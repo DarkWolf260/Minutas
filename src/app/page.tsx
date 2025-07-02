@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Suspense, useState, useMemo, useEffect, useRef } from 'react';
@@ -63,7 +64,7 @@ function NovedadesPageContent() {
 
   useEffect(() => {
     // This effect handles draft restoration and default report selection.
-
+    
     // 1. Handle draft restoration first.
     if (draftIsLoaded && draft) {
       const template = templates.find(t => t.id === draft.templateId);
@@ -86,7 +87,7 @@ function NovedadesPageContent() {
     if (selectedReportId && reports.find(r => r.id === selectedReportId)) {
         return;
     }
-
+    
     // 4. If we're here, there's no valid selection. Let's pick one.
     // Give priority to the URL parameter.
     if (preSelectedId && reports.find(r => r.id === preSelectedId)) {
@@ -97,13 +98,13 @@ function NovedadesPageContent() {
       setSelectedReportId(null);
     }
   }, [
-    preSelectedId,
-    reports,
-    filteredReports,
-    creatingReport,
-    draft,
-    draftIsLoaded,
-    templates,
+    preSelectedId, 
+    reports, 
+    filteredReports, 
+    creatingReport, 
+    draft, 
+    draftIsLoaded, 
+    templates, 
     clearDraft,
   ]);
 
@@ -111,7 +112,7 @@ function NovedadesPageContent() {
     if (!selectedReportId || creatingReport) return null;
     return reports.find(report => report.id === selectedReportId) ?? null;
   }, [selectedReportId, reports, creatingReport]);
-
+  
   const handleDeleteReport = (id: string) => {
     removeReport(id);
     if (selectedReportId === id) {
@@ -124,7 +125,7 @@ function NovedadesPageContent() {
     clearAllReports();
     setReportToDelete(null);
   };
-
+  
   const handleSelectTemplate = (templateId: string) => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
@@ -267,7 +268,7 @@ function NovedadesPageContent() {
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
-
+        
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogContent>
                 <DialogHeader>
