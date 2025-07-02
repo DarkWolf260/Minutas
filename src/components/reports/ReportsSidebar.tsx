@@ -1,4 +1,4 @@
-import { getReports, Report } from '@/lib/reportsData';
+import { getReports } from '@/lib/reportsData'; // Report type is inferred
 import ReportListItem from './ReportListItem';
 
 const ReportsSidebar = async () => {
