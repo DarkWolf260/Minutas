@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
@@ -37,48 +36,36 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
     const [previewContent, setPreviewContent] = useState('');
     const [copyButtonText, setCopyButtonText] = useState('Copiar');
     
-    const saveDraftLogicRef = useRef<() => void>();
-    const isDirtyRef = useRef(false);
-
+    const saveDraftLogicRef = useRef<((formData: Record<string, any>) => void) | null>(null);
+    
     useEffect(() => {
-        saveDraftLogicRef.current = () => {
-            if (formRef.current && template) {
-                const formData = formRef.current.getValues();
+        saveDraftLogicRef.current = (formData: Record<string, any>) => {
+            if (template && formData) {
                 const draft: ReportDraft = { templateId: template.id, formData };
                 saveDraft(draft);
-                isDirtyRef.current = false;
             }
         };
-    });
+    }, [template, saveDraft]);
 
     const debouncedSaveDraft = useMemo(
-        () => debounce(() => {
-            saveDraftLogicRef.current?.();
+        () => debounce((formData: Record<string, any>) => {
+            saveDraftLogicRef.current?.(formData);
         }, 30000),
         []
     );
 
-    // This effect handles saving the draft when navigating away.
     useEffect(() => {
-        // Reset dirty flag when component mounts with new data
-        isDirtyRef.current = false;
-
         return () => {
-            // When the component unmounts, save any pending changes as a draft.
-            if (isDirtyRef.current) {
-                saveDraftLogicRef.current?.();
-            }
+            debouncedSaveDraft.flush();
         };
-    }, [template]);
+    }, [debouncedSaveDraft]);
 
-    const handleDataChange = useCallback(() => {
-        isDirtyRef.current = true;
-        debouncedSaveDraft();
+    const handleDataChange = useCallback((formData: Record<string, any>) => {
+        debouncedSaveDraft(formData);
     }, [debouncedSaveDraft]);
     
     const handleCreateReport = (formData: Record<string, any>, content: string, title: string) => {
         debouncedSaveDraft.cancel();
-        isDirtyRef.current = false;
         clearDraft();
         
         const newReport: Report = {
@@ -96,8 +83,7 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
     };
 
     const handleCancel = () => {
-        debouncedSaveDraft.cancel();
-        isDirtyRef.current = false;
+        debouncedSaveDraft.flush();
         onCancel();
     };
 

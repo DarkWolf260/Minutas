@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
@@ -22,6 +21,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { debounce } from '@/lib/utils';
+import { renderFinalReport } from '@/lib/template-parser';
 
 interface ReportViewerProps {
   report: Report | null;
@@ -44,56 +44,46 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     const config = useMemo(() => report ? configs[report.templateId] || {} : {}, [report, configs]);
     const isFinalizado = useMemo(() => status === 'Finalizado', [status]);
 
-    const saveLogicRef = useRef<() => void>();
-    const isDirtyRef = useRef(false);
+    const saveLogicRef = useRef<((formData: Record<string, any>) => void) | null>(null);
 
-    // This effect updates the save logic on every render to capture the latest state and props
     useEffect(() => {
-        saveLogicRef.current = () => {
-            if (formRef.current && report && template) {
-                const formData = formRef.current.getValues();
-                const content = formRef.current.getRenderedContent();
-                const newTitle = formData.titulo || formData.title || template.name;
-                
-                const finalReport: Report = {
-                    ...report,
-                    title: newTitle,
-                    content: content,
-                    formData: formData,
-                    status: status,
-                    timestamp: new Date().toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' }),
-                };
-                onSave(finalReport);
-                setSaveButtonText('Guardado');
-                isDirtyRef.current = false;
-            }
+        saveLogicRef.current = (formData: Record<string, any>) => {
+            if (!report || !template) return;
+            
+            const content = renderFinalReport(template.content, formData, config, {});
+            const newTitle = formData.titulo || formData.title || template.name;
+            
+            const finalReport: Report = {
+                ...report,
+                title: newTitle,
+                content: content,
+                formData: formData,
+                status: status,
+                timestamp: new Date().toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' }),
+            };
+            onSave(finalReport);
+            setSaveButtonText('Guardado');
         };
-    });
+    }, [report, template, config, status, onSave]);
 
     const debouncedSave = useMemo(
-        () => debounce(() => {
-            saveLogicRef.current?.();
+        () => debounce((formData: Record<string, any>) => {
+            saveLogicRef.current?.(formData);
         }, 30000),
         []
     );
 
-    // This is the key effect for saving on navigation.
-    // It runs a cleanup function when the component unmounts or when `report` changes.
     useEffect(() => {
         return () => {
-            // When leaving the report, if there are pending changes, save them immediately.
-            if (isDirtyRef.current) {
-                saveLogicRef.current?.();
-            }
+            debouncedSave.flush();
         };
-    }, [report]);
+    }, [debouncedSave]);
 
 
     useEffect(() => {
         if (report) {
             setStatus(report.status || 'En proceso');
             setSaveButtonText('Guardar Cambios');
-            isDirtyRef.current = false; // Reset dirty flag for the new report.
         }
     }, [report]);
 
@@ -104,31 +94,32 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     };
 
     const handleSave = () => {
+        if (!formRef.current) return;
+        const formData = formRef.current.getValues();
         debouncedSave.cancel();
-        saveLogicRef.current?.();
+        saveLogicRef.current?.(formData);
     };
     
     const handleStatusChange = (newStatus: 'En proceso' | 'Finalizado') => {
-        debouncedSave.cancel();
         setStatus(newStatus);
-
-        if (!report || !template || !formRef.current) return;
         
+        if (!formRef.current) return;
         const formData = formRef.current.getValues();
-        const content = formRef.current.getRenderedContent();
-        const newTitle = formData.titulo || formData.title || template.name;
+        debouncedSave.cancel();
         
+        if (!report || !template) return;
+        const content = renderFinalReport(template.content, formData, config, {});
+        const newTitle = formData.titulo || formData.title || template.name;
         const finalReport: Report = {
             ...report,
             title: newTitle,
             content: content,
             formData: formData,
-            status: newStatus, // Use the new status directly
+            status: newStatus,
             timestamp: new Date().toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' }),
         };
         onSave(finalReport);
         setSaveButtonText('Guardado');
-        isDirtyRef.current = false;
     }
     
     const handlePreviewClick = () => {
@@ -140,10 +131,9 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
         setIsPreviewOpen(true);
     };
 
-    const handleDataChange = useCallback(() => {
-        isDirtyRef.current = true;
+    const handleDataChange = useCallback((formData: Record<string, any>) => {
         setSaveButtonText('Guardar Cambios');
-        debouncedSave();
+        debouncedSave(formData);
     }, [debouncedSave]);
 
     if (!report) {

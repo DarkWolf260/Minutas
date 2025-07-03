@@ -140,7 +140,7 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
                                         const isFullWidth = fieldConfig.type === 'textarea';
                                         const path = `${section.id}.${index}.${fieldId}`;
                                         const staffOptions = getStaffOptionsForRole(fieldId);
-                                        const finalDisabled = disabled || (predefinedValues.hasOwnProperty(fieldId) && !!predefinedValues[fieldId]);
+                                        const finalDisabled = disabled;
 
                                         return (
                                             <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2")}>
@@ -207,7 +207,7 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
                     const isFullWidth = fieldConfig.type === 'textarea';
                     const path = `${section.id}.${fieldId}`;
                     const staffOptions = getStaffOptionsForRole(fieldId);
-                    const finalDisabled = disabled || (predefinedValues.hasOwnProperty(fieldId) && !!predefinedValues[fieldId]);
+                    const finalDisabled = disabled;
 
                     return (
                         <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2")}>
@@ -504,7 +504,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
                                 if (!fieldConfig) return null;
                                 const isFullWidth = fieldConfig.type === 'textarea';
                                 const staffOptions = getStaffOptionsForRole(fieldId);
-                                const finalDisabled = disabled || (predefinedValues.hasOwnProperty(fieldId) && !!predefinedValues[fieldId]);
+                                const finalDisabled = disabled;
 
                                 return (
                                     <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2")}>

@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Defines the interface for the returned debounced function, including the cancel method.
+// Defines the interface for the returned debounced function, including the cancel and flush methods.
 interface DebouncedFunction<F extends (...args: any[]) => any> {
     (...args: Parameters<F>): void;
     cancel(): void;
