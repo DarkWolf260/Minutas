@@ -160,6 +160,10 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
                     <Label>Contenido del Reporte Original</Label>
                     <Textarea readOnly value={report.content} className="mt-2 h-64 font-mono text-sm" />
                 </div>
+                <Button variant="destructive" className="mt-6" onClick={() => onDelete(report.id)}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Eliminar Reporte
+                </Button>
             </div>
         );
     }

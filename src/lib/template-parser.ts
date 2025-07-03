@@ -110,6 +110,7 @@ export function parseTemplate(templateContent: string): { sections: SectionConfi
  * @param data The form data from react-hook-form.
  * @param config The template configuration.
  * @param predefinedValues A map of special values (e.g., from global settings).
+ * @param summaryOnly If true, only renders content inside << ... >> markers.
  * @returns The populated report string.
  */
 export const renderFinalReport = (
@@ -117,6 +118,7 @@ export const renderFinalReport = (
     data: Record<string, any>,
     config: TemplateConfig,
     predefinedValues: Record<string, string>,
+    summaryOnly: boolean = false,
 ): string => {
     let finalContent = template;
     const { sections = [], fields = {} } = config;
@@ -171,8 +173,10 @@ export const renderFinalReport = (
                 return ''; 
             }
 
+            const isComplex = !!(sectionConfig.singularTitle || sectionConfig.pluralTitle);
+
             let generatedBlock = '';
-            if (sectionConfig.singularTitle !== undefined || sectionConfig.pluralTitle !== undefined) {
+            if (isComplex) {
                  if (sectionData.length === 1 && sectionConfig.singularTitle) {
                     generatedBlock = `- *${sectionConfig.singularTitle}*`;
                 } else if (sectionData.length > 1 && sectionConfig.pluralTitle) {
@@ -190,7 +194,8 @@ export const renderFinalReport = (
             const itemsContent = sectionData.map((item: Record<string, any>, index: number) => {
                 let itemBlock = innerContent;
                 
-                if (sectionConfig.repeatableItemLabel) {
+                // Only add the numbered item subtitle for complex repeatable sections
+                if (isComplex && sectionConfig.repeatableItemLabel) {
                     const subTitle = `- *${sectionConfig.repeatableItemLabel} #${String(index + 1).padStart(2, '0')}*`;
                     itemBlock = `${subTitle}\n${itemBlock}`;
                 }
@@ -200,7 +205,7 @@ export const renderFinalReport = (
                     itemBlock = itemBlock.replace(new RegExp(`\\{${fieldId}\\}`, 'g'), renderValue(value, fieldId));
                 });
                 return itemBlock;
-            }).join('\n\n');
+            }).join(isComplex ? '\n\n' : '\n');
             
             return generatedBlock ? generatedBlock + '\n' + itemsContent : itemsContent;
         } 
@@ -249,5 +254,19 @@ export const renderFinalReport = (
         return '';
     });
     
+    if (summaryOnly) {
+        const summaryRegex = /<<([\s\S]*?)>>/g;
+        const summaryParts = Array.from(finalContent.matchAll(summaryRegex)).map(match => match[1].trim());
+        
+        if (summaryParts.length > 0) {
+            finalContent = summaryParts.join('\n\n');
+        } else {
+            finalContent = '';
+        }
+    }
+    
+    // For all views, remove the summary markers themselves from the final output.
+    finalContent = finalContent.replace(/<<|>>/g, '');
+
     return finalContent.replace(/\n{3,}/g, '\n\n').trim();
 };

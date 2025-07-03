@@ -110,6 +110,72 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
         const { fields, append, remove } = useFieldArray({ control, name: section.id });
         const defaultItem = section.fieldIds.reduce((acc, fieldId) => ({ ...acc, [fieldId]: predefinedValues.hasOwnProperty(fieldId) ? predefinedValues[fieldId] : '' }), {});
 
+        const isSimpleList = section.fieldIds.length === 1;
+
+        if (isSimpleList) {
+            const fieldId = section.fieldIds[0];
+            const fieldConfig = (config.fields || {})[fieldId];
+            if (!fieldConfig) return null;
+
+            return (
+                 <div className="space-y-4 border-t pt-6">
+                    {section.label && <h3 className="text-lg font-semibold">{section.label}</h3>}
+                    <div className="space-y-2">
+                        {fields.map((field, index) => {
+                            const path = `${section.id}.${index}.${fieldId}`;
+                            const staffOptions = getStaffOptionsForRole(fieldId);
+                            const finalDisabled = disabled;
+
+                            return (
+                                <div key={field.id} className="flex items-center gap-2">
+                                    <div className="flex-1">
+                                        <Controller
+                                            name={path}
+                                            control={control}
+                                            render={({ field: controllerField }) => {
+                                                const role = roles.find(r => r.name === fieldId);
+                                                const fieldType = (role && !role.isSingle ? 'multi-text' : fieldConfig.type) || 'text';
+                                                const placeholder = `Añadir ${fieldConfig.label || fieldId}...`;
+                                                
+                                                switch (fieldType) {
+                                                    case 'multi-text':
+                                                        return <MultiInput options={staffOptions} value={Array.isArray(controllerField.value) ? controllerField.value : []} onChange={controllerField.onChange} placeholder={placeholder} disabled={finalDisabled} />;
+                                                    case 'textarea':
+                                                        return <Textarea {...controllerField} disabled={finalDisabled} placeholder={placeholder} />;
+                                                    case 'time-hlv':
+                                                        return <TimeHlvInput value={controllerField.value || ''} onChange={controllerField.onChange} disabled={finalDisabled} />;
+                                                    case 'date':
+                                                        return <DatePicker value={controllerField.value || ''} onChange={controllerField.onChange} disabled={finalDisabled} />;
+                                                    default:
+                                                        return <Input {...controllerField} disabled={finalDisabled} placeholder={placeholder} />;
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                    {!disabled && (
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-9 w-9 shrink-0 text-destructive"
+                                            onClick={() => remove(index)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                     {!disabled && (
+                        <Button type="button" variant="outline" size="sm" onClick={() => append(defaultItem)}>
+                            <PlusCircle className="mr-2 h-4 w-4" /> Añadir {section.repeatableItemLabel || fieldConfig.label}
+                        </Button>
+                    )}
+                 </div>
+            );
+        }
+
         return (
             <div className="space-y-4 border-t pt-6">
                 {section.label && <h3 className="text-lg font-semibold">{section.label}</h3>}
@@ -371,8 +437,14 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
 
         finalConfig.sections.forEach(section => {
             if (section.isRepeatable) {
-                if (Array.isArray(initialFormValues[section.id])) {
-                    initialFormValues[section.id].forEach((item: Record<string, any>) => {
+                const sectionData = initialFormValues[section.id];
+                const defaultItem = {};
+                applyDefaults(defaultItem, section.fieldIds);
+
+                if (isNewReport && (!Array.isArray(sectionData) || sectionData.length === 0)) {
+                    initialFormValues[section.id] = [defaultItem];
+                } else if (Array.isArray(sectionData)) {
+                    sectionData.forEach((item: Record<string, any>) => {
                         applyDefaults(item, section.fieldIds);
                     });
                 } else {

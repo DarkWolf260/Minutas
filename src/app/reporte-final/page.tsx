@@ -12,12 +12,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { sortReports } from '@/lib/report-sorter';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+import { useGuards } from '@/hooks/use-guards';
+import { useSettings } from '@/hooks/use-settings';
+import { useRoles } from '@/hooks/use-roles';
+import { useTemplates } from '@/hooks/use-templates';
+import { renderFinalReport } from '@/lib/template-parser';
 
 export default function ReporteFinalPage() {
     const { reports, isLoaded: reportsLoaded } = useReports();
     const { definitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
+    const { guards, isLoaded: guardsLoaded } = useGuards();
+    const { settings, isLoaded: settingsLoaded } = useSettings();
+    const { roles, isLoaded: rolesLoadedHook } = useRoles();
+    const { templates, configs, isLoaded: templatesLoaded } = useTemplates();
     
-    const [finalRemarks, setFinalRemarks] = useState('');
+    const [statisticsText, setStatisticsText] = useState('');
     const [generatedReport, setGeneratedReport] = useState('');
     const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
     const [copyButtonText, setCopyButtonText] = useState('Copiar');
@@ -32,44 +41,121 @@ export default function ReporteFinalPage() {
         return settings;
     }, [definitions]);
 
+    const activeGuard = useMemo(() => {
+        if (!settings.activeGuardId || !guards.length) return null;
+        return guards.find(g => g.id === settings.activeGuardId);
+    }, [settings.activeGuardId, guards]);
+
     const sortedReports = useMemo(() => {
         return sortReports(reports, 'asc');
     }, [reports]);
 
     const handleGenerateReport = () => {
-        if (!reports.length) {
-            setGeneratedReport('No hay novedades para reportar.');
+        if (reports.length === 0 && !statisticsText.trim()) {
+            setGeneratedReport('No hay novedades ni estadísticas para reportar.');
             setIsResultDialogOpen(true);
             return;
         }
 
         const today = new Date();
-        const fecha = today.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        const hora = today.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
 
-        const reportContent = sortedReports.map(report => report.content).join('\n\n----------------------------------------\n\n');
+        const formatDatePart = (date: Date) => {
+            const dayName = new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(date);
+            const dayNumber = String(date.getDate()).padStart(2, '0');
+            const monthName = new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(date);
+            return `${dayName} ${dayNumber} de ${monthName}`.toUpperCase();
+        };
 
-        const reportParts = [
-            `*CIERRE DE GUARDIA*`,
-            `*PROTECCIÓN CIVIL MUNICIPIO ${(globalSettings['Municipio'] || '').toUpperCase()}*`,
-            `*FECHA:* ${fecha} - *HORA:* ${hora}`,
-            `----------------------------------------`,
-            ``,
-            `*NOVEDADES DEL DÍA:*`,
-            ``,
-            reportContent,
-            ``,
-            `----------------------------------------`,
-            `*OBSERVACIONES FINALES:*`,
-            finalRemarks || 'Sin observaciones.',
-            ``,
-            `*REPORTE CERRADO POR:*`,
-            `${globalSettings['Jefe de Operaciones'] || ''}`,
-            ``,
-            `*SISTEMA NACIONAL DE GESTIÓN DE RIESGOS*`
-        ];
+        const year = today.getFullYear();
+        const dateRangeString = `DESDE EL ${formatDatePart(today)} HASTA EL ${formatDatePart(tomorrow)} DE ${year}`;
         
-        const finalReportText = reportParts.join('\n').trim();
+        const headerParts = [
+            `*INSTITUTO AUTÓNOMO DE PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO ${(globalSettings['Municipio'] || '').toUpperCase()}*`,
+            ``,
+            `*DIRECTOR-PRESIDENTE*`,
+            (globalSettings['Director'] || '').toUpperCase(),
+            ``,
+            `*JEFE DE OPERACIONES*`,
+            (globalSettings['Jefe de Operaciones'] || '').toUpperCase(),
+            ``,
+            `*REPORTE DE NOVEDADES ${dateRangeString}*`,
+            ``
+        ];
+
+        if (activeGuard) {
+             headerParts.push(`- *EQUIPO DE GUARDIA:* GRUPO “${activeGuard.id}”`);
+             roles.forEach(role => {
+                 const staffList = activeGuard.staff[role.name];
+                 if (staffList && staffList.length > 0 && staffList.some(s => s.trim() !== '')) {
+                     headerParts.push(`- *${role.name.toUpperCase()}:* ${staffList.join(' / ')}`);
+                 }
+             });
+        }
+        
+        const reportContent = sortedReports
+            .map((report) => {
+                const fecha = report.formData?.['Fecha'];
+                const hora = report.formData?.['Hora'] || '';
+                
+                let formattedDate = '';
+                if (fecha && typeof fecha === 'string') {
+                    const dateParts = fecha.split('-');
+                    if(dateParts.length === 3) {
+                       formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+                    }
+                }
+                
+                const title = report.title || 'Novedad sin título';
+                const prefix = ` - *${formattedDate} ${hora}* - *${title}*`;
+
+                const template = templates.find(t => t.id === report.templateId);
+                const config = configs[report.templateId];
+                const formData = report.formData || {};
+
+                if (!template || !config) {
+                    return `${prefix}\n\n[No se pudo generar el resumen para este reporte. Plantilla no encontrada.]`;
+                }
+
+                const summaryContent = renderFinalReport(template.content, formData, config, globalSettings, true);
+
+                if (summaryContent.trim() === '') {
+                    return prefix;
+                }
+                
+                return `${prefix}\n\n${summaryContent}`;
+            })
+            .join('\n\n');
+
+        const finalReportParts = [
+            ...headerParts,
+        ];
+
+        if (statisticsText.trim()) {
+            finalReportParts.push(
+                ``,
+                `*ESTADÍSTICAS DEL DÍA*`,
+                ``,
+                statisticsText.trim()
+            );
+        }
+        
+        if (reportContent.trim()) {
+            finalReportParts.push(
+                ``,
+                `*NOVEDADES DEL DÍA*`,
+                ``,
+                reportContent
+            );
+        }
+        
+        finalReportParts.push(
+            ``,
+            `*PROTECCIÓN CIVIL ${(globalSettings['Municipio'] || '').toUpperCase()}*`
+        );
+        
+        const finalReportText = finalReportParts.join('\n').trim();
         setGeneratedReport(finalReportText);
         setIsResultDialogOpen(true);
         setCopyButtonText('Copiar');
@@ -81,7 +167,7 @@ export default function ReporteFinalPage() {
         setTimeout(() => setCopyButtonText('Copiar'), 2000);
     };
 
-    const isLoaded = reportsLoaded && definitionsLoaded;
+    const isLoaded = reportsLoaded && definitionsLoaded && guardsLoaded && settingsLoaded && rolesLoadedHook && templatesLoaded;
 
     return (
         <>
@@ -90,17 +176,27 @@ export default function ReporteFinalPage() {
                     <CardHeader>
                         <CardTitle>Generador de Reporte de Cierre de Guardia</CardTitle>
                         <CardDescription>
-                            Recopila todas las novedades del día en orden cronológico para generar el reporte final.
+                            Añade las estadísticas y recopila todas las novedades del día para generar el reporte final.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         {!isLoaded ? (
                             <div className="space-y-6">
-                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-24 w-full" />
                                 <Skeleton className="h-48 w-full" />
                             </div>
                         ) : (
                             <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="statistics-text">Estadísticas del Día</Label>
+                                    <Textarea 
+                                        id="statistics-text" 
+                                        value={statisticsText}
+                                        onChange={(e) => setStatisticsText(e.target.value)}
+                                        placeholder="Introduce las estadísticas del día, una por línea. Ejemplo:&#10;- ATENCIONES PREHOSPITALARIAS 06"
+                                        rows={5}
+                                    />
+                                </div>
                                 <div>
                                     <h4 className="font-semibold mb-2">Novedades a Incluir ({sortedReports.length})</h4>
                                     <ScrollArea className="h-48 rounded-md border p-4 bg-muted/50">
@@ -117,18 +213,8 @@ export default function ReporteFinalPage() {
                                         )}
                                     </ScrollArea>
                                 </div>
-                                
-                                <div className="space-y-2">
-                                    <Label htmlFor="final-remarks">Observaciones Finales (Opcional)</Label>
-                                    <Textarea 
-                                        id="final-remarks" 
-                                        value={finalRemarks}
-                                        onChange={(e) => setFinalRemarks(e.target.value)}
-                                        placeholder="Añade aquí cualquier observación o conclusión para el cierre de la guardia..."
-                                    />
-                                </div>
                                 <div className="flex justify-end">
-                                    <Button onClick={handleGenerateReport} disabled={reports.length === 0}>Generar Reporte de Cierre</Button>
+                                    <Button onClick={handleGenerateReport} disabled={reports.length === 0 && !statisticsText.trim()}>Generar Reporte de Cierre</Button>
                                 </div>
                             </div>
                         )}
