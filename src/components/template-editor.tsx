@@ -49,7 +49,7 @@ const FieldEditor = React.memo(function FieldEditor({
                         onValueChange={handleTypeChange}
                         disabled={isPredefined}
                     >
-                        <SelectTrigger className="w-[130px] h-8 text-xs">
+                        <SelectTrigger className="w-[150px] h-8 text-xs">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

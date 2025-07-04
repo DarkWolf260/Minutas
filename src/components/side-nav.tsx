@@ -1,11 +1,10 @@
-
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { Newspaper, Settings, Mountain, FileText, ClipboardList, ClipboardCheck, Map, BookOpen } from 'lucide-react';
+import { Newspaper, Settings, Mountain, FileText, ClipboardList, ClipboardCheck, Map, BookOpen, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -52,6 +51,21 @@ export function SideNav() {
         </nav>
         <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">
           <ThemeToggle />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href="/about"
+                className={cn(
+                    'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+                    pathname === '/about' && 'bg-accent text-accent-foreground'
+                )}
+              >
+                <Info className="h-5 w-5" />
+                <span className="sr-only">Acerca de</span>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right">Acerca de</TooltipContent>
+          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <Link

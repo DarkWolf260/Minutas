@@ -70,5 +70,14 @@ export function useFieldDefinitions() {
     saveDefinitions(newDefinitions);
   }, [definitions, saveDefinitions]);
 
-  return { definitions, updateDefinition, removeDefinition, saveDefinitions, isLoaded };
+  const clearAllDefinitions = useCallback(() => {
+    try {
+      localStorage.removeItem(DEFINITIONS_STORAGE_KEY);
+      setDefinitions(defaultDefinitions);
+    } catch (error) {
+      console.error('Failed to clear global field definitions', error);
+    }
+  }, []);
+
+  return { definitions, updateDefinition, removeDefinition, saveDefinitions, isLoaded, clearAllDefinitions };
 }

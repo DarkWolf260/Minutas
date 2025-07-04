@@ -20,161 +20,47 @@ import { useRoles } from '@/hooks/use-roles';
 import { MultiInput } from './ui/multi-input';
 import { useGuards } from '@/hooks/use-guards';
 import { useDepartments } from '@/hooks/use-departments';
+import { useUnits } from '@/hooks/use-units';
 
+function getFieldComponent(
+    fieldId: string, 
+    fieldConfig: FieldConfig, 
+    roles: StaffRole[], 
+    rolesLoaded: boolean, 
+    units: string[], 
+    staffOptions: string[]
+) {
+    if (fieldId === 'Unidad') {
+        return (props: any) => <MultiInput {...props} options={units} placeholder="Buscar o añadir unidades..." value={Array.isArray(props.value) ? props.value : (props.value ? [String(props.value)] : [])} />;
+    }
 
-function renderField(fieldId: string, fieldConfig: FieldConfig, control: any, disabled: boolean, roles: StaffRole[], rolesLoaded: boolean, staffOptions: string[]) {
-    const getFieldType = (fieldId: string, originalType: FieldType): FieldType | 'multi-text' => {
-        if (!rolesLoaded) return originalType;
-        const role = roles.find(r => r.name === fieldId);
-        if (role && !role.isSingle && originalType === 'text') {
-            return 'multi-text';
-        }
-        return originalType;
-    };
+    const role = rolesLoaded ? roles.find(r => r.name === fieldId) : null;
+    const isMultiTextStaff = role && !role.isSingle && fieldConfig.type === 'text';
+
+    if (isMultiTextStaff) {
+        return (props: any) => <MultiInput {...props} options={staffOptions} placeholder="Buscar o añadir..." value={Array.isArray(props.value) ? props.value : []} />;
+    }
     
-    const type = getFieldType(fieldId, fieldConfig?.type || 'text');
-
-    switch (type) {
+    switch (fieldConfig.type) {
         case 'textarea':
-             return (
-                 <Controller
-                    name={fieldId}
-                    control={control}
-                    render={({ field }) => (
-                        <Textarea {...field} disabled={disabled} />
-                    )}
-                 />
-            );
+            return (props: any) => <Textarea {...props} />;
         case 'time-hlv':
-            return (
-                <Controller
-                    name={fieldId}
-                    control={control}
-                    render={({ field }) => (
-                        <TimeHlvInput
-                            value={field.value || ''}
-                            onChange={field.onChange}
-                            disabled={disabled}
-                        />
-                    )}
-                />
-            );
+            return (props: any) => <TimeHlvInput {...props} />;
         case 'date':
-            return (
-                <Controller
-                    name={fieldId}
-                    control={control}
-                    render={({ field }) => (
-                        <DatePicker
-                            value={field.value || ''}
-                            onChange={field.onChange}
-                            disabled={disabled}
-                        />
-                    )}
-                />
-            );
-        case 'multi-text':
-            return (
-                 <Controller
-                    name={fieldId}
-                    control={control}
-                    render={({ field }) => (
-                        <MultiInput
-                            options={staffOptions}
-                            value={Array.isArray(field.value) ? field.value : []}
-                            onChange={field.onChange}
-                            placeholder="Buscar o añadir..."
-                            disabled={disabled}
-                        />
-                    )}
-                />
-            );
+            return (props: any) => <DatePicker {...props} />;
         case 'text':
         default:
-             return (
-                 <Controller
-                    name={fieldId}
-                    control={control}
-                    render={({ field }) => (
-                        <Input {...field} disabled={disabled} />
-                    )}
-                 />
-            );
+            return (props: any) => <Input {...props} />;
     }
 }
 
-function SectionRenderer({ section, config, control, disabled, roles, rolesLoaded, getStaffOptionsForRole, predefinedValues }: { section: SectionConfig, config: TemplateConfig, control: any, disabled: boolean, roles: StaffRole[], rolesLoaded: boolean, getStaffOptionsForRole: (roleName: string) => string[], predefinedValues: Record<string, string> }) {
+
+function SectionRenderer({ section, config, control, disabled, roles, rolesLoaded, getStaffOptionsForRole, predefinedValues, units }: { section: SectionConfig, config: TemplateConfig, control: any, disabled: boolean, roles: StaffRole[], rolesLoaded: boolean, getStaffOptionsForRole: (roleName: string) => string[], predefinedValues: Record<string, string>, units: string[] }) {
     const visibleFields = useMemo(() => section.fieldIds, [section.fieldIds]);
 
     if (section.isRepeatable) {
         const { fields, append, remove } = useFieldArray({ control, name: section.id });
         const defaultItem = section.fieldIds.reduce((acc, fieldId) => ({ ...acc, [fieldId]: predefinedValues.hasOwnProperty(fieldId) ? predefinedValues[fieldId] : '' }), {});
-
-        const isSimpleList = section.fieldIds.length === 1;
-
-        if (isSimpleList) {
-            const fieldId = section.fieldIds[0];
-            const fieldConfig = (config.fields || {})[fieldId];
-            if (!fieldConfig) return null;
-
-            return (
-                 <div className="space-y-4 border-t pt-6">
-                    {section.label && <h3 className="text-lg font-semibold">{section.label}</h3>}
-                    <div className="space-y-2">
-                        {fields.map((field, index) => {
-                            const path = `${section.id}.${index}.${fieldId}`;
-                            const staffOptions = getStaffOptionsForRole(fieldId);
-                            const finalDisabled = disabled;
-
-                            return (
-                                <div key={field.id} className="flex items-center gap-2">
-                                    <div className="flex-1">
-                                        <Controller
-                                            name={path}
-                                            control={control}
-                                            render={({ field: controllerField }) => {
-                                                const role = roles.find(r => r.name === fieldId);
-                                                const fieldType = (role && !role.isSingle ? 'multi-text' : fieldConfig.type) || 'text';
-                                                const placeholder = `Añadir ${fieldConfig.label || fieldId}...`;
-                                                
-                                                switch (fieldType) {
-                                                    case 'multi-text':
-                                                        return <MultiInput options={staffOptions} value={Array.isArray(controllerField.value) ? controllerField.value : []} onChange={controllerField.onChange} placeholder={placeholder} disabled={finalDisabled} />;
-                                                    case 'textarea':
-                                                        return <Textarea {...controllerField} disabled={finalDisabled} placeholder={placeholder} />;
-                                                    case 'time-hlv':
-                                                        return <TimeHlvInput value={controllerField.value || ''} onChange={controllerField.onChange} disabled={finalDisabled} />;
-                                                    case 'date':
-                                                        return <DatePicker value={controllerField.value || ''} onChange={controllerField.onChange} disabled={finalDisabled} />;
-                                                    default:
-                                                        return <Input {...controllerField} disabled={finalDisabled} placeholder={placeholder} />;
-                                                }
-                                            }}
-                                        />
-                                    </div>
-                                    {!disabled && (
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-9 w-9 shrink-0 text-destructive"
-                                            onClick={() => remove(index)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                     {!disabled && (
-                        <Button type="button" variant="outline" size="sm" onClick={() => append(defaultItem)}>
-                            <PlusCircle className="mr-2 h-4 w-4" /> Añadir {section.repeatableItemLabel || fieldConfig.label}
-                        </Button>
-                    )}
-                 </div>
-            );
-        }
 
         return (
             <div className="space-y-4 border-t pt-6">
@@ -206,7 +92,7 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
                                         const isFullWidth = fieldConfig.type === 'textarea';
                                         const path = `${section.id}.${index}.${fieldId}`;
                                         const staffOptions = getStaffOptionsForRole(fieldId);
-                                        const finalDisabled = disabled;
+                                        const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, staffOptions);
 
                                         return (
                                             <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2")}>
@@ -214,24 +100,7 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
                                                 <Controller
                                                     name={path}
                                                     control={control}
-                                                    render={({ field }) => {
-                                                        const role = roles.find(r => r.name === fieldId);
-                                                        const fieldType = (role && !role.isSingle ? 'multi-text' : fieldConfig.type) || 'text';
-                                                        
-                                                        if (fieldType === 'multi-text') {
-                                                            return <MultiInput options={staffOptions} value={Array.isArray(field.value) ? field.value : []} onChange={field.onChange} placeholder="Buscar o añadir..." disabled={finalDisabled} />;
-                                                        }
-                                                        if (fieldType === 'textarea') {
-                                                            return <Textarea {...field} disabled={finalDisabled} />;
-                                                        }
-                                                        if (fieldType === 'time-hlv') {
-                                                            return <TimeHlvInput value={field.value || ''} onChange={field.onChange} disabled={finalDisabled} />;
-                                                        }
-                                                        if (fieldType === 'date') {
-                                                            return <DatePicker value={field.value || ''} onChange={field.onChange} disabled={finalDisabled} />;
-                                                        }
-                                                        return <Input {...field} disabled={finalDisabled} />;
-                                                    }}
+                                                    render={({ field }) => <FieldComponent {...field} disabled={disabled} />}
                                                 />
                                             </div>
                                         );
@@ -273,7 +142,7 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
                     const isFullWidth = fieldConfig.type === 'textarea';
                     const path = `${section.id}.${fieldId}`;
                     const staffOptions = getStaffOptionsForRole(fieldId);
-                    const finalDisabled = disabled;
+                    const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, staffOptions);
 
                     return (
                         <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2")}>
@@ -281,24 +150,7 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
                             <Controller
                                 name={path}
                                 control={control}
-                                render={({ field }) => {
-                                    const role = roles.find(r => r.name === fieldId);
-                                    const fieldType = (role && !role.isSingle ? 'multi-text' : fieldConfig.type) || 'text';
-                                    
-                                    if (fieldType === 'multi-text') {
-                                        return <MultiInput options={staffOptions} value={Array.isArray(field.value) ? field.value : []} onChange={field.onChange} placeholder="Buscar o añadir..." disabled={finalDisabled} />;
-                                    }
-                                    if (fieldType === 'textarea') {
-                                        return <Textarea {...field} disabled={finalDisabled} />;
-                                    }
-                                    if (fieldType === 'time-hlv') {
-                                        return <TimeHlvInput value={field.value || ''} onChange={field.onChange} disabled={finalDisabled} />;
-                                    }
-                                    if (fieldType === 'date') {
-                                        return <DatePicker value={field.value || ''} onChange={field.onChange} disabled={finalDisabled} />;
-                                    }
-                                    return <Input {...field} disabled={finalDisabled} />;
-                                }}
+                                render={({ field }) => <FieldComponent {...field} disabled={disabled} />}
                             />
                         </div>
                     );
@@ -328,6 +180,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
     const { roles, isLoaded: rolesLoaded } = useRoles();
     const { guards, isLoaded: guardsLoaded } = useGuards();
     const { departments, isLoaded: deptsLoaded } = useDepartments();
+    const { units } = useUnits();
 
     const getStaffOptionsForRole = useCallback((roleName: string): string[] => {
         const role = roles.find(r => r.name === roleName);
@@ -426,7 +279,12 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
                         target[fieldId] = new Date().toISOString().split('T')[0];
                     }
                     else {
-                        target[fieldId] = '';
+                        const fieldConfig = finalConfig.fields[fieldId];
+                        if (fieldId === 'Unidad' || (fieldConfig && fieldConfig.type === 'multi-text')) {
+                           target[fieldId] = [];
+                        } else {
+                           target[fieldId] = '';
+                        }
                     }
                 }
             });
@@ -451,21 +309,23 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
                     initialFormValues[section.id] = [];
                 }
             } else {
-                // Ensure the section object exists on the initial values
                 if (!initialFormValues[section.id]) {
                     initialFormValues[section.id] = {};
                 }
                 
-                // Get a reference to the nested object for this section
                 const sectionObject = initialFormValues[section.id];
                 
-                // Populate its fields with defaults if they don't exist
                 section.fieldIds.forEach(fieldId => {
                     if (sectionObject[fieldId] === undefined || sectionObject[fieldId] === null) {
                          if (predefinedValues.hasOwnProperty(fieldId)) {
                             sectionObject[fieldId] = predefinedValues[fieldId];
                         } else {
-                            sectionObject[fieldId] = '';
+                            const fieldConfig = finalConfig.fields[fieldId];
+                            if (fieldId === 'Unidad' || (fieldConfig && fieldConfig.type === 'multi-text')) {
+                               sectionObject[fieldId] = [];
+                            } else {
+                               sectionObject[fieldId] = '';
+                            }
                         }
                     }
                 });
@@ -566,6 +426,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
                             rolesLoaded={rolesLoaded}
                             getStaffOptionsForRole={getStaffOptionsForRole}
                             predefinedValues={predefinedValues}
+                            units={units}
                         />
                     );
                 } else {
@@ -576,12 +437,16 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
                                 if (!fieldConfig) return null;
                                 const isFullWidth = fieldConfig.type === 'textarea';
                                 const staffOptions = getStaffOptionsForRole(fieldId);
-                                const finalDisabled = disabled;
+                                const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, staffOptions);
 
                                 return (
                                     <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2")}>
                                         <Label htmlFor={fieldId}>{fieldConfig.label || fieldId}</Label>
-                                        {renderField(fieldId, fieldConfig, control, finalDisabled, roles, rolesLoaded, staffOptions)}
+                                        <Controller
+                                            name={fieldId}
+                                            control={control}
+                                            render={({ field }) => <FieldComponent {...field} disabled={disabled} />}
+                                        />
                                     </div>
                                 );
                             })}

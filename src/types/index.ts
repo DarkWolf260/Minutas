@@ -1,11 +1,4 @@
 
-
-
-
-
-
-
-
 export interface StaffRole {
   name: string;
   isSingle: boolean; // True for roles that can only have one person
@@ -26,6 +19,9 @@ export interface AppSettings {
   // This is now managed via global field definitions
   activeGuardId?: string;
   guardShiftDuration?: number;
+  finalReportStaffSnapshot?: Staff;
+  finalReportStartDate?: string;
+  finalReportEndDate?: string;
 }
 
 export interface Report {

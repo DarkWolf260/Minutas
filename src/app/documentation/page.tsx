@@ -1,6 +1,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 const Code = ({ children }: { children: React.ReactNode }) => (
     <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold text-card-foreground">
@@ -31,6 +33,14 @@ export default function DocumentationPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-12 pt-6">
+
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Aviso: Documentación en Revisión</AlertTitle>
+            <AlertDescription>
+              Esta documentación fue generada por una inteligencia artificial para proporcionar una guía inicial. Actualmente está siendo revisada y validada por el desarrollador.
+            </AlertDescription>
+          </Alert>
 
           <Section
             title="1. Sistema de Guardado y Prioridad de Datos"
@@ -67,7 +77,7 @@ export default function DocumentationPage() {
                     <li>
                         <span className="font-semibold text-card-foreground">El Valor Global Predefinido</span>
                          <p className="pl-6 mt-1">
-                            Si un campo en tu reporte está vacío (porque es un reporte nuevo, o porque nunca lo rellenaste), la aplicación intentará rellenarlo con el valor que hayas configurado en <Badge variant="outline">Configuración {'>'} Etiquetas Globales</Badge>. Este es el valor "por defecto".
+                            Si un campo en tu reporte está vacío (porque es un reporte nuevo, o porque nunca lo rellenaste), la aplicación intentará rellenarlo con el valor que hayas configurado en <Badge variant="outline">Plantillas {'>'} Etiquetas Globales</Badge>. Este es el valor "por defecto".
                         </p>
                     </li>
                     <li>

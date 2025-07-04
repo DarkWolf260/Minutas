@@ -9,6 +9,9 @@ const SETTINGS_STORAGE_KEY = 'app-settings';
 const defaultSettings: AppSettings = {
   activeGuardId: '',
   guardShiftDuration: 24,
+  finalReportStaffSnapshot: {},
+  finalReportStartDate: '',
+  finalReportEndDate: '',
 };
 
 export function useSettings() {
@@ -36,6 +39,15 @@ export function useSettings() {
       console.error('Failed to save settings to localStorage', error);
     }
   }
+  
+  const clearAllSettings = () => {
+     try {
+      localStorage.removeItem(SETTINGS_STORAGE_KEY);
+      setSettings(defaultSettings);
+    } catch (error) {
+      console.error('Failed to clear settings from localStorage', error);
+    }
+  }
 
-  return { settings, saveSettings, isLoaded };
+  return { settings, saveSettings, isLoaded, clearAllSettings };
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
@@ -152,9 +153,9 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
         return (
             <div className="flex h-full flex-col items-center justify-center bg-card p-6 text-center">
                 <FileText className="h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-semibold text-destructive">Plantilla no encontrada</h3>
+                <h3 className="mt-4 text-lg font-semibold text-destructive">Error en la Plantilla</h3>
                 <p className="text-muted-foreground">
-                  La plantilla original de este reporte no existe y no se puede editar.
+                  La plantilla de este reporte tiene un error o no se encuentra. No se puede editar, pero puedes ver su contenido original o eliminarlo.
                 </p>
                 <div className="mt-4 w-full max-w-2xl text-left">
                     <Label>Contenido del Reporte Original</Label>

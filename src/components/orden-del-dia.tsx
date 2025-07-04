@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { Staff } from '@/types';
 import { useRoles } from '@/hooks/use-roles';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+import { useSettings } from '@/hooks/use-settings';
 
 interface OrdenDelDiaFormProps {
     selectedGuard: string;
@@ -27,12 +28,14 @@ interface OrdenDelDiaFormProps {
 export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormProps) {
   const { definitions } = useFieldDefinitions();
   const { roles, isLoaded: rolesLoaded } = useRoles();
+  const { settings, saveSettings } = useSettings();
   const [periodo, setPeriodo] = useState('');
   const [staff, setStaff] = useState<Staff>({});
 
   const [generatedOrder, setGeneratedOrder] = useState('');
   const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
   const [copyButtonText, setCopyButtonText] = useState('Copiar');
+  const [isSnapshotSaved, setIsSnapshotSaved] = useState(false);
 
   const globalSettings = useMemo(() => {
     const settings: Record<string, string> = {};
@@ -50,8 +53,8 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const formatDate = (date: Date) => {
-        const day = date.getDate();
-        const month = date.getMonth() + 1;
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
         return `${day}/${month}/${year}`;
     };
@@ -84,6 +87,29 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
         [roleName]: personnel
     }));
   };
+  
+  const handleUseForFinalReport = () => {
+    let startDate, endDate;
+    const parts = periodo.split(' AL ');
+    if (parts.length === 2) {
+        const [startStr, endStr] = parts;
+        const startParts = startStr.split('/');
+        const endParts = endStr.split('/');
+        if (startParts.length === 3 && endParts.length === 3) {
+            // DD/MM/YYYY -> YYYY-MM-DD for Date constructor
+            startDate = new Date(`${startParts[2]}-${startParts[1]}-${startParts[0]}T00:00:00`);
+            endDate = new Date(`${endParts[2]}-${endParts[1]}-${endParts[0]}T00:00:00`);
+        }
+    }
+
+    saveSettings({
+        ...settings,
+        finalReportStaffSnapshot: staff,
+        finalReportStartDate: startDate && !isNaN(startDate.getTime()) ? startDate.toISOString() : '',
+        finalReportEndDate: endDate && !isNaN(endDate.getTime()) ? endDate.toISOString() : '',
+    });
+    setIsSnapshotSaved(true);
+  };
 
   const handleGenerateOrder = () => {
     const reportParts = [
@@ -111,6 +137,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
     setGeneratedOrder(order);
     setIsResultDialogOpen(true);
     setCopyButtonText('Copiar');
+    setIsSnapshotSaved(false);
   };
 
   const handleCopyToClipboard = () => {
@@ -159,7 +186,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
           <DialogHeader>
             <DialogTitle>Orden del Día Generada</DialogTitle>
             <DialogDescription>
-              Puedes copiar el texto generado.
+              Puedes copiar el texto generado o guardar el personal para el reporte final.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -170,6 +197,9 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
             />
           </div>
           <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleUseForFinalReport} disabled={isSnapshotSaved}>
+              {isSnapshotSaved ? 'Guardado para Reporte Final' : 'Usar para Reporte Final'}
+            </Button>
             <Button type="button" onClick={handleCopyToClipboard}>
               {copyButtonText}
             </Button>

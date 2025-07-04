@@ -9,10 +9,10 @@ const ROLES_STORAGE_KEY = 'app-staff-roles';
 const defaultRoles: StaffRole[] = [
     { name: 'Jefe de los Servicios', isSingle: true, departmentScope: ['OPERATIONS'] },
     { name: 'Operador de Radio', isSingle: true, departmentScope: ['OPERATIONS'] },
-    { name: 'CEMUPRAD', isSingle: false, departmentScope: [] },
-    { name: 'Técnico', isSingle: false, departmentScope: [] },
-    { name: 'Auxiliar', isSingle: false, departmentScope: [] },
-    { name: 'Conductor', isSingle: false, departmentScope: [] },
+    { name: 'CEMUPRAD', isSingle: false, departmentScope: ['OPERATIONS'] },
+    { name: 'Técnico', isSingle: false, departmentScope: ['OPERATIONS'] },
+    { name: 'Auxiliar', isSingle: false, departmentScope: ['OPERATIONS'] },
+    { name: 'Conductor', isSingle: false, departmentScope: ['OPERATIONS'] },
     { name: 'Permiso', isSingle: false, departmentScope: [] },
     { name: 'Vacaciones', isSingle: false, departmentScope: [] },
     { name: 'Apoyo', isSingle: false, departmentScope: [] },
@@ -57,5 +57,14 @@ export function useRoles() {
     }
   }, []);
 
-  return { roles, saveRoles, isLoaded };
+  const clearAllRoles = useCallback(() => {
+    try {
+      localStorage.removeItem(ROLES_STORAGE_KEY);
+      setRoles(defaultRoles);
+    } catch (error) {
+      console.error('Failed to clear roles from localStorage', error);
+    }
+  }, []);
+
+  return { roles, saveRoles, isLoaded, clearAllRoles };
 }

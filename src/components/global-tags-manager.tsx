@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -9,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { PlusCircle, Trash2, GripVertical } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -27,6 +27,7 @@ import { useRoles } from '@/hooks/use-roles';
 import type { FieldConfig, FieldType } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useUnits } from '@/hooks/use-units';
 
 function SortableFieldItem({ fieldName, config, onUpdate, onRemove }: { fieldName: string; config: FieldConfig; onUpdate: (fieldName: string, newConfig: FieldConfig) => void; onRemove: () => void; }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: fieldName });
@@ -76,6 +77,7 @@ function SortableFieldItem({ fieldName, config, onUpdate, onRemove }: { fieldNam
 export function GlobalTagsManager() {
     const { definitions, saveDefinitions, removeDefinition, isLoaded: definitionsLoaded } = useFieldDefinitions();
     const { roles, isLoaded: rolesLoaded } = useRoles();
+    const { units, isLoaded: unitsLoaded } = useUnits();
     const [newDefinitionName, setNewDefinitionName] = useState('');
     const [definitionToRemove, setDefinitionToRemove] = useState<string | null>(null);
 
@@ -142,7 +144,7 @@ export function GlobalTagsManager() {
 
     const customFields = useMemo(() => orderedFields.filter(key => !defaultFieldKeys.includes(key) && definitions[key]?.type !== 'textarea' && !definitions[key]?.label.startsWith('Descripción') && !definitions[key]?.label.startsWith('Conclusión')), [orderedFields, defaultFieldKeys, definitions]);
 
-    if (!definitionsLoaded || !rolesLoaded) {
+    if (!definitionsLoaded || !rolesLoaded || !unitsLoaded) {
         return (
              <Card className="max-w-4xl mx-auto shadow-lg">
                 <CardHeader>
@@ -237,16 +239,17 @@ export function GlobalTagsManager() {
                     </div>
 
                     <Separator />
-                    
+
                     <div>
-                        <h3 className="text-lg font-semibold mb-2">Etiquetas de Cargos</h3>
-                         <p className="text-sm text-muted-foreground mb-4">
-                            Estas etiquetas se generan automáticamente a partir de los cargos que definas en Configuración. Úsalas en tus plantillas (ej. {`{Jefe de los Servicios}`}).
+                        <h3 className="text-lg font-semibold mb-2">Etiquetas de Cargos y Unidades</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                            Estas etiquetas se generan automáticamente a partir de los cargos y unidades definidos en <Link href="/settings" className="text-primary underline">Configuración</Link>. La etiqueta <code className="font-mono bg-muted px-1 py-0.5 rounded">{`{Unidad}`}</code> es especial: se convertirá automáticamente en un campo de selección para las unidades que hayas registrado.
                         </p>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                             {roles.map(role => (
                                 <Badge key={role.name} variant="secondary">{role.name}</Badge>
                             ))}
+                            <Badge variant="outline">Unidad</Badge>
                              {roles.length === 0 && <p className="text-sm text-muted-foreground">No hay cargos definidos.</p>}
                         </div>
                     </div>

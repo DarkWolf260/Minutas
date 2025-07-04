@@ -46,7 +46,7 @@ const getCursorPosition = (digitCount: number): number => {
 };
 
 
-export function TimeHlvInput({ value: propValue, onChange: onFormChange, disabled = false }: { value: string; onChange: (value: string) => void; disabled?: boolean }) {
+export function TimeHlvInput({ value: propValue, onChange: onFormChange, disabled = false, showHelperText = true }: { value: string; onChange: (value: string) => void; disabled?: boolean; showHelperText?: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Extract only digits from the prop value
@@ -123,9 +123,11 @@ export function TimeHlvInput({ value: propValue, onChange: onFormChange, disable
         className="font-mono"
         disabled={disabled}
       />
-      <p className="text-xs text-muted-foreground mt-1">
-        Este campo no solo es para la hora de inicio, sigue escribiendo
-      </p>
+      {showHelperText && (
+        <p className="text-xs text-muted-foreground mt-1">
+          Este campo no solo es para la hora de inicio, sigue escribiendo
+        </p>
+      )}
     </>
   );
 }

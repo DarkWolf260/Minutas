@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -78,5 +79,14 @@ export function useGuards() {
     }
   }, []);
 
-  return { guards, saveGuards, isLoaded };
+  const clearAllGuards = useCallback(() => {
+    try {
+      localStorage.removeItem(GUARDS_STORAGE_KEY);
+      setGuards(defaultGuards);
+    } catch (error) {
+      console.error('Failed to clear guards from localStorage', error);
+    }
+  }, []);
+
+  return { guards, saveGuards, isLoaded, clearAllGuards };
 }

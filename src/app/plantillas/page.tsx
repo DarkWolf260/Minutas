@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Upload, FileText, Trash2, HelpCircle, PlusCircle } from 'lucide-react';
+import { Upload, FileText, Trash2, HelpCircle, PlusCircle, AlertTriangle } from 'lucide-react';
 import { useTemplates } from '@/hooks/use-templates';
 import type { Template } from '@/types';
 import { TemplateEditor } from '@/components/template-editor';
@@ -35,6 +35,13 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GlobalTagsManager } from '@/components/global-tags-manager';
+import { parseTemplate } from '@/lib/template-parser';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export default function PlantillasPage() {
     const { templates, addTemplate, removeTemplate, updateTemplate, configs, updateTemplateConfig, toggleTemplateActive, clearAllTemplates } = useTemplates();
@@ -122,45 +129,66 @@ export default function PlantillasPage() {
                           />
                         </div>
                         <ScrollArea className="flex-1">
-                          <div className="space-y-1 p-4 pt-0">
-                            {templates.map((template, index) => (
-                              <div
-                                key={`${template.id}-${index}`}
-                                className={cn(
-                                  'group w-full flex items-center justify-between rounded-md p-3 text-left transition-colors hover:bg-muted',
-                                  selectedTemplateId === template.id && 'bg-muted'
-                                )}
-                              >
+                          <TooltipProvider>
+                            <div className="space-y-1 p-4 pt-0">
+                              {templates.map((template, index) => {
+                                const { layout, fieldNames } = parseTemplate(template.content);
+                                const isValid = layout.length > 0 || fieldNames.size > 0;
+
+                                return (
                                 <div
-                                  className="flex items-center gap-3 flex-grow cursor-pointer"
-                                  onClick={() => setSelectedTemplateId(template.id)}
+                                  key={`${template.id}-${index}`}
+                                  className={cn(
+                                    'group w-full flex items-center justify-between rounded-md p-3 text-left transition-colors hover:bg-muted',
+                                    selectedTemplateId === template.id && 'bg-muted'
+                                  )}
                                 >
-                                  <FileText className="h-4 w-4 text-primary" />
-                                  <span className="flex-1 font-medium">{template.name}</span>
-                                </div>
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  <Switch
-                                      checked={template.isActive}
-                                      onCheckedChange={() => toggleTemplateActive(template.id)}
-                                      aria-label={`Activar/Desactivar plantilla ${template.name}`}
-                                  />
-                                  <Button
+                                  <div
+                                    className="flex items-center gap-3 flex-grow cursor-pointer"
+                                    onClick={() => setSelectedTemplateId(template.id)}
+                                  >
+                                    <FileText className={cn("h-4 w-4 text-primary", !isValid && "text-destructive")} />
+                                    <span className="flex-1 font-medium">{template.name}</span>
+                                    {!isValid && <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />}
+                                  </div>
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        {/* Wrapper div for tooltip on disabled element */}
+                                        <div className="flex items-center">
+                                          <Switch
+                                            checked={template.isActive && isValid}
+                                            onCheckedChange={() => toggleTemplateActive(template.id)}
+                                            disabled={!isValid}
+                                            aria-label={`Activar/Desactivar plantilla ${template.name}`}
+                                          />
+                                        </div>
+                                      </TooltipTrigger>
+                                      {!isValid && (
+                                        <TooltipContent>
+                                          <p>Esta plantilla tiene errores o está vacía y no puede ser activada.</p>
+                                        </TooltipContent>
+                                      )}
+                                    </Tooltip>
+                                    <Button
                                       variant="ghost"
                                       size="icon"
                                       className="h-7 w-7 text-destructive"
                                       onClick={() => handleDeleteClick(template.id)}
-                                  >
+                                    >
                                       <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                    </Button>
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
-                            {templates.length === 0 && (
-                              <div className="p-4 text-center text-sm text-muted-foreground">
-                                No has subido ninguna plantilla.
-                              </div>
-                            )}
-                          </div>
+                                )
+                              })}
+                              {templates.length === 0 && (
+                                <div className="p-4 text-center text-sm text-muted-foreground">
+                                  No has subido ninguna plantilla.
+                                </div>
+                              )}
+                            </div>
+                          </TooltipProvider>
                         </ScrollArea>
                         {templates.length > 0 && (
                           <div className="border-t p-3">

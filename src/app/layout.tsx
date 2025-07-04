@@ -4,13 +4,13 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { SideNav } from '@/components/side-nav';
 import { ThemeProvider } from '@/components/theme-provider';
+import { WelcomeDialog } from '@/components/welcome-dialog';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
   title: 'Generador de Reportes',
   description: 'Un nuevo proyecto para generar reportes.',
-  manifest: '/manifest.json',
   themeColor: '#ffffff',
   viewport: 'width=device-width, initial-scale=1',
 };
@@ -35,6 +35,7 @@ export default function RootLayout({
               {children}
             </main>
           </div>
+          <WelcomeDialog />
         </ThemeProvider>
       </body>
     </html>

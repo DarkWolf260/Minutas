@@ -7,15 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import type { AppSettings, Guard, StaffRole, Department } from '@/types';
+import type { StaffRole, Department } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Trash2, GripVertical } from 'lucide-react';
-import { useGuards } from '@/hooks/use-guards';
+import { PlusCircle, Trash2, GripVertical, AlertTriangle } from 'lucide-react';
 import { useDepartments } from '@/hooks/use-departments';
 import { GuardStaffEditor } from '@/components/guard-staff-editor';
 import { useUnits } from '@/hooks/use-units';
 import { useRoles } from '@/hooks/use-roles';
-import { useSettings } from '@/hooks/use-settings';
 import { Switch } from '@/components/ui/switch';
 import {
     AlertDialog,
@@ -48,8 +46,11 @@ import {
     arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
+import { useReports } from '@/hooks/use-reports';
+import { useTemplates } from '@/hooks/use-templates';
+import { useGuards } from '@/hooks/use-guards';
+import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+import { useSettings } from '@/hooks/use-settings';
 
 function SortableRoleItem({ role, onRemove, onToggleSingle }: { role: StaffRole; onRemove: (role: StaffRole) => void; onToggleSingle: (name: string, checked: boolean) => void }) {
     const {
@@ -158,7 +159,7 @@ function RoleManager({
             const newRole: StaffRole = {
                 name: newRoleName.trim(),
                 isSingle: false,
-                departmentScope: []
+                departmentScope: ['OPERATIONS']
             };
             onRolesChange([...roles, newRole]);
             setNewRoleName('');
@@ -306,7 +307,7 @@ function RoleManager({
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <RoleColumn 
                         id="unassigned" 
-                        title="Cargos sin Asignar" 
+                        title="Cargos Globales" 
                         roles={roleBuckets.unassigned} 
                         onPrepareRemove={onPrepareRemoveRole} 
                         onToggleRoleSingle={handleToggleSingle}
@@ -355,370 +356,353 @@ function RoleManager({
 }
 
 export default function SettingsPage() {
-  const { guards, saveGuards, isLoaded: guardsLoaded } = useGuards();
-  const { units, saveUnits, isLoaded: unitsLoaded } = useUnits();
-  const { roles: initialRoles, saveRoles, isLoaded: rolesLoaded } = useRoles();
-  const { departments, addDepartment, removeDepartment, updateDepartment, isLoaded: deptsLoaded } = useDepartments();
-  const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
-  
-  const [newGuardName, setNewGuardName] = useState('');
-  const [guardFeedback, setGuardFeedback] = useState('');
-  
-  const [newUnit, setNewUnit] = useState('');
-  const [newDepartmentName, setNewDepartmentName] = useState('');
+    const { units, saveUnits, isLoaded: unitsLoaded, clearAllUnits } = useUnits();
+    const { roles: initialRoles, saveRoles, isLoaded: rolesLoaded, clearAllRoles } = useRoles();
+    const { departments, addDepartment, removeDepartment, updateDepartment, isLoaded: deptsLoaded, clearAllDepartments } = useDepartments();
+    const { clearAllReports } = useReports();
+    const { clearAllTemplates } = useTemplates();
+    const { clearAllGuards } = useGuards();
+    const { clearAllDefinitions } = useFieldDefinitions();
+    const { clearAllSettings } = useSettings();
+    
+    const [newUnit, setNewUnit] = useState('');
+    const [newDepartmentName, setNewDepartmentName] = useState('');
+    const [departmentStaffFeedback, setDepartmentStaffFeedback] = useState('');
 
-  const [editableRoles, setEditableRoles] = useState<StaffRole[]>([]);
-  
-  const [roleToDelete, setRoleToDelete] = useState<StaffRole | null>(null);
-  const [departmentIdToDelete, setDepartmentIdToDelete] = useState<string | null>(null);
+    const [editableRoles, setEditableRoles] = useState<StaffRole[]>([]);
+    
+    const [roleToDelete, setRoleToDelete] = useState<StaffRole | null>(null);
+    const [departmentIdToDelete, setDepartmentIdToDelete] = useState<string | null>(null);
 
-  const [currentSettings, setCurrentSettings] = useState(settings);
-  const [settingsFeedback, setSettingsFeedback] = useState('');
+    const [actionToConfirm, setActionToConfirm] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (settingsLoaded) {
-      setCurrentSettings(settings);
+
+    useEffect(() => {
+        if (rolesLoaded) {
+          setEditableRoles(initialRoles);
+        }
+    }, [initialRoles, rolesLoaded]);
+
+    const showDepartmentFeedback = (message: string) => {
+        setDepartmentStaffFeedback(message);
+        setTimeout(() => setDepartmentStaffFeedback(''), 3000);
+    };
+
+    const handleDepartmentStaffSave = useCallback((deptName: string) => {
+        showDepartmentFeedback(`Personal de "${deptName}" guardado.`);
+    }, []);
+
+    const handleAddUnit = () => {
+        if (newUnit && !units.includes(newUnit)) {
+          saveUnits([...units, newUnit].sort());
+          setNewUnit('');
+        }
+    };
+
+    const handleRemoveUnit = (unitToRemove: string) => {
+        saveUnits(units.filter((unit) => unit !== unitToRemove));
+    };
+
+    const handleAddDepartment = () => {
+        if (newDepartmentName.trim() && !departments.find(d => d.name.toLowerCase() === newDepartmentName.trim().toLowerCase())) {
+            addDepartment({
+                id: `dept_${Date.now()}`,
+                name: newDepartmentName.trim(),
+                staff: {}
+            });
+            setNewDepartmentName('');
+        }
+    };
+    
+    const handlePrepareRemoveRole = (role: StaffRole) => {
+        setRoleToDelete(role);
+    };
+
+    const handleConfirmRemoveRole = () => {
+        if (roleToDelete) {
+            const newRoles = editableRoles.filter(r => r.name !== roleToDelete.name);
+            setEditableRoles(newRoles);
+            saveRoles(newRoles);
+            setRoleToDelete(null);
+        }
+    };
+    
+    const handlePrepareRemoveDepartment = (deptId: string) => {
+        setDepartmentIdToDelete(deptId);
+    };
+
+    const handleConfirmRemoveDepartment = () => {
+        if (departmentIdToDelete) {
+            removeDepartment(departmentIdToDelete);
+            // Also update roles that were assigned to this department
+            const newRoles = editableRoles.map(r => ({
+                ...r,
+                departmentScope: r.departmentScope.filter(id => id !== departmentIdToDelete)
+            }));
+            setEditableRoles(newRoles);
+            saveRoles(newRoles);
+            setDepartmentIdToDelete(null);
+        }
+    };
+    
+    const departmentBeingDeleted = useMemo(() => {
+        if (!departmentIdToDelete) return null;
+        return departments.find(d => d.id === departmentIdToDelete) || null;
+    }, [departmentIdToDelete, departments]);
+
+
+    const isLoaded = unitsLoaded && rolesLoaded && deptsLoaded;
+    
+    const handleConfirmReset = () => {
+        if (!actionToConfirm) return;
+
+        switch (actionToConfirm) {
+            case 'reports':
+                clearAllReports();
+                break;
+            case 'templates':
+                clearAllTemplates();
+                break;
+            case 'staff':
+                clearAllRoles();
+                clearAllDepartments();
+                clearAllGuards();
+                clearAllUnits();
+                break;
+            case 'definitions':
+                clearAllDefinitions();
+                break;
+            case 'all':
+                clearAllReports();
+                clearAllTemplates();
+                clearAllRoles();
+                clearAllDepartments();
+                clearAllGuards();
+                clearAllUnits();
+                clearAllDefinitions();
+                clearAllSettings();
+                localStorage.removeItem('app-report-draft');
+                localStorage.removeItem('report-app-welcome-seen');
+                window.location.reload();
+                break;
+        }
+
+        setActionToConfirm(null);
+    };
+
+    const resetOptions: { [key: string]: { title: string; description: string; buttonLabel: string; } } = {
+        reports: {
+            title: '¿Limpiar todos los reportes?',
+            description: 'Esta acción es irreversible. Se eliminarán permanentemente todos los reportes de novedades que has guardado.',
+            buttonLabel: 'Limpiar Reportes'
+        },
+        templates: {
+            title: '¿Limpiar todas las plantillas?',
+            description: 'Esta acción es irreversible. Se eliminarán permanentemente todas las plantillas y sus configuraciones asociadas.',
+            buttonLabel: 'Limpiar Plantillas'
+        },
+        staff: {
+            title: '¿Restablecer personal, guardias y unidades?',
+            description: 'Se eliminarán todas las guardias, departamentos, cargos personalizados y unidades, volviendo a la configuración por defecto. El personal y las unidades asignadas se perderán.',
+            buttonLabel: 'Restablecer Personal y Unidades'
+        },
+        definitions: {
+            title: '¿Restablecer etiquetas globales?',
+            description: 'Se eliminarán todas las etiquetas globales personalizadas, volviendo a la configuración por defecto.',
+            buttonLabel: 'Restablecer Etiquetas'
+        },
+        all: {
+            title: '¿Restablecer toda la aplicación?',
+            description: '¡ADVERTENCIA! Esta acción es irreversible. Se eliminará TODA la información guardada (reportes, plantillas, configuraciones, personal) y se restaurará la aplicación a su estado inicial. Es como abrirla por primera vez.',
+            buttonLabel: 'Restablecer Toda la Aplicación'
+        }
+    };
+
+    if (!isLoaded) {
+        return (
+            <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+                <Skeleton className="h-48 w-full max-w-4xl mx-auto" />
+                <Skeleton className="h-48 w-full max-w-4xl mx-auto" />
+                <Skeleton className="h-48 w-full max-w-4xl mx-auto" />
+            </div>
+        );
     }
-  }, [settings, settingsLoaded]);
 
-  useEffect(() => {
-    if (rolesLoaded) {
-      setEditableRoles(initialRoles);
-    }
-  }, [initialRoles, rolesLoaded]);
-
-  const handleSettingChange = (key: keyof AppSettings, value: any) => {
-    setCurrentSettings(prev => ({...prev, [key]: value}));
-  };
-
-  const handleSaveRotationSettings = () => {
-    saveSettings(currentSettings);
-    setSettingsFeedback('¡Configuración de rotación guardada!');
-    setTimeout(() => setSettingsFeedback(''), 3000);
-  }
-  
-  const handleAddGuard = () => {
-    if (newGuardName && !guards.find(g => g.id === newGuardName.toUpperCase())) {
-      const newGuardObj: Guard = {
-        id: newGuardName.toUpperCase(),
-        staff: {},
-      };
-      const updatedGuards = [...guards, newGuardObj].sort((a, b) => a.id.localeCompare(b.id));
-      saveGuards(updatedGuards);
-      setNewGuardName('');
-    }
-  };
-
-  const handleRemoveGuard = (guardIdToRemove: string) => {
-    const updatedGuards = guards.filter((guard) => guard.id !== guardIdToRemove);
-    saveGuards(updatedGuards);
-  };
-  
-  const handleUpdateGuard = (updatedGuard: Guard) => {
-    const updatedGuards = guards.map(g => g.id === updatedGuard.id ? updatedGuard : g);
-    saveGuards(updatedGuards);
-  };
-  
-  const showGuardFeedback = (message: string) => {
-    setGuardFeedback(message);
-    setTimeout(() => setGuardFeedback(''), 3000);
-  }
-
-  const handleGuardStaffSave = useCallback((guardId: string) => {
-    showGuardFeedback(`Personal de la Guardia "${guardId}" guardado.`);
-  }, []);
-
-  const handleDepartmentStaffSave = useCallback((deptName: string) => {
-      showGuardFeedback(`Personal de "${deptName}" guardado.`);
-  }, []);
-
-  const handleAddUnit = () => {
-    if (newUnit && !units.includes(newUnit)) {
-      saveUnits([...units, newUnit].sort());
-      setNewUnit('');
-    }
-  };
-
-  const handleRemoveUnit = (unitToRemove: string) => {
-    saveUnits(units.filter((unit) => unit !== unitToRemove));
-  };
-
-  const handleAddDepartment = () => {
-    if (newDepartmentName.trim() && !departments.find(d => d.name.toLowerCase() === newDepartmentName.trim().toLowerCase())) {
-        addDepartment({
-            id: `dept_${Date.now()}`,
-            name: newDepartmentName.trim(),
-            staff: {}
-        });
-        setNewDepartmentName('');
-    }
-  };
-  
-  const handlePrepareRemoveRole = (role: StaffRole) => {
-    setRoleToDelete(role);
-  };
-
-  const handleConfirmRemoveRole = () => {
-    if (roleToDelete) {
-        const newRoles = editableRoles.filter(r => r.name !== roleToDelete.name);
-        setEditableRoles(newRoles);
-        saveRoles(newRoles);
-        setRoleToDelete(null);
-    }
-  };
-  
-  const handlePrepareRemoveDepartment = (deptId: string) => {
-    setDepartmentIdToDelete(deptId);
-  };
-
-  const handleConfirmRemoveDepartment = () => {
-    if (departmentIdToDelete) {
-        removeDepartment(departmentIdToDelete);
-        // Also update roles that were assigned to this department
-        const newRoles = editableRoles.map(r => ({
-            ...r,
-            departmentScope: r.departmentScope.filter(id => id !== departmentIdToDelete)
-        }));
-        setEditableRoles(newRoles);
-        saveRoles(newRoles);
-        setDepartmentIdToDelete(null);
-    }
-  };
-  
-  const departmentBeingDeleted = useMemo(() => {
-    if (!departmentIdToDelete) return null;
-    return departments.find(d => d.id === departmentIdToDelete) || null;
-  }, [departmentIdToDelete, departments]);
-
-
-  const isLoaded = guardsLoaded && unitsLoaded && rolesLoaded && deptsLoaded && settingsLoaded;
-
-  if (!isLoaded) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-        <Skeleton className="h-48 w-full max-w-4xl mx-auto" />
-        <Skeleton className="h-48 w-full max-w-4xl mx-auto" />
-        <Skeleton className="h-48 w-full max-w-4xl mx-auto" />
-      </div>
-    );
-  }
-
-  return (
-    <>
-        <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-            <Card className="max-w-4xl mx-auto shadow-lg">
-                <CardHeader>
-                    <CardTitle>Rotación de Guardia</CardTitle>
-                    <CardDescription>
-                        Define qué guardia está activa actualmente y la duración de su turno en horas.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4 pt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="active-guard">Guardia Activa</Label>
-                            <Select
-                                value={currentSettings.activeGuardId || ''}
-                                onValueChange={(value) => handleSettingChange('activeGuardId', value)}
-                            >
-                                <SelectTrigger id="active-guard">
-                                    <SelectValue placeholder="Seleccionar guardia..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {guards.map((guard) => (
-                                        <SelectItem key={guard.id} value={guard.id}>
-                                            Guardia "{guard.id}"
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="shift-duration">Duración del Turno (horas)</Label>
-                            <Input
-                                id="shift-duration"
-                                type="number"
-                                value={currentSettings.guardShiftDuration || 24}
-                                onChange={(e) => handleSettingChange('guardShiftDuration', parseInt(e.target.value, 10) || 0)}
-                                min="1"
+        <>
+            <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+                <Card className="max-w-4xl mx-auto shadow-lg">
+                    <CardHeader>
+                        <CardTitle>Gestión de Cargos y Departamentos</CardTitle>
+                        <CardDescription>Define la estructura de personal de la organización. Arrastra los cargos para asignarlos a un departamento, luego asigna el personal a cada rol.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6 pt-6">
+                        <div>
+                            <h3 className="text-lg font-semibold mb-4">Cargos y Departamentos</h3>
+                            <RoleManager 
+                                roles={editableRoles} 
+                                onRolesChange={setEditableRoles} 
+                                onSave={() => saveRoles(editableRoles)}
+                                departments={departments}
+                                handleAddDepartment={handleAddDepartment}
+                                newDepartmentName={newDepartmentName}
+                                setNewDepartmentName={setNewDepartmentName}
+                                onPrepareRemoveRole={handlePrepareRemoveRole}
+                                onPrepareRemoveDepartment={handlePrepareRemoveDepartment}
                             />
                         </div>
-                    </div>
-                    <div className="flex justify-end items-center gap-4">
-                        {settingsFeedback && <p className="text-sm text-green-600">{settingsFeedback}</p>}
-                        <Button onClick={handleSaveRotationSettings}>Guardar Configuración de Rotación</Button>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card className="max-w-4xl mx-auto shadow-lg">
-            <CardHeader>
-                <CardTitle>Gestión de Personal y Departamentos</CardTitle>
-                <CardDescription>Arrastra los cargos para asignarlos a un departamento. Luego asigna el personal a cada rol.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6 pt-6">
-                <div>
-                    <h3 className="text-lg font-semibold mb-4">Cargos</h3>
-                    <RoleManager 
-                        roles={editableRoles} 
-                        onRolesChange={setEditableRoles} 
-                        onSave={() => saveRoles(editableRoles)}
-                        departments={departments}
-                        handleAddDepartment={handleAddDepartment}
-                        newDepartmentName={newDepartmentName}
-                        setNewDepartmentName={setNewDepartmentName}
-                        onPrepareRemoveRole={handlePrepareRemoveRole}
-                        onPrepareRemoveDepartment={handlePrepareRemoveDepartment}
-                    />
-                </div>
-                <Separator />
-                <div>
-                    <h3 className="text-lg font-semibold mb-4">Asignación de Personal</h3>
-                    
-                    <div className="space-y-6">
-                        <div className="space-y-4 rounded-lg border p-4">
-                            <h4 className="font-semibold text-lg">Personal de Operaciones (Guardias)</h4>
-                            <div className="space-y-2">
-                                <Label>Añadir Nueva Guardia</Label>
-                                <div className="flex gap-2 max-w-sm">
-                                    <Input value={newGuardName} onChange={(e) => setNewGuardName(e.target.value)} placeholder="Ej: E" />
-                                    <Button onClick={handleAddGuard}><PlusCircle className="mr-2 h-4 w-4" />Añadir</Button>
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Guardias Existentes</Label>
-                                {guardFeedback && <p className="text-sm text-green-600">{guardFeedback}</p>}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {guards.map((guard) => (
-                                        <Card key={guard.id}>
-                                            <CardHeader className="flex flex-row items-center justify-between p-3 border-b">
-                                                <CardTitle className="text-base">Guardia "{guard.id}"</CardTitle>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/10 text-destructive"
-                                                    onClick={() => handleRemoveGuard(guard.id)}
-                                                    aria-label={`Eliminar Guardia ${guard.id}`}
-                                                ><Trash2 className="h-4 w-4" /></Button>
-                                            </CardHeader>
-                                            <CardContent className="p-4">
-                                                <GuardStaffEditor
-                                                    scopeId="OPERATIONS"
-                                                    guard={guard}
-                                                    roles={editableRoles}
-                                                    onUpdate={handleUpdateGuard}
-                                                    onSave={() => handleGuardStaffSave(guard.id)}
-                                                />
-                                            </CardContent>
-                                        </Card>
-                                    ))}
-                                    {guards.length === 0 && <p className="text-sm text-muted-foreground p-4 text-center border rounded-md col-span-full">No hay guardias definidas.</p>}
-                                </div>
-                            </div>
-                        </div>
-
-                        {departments.length > 0 && (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {departments.map((dept) => (
-                                    <div key={dept.id} className="space-y-4 rounded-lg border p-4">
-                                        <div className="flex justify-between items-center">
-                                            <h4 className="font-semibold text-lg">Personal de {dept.name}</h4>
+                        <Separator />
+                        <div>
+                            <h3 className="text-lg font-semibold mb-4">Asignación de Personal (Departamentos)</h3>
+                             {departmentStaffFeedback && <p className="text-sm text-green-600 mb-4">{departmentStaffFeedback}</p>}
+                            {departments.length > 0 ? (
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    {departments.map((dept) => (
+                                        <div key={dept.id} className="space-y-4 rounded-lg border p-4">
+                                            <div className="flex justify-between items-center">
+                                                <h4 className="font-semibold text-lg">Personal de {dept.name}</h4>
+                                            </div>
+                                            <GuardStaffEditor
+                                                scopeId={dept.id}
+                                                guard={dept}
+                                                roles={editableRoles}
+                                                onUpdate={(updated) => updateDepartment(updated as Department)}
+                                                onSave={() => handleDepartmentStaffSave(dept.name)}
+                                            />
                                         </div>
-                                        <GuardStaffEditor
-                                            scopeId={dept.id}
-                                            guard={dept}
-                                            roles={editableRoles}
-                                            onUpdate={(updated) => updateDepartment(updated as Department)}
-                                            onSave={() => handleDepartmentStaffSave(dept.name)}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </CardContent>
-            </Card>
-            
-            <Card className="max-w-4xl mx-auto shadow-lg">
-                <CardHeader>
-                    <CardTitle>Gestión de Unidades</CardTitle>
-                    <CardDescription>Añade o elimina unidades de la lista de vehículos operativos.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6 pt-6">
-                    <div className="space-y-2">
-                        <Label>Añadir Nueva Unidad</Label>
-                        <div className="flex gap-2 max-w-sm">
-                            <Input
-                                value={newUnit}
-                                onChange={(e) => setNewUnit(e.target.value)}
-                                placeholder="Ej: Alpha 3"
-                            />
-                            <Button onClick={handleAddUnit}>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Añadir
-                            </Button>
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Unidades Existentes</Label>
-                        <div className="space-y-2 max-h-60 overflow-y-auto rounded-md border p-2">
-                            {units.length > 0 ? (
-                                units.map((unit) => (
-                                    <div key={unit} className="flex items-center justify-between rounded-md p-2 hover:bg-muted/50">
-                                        <span>{unit}</span>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                                            onClick={() => handleRemoveUnit(unit)}
-                                            aria-label={`Eliminar Unidad ${unit}`}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="p-4 text-center text-sm text-muted-foreground">
-                                    No hay unidades.
-                                </p>
+                                    ))}
+                                </div>
+                            ): (
+                                 <p className="text-sm text-muted-foreground p-4 text-center border rounded-md col-span-full">No hay departamentos definidos.</p>
                             )}
                         </div>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
+                    </CardContent>
+                </Card>
+                
+                <Card className="max-w-4xl mx-auto shadow-lg">
+                    <CardHeader>
+                        <CardTitle>Gestión de Unidades</CardTitle>
+                        <CardDescription>Añade o elimina unidades de la lista de vehículos operativos.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6 pt-6">
+                        <div className="space-y-2">
+                            <Label>Añadir Nueva Unidad</Label>
+                            <div className="flex gap-2 max-w-sm">
+                                <Input
+                                    value={newUnit}
+                                    onChange={(e) => setNewUnit(e.target.value)}
+                                    placeholder="Ej: Alpha 3"
+                                />
+                                <Button onClick={handleAddUnit}>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Añadir
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Unidades Existentes</Label>
+                            <div className="space-y-2 max-h-60 overflow-y-auto rounded-md border p-2">
+                                {units.length > 0 ? (
+                                    units.map((unit) => (
+                                        <div key={unit} className="flex items-center justify-between rounded-md p-2 hover:bg-muted/50">
+                                            <span>{unit}</span>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                                onClick={() => handleRemoveUnit(unit)}
+                                                aria-label={`Eliminar Unidad ${unit}`}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="p-4 text-center text-sm text-muted-foreground">
+                                        No hay unidades.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
 
-        <AlertDialog open={!!roleToDelete} onOpenChange={(open) => !open && setRoleToDelete(null)}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Esta acción no se puede deshacer. El cargo "{roleToDelete?.name}" será eliminado permanentemente de la lista de cargos.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setRoleToDelete(null)}>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleConfirmRemoveRole}>
-                        Sí, eliminar
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-        
-        <AlertDialog open={!!departmentIdToDelete} onOpenChange={(open) => !open && setDepartmentIdToDelete(null)}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Esta acción no se puede deshacer. El departamento "{departmentBeingDeleted?.name}" será eliminado. Todos los cargos asignados a él pasarán a la columna "Cargos sin Asignar".
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setDepartmentIdToDelete(null)}>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleConfirmRemoveDepartment}>
-                        Sí, eliminar
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-    </>
-  );
+                 <Card className="max-w-4xl mx-auto shadow-lg border-destructive">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-destructive">
+                            <AlertTriangle />
+                            Zona de Peligro
+                        </CardTitle>
+                        <CardDescription>
+                            Las siguientes acciones son destructivas y no se pueden deshacer. Úsalas con precaución.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {Object.keys(resetOptions).map(key => (
+                            <div key={key} className="flex items-center justify-between p-3 rounded-md border border-dashed border-destructive/50">
+                                <div>
+                                    <h4 className="font-semibold">{resetOptions[key].buttonLabel}</h4>
+                                    <p className="text-sm text-muted-foreground">{resetOptions[key].description.split('.')[0]}.</p>
+                                </div>
+                                <Button variant="destructive" onClick={() => setActionToConfirm(key)}>
+                                    {resetOptions[key].buttonLabel}
+                                </Button>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            </div>
+
+            <AlertDialog open={!!roleToDelete} onOpenChange={(open) => !open && setRoleToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Esta acción no se puede deshacer. El cargo "{roleToDelete?.name}" será eliminado permanentemente de la lista de cargos.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setRoleToDelete(null)}>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmRemoveRole}>
+                            Sí, eliminar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            
+            <AlertDialog open={!!departmentIdToDelete} onOpenChange={(open) => !open && setDepartmentIdToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Esta acción no se puede deshacer. El departamento "{departmentBeingDeleted?.name}" será eliminado. Todos los cargos asignados a él pasarán a la columna "Cargos Globales".
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setDepartmentIdToDelete(null)}>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmRemoveDepartment}>
+                            Sí, eliminar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+             <AlertDialog open={!!actionToConfirm} onOpenChange={(open) => !open && setActionToConfirm(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{actionToConfirm ? resetOptions[actionToConfirm].title : ''}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {actionToConfirm ? resetOptions[actionToConfirm].description : ''}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setActionToConfirm(null)}>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmReset}>
+                            Sí, continuar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
+    );
 }

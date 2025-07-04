@@ -1,13 +1,14 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 
 const UNITS_STORAGE_KEY = 'app-units';
 
-const initialUnits: string[] = ['Alpha 1', 'Unidad 2'];
+const initialUnits: string[] = [];
 
 export function useUnits() {
-  const [units, setUnits] = useState<string[]>(initialUnits);
+  const [units, setUnits] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -15,12 +16,17 @@ export function useUnits() {
       const storedUnits = localStorage.getItem(UNITS_STORAGE_KEY);
       if (storedUnits) {
         const parsedUnits = JSON.parse(storedUnits);
-        if (Array.isArray(parsedUnits) && parsedUnits.length > 0) {
+        if (Array.isArray(parsedUnits)) {
             setUnits(parsedUnits);
+        } else {
+            setUnits(initialUnits);
         }
+      } else {
+          setUnits(initialUnits);
       }
     } catch (error) {
       console.error('Failed to load units from localStorage', error);
+      setUnits(initialUnits);
     } finally {
         setIsLoaded(true);
     }
@@ -35,5 +41,14 @@ export function useUnits() {
     }
   }, []);
 
-  return { units, saveUnits, isLoaded };
+  const clearAllUnits = useCallback(() => {
+    try {
+      localStorage.removeItem(UNITS_STORAGE_KEY);
+      setUnits(initialUnits);
+    } catch (error) {
+      console.error('Failed to clear units from localStorage', error);
+    }
+  }, []);
+
+  return { units, saveUnits, isLoaded, clearAllUnits };
 }
