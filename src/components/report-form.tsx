@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
@@ -85,7 +84,7 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
                                  )}
                             </div>
                             <div className="p-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 3xl:grid-cols-3 gap-x-4 gap-y-6">
                                     {visibleFields.map(fieldId => {
                                         const fieldConfig = (config.fields || {})[fieldId];
                                         if (!fieldConfig) return null;
@@ -95,7 +94,7 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
                                         const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, staffOptions);
 
                                         return (
-                                            <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2")}>
+                                            <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2 3xl:col-span-3")}>
                                                 <Label htmlFor={path}>{fieldConfig?.label || fieldId}</Label>
                                                 <Controller
                                                     name={path}
@@ -135,7 +134,7 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
     return (
         <div className="space-y-4 border-t pt-6">
              {section.label && <h3 className="text-lg font-semibold">{section.label}</h3>}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 3xl:grid-cols-3 gap-x-4 gap-y-6">
                  {visibleFields.map(fieldId => {
                     const fieldConfig = (config.fields || {})[fieldId];
                     if (!fieldConfig) return null;
@@ -145,7 +144,7 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
                     const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, staffOptions);
 
                     return (
-                        <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2")}>
+                        <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2 3xl:col-span-3")}>
                             <Label htmlFor={path}>{fieldConfig?.label || fieldId}</Label>
                             <Controller
                                 name={path}
@@ -267,16 +266,12 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
 
     const getInitialValues = useCallback((data?: Record<string, any>) => {
         const initialFormValues = data ? JSON.parse(JSON.stringify(data)) : {};
-        const isNewReport = !data;
 
         const applyDefaults = (target: Record<string, any>, fieldIds: string[]) => {
             fieldIds.forEach(fieldId => {
                 if (target[fieldId] === undefined || target[fieldId] === null) {
                     if (predefinedValues.hasOwnProperty(fieldId)) {
                         target[fieldId] = predefinedValues[fieldId];
-                    }
-                    else if (isNewReport && fieldId === 'Fecha') {
-                        target[fieldId] = new Date().toISOString().split('T')[0];
                     }
                     else {
                         const fieldConfig = finalConfig.fields[fieldId];
@@ -299,7 +294,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
                 const defaultItem = {};
                 applyDefaults(defaultItem, section.fieldIds);
 
-                if (isNewReport && (!Array.isArray(sectionData) || sectionData.length === 0)) {
+                if (!data && (!Array.isArray(sectionData) || sectionData.length === 0)) {
                     initialFormValues[section.id] = [defaultItem];
                 } else if (Array.isArray(sectionData)) {
                     sectionData.forEach((item: Record<string, any>) => {
@@ -349,7 +344,15 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
 
 
     useEffect(() => {
-        reset(getInitialValues(initialData));
+        const formValues = getInitialValues(initialData);
+        const isNewReport = !initialData;
+
+        // If it's a new report, we now set the 'Fecha' field on the client side to avoid hydration errors.
+        if (isNewReport && finalConfig.fields['Fecha'] && !formValues['Fecha']) {
+            formValues['Fecha'] = new Date().toISOString().split('T')[0];
+        }
+        
+        reset(formValues);
     }, [initialData, finalConfig, getInitialValues, reset]);
 
     const handleFormSubmit = (data: Record<string, any>) => {
@@ -431,7 +434,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
                     );
                 } else {
                     return (
-                        <div key={`chunk-${index}`} className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
+                        <div key={`chunk-${index}`} className="grid grid-cols-1 sm:grid-cols-2 3xl:grid-cols-3 gap-x-4 gap-y-6">
                             {chunk.map(fieldId => {
                                 const fieldConfig = finalConfig.fields[fieldId];
                                 if (!fieldConfig) return null;
@@ -440,7 +443,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
                                 const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, staffOptions);
 
                                 return (
-                                    <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2")}>
+                                    <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2 3xl:col-span-3")}>
                                         <Label htmlFor={fieldId}>{fieldConfig.label || fieldId}</Label>
                                         <Controller
                                             name={fieldId}

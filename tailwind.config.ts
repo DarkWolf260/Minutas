@@ -1,4 +1,3 @@
-
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -9,6 +8,9 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        '3xl': '1600px',
+      },
       fontFamily: {
         sans: ['var(--font-sans)', 'sans-serif'],
       },

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Suspense, useState, useMemo, useEffect, useRef } from 'react';
@@ -40,6 +39,7 @@ function NovedadesPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  const [isMounted, setIsMounted] = useState(false);
   const preSelectedId = searchParams.get('selected');
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,6 +63,11 @@ function NovedadesPageContent() {
   }, [sortedReports, searchQuery]);
 
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
     // This effect handles draft restoration and default report selection.
     
     // 1. Handle draft restoration first.
@@ -98,6 +103,7 @@ function NovedadesPageContent() {
       setSelectedReportId(null);
     }
   }, [
+    isMounted,
     preSelectedId, 
     reports, 
     filteredReports, 
@@ -232,6 +238,7 @@ function NovedadesPageContent() {
         <main className="flex-1">
             {creatingReport ? (
                  <ReportGenerator
+                    key={creatingReport.id}
                     template={creatingReport}
                     config={configs[creatingReport.id] || {}}
                     initialData={initialDraftData}

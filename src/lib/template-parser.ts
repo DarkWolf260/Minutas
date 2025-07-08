@@ -16,6 +16,7 @@ export function parseTemplate(templateContent: string): { sections: SectionConfi
         const layout: string[] = [];
         const fieldNames = new Set<string>();
         const sectionMap: Map<string, string> = new Map();
+        const addedTopLevelFields = new Set<string>();
         
         let sectionIndex = 0;
         let contentWithPlaceholders = '';
@@ -73,7 +74,7 @@ export function parseTemplate(templateContent: string): { sections: SectionConfi
 
                 const isNewRepeatableSyntax = !!(pluralMatch || singularMatch || subMatch);
 
-                const sectionFieldIds: string[] = [];
+                const sectionFieldIdsSet = new Set<string>();
                 const fieldRegex = /\{([^}]+)\}/g;
                 let fieldMatch;
                 const fieldsContent = sectionContent
@@ -83,9 +84,10 @@ export function parseTemplate(templateContent: string): { sections: SectionConfi
                     
                 while ((fieldMatch = fieldRegex.exec(fieldsContent)) !== null) {
                     const fieldName = fieldMatch[1].trim();
-                    sectionFieldIds.push(fieldName);
+                    sectionFieldIdsSet.add(fieldName);
                     fieldNames.add(fieldName);
                 }
+                const sectionFieldIds = Array.from(sectionFieldIdsSet);
 
                 if (isNewRepeatableSyntax) {
                     const label = singularMatch?.[1] || pluralMatch?.[1] || subMatch?.[1] || `Sección ${sections.length + 1}`;
@@ -127,7 +129,10 @@ export function parseTemplate(templateContent: string): { sections: SectionConfi
             } else {
                 const fieldName = block.slice(1, -1).trim();
                 fieldNames.add(fieldName);
-                layout.push(fieldName);
+                if (!addedTopLevelFields.has(fieldName)) {
+                    layout.push(fieldName);
+                    addedTopLevelFields.add(fieldName);
+                }
             }
         }
         
