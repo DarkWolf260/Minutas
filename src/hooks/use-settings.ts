@@ -19,13 +19,15 @@ export function useSettings() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
+    // This effect now runs only on the client, after the initial render.
+    // This prevents hydration mismatches.
     try {
       const storedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
       const initial = storedSettings ? JSON.parse(storedSettings) : {};
       setSettings({ ...defaultSettings, ...initial });
     } catch (error) {
       console.error('Failed to load settings from localStorage', error);
-      setSettings(defaultSettings);
+      // setSettings is already at default, so no need to set it again.
     } finally {
         setIsLoaded(true);
     }

@@ -51,6 +51,7 @@ import { useTemplates } from '@/hooks/use-templates';
 import { useGuards } from '@/hooks/use-guards';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useSettings } from '@/hooks/use-settings';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 function SortableRoleItem({ role, onRemove, onToggleSingle }: { role: StaffRole; onRemove: (role: StaffRole) => void; onToggleSingle: (name: string, checked: boolean) => void }) {
     const {
@@ -359,11 +360,11 @@ export default function SettingsPage() {
     const { units, saveUnits, isLoaded: unitsLoaded, clearAllUnits } = useUnits();
     const { roles: initialRoles, saveRoles, isLoaded: rolesLoaded, clearAllRoles } = useRoles();
     const { departments, addDepartment, removeDepartment, updateDepartment, isLoaded: deptsLoaded, clearAllDepartments } = useDepartments();
+    const { settings, saveSettings, isLoaded: settingsLoaded, clearAllSettings } = useSettings();
     const { clearAllReports } = useReports();
     const { clearAllTemplates } = useTemplates();
     const { clearAllGuards } = useGuards();
     const { clearAllDefinitions } = useFieldDefinitions();
-    const { clearAllSettings } = useSettings();
     
     const [newUnit, setNewUnit] = useState('');
     const [newDepartmentName, setNewDepartmentName] = useState('');
@@ -400,7 +401,7 @@ export default function SettingsPage() {
     };
 
     const handleRemoveUnit = (unitToRemove: string) => {
-        saveUnits(units.filter((unit) => unit !== unitToRemove));
+        saveUnits(units.filter(u => u !== unitToRemove));
     };
 
     const handleAddDepartment = () => {
@@ -451,7 +452,7 @@ export default function SettingsPage() {
     }, [departmentIdToDelete, departments]);
 
 
-    const isLoaded = unitsLoaded && rolesLoaded && deptsLoaded;
+    const isLoaded = unitsLoaded && rolesLoaded && deptsLoaded && settingsLoaded;
     
     const handleConfirmReset = () => {
         if (!actionToConfirm) return;
@@ -488,6 +489,10 @@ export default function SettingsPage() {
         }
 
         setActionToConfirm(null);
+    };
+    
+    const handleReportTagRoleChange = (value: string) => {
+        saveSettings({ ...settings, reportaRoleId: value, analistaRoleId: value });
     };
 
     const resetOptions: { [key: string]: { title: string; description: string; buttonLabel: string; } } = {
@@ -531,6 +536,33 @@ export default function SettingsPage() {
     return (
         <>
             <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+                 <Card className="max-w-4xl mx-auto shadow-lg">
+                    <CardHeader>
+                        <CardTitle>Configuración de Etiquetas de Reporte</CardTitle>
+                        <CardDescription>
+                            Selecciona el cargo que se usará para rellenar las etiquetas dinámicas en los reportes.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4 pt-6">
+                        <div className="space-y-2 max-w-sm">
+                            <Label>Cargo para etiquetas Reporta y Analista</Label>
+                            <Select 
+                                value={settings.reportaRoleId} 
+                                onValueChange={handleReportTagRoleChange}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecciona un cargo..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {initialRoles.map(role => (
+                                        <SelectItem key={role.name} value={role.name}>{role.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 <Card className="max-w-4xl mx-auto shadow-lg">
                     <CardHeader>
                         <CardTitle>Gestión de Cargos y Departamentos</CardTitle>

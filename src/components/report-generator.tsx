@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
-import type { Template, TemplateConfig, Report, ReportDraft } from '@/types';
+import type { Template, TemplateConfig, Report, ReportDraft, StaffMember } from '@/types';
 import { ReportForm, type ReportFormRef } from './report-form';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
@@ -19,7 +20,9 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useDrafts } from '@/hooks/use-drafts';
 import { debounce } from '@/lib/utils';
-
+import { useSettings } from '@/hooks/use-settings';
+import { useGuards } from '@/hooks/use-guards';
+import { parseTemplate } from '@/lib/template-parser';
 
 interface ReportGeneratorProps {
     template: Template, 
@@ -35,7 +38,63 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [previewContent, setPreviewContent] = useState('');
     const [copyButtonText, setCopyButtonText] = useState('Copiar');
+    const { settings } = useSettings();
+    const { guards } = useGuards();
     
+    const finalInitialData = useMemo(() => {
+        const newInitialData = initialData ? JSON.parse(JSON.stringify(initialData)) : {};
+
+        const { sections, fieldNames: allTemplateFields } = parseTemplate(template.content);
+        
+        const activeGuard = guards.find(g => g.id === settings.activeGuardId);
+        if (!activeGuard) {
+            return newInitialData;
+        }
+
+        const jefeDeServiciosKey = Object.keys(activeGuard.staff || {}).find(k => k.toLowerCase() === 'jefe de los servicios');
+        
+        const dataToInject: Record<string, any> = {};
+
+        if (jefeDeServiciosKey) {
+            const jefeStaff = activeGuard.staff[jefeDeServiciosKey] || [];
+            if(jefeStaff.length > 0) {
+                 dataToInject['Jefe de los Servicios'] = jefeStaff.map(member => member.name);
+            }
+        }
+        
+        // Explicitly add Guardia ID to be injected
+        dataToInject['Guardia'] = activeGuard.id;
+
+        allTemplateFields.forEach(templateFieldKey => {
+            const lowerTemplateFieldKey = templateFieldKey.toLowerCase();
+            const canonicalKey = Object.keys(dataToInject).find(k => k.toLowerCase() === lowerTemplateFieldKey);
+            
+            if (canonicalKey) {
+                const valueToInject = dataToInject[canonicalKey];
+                if (valueToInject === undefined) return;
+
+                const parentSection = sections.find(s => s.fieldIds.some(sf => sf.toLowerCase() === lowerTemplateFieldKey));
+                
+                if (parentSection) {
+                    if (!parentSection.isRepeatable) {
+                        if (!newInitialData[parentSection.id]) {
+                            newInitialData[parentSection.id] = {};
+                        }
+                        if (newInitialData[parentSection.id][templateFieldKey] === undefined) {
+                            newInitialData[parentSection.id][templateFieldKey] = valueToInject;
+                        }
+                    }
+                } else {
+                    if (newInitialData[templateFieldKey] === undefined) {
+                        newInitialData[templateFieldKey] = valueToInject;
+                    }
+                }
+            }
+        });
+
+        return newInitialData;
+    }, [template.content, initialData, settings.activeGuardId, guards]);
+
     const saveDraftLogicRef = useRef<((formData: Record<string, any>) => void) | null>(null);
     
     useEffect(() => {
@@ -138,7 +197,7 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
                                     ref={formRef}
                                     template={template}
                                     config={config}
-                                    initialData={initialData}
+                                    initialData={finalInitialData}
                                     onSubmit={handleCreateReport}
                                     onDataChange={handleDataChange}
                                 />
@@ -149,21 +208,21 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
             </div>
             
             <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-                <DialogContent className="sm:max-w-3xl">
+                <DialogContent className="max-h-[90vh] max-w-[90vw] sm:max-w-3xl flex flex-col">
                     <DialogHeader>
                         <DialogTitle>Vista Previa del Reporte</DialogTitle>
                         <DialogDescription>
                             Revisa el reporte generado. Puedes copiar el texto para usarlo donde necesites.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
+                    <div className="flex-1 overflow-y-auto -mx-6 px-6">
                         <Textarea
                             readOnly
                             value={previewContent}
-                            className="h-[60vh] bg-muted/50 font-mono text-sm whitespace-pre-wrap"
+                            className="w-full h-full min-h-[50vh] bg-muted/50 font-mono text-sm whitespace-pre-wrap"
                         />
                     </div>
-                    <DialogFooter>
+                    <DialogFooter className="mt-auto pt-4">
                         <Button type="button" onClick={handleCopyToClipboard}>
                             {copyButtonText === 'Copiar' ? <Copy className="mr-2 h-4 w-4" /> : <CheckIcon className="mr-2 h-4 w-4" />}
                             {copyButtonText}

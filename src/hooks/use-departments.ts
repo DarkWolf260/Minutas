@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Department } from '@/types';
+import type { Department, Staff } from '@/types';
 
 const DEPARTMENTS_STORAGE_KEY = 'app-departments';
 
@@ -21,7 +21,28 @@ export function useDepartments() {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-            setDepartments(parsed);
+            const migratedDepartments = parsed.map((dept: any) => {
+                const newStaff: Staff = {};
+                if (!dept.staff) return { ...dept, staff: newStaff };
+
+                // Check if migration from string[] to StaffMember[] is needed
+                for (const roleName in dept.staff) {
+                    const staffList = dept.staff[roleName];
+                    if (Array.isArray(staffList) && staffList.length > 0 && typeof staffList[0] === 'string') {
+                        // This is the old format (string[])
+                        newStaff[roleName] = staffList.map((name: string) => ({
+                            id: `staff_${Date.now()}_${Math.random()}`,
+                            name: name,
+                            cedula: undefined
+                        }));
+                    } else {
+                        // Already in new format (StaffMember[]) or empty
+                        newStaff[roleName] = staffList;
+                    }
+                }
+                return { ...dept, staff: newStaff };
+            });
+            setDepartments(migratedDepartments);
         } else {
             setDepartments(defaultDepartments);
         }

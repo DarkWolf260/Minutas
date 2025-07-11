@@ -28,13 +28,23 @@ export function useRoles() {
       const storedRoles = localStorage.getItem(ROLES_STORAGE_KEY);
       if (storedRoles) {
         const parsed = JSON.parse(storedRoles);
-        // Migration for old roles without departmentScope
+        // Migration for old roles without departmentScope and ensuring all fields exist
         const migrated = parsed.map((role: any) => ({
-            ...role,
+            name: role.name,
             isSingle: role.isSingle ?? false,
-            departmentScope: role.departmentScope ?? [], // If undefined, make it global (available everywhere)
+            departmentScope: role.departmentScope ?? (defaultRoles.find(dr => dr.name === role.name)?.departmentScope || []), 
         }));
-        setRoles(migrated);
+        
+        // Add any default roles that might be missing from storage
+        const allRoles = [...migrated];
+        const migratedRoleNames = new Set(migrated.map((r: StaffRole) => r.name));
+        defaultRoles.forEach(defaultRole => {
+            if (!migratedRoleNames.has(defaultRole.name)) {
+                allRoles.push(defaultRole);
+            }
+        });
+
+        setRoles(allRoles);
       } else {
         setRoles(defaultRoles);
       }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Suspense, useState, useMemo, useEffect, useRef } from 'react';
@@ -31,6 +32,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { sortReports } from '@/lib/report-sorter';
+import { findValueInFormData } from '@/lib/report-sorter';
 
 function NovedadesPageContent() {
   const { reports, addReport, updateReport, removeReport, clearAllReports } = useReports();
@@ -178,46 +180,49 @@ function NovedadesPageContent() {
           </div>
           <ScrollArea className="flex-1">
             <div className="space-y-1 p-3 pt-0">
-              {filteredReports.map((report) => (
-                <button
-                  key={report.id}
-                  onClick={() => {
-                    setSelectedReportId(report.id);
-                    setCreatingReport(null);
-                  }}
-                  className={cn(
-                    'w-full rounded-md p-3 text-left transition-colors hover:bg-muted/50',
-                    selectedReportId === report.id && !creatingReport && 'bg-muted'
-                  )}
-                >
-                  <div className="flex w-full items-start gap-3">
-                    {report.isRelevant ? (
-                      <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-destructive" />
-                    ) : (
-                      <FileText className="mt-1 h-4 w-4 shrink-0 text-primary" />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium">{report.title}</p>
-                       <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                        {report.status && (
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className={cn(
-                                'h-2 w-2 rounded-full',
-                                report.status === 'Finalizado' ? 'bg-green-500' : 'bg-orange-500'
-                              )}
-                            />
-                            <span>{report.status}</span>
-                          </div>
+              {filteredReports.map((report) => {
+                const horaValue = findValueInFormData(report.formData, 'Hora');
+                return (
+                    <button
+                        key={report.id}
+                        onClick={() => {
+                            setSelectedReportId(report.id);
+                            setCreatingReport(null);
+                        }}
+                        className={cn(
+                            'w-full rounded-md p-3 text-left transition-colors hover:bg-muted/50',
+                            selectedReportId === report.id && !creatingReport && 'bg-muted'
                         )}
-                        {report.formData?.['Hora'] && (
-                          <span className="truncate">{String(report.formData['Hora'])}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              ))}
+                    >
+                        <div className="flex w-full items-start gap-3">
+                            {report.isRelevant ? (
+                            <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-destructive" />
+                            ) : (
+                            <FileText className="mt-1 h-4 w-4 shrink-0 text-primary" />
+                            )}
+                            <div className="min-w-0 flex-1">
+                            <p className="font-medium">{report.title}</p>
+                            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                                {report.status && (
+                                <div className="flex items-center gap-1.5">
+                                    <span
+                                    className={cn(
+                                        'h-2 w-2 rounded-full',
+                                        report.status === 'Finalizado' ? 'bg-green-500' : 'bg-orange-500'
+                                    )}
+                                    />
+                                    <span>{report.status}</span>
+                                </div>
+                                )}
+                                {horaValue && (
+                                <span className="truncate">{String(horaValue)}</span>
+                                )}
+                            </div>
+                            </div>
+                        </div>
+                    </button>
+                );
+              })}
               {filteredReports.length === 0 && (
                 <div className="p-4 text-center text-sm text-muted-foreground">
                     No se encontraron reportes.

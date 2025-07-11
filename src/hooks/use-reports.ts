@@ -23,7 +23,7 @@ export function useReports() {
     }
   }, []);
 
-  const getLatestReports = (): Report[] => {
+  const getLatestReports = useCallback((): Report[] => {
     try {
         const storedReports = localStorage.getItem(REPORTS_STORAGE_KEY);
         return storedReports ? JSON.parse(storedReports) : [];
@@ -31,7 +31,7 @@ export function useReports() {
         console.error('Failed to read reports from localStorage', error);
         return [];
     }
-  };
+  }, []);
 
   const addReport = useCallback((newReport: Report) => {
     const currentReports = getLatestReports();
@@ -42,7 +42,7 @@ export function useReports() {
     } catch (error) {
         console.error('Failed to save reports to localStorage', error);
     }
-  }, []);
+  }, [getLatestReports]);
 
   const updateReport = useCallback((updatedReport: Report) => {
     const currentReports = getLatestReports();
@@ -53,7 +53,7 @@ export function useReports() {
     } catch (error) {
         console.error('Failed to save reports to localStorage', error);
     }
-  }, []);
+  }, [getLatestReports]);
 
   const removeReport = useCallback((reportId: string) => {
     const currentReports = getLatestReports();
@@ -64,7 +64,7 @@ export function useReports() {
     } catch (error) {
         console.error('Failed to save reports to localStorage', error);
     }
-  }, []);
+  }, [getLatestReports]);
 
   const clearAllReports = useCallback(() => {
     try {
@@ -75,5 +75,5 @@ export function useReports() {
     }
   }, []);
 
-  return { reports, addReport, updateReport, removeReport, clearAllReports, isLoaded };
+  return { reports, addReport, updateReport, removeReport, clearAllReports, isLoaded, getLatestReports };
 }

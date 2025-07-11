@@ -151,20 +151,24 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     
     if (!template) {
         return (
-            <div className="flex h-full flex-col items-center justify-center bg-card p-6 text-center">
-                <FileText className="h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-semibold text-destructive">Error en la Plantilla</h3>
-                <p className="text-muted-foreground">
-                  La plantilla de este reporte tiene un error o no se encuentra. No se puede editar, pero puedes ver su contenido original o eliminarlo.
-                </p>
-                <div className="mt-4 w-full max-w-2xl text-left">
-                    <Label>Contenido del Reporte Original</Label>
-                    <Textarea readOnly value={report.content} className="mt-2 h-64 font-mono text-sm" />
-                </div>
-                <Button variant="destructive" className="mt-6" onClick={() => onDelete(report.id)}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Eliminar Reporte
-                </Button>
+            <div className="flex h-full flex-col">
+                <ScrollArea className="flex-1 p-6">
+                    <div className="flex flex-col items-center justify-center bg-card text-center">
+                        <FileText className="h-12 w-12 text-muted-foreground" />
+                        <h3 className="mt-4 text-lg font-semibold text-destructive">Error en la Plantilla</h3>
+                        <p className="text-muted-foreground">
+                          La plantilla de este reporte tiene un error o no se encuentra. No se puede editar, pero puedes ver su contenido original o eliminarlo.
+                        </p>
+                        <div className="mt-4 w-full max-w-2xl text-left">
+                            <Label>Contenido del Reporte Original</Label>
+                            <Textarea readOnly value={report.content} className="mt-2 font-mono text-sm flex-1 min-h-0" autoSize />
+                        </div>
+                        <Button variant="destructive" className="mt-6" onClick={() => onDelete(report.id)}>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar Reporte
+                        </Button>
+                    </div>
+                </ScrollArea>
             </div>
         );
     }
@@ -222,21 +226,21 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
             </div>
 
             <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-                <DialogContent className="sm:max-w-3xl">
+                <DialogContent className="max-h-[90vh] max-w-[90vw] sm:max-w-3xl flex flex-col">
                     <DialogHeader>
                         <DialogTitle>Vista Previa del Reporte</DialogTitle>
                         <DialogDescription>
                             Revisa el reporte generado. Puedes copiar el texto para usarlo donde necesites.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
+                    <div className="flex-1 overflow-y-auto -mx-6 px-6">
                         <Textarea
                             readOnly
                             value={previewContent}
-                            className="h-[60vh] bg-muted/50 font-mono text-sm whitespace-pre-wrap"
+                            className="w-full h-full min-h-[50vh] bg-muted/50 font-mono text-sm whitespace-pre-wrap"
                         />
                     </div>
-                    <DialogFooter>
+                    <DialogFooter className="mt-auto pt-4">
                         <Button type="button" onClick={handleCopyToClipboard}>
                             {copyButtonText === 'Copiar' ? <Copy className="mr-2 h-4 w-4" /> : <CheckIcon className="mr-2 h-4 w-4" />}
                             {copyButtonText}

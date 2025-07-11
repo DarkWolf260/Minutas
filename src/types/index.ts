@@ -1,4 +1,12 @@
 
+'use client';
+
+export interface StaffMember {
+  id: string;
+  name: string;
+  cedula?: string;
+}
+
 export interface StaffRole {
   name: string;
   isSingle: boolean; // True for roles that can only have one person
@@ -7,7 +15,7 @@ export interface StaffRole {
 
 // Staff is a record mapping a role name to a list of personnel for that role.
 export interface Staff {
-  [roleName: string]: string[];
+  [roleName: string]: StaffMember[];
 }
 
 export interface Guard {
@@ -22,6 +30,8 @@ export interface AppSettings {
   finalReportStaffSnapshot?: Staff;
   finalReportStartDate?: string;
   finalReportEndDate?: string;
+  reportaRoleId?: string;
+  analistaRoleId?: string;
 }
 
 export interface Report {
@@ -35,7 +45,13 @@ export interface Report {
   formData?: Record<string, any>;
 }
 
-export type FieldType = 'text' | 'textarea' | 'date' | 'predefined' | 'time-hlv' | 'multi-text';
+export type FieldType = 'text' | 'textarea' | 'date' | 'predefined' | 'time-hlv' | 'multi-text' | 'dropdown';
+
+export interface SnippetOption {
+    id: string;
+    label: string;
+    value: string;
+}
 
 export interface FieldConfig {
     type: FieldType;
@@ -43,6 +59,8 @@ export interface FieldConfig {
     required?: boolean;
     value?: string;
     sectionId?: string;
+    targetField?: string;
+    snippetOptions?: SnippetOption[];
 }
 
 export interface SectionConfig {
@@ -50,9 +68,15 @@ export interface SectionConfig {
     label: string;
     isRepeatable: boolean;
     fieldIds: string[];
+    layout?: string[]; // Order of fields and section IDs within this section
     repeatableItemLabel?: string; // This is the `sub` value
     pluralTitle?: string;
     singularTitle?: string;
+    condition?: {
+        fieldId: string;
+        value: string;
+    };
+    originalContent?: string; // Used for re-parsing conditional blocks
 }
 
 export interface TemplateConfig {
@@ -78,6 +102,20 @@ export interface Department {
   id: string;
   name: string;
   staff: Staff;
+}
+
+export interface Address {
+  id: string;
+  name: string;
+  street?: string;
+  houseNumber?: string;
+  municipality: string;
+  parish: string;
+  sector?: string;
+  peaceQuadrant: string;
+  latitude?: string;
+  longitude?: string;
+  details?: string;
 }
 
 export interface DefinitionSection {

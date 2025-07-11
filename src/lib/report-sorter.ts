@@ -1,6 +1,43 @@
 
 import type { Report } from '@/types';
 
+
+/**
+ * Finds a value in the report's formData, checking both top-level and nested section data.
+ * The search is case-insensitive.
+ * @param formData The report's formData object.
+ * @param keyToFind The key to search for (e.g., "Hora").
+ * @returns The found value, or null if not present.
+ */
+export const findValueInFormData = (formData: Record<string, any> | undefined, keyToFind: string): any | null => {
+    if (!formData) return null;
+    
+    const lowerKeyToFind = keyToFind.toLowerCase();
+
+    // Check top-level fields first
+    for (const key in formData) {
+        if (key.toLowerCase() === lowerKeyToFind) {
+            return formData[key];
+        }
+    }
+
+    // Check nested section objects. A section object's keys are the section IDs.
+    for (const key in formData) {
+        const value = formData[key];
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            // Now check the fields within that section object
+            for (const nestedKey in value) {
+                if (nestedKey.toLowerCase() === lowerKeyToFind) {
+                    return value[nestedKey];
+                }
+            }
+        }
+    }
+
+    return null;
+};
+
+
 /**
  * Extracts the time from a report's 'Hora' field in formData.
  * The time is returned as total minutes from midnight (0 to 1439).
@@ -8,7 +45,8 @@ import type { Report } from '@/types';
  * @returns Total minutes from midnight, or null if not found/invalid.
  */
 const getReportTimeInMinutes = (report: Report): number | null => {
-    const horaString = report.formData?.['Hora'];
+    const horaString = findValueInFormData(report.formData, 'Hora');
+
     if (typeof horaString !== 'string') {
         return null;
     }

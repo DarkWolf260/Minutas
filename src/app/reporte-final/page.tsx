@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useReports } from '@/hooks/use-reports';
 import { Skeleton } from '@/components/ui/skeleton';
-import { sortReports } from '@/lib/report-sorter';
+import { sortReports, findValueInFormData } from '@/lib/report-sorter';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useGuards } from '@/hooks/use-guards';
@@ -19,7 +19,7 @@ import { useRoles } from '@/hooks/use-roles';
 import { useTemplates } from '@/hooks/use-templates';
 import { renderFinalReport } from '@/lib/template-parser';
 import { format } from 'date-fns';
-import type { Report } from '@/types';
+import type { Report, StaffMember } from '@/types';
 import { DatePicker } from '@/components/date-picker';
 import { TimeHlvInput } from '@/components/time-hlv-input';
 import { PlusCircle, Trash2 } from 'lucide-react';
@@ -32,8 +32,13 @@ interface ManualNovedad {
   text: string;
 }
 
+const formatStaffMemberForReport = (member: StaffMember): string => {
+    // Only show name for report generation
+    return member.name;
+};
+
 export default function ReporteFinalPage() {
-    const { reports, isLoaded: reportsLoaded } = useReports();
+    const { reports, isLoaded: reportsLoaded, getLatestReports } = useReports();
     const { definitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
     const { guards, isLoaded: guardsLoaded } = useGuards();
     const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
@@ -139,8 +144,9 @@ export default function ReporteFinalPage() {
 
     const getSortDate = (novedad: Report | ManualNovedad): Date | null => {
         if ('templateId' in novedad) { // It's a Report
-            const fechaStr = novedad.formData?.['Fecha']; // "YYYY-MM-DD"
-            const horaStr = novedad.formData?.['Hora']; // "HH:mm HLV"
+            const fechaStr = findValueInFormData(novedad.formData, 'Fecha') as string | undefined;
+            const horaStr = findValueInFormData(novedad.formData, 'Hora') as string | undefined;
+
             if (!fechaStr || !horaStr) return null;
 
             const timeMatch = horaStr.match(/(\d{2}):(\d{2})/);
@@ -149,6 +155,9 @@ export default function ReporteFinalPage() {
             const [hours, minutes] = timeMatch.slice(1).map(Number);
             if (isNaN(hours) || isNaN(minutes)) return null;
             
+            // The date string from the form is 'YYYY-MM-DD'.
+            // new Date('YYYY-MM-DD') parses it as UTC midnight.
+            // By adding 'T00:00:00', we treat it as local time to avoid timezone shifts.
             const sortDate = new Date(`${fechaStr}T00:00:00`);
             if (isNaN(sortDate.getTime())) return null;
 
@@ -181,12 +190,31 @@ export default function ReporteFinalPage() {
         });
     }, [manualNovedades]);
 
+    const finishedReports = useMemo(() => {
+        const latestReports = getLatestReports();
+        return latestReports.filter(report => report.status === 'Finalizado');
+    }, [reports, getLatestReports]);
+
     const handleGenerateReport = () => {
-        if (reports.length === 0 && !statisticsText.trim() && manualNovedades.length === 0) {
-            setGeneratedReport('No hay novedades ni estadísticas para reportar.');
+        const finalReportsToInclude = finishedReports;
+
+        if (finalReportsToInclude.length === 0 && !statisticsText.trim() && manualNovedades.length === 0) {
+            setGeneratedReport('No hay novedades finalizadas ni estadísticas para reportar.');
             setIsResultDialogOpen(true);
             return;
         }
+
+        // Helper to find a key case-insensitively
+        const findInsensitive = (obj: Record<string, string>, key: string): string => {
+            if (!obj) return '';
+            const keyLower = key.toLowerCase();
+            const foundKey = Object.keys(obj).find(k => k.toLowerCase() === keyLower);
+            return foundKey ? obj[foundKey] : '';
+        };
+
+        const director = findInsensitive(globalSettings, 'Director');
+        const jefeDeOperaciones = findInsensitive(globalSettings, 'Jefe de Operaciones');
+        const municipio = findInsensitive(globalSettings, 'Municipio');
 
         const dateRangeString = (() => {
             const hasCustomDates = settings.finalReportStartDate && settings.finalReportEndDate;
@@ -205,13 +233,13 @@ export default function ReporteFinalPage() {
         })();
         
         const headerParts = [
-            `*INSTITUTO AUTÓNOMO DE PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO ${(globalSettings['Municipio'] || '').toUpperCase()}*`,
+            `*INSTITUTO AUTÓNOMO DE PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO ${(municipio || '').toUpperCase()}*`,
             ``,
             `*DIRECTOR-PRESIDENTE*`,
-            (globalSettings['Director'] || '').toUpperCase(),
+            director,
             ``,
             `*JEFE DE OPERACIONES*`,
-            (globalSettings['Jefe de Operaciones'] || '').toUpperCase(),
+            jefeDeOperaciones,
             ``,
             `*REPORTE DE NOVEDADES ${dateRangeString}*`,
             ``
@@ -224,15 +252,16 @@ export default function ReporteFinalPage() {
         if (activeGuard && staffForReport) {
              headerParts.push(`- *EQUIPO DE GUARDIA:* GRUPO “${activeGuard.id}”`);
              roles.forEach(role => {
-                 const staffList = staffForReport[role.name];
-                 if (staffList && staffList.length > 0 && staffList.some(s => s.trim() !== '')) {
-                     headerParts.push(`- *${role.name.toUpperCase()}:* ${staffList.join(' / ')}`);
+                 const staffKey = Object.keys(staffForReport).find(k => k.toLowerCase() === role.name.toLowerCase());
+                 const staffList = staffKey ? staffForReport[staffKey as keyof typeof staffForReport] : undefined;
+                 if (staffList && staffList.length > 0 && staffList.some(s => s.name.trim() !== '')) {
+                     headerParts.push(`- *${role.name.toUpperCase()}:* ${staffList.map(formatStaffMemberForReport).join(' / ')}`);
                  }
              });
         }
         
         const allNovedades = [
-          ...sortedReports.map(report => ({ type: 'report', data: report, sortDate: getSortDate(report) })),
+          ...finalReportsToInclude.map(report => ({ type: 'report', data: report, sortDate: getSortDate(report) })),
           ...manualNovedades.map(novedad => ({ type: 'manual', data: novedad, sortDate: getSortDate(novedad) }))
         ];
 
@@ -241,29 +270,43 @@ export default function ReporteFinalPage() {
           .sort((a, b) => a.sortDate!.getTime() - b.sortDate!.getTime());
 
         const reportContent = sortedAllNovedades
-            .map((item, index) => {
+            .map((item) => {
                 if (item.type === 'report') {
                     const report = item.data as Report;
-                    
-                    const title = `*NOVEDAD #${index + 1}: ${(report.title || 'Novedad sin título').toUpperCase()}*`;
+                    const sortDate = getSortDate(report);
+                    if (!sortDate) return null;
 
+                    const formattedDate = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(sortDate);
+                    const horaStr = findValueInFormData(report.formData, 'Hora') as string | undefined;
+                    const timestampText = `${formattedDate} ${horaStr || ''}`.trim();
+                    
                     const template = templates.find(t => t.id === report.templateId);
                     const config = configs[report.templateId];
                     const formData = report.formData || {};
-
-                    if (!template || !config) {
-                        return `${title}\n\n[No se pudo generar el resumen para este reporte. Plantilla no encontrada.]`;
+                    
+                    const dynamicPredefinedValues = {...globalSettings};
+                    if(activeGuard) {
+                        dynamicPredefinedValues['Guardia'] = activeGuard.id;
                     }
 
-                    const summaryContent = renderFinalReport(template.content, formData, config, globalSettings, true);
+                    let contentText = '';
+                    if (template && config) {
+                        contentText = renderFinalReport(template.content, formData, config, {}, true, dynamicPredefinedValues);
+                    }
                     
-                    return `${title}\n\n${summaryContent}`;
-                } else {
+                    const titleText = ` - *${timestampText}* - *${report.title}*`;
+                    return contentText ? `${titleText}\n\n${contentText}` : titleText;
+
+                } else { // Manual Novedad
                     const novedad = item.data as ManualNovedad;
                     const formattedDate = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(novedad.date);
-                    return `- *${formattedDate} ${novedad.time}* - *${novedad.text}*`;
+                    const timestampText = `${formattedDate} ${novedad.time}`;
+                    const contentText = novedad.text;
+                    return ` - *${timestampText}* - *${contentText}*`;
                 }
+
             })
+            .filter(Boolean)
             .join('\n\n');
 
         const finalReportParts = [
@@ -290,7 +333,7 @@ export default function ReporteFinalPage() {
         
         finalReportParts.push(
             ``,
-            `*PROTECCIÓN CIVIL ${(globalSettings['Municipio'] || '').toUpperCase()}*`
+            `*PROTECCIÓN CIVIL ${(municipio || '').toUpperCase()}*`
         );
         
         const finalReportText = finalReportParts.join('\n').trim();
@@ -360,16 +403,21 @@ export default function ReporteFinalPage() {
                                     />
                                 </div>
                                 <div>
-                                    <h4 className="font-semibold mb-2">Novedades Registradas ({sortedReports.length})</h4>
+                                    <h4 className="font-semibold mb-2">Novedades Registradas ({finishedReports.length} de {getLatestReports().length} finalizadas)</h4>
                                     <ScrollArea className="h-48 rounded-md border p-4 bg-muted/50">
-                                        {sortedReports.length > 0 ? (
+                                        {reports.length > 0 ? (
                                             <ul className="space-y-2">
-                                                {sortedReports.map(report => (
+                                                {sortReports(reports).map(report => (
                                                     <li key={report.id} className="text-sm">
                                                         - {report.title}
-                                                        {report.formData?.['Hora'] && (
+                                                        {report.status === 'Finalizado' ? (
+                                                            <span className="ml-2 text-xs text-green-600 font-semibold">(Finalizado)</span>
+                                                        ) : (
+                                                            <span className="ml-2 text-xs text-amber-600">(En proceso)</span>
+                                                        )}
+                                                        {findValueInFormData(report.formData, 'Hora') && (
                                                             <span className="ml-2 text-xs text-muted-foreground">
-                                                                ({String(report.formData['Hora'])})
+                                                                ({String(findValueInFormData(report.formData, 'Hora'))})
                                                             </span>
                                                         )}
                                                     </li>
@@ -426,7 +474,7 @@ export default function ReporteFinalPage() {
                                 </div>
 
                                 <div className="flex justify-end">
-                                    <Button onClick={handleGenerateReport} disabled={reports.length === 0 && !statisticsText.trim() && manualNovedades.length === 0}>Generar Reporte de Cierre</Button>
+                                    <Button onClick={handleGenerateReport} disabled={finishedReports.length === 0 && !statisticsText.trim() && manualNovedades.length === 0}>Generar Reporte de Cierre</Button>
                                 </div>
                             </div>
                         )}
@@ -435,21 +483,21 @@ export default function ReporteFinalPage() {
             </div>
 
             <Dialog open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
-                <DialogContent className="sm:max-w-2xl">
+                <DialogContent className="max-h-[90vh] max-w-[90vw] sm:max-w-2xl flex flex-col">
                     <DialogHeader>
                         <DialogTitle>Reporte de Cierre de Guardia Generado</DialogTitle>
                         <DialogDescription>
                             Puedes copiar el texto generado.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
+                    <div className="flex-1 overflow-y-auto -mx-6 px-6">
                         <Textarea
                             readOnly
                             value={generatedReport}
-                            className="h-80 text-sm whitespace-pre-wrap font-mono"
+                            className="w-full h-full min-h-[50vh] text-sm whitespace-pre-wrap font-mono"
                         />
                     </div>
-                    <DialogFooter>
+                    <DialogFooter className="mt-auto pt-4">
                         <Button type="button" onClick={handleCopyToClipboard}>
                             {copyButtonText}
                         </Button>

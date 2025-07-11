@@ -1,0 +1,33 @@
+["DATOS GENERALES"*PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO {Municipio}, ESTADO {Estado}*
+
+*DIRECTOR*
+{Director}
+
+*JEFE DE OPERACIONES*
+{Jefe de Operaciones}
+
+*JEFE DE LOS SERVICIOS*
+{Jefe de los Servicios}
+
+- *EQUIPO DE GUARDIA:* "{Guardia}"
+- *FECHA:* {Fecha}
+- *HORA:* {Hora}]
+<<- *UBICACIÓN:* {Ubicación:textarea}>>
+
+- *TIPO DE NOVEDAD:* Atención pre-hospitalaria (en sala de radio)
+
+<<- *DESCRIPCIÓN DE LA NOVEDAD:* Se apersona a la institución el ciudadano {Nombre y apellido} {Cédula}, solicitando cuantificación de presión arterial para su persona ya que refiere {Motivo:dropdown(Regulares condiciones=encontrarse en regulares condiciones de salud.|Control médico=control médico.)}
+
+["DATOS DEL PACIENTE"- *DATOS DEL PACIENTE:*
+- *NOMBRE Y APELLIDO:* {Nombre y apellido}
+- *CÉDULA:* {Cédula}
+- *EDAD:* {Edad}
+- *DIAGNÓSTICO:* {Diagnóstico}
+- *DIRECCIÓN:* {Dirección}]
+
+- *PERSONAL QUE REALIZA LA ATENCIÓN:*
+- *TÉCNICO:* {Técnico}>>
+
+- *REPORTA:* Analista de CEMUPRAD {Reporta:textarea}
+
+*SOLO QUEREMOS SALVAR VIDAS* 🚑

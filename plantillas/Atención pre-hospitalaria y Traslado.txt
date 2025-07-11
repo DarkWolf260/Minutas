@@ -1,0 +1,41 @@
+["DATOS GENERALES"*PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO {Municipio}, ESTADO {Estado}*
+
+*DIRECTOR*
+{Director}
+
+*JEFE DE OPERACIONES*
+{Jefe de Operaciones}
+
+*JEFE DE LOS SERVICIOS*
+{Jefe de los Servicios} 
+
+- *EQUIPO DE GUARDIA:* "{Guardia}"
+- *FECHA:* {Fecha}
+- *HORA:* {Hora}]
+<<["DATOS GEOGRAFICOS"
+- *UBICACION:* {Ubicación:textarea}
+- *DESTINO:* {Destino:textarea}]>>
+
+- *TIPO DE NOVEDAD:* Atención pre-hospitalaria y traslado
+
+<<["DESCRIPCIÓN"- *DESCRIPCIÓN DE LA NOVEDAD:* {Descripción de la novedad:dropdown(Llamada télefonica=Se recibe llamada télefonica por parte del|Llamada vía radio=Se recibe llamada vía radio por parte del|Se apersona=Se apersona)} {Solicitante}, solicitando atención y traslado para {Paciente:dropdown(Familiar=familiar|Ciudadano=ciudadano)} quien {Motivo:dropdown(Regular condición=se encuentra en regulares condicones de salud|Estudios médicos=requiere realizarse estudios médicos|Alta médica=fue dado de alta y requiere trasladarse a su residencia)}]
+
+["DATOS DEL PACIENTE"- *DATOS DEL PACIENTE:*
+- *NOMBRE Y APELLIDO:* {Nombre y apellido}
+- *CÉDULA:* {Cédula}
+- *EDAD:* {Edad}
+- *DIAGNÓSTICO:* {Diagnóstico} 
+- *DIRECCIÓN:* {Dirección}
+- *ACOMPAÑANTE:* {Acompañante}]
+
+["CONCLUSIÓN"- *CONCLUSIÓN DE LA NOVEDAD:* Al llegar al sitio el personal procedió a realizar, evaluación y traslado del paciente con destino {Lugar a donde se moviliza:dropdown(Centro asistencial=al centro asistencial mencionado.|Residencia=a su residencia, donde fue dejado bajo el cuidado de sus familiares.)}]
+
+["DATOS OPERACIONALES"- *DATOS OPERACIONALES:*
+- *UNIDAD:* {UNIDAD}
+- *TECNICO:* {Técnico}
+- *AUXILIAR:* {Auxiliar} 
+- *CONDUCTOR:* {Conductor}]>>
+
+- *REPORTA:* Analista de CEMUPRAD {Reporta:textarea}
+
+*SOLO QUEREMOS SALVAR VIDAS* 🚑

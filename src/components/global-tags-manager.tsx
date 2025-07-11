@@ -24,10 +24,11 @@ import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrate
 import { CSS } from '@dnd-kit/utilities';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useRoles } from '@/hooks/use-roles';
-import type { FieldConfig, FieldType } from '@/types';
+import type { FieldConfig, FieldType, SnippetOption } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUnits } from '@/hooks/use-units';
+import { SnippetOptionEditor } from './snippet-option-editor';
 
 function SortableFieldItem({ fieldName, config, onUpdate, onRemove }: { fieldName: string; config: FieldConfig; onUpdate: (fieldName: string, newConfig: FieldConfig) => void; onRemove: () => void; }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: fieldName });
@@ -48,8 +49,8 @@ function SortableFieldItem({ fieldName, config, onUpdate, onRemove }: { fieldNam
     };
     
     return (
-        <Card ref={setNodeRef} style={style} className="p-3 bg-muted/50 touch-none">
-            <div className="flex items-center gap-4">
+        <Card ref={setNodeRef} style={style} className="bg-card p-0 touch-none">
+            <div className="flex items-center gap-4 p-3">
                 <span {...attributes} {...listeners} className="cursor-grab p-1 text-muted-foreground hover:text-foreground">
                     <GripVertical className="h-5 w-5" />
                 </span>
@@ -58,18 +59,27 @@ function SortableFieldItem({ fieldName, config, onUpdate, onRemove }: { fieldNam
                     value={config.type || 'text'}
                     onValueChange={handleTypeChange}
                 >
-                    <SelectTrigger className="w-[140px] bg-background h-9">
+                    <SelectTrigger className="w-[150px] bg-background h-9">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="text">Texto</SelectItem>
                         <SelectItem value="textarea">Área de Texto</SelectItem>
+                        <SelectItem value="dropdown">Dropdown</SelectItem>
                     </SelectContent>
                 </Select>
                 <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={onRemove}>
                     <Trash2 className="h-4 w-4" />
                 </Button>
             </div>
+            {config.type === 'dropdown' && (
+                <div className="pb-3 pr-3">
+                    <SnippetOptionEditor 
+                        config={config}
+                        onUpdate={(newConfig) => onUpdate(fieldName, newConfig)}
+                    />
+                </div>
+            )}
         </Card>
     );
 }
@@ -80,8 +90,8 @@ export function GlobalTagsManager() {
     const { units, isLoaded: unitsLoaded } = useUnits();
     const [newDefinitionName, setNewDefinitionName] = useState('');
     const [definitionToRemove, setDefinitionToRemove] = useState<string | null>(null);
+    const [feedbackMessage, setFeedbackMessage] = useState('');
 
-    // Derive orderedFields directly from definitions to prevent stale state issues.
     const orderedFields = useMemo(() => Object.keys(definitions), [definitions]);
 
     const handleUpdateDefinition = (fieldName: string, newConfig: FieldConfig) => {
@@ -90,15 +100,26 @@ export function GlobalTagsManager() {
     };
 
     const handleAddDefinition = () => {
-        if (newDefinitionName.trim() && !definitions[newDefinitionName.trim()]) {
-            const newName = newDefinitionName.trim();
-            const newDefinitions = {
-                ...definitions,
-                [newName]: { label: newName, type: 'text', value: '', sectionId: 'custom' },
-            };
-            saveDefinitions(newDefinitions);
-            setNewDefinitionName('');
+        const newName = newDefinitionName.trim();
+        if (!newName) return;
+
+        const definitionExists = Object.keys(definitions).some(
+            key => key.toLowerCase() === newName.toLowerCase()
+        );
+
+        if (definitionExists) {
+            setFeedbackMessage(`La etiqueta "${newName}" ya existe o es una etiqueta general.`);
+            setTimeout(() => setFeedbackMessage(''), 3000);
+            return;
         }
+        
+        const newDefinitions = {
+            ...definitions,
+            [newName]: { label: newName, type: 'text', value: '', sectionId: 'custom' },
+        };
+        saveDefinitions(newDefinitions);
+        setNewDefinitionName('');
+        setFeedbackMessage('');
     };
     
     const handleConfirmRemove = () => {
@@ -110,7 +131,6 @@ export function GlobalTagsManager() {
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
-        // Ensure `over` is not null and we are not dropping on the same item
         if (over && active.id !== over.id) {
             const oldIndex = orderedFields.indexOf(active.id as string);
             const newIndex = orderedFields.indexOf(over.id as string);
@@ -136,13 +156,19 @@ export function GlobalTagsManager() {
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
-    const defaultFieldKeys = useMemo(() => ['Municipio', 'Estado', 'Director', 'Jefe de Operaciones', 'REDAN', 'ZOEDAN', 'Fecha', 'Hora'], []);
+    const allDefaultFieldKeys = useMemo(() => [
+        'Municipio', 'Estado', 'Director', 'Jefe de Operaciones', 'REDAN', 'ZOEDAN', 'Fecha', 'Hora'
+    ], []);
 
     const generalFields = useMemo(() => {
-        return defaultFieldKeys.filter(key => definitions[key]);
-    }, [definitions, defaultFieldKeys]);
+         return orderedFields.filter(key => definitions[key] && allDefaultFieldKeys.includes(key));
+    }, [orderedFields, definitions, allDefaultFieldKeys]);
 
-    const customFields = useMemo(() => orderedFields.filter(key => !defaultFieldKeys.includes(key) && definitions[key]?.type !== 'textarea' && !definitions[key]?.label.startsWith('Descripción') && !definitions[key]?.label.startsWith('Conclusión')), [orderedFields, defaultFieldKeys, definitions]);
+
+    const customFields = useMemo(() => {
+        return orderedFields.filter(key => definitions[key] && !allDefaultFieldKeys.includes(key));
+    }, [orderedFields, definitions, allDefaultFieldKeys]);
+
 
     if (!definitionsLoaded || !rolesLoaded || !unitsLoaded) {
         return (
@@ -178,7 +204,7 @@ export function GlobalTagsManager() {
                         <div className="space-y-2">
                              {generalFields.map(key => {
                                 const config = definitions[key];
-                                if (!config) return null; // Defensive check
+                                if (!config) return null;
                                 return (
                                 <div key={key} className="flex items-center gap-4 rounded-md border p-3 bg-card">
                                     <Label htmlFor={key} className="w-48 font-semibold shrink-0">{config.label}</Label>
@@ -199,7 +225,7 @@ export function GlobalTagsManager() {
                     <div>
                          <h3 className="text-lg font-semibold mb-2">Etiquetas Personalizadas</h3>
                          <p className="text-sm text-muted-foreground mb-4">
-                            Añade tus propias etiquetas globales y define su tipo de campo por defecto (ej. Texto, Área de texto). Puedes reordenarlas arrastrándolas.
+                            Añade tus propias etiquetas globales y define su tipo de campo por defecto. Para los "Dropdown", puedes definir una lista de opciones con texto predefinido.
                         </p>
                         <div className="space-y-2 mb-4 max-w-md">
                              <Label>Añadir Nueva Etiqueta</Label>
@@ -207,6 +233,12 @@ export function GlobalTagsManager() {
                                 <Input
                                     value={newDefinitionName}
                                     onChange={(e) => setNewDefinitionName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleAddDefinition();
+                                        }
+                                    }}
                                     placeholder="Ej: Lesionados"
                                 />
                                 <Button onClick={handleAddDefinition}>
@@ -214,6 +246,7 @@ export function GlobalTagsManager() {
                                     Añadir
                                 </Button>
                              </div>
+                             {feedbackMessage && <p className="text-sm text-destructive pt-1">{feedbackMessage}</p>}
                         </div>
 
                         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>

@@ -1,0 +1,27 @@
+["DATOS GENERALES"*SISTEMA NACIONAL DE GESTIÓN DE RIESGOS*
+*PROTECCIÓN CIVIL MUNICIPIO {Municipio}*
+
+*NOVEDADES RELEVANTES*
+- *FECHA:* {Fecha}
+- *HORA:* {Hora}
+- *REDAN:* {Redan}
+- *ZOEDAN:* {Zoedan}
+- *MUNICIPIO:* {Municipio del incidente}
+- *PARROQUIA:* {Parroquia}
+- *UBICACIÓN:* {Lugar}
+- *CUADRANTE DE PAZ:* {Cuadrante de Paz}]
+
+*PRELIMINAR*
+- *TIPO DE NOVEDAD:* Posible accidente de tránstio
+
+- *DESCRIPCIÓN DE LA NOVEDAD:* Se recibe llamada por parte del {solicitante}, informando sobre presunto accidente de tránsito ocurrido en la dirección mencionada, por lo que se despacha personal operativo en atención de la novedad.
+
+- *ESTATUS:* En proceso
+
+- *REPORTA:* Analista del departamento de CEMUPRAD {Reporta:textarea}
+
+*SOLO QUEREMOS SALVAR VIDAS* 🚑
+
+
+
+ 

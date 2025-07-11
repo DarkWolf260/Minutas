@@ -15,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { Staff } from '@/types';
+import type { Staff, StaffMember } from '@/types';
 import { useRoles } from '@/hooks/use-roles';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useSettings } from '@/hooks/use-settings';
@@ -23,6 +23,11 @@ import { useSettings } from '@/hooks/use-settings';
 interface OrdenDelDiaFormProps {
     selectedGuard: string;
     initialData: Staff | undefined;
+}
+
+const formatStaffMember = (member: StaffMember): string => {
+    // Only show name for this component
+    return member.name;
 }
 
 export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormProps) {
@@ -80,11 +85,13 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
 
   const handleStaffChange = (roleName: string, value: string) => {
     const roleConfig = roles.find(r => r.name === roleName);
-    const personnel = roleConfig?.isSingle ? [value] : value.split('\n').filter(Boolean);
+    const members = value.split('\n')
+        .filter(Boolean)
+        .map(name => ({ id: `manual_${Date.now()}`, name }));
     
     setStaff(prev => ({
         ...prev,
-        [roleName]: personnel
+        [roleName]: roleConfig?.isSingle ? members.slice(0, 1) : members
     }));
   };
   
@@ -112,14 +119,27 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   };
 
   const handleGenerateOrder = () => {
+    // Helper to find a key case-insensitively
+    const findInsensitive = (obj: Record<string, string>, key: string): string => {
+        if (!obj) return '';
+        const keyLower = key.toLowerCase();
+        const foundKey = Object.keys(obj).find(k => k.toLowerCase() === keyLower);
+        return foundKey ? obj[foundKey] : '';
+    };
+
+    const director = findInsensitive(globalSettings, 'Director');
+    const jefeDeOperaciones = findInsensitive(globalSettings, 'Jefe de Operaciones');
+    const municipio = findInsensitive(globalSettings, 'Municipio');
+    const estado = findInsensitive(globalSettings, 'Estado');
+    
     const reportParts = [
-      `*ORDEN DEL DÍA DEL INSTITUTO AUTONOMO DE PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES DEL MUNICIPIO ${(globalSettings['Municipio'] || '').toUpperCase()} ESTADO ${(globalSettings['Estado'] || '').toUpperCase()}*`,
+      `*ORDEN DEL DÍA DEL INSTITUTO AUTONOMO DE PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES DEL MUNICIPIO ${(municipio || '').toUpperCase()} ESTADO ${(estado || '').toUpperCase()}*`,
       ``,
       `*DIRECTOR*`,
-      (globalSettings['Director'] || '').toUpperCase(),
+      director,
       ``,
       `*JEFE DE OPERACIONES*`,
-      (globalSettings['Jefe de Operaciones'] || '').toUpperCase(),
+      jefeDeOperaciones,
       ``,
       `*GRUPO DE GUARDIA:* “${selectedGuard}”`,
       ``,
@@ -127,8 +147,8 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
     ];
 
     Object.entries(staff).forEach(([role, personnel]) => {
-      if (personnel && personnel.length > 0 && personnel.some(p => p.trim() !== '')) {
-        reportParts.push(``, `*${role.toUpperCase()}*`, personnel.join('\n'));
+      if (personnel && personnel.length > 0 && personnel.some(p => p.name.trim() !== '')) {
+        reportParts.push(``, `*${role.toUpperCase()}*`, personnel.map(formatStaffMember).join('\n'));
       }
     });
     
@@ -145,6 +165,12 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
     setCopyButtonText('¡Copiado!');
     setTimeout(() => setCopyButtonText('Copiar'), 2000);
   };
+  
+  const getDisplayValueForRole = (roleName: string): string => {
+      const members = staff[roleName];
+      if (!members) return '';
+      return members.map(m => m.name).join('\n');
+  }
 
   return (
     <div>
@@ -164,13 +190,13 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
             <Label>{role.name}</Label>
             {role.isSingle ? (
               <Input 
-                value={(staff[role.name] || [])[0] || ''} 
+                value={getDisplayValueForRole(role.name)} 
                 onChange={(e) => handleStaffChange(role.name, e.target.value)} 
               />
             ) : (
               <Textarea 
                 rows={2} 
-                value={(staff[role.name] || []).join('\n')} 
+                value={getDisplayValueForRole(role.name)} 
                 onChange={(e) => handleStaffChange(role.name, e.target.value)} 
               />
             )}
@@ -182,21 +208,21 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
       </div>
 
       <Dialog open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="max-h-[90vh] max-w-[90vw] sm:max-w-2xl flex flex-col">
           <DialogHeader>
             <DialogTitle>Orden del Día Generada</DialogTitle>
             <DialogDescription>
               Puedes copiar el texto generado o guardar el personal para el reporte final.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="flex-1 overflow-y-auto -mx-6 px-6">
             <Textarea
               readOnly
               value={generatedOrder}
-              className="h-80 text-sm whitespace-pre-wrap font-mono"
+              className="w-full h-full min-h-[50vh] text-sm whitespace-pre-wrap font-mono"
             />
           </div>
-          <DialogFooter>
+          <DialogFooter className="mt-auto pt-4">
             <Button type="button" variant="outline" onClick={handleUseForFinalReport} disabled={isSnapshotSaved}>
               {isSnapshotSaved ? 'Guardado para Reporte Final' : 'Usar para Reporte Final'}
             </Button>

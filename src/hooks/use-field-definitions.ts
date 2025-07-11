@@ -2,10 +2,20 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { FieldConfig } from '@/types';
+import type { FieldConfig, StaffMember } from '@/types';
 import { format } from 'date-fns';
+import { useSettings } from './use-settings';
+import { useGuards } from './use-guards';
 
 const DEFINITIONS_STORAGE_KEY = 'app-global-field-configs';
+
+const formatStaffMember = (member: StaffMember, showCedula: boolean): string => {
+    if (showCedula && member.cedula) {
+        return `${member.name} ${member.cedula}`;
+    }
+    return member.name;
+};
+
 
 const defaultDefinitions: Record<string, FieldConfig> = {
     'Municipio': { label: 'Municipio', type: 'predefined', value: '', sectionId: 'default' },
@@ -14,40 +24,81 @@ const defaultDefinitions: Record<string, FieldConfig> = {
     'Jefe de Operaciones': { label: 'Jefe de Operaciones', type: 'predefined', value: '', sectionId: 'default' },
     'REDAN': { label: 'REDAN', type: 'predefined', value: '', sectionId: 'default' },
     'ZOEDAN': { label: 'ZOEDAN', type: 'predefined', value: '', sectionId: 'default' },
-    'Fecha': { label: 'Fecha', type: 'date', value: format(new Date(), 'yyyy-MM-dd'), sectionId: 'default' },
+    'Fecha': { label: 'Fecha', type: 'date', value: '', sectionId: 'default' }, // Value is now set dynamically
     'Hora': { label: 'Hora', type: 'time-hlv', value: '', sectionId: 'default' },
-    'Ubicación': { label: 'Ubicación', type: 'textarea', value: '', sectionId: 'default' },
-    'Destino': { label: 'Destino', type: 'textarea', value: '', sectionId: 'default' },
-    'Descripción de la novedad': { label: 'Descripción de la novedad', type: 'textarea', value: '', sectionId: 'default' },
-    'Conclusión de la novedad': { label: 'Conclusión de la novedad', type: 'textarea', value: '', sectionId: 'default' },
+    'Reporta': { label: 'Reporta', type: 'predefined', value: '', sectionId: 'default'},
+    'Analista': { label: 'Analista', type: 'predefined', value: '', sectionId: 'default'},
 };
 
 export function useFieldDefinitions() {
   const [definitions, setDefinitions] = useState<Record<string, FieldConfig>>({});
   const [isLoaded, setIsLoaded] = useState(false);
+  const { settings, isLoaded: settingsLoaded } = useSettings();
+  const { guards, isLoaded: guardsLoaded } = useGuards();
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(DEFINITIONS_STORAGE_KEY);
-      const existingDefinitions = stored ? JSON.parse(stored) : {};
-      
-      const merged = { ...defaultDefinitions, ...existingDefinitions };
+    let isMounted = true;
+    const loadDefinitions = () => {
+        try {
+            const stored = localStorage.getItem(DEFINITIONS_STORAGE_KEY);
+            const existingDefinitions = stored ? JSON.parse(stored) : {};
+            
+            let merged = { ...defaultDefinitions, ...existingDefinitions };
 
-      // Migrate old definitions by adding a sectionId
-      Object.keys(merged).forEach(key => {
-        if (!merged[key].sectionId) {
-          merged[key].sectionId = defaultDefinitions[key] ? 'default' : 'unassigned';
+            // Migrate old definitions by adding a sectionId
+            Object.keys(merged).forEach(key => {
+                if (!merged[key].sectionId) {
+                merged[key].sectionId = defaultDefinitions[key] ? 'default' : 'unassigned';
+                }
+            });
+            
+            // Dynamically set the current date for the 'Fecha' field.
+            if (merged['Fecha']) {
+                merged['Fecha'].value = format(new Date(), 'yyyy-MM-dd');
+            }
+
+            // Dynamically set Reporta and Analista
+            const activeGuard = settings.activeGuardId ? guards.find(g => g.id === settings.activeGuardId) : null;
+            
+            if (activeGuard && settings.reportaRoleId) {
+                const staff = activeGuard.staff[settings.reportaRoleId] || [];
+                merged['Reporta'].value = staff.map(member => formatStaffMember(member, true)).join(', ');
+            } else {
+                merged['Reporta'].value = '';
+            }
+
+            if (activeGuard && settings.analistaRoleId) {
+                 const staff = activeGuard.staff[settings.analistaRoleId] || [];
+                 merged['Analista'].value = staff.map(member => formatStaffMember(member, true)).join(', ');
+            } else {
+                merged['Analista'].value = '';
+            }
+            
+            if (isMounted) {
+                setDefinitions(merged);
+            }
+
+        } catch (error) {
+            console.error('Failed to load global field definitions', error);
+            const dynamicDefaults = {...defaultDefinitions};
+            dynamicDefaults['Fecha'].value = format(new Date(), 'yyyy-MM-dd');
+            if (isMounted) {
+                setDefinitions(dynamicDefaults);
+            }
+        } finally {
+            if (isMounted) {
+                setIsLoaded(true);
+            }
         }
-      });
-      
-      setDefinitions(merged);
-    } catch (error) {
-      console.error('Failed to load global field definitions', error);
-      setDefinitions(defaultDefinitions);
-    } finally {
-        setIsLoaded(true);
     }
-  }, []);
+
+    if(settingsLoaded && guardsLoaded) {
+        loadDefinitions();
+    }
+    
+    return () => { isMounted = false };
+
+  }, [settings, guards, settingsLoaded, guardsLoaded]);
 
   const saveDefinitions = useCallback((newDefinitions: Record<string, FieldConfig>) => {
     try {

@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Guard, Staff } from '@/types';
+import type { Guard, Staff, StaffMember } from '@/types';
 
 const GUARDS_STORAGE_KEY = 'app-guards';
 
@@ -12,19 +12,6 @@ const defaultGuards: Guard[] = [
     { id: 'C', staff: {} },
     { id: 'D', staff: {} },
 ];
-
-const roleNameMapping: Record<string, string> = {
-    jefeServicios: 'Jefe de los Servicios',
-    operadorRadio: 'Operador de Radio',
-    cemprad: 'CEMUPRAD',
-    tecnico: 'Técnico',
-    auxiliar: 'Auxiliar',
-    conductor: 'Conductor',
-    permiso: 'Permiso',
-    vacaciones: 'Vacaciones',
-    apoyo: 'Apoyo',
-};
-
 
 export function useGuards() {
   const [guards, setGuards] = useState<Guard[]>([]);
@@ -37,23 +24,25 @@ export function useGuards() {
         const parsedGuards = JSON.parse(storedGuards);
         if (parsedGuards.length > 0) {
             const migratedGuards = parsedGuards.map((guard: any) => {
-                // Check if migration is needed by looking for an old key
-                if (guard.staff && typeof guard.staff.jefeServicios !== 'undefined') {
-                    const newStaff: Staff = {};
-                    for (const oldKey in guard.staff) {
-                        const newKey = roleNameMapping[oldKey];
-                        if (newKey) {
-                            const value = guard.staff[oldKey];
-                            if (typeof value === 'string') {
-                                newStaff[newKey] = value ? [value] : [];
-                            } else if (Array.isArray(value)) {
-                                newStaff[newKey] = value.filter(Boolean);
-                            }
-                        }
+                const newStaff: Staff = {};
+                if (!guard.staff) return { ...guard, staff: newStaff };
+
+                // Check if migration from string[] to StaffMember[] is needed
+                for (const roleName in guard.staff) {
+                    const staffList = guard.staff[roleName];
+                    if (Array.isArray(staffList) && staffList.length > 0 && typeof staffList[0] === 'string') {
+                        // This is the old format (string[])
+                        newStaff[roleName] = staffList.map((name: string) => ({
+                            id: `staff_${Date.now()}_${Math.random()}`,
+                            name: name,
+                            cedula: undefined
+                        }));
+                    } else {
+                        // Already in new format (StaffMember[]) or empty
+                        newStaff[roleName] = staffList;
                     }
-                    return { ...guard, staff: newStaff };
                 }
-                return guard; // Already in new format
+                return { ...guard, staff: newStaff };
             });
             setGuards(migratedGuards);
         } else {
