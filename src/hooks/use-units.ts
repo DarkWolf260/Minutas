@@ -33,22 +33,17 @@ export function useUnits() {
   }, []);
 
   const saveUnits = useCallback((newUnits: string[]) => {
+    setUnits(newUnits);
     try {
       localStorage.setItem(UNITS_STORAGE_KEY, JSON.stringify(newUnits));
-      setUnits(newUnits);
     } catch (error) {
       console.error('Failed to save units to localStorage', error);
     }
   }, []);
 
   const clearAllUnits = useCallback(() => {
-    try {
-      localStorage.removeItem(UNITS_STORAGE_KEY);
-      setUnits(initialUnits);
-    } catch (error) {
-      console.error('Failed to clear units from localStorage', error);
-    }
-  }, []);
+    saveUnits(initialUnits);
+  }, [saveUnits]);
 
   return { units, saveUnits, isLoaded, clearAllUnits };
 }

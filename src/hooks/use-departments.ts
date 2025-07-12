@@ -58,9 +58,9 @@ export function useDepartments() {
   }, []);
 
   const saveDepartments = useCallback((newDepartments: Department[]) => {
+    setDepartments(newDepartments);
     try {
       localStorage.setItem(DEPARTMENTS_STORAGE_KEY, JSON.stringify(newDepartments));
-      setDepartments(newDepartments);
     } catch (error) {
       console.error('Failed to save departments to localStorage', error);
     }
@@ -82,13 +82,8 @@ export function useDepartments() {
   }, [departments, saveDepartments]);
 
   const clearAllDepartments = useCallback(() => {
-    try {
-      localStorage.removeItem(DEPARTMENTS_STORAGE_KEY);
-      setDepartments(defaultDepartments);
-    } catch (error) {
-      console.error('Failed to clear departments from localStorage', error);
-    }
-  }, []);
+    saveDepartments(defaultDepartments);
+  }, [saveDepartments]);
 
 
   return { departments, addDepartment, removeDepartment, updateDepartment, isLoaded, clearAllDepartments };

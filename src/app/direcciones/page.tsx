@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import 'leaflet/dist/leaflet.css'; // Import leaflet css
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -28,10 +29,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AddressMap } from '@/components/address-map';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
+
+const AddressMap = dynamic(() => import('@/components/address-map').then(mod => mod.AddressMap), { 
+    ssr: false,
+    loading: () => <Skeleton className="h-full w-full" />
+});
 
 export default function DireccionesPage() {
     const { addresses, addAddress, updateAddress, removeAddress, isLoaded } = useAddresses();

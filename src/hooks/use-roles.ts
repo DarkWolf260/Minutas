@@ -57,24 +57,19 @@ export function useRoles() {
   }, []);
 
   const saveRoles = useCallback((newRoles: StaffRole[]) => {
+    setRoles(newRoles);
     try {
       // The `newRoles` array is already in the desired order from drag-and-drop.
       // Do not sort it again here.
       localStorage.setItem(ROLES_STORAGE_KEY, JSON.stringify(newRoles));
-      setRoles(newRoles);
     } catch (error) {
       console.error('Failed to save roles to localStorage', error);
     }
   }, []);
 
   const clearAllRoles = useCallback(() => {
-    try {
-      localStorage.removeItem(ROLES_STORAGE_KEY);
-      setRoles(defaultRoles);
-    } catch (error) {
-      console.error('Failed to clear roles from localStorage', error);
-    }
-  }, []);
+    saveRoles(defaultRoles);
+  }, [saveRoles]);
 
   return { roles, saveRoles, isLoaded, clearAllRoles };
 }

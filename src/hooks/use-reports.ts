@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -24,6 +25,7 @@ export function useReports() {
   }, []);
 
   const getLatestReports = useCallback((): Report[] => {
+    if (typeof window === 'undefined') return [];
     try {
         const storedReports = localStorage.getItem(REPORTS_STORAGE_KEY);
         return storedReports ? JSON.parse(storedReports) : [];
@@ -32,48 +34,31 @@ export function useReports() {
         return [];
     }
   }, []);
-
-  const addReport = useCallback((newReport: Report) => {
-    const currentReports = getLatestReports();
-    const newReports = [...currentReports, newReport];
+  
+  const saveReports = useCallback((newReports: Report[]) => {
+    setReports(newReports);
     try {
         localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(newReports));
-        setReports(newReports);
     } catch (error) {
         console.error('Failed to save reports to localStorage', error);
-    }
-  }, [getLatestReports]);
-
-  const updateReport = useCallback((updatedReport: Report) => {
-    const currentReports = getLatestReports();
-    const newReports = currentReports.map(r => (r.id === updatedReport.id ? updatedReport : r));
-     try {
-        localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(newReports));
-        setReports(newReports);
-    } catch (error) {
-        console.error('Failed to save reports to localStorage', error);
-    }
-  }, [getLatestReports]);
-
-  const removeReport = useCallback((reportId: string) => {
-    const currentReports = getLatestReports();
-    const newReports = currentReports.filter(r => r.id !== reportId);
-    try {
-        localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(newReports));
-        setReports(newReports);
-    } catch (error) {
-        console.error('Failed to save reports to localStorage', error);
-    }
-  }, [getLatestReports]);
-
-  const clearAllReports = useCallback(() => {
-    try {
-        localStorage.setItem(REPORTS_STORAGE_KEY, '[]');
-        setReports([]);
-    } catch (error) {
-        console.error('Failed to clear reports from localStorage', error);
     }
   }, []);
+
+  const addReport = useCallback((newReport: Report) => {
+    saveReports([...reports, newReport]);
+  }, [reports, saveReports]);
+
+  const updateReport = useCallback((updatedReport: Report) => {
+    saveReports(reports.map(r => (r.id === updatedReport.id ? updatedReport : r)));
+  }, [reports, saveReports]);
+
+  const removeReport = useCallback((reportId: string) => {
+    saveReports(reports.filter(r => r.id !== reportId));
+  }, [reports, saveReports]);
+
+  const clearAllReports = useCallback(() => {
+    saveReports([]);
+  }, [saveReports]);
 
   return { reports, addReport, updateReport, removeReport, clearAllReports, isLoaded, getLatestReports };
 }

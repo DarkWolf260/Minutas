@@ -32,25 +32,23 @@ export function useTemplates() {
     } catch (error) {
       console.error('Failed to load templates from localStorage', error);
     } finally {
-      if (definitionsLoaded && settingsLoaded) {
-        setIsLoaded(true);
-      }
+      setIsLoaded(true);
     }
-  }, [definitionsLoaded, settingsLoaded]);
+  }, []);
 
   const saveTemplates = useCallback((newTemplates: Template[]) => {
+    setTemplates(newTemplates);
     try {
       localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(newTemplates));
-      setTemplates(newTemplates);
     } catch (error) {
       console.error('Failed to save templates to localStorage', error);
     }
   }, []);
   
   const saveConfigs = useCallback((newConfigs: Record<string, TemplateConfig>) => {
+    setConfigs(newConfigs);
     try {
       localStorage.setItem(TEMPLATE_CONFIGS_STORAGE_KEY, JSON.stringify(newConfigs));
-      setConfigs(newConfigs);
     } catch (error) {
       console.error('Failed to save template configs to localStorage', error);
     }
@@ -116,16 +114,10 @@ export function useTemplates() {
   }, [templates, saveTemplates]);
   
   const clearAllTemplates = useCallback(() => {
-    try {
-      localStorage.removeItem(TEMPLATES_STORAGE_KEY);
-      localStorage.removeItem(TEMPLATE_CONFIGS_STORAGE_KEY);
-      setTemplates([]);
-      setConfigs({});
-    } catch (error) {
-      console.error('Failed to clear all templates from localStorage', error);
-    }
-  }, []);
+    saveTemplates([]);
+    saveConfigs({});
+  }, [saveTemplates, saveConfigs]);
 
 
-  return { templates, configs, addTemplate, removeTemplate, updateTemplate, updateTemplateConfig, toggleTemplateActive, clearAllTemplates, isLoaded };
+  return { templates, configs, addTemplate, removeTemplate, updateTemplate, updateTemplateConfig, toggleTemplateActive, clearAllTemplates, isLoaded: isLoaded && definitionsLoaded && settingsLoaded };
 }

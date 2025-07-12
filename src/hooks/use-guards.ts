@@ -60,22 +60,17 @@ export function useGuards() {
   }, []);
 
   const saveGuards = useCallback((newGuards: Guard[]) => {
+    setGuards(newGuards);
     try {
       localStorage.setItem(GUARDS_STORAGE_KEY, JSON.stringify(newGuards));
-      setGuards(newGuards);
     } catch (error) {
       console.error('Failed to save guards to localStorage', error);
     }
   }, []);
 
   const clearAllGuards = useCallback(() => {
-    try {
-      localStorage.removeItem(GUARDS_STORAGE_KEY);
-      setGuards(defaultGuards);
-    } catch (error) {
-      console.error('Failed to clear guards from localStorage', error);
-    }
-  }, []);
+    saveGuards(defaultGuards);
+  }, [saveGuards]);
 
   return { guards, saveGuards, isLoaded, clearAllGuards };
 }
