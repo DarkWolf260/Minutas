@@ -382,7 +382,7 @@ export default function PlantillasPage() {
                         </p>
                     </div>
                     <div>
-                        <h4 className="font-semibold text-base mb-2">5. ¡Nuevo! Secciones Condicionales por Índice</h4>
+                        <h4 className="font-semibold text-base mb-2">5. Secciones Condicionales <Badge variant="destructive">En Desarrollo</Badge></h4>
                         <p>Puedes mostrar u ocultar una sección entera basándote en la opción seleccionada en un dropdown. Esto es ideal para formularios que cambian según la selección del usuario.</p>
                         <p className="text-muted-foreground mt-2">Usa la sintaxis <code>[?{`{NombreDelDropdown}`}=Índice] ... [/]</code>, donde el índice empieza en 0.</p>
                          <div className="mt-2 p-3 bg-muted rounded-md text-xs font-mono whitespace-pre-wrap">

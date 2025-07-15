@@ -23,6 +23,7 @@ import { debounce } from '@/lib/utils';
 import { useSettings } from '@/hooks/use-settings';
 import { useGuards } from '@/hooks/use-guards';
 import { parseTemplate } from '@/lib/template-parser';
+import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 
 interface ReportGeneratorProps {
     template: Template, 
@@ -32,6 +33,13 @@ interface ReportGeneratorProps {
     onSave: (report: Report) => void,
 }
 
+const formatStaffMemberForAutocomplete = (member: StaffMember, withCedula: boolean): string => {
+    if (withCedula && member.cedula) {
+        return `${member.name} ${member.cedula}`;
+    }
+    return member.name;
+};
+
 export function ReportGenerator({ template, config, initialData, onCancel, onSave }: ReportGeneratorProps) {
     const { saveDraft, clearDraft } = useDrafts();
     const formRef = useRef<ReportFormRef>(null);
@@ -40,6 +48,7 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
     const [copyButtonText, setCopyButtonText] = useState('Copiar');
     const { settings } = useSettings();
     const { guards } = useGuards();
+    const { definitions } = useFieldDefinitions();
     
     const finalInitialData = useMemo(() => {
         const newInitialData = initialData ? JSON.parse(JSON.stringify(initialData)) : {};
@@ -51,15 +60,27 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
             return newInitialData;
         }
 
-        const jefeDeServiciosKey = Object.keys(activeGuard.staff || {}).find(k => k.toLowerCase() === 'jefe de los servicios');
-        
         const dataToInject: Record<string, any> = {};
 
+        // Get Jefe de los servicios
+        const jefeDeServiciosKey = Object.keys(activeGuard.staff || {}).find(k => k.toLowerCase() === 'jefe de los servicios');
         if (jefeDeServiciosKey) {
             const jefeStaff = activeGuard.staff[jefeDeServiciosKey] || [];
             if(jefeStaff.length > 0) {
                  dataToInject['Jefe de los Servicios'] = jefeStaff.map(member => member.name);
             }
+        }
+        
+        // Get Reporta
+        if (settings.reportaRoleId) {
+            const reportaStaff = activeGuard.staff[settings.reportaRoleId] || [];
+            dataToInject['Reporta'] = reportaStaff; // Keep as StaffMember[]
+        }
+        
+        // Get Analista
+        if (settings.analistaRoleId) {
+            const analistaStaff = activeGuard.staff[settings.analistaRoleId] || [];
+            dataToInject['Analista'] = analistaStaff; // Keep as StaffMember[]
         }
         
         // Explicitly add Guardia ID to be injected
@@ -93,7 +114,7 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
         });
 
         return newInitialData;
-    }, [template.content, initialData, settings.activeGuardId, guards]);
+    }, [template.content, initialData, settings.activeGuardId, settings.reportaRoleId, settings.analistaRoleId, guards]);
 
     const saveDraftLogicRef = useRef<((formData: Record<string, any>) => void) | null>(null);
     

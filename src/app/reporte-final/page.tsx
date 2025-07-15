@@ -10,9 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useReports } from '@/hooks/use-reports';
 import { Skeleton } from '@/components/ui/skeleton';
-import { sortReports, findValueInFormData } from '@/lib/report-sorter';
+import { findValueInFormData } from '@/lib/report-sorter';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useGuards } from '@/hooks/use-guards';
 import { useSettings } from '@/hooks/use-settings';
 import { useRoles } from '@/hooks/use-roles';
@@ -32,14 +31,16 @@ interface ManualNovedad {
   text: string;
 }
 
-const formatStaffMemberForReport = (member: StaffMember): string => {
-    // Only show name for report generation
+const formatStaffMemberForReport = (member: StaffMember, showCedula: boolean): string => {
+    if (showCedula && member.cedula) {
+        return `${member.name} ${member.cedula}`;
+    }
     return member.name;
 };
 
+
 export default function ReporteFinalPage() {
     const { reports, isLoaded: reportsLoaded, getLatestReports } = useReports();
-    const { definitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
     const { guards, isLoaded: guardsLoaded } = useGuards();
     const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
     const { roles, isLoaded: rolesLoadedHook } = useRoles();
@@ -57,8 +58,6 @@ export default function ReporteFinalPage() {
     const [newNovedadText, setNewNovedadText] = useState('');
 
     useEffect(() => {
-        // This effect runs when settings are loaded or the custom period changes.
-        // It establishes the default start and end guard entries.
         if (!settingsLoaded) return;
 
         const hasCustomDates = settings.finalReportStartDate && settings.finalReportEndDate;
@@ -87,8 +86,6 @@ export default function ReporteFinalPage() {
             text: 'Se da culminación a la guardia preventiva de 24 horas',
         };
 
-        // It's important to preserve any other manual entries the user might have added
-        // during the session, so we filter out old defaults and add the new ones.
         setManualNovedades(prev => {
             const otherNovedades = prev.filter(n => !n.id.includes('_start') && !n.id.includes('_end'));
             return [...otherNovedades, defaultStartNovedad, defaultEndNovedad];
@@ -96,28 +93,25 @@ export default function ReporteFinalPage() {
     }, [settings.finalReportStartDate, settings.finalReportEndDate, settingsLoaded]);
 
     const globalSettings = useMemo(() => {
-        const settings: Record<string, string> = {};
-        Object.entries(definitions).forEach(([key, config]) => {
-            if (config.type === 'predefined') {
-                settings[key] = config.value || '';
-            }
-        });
-        return settings;
-    }, [definitions]);
+        return Object.values(configs).reduce((acc, config) => {
+            Object.keys(config.fields).forEach(fieldName => {
+                if (config.fields[fieldName].type === 'predefined' && config.fields[fieldName].value) {
+                    acc[fieldName] = config.fields[fieldName].value!;
+                }
+            });
+            return acc;
+        }, {} as Record<string, string>);
+    }, [configs]);
 
     const activeGuard = useMemo(() => {
         if (!settings.activeGuardId || !guards.length) return null;
         return guards.find(g => g.id === settings.activeGuardId);
     }, [settings.activeGuardId, guards]);
 
-    const sortedReports = useMemo(() => {
-        return sortReports(reports, 'asc');
-    }, [reports]);
-
-    const hasCustomSettings = useMemo(() => {
+    const hasSnapshot = useMemo(() => {
         const staffSnapshot = settings.finalReportStaffSnapshot && Object.keys(settings.finalReportStaffSnapshot).length > 0;
         const customDates = !!settings.finalReportStartDate && !!settings.finalReportEndDate;
-        return { staffSnapshot, customDates, any: staffSnapshot || customDates };
+        return staffSnapshot && customDates;
     }, [settings]);
 
     const handleClearSnapshot = () => {
@@ -155,9 +149,6 @@ export default function ReporteFinalPage() {
             const [hours, minutes] = timeMatch.slice(1).map(Number);
             if (isNaN(hours) || isNaN(minutes)) return null;
             
-            // The date string from the form is 'YYYY-MM-DD'.
-            // new Date('YYYY-MM-DD') parses it as UTC midnight.
-            // By adding 'T00:00:00', we treat it as local time to avoid timezone shifts.
             const sortDate = new Date(`${fechaStr}T00:00:00`);
             if (isNaN(sortDate.getTime())) return null;
 
@@ -181,11 +172,7 @@ export default function ReporteFinalPage() {
         return [...manualNovedades].sort((a, b) => {
             const dateA = getSortDate(a);
             const dateB = getSortDate(b);
-            if (dateA && dateB) {
-                return dateA.getTime() - dateB.getTime();
-            }
-            if (dateA) return -1;
-            if (dateB) return 1;
+            if (dateA && dateB) return dateA.getTime() - dateB.getTime();
             return 0;
         });
     }, [manualNovedades]);
@@ -196,17 +183,13 @@ export default function ReporteFinalPage() {
     }, [reports, getLatestReports]);
 
     const handleGenerateReport = () => {
-        const finalReportsToInclude = finishedReports;
-
-        if (finalReportsToInclude.length === 0 && !statisticsText.trim() && manualNovedades.length === 0) {
+        if (finishedReports.length === 0 && !statisticsText.trim() && manualNovedades.length === 0) {
             setGeneratedReport('No hay novedades finalizadas ni estadísticas para reportar.');
             setIsResultDialogOpen(true);
             return;
         }
 
-        // Helper to find a key case-insensitively
         const findInsensitive = (obj: Record<string, string>, key: string): string => {
-            if (!obj) return '';
             const keyLower = key.toLowerCase();
             const foundKey = Object.keys(obj).find(k => k.toLowerCase() === keyLower);
             return foundKey ? obj[foundKey] : '';
@@ -217,127 +200,75 @@ export default function ReporteFinalPage() {
         const municipio = findInsensitive(globalSettings, 'Municipio');
 
         const dateRangeString = (() => {
-            const hasCustomDates = settings.finalReportStartDate && settings.finalReportEndDate;
-            const startDate = hasCustomDates ? new Date(settings.finalReportStartDate!) : new Date();
-            const endDate = hasCustomDates ? new Date(settings.finalReportEndDate!) : new Date(new Date().setDate(new Date().getDate() + 1));
+            const startDate = hasSnapshot ? new Date(settings.finalReportStartDate!) : new Date();
+            const endDate = hasSnapshot ? new Date(settings.finalReportEndDate!) : new Date(new Date().setDate(new Date().getDate() + 1));
 
-            const formatDatePart = (date: Date) => {
-                const dayName = new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(date);
-                const dayNumber = String(date.getDate()).padStart(2, '0');
-                const monthName = new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(date);
-                return `${dayName} ${dayNumber} de ${monthName}`.toUpperCase();
-            };
-
-            const year = startDate.getFullYear(); // Assuming same year for start and end
-            return `DESDE EL ${formatDatePart(startDate)} HASTA EL ${formatDatePart(endDate)} DE ${year}`;
+            const formatDatePart = (date: Date) => new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: '2-digit', month: 'long' }).format(date);
+            return `DESDE EL ${formatDatePart(startDate)} HASTA EL ${formatDatePart(endDate)} DE ${startDate.getFullYear()}`.toUpperCase();
         })();
         
         const headerParts = [
-            `*INSTITUTO AUTÓNOMO DE PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO ${(municipio || '').toUpperCase()}*`,
-            ``,
-            `*DIRECTOR-PRESIDENTE*`,
-            director,
-            ``,
-            `*JEFE DE OPERACIONES*`,
-            jefeDeOperaciones,
-            ``,
-            `*REPORTE DE NOVEDADES ${dateRangeString}*`,
-            ``
+            `*INSTITUTO AUTÓNOMO DE PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO ${(municipio || '').toUpperCase()}*`, ``,
+            `*DIRECTOR-PRESIDENTE*`, director, ``,
+            `*JEFE DE OPERACIONES*`, jefeDeOperaciones, ``,
+            `*REPORTE DE NOVEDADES ${dateRangeString}*`, ``
         ];
         
-        const staffForReport = hasCustomSettings.staffSnapshot
-            ? settings.finalReportStaffSnapshot
-            : activeGuard?.staff;
+        const staffForReport = hasSnapshot ? settings.finalReportStaffSnapshot : activeGuard?.staff;
+        const guardIdForReport = hasSnapshot ? findValueInFormData(settings.finalReportStaffSnapshot, 'Guardia') || activeGuard?.id : activeGuard?.id;
 
-        if (activeGuard && staffForReport) {
-             headerParts.push(`- *EQUIPO DE GUARDIA:* GRUPO “${activeGuard.id}”`);
+        if (guardIdForReport && staffForReport) {
+             headerParts.push(`- *EQUIPO DE GUARDIA:* GRUPO “${guardIdForReport}”`);
              roles.forEach(role => {
                  const staffKey = Object.keys(staffForReport).find(k => k.toLowerCase() === role.name.toLowerCase());
                  const staffList = staffKey ? staffForReport[staffKey as keyof typeof staffForReport] : undefined;
                  if (staffList && staffList.length > 0 && staffList.some(s => s.name.trim() !== '')) {
-                     headerParts.push(`- *${role.name.toUpperCase()}:* ${staffList.map(formatStaffMemberForReport).join(' / ')}`);
+                     const showCedula = role.name.toLowerCase() === settings.reportaRoleId?.toLowerCase() || role.name.toLowerCase() === settings.analistaRoleId?.toLowerCase();
+                     headerParts.push(`- *${role.name.toUpperCase()}:* ${staffList.map(member => formatStaffMemberForReport(member, showCedula)).join(' / ')}`);
                  }
              });
         }
         
         const allNovedades = [
-          ...finalReportsToInclude.map(report => ({ type: 'report', data: report, sortDate: getSortDate(report) })),
+          ...finishedReports.map(report => ({ type: 'report', data: report, sortDate: getSortDate(report) })),
           ...manualNovedades.map(novedad => ({ type: 'manual', data: novedad, sortDate: getSortDate(novedad) }))
         ];
 
-        const sortedAllNovedades = allNovedades
-          .filter(item => item.sortDate)
-          .sort((a, b) => a.sortDate!.getTime() - b.sortDate!.getTime());
+        const sortedAllNovedades = allNovedades.filter(item => item.sortDate).sort((a, b) => a.sortDate!.getTime() - b.sortDate!.getTime());
 
-        const reportContent = sortedAllNovedades
-            .map((item) => {
-                if (item.type === 'report') {
-                    const report = item.data as Report;
-                    const sortDate = getSortDate(report);
-                    if (!sortDate) return null;
-
-                    const formattedDate = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(sortDate);
-                    const horaStr = findValueInFormData(report.formData, 'Hora') as string | undefined;
-                    const timestampText = `${formattedDate} ${horaStr || ''}`.trim();
-                    
-                    const template = templates.find(t => t.id === report.templateId);
-                    const config = configs[report.templateId];
-                    const formData = report.formData || {};
-                    
-                    const dynamicPredefinedValues = {...globalSettings};
-                    if(activeGuard) {
-                        dynamicPredefinedValues['Guardia'] = activeGuard.id;
-                    }
-
-                    let contentText = '';
-                    if (template && config) {
-                        contentText = renderFinalReport(template.content, formData, config, {}, true, dynamicPredefinedValues);
-                    }
-                    
-                    const titleText = ` - *${timestampText}* - *${report.title}*`;
-                    return contentText ? `${titleText}\n\n${contentText}` : titleText;
-
-                } else { // Manual Novedad
-                    const novedad = item.data as ManualNovedad;
-                    const formattedDate = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(novedad.date);
-                    const timestampText = `${formattedDate} ${novedad.time}`;
-                    const contentText = novedad.text;
-                    return ` - *${timestampText}* - *${contentText}*`;
+        const reportContent = sortedAllNovedades.map((item) => {
+            if (item.type === 'report') {
+                const report = item.data as Report;
+                const formattedDate = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(item.sortDate!);
+                const horaStr = findValueInFormData(report.formData, 'Hora') as string | undefined;
+                const timestampText = `${formattedDate} ${horaStr || ''}`.trim();
+                
+                const template = templates.find(t => t.id === report.templateId);
+                const config = configs[report.templateId];
+                
+                let contentText = '';
+                if (template && config) {
+                    const dynamicPredefinedValues = {...globalSettings, 'Guardia': guardIdForReport || ''};
+                    contentText = renderFinalReport(template.content, report.formData || {}, config, {}, true, dynamicPredefinedValues);
                 }
+                
+                const titleText = ` - *${timestampText}* - *${report.title}*`;
+                return contentText ? `${titleText}\n\n${contentText}` : titleText;
 
-            })
-            .filter(Boolean)
-            .join('\n\n');
+            } else {
+                const novedad = item.data as ManualNovedad;
+                const formattedDate = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(item.sortDate!);
+                const timestampText = `${formattedDate} ${novedad.time}`;
+                return ` - *${timestampText}* - *${novedad.text}*`;
+            }
+        }).filter(Boolean).join('\n\n');
 
-        const finalReportParts = [
-            ...headerParts,
-        ];
-
-        if (statisticsText.trim()) {
-            finalReportParts.push(
-                ``,
-                `*ESTADÍSTICAS DEL DÍA*`,
-                ``,
-                statisticsText.trim()
-            );
-        }
+        const finalReportParts = [...headerParts];
+        if (statisticsText.trim()) finalReportParts.push(``, `*ESTADÍSTICAS DEL DÍA*`, ``, statisticsText.trim());
+        if (reportContent.trim()) finalReportParts.push(``, `*NOVEDADES DEL DÍA*`, ``, reportContent);
+        finalReportParts.push(``, `*PROTECCIÓN CIVIL ${(municipio || '').toUpperCase()}*`);
         
-        if (reportContent.trim()) {
-            finalReportParts.push(
-                ``,
-                `*NOVEDADES DEL DÍA*`,
-                ``,
-                reportContent
-            );
-        }
-        
-        finalReportParts.push(
-            ``,
-            `*PROTECCIÓN CIVIL ${(municipio || '').toUpperCase()}*`
-        );
-        
-        const finalReportText = finalReportParts.join('\n').trim();
-        setGeneratedReport(finalReportText);
+        setGeneratedReport(finalReportParts.join('\n').trim());
         setIsResultDialogOpen(true);
         setCopyButtonText('Copiar');
     };
@@ -348,7 +279,7 @@ export default function ReporteFinalPage() {
         setTimeout(() => setCopyButtonText('Copiar'), 2000);
     };
 
-    const isLoaded = reportsLoaded && definitionsLoaded && guardsLoaded && settingsLoaded && rolesLoadedHook && templatesLoaded;
+    const isLoaded = reportsLoaded && guardsLoaded && settingsLoaded && rolesLoadedHook && templatesLoaded;
 
     return (
         <>
@@ -368,11 +299,12 @@ export default function ReporteFinalPage() {
                             </div>
                         ) : (
                             <div className="space-y-6">
-                                {hasCustomSettings.any ? (
+                                {hasSnapshot ? (
                                     <Alert variant="default">
+                                        <AlertTitle>Usando Datos de Orden del Día</AlertTitle>
                                         <AlertDescription className="flex items-center justify-between gap-4">
                                             <span>
-                                                Se ha emitido una Orden del Día. El reporte final usará el personal y periodo de esa emisión.
+                                                El reporte se generará con el personal y periodo de la última orden del día emitida.
                                             </span>
                                             <Button variant="link" className="p-0 h-auto whitespace-nowrap" onClick={handleClearSnapshot}>
                                                 Anular y usar valores actuales
@@ -407,7 +339,7 @@ export default function ReporteFinalPage() {
                                     <ScrollArea className="h-48 rounded-md border p-4 bg-muted/50">
                                         {reports.length > 0 ? (
                                             <ul className="space-y-2">
-                                                {sortReports(reports).map(report => (
+                                                {getLatestReports().map(report => (
                                                     <li key={report.id} className="text-sm">
                                                         - {report.title}
                                                         {report.status === 'Finalizado' ? (

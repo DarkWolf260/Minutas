@@ -9,14 +9,6 @@ import { useGuards } from './use-guards';
 
 const DEFINITIONS_STORAGE_KEY = 'app-global-field-configs';
 
-const formatStaffMember = (member: StaffMember, showCedula: boolean): string => {
-    if (showCedula && member.cedula) {
-        return `${member.name} ${member.cedula}`;
-    }
-    return member.name;
-};
-
-
 const defaultDefinitions: Record<string, FieldConfig> = {
     'Municipio': { label: 'Municipio', type: 'predefined', value: '', sectionId: 'default' },
     'Estado': { label: 'Estado', type: 'predefined', value: '', sectionId: 'default' },
@@ -55,23 +47,6 @@ export function useFieldDefinitions() {
             // Dynamically set the current date for the 'Fecha' field.
             if (merged['Fecha']) {
                 merged['Fecha'].value = format(new Date(), 'yyyy-MM-dd');
-            }
-
-            // Dynamically set Reporta and Analista
-            const activeGuard = settings.activeGuardId ? guards.find(g => g.id === settings.activeGuardId) : null;
-            
-            if (activeGuard && settings.reportaRoleId) {
-                const staff = activeGuard.staff[settings.reportaRoleId] || [];
-                merged['Reporta'].value = staff.map(member => formatStaffMember(member, true)).join(', ');
-            } else {
-                merged['Reporta'].value = '';
-            }
-
-            if (activeGuard && settings.analistaRoleId) {
-                 const staff = activeGuard.staff[settings.analistaRoleId] || [];
-                 merged['Analista'].value = staff.map(member => formatStaffMember(member, true)).join(', ');
-            } else {
-                merged['Analista'].value = '';
             }
             
             if (isMounted) {

@@ -63,9 +63,17 @@ const TargetFieldEditor = ({
 const FieldEditor = React.memo(function FieldEditor({
     fieldId,
     fieldConfig,
+    allFields,
+    onConfigChange,
+    siblingFieldIds,
+    optionsDefinedInTemplate
 }: {
     fieldId: string;
     fieldConfig: FieldConfig;
+    allFields: Record<string, FieldConfig>;
+    onConfigChange: (fieldId: string, newConfig: Partial<FieldConfig>) => void;
+    siblingFieldIds: string[];
+    optionsDefinedInTemplate: boolean;
 }) {
     const { definitions } = useFieldDefinitions();
 
@@ -81,8 +89,7 @@ const FieldEditor = React.memo(function FieldEditor({
 
     const globalDefinition = definitions[fieldId];
     const finalType = fieldConfig.type || globalDefinition?.type || 'text';
-    const displayType = typeDisplay[finalType] || 'Texto';
-    const hasOptions = finalType === 'dropdown' && Array.isArray(fieldConfig.snippetOptions) && fieldConfig.snippetOptions.length > 0;
+    const isTypeDefinedInTemplate = !!parseTemplate(`{${fieldId}:${finalType}}`).fieldTypes.get(fieldId);
 
     return (
         <Card className="bg-muted/50">
@@ -90,17 +97,38 @@ const FieldEditor = React.memo(function FieldEditor({
                 <Label className="font-mono text-sm font-semibold flex-grow truncate" title={fieldId}>
                     {fieldConfig.label || fieldId}
                 </Label>
-                <Badge variant="outline">{displayType}</Badge>
+                 <Select
+                    value={finalType}
+                    onValueChange={(value) => onConfigChange(fieldId, { type: value as FieldType })}
+                    disabled={isTypeDefinedInTemplate}
+                >
+                    <SelectTrigger className="w-[150px] bg-background h-9">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="text">Texto</SelectItem>
+                        <SelectItem value="textarea">Área de Texto</SelectItem>
+                        <SelectItem value="dropdown">Dropdown</SelectItem>
+                        <SelectItem value="time-hlv">Hora (HLV)</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
-            {hasOptions && (
-                 <div className="border-t border-border px-3 pb-3 pt-2 space-y-1">
-                    {fieldConfig.snippetOptions?.map(opt => (
-                        <div key={opt.id} className="text-xs text-muted-foreground p-1.5 rounded-sm bg-background grid grid-cols-2 items-start gap-2">
-                           <p className="font-medium text-foreground/80 break-words">{opt.label}</p>
-                           <p className="italic text-right break-words">"{opt.value}"</p>
-                        </div>
-                    ))}
-                </div>
+             {finalType === 'dropdown' && (
+                <>
+                    <TargetFieldEditor
+                        fieldId={fieldId}
+                        config={fieldConfig}
+                        allFields={allFields}
+                        onConfigChange={onConfigChange}
+                        siblingFieldIds={siblingFieldIds}
+                    />
+                    {!optionsDefinedInTemplate && (
+                        <SnippetOptionEditor
+                            config={fieldConfig}
+                            onUpdate={(newConfig) => onConfigChange(fieldId, newConfig)}
+                        />
+                    )}
+                </>
             )}
         </Card>
     );
@@ -108,7 +136,6 @@ const FieldEditor = React.memo(function FieldEditor({
 
 
 export function TemplateEditor({ template, config, onConfigChange, onTemplateChange }: {template: Template, config: TemplateConfig, onConfigChange: (config: TemplateConfig) => void, onTemplateChange: (template: Template) => void}) {
-    const { definitions } = useFieldDefinitions();
     const [localTemplate, setLocalTemplate] = useState<Template>(template);
     const [localConfig, setLocalConfig] = useState<TemplateConfig>(() => JSON.parse(JSON.stringify({ ...initialConfig, ...(config || {}) })));
     const [optionsDefinedInTemplate, setOptionsDefinedInTemplate] = useState(new Map<string, boolean>());
@@ -116,51 +143,13 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
     
     useEffect(() => {
         setLocalTemplate(template);
-        const { sections, layout, fieldNames, fieldTypes, templateOptions } = parseTemplate(template.content);
-
-        const newConfig: TemplateConfig = {
-            fields: {},
-            sections,
-            layout
-        };
+        setLocalConfig(config);
         
-        let timeHlvFieldInConfig: string | null = null;
-        
-        const existingConfigFields = config?.fields || {};
-        if (config && config.fields) {
-            timeHlvFieldInConfig = Object.keys(config.fields).find(k => config.fields[k]?.type === 'time-hlv') || null;
-        }
-
-        fieldNames.forEach(fieldId => {
-            const oldFieldConfig = existingConfigFields[fieldId];
-            const globalDef = definitions[fieldId];
-            const typeFromTemplate = fieldTypes.get(fieldId);
-            
-            newConfig.fields[fieldId] = { ...(globalDef || { type: 'text', label: fieldId }), ...(oldFieldConfig || {}) };
-            newConfig.fields[fieldId].label = fieldId;
-            
-            if (templateOptions.has(fieldId)) {
-                newConfig.fields[fieldId].snippetOptions = templateOptions.get(fieldId);
-            }
-
-            if (typeFromTemplate) {
-                newConfig.fields[fieldId].type = typeFromTemplate;
-            } else if (fieldId.toLowerCase() === 'fecha') {
-                newConfig.fields[fieldId].type = 'date';
-            } else if (fieldId.toLowerCase() === 'hora') {
-                if (!timeHlvFieldInConfig) {
-                    newConfig.fields[fieldId].type = 'time-hlv';
-                    timeHlvFieldInConfig = fieldId;
-                } else if (timeHlvFieldInConfig !== fieldId && newConfig.fields[fieldId].type === 'time-hlv') {
-                    newConfig.fields[fieldId].type = 'text';
-                }
-            }
-        });
-        
+        const { templateOptions } = parseTemplate(template.content);
         setOptionsDefinedInTemplate(new Map(Array.from(templateOptions.keys()).map(k => [k, true])));
-        setLocalConfig(newConfig);
+        
         setHasChanges(false);
-    }, [template, config, definitions]);
+    }, [template, config]);
 
     const handleSaveChanges = () => {
         onConfigChange(localConfig);
@@ -218,7 +207,7 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
                          <h3 className="font-semibold text-lg mb-4">Estructura del Formulario</h3>
                          
                          <div className="space-y-4 p-1 rounded-md bg-muted/30">
-                            {(localConfig.layout || []).map((itemId, index) => {
+                            {(localConfig.layout || []).map((itemId) => {
                                 if (itemId.startsWith('section_')) {
                                     const section = sectionsById[itemId];
                                     if (!section) return null;
@@ -231,82 +220,46 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
                                                 </CardTitle>
                                             </CardHeader>
                                             <CardContent className="p-4 space-y-2">
-                                                {section.fieldIds.map((fieldId) => {
+                                                {section.layout?.map(fieldId => {
                                                     const fieldConfig = localConfig.fields[fieldId];
                                                     if (!fieldConfig) return null;
-                                                    const globalDefinition = definitions[fieldId];
-                                                    const finalType = fieldConfig.type || globalDefinition?.type || 'text';
-
+                                                    
                                                     return (
-                                                        <React.Fragment key={fieldId}>
-                                                            <FieldEditor
-                                                                fieldId={fieldId}
-                                                                fieldConfig={fieldConfig}
-                                                            />
-                                                            {finalType === 'dropdown' && (
-                                                                <>
-                                                                    <TargetFieldEditor
-                                                                        fieldId={fieldId}
-                                                                        config={fieldConfig}
-                                                                        allFields={localConfig.fields}
-                                                                        onConfigChange={handleFieldChange}
-                                                                        siblingFieldIds={section.fieldIds}
-                                                                    />
-                                                                    {!optionsDefinedInTemplate.get(fieldId) && (
-                                                                        <SnippetOptionEditor
-                                                                            config={fieldConfig}
-                                                                            onUpdate={(newConfig) => handleFieldChange(fieldId, newConfig)}
-                                                                        />
-                                                                    )}
-                                                                </>
-                                                            )}
-                                                        </React.Fragment>
-                                                    );
+                                                         <FieldEditor
+                                                            key={fieldId}
+                                                            fieldId={fieldId}
+                                                            fieldConfig={fieldConfig}
+                                                            allFields={localConfig.fields}
+                                                            onConfigChange={handleFieldChange}
+                                                            siblingFieldIds={section.fieldIds}
+                                                            optionsDefinedInTemplate={optionsDefinedInTemplate.get(fieldId) || false}
+                                                        />
+                                                    )
                                                 })}
                                                 {section.fieldIds.length === 0 && <p className="text-sm text-muted-foreground text-center p-2">Esta sección no tiene campos definidos en la plantilla.</p>}
                                             </CardContent>
                                         </Card>
                                     );
                                 } else if (itemId === 'section_separator') {
-                                    return <div key={`sep-${index}`} className="h-px bg-foreground/20 my-4" />;
+                                    return <div key={itemId} className="h-px bg-foreground/20 my-4" />;
                                 }
                                 else {
                                     const fieldId = itemId;
                                     const fieldConfig = localConfig.fields[fieldId];
                                     if (!fieldConfig || fieldConfig.type === 'predefined') return null;
                                     
-                                    const isAssigned = (localConfig.sections || []).some(s => s.fieldIds.includes(fieldId));
-                                    if (isAssigned || addedTopLevelFields.has(fieldId)) return null;
-
                                     addedTopLevelFields.add(fieldId);
-
-                                    const globalDefinition = definitions[fieldId];
-                                    const finalType = fieldConfig.type || globalDefinition?.type || 'text';
                                     
                                     return (
-                                        <React.Fragment key={fieldId}>
-                                            <FieldEditor
-                                                fieldId={fieldId}
-                                                fieldConfig={fieldConfig}
-                                            />
-                                            {finalType === 'dropdown' && (
-                                                <>
-                                                    <TargetFieldEditor
-                                                        fieldId={fieldId}
-                                                        config={fieldConfig}
-                                                        allFields={localConfig.fields}
-                                                        onConfigChange={handleFieldChange}
-                                                        siblingFieldIds={Array.from(addedTopLevelFields)}
-                                                    />
-                                                    {!optionsDefinedInTemplate.get(fieldId) && (
-                                                        <SnippetOptionEditor
-                                                            config={fieldConfig}
-                                                            onUpdate={(newConfig) => handleFieldChange(fieldId, newConfig)}
-                                                        />
-                                                    )}
-                                                </>
-                                            )}
-                                        </React.Fragment>
+                                         <FieldEditor
+                                            key={fieldId}
+                                            fieldId={fieldId}
+                                            fieldConfig={fieldConfig}
+                                            allFields={localConfig.fields}
+                                            onConfigChange={handleFieldChange}
+                                            siblingFieldIds={Array.from(addedTopLevelFields)}
+                                            optionsDefinedInTemplate={optionsDefinedInTemplate.get(fieldId) || false}
+                                        />
                                     );
                                 }
                             })}

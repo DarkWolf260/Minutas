@@ -161,7 +161,7 @@ export default function DireccionesPage() {
     if (!isLoaded) {
         return (
             <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-                <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
                         <Skeleton className="h-12 w-1/3 mb-4" />
                         <Skeleton className="h-10 w-full mb-6" />
@@ -170,7 +170,7 @@ export default function DireccionesPage() {
                             <Skeleton className="h-48 w-full" />
                         </div>
                     </div>
-                     <div className="h-96 lg:h-auto">
+                     <div className="h-96 md:h-auto">
                         <Skeleton className="h-full w-full" />
                     </div>
                 </div>
@@ -180,149 +180,147 @@ export default function DireccionesPage() {
     
     return (
         <>
-            <div className="p-4 sm:p-6 lg:p-8">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+            <div className="p-4 sm:p-6 lg:p-8 h-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-[calc(100vh-4rem)]">
                     {/* Left Column */}
-                    <div>
-                         <Card className="shadow-lg">
-                            <CardHeader>
-                                <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                                    <div>
-                                        <CardTitle>Gestor de Direcciones</CardTitle>
-                                        <CardDescription>Añade, edita y visualiza direcciones.</CardDescription>
-                                    </div>
-                                    <Button onClick={() => handleOpenForm()}>
-                                        <PlusCircle className="mr-2 h-4 w-4" />
-                                        Añadir Dirección
-                                    </Button>
+                    <Card className="shadow-lg flex flex-col h-full overflow-hidden">
+                        <CardHeader>
+                            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                                <div>
+                                    <CardTitle>Gestor de Direcciones</CardTitle>
+                                    <CardDescription>Añade, edita y visualiza direcciones.</CardDescription>
                                 </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="search">Buscar</Label>
-                                        <Input 
-                                            id="search"
-                                            placeholder="Por nombre, parroquia..."
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="municipality-filter">Filtrar por Municipio</Label>
-                                        <Select value={municipalityFilter} onValueChange={setMunicipalityFilter}>
-                                            <SelectTrigger id="municipality-filter">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {uniqueMunicipalities.map(mun => (
-                                                    <SelectItem key={mun} value={mun === 'Todos los municipios' ? 'all' : mun}>
-                                                        {mun}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                                <Button onClick={() => handleOpenForm()}>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Añadir Dirección
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="flex flex-col flex-1 min-h-0">
+                            <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="search">Buscar</Label>
+                                    <Input 
+                                        id="search"
+                                        placeholder="Por nombre, parroquia..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
                                 </div>
-                                <ScrollArea className="h-[calc(100vh-25rem)] pr-4">
-                                {filteredAddresses.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {filteredAddresses.map(address => (
-                                            <Card key={address.id} className={cn("flex flex-col transition-all", selectedForMap?.id === address.id && 'border-primary ring-1 ring-primary')}>
-                                                <CardHeader>
-                                                    <CardTitle className="flex items-start gap-2 text-lg">
-                                                        <NotebookPen className="h-5 w-5 mt-0.5 text-primary shrink-0" />
-                                                        <span className="flex-1">{address.name}</span>
-                                                    </CardTitle>
-                                                </CardHeader>
-                                                <CardContent className="text-sm text-muted-foreground flex-grow space-y-3">
-                                                    {(address.street || address.houseNumber) && (
-                                                        <div>
-                                                            <p className="font-semibold text-card-foreground/90">Dirección Específica:</p>
-                                                            <p>
-                                                                {`${address.street || ''}${address.street && address.houseNumber ? ', ' : ''}${address.houseNumber || ''}`}
-                                                            </p>
-                                                        </div>
-                                                    )}
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="municipality-filter">Filtrar por Municipio</Label>
+                                    <Select value={municipalityFilter} onValueChange={setMunicipalityFilter}>
+                                        <SelectTrigger id="municipality-filter">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {uniqueMunicipalities.map(mun => (
+                                                <SelectItem key={mun} value={mun === 'Todos los municipios' ? 'all' : mun}>
+                                                    {mun}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <ScrollArea className="flex-1 pr-1">
+                            {filteredAddresses.length > 0 ? (
+                                <div className="space-y-4 pr-3">
+                                    {filteredAddresses.map(address => (
+                                        <Card key={address.id} className={cn("flex flex-col transition-all", selectedForMap?.id === address.id && 'border-primary ring-1 ring-primary')}>
+                                            <CardHeader>
+                                                <CardTitle className="flex items-start gap-2 text-lg">
+                                                    <NotebookPen className="h-5 w-5 mt-0.5 text-primary shrink-0" />
+                                                    <span className="flex-1">{address.name}</span>
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="text-sm text-muted-foreground flex-grow space-y-3">
+                                                {(address.street || address.houseNumber) && (
                                                     <div>
-                                                        <p className="font-semibold text-card-foreground/90">Ubicación:</p>
+                                                        <p className="font-semibold text-card-foreground/90">Dirección Específica:</p>
                                                         <p>
-                                                            {[
-                                                                `Mcp. ${address.municipality}`,
-                                                                `Pqa. ${address.parish}`,
-                                                                address.sector ? `Sctor. ${address.sector}` : null,
-                                                                address.peaceQuadrant
-                                                            ].filter(Boolean).join(', ')}
+                                                            {`${address.street || ''}${address.street && address.houseNumber ? ', ' : ''}${address.houseNumber || ''}`}
                                                         </p>
                                                     </div>
-                                                    {(address.latitude && address.longitude) && (
-                                                        <div>
-                                                            <p className="font-semibold text-card-foreground/90">Coordenadas:</p>
-                                                            <p className="font-mono text-xs">{address.latitude}, {address.longitude}</p>
-                                                        </div>
-                                                    )}
-                                                    {address.details && (
-                                                        <div>
-                                                            <p className="font-semibold text-card-foreground/90">Detalles Adicionales:</p>
-                                                            <p className="italic">"{address.details}"</p>
-                                                        </div>
-                                                    )}
-                                                </CardContent>
-                                                <CardFooter className="flex justify-end gap-2 bg-muted/50 p-2">
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="outline" size="sm">
-                                                                {copiedAddressId === address.id ? (
-                                                                    <>
-                                                                        <Check className="mr-2 h-4 w-4" /> Copiado
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <ClipboardCopy className="mr-2 h-4 w-4" /> Copiar
-                                                                    </>
-                                                                )}
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem onClick={() => handleCopyAddress(address, false)}>
-                                                                Sin coordenadas
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem 
-                                                                onClick={() => handleCopyAddress(address, true)}
-                                                                disabled={!address.latitude || !address.longitude}
-                                                            >
-                                                                Con coordenadas
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                    <Button variant="outline" size="sm" onClick={() => setSelectedForMap(address)} disabled={!address.latitude || !address.longitude}>
-                                                        <Eye className="mr-2 h-4 w-4" /> Ver
-                                                    </Button>
-                                                    <Button variant="outline" size="sm" onClick={() => handleOpenForm(address)}>
-                                                        <Edit className="mr-2 h-4 w-4" /> Editar
-                                                    </Button>
-                                                    <Button variant="destructive" size="sm" onClick={() => setAddressToDelete(address)}>
-                                                        <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-                                                    </Button>
-                                                </CardFooter>
-                                            </Card>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                                        <MapPin className="mx-auto h-12 w-12 text-muted-foreground" />
-                                        <h3 className="mt-4 text-lg font-semibold">No se encontraron direcciones</h3>
-                                        <p className="mt-1 text-sm text-muted-foreground">
-                                            {searchQuery || municipalityFilter !== 'all' ? 'Prueba con otra búsqueda o filtro.' : 'Empieza añadiendo una nueva dirección.'}
-                                        </p>
-                                    </div>
-                                )}
-                                </ScrollArea>
-                            </CardContent>
-                        </Card>
-                    </div>
+                                                )}
+                                                <div>
+                                                    <p className="font-semibold text-card-foreground/90">Ubicación:</p>
+                                                    <p>
+                                                        {[
+                                                            `Mcp. ${address.municipality}`,
+                                                            `Pqa. ${address.parish}`,
+                                                            address.sector ? `Sctor. ${address.sector}` : null,
+                                                            address.peaceQuadrant
+                                                        ].filter(Boolean).join(', ')}
+                                                    </p>
+                                                </div>
+                                                {(address.latitude && address.longitude) && (
+                                                    <div>
+                                                        <p className="font-semibold text-card-foreground/90">Coordenadas:</p>
+                                                        <p className="font-mono text-xs">{address.latitude}, {address.longitude}</p>
+                                                    </div>
+                                                )}
+                                                {address.details && (
+                                                    <div>
+                                                        <p className="font-semibold text-card-foreground/90">Detalles Adicionales:</p>
+                                                        <p className="italic">"{address.details}"</p>
+                                                    </div>
+                                                )}
+                                            </CardContent>
+                                            <CardFooter className="flex justify-end gap-2 bg-muted/50 p-2">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="outline" size="sm">
+                                                            {copiedAddressId === address.id ? (
+                                                                <>
+                                                                    <Check className="mr-2 h-4 w-4" /> Copiado
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <ClipboardCopy className="mr-2 h-4 w-4" /> Copiar
+                                                                </>
+                                                            )}
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => handleCopyAddress(address, false)}>
+                                                            Sin coordenadas
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem 
+                                                            onClick={() => handleCopyAddress(address, true)}
+                                                            disabled={!address.latitude || !address.longitude}
+                                                        >
+                                                            Con coordenadas
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                                <Button variant="outline" size="sm" onClick={() => setSelectedForMap(address)} disabled={!address.latitude || !address.longitude}>
+                                                    <Eye className="mr-2 h-4 w-4" /> Ver
+                                                </Button>
+                                                <Button variant="outline" size="sm" onClick={() => handleOpenForm(address)}>
+                                                    <Edit className="mr-2 h-4 w-4" /> Editar
+                                                </Button>
+                                                <Button variant="destructive" size="sm" onClick={() => setAddressToDelete(address)}>
+                                                    <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                                                </Button>
+                                            </CardFooter>
+                                        </Card>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                                    <MapPin className="mx-auto h-12 w-12 text-muted-foreground" />
+                                    <h3 className="mt-4 text-lg font-semibold">No se encontraron direcciones</h3>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        {searchQuery || municipalityFilter !== 'all' ? 'Prueba con otra búsqueda o filtro.' : 'Empieza añadiendo una nueva dirección.'}
+                                    </p>
+                                </div>
+                            )}
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
                     {/* Right Column */}
-                     <div className="h-96 lg:h-[calc(100vh-3rem)] lg:sticky lg:top-6">
+                    <div className="h-96 md:h-full">
                         <AddressMap 
                             latitude={selectedForMap?.latitude}
                             longitude={selectedForMap?.longitude}

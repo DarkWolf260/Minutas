@@ -48,10 +48,45 @@ function getFieldComponent(
     rolesLoaded: boolean, 
     units: string[], 
     staffOptions: StaffMember[],
-    setValue: (name: string, value: any, options?: { shouldValidate?: boolean; shouldDirty?: boolean; }) => void
+    setValue: (name: string, value: any, options?: { shouldValidate?: boolean; shouldDirty?: boolean; }) => void,
+    settings: any // Using 'any' for simplicity, should be AppSettings
 ) {
     const lowerFieldId = fieldId.toLowerCase();
     const addressFieldNames = ['dirección', 'ubicación', 'destino'];
+    
+    // Check for Reporta/Analista fields
+    if (lowerFieldId === 'reporta' || lowerFieldId === 'analista') {
+        const reportingRoleId = settings.reportaRoleId;
+        const reportingStaff = reportingRoleId ? staffOptions.filter(staff => staff.roleId === reportingRoleId) : [];
+        
+        return (props: any) => {
+             const { onChange, value, disabled } = props;
+
+            // The value might be an array of StaffMember objects. We need the ID for the Select.
+            const selectedStaffId = Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' ? value[0].id : undefined;
+
+            const handleSelectChange = (staffId: string) => {
+                const selectedStaff = reportingStaff.find(s => s.id === staffId);
+                // The form expects an array for this field
+                onChange(selectedStaff ? [selectedStaff] : []);
+            };
+            
+            return (
+                 <Select onValueChange={handleSelectChange} value={selectedStaffId} disabled={disabled}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Selecciona el personal..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {reportingStaff.map(staff => (
+                            <SelectItem key={staff.id} value={staff.id}>
+                                {formatStaffMemberForAutocomplete(staff, true)}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            );
+        };
+    }
 
     if (lowerFieldId === 'cédula') {
         return (props: any) => <CedulaInput {...props} />;
@@ -70,21 +105,12 @@ function getFieldComponent(
     if (role) {
          return (props: any) => {
             const isReportaAnalista = lowerFieldId === 'reporta' || lowerFieldId === 'analista';
-            const currentValue = Array.isArray(props.value) ? props.value.map(formatStaffMemberForDisplay) : [];
-            const autocompleteOptions = staffOptions.map(member => formatStaffMemberForAutocomplete(member, isReportaAnalista));
+            const currentValue = Array.isArray(props.value) ? props.value.map(val => (typeof val === 'object' && val.name) ? val.name : val) : [];
+            const autocompleteOptions = staffOptions.map(member => formatStaffMemberForAutocomplete(member, false));
 
             const handleMultiInputChange = (newValue: string[] | string) => {
                 const finalValueArray = Array.isArray(newValue) ? newValue : [newValue];
-                
-                if (isReportaAnalista) {
-                    const finalObjects = finalValueArray.map(nv => {
-                        const foundStaff = staffOptions.find(so => formatStaffMemberForAutocomplete(so, true) === nv);
-                        return foundStaff || { id: `staff_${Date.now()}_${Math.random()}`, name: nv };
-                    });
-                    props.onChange(finalObjects);
-                } else {
-                    props.onChange(finalValueArray);
-                }
+                 props.onChange(finalValueArray);
             };
             
             if (role.isSingle) {
@@ -140,7 +166,7 @@ function getFieldComponent(
 }
 
 
-function SectionRenderer({ section, config, control, disabled, roles, rolesLoaded, activeGuardStaff, predefinedValues, units, setValue }: { section: SectionConfig, config: TemplateConfig, control: any, disabled: boolean, roles: StaffRole[], rolesLoaded: boolean, activeGuardStaff: StaffMember[], predefinedValues: Record<string, string>, units: string[], setValue: (name: string, value: any, options?: { shouldValidate?: boolean; shouldDirty?: boolean; }) => void }) {
+function SectionRenderer({ section, config, control, disabled, roles, rolesLoaded, activeGuardStaff, predefinedValues, units, setValue, settings }: { section: SectionConfig, config: TemplateConfig, control: any, disabled: boolean, roles: StaffRole[], rolesLoaded: boolean, activeGuardStaff: StaffMember[], predefinedValues: Record<string, string>, units: string[], setValue: (name: string, value: any, options?: { shouldValidate?: boolean; shouldDirty?: boolean; }) => void, settings: any }) {
     
     const condition = section.condition;
     const watchedFieldValue = useWatch({
@@ -178,7 +204,7 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
             const fieldConfig = (config.fields || {})[fieldId];
             if (!fieldConfig) return null;
 
-            const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, activeGuardStaff, setValue);
+            const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, activeGuardStaff, setValue, settings);
             const defaultSingleFieldItem = { [fieldId]: '' };
 
             return (
@@ -249,7 +275,7 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
                                     if (!fieldConfig) return null;
                                     const isFullWidth = fieldConfig.type === 'textarea';
                                     const path = `${section.id}.${index}.${fieldId}`;
-                                    const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, activeGuardStaff, setValue);
+                                    const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, activeGuardStaff, setValue, settings);
 
                                     return (
                                         <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2")}>
@@ -297,14 +323,14 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
                         // Nested non-repeatable section
                         const nestedSection = config.sections.find(s => s.id === fieldId);
                         if (!nestedSection) return null;
-                        return <SectionRenderer key={fieldId} section={nestedSection} config={config} control={control} disabled={disabled} roles={roles} rolesLoaded={rolesLoaded} activeGuardStaff={activeGuardStaff} predefinedValues={predefinedValues} units={units} setValue={setValue} />;
+                        return <SectionRenderer key={fieldId} section={nestedSection} config={config} control={control} disabled={disabled} roles={roles} rolesLoaded={rolesLoaded} activeGuardStaff={activeGuardStaff} predefinedValues={predefinedValues} units={units} setValue={setValue} settings={settings} />;
                     }
 
                     const fieldConfig = (config.fields || {})[fieldId];
                     if (!fieldConfig) return null;
                     const isFullWidth = fieldConfig.type === 'textarea';
                     const path = `${section.id}.${fieldId}`;
-                    const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, activeGuardStaff, setValue);
+                    const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, activeGuardStaff, setValue, settings);
 
                     return (
                         <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2 3xl:col-span-3")}>
@@ -350,12 +376,16 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
         const activeGuard = guards.find(g => g.id === settings.activeGuardId);
         if (!activeGuard || !activeGuard.staff) return [];
 
-        const staffSet = new Set<StaffMember>();
-        Object.values(activeGuard.staff).forEach(staffList => {
-            staffList.forEach(person => staffSet.add(person));
+        const staffSetWithRoles = new Set<StaffMember & { roleId?: string }>();
+        Object.entries(activeGuard.staff).forEach(([roleName, staffList]) => {
+            const roleId = roles.find(r => r.name === roleName)?.name; // Using name as ID for now
+            staffList.forEach(person => {
+                staffSetWithRoles.add({ ...person, roleId: roleId });
+            });
         });
-        return Array.from(staffSet).sort((a,b) => a.name.localeCompare(b.name));
-    }, [settings.activeGuardId, guards, settingsLoaded, guardsLoaded]);
+        
+        return Array.from(staffSetWithRoles).sort((a,b) => a.name.localeCompare(b.name));
+    }, [settings.activeGuardId, guards, settingsLoaded, guardsLoaded, roles]);
 
     const finalConfig = useMemo(() => {
         if (!config || !template) return { fields: {}, sections: [], layout: []};
@@ -608,6 +638,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
                             predefinedValues={predefinedValues}
                             units={units}
                             setValue={setValue}
+                            settings={settings}
                         />
                     );
                 } else {
@@ -617,7 +648,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
                                 const fieldConfig = finalConfig.fields[fieldId];
                                 if (!fieldConfig) return null;
                                 const isFullWidth = fieldConfig.type === 'textarea';
-                                const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, activeGuardStaff, setValue);
+                                const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, activeGuardStaff, setValue, settings);
 
                                 return (
                                     <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2 3xl:col-span-3")}>
@@ -638,3 +669,5 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
     );
 });
 ReportForm.displayName = 'ReportForm';
+
+    

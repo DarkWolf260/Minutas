@@ -21,20 +21,66 @@ export function useTemplates() {
   useEffect(() => {
     try {
       const storedTemplates = localStorage.getItem(TEMPLATES_STORAGE_KEY);
-      if (storedTemplates) {
-        const parsed = JSON.parse(storedTemplates);
-        setTemplates(parsed.map((t: Template) => ({ ...t, isActive: t.isActive ?? true })));
-      }
+      const initialTemplates = storedTemplates ? JSON.parse(storedTemplates) : [];
+      setTemplates(initialTemplates.map((t: Template) => ({ ...t, isActive: t.isActive ?? true })));
+
       const storedConfigs = localStorage.getItem(TEMPLATE_CONFIGS_STORAGE_KEY);
-      if (storedConfigs) {
-        setConfigs(JSON.parse(storedConfigs));
-      }
+      setConfigs(storedConfigs ? JSON.parse(storedConfigs) : {});
+      
     } catch (error) {
       console.error('Failed to load templates from localStorage', error);
     } finally {
       setIsLoaded(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (isLoaded && definitionsLoaded && templates.length > 0) {
+        const newConfigs: Record<string, TemplateConfig> = {};
+
+        templates.forEach(template => {
+            const parsed = parseTemplate(template.content);
+            const existingConfig = configs[template.id] || { fields: {}, sections: [], layout: [] };
+            
+            const finalConfig: TemplateConfig = {
+                sections: parsed.sections,
+                layout: parsed.layout,
+                fields: {}
+            };
+
+            parsed.fieldNames.forEach(fieldName => {
+                const existingFieldConfig = existingConfig.fields[fieldName];
+                const globalDef = globalDefinitions[fieldName];
+                const typeFromTemplate = parsed.fieldTypes.get(fieldName);
+                const optionsFromTemplate = parsed.templateOptions.get(fieldName);
+
+                const baseConfig = {
+                    type: 'text' as const,
+                    label: fieldName,
+                    ...globalDef,
+                    ...existingFieldConfig,
+                };
+
+                if (typeFromTemplate) {
+                    baseConfig.type = typeFromTemplate;
+                }
+                if (optionsFromTemplate) {
+                    baseConfig.snippetOptions = optionsFromTemplate;
+                }
+                
+                finalConfig.fields[fieldName] = baseConfig;
+            });
+
+            newConfigs[template.id] = finalConfig;
+        });
+        
+        if (JSON.stringify(newConfigs) !== JSON.stringify(configs)) {
+            saveConfigs(newConfigs);
+        }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, definitionsLoaded, templates]);
+
 
   const saveTemplates = useCallback((newTemplates: Template[]) => {
     setTemplates(newTemplates);
@@ -55,37 +101,27 @@ export function useTemplates() {
   }, []);
 
   const addTemplate = (newTemplate: Template) => {
-    const predefinedKeys = Object.keys(settings);
-    const templateWithStatus = { ...newTemplate, isActive: true };
-    const updatedTemplates = [...templates, templateWithStatus];
+    const updatedTemplates = [...templates, { ...newTemplate, isActive: true }];
     saveTemplates(updatedTemplates);
 
-    const { sections, layout, fieldNames } = parseTemplate(newTemplate.content);
+    const { sections, layout, fieldNames, fieldTypes, templateOptions } = parseTemplate(newTemplate.content);
     const newConfig: TemplateConfig = { fields: {}, sections, layout };
-
-    let hasTimeField = false;
-    const globalTimeField = Object.keys(globalDefinitions).find(key => globalDefinitions[key].type === 'time-hlv');
-
-    fieldNames.forEach(fieldId => {
-      // Priority: Global Definition > Predefined > Heuristic > Default
-      if (globalDefinitions[fieldId]) {
-        newConfig.fields[fieldId] = { ...globalDefinitions[fieldId], label: fieldId };
-        if (newConfig.fields[fieldId].type === 'time-hlv') {
-          hasTimeField = true;
+    
+    fieldNames.forEach(fieldName => {
+        newConfig.fields[fieldName] = {
+            ...(globalDefinitions[fieldName] || { type: 'text', label: fieldName }),
+        };
+        const typeFromTemplate = fieldTypes.get(fieldName);
+        if (typeFromTemplate) {
+            newConfig.fields[fieldName].type = typeFromTemplate;
         }
-      } else if (predefinedKeys.includes(fieldId)) {
-        newConfig.fields[fieldId] = { type: 'predefined', label: fieldId };
-      } else {
-        newConfig.fields[fieldId] = { type: 'text', label: fieldId };
-        if (fieldId.toLowerCase() === 'hora' && !hasTimeField && !globalTimeField) {
-          newConfig.fields[fieldId].type = 'time-hlv';
-          hasTimeField = true;
+        const optionsFromTemplate = templateOptions.get(fieldName);
+        if (optionsFromTemplate) {
+            newConfig.fields[fieldName].snippetOptions = optionsFromTemplate;
         }
-      }
     });
-
-    const updatedConfigs = {...configs, [newTemplate.id]: newConfig};
-    saveConfigs(updatedConfigs);
+    
+    saveConfigs({...configs, [newTemplate.id]: newConfig});
   };
   
   const removeTemplate = (templateId: string) => {
