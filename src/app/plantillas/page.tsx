@@ -43,6 +43,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { TemplateBuilder } from '@/components/template-builder';
+import { Badge } from '@/components/ui/badge';
 
 export default function PlantillasPage() {
     const { templates, addTemplate, removeTemplate, updateTemplate, configs, updateTemplateConfig, toggleTemplateActive, clearAllTemplates } = useTemplates();
