@@ -15,6 +15,8 @@ import { parseTemplate } from '@/lib/template-parser';
 import { cn } from '@/lib/utils';
 import { Save, HelpCircle, AlertTriangle } from 'lucide-react';
 import type { SnippetOption, SectionConfig } from '@/types';
+import { toast } from 'sonner';
+import { validateTemplateSyntax } from '@/lib/validators';
 
 const PreviewFieldEditor = ({ fieldId, config }: { fieldId: string, config: any }) => {
     const typeDisplay: Record<string, string> = {
@@ -39,11 +41,11 @@ const PreviewFieldEditor = ({ fieldId, config }: { fieldId: string, config: any 
                 <Badge variant="outline">{displayType}</Badge>
             </div>
             {hasOptions && (
-                 <div className="border-t border-border px-3 pb-3 pt-2 space-y-1">
+                <div className="border-t border-border px-3 pb-3 pt-2 space-y-1">
                     {config.snippetOptions?.map((opt: SnippetOption) => (
                         <div key={opt.id} className="text-xs text-muted-foreground p-1.5 rounded-sm bg-background grid grid-cols-2 items-start gap-2">
-                           <p className="font-medium text-foreground/80 break-words">{opt.label}</p>
-                           <p className="italic text-right break-words">"{opt.value}"</p>
+                            <p className="font-medium text-foreground/80 break-words">{opt.label}</p>
+                            <p className="italic text-right break-words">"{opt.value}"</p>
                         </div>
                     ))}
                 </div>
@@ -60,7 +62,7 @@ function FormPreview({ layout, sections, fields }: { layout: string[], sections:
             </div>
         );
     }
-    
+
     const sectionsById = useMemo(() => sections.reduce((acc, section) => {
         acc[section.id] = section;
         return acc;
@@ -83,7 +85,7 @@ function FormPreview({ layout, sections, fields }: { layout: string[], sections:
                                     {section.condition && <Badge variant="secondary">Condicional</Badge>}
                                 </CardTitle>
                                 {section.condition && (
-                                     <CardDescription className="pt-1 !mt-1 text-xs">
+                                    <CardDescription className="pt-1 !mt-1 text-xs">
                                         Se muestra si '{section.condition.fieldId}' es '{section.condition.value}'
                                     </CardDescription>
                                 )}
@@ -99,14 +101,14 @@ function FormPreview({ layout, sections, fields }: { layout: string[], sections:
                         </Card>
                     );
                 } else if (itemId === 'section_separator') {
-                     return <div key={`sep-${index}`} className="h-px bg-foreground/20 my-4" />;
+                    return <div key={`sep-${index}`} className="h-px bg-foreground/20 my-4" />;
                 }
                 else {
                     const fieldId = itemId;
                     const fieldConfig = fields[fieldId];
                     const isAssigned = sections.some(s => s.fieldIds.includes(fieldId));
                     if (!fieldConfig || isAssigned || addedTopLevelFields.has(fieldId)) return null;
-                    
+
                     addedTopLevelFields.add(fieldId);
 
                     return <PreviewFieldEditor key={fieldId} fieldId={fieldId} config={fieldConfig} />;
@@ -119,7 +121,6 @@ function FormPreview({ layout, sections, fields }: { layout: string[], sections:
 export function TemplateBuilder({ onOpenInfoDialog }: { onOpenInfoDialog: () => void }) {
     const [templateContent, setTemplateContent] = useState('');
     const [templateName, setTemplateName] = useState('');
-    const [feedback, setFeedback] = useState('');
 
     const { definitions } = useFieldDefinitions();
     const { addTemplate } = useTemplates();
@@ -134,7 +135,7 @@ export function TemplateBuilder({ onOpenInfoDialog }: { onOpenInfoDialog: () => 
         fieldNames.forEach(name => {
             const globalDef = definitions[name];
             const typeFromTemplate = fieldTypes.get(name);
-            
+
             result[name] = {
                 label: name,
                 type: typeFromTemplate || globalDef?.type || 'text',
@@ -143,7 +144,7 @@ export function TemplateBuilder({ onOpenInfoDialog }: { onOpenInfoDialog: () => 
         });
         return result;
     }, [fieldNames, fieldTypes, templateOptions, definitions]);
-    
+
     const insertText = (text: string) => {
         const textarea = textareaRef.current;
         if (!textarea) return;
@@ -154,7 +155,7 @@ export function TemplateBuilder({ onOpenInfoDialog }: { onOpenInfoDialog: () => 
 
         const newText = `${currentText.substring(0, start)}${text}${currentText.substring(end)}`;
         setTemplateContent(newText);
-        
+
         // This makes sure the state update is processed before we focus and set cursor
         setTimeout(() => {
             textarea.focus();
@@ -164,13 +165,17 @@ export function TemplateBuilder({ onOpenInfoDialog }: { onOpenInfoDialog: () => 
 
     const handleSave = () => {
         if (!templateName.trim()) {
-            setFeedback('Por favor, dale un nombre a la plantilla.');
-            setTimeout(() => setFeedback(''), 3000);
+            toast.error('Por favor, dale un nombre a la plantilla.');
             return;
         }
-         if (!templateContent.trim()) {
-            setFeedback('La plantilla no puede estar vacía.');
-            setTimeout(() => setFeedback(''), 3000);
+        if (!templateContent.trim()) {
+            toast.error('La plantilla no puede estar vacía.');
+            return;
+        }
+
+        const syntaxCheck = validateTemplateSyntax(templateContent);
+        if (!syntaxCheck.valid) {
+            toast.error(`Error de sintaxis: ${syntaxCheck.error}`);
             return;
         }
 
@@ -183,14 +188,13 @@ export function TemplateBuilder({ onOpenInfoDialog }: { onOpenInfoDialog: () => 
         };
 
         addTemplate(newTemplate);
-        setFeedback(`¡Plantilla "${templateName}" guardada!`);
+        // addTemplate ya muestra un toast de éxito, así que solo limpiamos
         setTemplateName('');
         setTemplateContent('');
-        setTimeout(() => setFeedback(''), 4000);
     };
 
     const globalTags = Object.keys(definitions).map(key => definitions[key]);
-    
+
     const commonSnippets = [
         { name: 'Sección Simple', value: '["Título de la sección" {Campo1} {Campo2}]' },
         { name: 'Sección Repetible', value: '["Título de la sección"]* {Campo}' },
@@ -208,13 +212,13 @@ export function TemplateBuilder({ onOpenInfoDialog }: { onOpenInfoDialog: () => 
                             <CardDescription>Escribe tu plantilla y usa los botones para añadir etiquetas y secciones.</CardDescription>
                         </div>
                         <Button variant="outline" size="sm" onClick={onOpenInfoDialog}>
-                              <HelpCircle className="mr-2 h-4 w-4" />
-                              Guía de Sintaxis
+                            <HelpCircle className="mr-2 h-4 w-4" />
+                            Guía de Sintaxis
                         </Button>
                     </div>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col gap-4">
-                     <div className="space-y-2">
+                    <div className="space-y-2">
                         <Label>Etiquetas Globales</Label>
                         <div className="flex flex-wrap gap-1">
                             {globalTags.map(tag => (
@@ -224,10 +228,10 @@ export function TemplateBuilder({ onOpenInfoDialog }: { onOpenInfoDialog: () => 
                             ))}
                         </div>
                     </div>
-                     <div className="space-y-2">
+                    <div className="space-y-2">
                         <Label>Fragmentos Comunes</Label>
                         <div className="flex flex-wrap gap-1">
-                           {commonSnippets.map(snippet => (
+                            {commonSnippets.map(snippet => (
                                 <Button key={snippet.name} size="sm" variant="outline" onClick={() => insertText(snippet.value)}>
                                     {snippet.name}
                                 </Button>
@@ -240,13 +244,12 @@ export function TemplateBuilder({ onOpenInfoDialog }: { onOpenInfoDialog: () => 
                         onChange={(e) => setTemplateContent(e.target.value)}
                         className="flex-1 font-mono text-sm leading-relaxed"
                         placeholder="Escribe aquí tu plantilla. Ejemplo: Siendo las {Hora}, se reporta novedad..."
-                        
+
                     />
                     <div className="flex items-end gap-2 pt-4 border-t">
                         <div className="flex-1 space-y-2">
                             <Label htmlFor="template-name">Nombre de la Nueva Plantilla</Label>
                             <Input id="template-name" value={templateName} onChange={(e) => setTemplateName(e.target.value)} placeholder="Ej: Reporte de Accidente Vial" />
-                             {feedback && <p className={cn("text-sm pt-1", feedback.includes('guardada') ? 'text-green-600' : 'text-destructive')}>{feedback}</p>}
                         </div>
                         <Button onClick={handleSave}>
                             <Save className="mr-2 h-4 w-4" /> Guardar Plantilla

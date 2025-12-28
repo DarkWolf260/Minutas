@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search, FileText, AlertTriangle, Trash2, PlusCircle } from 'lucide-react';
-import { ReportViewer } from '@/components/report-viewer';
-import { ReportGenerator } from '@/components/report-generator';
+import { ReportViewer } from '@/components/report/report-viewer';
+import { ReportGenerator } from '@/components/report/report-generator';
 import { useReports } from '@/hooks/use-reports';
 import { useTemplates } from '@/hooks/use-templates';
 import { useDrafts } from '@/hooks/use-drafts';
@@ -71,7 +71,7 @@ function NovedadesPageContent() {
   useEffect(() => {
     if (!isMounted) return;
     // This effect handles draft restoration and default report selection.
-    
+
     // 1. Handle draft restoration first.
     if (draftIsLoaded && draft) {
       const template = templates.find(t => t.id === draft.templateId);
@@ -92,9 +92,9 @@ function NovedadesPageContent() {
     // 3. If a valid report is already selected, do nothing.
     // The user's selection should be preserved.
     if (selectedReportId && reports.find(r => r.id === selectedReportId)) {
-        return;
+      return;
     }
-    
+
     // 4. If we're here, there's no valid selection. Let's pick one.
     // Give priority to the URL parameter.
     if (preSelectedId && reports.find(r => r.id === preSelectedId)) {
@@ -106,13 +106,13 @@ function NovedadesPageContent() {
     }
   }, [
     isMounted,
-    preSelectedId, 
-    reports, 
-    filteredReports, 
-    creatingReport, 
-    draft, 
-    draftIsLoaded, 
-    templates, 
+    preSelectedId,
+    reports,
+    filteredReports,
+    creatingReport,
+    draft,
+    draftIsLoaded,
+    templates,
     clearDraft,
   ]);
 
@@ -120,7 +120,7 @@ function NovedadesPageContent() {
     if (!selectedReportId || creatingReport) return null;
     return reports.find(report => report.id === selectedReportId) ?? null;
   }, [selectedReportId, reports, creatingReport]);
-  
+
   const handleDeleteReport = (id: string) => {
     removeReport(id);
     if (selectedReportId === id) {
@@ -133,14 +133,14 @@ function NovedadesPageContent() {
     clearAllReports();
     setReportToDelete(null);
   };
-  
+
   const handleSelectTemplate = (templateId: string) => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
-        setInitialDraftData(undefined);
-        setSelectedReportId(null);
-        setCreatingReport(template);
-        setIsCreateDialogOpen(false);
+      setInitialDraftData(undefined);
+      setSelectedReportId(null);
+      setCreatingReport(template);
+      setIsCreateDialogOpen(false);
     }
   };
 
@@ -165,8 +165,8 @@ function NovedadesPageContent() {
           <div className="flex items-center justify-between border-b p-3">
             <h2 className="text-lg font-semibold">Novedades</h2>
             <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Crear
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Crear
             </Button>
           </div>
           <div className="relative p-3">
@@ -183,153 +183,145 @@ function NovedadesPageContent() {
               {filteredReports.map((report) => {
                 const horaValue = findValueInFormData(report.formData, 'Hora');
                 return (
-                    <button
-                        key={report.id}
-                        onClick={() => {
-                            setSelectedReportId(report.id);
-                            setCreatingReport(null);
-                        }}
-                        className={cn(
-                            'w-full rounded-md p-3 text-left transition-colors hover:bg-muted/50',
-                            selectedReportId === report.id && !creatingReport && 'bg-muted'
-                        )}
-                    >
-                        <div className="flex w-full items-start gap-3">
-                            {report.isRelevant ? (
-                            <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-destructive" />
-                            ) : (
-                            <FileText className="mt-1 h-4 w-4 shrink-0 text-primary" />
-                            )}
-                            <div className="min-w-0 flex-1">
-                            <p className="font-medium">{report.title}</p>
-                            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                                {report.status && (
-                                <div className="flex items-center gap-1.5">
-                                    <span
-                                    className={cn(
-                                        'h-2 w-2 rounded-full',
-                                        report.status === 'Finalizado' ? 'bg-green-500' : 'bg-orange-500'
-                                    )}
-                                    />
-                                    <span>{report.status}</span>
-                                </div>
+                  <button
+                    key={report.id}
+                    onClick={() => {
+                      setSelectedReportId(report.id);
+                      setCreatingReport(null);
+                    }}
+                    className={cn(
+                      'w-full rounded-md p-3 text-left transition-colors hover:bg-muted/50',
+                      selectedReportId === report.id && !creatingReport && 'bg-muted'
+                    )}
+                  >
+                    <div className="flex w-full items-start gap-3">
+                      {report.isRelevant ? (
+                        <AlertTriangle className="mt-1 h-4 w-4 shrink-0 text-destructive" />
+                      ) : (
+                        <FileText className="mt-1 h-4 w-4 shrink-0 text-primary" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium">{report.title}</p>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                          {report.status && (
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className={cn(
+                                  'h-2 w-2 rounded-full',
+                                  report.status === 'Finalizado' ? 'bg-green-500' : 'bg-orange-500'
                                 )}
-                                {horaValue && (
-                                <span className="truncate">{String(horaValue)}</span>
-                                )}
+                              />
+                              <span>{report.status}</span>
                             </div>
-                            </div>
+                          )}
+                          {horaValue && (
+                            <span className="truncate">{String(horaValue)}</span>
+                          )}
                         </div>
-                    </button>
+                      </div>
+                    </div>
+                  </button>
                 );
               })}
               {filteredReports.length === 0 && (
                 <div className="p-4 text-center text-sm text-muted-foreground">
-                    No se encontraron reportes.
+                  No se encontraron reportes.
                 </div>
               )}
             </div>
           </ScrollArea>
-           {reports.length > 0 && (
-            <div className="border-t p-3">
-                <Button variant="destructive" className="w-full" onClick={() => setReportToDelete('ALL')}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Limpiar Todo
-                </Button>
-            </div>
-          )}
         </aside>
 
         <main className="flex-1">
-            {creatingReport ? (
-                 <ReportGenerator
-                    key={creatingReport.id}
-                    template={creatingReport}
-                    config={configs[creatingReport.id] || {}}
-                    initialData={initialDraftData}
-                    onCancel={handleCancelCreation}
-                    onSave={handleSaveNewReport}
-                />
-            ) : (
-                 <ReportViewer
-                    key={selectedReportId}
-                    report={selectedReport}
-                    onSave={updateReport}
-                    onDelete={(id) => setReportToDelete(id)}
-                    />
-            )}
+          {creatingReport ? (
+            <ReportGenerator
+              key={creatingReport.id}
+              template={creatingReport}
+              config={configs[creatingReport.id] || {}}
+              initialData={initialDraftData}
+              onCancel={handleCancelCreation}
+              onSave={handleSaveNewReport}
+            />
+          ) : (
+            <ReportViewer
+              key={selectedReportId}
+              report={selectedReport}
+              onSave={updateReport}
+              onDelete={(id) => setReportToDelete(id)}
+            />
+          )}
         </main>
       </div>
 
-       <AlertDialog open={!!reportToDelete} onOpenChange={(open) => !open && setReportToDelete(null)}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        {reportToDelete === 'ALL'
-                            ? "Esta acción no se puede deshacer. Se eliminarán permanentemente TODOS los reportes guardados."
-                            : "Esta acción no se puede deshacer. El reporte será eliminado permanentemente."
-                        }
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setReportToDelete(null)}>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => reportToDelete === 'ALL' ? handleClearAll() : handleDeleteReport(reportToDelete!)}>
-                        Sí, eliminar
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-        
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Crear Novedad</DialogTitle>
-                    <DialogDescription>
-                        Selecciona una plantilla para empezar a generar un nuevo reporte.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="py-4 space-y-2 max-h-96 overflow-y-auto">
-                    {templates.filter(t => t.isActive).length > 0 ? templates.filter(t => t.isActive).map(template => (
-                        <button key={template.id} onClick={() => handleSelectTemplate(template.id)} className="w-full text-left p-3 rounded-md hover:bg-muted transition-colors flex items-center gap-3">
-                             <FileText className="h-5 w-5 text-primary" />
-                             <span className="flex-1">{template.name}</span>
-                        </button>
-                    )) : (
-                        <div className="text-center text-muted-foreground py-10">
-                            <p>No has subido o activado ninguna plantilla.</p>
-                            <Button variant="link" onClick={() => { setIsCreateDialogOpen(false); router.push('/plantillas'); }}>Ir a Plantillas</Button>
-                        </div>
-                    )}
-                </div>
-            </DialogContent>
-        </Dialog>
+      <AlertDialog open={!!reportToDelete} onOpenChange={(open) => !open && setReportToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {reportToDelete === 'ALL'
+                ? "Esta acción no se puede deshacer. Se eliminarán permanentemente TODOS los reportes guardados."
+                : "Esta acción no se puede deshacer. El reporte será eliminado permanentemente."
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setReportToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => reportToDelete === 'ALL' ? handleClearAll() : handleDeleteReport(reportToDelete!)}>
+              Sí, eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Crear Novedad</DialogTitle>
+            <DialogDescription>
+              Selecciona una plantilla para empezar a generar un nuevo reporte.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-2 max-h-96 overflow-y-auto">
+            {templates.filter(t => t.isActive).length > 0 ? templates.filter(t => t.isActive).map(template => (
+              <button key={template.id} onClick={() => handleSelectTemplate(template.id)} className="w-full text-left p-3 rounded-md hover:bg-muted transition-colors flex items-center gap-3">
+                <FileText className="h-5 w-5 text-primary" />
+                <span className="flex-1">{template.name}</span>
+              </button>
+            )) : (
+              <div className="text-center text-muted-foreground py-10">
+                <p>No has subido o activado ninguna plantilla.</p>
+                <Button variant="link" onClick={() => { setIsCreateDialogOpen(false); router.push('/plantillas'); }}>Ir a Plantillas</Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
 
 export default function NovedadesPage() {
-    return (
-        <Suspense fallback={
-            <div className="flex h-screen bg-background">
-                 <aside className="h-full w-80 flex-col border-r bg-card flex animate-pulse">
-                     <div className="flex items-center justify-between border-b p-3">
-                        <div className="h-6 w-32 bg-muted rounded"></div>
-                        <div className="h-8 w-24 bg-muted rounded"></div>
-                    </div>
-                    <div className="p-3"><div className="h-10 w-full bg-muted rounded"></div></div>
-                     <div className="p-3 space-y-2">
-                        <div className="h-12 w-full bg-muted rounded"></div>
-                        <div className="h-12 w-full bg-muted rounded"></div>
-                        <div className="h-12 w-full bg-muted rounded"></div>
-                    </div>
-                </aside>
-                <main className="flex-1 p-6">
-                    <div className="h-full w-full bg-muted rounded-lg animate-pulse"></div>
-                </main>
-            </div>
-        }>
-            <NovedadesPageContent />
-        </Suspense>
-    )
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen bg-background">
+        <aside className="h-full w-80 flex-col border-r bg-card flex animate-pulse">
+          <div className="flex items-center justify-between border-b p-3">
+            <div className="h-6 w-32 bg-muted rounded"></div>
+            <div className="h-8 w-24 bg-muted rounded"></div>
+          </div>
+          <div className="p-3"><div className="h-10 w-full bg-muted rounded"></div></div>
+          <div className="p-3 space-y-2">
+            <div className="h-12 w-full bg-muted rounded"></div>
+            <div className="h-12 w-full bg-muted rounded"></div>
+            <div className="h-12 w-full bg-muted rounded"></div>
+          </div>
+        </aside>
+        <main className="flex-1 p-6">
+          <div className="h-full w-full bg-muted rounded-lg animate-pulse"></div>
+        </main>
+      </div>
+    }>
+      <NovedadesPageContent />
+    </Suspense>
+  )
 }

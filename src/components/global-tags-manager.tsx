@@ -39,7 +39,7 @@ function SortableFieldItem({ fieldName, config, onUpdate, onRemove }: { fieldNam
         opacity: isDragging ? 0.5 : 1,
         zIndex: isDragging ? 100 : 'auto',
     };
-    
+
     if (!config) {
         return null;
     }
@@ -47,7 +47,7 @@ function SortableFieldItem({ fieldName, config, onUpdate, onRemove }: { fieldNam
     const handleTypeChange = (value: FieldType) => {
         onUpdate(fieldName, { ...config, type: value });
     };
-    
+
     return (
         <Card ref={setNodeRef} style={style} className="bg-card p-0 touch-none">
             <div className="flex items-center gap-4 p-3">
@@ -74,7 +74,7 @@ function SortableFieldItem({ fieldName, config, onUpdate, onRemove }: { fieldNam
             </div>
             {config.type === 'dropdown' && (
                 <div className="pb-3 pr-3">
-                    <SnippetOptionEditor 
+                    <SnippetOptionEditor
                         config={config}
                         onUpdate={(newConfig) => onUpdate(fieldName, newConfig)}
                     />
@@ -112,16 +112,16 @@ export function GlobalTagsManager() {
             setTimeout(() => setFeedbackMessage(''), 3000);
             return;
         }
-        
+
         const newDefinitions = {
             ...definitions,
-            [newName]: { label: newName, type: 'text', value: '', sectionId: 'custom' },
+            [newName]: { label: newName, type: 'text' as FieldType, value: '', sectionId: 'custom' },
         };
         saveDefinitions(newDefinitions);
         setNewDefinitionName('');
         setFeedbackMessage('');
     };
-    
+
     const handleConfirmRemove = () => {
         if (definitionToRemove) {
             removeDefinition(definitionToRemove);
@@ -134,13 +134,13 @@ export function GlobalTagsManager() {
         if (over && active.id !== over.id) {
             const oldIndex = orderedFields.indexOf(active.id as string);
             const newIndex = orderedFields.indexOf(over.id as string);
-            
+
             if (oldIndex === -1 || newIndex === -1) {
                 return;
             }
 
             const newOrder = arrayMove(orderedFields, oldIndex, newIndex);
-            
+
             const newDefinitions: Record<string, FieldConfig> = {};
             newOrder.forEach(key => {
                 if (definitions[key]) {
@@ -150,7 +150,7 @@ export function GlobalTagsManager() {
             saveDefinitions(newDefinitions);
         }
     };
-    
+
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -161,7 +161,7 @@ export function GlobalTagsManager() {
     ], []);
 
     const generalFields = useMemo(() => {
-         return orderedFields.filter(key => definitions[key] && allDefaultFieldKeys.includes(key));
+        return orderedFields.filter(key => definitions[key] && allDefaultFieldKeys.includes(key));
     }, [orderedFields, definitions, allDefaultFieldKeys]);
 
 
@@ -172,20 +172,20 @@ export function GlobalTagsManager() {
 
     if (!definitionsLoaded || !rolesLoaded || !unitsLoaded) {
         return (
-             <Card className="max-w-4xl mx-auto shadow-lg">
+            <Card className="max-w-4xl mx-auto shadow-lg">
                 <CardHeader>
                     <Skeleton className="h-8 w-1/2" />
                     <Skeleton className="h-4 w-3/4" />
                 </CardHeader>
                 <CardContent className="space-y-4 pt-6">
-                     <Skeleton className="h-10 w-full" />
-                     <Skeleton className="h-20 w-full" />
-                     <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-20 w-full" />
                 </CardContent>
             </Card>
         );
     }
-    
+
     return (
         <>
             <Card className="max-w-4xl mx-auto shadow-lg">
@@ -202,34 +202,35 @@ export function GlobalTagsManager() {
                             Estos valores se usarán en todas las plantillas que incluyan la etiqueta correspondiente (ej. {`{Municipio}`}). Las etiquetas "Fecha" y "Hora" son fijas.
                         </p>
                         <div className="space-y-2">
-                             {generalFields.map(key => {
+                            {generalFields.map(key => {
                                 const config = definitions[key];
                                 if (!config) return null;
                                 return (
-                                <div key={key} className="flex items-center gap-4 rounded-md border p-3 bg-card">
-                                    <Label htmlFor={key} className="w-48 font-semibold shrink-0">{config.label}</Label>
-                                    <Input
-                                        id={key}
-                                        value={config.value || ''}
-                                        onChange={(e) => handleUpdateDefinition(key, { ...config, value: e.target.value })}
-                                        className="bg-background"
-                                        disabled={key === 'Hora' || key === 'Fecha'}
-                                    />
-                                </div>
-                             )})}
+                                    <div key={key} className="flex items-center gap-4 rounded-md border p-3 bg-card">
+                                        <Label htmlFor={key} className="w-48 font-semibold shrink-0">{config.label}</Label>
+                                        <Input
+                                            id={key}
+                                            value={config.value || ''}
+                                            onChange={(e) => handleUpdateDefinition(key, { ...config, value: e.target.value })}
+                                            className="bg-background"
+                                            disabled={key === 'Hora' || key === 'Fecha'}
+                                        />
+                                    </div>
+                                )
+                            })}
                         </div>
                     </div>
-                    
+
                     <Separator />
 
                     <div>
-                         <h3 className="text-lg font-semibold mb-2">Etiquetas Personalizadas</h3>
-                         <p className="text-sm text-muted-foreground mb-4">
+                        <h3 className="text-lg font-semibold mb-2">Etiquetas Personalizadas</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
                             Añade tus propias etiquetas globales y define su tipo de campo por defecto. Para los "Dropdown", puedes definir una lista de opciones con texto predefinido.
                         </p>
                         <div className="space-y-2 mb-4 max-w-md">
-                             <Label>Añadir Nueva Etiqueta</Label>
-                             <div className="flex gap-2">
+                            <Label>Añadir Nueva Etiqueta</Label>
+                            <div className="flex gap-2">
                                 <Input
                                     value={newDefinitionName}
                                     onChange={(e) => setNewDefinitionName(e.target.value)}
@@ -245,22 +246,22 @@ export function GlobalTagsManager() {
                                     <PlusCircle className="mr-2 h-4 w-4" />
                                     Añadir
                                 </Button>
-                             </div>
-                             {feedbackMessage && <p className="text-sm text-destructive pt-1">{feedbackMessage}</p>}
+                            </div>
+                            {feedbackMessage && <p className="text-sm text-destructive pt-1">{feedbackMessage}</p>}
                         </div>
 
                         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
                             <SortableContext items={customFields} strategy={verticalListSortingStrategy}>
                                 <div className="space-y-2">
-                                     {customFields.map(key => (
-                                        <SortableFieldItem 
+                                    {customFields.map(key => (
+                                        <SortableFieldItem
                                             key={key}
                                             fieldName={key}
                                             config={definitions[key]}
                                             onUpdate={handleUpdateDefinition}
                                             onRemove={() => setDefinitionToRemove(key)}
                                         />
-                                     ))}
+                                    ))}
                                 </div>
                             </SortableContext>
                         </DndContext>
@@ -283,7 +284,7 @@ export function GlobalTagsManager() {
                                 <Badge key={role.name} variant="secondary">{role.name}</Badge>
                             ))}
                             <Badge variant="outline">Unidad</Badge>
-                             {roles.length === 0 && <p className="text-sm text-muted-foreground">No hay cargos definidos.</p>}
+                            {roles.length === 0 && <p className="text-sm text-muted-foreground">No hay cargos definidos.</p>}
                         </div>
                     </div>
                 </CardContent>

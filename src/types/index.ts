@@ -5,6 +5,7 @@ export interface StaffMember {
   id: string;
   name: string;
   cedula?: string;
+  roleId?: string;
 }
 
 export interface StaffRole {
@@ -35,7 +36,7 @@ export interface AppSettings {
 }
 
 export interface Report {
-  id:string;
+  id: string;
   templateId: string;
   title: string;
   timestamp: string;
@@ -47,42 +48,46 @@ export interface Report {
 
 export type FieldType = 'text' | 'textarea' | 'date' | 'predefined' | 'time-hlv' | 'multi-text' | 'dropdown';
 
+export type TextModifier = 'upper' | 'lower' | 'title';
+
 export interface SnippetOption {
-    id: string;
-    label: string;
-    value: string;
+  id: string;
+  label: string;
+  value: string;
 }
 
 export interface FieldConfig {
-    type: FieldType;
-    label: string;
-    required?: boolean;
-    value?: string;
-    sectionId?: string;
-    targetField?: string;
-    snippetOptions?: SnippetOption[];
+  type: FieldType;
+  label: string;
+  required?: boolean;
+  value?: string;
+  sectionId?: string;
+  targetField?: string;
+  snippetOptions?: SnippetOption[];
+  modifier?: TextModifier; // Transformación de texto: upper, lower, title
 }
 
 export interface SectionConfig {
-    id: string;
-    label: string;
-    isRepeatable: boolean;
-    fieldIds: string[];
-    layout?: string[]; // Order of fields and section IDs within this section
-    repeatableItemLabel?: string; // This is the `sub` value
-    pluralTitle?: string;
-    singularTitle?: string;
-    condition?: {
-        fieldId: string;
-        value: string;
-    };
-    originalContent?: string; // Used for re-parsing conditional blocks
+  id: string;
+  label: string;
+  isRepeatable: boolean;
+  fieldIds: string[];
+  layout?: string[]; // Order of fields and section IDs within this section
+  repeatableItemLabel?: string; // This is the `sub` value
+  pluralTitle?: string;
+  singularTitle?: string;
+  condition?: {
+    fieldId: string;
+    operator?: '=' | '!=' | '>' | '<' | '>=' | '<=';
+    value: string;
+  };
+  originalContent?: string; // Used for re-parsing conditional blocks
 }
 
 export interface TemplateConfig {
-    fields: Record<string, FieldConfig>;
-    sections: SectionConfig[];
-    layout: string[]; // Order of fields and section IDs
+  fields: Record<string, FieldConfig>;
+  sections: SectionConfig[];
+  layout: string[]; // Order of fields and section IDs
 }
 
 export interface Template {
@@ -122,3 +127,14 @@ export interface DefinitionSection {
   id: string;
   name: string;
 }
+
+export interface TemplateParserResult {
+  sections: SectionConfig[];
+  layout: string[];
+  fieldNames: Set<string>;
+  fieldTypes: Map<string, FieldType>;
+  templateOptions: Map<string, SnippetOption[]>;
+  fieldModifiers: Map<string, string>;
+  errors: string[];
+}
+

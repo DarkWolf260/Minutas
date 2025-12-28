@@ -14,53 +14,42 @@ import { Label } from '@/components/ui/label';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { parseTemplate, renderFinalReport } from '@/lib/template-parser';
 import { cn } from '@/lib/utils';
-import { TimeHlvInput } from './time-hlv-input';
-import { DatePicker } from './date-picker';
+import { TimeHlvInput } from '@/components/time-hlv-input';
+import { DatePicker } from '@/components/date-picker';
 import { useRoles } from '@/hooks/use-roles';
-import { MultiInput } from './ui/multi-input';
 import { useGuards } from '@/hooks/use-guards';
+import { MultiInput } from '@/components/ui/multi-input';
 import { useDepartments } from '@/hooks/use-departments';
 import { useUnits } from '@/hooks/use-units';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { AddressInput } from './ui/address-input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AddressInput } from '@/components/ui/address-input';
 import { useSettings } from '@/hooks/use-settings';
-import { CedulaInput } from './cedula-input';
+import { CedulaInput } from '@/components/cedula-input';
+import { toast } from 'sonner';
+import { formatStaffMemberForDisplay, formatStaffMemberForAutocomplete } from '@/lib/formatters';
 
-const formatStaffMemberForDisplay = (member: StaffMember | string): string => {
-    if (typeof member === 'string') {
-        return member;
-    }
-    return member.name;
-};
-
-const formatStaffMemberForAutocomplete = (member: StaffMember, withCedula: boolean): string => {
-    if (withCedula && member.cedula) {
-        return `${member.name} ${member.cedula}`;
-    }
-    return member.name;
-};
 
 
 function getFieldComponent(
-    fieldId: string, 
-    fieldConfig: FieldConfig, 
-    roles: StaffRole[], 
-    rolesLoaded: boolean, 
-    units: string[], 
+    fieldId: string,
+    fieldConfig: FieldConfig,
+    roles: StaffRole[],
+    rolesLoaded: boolean,
+    units: string[],
     staffOptions: StaffMember[],
     setValue: (name: string, value: any, options?: { shouldValidate?: boolean; shouldDirty?: boolean; }) => void,
     settings: any // Using 'any' for simplicity, should be AppSettings
 ) {
     const lowerFieldId = fieldId.toLowerCase();
     const addressFieldNames = ['dirección', 'ubicación', 'destino'];
-    
+
     // Check for Reporta/Analista fields
     if (lowerFieldId === 'reporta' || lowerFieldId === 'analista') {
         const reportingRoleId = settings.reportaRoleId;
         const reportingStaff = reportingRoleId ? staffOptions.filter(staff => staff.roleId === reportingRoleId) : [];
-        
+
         return (props: any) => {
-             const { onChange, value, disabled } = props;
+            const { onChange, value, disabled } = props;
 
             // The value might be an array of StaffMember objects. We need the ID for the Select.
             const selectedStaffId = Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' ? value[0].id : undefined;
@@ -70,9 +59,9 @@ function getFieldComponent(
                 // The form expects an array for this field
                 onChange(selectedStaff ? [selectedStaff] : []);
             };
-            
+
             return (
-                 <Select onValueChange={handleSelectChange} value={selectedStaffId} disabled={disabled}>
+                <Select onValueChange={handleSelectChange} value={selectedStaffId} disabled={disabled}>
                     <SelectTrigger>
                         <SelectValue placeholder="Selecciona el personal..." />
                     </SelectTrigger>
@@ -101,26 +90,26 @@ function getFieldComponent(
     }
 
     const role = rolesLoaded ? roles.find(r => r.name.toLowerCase() === lowerFieldId) : null;
-    
+
     if (role) {
-         return (props: any) => {
+        return (props: any) => {
             const isReportaAnalista = lowerFieldId === 'reporta' || lowerFieldId === 'analista';
-            const currentValue = Array.isArray(props.value) ? props.value.map(val => (typeof val === 'object' && val.name) ? val.name : val) : [];
+            const currentValue = Array.isArray(props.value) ? props.value.map((val: any) => (typeof val === 'object' && val.name) ? val.name : val) : [];
             const autocompleteOptions = staffOptions.map(member => formatStaffMemberForAutocomplete(member, false));
 
             const handleMultiInputChange = (newValue: string[] | string) => {
                 const finalValueArray = Array.isArray(newValue) ? newValue : [newValue];
-                 props.onChange(finalValueArray);
+                props.onChange(finalValueArray);
             };
-            
+
             if (role.isSingle) {
-                return <MultiInput {...props} options={autocompleteOptions} placeholder="Buscar o añadir..." value={currentValue} isSingle={true} onChange={handleMultiInputChange} />;
+                return <MultiInput {...props} options={autocompleteOptions} placeholder="Buscar o añadir..." value={currentValue} isSingle={true} onChange={(val) => handleMultiInputChange(val as string[] | string)} />;
             } else {
-                return <MultiInput {...props} options={autocompleteOptions} placeholder="Buscar o añadir..." value={currentValue} isSingle={false} onChange={handleMultiInputChange} />;
+                return <MultiInput {...props} options={autocompleteOptions} placeholder="Buscar o añadir..." value={currentValue} isSingle={false} onChange={(val) => handleMultiInputChange(val as string[] | string)} />;
             }
         };
     }
-    
+
     switch (fieldConfig.type) {
         case 'textarea':
             return (props: any) => <Textarea {...props} rows={1} />;
@@ -129,7 +118,7 @@ function getFieldComponent(
         case 'date':
             return (props: any) => <DatePicker {...props} />;
         case 'dropdown':
-             return (props: any) => {
+            return (props: any) => {
                 const { name, onChange, value, disabled } = props;
 
                 const handleSelect = (selectedLabel: string) => {
@@ -167,21 +156,21 @@ function getFieldComponent(
 
 
 function SectionRenderer({ section, config, control, disabled, roles, rolesLoaded, activeGuardStaff, predefinedValues, units, setValue, settings }: { section: SectionConfig, config: TemplateConfig, control: any, disabled: boolean, roles: StaffRole[], rolesLoaded: boolean, activeGuardStaff: StaffMember[], predefinedValues: Record<string, string>, units: string[], setValue: (name: string, value: any, options?: { shouldValidate?: boolean; shouldDirty?: boolean; }) => void, settings: any }) {
-    
+
     const condition = section.condition;
     const watchedFieldValue = useWatch({
         control,
         name: condition?.fieldId || 'dummy_field_to_avoid_errors',
         disabled: !condition
     });
-    
+
     if (condition) {
         let actualValue = watchedFieldValue;
-        
+
         const pathParts = (condition.fieldId || '').split('.');
         if (pathParts.length > 1) {
-             const watchedFormValues = useWatch({ control });
-             actualValue = pathParts.reduce((acc, part) => (acc && acc[part] !== undefined) ? acc[part] : undefined, watchedFormValues);
+            const watchedFormValues = useWatch({ control });
+            actualValue = pathParts.reduce((acc, part) => (acc && acc[part] !== undefined) ? acc[part] : undefined, watchedFormValues);
         }
 
         const fieldConfig = config.fields[condition.fieldId];
@@ -236,16 +225,16 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
                 </div>
             );
         }
-        
+
         // Simplified UI for multi-field repeatable sections
         return (
             <div className="space-y-4 border-t pt-6">
                 {section.label && <h3 className="text-lg font-semibold">{section.label}</h3>}
                 <div className="space-y-3">
                     {fields.map((field, index) => (
-                         <div key={field.id} className="p-4 rounded-md border bg-muted/30 flex flex-col gap-4">
+                        <div key={field.id} className="p-4 rounded-md border bg-muted/30 flex flex-col gap-4">
                             <div className="flex items-center justify-between">
-                                 <h4 className="font-medium">
+                                <h4 className="font-medium">
                                     {section.repeatableItemLabel ? `${section.repeatableItemLabel} #${String(index + 1).padStart(2, '0')}` : `${section.label} #${String(index + 1).padStart(2, '0')}`}
                                 </h4>
                                 {!disabled && (
@@ -262,10 +251,10 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
                                 {(section.layout || section.fieldIds).map(fieldId => {
-                                    if(fieldId.startsWith('section_')) {
+                                    if (fieldId.startsWith('section_')) {
                                         // This is a nested section, render it.
                                         const nestedSection = config.sections.find(s => s.id === fieldId);
-                                        if(!nestedSection) return null;
+                                        if (!nestedSection) return null;
                                         // We need to pass down the correct path prefix
                                         // This part is getting complex. For now, let's assume no nested repeatable sections.
                                         return <p key={fieldId} className="text-destructive text-xs">Nested sections not fully supported here yet.</p>
@@ -300,7 +289,7 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
             </div>
         );
     }
-    
+
     // Non-repeatable section
     if (section.fieldIds.length === 0 && section.label) {
         return (
@@ -313,12 +302,12 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
     if (section.fieldIds.length === 0 && !section.label) {
         return <div className="border-t"></div>;
     }
-    
+
     return (
         <div className="space-y-4 border-t pt-6">
-             {section.label && <h3 className="text-lg font-semibold">{section.label}</h3>}
+            {section.label && <h3 className="text-lg font-semibold">{section.label}</h3>}
             <div className="grid grid-cols-1 sm:grid-cols-2 3xl:grid-cols-3 gap-x-4 gap-y-6">
-                 {(section.layout || section.fieldIds).map(fieldId => {
+                {(section.layout || section.fieldIds).map(fieldId => {
                     if (fieldId.startsWith('section_')) {
                         // Nested non-repeatable section
                         const nestedSection = config.sections.find(s => s.id === fieldId);
@@ -383,24 +372,24 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
                 staffSetWithRoles.add({ ...person, roleId: roleId });
             });
         });
-        
-        return Array.from(staffSetWithRoles).sort((a,b) => a.name.localeCompare(b.name));
+
+        return Array.from(staffSetWithRoles).sort((a, b) => a.name.localeCompare(b.name));
     }, [settings.activeGuardId, guards, settingsLoaded, guardsLoaded, roles]);
 
     const finalConfig = useMemo(() => {
-        if (!config || !template) return { fields: {}, sections: [], layout: []};
+        if (!config || !template) return { fields: {}, sections: [], layout: [] };
 
-        const { sections, layout, fieldNames, fieldTypes, templateOptions } = parseTemplate(template.content);
+        const { sections, layout, fieldNames, fieldTypes, templateOptions, fieldModifiers } = parseTemplate(template.content);
 
         const newConfig: TemplateConfig = {
             fields: {},
             sections,
             layout
         };
-        
+
         let timeHlvFieldInConfig: string | null = null;
         const templateConfigFields = config.fields || {};
-        
+
         if (config.fields) {
             timeHlvFieldInConfig = Object.keys(config.fields).find(k => config.fields[k]?.type === 'time-hlv') || null;
         }
@@ -409,15 +398,15 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
             const templateFieldConfig = templateConfigFields[fieldId];
             const globalDef = definitions[fieldId];
             const typeFromTemplate = fieldTypes.get(fieldId);
-            
+
             // Priority: template-specific config > global definition > calculated > default
             const mergedConfig = { ...(globalDef || {}), ...(templateFieldConfig || {}) };
             newConfig.fields[fieldId] = {
-                type: 'text',
-                label: fieldId,
-                ...mergedConfig
-            };
-            
+                ...mergedConfig,
+                type: (mergedConfig as any).type || 'text',
+                label: (mergedConfig as any).label || fieldId,
+            } as FieldConfig;
+
             if (templateOptions.has(fieldId)) {
                 newConfig.fields[fieldId].snippetOptions = templateOptions.get(fieldId);
             }
@@ -428,7 +417,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
             } else if (fieldId.toLowerCase() === 'fecha') {
                 newConfig.fields[fieldId].type = 'date';
             } else if (fieldId.toLowerCase() === 'hora') {
-                 if (!timeHlvFieldInConfig || timeHlvFieldInConfig === fieldId) {
+                if (!timeHlvFieldInConfig || timeHlvFieldInConfig === fieldId) {
                     newConfig.fields[fieldId].type = 'time-hlv';
                     if (!timeHlvFieldInConfig) timeHlvFieldInConfig = fieldId;
                 } else {
@@ -439,11 +428,16 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
             } else if (globalDef?.type) {
                 newConfig.fields[fieldId].type = globalDef.type;
             }
+
+            // Apply text modifier if defined in template
+            if (fieldModifiers.has(fieldId)) {
+                newConfig.fields[fieldId].modifier = fieldModifiers.get(fieldId);
+            }
         });
-        
+
         return newConfig;
     }, [config, template, definitions]);
-    
+
     const predefinedValues: Record<string, string> = useMemo(() => {
         const values: Record<string, string> = {};
         Object.entries(definitions).forEach(([key, config]) => {
@@ -469,11 +463,11 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
                     else {
                         const role = roles.find(r => r.name.toLowerCase() === keyLower);
                         if (role) {
-                           target[fieldId] = [];
+                            target[fieldId] = [];
                         } else if (fieldId === 'Unidad') {
-                           target[fieldId] = [];
+                            target[fieldId] = [];
                         } else {
-                           target[fieldId] = '';
+                            target[fieldId] = '';
                         }
                     }
                 }
@@ -510,24 +504,24 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
                 if (!initialFormValues[section.id]) {
                     initialFormValues[section.id] = {};
                 }
-                
+
                 const sectionObject = initialFormValues[section.id];
-                
+
                 section.fieldIds.forEach(fieldId => {
                     if (sectionObject[fieldId] === undefined || sectionObject[fieldId] === null) {
-                         const keyLower = fieldId.toLowerCase();
-                         const foundKey = Object.keys(predefinedValues).find(k => k.toLowerCase() === keyLower);
+                        const keyLower = fieldId.toLowerCase();
+                        const foundKey = Object.keys(predefinedValues).find(k => k.toLowerCase() === keyLower);
 
-                         if (foundKey) {
+                        if (foundKey) {
                             sectionObject[fieldId] = predefinedValues[foundKey];
                         } else {
                             const role = roles.find(r => r.name.toLowerCase() === keyLower);
                             if (role) {
-                               sectionObject[fieldId] = [];
+                                sectionObject[fieldId] = [];
                             } else if (fieldId === 'Unidad') {
-                               sectionObject[fieldId] = [];
+                                sectionObject[fieldId] = [];
                             } else {
-                               sectionObject[fieldId] = '';
+                                sectionObject[fieldId] = '';
                             }
                         }
                     }
@@ -537,7 +531,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
 
         return initialFormValues;
     }, [finalConfig, predefinedValues, roles]);
-    
+
     const { handleSubmit, control, watch, reset, getValues, setValue } = useForm({
         defaultValues: getInitialValues(initialData),
     });
@@ -559,13 +553,18 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
     }, [initialData, finalConfig, getInitialValues, reset]);
 
     const handleFormSubmit = (data: Record<string, any>) => {
-       const finalContent = renderFinalReport(template.content, data, finalConfig, predefinedValues);
-       const title = data.titulo || data.title || template.name;
-       onSubmit(data, finalContent, title);
+        const finalContent = renderFinalReport(template.content, data, finalConfig, predefinedValues);
+        const title = data.titulo || data.title || template.name;
+        onSubmit(data, finalContent, title);
     };
 
     useImperativeHandle(ref, () => ({
-        submit: handleSubmit(handleFormSubmit),
+        submit: () => {
+            handleSubmit(handleFormSubmit, (errors) => {
+                console.error('Form validation errors:', errors);
+                toast.error('Por favor, corrige los errores en el formulario antes de guardar.');
+            })();
+        },
         getValues: getValues,
         getRenderedContent: () => {
             const formData = getValues();
@@ -573,12 +572,12 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
         }
     }));
 
-    const sectionsById = useMemo(() => 
+    const sectionsById = useMemo(() =>
         finalConfig.sections.reduce((acc, section) => {
             acc[section.id] = section;
             return acc;
         }, {} as Record<string, SectionConfig>),
-    [finalConfig.sections]);
+        [finalConfig.sections]);
 
     const layoutChunks = useMemo(() => {
         const chunks: (string[] | string)[] = [];
@@ -615,7 +614,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
         }
         return chunks;
     }, [finalConfig]);
-    
+
     return (
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6" autoComplete="off">
             {layoutChunks.map((chunk, index) => {
@@ -626,7 +625,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
                     const section = sectionsById[chunk];
                     if (!section) return null;
                     return (
-                         <SectionRenderer
+                        <SectionRenderer
                             key={section.id}
                             section={section}
                             config={finalConfig}
@@ -670,4 +669,4 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
 });
 ReportForm.displayName = 'ReportForm';
 
-    
+

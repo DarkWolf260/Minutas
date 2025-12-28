@@ -12,9 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { parseTemplate } from '@/lib/template-parser';
-import { Textarea } from './ui/textarea';
-import { SnippetOptionEditor } from './snippet-option-editor';
+import { Textarea } from '@/components/ui/textarea';
+import { SnippetOptionEditor } from '@/components/snippet-option-editor';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 const initialConfig: TemplateConfig = {
     fields: {},
@@ -97,7 +98,7 @@ const FieldEditor = React.memo(function FieldEditor({
                 <Label className="font-mono text-sm font-semibold flex-grow truncate" title={fieldId}>
                     {fieldConfig.label || fieldId}
                 </Label>
-                 <Select
+                <Select
                     value={finalType}
                     onValueChange={(value) => onConfigChange(fieldId, { type: value as FieldType })}
                     disabled={isTypeDefinedInTemplate}
@@ -113,7 +114,7 @@ const FieldEditor = React.memo(function FieldEditor({
                     </SelectContent>
                 </Select>
             </div>
-             {finalType === 'dropdown' && (
+            {finalType === 'dropdown' && (
                 <>
                     <TargetFieldEditor
                         fieldId={fieldId}
@@ -135,19 +136,19 @@ const FieldEditor = React.memo(function FieldEditor({
 });
 
 
-export function TemplateEditor({ template, config, onConfigChange, onTemplateChange }: {template: Template, config: TemplateConfig, onConfigChange: (config: TemplateConfig) => void, onTemplateChange: (template: Template) => void}) {
+export function TemplateEditor({ template, config, onConfigChange, onTemplateChange }: { template: Template, config: TemplateConfig, onConfigChange: (config: TemplateConfig) => void, onTemplateChange: (template: Template) => void }) {
     const [localTemplate, setLocalTemplate] = useState<Template>(template);
     const [localConfig, setLocalConfig] = useState<TemplateConfig>(() => JSON.parse(JSON.stringify({ ...initialConfig, ...(config || {}) })));
     const [optionsDefinedInTemplate, setOptionsDefinedInTemplate] = useState(new Map<string, boolean>());
     const [hasChanges, setHasChanges] = useState(false);
-    
+
     useEffect(() => {
         setLocalTemplate(template);
         setLocalConfig(config);
-        
+
         const { templateOptions } = parseTemplate(template.content);
         setOptionsDefinedInTemplate(new Map(Array.from(templateOptions.keys()).map(k => [k, true])));
-        
+
         setHasChanges(false);
     }, [template, config]);
 
@@ -155,12 +156,13 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
         onConfigChange(localConfig);
         onTemplateChange(localTemplate);
         setHasChanges(false);
+        toast.success('Cambios guardados correctamente en la plantilla.');
     };
 
     const handleFieldChange = useCallback((fieldId: string, newConfig: Partial<FieldConfig>) => {
         setLocalConfig(prev => {
             const updatedFields = { ...prev.fields };
-            
+
             updatedFields[fieldId] = { ...(updatedFields[fieldId] || { label: fieldId }), ...newConfig };
 
             if (newConfig.type === 'time-hlv') {
@@ -175,13 +177,13 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
         });
         setHasChanges(true);
     }, []);
-    
-    const sectionsById = useMemo(() => 
+
+    const sectionsById = useMemo(() =>
         (localConfig.sections || []).reduce((acc, section) => {
             acc[section.id] = section;
             return acc;
         }, {} as Record<string, SectionConfig>),
-    [localConfig.sections]);
+        [localConfig.sections]);
 
     const addedTopLevelFields = useMemo(() => new Set<string>(), []);
 
@@ -193,20 +195,20 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
                     <CardDescription>Configura los tipos de campo. La estructura se define en el archivo .txt.</CardDescription>
                 </div>
                 <Button onClick={handleSaveChanges} disabled={!hasChanges}>
-                   {hasChanges ? 'Guardar Cambios' : 'Guardado'}
+                    {hasChanges ? 'Guardar Cambios' : 'Guardado'}
                 </Button>
             </CardHeader>
             <ScrollArea className="flex-1 w-full">
                 <CardContent className="pt-2">
-                     <div className="space-y-2 mb-6">
+                    <div className="space-y-2 mb-6">
                         <Label htmlFor="template-name">Nombre de la Plantilla</Label>
-                        <Input id="template-name" value={localTemplate.name} onChange={(e) => { setLocalTemplate(p => ({...p, name: e.target.value})); setHasChanges(true); }} />
+                        <Input id="template-name" value={localTemplate.name} onChange={(e) => { setLocalTemplate(p => ({ ...p, name: e.target.value })); setHasChanges(true); }} />
                     </div>
-                    
+
                     <div className="border-t pt-6">
-                         <h3 className="font-semibold text-lg mb-4">Estructura del Formulario</h3>
-                         
-                         <div className="space-y-4 p-1 rounded-md bg-muted/30">
+                        <h3 className="font-semibold text-lg mb-4">Estructura del Formulario</h3>
+
+                        <div className="space-y-4 p-1 rounded-md bg-muted/30">
                             {(localConfig.layout || []).map((itemId) => {
                                 if (itemId.startsWith('section_')) {
                                     const section = sectionsById[itemId];
@@ -223,10 +225,10 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
                                                 {section.layout?.map(fieldId => {
                                                     const fieldConfig = localConfig.fields[fieldId];
                                                     if (!fieldConfig) return null;
-                                                    
+
                                                     return (
-                                                         <FieldEditor
-                                                            key={fieldId}
+                                                        <FieldEditor
+                                                            key={`${section.id}-${fieldId}`}
                                                             fieldId={fieldId}
                                                             fieldConfig={fieldConfig}
                                                             allFields={localConfig.fields}
@@ -247,11 +249,11 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
                                     const fieldId = itemId;
                                     const fieldConfig = localConfig.fields[fieldId];
                                     if (!fieldConfig || fieldConfig.type === 'predefined') return null;
-                                    
+
                                     addedTopLevelFields.add(fieldId);
-                                    
+
                                     return (
-                                         <FieldEditor
+                                        <FieldEditor
                                             key={fieldId}
                                             fieldId={fieldId}
                                             fieldConfig={fieldConfig}
@@ -269,7 +271,7 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
                                     <p className="text-sm text-muted-foreground mt-1">Verifica la sintaxis <code>{`{campo}`}</code> o <code>["Sección"...]</code> en tu archivo.</p>
                                 </div>
                             )}
-                            </div>
+                        </div>
                     </div>
                 </CardContent>
             </ScrollArea>

@@ -72,7 +72,7 @@ function SortableRoleItem({ role, onRemove, onToggleSingle }: { role: StaffRole;
 
     return (
         <Card ref={setNodeRef} style={style} className="p-2 bg-background touch-none">
-             <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
                 <span {...attributes} {...listeners} className="cursor-grab p-1 text-muted-foreground hover:text-foreground">
                     <GripVertical className="h-5 w-5" />
                 </span>
@@ -100,7 +100,7 @@ function RoleColumn({ id, title, roles, onPrepareRemove, onToggleRoleSingle, onP
             <CardHeader className='p-3 border-b flex flex-row items-center justify-between'>
                 <CardTitle className='text-base'>{title}</CardTitle>
                 {id !== 'unassigned' && id !== 'OPERATIONS' && (
-                     <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => onPrepareRemoveDepartment(id)}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => onPrepareRemoveDepartment(id)}>
                         <Trash2 className="h-4 w-4" />
                     </Button>
                 )}
@@ -108,19 +108,19 @@ function RoleColumn({ id, title, roles, onPrepareRemove, onToggleRoleSingle, onP
             <CardContent className="p-2 space-y-2 flex-1">
                 <SortableContext items={roles.map(r => r.name)} strategy={verticalListSortingStrategy}>
                     {roles.map(role => (
-                        <SortableRoleItem 
-                            key={role.name} 
+                        <SortableRoleItem
+                            key={role.name}
                             role={role}
                             onRemove={onPrepareRemove}
                             onToggleSingle={onToggleRoleSingle}
                         />
                     ))}
                 </SortableContext>
-                 {roles.length === 0 && (
+                {roles.length === 0 && (
                     <div className="flex items-center justify-center h-full text-xs text-center text-muted-foreground p-4">
                         Arrastra un cargo aquí
                     </div>
-                 )}
+                )}
             </CardContent>
         </Card>
     )
@@ -168,7 +168,7 @@ function RoleManager({
     };
 
     const handleToggleSingle = (roleName: string, checked: boolean) => {
-        onRolesChange(roles.map(r => r.name === roleName ? {...r, isSingle: checked} : r));
+        onRolesChange(roles.map(r => r.name === roleName ? { ...r, isSingle: checked } : r));
     };
 
     const handleSaveChanges = () => {
@@ -198,7 +198,7 @@ function RoleManager({
         });
         return buckets;
     }, [roles, allDepartments]);
-    
+
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -210,13 +210,13 @@ function RoleManager({
         if (roleBuckets[id]) {
             return id;
         }
-        return Object.keys(roleBuckets).find((key) => roleBuckets[key].some(r => r.name === id));
+        return Object.keys(roleBuckets).find((key) => roleBuckets[key].some((r: StaffRole) => r.name === id));
     }
 
     function handleDragStart(event: DragStartEvent) {
         setActiveId(event.active.id as string);
     }
-    
+
     function handleDragOver(event: DragOverEvent) {
         const { active, over } = event;
         const activeId = active.id as string;
@@ -230,34 +230,34 @@ function RoleManager({
             return;
         }
 
-        onRolesChange((prevRoles) => {
-            const activeIndex = prevRoles.findIndex((r) => r.name === activeId);
-            const newRoles = [...prevRoles];
-            newRoles[activeIndex] = {
-                ...newRoles[activeIndex],
-                departmentScope: overContainer === 'unassigned' ? [] : [overContainer],
-            };
-            
-            return newRoles;
-        });
+        const activeIndex = roles.findIndex((r: StaffRole) => r.name === activeId);
+        if (activeIndex === -1) return;
+
+        const newRoles = [...roles];
+        newRoles[activeIndex] = {
+            ...newRoles[activeIndex],
+            departmentScope: overContainer === 'unassigned' ? [] : [overContainer],
+        };
+
+        onRolesChange(newRoles);
     }
 
     function handleDragEnd(event: DragEndEvent) {
         const { active, over } = event;
         setActiveId(null);
         if (!over) return;
-        
+
         const activeContainer = findContainer(active.id as string);
         const overContainer = findContainer(over.id as string);
-        
+
         if (!activeContainer || !overContainer) return;
 
         if (active.id !== over.id && activeContainer === overContainer) {
-             onRolesChange((currentRoles) => {
-                const oldIndex = currentRoles.findIndex((r) => r.name === active.id);
-                const newIndex = currentRoles.findIndex((r) => r.name === over.id);
-                return arrayMove(currentRoles, oldIndex, newIndex);
-            });
+            const oldIndex = roles.findIndex((r: StaffRole) => r.name === active.id);
+            const newIndex = roles.findIndex((r: StaffRole) => r.name === over.id);
+            if (oldIndex !== -1 && newIndex !== -1) {
+                onRolesChange(arrayMove(roles, oldIndex, newIndex));
+            }
         }
     }
 
@@ -272,9 +272,9 @@ function RoleManager({
             <div className="space-y-4">
                 <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
                     <div className="grid sm:grid-cols-2 gap-4">
-                         <div className="space-y-2">
-                             <Label className="font-semibold">Añadir Nuevo Departamento</Label>
-                             <div className="flex gap-2">
+                        <div className="space-y-2">
+                            <Label className="font-semibold">Añadir Nuevo Departamento</Label>
+                            <div className="flex gap-2">
                                 <Input
                                     value={newDepartmentName}
                                     onChange={(e) => setNewDepartmentName(e.target.value)}
@@ -285,11 +285,11 @@ function RoleManager({
                                     <PlusCircle className="mr-2 h-4 w-4" />
                                     Añadir
                                 </Button>
-                             </div>
+                            </div>
                         </div>
                         <div className="space-y-2">
-                             <Label className="font-semibold">Añadir Nuevo Cargo</Label>
-                             <div className="flex gap-2">
+                            <Label className="font-semibold">Añadir Nuevo Cargo</Label>
+                            <div className="flex gap-2">
                                 <Input
                                     value={newRoleName}
                                     onChange={(e) => setNewRoleName(e.target.value)}
@@ -306,27 +306,27 @@ function RoleManager({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <RoleColumn 
-                        id="unassigned" 
-                        title="Cargos Globales" 
-                        roles={roleBuckets.unassigned} 
-                        onPrepareRemove={onPrepareRemoveRole} 
+                    <RoleColumn
+                        id="unassigned"
+                        title="Cargos Globales"
+                        roles={roleBuckets.unassigned}
+                        onPrepareRemove={onPrepareRemoveRole}
                         onToggleRoleSingle={handleToggleSingle}
-                        onPrepareRemoveDepartment={() => {}}
+                        onPrepareRemoveDepartment={() => { }}
                     />
                     {allDepartments.map(dept => (
-                        <RoleColumn 
-                            key={dept.id} 
-                            id={dept.id} 
-                            title={dept.name} 
-                            roles={roleBuckets[dept.id] || []} 
-                            onPrepareRemove={onPrepareRemoveRole} 
+                        <RoleColumn
+                            key={dept.id}
+                            id={dept.id}
+                            title={dept.name}
+                            roles={roleBuckets[dept.id] || []}
+                            onPrepareRemove={onPrepareRemoveRole}
                             onToggleRoleSingle={handleToggleSingle}
                             onPrepareRemoveDepartment={onPrepareRemoveDepartment}
                         />
                     ))}
                 </div>
-                 
+
                 <div className="flex justify-end mt-6 items-center">
                     {feedback && <p className="text-sm text-green-600 mr-4">{feedback}</p>}
                     <Button onClick={handleSaveChanges}>Guardar Cambios</Button>
@@ -365,13 +365,13 @@ export default function SettingsPage() {
     const { clearAllTemplates } = useTemplates();
     const { clearAllGuards } = useGuards();
     const { clearAllDefinitions } = useFieldDefinitions();
-    
+
     const [newUnit, setNewUnit] = useState('');
     const [newDepartmentName, setNewDepartmentName] = useState('');
     const [departmentStaffFeedback, setDepartmentStaffFeedback] = useState('');
 
     const [editableRoles, setEditableRoles] = useState<StaffRole[]>([]);
-    
+
     const [roleToDelete, setRoleToDelete] = useState<StaffRole | null>(null);
     const [departmentIdToDelete, setDepartmentIdToDelete] = useState<string | null>(null);
 
@@ -380,7 +380,7 @@ export default function SettingsPage() {
 
     useEffect(() => {
         if (rolesLoaded) {
-          setEditableRoles(initialRoles);
+            setEditableRoles(initialRoles);
         }
     }, [initialRoles, rolesLoaded]);
 
@@ -395,8 +395,8 @@ export default function SettingsPage() {
 
     const handleAddUnit = () => {
         if (newUnit && !units.includes(newUnit)) {
-          saveUnits([...units, newUnit].sort());
-          setNewUnit('');
+            saveUnits([...units, newUnit].sort());
+            setNewUnit('');
         }
     };
 
@@ -414,7 +414,7 @@ export default function SettingsPage() {
             setNewDepartmentName('');
         }
     };
-    
+
     const handlePrepareRemoveRole = (role: StaffRole) => {
         setRoleToDelete(role);
     };
@@ -427,7 +427,7 @@ export default function SettingsPage() {
             setRoleToDelete(null);
         }
     };
-    
+
     const handlePrepareRemoveDepartment = (deptId: string) => {
         setDepartmentIdToDelete(deptId);
     };
@@ -445,7 +445,7 @@ export default function SettingsPage() {
             setDepartmentIdToDelete(null);
         }
     };
-    
+
     const departmentBeingDeleted = useMemo(() => {
         if (!departmentIdToDelete) return null;
         return departments.find(d => d.id === departmentIdToDelete) || null;
@@ -453,7 +453,7 @@ export default function SettingsPage() {
 
 
     const isLoaded = unitsLoaded && rolesLoaded && deptsLoaded && settingsLoaded;
-    
+
     const handleConfirmReset = () => {
         if (!actionToConfirm) return;
 
@@ -490,7 +490,7 @@ export default function SettingsPage() {
 
         setActionToConfirm(null);
     };
-    
+
     const handleReportTagRoleChange = (value: string) => {
         saveSettings({ ...settings, reportaRoleId: value, analistaRoleId: value });
     };
@@ -536,7 +536,7 @@ export default function SettingsPage() {
     return (
         <>
             <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-                 <Card className="max-w-4xl mx-auto shadow-lg">
+                <Card className="max-w-4xl mx-auto shadow-lg">
                     <CardHeader>
                         <CardTitle>Configuración de Etiquetas de Reporte</CardTitle>
                         <CardDescription>
@@ -546,8 +546,8 @@ export default function SettingsPage() {
                     <CardContent className="space-y-4 pt-6">
                         <div className="space-y-2 max-w-sm">
                             <Label>Cargo para etiquetas Reporta y Analista</Label>
-                            <Select 
-                                value={settings.reportaRoleId} 
+                            <Select
+                                value={settings.reportaRoleId}
                                 onValueChange={handleReportTagRoleChange}
                             >
                                 <SelectTrigger>
@@ -571,9 +571,9 @@ export default function SettingsPage() {
                     <CardContent className="space-y-6 pt-6">
                         <div>
                             <h3 className="text-lg font-semibold mb-4">Cargos y Departamentos</h3>
-                            <RoleManager 
-                                roles={editableRoles} 
-                                onRolesChange={setEditableRoles} 
+                            <RoleManager
+                                roles={editableRoles}
+                                onRolesChange={setEditableRoles}
                                 onSave={() => saveRoles(editableRoles)}
                                 departments={departments}
                                 handleAddDepartment={handleAddDepartment}
@@ -586,7 +586,7 @@ export default function SettingsPage() {
                         <Separator />
                         <div>
                             <h3 className="text-lg font-semibold mb-4">Asignación de Personal (Departamentos)</h3>
-                             {departmentStaffFeedback && <p className="text-sm text-green-600 mb-4">{departmentStaffFeedback}</p>}
+                            {departmentStaffFeedback && <p className="text-sm text-green-600 mb-4">{departmentStaffFeedback}</p>}
                             {departments.length > 0 ? (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {departments.map((dept) => (
@@ -604,13 +604,13 @@ export default function SettingsPage() {
                                         </div>
                                     ))}
                                 </div>
-                            ): (
-                                 <p className="text-sm text-muted-foreground p-4 text-center border rounded-md col-span-full">No hay departamentos definidos.</p>
+                            ) : (
+                                <p className="text-sm text-muted-foreground p-4 text-center border rounded-md col-span-full">No hay departamentos definidos.</p>
                             )}
                         </div>
                     </CardContent>
                 </Card>
-                
+
                 <Card className="max-w-4xl mx-auto shadow-lg">
                     <CardHeader>
                         <CardTitle>Gestión de Unidades</CardTitle>
@@ -659,7 +659,7 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
 
-                 <Card className="max-w-4xl mx-auto shadow-lg border-destructive">
+                <Card className="max-w-4xl mx-auto shadow-lg border-destructive">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-destructive">
                             <AlertTriangle />
@@ -701,7 +701,7 @@ export default function SettingsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            
+
             <AlertDialog open={!!departmentIdToDelete} onOpenChange={(open) => !open && setDepartmentIdToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -719,7 +719,7 @@ export default function SettingsPage() {
                 </AlertDialogContent>
             </AlertDialog>
 
-             <AlertDialog open={!!actionToConfirm} onOpenChange={(open) => !open && setActionToConfirm(null)}>
+            <AlertDialog open={!!actionToConfirm} onOpenChange={(open) => !open && setActionToConfirm(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>{actionToConfirm ? resetOptions[actionToConfirm].title : ''}</AlertDialogTitle>

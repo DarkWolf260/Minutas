@@ -1,21 +1,20 @@
-
 'use client';
 
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import type { Template, TemplateConfig, Report, ReportDraft, StaffMember } from '@/types';
 import { ReportForm, type ReportFormRef } from './report-form';
-import { Button } from './ui/button';
-import { ScrollArea } from './ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Eye, Copy, CheckIcon } from 'lucide-react';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogClose,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useDrafts } from '@/hooks/use-drafts';
@@ -24,21 +23,17 @@ import { useSettings } from '@/hooks/use-settings';
 import { useGuards } from '@/hooks/use-guards';
 import { parseTemplate } from '@/lib/template-parser';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+import { toast } from 'sonner';
+import { formatStaffMemberForAutocomplete } from '@/lib/formatters';
 
 interface ReportGeneratorProps {
-    template: Template, 
-    config: TemplateConfig, 
+    template: Template,
+    config: TemplateConfig,
     initialData?: Record<string, any>,
     onCancel: () => void,
     onSave: (report: Report) => void,
 }
 
-const formatStaffMemberForAutocomplete = (member: StaffMember, withCedula: boolean): string => {
-    if (withCedula && member.cedula) {
-        return `${member.name} ${member.cedula}`;
-    }
-    return member.name;
-};
 
 export function ReportGenerator({ template, config, initialData, onCancel, onSave }: ReportGeneratorProps) {
     const { saveDraft, clearDraft } = useDrafts();
@@ -49,12 +44,12 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
     const { settings } = useSettings();
     const { guards } = useGuards();
     const { definitions } = useFieldDefinitions();
-    
+
     const finalInitialData = useMemo(() => {
         const newInitialData = initialData ? JSON.parse(JSON.stringify(initialData)) : {};
 
         const { sections, fieldNames: allTemplateFields } = parseTemplate(template.content);
-        
+
         const activeGuard = guards.find(g => g.id === settings.activeGuardId);
         if (!activeGuard) {
             return newInitialData;
@@ -66,36 +61,36 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
         const jefeDeServiciosKey = Object.keys(activeGuard.staff || {}).find(k => k.toLowerCase() === 'jefe de los servicios');
         if (jefeDeServiciosKey) {
             const jefeStaff = activeGuard.staff[jefeDeServiciosKey] || [];
-            if(jefeStaff.length > 0) {
-                 dataToInject['Jefe de los Servicios'] = jefeStaff.map(member => member.name);
+            if (jefeStaff.length > 0) {
+                dataToInject['Jefe de los Servicios'] = jefeStaff.map(member => member.name);
             }
         }
-        
+
         // Get Reporta
         if (settings.reportaRoleId) {
             const reportaStaff = activeGuard.staff[settings.reportaRoleId] || [];
             dataToInject['Reporta'] = reportaStaff; // Keep as StaffMember[]
         }
-        
+
         // Get Analista
         if (settings.analistaRoleId) {
             const analistaStaff = activeGuard.staff[settings.analistaRoleId] || [];
             dataToInject['Analista'] = analistaStaff; // Keep as StaffMember[]
         }
-        
+
         // Explicitly add Guardia ID to be injected
         dataToInject['Guardia'] = activeGuard.id;
 
         allTemplateFields.forEach(templateFieldKey => {
             const lowerTemplateFieldKey = templateFieldKey.toLowerCase();
             const canonicalKey = Object.keys(dataToInject).find(k => k.toLowerCase() === lowerTemplateFieldKey);
-            
+
             if (canonicalKey) {
                 const valueToInject = dataToInject[canonicalKey];
                 if (valueToInject === undefined) return;
 
                 const parentSection = sections.find(s => s.fieldIds.some(sf => sf.toLowerCase() === lowerTemplateFieldKey));
-                
+
                 if (parentSection) {
                     if (!parentSection.isRepeatable) {
                         if (!newInitialData[parentSection.id]) {
@@ -117,7 +112,7 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
     }, [template.content, initialData, settings.activeGuardId, settings.reportaRoleId, settings.analistaRoleId, guards]);
 
     const saveDraftLogicRef = useRef<((formData: Record<string, any>) => void) | null>(null);
-    
+
     useEffect(() => {
         saveDraftLogicRef.current = (formData: Record<string, any>) => {
             if (template && formData) {
@@ -143,11 +138,11 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
     const handleDataChange = useCallback((formData: Record<string, any>) => {
         debouncedSaveDraft(formData);
     }, [debouncedSaveDraft]);
-    
+
     const handleCreateReport = (formData: Record<string, any>, content: string, title: string) => {
         debouncedSaveDraft.cancel();
         clearDraft();
-        
+
         const newReport: Report = {
             id: `report_${Date.now()}`,
             templateId: template.id,
@@ -158,7 +153,7 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
             status: 'En proceso',
             formData: formData,
         };
-        
+
         onSave(newReport);
     };
 
@@ -174,41 +169,42 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
     const handleCopyToClipboard = () => {
         navigator.clipboard.writeText(previewContent);
         setCopyButtonText('¡Copiado!');
+        toast.success('Copiado al portapapeles');
         setTimeout(() => setCopyButtonText('Copiar'), 2000);
     };
 
     const handlePreviewClick = () => {
         if (!formRef.current) return;
-        
+
         const content = formRef.current.getRenderedContent();
-        
+
         setPreviewContent(content);
         setCopyButtonText('Copiar');
         setIsPreviewOpen(true);
     };
-    
+
     return (
         <>
             <div className="flex h-full flex-col">
-                 <div className="flex items-center justify-between border-b p-3">
-                     <div className="flex items-center gap-2">
-                         <Button variant="outline" size="sm" onClick={handleCancel}>
+                <div className="flex items-center justify-between border-b p-3">
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={handleCancel}>
                             Cancelar
                         </Button>
-                         <Button variant="outline" size="sm" onClick={handlePreviewClick}>
+                        <Button variant="outline" size="sm" onClick={handlePreviewClick}>
                             <Eye className="mr-2 h-4 w-4" />
                             Vista Previa
                         </Button>
                     </div>
-                     <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                         <Button onClick={handleSaveClick}>
                             Crear Novedad
                         </Button>
                     </div>
                 </div>
-                 <ScrollArea className="flex-1">
+                <ScrollArea className="flex-1">
                     <div className="p-4 sm:p-6 lg:p-8">
-                         <Card>
+                        <Card>
                             <CardHeader>
                                 <CardTitle>{template.name}</CardTitle>
                                 <CardDescription>Completa los campos para generar el reporte.</CardDescription>
@@ -227,7 +223,7 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
                     </div>
                 </ScrollArea>
             </div>
-            
+
             <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
                 <DialogContent className="max-h-[90vh] max-w-[90vw] sm:max-w-3xl flex flex-col">
                     <DialogHeader>

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { Newspaper, Settings, Mountain, FileText, ClipboardList, ClipboardCheck, BookOpen, NotebookPen } from 'lucide-react';
+import { Newspaper, Settings, Mountain, FileText, ClipboardList, ClipboardCheck, BookOpen, NotebookPen, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -15,6 +15,7 @@ const navItems = [
   { href: '/orden-del-dia', label: 'Orden del Día', icon: ClipboardList },
   { href: '/reporte-final', label: 'Reporte Final', icon: ClipboardCheck },
   { href: '/direcciones', label: 'Direcciones', icon: NotebookPen },
+  { href: '/estadisticas', label: 'Estadísticas', icon: TrendingUp },
   { href: '/documentation', label: 'Información', icon: BookOpen },
 ];
 
@@ -57,8 +58,8 @@ export function SideNav() {
               <Link
                 href="/settings"
                 className={cn(
-                    'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
-                    pathname === '/settings' && 'bg-accent text-accent-foreground'
+                  'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
+                  pathname === '/settings' && 'bg-accent text-accent-foreground'
                 )}
               >
                 <Settings className="h-5 w-5" />

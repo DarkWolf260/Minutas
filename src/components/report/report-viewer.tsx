@@ -6,28 +6,28 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import type { Report, Template } from '@/types';
+import type { Report, Template, TemplateConfig } from '@/types';
 import { Trash2, Copy, CheckIcon, FileText, Eye, Save } from 'lucide-react';
 import { useTemplates } from '@/hooks/use-templates';
 import { ReportForm, type ReportFormRef } from './report-form';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogClose,
 } from '@/components/ui/dialog';
 import { debounce } from '@/lib/utils';
 import { renderFinalReport } from '@/lib/template-parser';
 
 interface ReportViewerProps {
-  report: Report | null;
-  onSave: (report: Report) => void;
-  onDelete: (id: string) => void;
+    report: Report | null;
+    onSave: (report: Report) => void;
+    onDelete: (id: string) => void;
 }
 
 export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
@@ -35,14 +35,14 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     const [status, setStatus] = useState<'En proceso' | 'Finalizado'>('En proceso');
     const [copyButtonText, setCopyButtonText] = useState('Copiar');
     const [saveButtonText, setSaveButtonText] = useState('Guardar Cambios');
-    
+
     const { templates, configs } = useTemplates();
 
     const [previewContent, setPreviewContent] = useState('');
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    
+
     const template = useMemo(() => report ? templates.find(t => t.id === report.templateId) : null, [report, templates]);
-    const config = useMemo(() => report ? configs[report.templateId] || {} : {}, [report, configs]);
+    const config = useMemo<TemplateConfig>(() => report ? configs[report.templateId] || { fields: {}, sections: [], layout: [] } : { fields: {}, sections: [], layout: [] }, [report, configs]);
     const isFinalizado = useMemo(() => status === 'Finalizado', [status]);
 
     const saveLogicRef = useRef<((formData: Record<string, any>) => void) | null>(null);
@@ -50,10 +50,10 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     useEffect(() => {
         saveLogicRef.current = (formData: Record<string, any>) => {
             if (!report || !template) return;
-            
+
             const content = renderFinalReport(template.content, formData, config, {});
             const newTitle = formData.titulo || formData.title || template.name;
-            
+
             const finalReport: Report = {
                 ...report,
                 title: newTitle,
@@ -100,14 +100,14 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
         debouncedSave.cancel();
         saveLogicRef.current?.(formData);
     };
-    
+
     const handleStatusChange = (newStatus: 'En proceso' | 'Finalizado') => {
         setStatus(newStatus);
-        
+
         if (!formRef.current) return;
         const formData = formRef.current.getValues();
         debouncedSave.cancel();
-        
+
         if (!report || !template) return;
         const content = renderFinalReport(template.content, formData, config, {});
         const newTitle = formData.titulo || formData.title || template.name;
@@ -122,7 +122,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
         onSave(finalReport);
         setSaveButtonText('Guardado');
     }
-    
+
     const handlePreviewClick = () => {
         if (!formRef.current) return;
 
@@ -139,16 +139,16 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
 
     if (!report) {
         return (
-          <div className="flex h-full flex-col items-center justify-center bg-card text-center">
-            <FileText className="h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-semibold">No hay reporte seleccionado</h3>
-            <p className="text-muted-foreground">
-              Selecciona un reporte de la lista para verlo o editarlo.
-            </p>
-          </div>
+            <div className="flex h-full flex-col items-center justify-center bg-card text-center">
+                <FileText className="h-12 w-12 text-muted-foreground" />
+                <h3 className="mt-4 text-lg font-semibold">No hay reporte seleccionado</h3>
+                <p className="text-muted-foreground">
+                    Selecciona un reporte de la lista para verlo o editarlo.
+                </p>
+            </div>
         );
     }
-    
+
     if (!template) {
         return (
             <div className="flex h-full flex-col">
@@ -157,7 +157,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
                         <FileText className="h-12 w-12 text-muted-foreground" />
                         <h3 className="mt-4 text-lg font-semibold text-destructive">Error en la Plantilla</h3>
                         <p className="text-muted-foreground">
-                          La plantilla de este reporte tiene un error o no se encuentra. No se puede editar, pero puedes ver su contenido original o eliminarlo.
+                            La plantilla de este reporte tiene un error o no se encuentra. No se puede editar, pero puedes ver su contenido original o eliminarlo.
                         </p>
                         <div className="mt-4 w-full max-w-2xl text-left">
                             <Label>Contenido del Reporte Original</Label>
@@ -181,15 +181,15 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => onDelete(report.id)}>
                             <Trash2 className="h-4 w-4" />
                         </Button>
-                         <Button variant="outline" size="sm" onClick={handlePreviewClick}>
+                        <Button variant="outline" size="sm" onClick={handlePreviewClick}>
                             <Eye className="mr-2 h-4 w-4" />
                             Vista Previa
                         </Button>
                     </div>
-                     <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                         <Select value={status} onValueChange={handleStatusChange}>
                             <SelectTrigger id="report-status" className="w-[180px]">
-                               <SelectValue placeholder="Estatus..." />
+                                <SelectValue placeholder="Estatus..." />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="En proceso">En proceso</SelectItem>
@@ -203,19 +203,19 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
                     </div>
                 </div>
                 <ScrollArea className="flex-1">
-                     <div className="p-4 sm:p-6 lg:p-8">
+                    <div className="p-4 sm:p-6 lg:p-8">
                         <Card>
-                             <CardHeader>
+                            <CardHeader>
                                 <CardTitle>{report.title}</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <ReportForm
                                     ref={formRef}
-                                    key={report.id} 
+                                    key={report.id}
                                     template={template}
                                     config={config}
                                     initialData={report.formData}
-                                    onSubmit={() => {}} // Not used here, handled by manual save
+                                    onSubmit={() => { }} // Not used here, handled by manual save
                                     disabled={isFinalizado}
                                     onDataChange={handleDataChange}
                                 />

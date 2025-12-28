@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import type { ReportDraft } from '@/types';
 
 const DRAFT_STORAGE_KEY = 'app-report-draft';
@@ -19,7 +20,7 @@ export function useDrafts() {
     } catch (error) {
       console.error('Failed to load draft from localStorage', error);
     } finally {
-        setIsLoaded(true);
+      setIsLoaded(true);
     }
   }, []);
 
@@ -29,6 +30,9 @@ export function useDrafts() {
       setDraft(newDraft);
     } catch (error) {
       console.error('Failed to save draft to localStorage', error);
+      if (error instanceof Error && error.name === 'QuotaExceededError') {
+        toast.error('No hay espacio para guardar el borrador.');
+      }
     }
   }, []);
 
