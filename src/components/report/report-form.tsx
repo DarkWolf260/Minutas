@@ -77,6 +77,51 @@ function getFieldComponent(
         };
     }
 
+    // If type is explicitly something other than 'text', prioritize the switch
+    if (fieldConfig.type && fieldConfig.type !== 'text') {
+        switch (fieldConfig.type) {
+            case 'textarea':
+                return (props: any) => <Textarea {...props} rows={1} />;
+            case 'time-hlv':
+                return (props: any) => <TimeHlvInput {...props} />;
+            case 'date':
+                return (props: any) => <DatePicker {...props} />;
+            case 'multi-text':
+                return (props: any) => <MultiInput {...props} value={Array.isArray(props.value) ? props.value : (props.value ? [String(props.value)] : [])} placeholder="Escribe y presiona Enter para añadir..." />;
+            case 'dropdown':
+                return (props: any) => {
+                    const { name, onChange, value, disabled } = props;
+                    const handleSelect = (selectedLabel: string) => {
+                        const selectedOption = (fieldConfig.snippetOptions || []).find(opt => opt.label === selectedLabel);
+                        if (selectedOption) {
+                            onChange(selectedOption.label);
+                            if (fieldConfig.targetField) {
+                                const pathParts = name.split('.');
+                                pathParts[pathParts.length - 1] = fieldConfig.targetField;
+                                const targetPath = pathParts.join('.');
+                                setValue(targetPath, selectedOption.value, { shouldDirty: true });
+                            }
+                        }
+                    };
+                    return (
+                        <Select onValueChange={handleSelect} value={value} disabled={disabled}>
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Selecciona una opción..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {(fieldConfig.snippetOptions || []).map(option => (
+                                    <SelectItem key={option.id} value={option.label}>
+                                        {option.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    );
+                };
+        }
+    }
+
+    // Default or explicitly 'text': use name-based specialization or standard input
     if (lowerFieldId === 'cédula') {
         return (props: any) => <CedulaInput {...props} />;
     }
@@ -90,72 +135,24 @@ function getFieldComponent(
     }
 
     const role = rolesLoaded ? roles.find(r => r.name.toLowerCase() === lowerFieldId) : null;
-
     if (role) {
         return (props: any) => {
-            const isReportaAnalista = lowerFieldId === 'reporta' || lowerFieldId === 'analista';
             const currentValue = Array.isArray(props.value) ? props.value.map((val: any) => (typeof val === 'object' && val.name) ? val.name : val) : [];
             const autocompleteOptions = staffOptions.map(member => formatStaffMemberForAutocomplete(member, false));
-
             const handleMultiInputChange = (newValue: string[] | string) => {
                 const finalValueArray = Array.isArray(newValue) ? newValue : [newValue];
                 props.onChange(finalValueArray);
             };
 
-            if (role.isSingle) {
-                return <MultiInput {...props} options={autocompleteOptions} placeholder="Buscar o añadir..." value={currentValue} isSingle={true} onChange={(val) => handleMultiInputChange(val as string[] | string)} />;
-            } else {
-                return <MultiInput {...props} options={autocompleteOptions} placeholder="Buscar o añadir..." value={currentValue} isSingle={false} onChange={(val) => handleMultiInputChange(val as string[] | string)} />;
-            }
+            return <MultiInput {...props} options={autocompleteOptions} placeholder="Buscar o añadir..." value={currentValue} isSingle={role.isSingle} onChange={(val) => handleMultiInputChange(val as string[] | string)} />;
         };
     }
 
-    switch (fieldConfig.type) {
-        case 'textarea':
-            return (props: any) => <Textarea {...props} rows={1} />;
-        case 'time-hlv':
-            return (props: any) => <TimeHlvInput {...props} />;
-        case 'date':
-            return (props: any) => <DatePicker {...props} />;
-        case 'dropdown':
-            return (props: any) => {
-                const { name, onChange, value, disabled } = props;
-
-                const handleSelect = (selectedLabel: string) => {
-                    const selectedOption = (fieldConfig.snippetOptions || []).find(opt => opt.label === selectedLabel);
-                    if (selectedOption) {
-                        onChange(selectedOption.label); // Update current field
-                        if (fieldConfig.targetField) {
-                            const pathParts = name.split('.');
-                            pathParts[pathParts.length - 1] = fieldConfig.targetField;
-                            const targetPath = pathParts.join('.');
-                            setValue(targetPath, selectedOption.value, { shouldDirty: true });
-                        }
-                    }
-                };
-                return (
-                    <Select onValueChange={handleSelect} value={value} disabled={disabled}>
-                        <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Selecciona una opción..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {(fieldConfig.snippetOptions || []).map(option => (
-                                <SelectItem key={option.id} value={option.label}>
-                                    {option.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                );
-            };
-        case 'text':
-        default:
-            return (props: any) => <Input {...props} />;
-    }
+    return (props: any) => <Input {...props} />;
 }
 
 
-function SectionRenderer({ section, config, control, disabled, roles, rolesLoaded, activeGuardStaff, predefinedValues, units, setValue, settings }: { section: SectionConfig, config: TemplateConfig, control: any, disabled: boolean, roles: StaffRole[], rolesLoaded: boolean, activeGuardStaff: StaffMember[], predefinedValues: Record<string, string>, units: string[], setValue: (name: string, value: any, options?: { shouldValidate?: boolean; shouldDirty?: boolean; }) => void, settings: any }) {
+function SectionRenderer({ section, config, control, disabled, roles, rolesLoaded, activeGuardStaff, predefinedValues, units, setValue, settings, isNested = false }: { section: SectionConfig, config: TemplateConfig, control: any, disabled: boolean, roles: StaffRole[], rolesLoaded: boolean, activeGuardStaff: StaffMember[], predefinedValues: Record<string, string>, units: string[], setValue: (name: string, value: any, options?: { shouldValidate?: boolean; shouldDirty?: boolean; }) => void, settings: any, isNested?: boolean }) {
 
     const condition = section.condition;
     const watchedFieldValue = useWatch({
@@ -193,12 +190,25 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
             const fieldConfig = (config.fields || {})[fieldId];
             if (!fieldConfig) return null;
 
+            const isFullWidth = fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
             const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, activeGuardStaff, setValue, settings);
             const defaultSingleFieldItem = { [fieldId]: '' };
 
             return (
-                <div className="space-y-4 border-t pt-6">
-                    {section.label && <h3 className="text-lg font-semibold">{section.label}</h3>}
+                <div className={cn("space-y-4", !isNested && "pt-4", isNested && isFullWidth && "sm:col-span-2")}>
+                    {section.label && (
+                        isNested ? (
+                            <Label className="text-sm font-medium">
+                                {section.label}
+                                {fieldConfig.required && <span className="text-destructive ml-1">*</span>}
+                            </Label>
+                        ) : (
+                            <h3 className="text-lg font-semibold">
+                                {section.label}
+                                {fieldConfig.required && <span className="text-destructive ml-1">*</span>}
+                            </h3>
+                        )
+                    )}
                     <div className="space-y-2">
                         {fields.map((item, index) => (
                             <div key={item.id} className="flex items-center gap-2">
@@ -206,7 +216,13 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
                                     <Controller
                                         name={`${section.id}.${index}.${fieldId}`}
                                         control={control}
-                                        render={({ field }) => <FieldComponent {...field} disabled={disabled} />}
+                                        rules={{ required: fieldConfig.required ? 'Este campo es obligatorio' : false }}
+                                        render={({ field, fieldState: { error } }) => (
+                                            <div className="flex flex-col gap-1 w-full">
+                                                <FieldComponent {...field} disabled={disabled} className={cn(error && "border-destructive")} />
+                                                {error && <span className="text-[10px] text-destructive">{error.message}</span>}
+                                            </div>
+                                        )}
                                     />
                                 </div>
                                 {!disabled && (
@@ -226,9 +242,14 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
             );
         }
 
+        const isFullWidth = section.fieldIds.some(fid => {
+            const fc = config.fields[fid];
+            return fc?.type === 'textarea' || fc?.isFullWidth;
+        });
+
         // Simplified UI for multi-field repeatable sections
         return (
-            <div className="space-y-4 border-t pt-6">
+            <div className={cn("space-y-4", !isNested && "pt-4", isNested && isFullWidth && "sm:col-span-2")}>
                 {section.label && <h3 className="text-lg font-semibold">{section.label}</h3>}
                 <div className="space-y-3">
                     {fields.map((field, index) => (
@@ -262,17 +283,26 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
 
                                     const fieldConfig = (config.fields || {})[fieldId];
                                     if (!fieldConfig) return null;
-                                    const isFullWidth = fieldConfig.type === 'textarea';
+                                    const isFullWidth = fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
                                     const path = `${section.id}.${index}.${fieldId}`;
                                     const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, activeGuardStaff, setValue, settings);
 
                                     return (
                                         <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2")}>
-                                            <Label htmlFor={path}>{fieldConfig?.label || fieldId}</Label>
+                                            <Label htmlFor={path}>
+                                                {fieldConfig?.label || fieldId}
+                                                {fieldConfig.required && <span className="text-destructive ml-1">*</span>}
+                                            </Label>
                                             <Controller
                                                 name={path}
                                                 control={control}
-                                                render={({ field }) => <FieldComponent {...field} disabled={disabled} />}
+                                                rules={{ required: fieldConfig.required ? 'Este campo es obligatorio' : false }}
+                                                render={({ field, fieldState: { error } }) => (
+                                                    <div className="flex flex-col gap-1">
+                                                        <FieldComponent {...field} disabled={disabled} className={cn(error && "border-destructive")} />
+                                                        {error && <span className="text-[10px] text-destructive">{error.message}</span>}
+                                                    </div>
+                                                )}
                                             />
                                         </div>
                                     );
@@ -293,18 +323,18 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
     // Non-repeatable section
     if (section.fieldIds.length === 0 && section.label) {
         return (
-            <div className="border-t pt-6">
+            <div className={cn(!isNested && "pt-4")}>
                 <h3 className="text-lg font-semibold">{section.label}</h3>
             </div>
         );
     }
 
     if (section.fieldIds.length === 0 && !section.label) {
-        return <div className="border-t"></div>;
+        return <div className="pt-2"></div>;
     }
 
     return (
-        <div className="space-y-4 border-t pt-6">
+        <div className={cn("space-y-4", !isNested && "pt-4")}>
             {section.label && <h3 className="text-lg font-semibold">{section.label}</h3>}
             <div className="grid grid-cols-1 sm:grid-cols-2 3xl:grid-cols-3 gap-x-4 gap-y-6">
                 {(section.layout || section.fieldIds).map(fieldId => {
@@ -312,22 +342,31 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
                         // Nested non-repeatable section
                         const nestedSection = config.sections.find(s => s.id === fieldId);
                         if (!nestedSection) return null;
-                        return <SectionRenderer key={fieldId} section={nestedSection} config={config} control={control} disabled={disabled} roles={roles} rolesLoaded={rolesLoaded} activeGuardStaff={activeGuardStaff} predefinedValues={predefinedValues} units={units} setValue={setValue} settings={settings} />;
+                        return <SectionRenderer key={fieldId} section={nestedSection} config={config} control={control} disabled={disabled} roles={roles} rolesLoaded={rolesLoaded} activeGuardStaff={activeGuardStaff} predefinedValues={predefinedValues} units={units} setValue={setValue} settings={settings} isNested={true} />;
                     }
 
                     const fieldConfig = (config.fields || {})[fieldId];
                     if (!fieldConfig) return null;
-                    const isFullWidth = fieldConfig.type === 'textarea';
+                    const isFullWidth = fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
                     const path = `${section.id}.${fieldId}`;
                     const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, activeGuardStaff, setValue, settings);
 
                     return (
                         <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2 3xl:col-span-3")}>
-                            <Label htmlFor={path}>{fieldConfig?.label || fieldId}</Label>
+                            <Label htmlFor={path}>
+                                {fieldConfig?.label || fieldId}
+                                {fieldConfig.required && <span className="text-destructive ml-1">*</span>}
+                            </Label>
                             <Controller
                                 name={path}
                                 control={control}
-                                render={({ field }) => <FieldComponent {...field} disabled={disabled} />}
+                                rules={{ required: fieldConfig.required ? 'Este campo es obligatorio' : false }}
+                                render={({ field, fieldState: { error } }) => (
+                                    <div className="flex flex-col gap-1">
+                                        <FieldComponent {...field} disabled={disabled} className={cn(error && "border-destructive")} />
+                                        {error && <span className="text-[10px] text-destructive">{error.message}</span>}
+                                    </div>
+                                )}
                             />
                         </div>
                     );
@@ -379,7 +418,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
     const finalConfig = useMemo(() => {
         if (!config || !template) return { fields: {}, sections: [], layout: [] };
 
-        const { sections, layout, fieldNames, fieldTypes, templateOptions, fieldModifiers } = parseTemplate(template.content);
+        const { sections, layout, fieldNames, fieldTypes, templateOptions, fieldModifiers, fieldWidths, requiredFields } = parseTemplate(template.content);
 
         const newConfig: TemplateConfig = {
             fields: {},
@@ -401,9 +440,45 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
 
             // Priority: template-specific config > global definition > calculated > default
             const mergedConfig = { ...(globalDef || {}), ...(templateFieldConfig || {}) };
+
+            // Determine the type with proper priority
+            let fieldType: FieldType = 'text';
+
+            // Priority 1: Explicitly specified type from template (e.g. {Field:dropdown})
+            if (typeFromTemplate && typeFromTemplate !== 'text') {
+                fieldType = typeFromTemplate;
+            }
+            // Priority 2: Special handling for Fecha and Hora fields by name
+            else if (fieldId.toLowerCase() === 'fecha') {
+                fieldType = 'date';
+            } else if (fieldId.toLowerCase() === 'hora') {
+                if (!timeHlvFieldInConfig || timeHlvFieldInConfig === fieldId) {
+                    fieldType = 'time-hlv';
+                    if (!timeHlvFieldInConfig) timeHlvFieldInConfig = fieldId;
+                } else {
+                    fieldType = 'text';
+                }
+            }
+            // Priority 3: Use type from template even if it's 'text'
+            else if (typeFromTemplate) {
+                fieldType = typeFromTemplate;
+            }
+            // Priority 4: Check template config (from JSON/Props)
+            else if (templateFieldConfig?.type) {
+                fieldType = templateFieldConfig.type;
+            }
+            // Priority 5: Check global definition
+            else if (globalDef?.type) {
+                fieldType = globalDef.type;
+            }
+            // Priority 6: Otherwise use merged config or default to 'text'
+            else if ((mergedConfig as any).type) {
+                fieldType = (mergedConfig as any).type;
+            }
+
             newConfig.fields[fieldId] = {
                 ...mergedConfig,
-                type: (mergedConfig as any).type || 'text',
+                type: fieldType,
                 label: (mergedConfig as any).label || fieldId,
             } as FieldConfig;
 
@@ -411,27 +486,22 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
                 newConfig.fields[fieldId].snippetOptions = templateOptions.get(fieldId);
             }
 
-            // Recalculate type based on priority
-            if (typeFromTemplate) {
-                newConfig.fields[fieldId].type = typeFromTemplate;
-            } else if (fieldId.toLowerCase() === 'fecha') {
-                newConfig.fields[fieldId].type = 'date';
-            } else if (fieldId.toLowerCase() === 'hora') {
-                if (!timeHlvFieldInConfig || timeHlvFieldInConfig === fieldId) {
-                    newConfig.fields[fieldId].type = 'time-hlv';
-                    if (!timeHlvFieldInConfig) timeHlvFieldInConfig = fieldId;
-                } else {
-                    newConfig.fields[fieldId].type = 'text';
-                }
-            } else if (templateFieldConfig?.type) {
-                newConfig.fields[fieldId].type = templateFieldConfig.type;
-            } else if (globalDef?.type) {
-                newConfig.fields[fieldId].type = globalDef.type;
+            // Apply text modifiers if defined in template
+            if (fieldModifiers.has(fieldId)) {
+                newConfig.fields[fieldId].modifiers = fieldModifiers.get(fieldId) as any;
+            } else if ((mergedConfig as any).modifier) {
+                // Backward compatibility for singular modifier in config
+                newConfig.fields[fieldId].modifiers = [(mergedConfig as any).modifier];
             }
 
-            // Apply text modifier if defined in template
-            if (fieldModifiers.has(fieldId)) {
-                newConfig.fields[fieldId].modifier = fieldModifiers.get(fieldId);
+            // Apply full width if defined in template or if it's a textarea
+            if (fieldWidths.has(fieldId)) {
+                newConfig.fields[fieldId].isFullWidth = true;
+            }
+
+            // Apply required if defined in template
+            if (requiredFields.has(fieldId)) {
+                newConfig.fields[fieldId].required = true;
             }
         });
 
@@ -485,20 +555,26 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
         });
         applyDefaults(initialFormValues, topLevelFieldIds);
 
+        // Initialize all sections
         finalConfig.sections.forEach(section => {
             if (section.isRepeatable) {
-                const sectionData = initialFormValues[section.id];
-                const defaultItem = {};
-                applyDefaults(defaultItem, section.fieldIds);
+                // For repeatable sections, ensure it's an array and has at least one item if no data is provided
+                if (!initialFormValues[section.id] || !Array.isArray(initialFormValues[section.id])) {
+                    initialFormValues[section.id] = [];
+                }
 
-                if (!data && (!Array.isArray(sectionData) || sectionData.length === 0)) {
-                    initialFormValues[section.id] = [defaultItem];
-                } else if (Array.isArray(sectionData)) {
+                const sectionData = initialFormValues[section.id];
+
+                // If it's a new report (no data) or the array is empty, add the first default item
+                if ((!data || sectionData.length === 0) && sectionData.length === 0) {
+                    const defaultItem = {};
+                    applyDefaults(defaultItem, section.fieldIds);
+                    sectionData.push(defaultItem);
+                } else {
+                    // Populate defaults for existing items
                     sectionData.forEach((item: Record<string, any>) => {
                         applyDefaults(item, section.fieldIds);
                     });
-                } else {
-                    initialFormValues[section.id] = [];
                 }
             } else {
                 if (!initialFormValues[section.id]) {

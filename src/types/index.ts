@@ -64,7 +64,8 @@ export interface FieldConfig {
   sectionId?: string;
   targetField?: string;
   snippetOptions?: SnippetOption[];
-  modifier?: TextModifier; // Transformación de texto: upper, lower, title
+  modifiers?: TextModifier[]; // Transformaciones de texto: upper, lower, title
+  isFullWidth?: boolean;
 }
 
 export interface SectionConfig {
@@ -134,7 +135,9 @@ export interface TemplateParserResult {
   fieldNames: Set<string>;
   fieldTypes: Map<string, FieldType>;
   templateOptions: Map<string, SnippetOption[]>;
-  fieldModifiers: Map<string, string>;
+  fieldModifiers: Map<string, string[]>;
+  fieldWidths: Map<string, boolean>;
+  requiredFields: Map<string, boolean>;
   errors: string[];
 }
 

@@ -1,0 +1,42 @@
+*PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO {Municipio:upper}, ESTADO {Estado:upper}\*
+
+*DIRECTOR*  
+{Director:upper}
+
+*JEFE DE OPERACIONES*
+{Jefe de operaciones:upper}
+
+*JEFE DE LOS SERVICIOS*
+{Jefe de los servicios:upper}
+
+- *EQUIPO DE GUARDIA:* “{Equipo de guardia:upper}” 
+- *FECHA:* {Fecha}
+- *HORA:* {Hora}
+["DATOS GEOGRÁFICOS"
+- *UBICACIÓN:* {Ubicación:full}
+{Destino:full}*]
+
+- *TIPO DE ACTIVIDAD:* Atención pre-hospitalaria y traslado 
+["DESCRIPCIÓN DE LA NOVEDAD"
+- *DESCRIPCIÓN DE LA NOVEDAD:* {Descripción de la novedad:textarea}]
+
+[singular="DATOS DEL PACIENTE" plural="DATOS DE LOS PACIENTES" sub="PACIENTE"
+- *NOMBRE Y APELLIDO:* {Nombre y apellido:title}
+- *CÉDULA:* {Cédula}
+- *EDAD:* {Edad}
+- *DIAGNÓSTICO:* {Diagnóstico}
+- *DIRECCIÓN:* {Dirección}
+- *ACOMPAÑANTE:* {Accompañante}]*
+
+- *CONCLUSIÓN DE LA NOVEDAD:* {Conclusión de la novedad:textarea}   
+
+- *DATOS OPERACIONALES:*
+["DATOS OPERACIONALES"
+- *UNIDAD:* {Unidad}
+- *TÉCNICO:* {Técnico}
+- *AUXILIAR:* {Auxiliar}
+- *CONDUCTOR* {Conductor}]*
+
+- *REPORTA:* {Reporta}
+
+*SOLO QUEREMOS SALVAR VIDAS* 🚑

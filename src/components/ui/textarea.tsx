@@ -35,7 +35,9 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           className
         )}
         ref={internalRef}
-        rows={rows ?? (autoSize ? 1 : undefined)}
+        autoComplete="off"
+        autoCorrect="off"
+        spellCheck="false"
         {...rest}
       />
     )

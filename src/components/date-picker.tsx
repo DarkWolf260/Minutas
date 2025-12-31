@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { format } from 'date-fns/format';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar as CalendarIcon } from 'lucide-react';
 
@@ -46,7 +46,15 @@ export function DatePicker({ value, onChange, disabled }: DatePickerProps) {
           disabled={disabled}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, 'PPP', { locale: es }) : <span>Selecciona una fecha</span>}
+          {date ? (() => {
+            const formatted = format(date, 'dd/MMMM/yyyy', { locale: es });
+            const parts = formatted.split('/');
+            if (parts.length === 3) {
+              parts[1] = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+              return parts.join('/');
+            }
+            return formatted;
+          })() : <span>Selecciona una fecha</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">

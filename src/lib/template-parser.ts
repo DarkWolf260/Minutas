@@ -12,7 +12,8 @@ import { formatStaffMember } from './formatters';
  * Tipos automáticos basados en el nombre del campo
  */
 const AUTOMATIC_FIELD_TYPES: Record<string, FieldType> = {
-    'hora': 'time-hlv'
+    'hora': 'time-hlv',
+    'fecha': 'date'
 };
 
 /**
@@ -21,48 +22,68 @@ const AUTOMATIC_FIELD_TYPES: Record<string, FieldType> = {
 const parseFieldTag = (
     tagContent: string,
     templateOptions: Map<string, SnippetOption[]>
-): { fieldId: string; fieldType: FieldType; modifier?: string } => {
-    // 1. Dropdown con opciones inline: {Campo:dropdown(A=Val1|B=Val2)}
-    const dropdownMatch = tagContent.match(/^(.+?):dropdown\((.+)\)(?:\|(.+))?$/);
-    if (dropdownMatch) {
-        const fieldName = dropdownMatch[1].trim();
-        const optionsString = dropdownMatch[2];
-        const modifier = dropdownMatch[3];
+): { fieldId: string; fieldType: FieldType; modifiers: string[]; isFullWidth: boolean; isRequired: boolean } => {
+    // Split by colon to get ID and segments
+    const segments = tagContent.split(':').map(s => s.trim());
+    const fieldId = segments[0];
+    const otherSegments = segments.slice(1);
 
-        const options: SnippetOption[] = optionsString.split('|').map((opt, i) => {
-            const eqIdx = opt.indexOf('=');
-            if (eqIdx > -1) {
-                const label = opt.substring(0, eqIdx).trim();
-                const value = opt.substring(eqIdx + 1).trim();
-                if (label) {
-                    return { id: `tpl_opt_${fieldName}_${i}`, label, value };
+    let fieldType: FieldType = AUTOMATIC_FIELD_TYPES[fieldId.toLowerCase()] || 'text';
+    let isFullWidth = false;
+    let isRequired = false;
+    const modifiers: string[] = [];
+
+    // Valid FieldTypes for explicit detection
+    const VALID_FIELD_TYPES = new Set(['text', 'textarea', 'date', 'predefined', 'time-hlv', 'multi-text', 'dropdown']);
+    const VALID_TEXT_MODS = new Set(['upper', 'lower', 'title']);
+
+    otherSegments.forEach(segment => {
+        // 1. Dropdown with inline options: dropdown(A=Val1|B=Val2)
+        const dropdownMatch = segment.match(/^dropdown\((.+)\)$/);
+        if (dropdownMatch) {
+            fieldType = 'dropdown';
+            const optionsString = dropdownMatch[1];
+            const options: SnippetOption[] = optionsString.split('|').map((opt, i) => {
+                const eqIdx = opt.indexOf('=');
+                if (eqIdx > -1) {
+                    const label = opt.substring(0, eqIdx).trim();
+                    const value = opt.substring(eqIdx + 1).trim();
+                    if (label) {
+                        return { id: `tpl_opt_${fieldId}_${i}`, label, value };
+                    }
                 }
+                return null;
+            }).filter((o): o is SnippetOption => o !== null);
+
+            if (options.length > 0) {
+                templateOptions.set(fieldId, options);
             }
-            return null;
-        }).filter((o): o is SnippetOption => o !== null);
-
-        if (options.length > 0) {
-            templateOptions.set(fieldName, options);
+            return;
         }
-        return { fieldId: fieldName, fieldType: 'dropdown', modifier };
-    }
 
-    // 2. Campo con tipo explícito y posibles modificadores: {Campo:tipo|mod1|mod2}
-    const typeMatch = tagContent.match(/^(.+?):([a-zA-Z-]+)(?:\|(.+))?$/);
-    if (typeMatch) {
-        const fieldName = typeMatch[1].trim();
-        const fieldType = typeMatch[2] as FieldType;
-        const modifier = typeMatch[3];
-        return { fieldId: fieldName, fieldType, modifier };
-    }
+        // 2. Exact keyword modifiers
+        if (segment === 'full') {
+            isFullWidth = true;
+        } else if (segment === 'req') {
+            isRequired = true;
+        } else if (VALID_FIELD_TYPES.has(segment)) {
+            fieldType = segment as FieldType;
+        } else if (VALID_TEXT_MODS.has(segment)) {
+            modifiers.push(segment);
+        } else {
+            // Handle multiple modifiers separated by pipes in one segment (backward compat) or just extra modifiers
+            const pipeParts = segment.split('|');
+            pipeParts.forEach(part => {
+                const trimmed = part.trim();
+                if (trimmed === 'full') isFullWidth = true;
+                else if (trimmed === 'req') isRequired = true;
+                else if (VALID_TEXT_MODS.has(trimmed)) modifiers.push(trimmed);
+                else if (trimmed) modifiers.push(trimmed);
+            });
+        }
+    });
 
-    // 3. Campo simple sin tipo (puede tener modificadores): {Campo|mod1|mod2}
-    const parts = tagContent.split('|');
-    const fieldName = parts[0].trim();
-    const modifier = parts.length > 1 ? parts.slice(1).join('|') : undefined;
-    const autoType = AUTOMATIC_FIELD_TYPES[fieldName.toLowerCase()] || 'text';
-
-    return { fieldId: fieldName, fieldType: autoType, modifier };
+    return { fieldId, fieldType, modifiers, isFullWidth, isRequired };
 };
 
 /**
@@ -139,10 +160,12 @@ export function parseTemplate(templateContent: string): TemplateParserResult {
         const fieldNames = new Set<string>();
         const fieldTypes = new Map<string, FieldType>();
         const templateOptions = new Map<string, SnippetOption[]>();
-        const fieldModifiers = new Map<string, string>();
+        const fieldModifiers = new Map<string, string[]>();
+        const fieldWidths = new Map<string, boolean>();
+        const requiredFields = new Map<string, boolean>();
 
         const processFieldTag = (tagContent: string): string => {
-            const { fieldId, fieldType, modifier } = parseFieldTag(tagContent, templateOptions);
+            const { fieldId, fieldType, modifiers, isFullWidth, isRequired } = parseFieldTag(tagContent, templateOptions);
             if (fieldId) {
                 fieldNames.add(fieldId);
                 // Solo sobrescribir si no está definido o si el nuevo tipo es más específico
@@ -150,8 +173,14 @@ export function parseTemplate(templateContent: string): TemplateParserResult {
                 if (!currentType || (currentType === 'text' && fieldType !== 'text')) {
                     fieldTypes.set(fieldId, fieldType);
                 }
-                if (modifier) {
-                    fieldModifiers.set(fieldId, modifier);
+                if (modifiers.length > 0) {
+                    fieldModifiers.set(fieldId, modifiers);
+                }
+                if (isFullWidth) {
+                    fieldWidths.set(fieldId, true);
+                }
+                if (isRequired) {
+                    requiredFields.set(fieldId, true);
                 }
             }
             return fieldId;
@@ -179,6 +208,8 @@ export function parseTemplate(templateContent: string): TemplateParserResult {
             fieldTypes,
             templateOptions,
             fieldModifiers,
+            fieldWidths,
+            requiredFields,
             errors
         };
     } catch (error) {
@@ -190,6 +221,8 @@ export function parseTemplate(templateContent: string): TemplateParserResult {
             fieldTypes: new Map(),
             templateOptions: new Map(),
             fieldModifiers: new Map(),
+            fieldWidths: new Map(),
+            requiredFields: new Map(),
             errors: ["Error interno al procesar la plantilla."]
         };
     }
@@ -208,7 +241,8 @@ function parseContentRecursive(
     const fieldNames = new Set<string>();
 
     // Regex para encontrar: campos {}, condicionales avanzados [?{...} op valor]...[/], o secciones [...](*)
-    const blockRegex = /(\{[\s\S]+?\}|\[\?\s*\{[\s\S]+?\}\s*(?:!=|>=|<=|>|<|=)\s*(?:"[^"]*"|\S+?)\s*\][\s\S]*?\[\/\s*\]|\[[\s\S]+?\](\*)?)/g;
+    // Grupos: 1:fielTag(+2:*), 3:advCond, 4:sectionTag(+5:*)
+    const blockRegex = /(\{[\s\S]+?\})(\*)?|(\[\?\s*\{[\s\S]+?\}\s*(?:!=|>=|<=|>|<|=)\s*(?:"[^"]*"|\S+?)\s*\][\s\S]*?\[\/\s*\])|(\[[\s\S]+?\])(\*)?/g;
 
     let lastIndex = 0;
     let match;
@@ -229,13 +263,34 @@ function parseContentRecursive(
         }
 
         const blockText = match[0];
-        const isRepeatable = !!match[2];
+        const isField = !!match[1];
+        const isRepeatableField = isField && !!match[2];
+        const isAdvancedCond = !!match[3];
+        const isSection = !!match[4];
+        const isRepeatableSection = isSection && !!match[5];
 
-        if (blockText.startsWith('{')) {
+        if (isRepeatableField) {
+            // Sintaxis {Campo}* -> Sección repetible automática de un solo campo
+            const fieldTag = match[1];
+            const fieldName = processFieldTag(fieldTag.slice(1, -1));
+            const sectionId = `section_${sectionIdCounter++}`;
+
+            sections.push({
+                id: sectionId,
+                label: fieldName,
+                isRepeatable: true,
+                fieldIds: [fieldName],
+                layout: [fieldName],
+                repeatableItemLabel: fieldName.toUpperCase(),
+                originalContent: fieldTag,
+            });
+            layout.push(sectionId);
+            fieldNames.add(fieldName);
+        } else if (isField) {
             const fieldName = processFieldTag(blockText.slice(1, -1));
             fieldNames.add(fieldName);
             layout.push(fieldName);
-        } else if (blockText.startsWith('[?')) {
+        } else if (isAdvancedCond) {
             // Condicional avanzado con operadores: [?{Campo} op Valor]...[/]
             const condMatch = blockText.match(/^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(!=|>=|<=|>|<|=)\s*("[^"]*"|\S+?)\s*\]([\s\S]*?)\[\/\s*\]$/);
             if (condMatch) {
@@ -267,8 +322,8 @@ function parseContentRecursive(
                 });
                 layout.push(sectionId);
             }
-        } else {
-            const contentWithBrackets = isRepeatable ? blockText.slice(0, -1).trim() : blockText;
+        } else if (isSection) {
+            const contentWithBrackets = isRepeatableSection ? blockText.slice(0, -1).trim() : blockText;
             let innerContent = contentWithBrackets.slice(1, -1);
 
             if (innerContent.trim() === '""') {
@@ -315,7 +370,7 @@ function parseContentRecursive(
                 sections.push({
                     id: sectionId,
                     label: sectionLabel,
-                    isRepeatable: isRepeatable,
+                    isRepeatable: isRepeatableSection,
                     fieldIds: Array.from(allFieldIds),
                     layout: nestedParse.layout,
                     repeatableItemLabel: subTitle,
@@ -376,14 +431,14 @@ function evaluateCondition(fieldValue: any, operator: string, targetValue: strin
 /**
  * Aplica modificadores de texto de forma encadenada
  */
-function applyTextModifier(value: any, modifier?: string): string {
+function applyTextModifier(value: any, modifierInput?: string | string[]): string {
     if (value === undefined || value === null) return '';
     let result = String(value);
 
-    if (!modifier) return result;
+    if (!modifierInput) return result;
 
-    const modifiers = modifier.split('|');
-    for (const mod of modifiers) {
+    const modifierArray = Array.isArray(modifierInput) ? modifierInput : modifierInput.split('|');
+    for (const mod of modifierArray) {
         const m = mod.trim().toLowerCase();
 
         // default("fallback")
@@ -445,7 +500,7 @@ export function renderContent(
     return content.replace(blockRegex, (block) => {
         if (block.startsWith('{')) {
             const tag = block.slice(1, -1);
-            const { fieldId, modifier } = parseFieldTag(tag, new Map());
+            const { fieldId, modifiers } = parseFieldTag(tag, new Map());
 
             let val = localData[fieldId];
 
@@ -456,7 +511,11 @@ export function renderContent(
                 if (options[idx]) val = options[idx].value;
             }
 
-            return applyTextModifier(val, modifier || config.fieldModifiers.get(fieldId));
+            // Unir modificadores de la etiqueta con los modificadores detectados globalmente
+            const globalModifiers = config.fieldModifiers.get(fieldId) || [];
+            const allModifiers = [...globalModifiers, ...modifiers];
+
+            return applyTextModifier(val, allModifiers);
         } else if (block.startsWith('[?')) {
             const condMatch = block.match(/^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(!=|>=|<=|>|<|=)\s*("[^"]*"|\S+?)\s*\]([\s\S]*?)\[\/\s*\]$/);
             if (condMatch) {
@@ -540,6 +599,7 @@ export function renderFinalReport(
             .replace(/\[\?.*?\][\s\S]*?\[\/\s*\]/g, '') // Eliminar bloques condicionales no procesados
             .replace(/\[""\]\s*/g, '') // Eliminar separadores
             .replace(/\[[\s\S]*?\](?:\s*)?(\*)?/g, '') // Eliminar bloques de sección no procesados
+            .replace(/\\\*/g, '*') // Convertir asteriscos escapados (\*) en asteriscos literales (*)
             .replace(/\n{3,}/g, '\n\n')
             .trim();
 
@@ -645,8 +705,8 @@ function renderContentWithSections(
         }
 
         // Aplicar modificadores si existen
-        const modifier = config.fieldModifiers?.get(fieldId);
-        return applyTextModifier(String(value), modifier);
+        const modifiers = config.fieldModifiers?.get(fieldId) || [];
+        return applyTextModifier(String(value), modifiers);
     };
 
     const hasContent = (value: any): boolean => {
@@ -664,93 +724,128 @@ function renderContentWithSections(
             });
         };
 
-        let context;
-        if (dataContext) {
-            context = dataContext;
-        } else if (data[section.id]) {
-            context = data[section.id];
-        } else {
-            context = data;
-        }
+        const checkSectionRecursive = (s: SectionConfig, context: any): boolean => {
+            if (s.isRepeatable) {
+                const sectionData = context[s.id];
+                if (!Array.isArray(sectionData) || sectionData.length === 0) return false;
+                return sectionData.some(item =>
+                    checkFieldsForContent(s.fieldIds, item) ||
+                    (s.layout || []).some(id => id.startsWith('section_') && checkSectionRecursive(sections.find((sec: any) => sec.id === id)!, item))
+                );
+            } else {
+                const nestedContext = context[s.id] || context;
+                return checkFieldsForContent(s.fieldIds, nestedContext) ||
+                    (s.layout || []).some(id => id.startsWith('section_') && checkSectionRecursive(sections.find((sec: any) => sec.id === id)!, nestedContext));
+            }
+        };
 
-        if (section.isRepeatable) {
-            const sectionData = data[section.id];
-            if (!Array.isArray(sectionData) || sectionData.length === 0) return false;
-            return sectionData.some(item => checkFieldsForContent(section.fieldIds, item));
-        } else {
-            return checkFieldsForContent(section.fieldIds, context);
-        }
+        const context = dataContext || (data[section.id] ? data[section.id] : data);
+        return checkSectionRecursive(section, context);
     };
 
-    // Procesar todas las secciones
-    sections.forEach((section: any) => {
+    // Recursive function to render a section and its nested content
+    const renderSection = (sectionId: string, currentData: any): string => {
+        const section = sections.find((s: any) => s.id === sectionId);
+        if (!section) return '';
+
+        let renderedItems = '';
+        const itemsToProcess = section.isRepeatable
+            ? (Array.isArray(data[section.id]) ? data[section.id] : [])
+            : [data[section.id] || data];
+
+        const itemsWithContent = itemsToProcess.filter((item: any) =>
+            section.fieldIds.some((fid: string) => hasContent(findValueForField(fid, item))) ||
+            (section.layout || []).some((id: string) => id.startsWith('section_') && sectionHasValues(sections.find((s: any) => s.id === id)!, item))
+        );
+
+        if (itemsWithContent.length === 0) return '';
+
+        renderedItems = itemsWithContent.map((item: any, index: number) => {
+            let itemContent = section.originalContent || '';
+            const itemLayout = section.layout || section.fieldIds;
+
+            itemLayout.forEach((id: string) => {
+                if (id.startsWith('section_')) {
+                    const nestedSection = sections.find((s: any) => s.id === id);
+                    if (nestedSection) {
+                        const isVirtual = nestedSection.originalContent?.startsWith('{');
+                        let nestedRegex;
+                        if (isVirtual) {
+                            nestedRegex = new RegExp(`${escapeRegExp(nestedSection.originalContent)}\\*`, 'g');
+                        } else {
+                            // Find the header for the nested section
+                            let header = '';
+                            if (nestedSection.singularTitle || nestedSection.pluralTitle || nestedSection.repeatableItemLabel) {
+                                header += nestedSection.singularTitle ? `singular="${nestedSection.singularTitle}"\\s*` : '';
+                                header += nestedSection.pluralTitle ? `plural="${nestedSection.pluralTitle}"\\s*` : '';
+                                header += nestedSection.repeatableItemLabel ? `sub="${nestedSection.repeatableItemLabel}"\\s*` : '';
+                            } else if (nestedSection.label) {
+                                header = `"${escapeRegExp(nestedSection.label)}"?\\s*`;
+                            }
+                            nestedRegex = new RegExp(`\\[\\s*${header}${escapeRegExp(nestedSection.originalContent)}\\s*\\]${nestedSection.isRepeatable ? '\\s*\\*' : ''}`, 'g');
+                        }
+                        const renderedNested = renderSection(id, item);
+                        itemContent = itemContent.replace(nestedRegex, renderedNested);
+                    }
+                } else {
+                    const val = findValueForField(id, item);
+                    itemContent = itemContent.replace(new RegExp(`\\{${escapeRegExp(id)}(:dropdown\\(.*?\\)|:[a-zA-Z-]+)?\\}(\\*)?`, 'g'), renderValue(val, id));
+                }
+            });
+
+            if (section.repeatableItemLabel) {
+                let labelPrefix = '';
+                if (itemsWithContent.length > 1) {
+                    labelPrefix = `- *${section.repeatableItemLabel} #${String(index + 1).padStart(2, '0')}:*`;
+                } else {
+                    labelPrefix = `- *${section.repeatableItemLabel}:*`;
+                }
+
+                if (section.fieldIds.length === 1 && !section.layout?.some((id: string) => id.startsWith('section_'))) {
+                    itemContent = `${labelPrefix} ${itemContent.trim()}`;
+                } else {
+                    itemContent = `${labelPrefix}\n${itemContent}`;
+                }
+            }
+            return itemContent;
+        }).join('\n'); // Ensure each instance is on its own line
+
+        const title = itemsWithContent.length === 1 ? section.singularTitle : section.pluralTitle;
+        if (title) {
+            renderedItems = `- *${title}*\n${renderedItems}`;
+        }
+
+        return renderedItems;
+    };
+
+    // Process top-level layout items
+    const topLevelSections = sections.filter((s: any) => {
+        // A section is top-level if it's in the root layout or not nested in any other section
+        return config.layout.includes(s.id);
+    });
+
+    topLevelSections.forEach((section: any) => {
+        const isVirtual = section.originalContent?.startsWith('{');
         let sectionRegex;
         const baseContent = escapeRegExp(section.originalContent || '###NEVERMATCH###');
 
-        let headerPart = '';
-        if (section.singularTitle || section.pluralTitle || section.repeatableItemLabel) {
-            headerPart += section.singularTitle ? `singular="${section.singularTitle}"\\s*` : '';
-            headerPart += section.pluralTitle ? `plural="${section.pluralTitle}"\\s*` : '';
-            headerPart += section.repeatableItemLabel ? `sub="${section.repeatableItemLabel}"\\s*` : '';
-        } else if (section.label) {
-            headerPart = `"${escapeRegExp(section.label)}"?\\s*`;
-        }
-
-        const fullBlockPattern = `\\[\\s*${headerPart}${baseContent}\\s*\\]${section.isRepeatable ? '\\s*\\*' : ''}`;
-        sectionRegex = new RegExp(fullBlockPattern, 'g');
-
-        let blockRendered = false;
-
-        if (section.isRepeatable) {
-            const sectionData = data[section.id];
-            let renderedItems = '';
-            if (Array.isArray(sectionData) && sectionData.length > 0) {
-                const itemsWithContent = sectionData.filter((item: any) =>
-                    section.fieldIds.some((fid: string) => hasContent(item[fid]))
-                );
-
-                if (itemsWithContent.length > 0) {
-                    renderedItems = itemsWithContent.map((item: any, index: number) => {
-                        let itemBlock = section.originalContent || '';
-                        section.fieldIds.forEach((fieldId: string) => {
-                            const value = findValueForField(fieldId, item);
-                            itemBlock = itemBlock.replace(new RegExp(`\\{${escapeRegExp(fieldId)}(:dropdown\\(.*?\\)|:[a-zA-Z-]+)?\\}`, 'g'), renderValue(value, fieldId));
-                        });
-
-                        if (section.repeatableItemLabel) {
-                            const subTitle = `- *${section.repeatableItemLabel} #${String(index + 1).padStart(2, '0')}*`;
-                            itemBlock = `${subTitle}\n${itemBlock}`;
-                        }
-                        return itemBlock;
-                    }).join('\n\n');
-
-                    const title = itemsWithContent.length === 1 ? section.singularTitle : section.pluralTitle;
-                    if (title) {
-                        renderedItems = `- *${title}*\n${renderedItems}`;
-                    }
-                }
-            }
-            finalContent = finalContent.replace(sectionRegex, renderedItems);
-            blockRendered = true;
+        if (isVirtual) {
+            sectionRegex = new RegExp(`${escapeRegExp(section.originalContent)}\\*`, 'g');
         } else {
-            if (sectionHasValues(section)) {
-                let sectionContent = section.originalContent || '';
-                if (section.label && !section.fieldIds.length) {
-                    sectionContent = `- *${section.label}*`;
-                } else {
-                    section.fieldIds.forEach((fieldId: string) => {
-                        const value = findValueForField(fieldId, data[section.id]);
-                        sectionContent = sectionContent.replace(new RegExp(`\\{${escapeRegExp(fieldId)}(:dropdown\\(.*?\\)|:[a-zA-Z-]+)?\\}`, 'g'), renderValue(value, fieldId));
-                    });
-                }
-                finalContent = finalContent.replace(sectionRegex, sectionContent);
-                blockRendered = true;
+            let headerPart = '';
+            if (section.singularTitle || section.pluralTitle || section.repeatableItemLabel) {
+                headerPart += section.singularTitle ? `singular="${section.singularTitle}"\\s*` : '';
+                headerPart += section.pluralTitle ? `plural="${section.pluralTitle}"\\s*` : '';
+                headerPart += section.repeatableItemLabel ? `sub="${section.repeatableItemLabel}"\\s*` : '';
+            } else if (section.label) {
+                headerPart = `"${escapeRegExp(section.label)}"?\\s*`;
             }
+            const fullBlockPattern = `\\[\\s*${headerPart}${baseContent}\\s*\\]${section.isRepeatable ? '\\s*\\*' : ''}`;
+            sectionRegex = new RegExp(fullBlockPattern, 'g');
         }
 
-        if (!blockRendered) {
-            finalContent = finalContent.replace(sectionRegex, '');
-        }
+        const rendered = renderSection(section.id, data);
+        finalContent = finalContent.replace(sectionRegex, rendered);
     });
 
     // Limpieza final de tags sueltos
