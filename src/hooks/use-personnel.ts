@@ -14,7 +14,14 @@ export function usePersonnel() {
         try {
             const storedPersonnel = localStorage.getItem(PERSONNEL_STORAGE_KEY);
             if (storedPersonnel) {
-                setPersonnel(JSON.parse(storedPersonnel));
+                const parsed = JSON.parse(storedPersonnel);
+                // Migration: Ensure all members have a status if missing and specialties array
+                const migrated = parsed.map((m: any) => ({
+                    ...m,
+                    status: m.status || 'activo',
+                    specialties: m.specialties || [],
+                }));
+                setPersonnel(migrated);
             }
         } catch (error) {
             console.error('Failed to load personnel from localStorage', error);

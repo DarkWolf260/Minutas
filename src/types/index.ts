@@ -1,11 +1,32 @@
 
 'use client';
 
+export type PersonnelStatus = 'activo' | 'vacaciones' | 'permiso' | 'reposo';
+export type AttendanceStatus = 'presente' | 'tarde' | 'permiso' | 'ausente';
+
+export interface AttendanceRecord {
+  id: string;
+  memberId: string;
+  date: string; // ISO format: YYYY-MM-DD
+  status: AttendanceStatus;
+  checkInTime?: string;
+  note?: string;
+  createdAt: string;
+}
+
 export interface StaffMember {
   id: string;
   name: string;
   cedula?: string;
   roleId?: string;
+  status?: PersonnelStatus;
+  specialties?: string[];
+  bloodType?: string;
+  emergencyContact?: string;
+  email?: string;
+  phone?: string;
+  joinDate?: string;
+  department?: string;
 }
 
 export interface StaffRole {

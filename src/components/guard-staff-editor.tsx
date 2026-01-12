@@ -85,8 +85,11 @@ function StaffListEditor({ label, staffMembers, isSingle, onUpdate }: StaffListE
     };
 
     const filteredPersonnel = useMemo(() => {
-        if (!newMemberName.trim()) return personnel.slice(0, 5);
-        return personnel.filter(p => p.name.toLowerCase().includes(newMemberName.toLowerCase())).slice(0, 10);
+        const query = newMemberName.toLowerCase().trim();
+        const activePersonnel = personnel.filter(p => p.status === 'activo' || !p.status);
+
+        if (!query) return activePersonnel.slice(0, 5);
+        return activePersonnel.filter(p => p.name.toLowerCase().includes(query)).slice(0, 10);
     }, [personnel, newMemberName]);
 
     return (
