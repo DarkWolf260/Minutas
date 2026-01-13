@@ -16,6 +16,7 @@ export interface AttendanceRecord {
 
 export interface StaffMember {
   id: string;
+  personnelId?: string; // Link to global personnel list
   name: string;
   cedula?: string;
   roleId?: string;

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { usePersonnel } from '@/hooks/use-personnel';
 import { useRoles } from '@/hooks/use-roles';
+import { useGuards } from '@/hooks/use-guards'; // Import useGuards
 import { useReports } from '@/hooks/use-reports';
 import { CedulaInput } from '@/components/cedula-input';
 import { PlusCircle, Trash2, Search, UserPlus, FileEdit, Download, Upload, UserCog, Activity, LifeBuoy, HeartPulse, User, Clock, Mail, Phone, ShieldCheck, Calendar, Hash } from 'lucide-react';
@@ -43,6 +44,7 @@ const STATUS_OPTIONS: { value: PersonnelStatus; label: string; color: string }[]
 export default function PersonnelPage() {
     const { personnel, addMember, updateMember, removeMember, isLoaded: personnelLoaded, savePersonnel } = usePersonnel();
     const { roles, isLoaded: rolesLoaded } = useRoles();
+    const { guards } = useGuards();
     const { reports } = useReports();
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -278,6 +280,21 @@ export default function PersonnelPage() {
                                                     <Badge variant="outline" className={cn("font-medium", status.color)}>
                                                         {status.label}
                                                     </Badge>
+                                                    {/* Show Guard Badges */}
+                                                    <div className="flex gap-1 mt-1 flex-wrap">
+                                                        {guards.map(g => {
+                                                            const isInGuard = Object.values(g.staff).flat().some(m =>
+                                                                m.personnelId === member.id ||
+                                                                m.name.toLowerCase().trim() === member.name.toLowerCase().trim()
+                                                            );
+                                                            if (!isInGuard) return null;
+                                                            return (
+                                                                <Badge key={g.id} variant="secondary" className="text-[9px] px-1 h-4 bg-slate-100 border-slate-200 text-slate-700">
+                                                                    G-{g.id}
+                                                                </Badge>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <div className="text-xs">{member.roleId || <span className="opacity-40 italic">Global</span>}</div>
@@ -334,6 +351,18 @@ export default function PersonnelPage() {
                                                                                     <Badge variant="outline" className={cn("px-1.5 py-0 h-4 text-[10px] uppercase font-bold", STATUS_OPTIONS.find(s => s.value === editingMember.status)?.color)}>
                                                                                         {STATUS_OPTIONS.find(s => s.value === editingMember.status)?.label}
                                                                                     </Badge>
+                                                                                    {guards.map(g => {
+                                                                                        const isInGuard = Object.values(g.staff).flat().some(m =>
+                                                                                            m.personnelId === editingMember.id ||
+                                                                                            m.name.toLowerCase().trim() === editingMember.name.toLowerCase().trim()
+                                                                                        );
+                                                                                        if (!isInGuard) return null;
+                                                                                        return (
+                                                                                            <Badge key={g.id} variant="secondary" className="text-[9px] px-1 h-4 bg-slate-100 border-slate-200 text-slate-700">
+                                                                                                G-{g.id}
+                                                                                            </Badge>
+                                                                                        );
+                                                                                    })}
                                                                                 </div>
                                                                             </div>
                                                                         </div>

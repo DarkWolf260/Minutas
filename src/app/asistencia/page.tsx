@@ -4,6 +4,9 @@
 import { useState, useMemo } from 'react';
 import { usePersonnel } from '@/hooks/use-personnel';
 import { useAttendance } from '@/hooks/use-attendance';
+import { useGuards } from '@/hooks/use-guards';
+import { useSettings } from '@/hooks/use-settings';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,8 +38,18 @@ const ATTENDANCE_STATUS_CONFIG = {
 export default function AttendancePage() {
     const { personnel } = usePersonnel();
     const { records, markAttendance, getRecordsByDate } = useAttendance();
+    const { guards } = useGuards();
+    const { settings } = useSettings();
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [searchQuery, setSearchQuery] = useState('');
+    const [filterGuardId, setFilterGuardId] = useState<string>('todos');
+
+    // Set default filter to active guard when loaded
+    useMemo(() => {
+        if (settings.activeGuardId) {
+            setFilterGuardId(settings.activeGuardId);
+        }
+    }, [settings.activeGuardId]);
 
     const formattedDate = format(selectedDate, 'yyyy-MM-dd');
     const displayDate = format(selectedDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
@@ -59,11 +72,34 @@ export default function AttendancePage() {
     }, [personnel, dailyRecords]);
 
     const filteredPersonnel = useMemo(() => {
-        return personnel.filter(p =>
+        let currentList = personnel;
+
+        // Filter by Guard
+        if (filterGuardId !== 'todos') {
+            const activeGuard = guards.find(g => g.id === filterGuardId);
+            if (activeGuard) {
+                // Get all personnel IDs in this guard
+                const guardMemberIds = new Set<string>();
+                const guardMemberNames = new Set<string>();
+
+                Object.values(activeGuard.staff).flat().forEach(member => {
+                    if (member.personnelId) guardMemberIds.add(member.personnelId);
+                    // Also track names for fallback matching (legacy/manual entries)
+                    if (member.name) guardMemberNames.add(member.name.toLowerCase().trim());
+                });
+
+                currentList = currentList.filter(p =>
+                    guardMemberIds.has(p.id) ||
+                    guardMemberNames.has(p.name.toLowerCase().trim())
+                );
+            }
+        }
+
+        return currentList.filter(p =>
             p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             p.cedula?.includes(searchQuery)
         );
-    }, [personnel, searchQuery]);
+    }, [personnel, searchQuery, filterGuardId, guards]);
 
     const handleStatusChange = (memberId: string, status: any) => {
         const time = status === 'presente' || status === 'tarde' ? format(new Date(), 'HH:mm') : undefined;
@@ -118,6 +154,19 @@ export default function AttendancePage() {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
+                        <div className="w-[180px]">
+                            <Select value={filterGuardId} onValueChange={setFilterGuardId}>
+                                <SelectTrigger className="h-10 bg-white/50 border-slate-200/60 rounded-xl">
+                                    <SelectValue placeholder="Filtrar por guardia" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="todos">Todo el Personal</SelectItem>
+                                    {guards.map(g => (
+                                        <SelectItem key={g.id} value={g.id}>Guardia "{g.id}"</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </CardHeader>
                     <CardContent className="p-0">
                         <div className="divide-y divide-slate-100/50">
@@ -137,7 +186,22 @@ export default function AttendancePage() {
                                             </div>
                                             <div>
                                                 <p className="font-extrabold text-base text-slate-900 leading-none">{member.name}</p>
-                                                <p className="text-xs font-mono font-medium text-muted-foreground mt-1.5">{member.cedula || 'V-00000000'}</p>
+                                                <p className="text-xs font-mono font-medium text-muted-foreground mt-1.5 flex items-center gap-2">
+                                                    {member.cedula || 'V-00000000'}
+                                                    {/* Show Guard Badge if they belong to one */}
+                                                    {guards.map(g => {
+                                                        const isInGuard = Object.values(g.staff).flat().some(m =>
+                                                            m.personnelId === member.id ||
+                                                            m.name.toLowerCase().trim() === member.name.toLowerCase().trim()
+                                                        );
+                                                        if (!isInGuard) return null;
+                                                        return (
+                                                            <span key={g.id} className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                                                G-{g.id}
+                                                            </span>
+                                                        );
+                                                    })}
+                                                </p>
                                             </div>
                                         </div>
 

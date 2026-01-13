@@ -61,13 +61,14 @@ function StaffListEditor({ label, staffMembers, isSingle, onUpdate }: StaffListE
 
     const canAdd = !isSingle || (isSingle && staffMembers.length === 0);
 
-    const handleAdd = (memberData?: { name: string, cedula?: string }) => {
+    const handleAdd = (memberData?: { id?: string, name: string, cedula?: string }) => {
         const name = memberData?.name || newMemberName;
         const cedula = memberData?.cedula || newMemberCedula;
 
         if (name.trim() && canAdd) {
             const newMember: StaffMember = {
                 id: `staff_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                personnelId: memberData?.id, // Save the link if it comes from suggestions
                 name: name.trim(),
                 cedula: (memberData?.cedula || showNewCedula) ? cedula.trim() : undefined,
             };
@@ -131,7 +132,7 @@ function StaffListEditor({ label, staffMembers, isSingle, onUpdate }: StaffListE
                                                             key={p.id}
                                                             variant="ghost"
                                                             className="w-full justify-start text-xs h-9 px-2"
-                                                            onClick={() => handleAdd({ name: p.name, cedula: p.cedula })}
+                                                            onClick={() => handleAdd({ id: p.id, name: p.name, cedula: p.cedula })}
                                                         >
                                                             <div className="flex flex-col items-start">
                                                                 <span className="font-medium">{p.name}</span>
