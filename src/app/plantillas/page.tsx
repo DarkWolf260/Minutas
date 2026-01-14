@@ -34,7 +34,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { GlobalTagsManager } from '@/components/global-tags-manager';
+
 import { parseTemplate } from '@/lib/template-parser';
 import {
   Tooltip,
@@ -115,7 +115,6 @@ export default function PlantillasPage() {
           <TabsList className="self-center sm:self-start mb-4">
             <TabsTrigger value="builder">Constructor</TabsTrigger>
             <TabsTrigger value="editor">Gestionar Plantillas</TabsTrigger>
-            <TabsTrigger value="etiquetas">Etiquetas Globales</TabsTrigger>
           </TabsList>
 
           <TabsContent value="builder" className="flex-1 flex-grow overflow-hidden">
@@ -267,9 +266,7 @@ export default function PlantillasPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="etiquetas" className="flex-1 overflow-y-auto">
-            <GlobalTagsManager />
-          </TabsContent>
+
         </Tabs>
       </div>
 

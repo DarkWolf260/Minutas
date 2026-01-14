@@ -16,7 +16,6 @@ const navItems = [
   { href: '/reporte-final', label: 'Reporte Final', icon: ClipboardCheck },
   { href: '/direcciones', label: 'Direcciones', icon: NotebookPen },
   { href: '/personal', label: 'Personal', icon: Users },
-  { href: '/asistencia', label: 'Asistencia', icon: CalendarCheck },
   { href: '/estadisticas', label: 'Estadísticas', icon: TrendingUp },
   { href: '/documentation', label: 'Información', icon: BookOpen },
 ];

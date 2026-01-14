@@ -19,15 +19,16 @@ import type { Staff, StaffMember } from '@/types';
 import { useRoles } from '@/hooks/use-roles';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useSettings } from '@/hooks/use-settings';
+import { StaffListEditor } from './guard-staff-editor';
 
 interface OrdenDelDiaFormProps {
-    selectedGuard: string;
-    initialData: Staff | undefined;
+  selectedGuard: string;
+  initialData: Staff | undefined;
 }
 
 const formatStaffMember = (member: StaffMember): string => {
-    // Only show name for this component
-    return member.name;
+  const rank = member.rank ? `${member.rank} ` : '';
+  return `${rank}${member.name}`;
 }
 
 export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormProps) {
@@ -45,9 +46,9 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   const globalSettings = useMemo(() => {
     const settings: Record<string, string> = {};
     Object.entries(definitions).forEach(([key, config]) => {
-        if (config.type === 'predefined') {
-            settings[key] = config.value || '';
-        }
+      if (config.type === 'predefined') {
+        settings[key] = config.value || '';
+      }
     });
     return settings;
   }, [definitions]);
@@ -58,10 +59,10 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const formatDate = (date: Date) => {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
     };
 
     setPeriodo(`${formatDate(today)} AL ${formatDate(tomorrow)}`);
@@ -83,37 +84,32 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
     }
   }, [initialData, roles, rolesLoaded]);
 
-  const handleStaffChange = (roleName: string, value: string) => {
-    const roleConfig = roles.find(r => r.name === roleName);
-    const members = value.split('\n')
-        .filter(Boolean)
-        .map(name => ({ id: `manual_${Date.now()}`, name }));
-    
+  const handleRoleStaffUpdate = (roleName: string, members: StaffMember[]) => {
     setStaff(prev => ({
-        ...prev,
-        [roleName]: roleConfig?.isSingle ? members.slice(0, 1) : members
+      ...prev,
+      [roleName]: members
     }));
   };
-  
+
   const handleUseForFinalReport = () => {
     let startDate, endDate;
     const parts = periodo.split(' AL ');
     if (parts.length === 2) {
-        const [startStr, endStr] = parts;
-        const startParts = startStr.split('/');
-        const endParts = endStr.split('/');
-        if (startParts.length === 3 && endParts.length === 3) {
-            // DD/MM/YYYY -> YYYY-MM-DD for Date constructor
-            startDate = new Date(`${startParts[2]}-${startParts[1]}-${startParts[0]}T00:00:00`);
-            endDate = new Date(`${endParts[2]}-${endParts[1]}-${endParts[0]}T00:00:00`);
-        }
+      const [startStr, endStr] = parts;
+      const startParts = startStr.split('/');
+      const endParts = endStr.split('/');
+      if (startParts.length === 3 && endParts.length === 3) {
+        // DD/MM/YYYY -> YYYY-MM-DD for Date constructor
+        startDate = new Date(`${startParts[2]}-${startParts[1]}-${startParts[0]}T00:00:00`);
+        endDate = new Date(`${endParts[2]}-${endParts[1]}-${endParts[0]}T00:00:00`);
+      }
     }
 
     saveSettings({
-        ...settings,
-        finalReportStaffSnapshot: staff,
-        finalReportStartDate: startDate && !isNaN(startDate.getTime()) ? startDate.toISOString() : '',
-        finalReportEndDate: endDate && !isNaN(endDate.getTime()) ? endDate.toISOString() : '',
+      ...settings,
+      finalReportStaffSnapshot: staff,
+      finalReportStartDate: startDate && !isNaN(startDate.getTime()) ? startDate.toISOString() : '',
+      finalReportEndDate: endDate && !isNaN(endDate.getTime()) ? endDate.toISOString() : '',
     });
     setIsSnapshotSaved(true);
   };
@@ -121,17 +117,17 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   const handleGenerateOrder = () => {
     // Helper to find a key case-insensitively
     const findInsensitive = (obj: Record<string, string>, key: string): string => {
-        if (!obj) return '';
-        const keyLower = key.toLowerCase();
-        const foundKey = Object.keys(obj).find(k => k.toLowerCase() === keyLower);
-        return foundKey ? obj[foundKey] : '';
+      if (!obj) return '';
+      const keyLower = key.toLowerCase();
+      const foundKey = Object.keys(obj).find(k => k.toLowerCase() === keyLower);
+      return foundKey ? obj[foundKey] : '';
     };
 
     const director = findInsensitive(globalSettings, 'Director');
     const jefeDeOperaciones = findInsensitive(globalSettings, 'Jefe de Operaciones');
     const municipio = findInsensitive(globalSettings, 'Municipio');
     const estado = findInsensitive(globalSettings, 'Estado');
-    
+
     const reportParts = [
       `*ORDEN DEL DÍA DEL INSTITUTO AUTONOMO DE PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES DEL MUNICIPIO ${(municipio || '').toUpperCase()} ESTADO ${(estado || '').toUpperCase()}*`,
       ``,
@@ -151,7 +147,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
         reportParts.push(``, `*${role.toUpperCase()}*`, personnel.map(formatStaffMember).join('\n'));
       }
     });
-    
+
     const order = reportParts.join('\n').trim();
 
     setGeneratedOrder(order);
@@ -165,45 +161,34 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
     setCopyButtonText('¡Copiado!');
     setTimeout(() => setCopyButtonText('Copiar'), 2000);
   };
-  
-  const getDisplayValueForRole = (roleName: string): string => {
-      const members = staff[roleName];
-      if (!members) return '';
-      return members.map(m => m.name).join('\n');
-  }
 
   return (
     <div>
       <div className="space-y-6 pt-4 max-h-[70vh] overflow-y-auto pr-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <Label>Grupo de Guardia</Label>
-                <Input readOnly value={`“${selectedGuard}”`} />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="periodo">Periodo</Label>
-                <Input id="periodo" value={periodo} onChange={(e) => setPeriodo(e.target.value)}/>
-            </div>
-        </div>
-        {roles.map(role => (
-          <div className="space-y-2" key={role.name}>
-            <Label>{role.name}</Label>
-            {role.isSingle ? (
-              <Input 
-                value={getDisplayValueForRole(role.name)} 
-                onChange={(e) => handleStaffChange(role.name, e.target.value)} 
-              />
-            ) : (
-              <Textarea 
-                rows={2} 
-                value={getDisplayValueForRole(role.name)} 
-                onChange={(e) => handleStaffChange(role.name, e.target.value)} 
-              />
-            )}
+          <div className="space-y-2">
+            <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Grupo de Guardia</Label>
+            <Input readOnly value={`“${selectedGuard}”`} className="bg-muted/50" />
           </div>
-        ))}
+          <div className="space-y-2">
+            <Label htmlFor="periodo" className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Periodo</Label>
+            <Input id="periodo" value={periodo} onChange={(e) => setPeriodo(e.target.value)} className="bg-background" />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {roles.filter(r => !r.isHidden).map(role => (
+            <StaffListEditor
+              key={role.name}
+              label={role.name}
+              staffMembers={staff[role.name] || []}
+              isSingle={role.isSingle}
+              onUpdate={(members) => handleRoleStaffUpdate(role.name, members)}
+            />
+          ))}
+        </div>
       </div>
-       <div className="flex justify-end pt-6">
+      <div className="flex justify-end pt-6">
         <Button onClick={handleGenerateOrder}>Generar Orden del Día</Button>
       </div>
 

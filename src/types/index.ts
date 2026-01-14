@@ -1,7 +1,7 @@
 
 'use client';
 
-export type PersonnelStatus = 'activo' | 'vacaciones' | 'permiso' | 'reposo';
+export type PersonnelStatus = 'activo' | 'vacaciones' | 'permiso' | 'reposo' | 'apoyo';
 export type AttendanceStatus = 'presente' | 'tarde' | 'permiso' | 'ausente';
 
 export interface AttendanceRecord {
@@ -19,6 +19,7 @@ export interface StaffMember {
   personnelId?: string; // Link to global personnel list
   name: string;
   cedula?: string;
+  rank?: string; // Hierarchy / Rank
   roleId?: string;
   status?: PersonnelStatus;
   specialties?: string[];
@@ -34,6 +35,7 @@ export interface StaffRole {
   name: string;
   isSingle: boolean; // True for roles that can only have one person
   departmentScope: string[]; // Array of department IDs, 'OPERATIONS' for guards. Empty array means global.
+  isHidden?: boolean; // If true, this role won't appear in the default Orden del Día / Reports
 }
 
 // Staff is a record mapping a role name to a list of personnel for that role.

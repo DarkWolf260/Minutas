@@ -7,8 +7,8 @@ import type { Department, Staff } from '@/types';
 const DEPARTMENTS_STORAGE_KEY = 'app-departments';
 
 const defaultDepartments: Department[] = [
-    { id: 'capacitacion', name: 'Capacitación', staff: {} },
-    { id: 'gestion_riesgos', name: 'Gestión de Riesgos', staff: {} },
+  { id: 'capacitacion', name: 'Capacitación', staff: {} },
+  { id: 'gestion_riesgos', name: 'Gestión de Riesgos', staff: {} },
 ];
 
 export function useDepartments() {
@@ -21,30 +21,30 @@ export function useDepartments() {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-            const migratedDepartments = parsed.map((dept: any) => {
-                const newStaff: Staff = {};
-                if (!dept.staff) return { ...dept, staff: newStaff };
+          const migratedDepartments = parsed.map((dept: any) => {
+            const newStaff: Staff = {};
+            if (!dept.staff) return { ...dept, staff: newStaff };
 
-                // Check if migration from string[] to StaffMember[] is needed
-                for (const roleName in dept.staff) {
-                    const staffList = dept.staff[roleName];
-                    if (Array.isArray(staffList) && staffList.length > 0 && typeof staffList[0] === 'string') {
-                        // This is the old format (string[])
-                        newStaff[roleName] = staffList.map((name: string) => ({
-                            id: `staff_${Date.now()}_${Math.random()}`,
-                            name: name,
-                            cedula: undefined
-                        }));
-                    } else {
-                        // Already in new format (StaffMember[]) or empty
-                        newStaff[roleName] = staffList;
-                    }
-                }
-                return { ...dept, staff: newStaff };
-            });
-            setDepartments(migratedDepartments);
+            // Check if migration from string[] to StaffMember[] is needed
+            for (const roleName in dept.staff) {
+              const staffList = dept.staff[roleName];
+              if (Array.isArray(staffList) && staffList.length > 0 && typeof staffList[0] === 'string') {
+                // This is the old format (string[])
+                newStaff[roleName] = staffList.map((name: string) => ({
+                  id: `staff_${Date.now()}_${Math.random()}`,
+                  name: name,
+                  cedula: undefined
+                }));
+              } else {
+                // Already in new format (StaffMember[]) or empty
+                newStaff[roleName] = staffList;
+              }
+            }
+            return { ...dept, staff: newStaff };
+          });
+          setDepartments(migratedDepartments);
         } else {
-            setDepartments(defaultDepartments);
+          setDepartments(defaultDepartments);
         }
       } else {
         setDepartments(defaultDepartments);
@@ -53,7 +53,7 @@ export function useDepartments() {
       console.error('Failed to load departments from localStorage', error);
       setDepartments(defaultDepartments);
     } finally {
-        setIsLoaded(true);
+      setIsLoaded(true);
     }
   }, []);
 
@@ -65,9 +65,9 @@ export function useDepartments() {
       console.error('Failed to save departments to localStorage', error);
     }
   }, []);
-  
+
   const addDepartment = useCallback((newDepartment: Department) => {
-    const updated = [...departments, newDepartment].sort((a,b) => a.name.localeCompare(b.name));
+    const updated = [...departments, newDepartment].sort((a, b) => a.name.localeCompare(b.name));
     saveDepartments(updated);
   }, [departments, saveDepartments]);
 
@@ -75,7 +75,7 @@ export function useDepartments() {
     const updated = departments.filter(d => d.id !== departmentId);
     saveDepartments(updated);
   }, [departments, saveDepartments]);
-  
+
   const updateDepartment = useCallback((updatedDepartment: Department) => {
     const updated = departments.map(d => d.id === updatedDepartment.id ? updatedDepartment : d);
     saveDepartments(updated);
@@ -86,5 +86,5 @@ export function useDepartments() {
   }, [saveDepartments]);
 
 
-  return { departments, addDepartment, removeDepartment, updateDepartment, isLoaded, clearAllDepartments };
+  return { departments, addDepartment, removeDepartment, updateDepartment, isLoaded, clearAllDepartments, saveDepartments };
 }

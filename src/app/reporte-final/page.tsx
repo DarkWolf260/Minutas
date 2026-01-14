@@ -25,17 +25,18 @@ import { PlusCircle, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface ManualNovedad {
-  id: string;
-  date: Date;
-  time: string;
-  text: string;
+    id: string;
+    date: Date;
+    time: string;
+    text: string;
 }
 
 const formatStaffMemberForReport = (member: StaffMember, showCedula: boolean): string => {
+    const rank = member.rank ? `${member.rank} ` : '';
     if (showCedula && member.cedula) {
-        return `${member.name} ${member.cedula}`;
+        return `${rank}${member.name} ${member.cedula}`;
     }
-    return member.name;
+    return `${rank}${member.name}`;
 };
 
 
@@ -46,12 +47,12 @@ export default function ReporteFinalPage() {
     const { roles, isLoaded: rolesLoadedHook } = useRoles();
     const { templates, configs, isLoaded: templatesLoaded } = useTemplates();
     const router = useRouter();
-    
+
     const [statisticsText, setStatisticsText] = useState('');
     const [generatedReport, setGeneratedReport] = useState('');
     const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
     const [copyButtonText, setCopyButtonText] = useState('Copiar');
-    
+
     const [manualNovedades, setManualNovedades] = useState<ManualNovedad[]>([]);
     const [newNovedadDate, setNewNovedadDate] = useState(new Date());
     const [newNovedadTime, setNewNovedadTime] = useState('');
@@ -61,17 +62,17 @@ export default function ReporteFinalPage() {
         if (!settingsLoaded) return;
 
         const hasCustomDates = settings.finalReportStartDate && settings.finalReportEndDate;
-        
-        const startDate = hasCustomDates 
-            ? new Date(settings.finalReportStartDate!) 
+
+        const startDate = hasCustomDates
+            ? new Date(settings.finalReportStartDate!)
             : new Date();
         startDate.setHours(9, 0, 0, 0);
 
-        const endDate = hasCustomDates 
+        const endDate = hasCustomDates
             ? new Date(settings.finalReportEndDate!)
             : new Date(new Date().setDate(new Date().getDate() + 1));
         endDate.setHours(9, 0, 0, 0);
-        
+
         const defaultStartNovedad: ManualNovedad = {
             id: `manual_${Date.now()}_start`,
             date: startDate,
@@ -148,7 +149,7 @@ export default function ReporteFinalPage() {
 
             const [hours, minutes] = timeMatch.slice(1).map(Number);
             if (isNaN(hours) || isNaN(minutes)) return null;
-            
+
             const sortDate = new Date(`${fechaStr}T00:00:00`);
             if (isNaN(sortDate.getTime())) return null;
 
@@ -167,7 +168,7 @@ export default function ReporteFinalPage() {
             return sortDate;
         }
     };
-    
+
     const sortedManualNovedades = useMemo(() => {
         return [...manualNovedades].sort((a, b) => {
             const dateA = getSortDate(a);
@@ -206,32 +207,32 @@ export default function ReporteFinalPage() {
             const formatDatePart = (date: Date) => new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: '2-digit', month: 'long' }).format(date);
             return `DESDE EL ${formatDatePart(startDate)} HASTA EL ${formatDatePart(endDate)} DE ${startDate.getFullYear()}`.toUpperCase();
         })();
-        
+
         const headerParts = [
             `*INSTITUTO AUTÓNOMO DE PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO ${(municipio || '').toUpperCase()}*`, ``,
             `*DIRECTOR-PRESIDENTE*`, director, ``,
             `*JEFE DE OPERACIONES*`, jefeDeOperaciones, ``,
             `*REPORTE DE NOVEDADES ${dateRangeString}*`, ``
         ];
-        
+
         const staffForReport = hasSnapshot ? settings.finalReportStaffSnapshot : activeGuard?.staff;
         const guardIdForReport = hasSnapshot ? findValueInFormData(settings.finalReportStaffSnapshot, 'Guardia') || activeGuard?.id : activeGuard?.id;
 
         if (guardIdForReport && staffForReport) {
-             headerParts.push(`- *EQUIPO DE GUARDIA:* GRUPO “${guardIdForReport}”`);
-             roles.forEach(role => {
-                 const staffKey = Object.keys(staffForReport).find(k => k.toLowerCase() === role.name.toLowerCase());
-                 const staffList = staffKey ? staffForReport[staffKey as keyof typeof staffForReport] : undefined;
-                 if (staffList && staffList.length > 0 && staffList.some(s => s.name.trim() !== '')) {
-                     const showCedula = role.name.toLowerCase() === settings.reportaRoleId?.toLowerCase() || role.name.toLowerCase() === settings.analistaRoleId?.toLowerCase();
-                     headerParts.push(`- *${role.name.toUpperCase()}:* ${staffList.map(member => formatStaffMemberForReport(member, showCedula)).join(' / ')}`);
-                 }
-             });
+            headerParts.push(`- *EQUIPO DE GUARDIA:* GRUPO “${guardIdForReport}”`);
+            roles.filter(r => !r.isHidden).forEach(role => {
+                const staffKey = Object.keys(staffForReport).find(k => k.toLowerCase() === role.name.toLowerCase());
+                const staffList = staffKey ? staffForReport[staffKey as keyof typeof staffForReport] : undefined;
+                if (staffList && staffList.length > 0 && staffList.some(s => s.name.trim() !== '')) {
+                    const showCedula = role.name.toLowerCase() === settings.reportaRoleId?.toLowerCase() || role.name.toLowerCase() === settings.analistaRoleId?.toLowerCase();
+                    headerParts.push(`- *${role.name.toUpperCase()}:* ${staffList.map(member => formatStaffMemberForReport(member, showCedula)).join(' / ')}`);
+                }
+            });
         }
-        
+
         const allNovedades = [
-          ...finishedReports.map(report => ({ type: 'report', data: report, sortDate: getSortDate(report) })),
-          ...manualNovedades.map(novedad => ({ type: 'manual', data: novedad, sortDate: getSortDate(novedad) }))
+            ...finishedReports.map(report => ({ type: 'report', data: report, sortDate: getSortDate(report) })),
+            ...manualNovedades.map(novedad => ({ type: 'manual', data: novedad, sortDate: getSortDate(novedad) }))
         ];
 
         const sortedAllNovedades = allNovedades.filter(item => item.sortDate).sort((a, b) => a.sortDate!.getTime() - b.sortDate!.getTime());
@@ -242,16 +243,16 @@ export default function ReporteFinalPage() {
                 const formattedDate = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(item.sortDate!);
                 const horaStr = findValueInFormData(report.formData, 'Hora') as string | undefined;
                 const timestampText = `${formattedDate} ${horaStr || ''}`.trim();
-                
+
                 const template = templates.find(t => t.id === report.templateId);
                 const config = configs[report.templateId];
-                
+
                 let contentText = '';
                 if (template && config) {
-                    const dynamicPredefinedValues = {...globalSettings, 'Guardia': guardIdForReport || ''};
+                    const dynamicPredefinedValues = { ...globalSettings, 'Guardia': guardIdForReport || '' };
                     contentText = renderFinalReport(template.content, report.formData || {}, config, {}, true, dynamicPredefinedValues);
                 }
-                
+
                 const titleText = ` - *${timestampText}* - *${report.title}*`;
                 return contentText ? `${titleText}\n\n${contentText}` : titleText;
 
@@ -267,7 +268,7 @@ export default function ReporteFinalPage() {
         if (statisticsText.trim()) finalReportParts.push(``, `*ESTADÍSTICAS DEL DÍA*`, ``, statisticsText.trim());
         if (reportContent.trim()) finalReportParts.push(``, `*NOVEDADES DEL DÍA*`, ``, reportContent);
         finalReportParts.push(``, `*PROTECCIÓN CIVIL ${(municipio || '').toUpperCase()}*`);
-        
+
         setGeneratedReport(finalReportParts.join('\n').trim());
         setIsResultDialogOpen(true);
         setCopyButtonText('Copiar');
@@ -315,7 +316,7 @@ export default function ReporteFinalPage() {
                                     <Alert variant="default">
                                         <AlertTitle>Aviso</AlertTitle>
                                         <AlertDescription className="flex items-center justify-between gap-4">
-                                             <span>
+                                            <span>
                                                 No se ha emitido una Orden del Día. El reporte se generará con la guardia activa y fecha actuales.
                                             </span>
                                             <Button variant="outline" size="sm" onClick={() => router.push('/orden-del-dia')}>
@@ -326,8 +327,8 @@ export default function ReporteFinalPage() {
                                 )}
                                 <div className="space-y-2">
                                     <Label htmlFor="statistics-text">Estadísticas del Día</Label>
-                                    <Textarea 
-                                        id="statistics-text" 
+                                    <Textarea
+                                        id="statistics-text"
                                         value={statisticsText}
                                         onChange={(e) => setStatisticsText(e.target.value)}
                                         placeholder="Introduce las estadísticas del día, una por línea. Ejemplo:&#10;- ATENCIONES PREHOSPITALARIAS 06"
@@ -367,9 +368,9 @@ export default function ReporteFinalPage() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label>Fecha</Label>
-                                                <DatePicker 
-                                                    value={format(newNovedadDate, 'yyyy-MM-dd')} 
-                                                    onChange={(val) => setNewNovedadDate(new Date(val + 'T00:00:00'))} 
+                                                <DatePicker
+                                                    value={format(newNovedadDate, 'yyyy-MM-dd')}
+                                                    onChange={(val) => setNewNovedadDate(new Date(val + 'T00:00:00'))}
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -385,7 +386,7 @@ export default function ReporteFinalPage() {
                                             <Button onClick={handleAddManualNovedad}><PlusCircle className="h-4 w-4 mr-2" />Añadir</Button>
                                         </div>
                                     </div>
-                                    
+
                                     {manualNovedades.length > 0 && (
                                         <div className="space-y-2 pt-2">
                                             <Label>Novedades Manuales ({manualNovedades.length})</Label>

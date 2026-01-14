@@ -71,18 +71,18 @@
 
 /* Parche para Leaflet: evitar que el mapa se superponga a los Diálogos/Modales */
 .leaflet-container {
-  z-index: 0 !important;
+  z-index: 10 !important;
 }
 
 .leaflet-control-container {
-  z-index: 0 !important;
+  z-index: 10 !important;
 }
 
 .leaflet-pane {
-  z-index: 1 !important;
+  z-index: 20 !important;
 }
 
 .leaflet-top,
 .leaflet-bottom {
-  z-index: 10 !important;
+  z-index: 30 !important;
 }
