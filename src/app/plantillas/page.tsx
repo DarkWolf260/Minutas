@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Upload, FileText, Trash2, HelpCircle, PlusCircle, AlertTriangle, Download } from 'lucide-react';
+import { Upload, FileText, Trash2, HelpCircle, PlusCircle, AlertTriangle, Download, Pencil } from 'lucide-react';
 import { useTemplates } from '@/hooks/use-templates';
 import type { Template } from '@/types';
 import { TemplateEditor } from '@/components/template/template-editor';
@@ -51,6 +51,8 @@ export default function PlantillasPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+  const [activeTab, setActiveTab] = useState("builder");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,11 +77,13 @@ export default function PlantillasPage() {
     fileInputRef.current?.click();
   };
 
-  const handleDeleteClick = (templateId: string) => {
+  const handleDeleteClick = (e: React.MouseEvent, templateId: string) => {
+    e.stopPropagation();
     setTemplateToDelete(templateId);
   };
 
-  const handleDownloadTemplate = (template: Template) => {
+  const handleDownloadTemplate = (e: React.MouseEvent, template: Template) => {
+    e.stopPropagation();
     const blob = new Blob([template.content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -89,6 +93,12 @@ export default function PlantillasPage() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const handleEditContentClick = (e: React.MouseEvent, template: Template) => {
+    e.stopPropagation();
+    setEditingTemplate(template);
+    setActiveTab("builder");
   };
 
   const handleConfirmDelete = () => {
@@ -106,19 +116,35 @@ export default function PlantillasPage() {
     setTemplateToDelete(null);
   };
 
+  const handleUpdateTemplateContent = (id: string, updates: Partial<Template>) => {
+    updateTemplate(id, updates);
+    setEditingTemplate(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTemplate(null);
+    // Optional: switch back to list if desired, but maybe user wants to create new one?
+    // let's stay in builder but reset
+  };
+
   const selectedTemplate = templates.find(t => t.id === selectedTemplateId) || null;
 
   return (
     <>
       <div className="h-screen flex flex-col bg-muted/30">
-        <Tabs defaultValue="builder" className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col">
           <TabsList className="self-center sm:self-start mb-4">
             <TabsTrigger value="builder">Constructor</TabsTrigger>
             <TabsTrigger value="editor">Gestionar Plantillas</TabsTrigger>
           </TabsList>
 
           <TabsContent value="builder" className="flex-1 flex-grow overflow-hidden">
-            <TemplateBuilder onOpenInfoDialog={() => setIsInfoDialogOpen(true)} />
+            <TemplateBuilder
+              onOpenInfoDialog={() => setIsInfoDialogOpen(true)}
+              initialTemplate={editingTemplate}
+              onUpdate={handleUpdateTemplateContent}
+              onCancel={handleCancelEdit}
+            />
           </TabsContent>
 
           <TabsContent value="editor" className="flex-1 flex-grow overflow-hidden">
@@ -173,7 +199,21 @@ export default function PlantillasPage() {
                                     variant="ghost"
                                     size="icon"
                                     className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                                    onClick={() => handleDownloadTemplate(template)}
+                                    onClick={(e) => handleEditContentClick(e, template)}
+                                    aria-label={`Editar contenido de ${template.name}`}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Editar Contenido</p></TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                                    onClick={(e) => handleDownloadTemplate(e, template)}
                                     aria-label={`Exportar plantilla ${template.name}`}
                                   >
                                     <Download className="h-4 w-4" />
@@ -188,6 +228,7 @@ export default function PlantillasPage() {
                                       checked={template.isActive && isValid}
                                       onCheckedChange={() => toggleTemplateActive(template.id)}
                                       disabled={!isValid}
+                                      onClick={(e) => e.stopPropagation()}
                                       aria-label={`Activar/Desactivar plantilla ${template.name}`}
                                     />
                                   </div>
@@ -218,7 +259,7 @@ export default function PlantillasPage() {
                                     variant="ghost"
                                     size="icon"
                                     className="h-7 w-7 text-destructive"
-                                    onClick={() => handleDeleteClick(template.id)}
+                                    onClick={(e) => handleDeleteClick(e, template.id)}
                                     aria-label={`Eliminar plantilla ${template.name}`}
                                   >
                                     <Trash2 className="h-4 w-4" />

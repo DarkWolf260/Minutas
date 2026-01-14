@@ -97,6 +97,12 @@ export default function PersonnelPage() {
     const [newRole, setNewRole] = useState<string>('none');
     const [newSpecialties, setNewSpecialties] = useState<string[]>([]);
 
+    const [newStatus, setNewStatus] = useState<PersonnelStatus>('activo');
+    const [newBloodType, setNewBloodType] = useState('');
+    const [newEmail, setNewEmail] = useState('');
+    const [newPhone, setNewPhone] = useState('');
+    const [newJoinDate, setNewJoinDate] = useState('');
+
     // Guard state
     const [newGuardName, setNewGuardName] = useState('');
 
@@ -153,14 +159,23 @@ export default function PersonnelPage() {
             cedula: newCedula || undefined,
             rank: newRank,
             roleId: newRole === 'none' ? undefined : newRole,
-            status: 'activo',
-            specialties: newSpecialties
+            status: newStatus,
+            specialties: newSpecialties,
+            email: newEmail || undefined,
+            phone: newPhone || undefined,
+            joinDate: newJoinDate || undefined,
+            bloodType: newBloodType || undefined,
         });
 
         setNewName('');
         setNewCedula('');
         setNewRank('OPC');
         setNewRole('none');
+        setNewStatus('activo');
+        setNewEmail('');
+        setNewPhone('');
+        setNewJoinDate('');
+        setNewBloodType('');
         setNewSpecialties([]);
         setIsAdding(false);
         toast.success('Personal añadido correctamente');
@@ -411,6 +426,54 @@ export default function PersonnelPage() {
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label>Estatus</Label>
+                                        <Select value={newStatus} onValueChange={(val: PersonnelStatus) => setNewStatus(val)}>
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {STATUS_OPTIONS.map(opt => (
+                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Tipo de Sangre</Label>
+                                        <Input
+                                            value={newBloodType}
+                                            onChange={(e) => setNewBloodType(e.target.value)}
+                                            placeholder="Ej. O+"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Email</Label>
+                                        <Input
+                                            type="email"
+                                            value={newEmail}
+                                            onChange={(e) => setNewEmail(e.target.value)}
+                                            placeholder="correo@ejemplo.com"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Teléfono</Label>
+                                        <Input
+                                            type="tel"
+                                            value={newPhone}
+                                            onChange={(e) => setNewPhone(e.target.value)}
+                                            placeholder="0412-1234567"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Fecha de Ingreso</Label>
+                                        <Input
+                                            type="date"
+                                            value={newJoinDate}
+                                            onChange={(e) => setNewJoinDate(e.target.value)}
+                                        />
                                     </div>
                                     <div className="space-y-2 md:col-span-2">
                                         <Label>Especialidades</Label>

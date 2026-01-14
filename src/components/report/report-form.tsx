@@ -152,175 +152,147 @@ function getFieldComponent(
 }
 
 
-function SectionRenderer({ section, config, control, disabled, roles, rolesLoaded, activeGuardStaff, predefinedValues, units, setValue, settings, isNested = false }: { section: SectionConfig, config: TemplateConfig, control: any, disabled: boolean, roles: StaffRole[], rolesLoaded: boolean, activeGuardStaff: StaffMember[], predefinedValues: Record<string, string>, units: string[], setValue: (name: string, value: any, options?: { shouldValidate?: boolean; shouldDirty?: boolean; }) => void, settings: any, isNested?: boolean }) {
+function RepeatableSectionRenderer({ section, config, control, disabled, roles, rolesLoaded, activeGuardStaff, predefinedValues, units, setValue, settings, isNested }: any) {
+    const { fields, append, remove } = useFieldArray({ control, name: section.id });
+    const defaultItem = useMemo(() => section.fieldIds.reduce((acc: any, fieldId: string) => ({ ...acc, [fieldId]: predefinedValues.hasOwnProperty(fieldId) ? predefinedValues[fieldId] : '' }), {}), [section.fieldIds, predefinedValues]);
 
-    const condition = section.condition;
-    const watchedFieldValue = useWatch({
-        control,
-        name: condition?.fieldId || 'dummy_field_to_avoid_errors',
-        disabled: !condition
-    });
+    // Simplified UI for single-field repeatable sections
+    if (section.fieldIds.length === 1) {
+        const fieldId = section.fieldIds[0];
+        const fieldConfig = (config.fields || {})[fieldId];
+        if (!fieldConfig) return null;
 
-    if (condition) {
-        let actualValue = watchedFieldValue;
+        const isFullWidth = fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
+        const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, activeGuardStaff, setValue, settings);
+        const defaultSingleFieldItem = { [fieldId]: '' };
 
-        const pathParts = (condition.fieldId || '').split('.');
-        if (pathParts.length > 1) {
-            const watchedFormValues = useWatch({ control });
-            actualValue = pathParts.reduce((acc, part) => (acc && acc[part] !== undefined) ? acc[part] : undefined, watchedFormValues);
-        }
-
-        const fieldConfig = config.fields[condition.fieldId];
-        const options = fieldConfig?.snippetOptions || [];
-        const selectedIndex = options.findIndex(opt => opt.label === actualValue);
-
-        if (String(selectedIndex) !== condition.value) {
-            return null;
-        }
-    }
-
-
-    if (section.isRepeatable) {
-        const { fields, append, remove } = useFieldArray({ control, name: section.id });
-        const defaultItem = section.fieldIds.reduce((acc, fieldId) => ({ ...acc, [fieldId]: predefinedValues.hasOwnProperty(fieldId) ? predefinedValues[fieldId] : '' }), {});
-
-        // Simplified UI for single-field repeatable sections
-        if (section.fieldIds.length === 1) {
-            const fieldId = section.fieldIds[0];
-            const fieldConfig = (config.fields || {})[fieldId];
-            if (!fieldConfig) return null;
-
-            const isFullWidth = fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
-            const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, activeGuardStaff, setValue, settings);
-            const defaultSingleFieldItem = { [fieldId]: '' };
-
-            return (
-                <div className={cn("space-y-4", !isNested && "pt-4", isNested && isFullWidth && "sm:col-span-2")}>
-                    {section.label && (
-                        isNested ? (
-                            <Label className="text-sm font-medium">
-                                {section.label}
-                                {fieldConfig.required && <span className="text-destructive ml-1">*</span>}
-                            </Label>
-                        ) : (
-                            <h3 className="text-lg font-semibold">
-                                {section.label}
-                                {fieldConfig.required && <span className="text-destructive ml-1">*</span>}
-                            </h3>
-                        )
-                    )}
-                    <div className="space-y-2">
-                        {fields.map((item, index) => (
-                            <div key={item.id} className="flex items-center gap-2">
-                                <div className="flex-1">
-                                    <Controller
-                                        name={`${section.id}.${index}.${fieldId}`}
-                                        control={control}
-                                        rules={{ required: fieldConfig.required ? 'Este campo es obligatorio' : false }}
-                                        render={({ field, fieldState: { error } }) => (
-                                            <div className="flex flex-col gap-1 w-full">
-                                                <FieldComponent {...field} disabled={disabled} className={cn(error && "border-destructive")} />
-                                                {error && <span className="text-[10px] text-destructive">{error.message}</span>}
-                                            </div>
-                                        )}
-                                    />
-                                </div>
-                                {!disabled && (
-                                    <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive shrink-0" onClick={() => remove(index)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                    {!disabled && (
-                        <Button type="button" variant="outline" onClick={() => append(defaultSingleFieldItem)}>
-                            <PlusCircle className="mr-2 h-4 w-4" /> Añadir {fieldConfig.label}
-                        </Button>
-                    )}
-                </div>
-            );
-        }
-
-        const isFullWidth = section.fieldIds.some(fid => {
-            const fc = config.fields[fid];
-            return fc?.type === 'textarea' || fc?.isFullWidth;
-        });
-
-        // Simplified UI for multi-field repeatable sections
         return (
             <div className={cn("space-y-4", !isNested && "pt-4", isNested && isFullWidth && "sm:col-span-2")}>
-                {section.label && <h3 className="text-lg font-semibold">{section.label}</h3>}
-                <div className="space-y-3">
-                    {fields.map((field, index) => (
-                        <div key={field.id} className="p-4 rounded-md border bg-muted/30 flex flex-col gap-4">
-                            <div className="flex items-center justify-between">
-                                <h4 className="font-medium">
-                                    {section.repeatableItemLabel ? `${section.repeatableItemLabel} #${String(index + 1).padStart(2, '0')}` : `${section.label} #${String(index + 1).padStart(2, '0')}`}
-                                </h4>
-                                {!disabled && (
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7 text-destructive -mr-2 -mt-2"
-                                        onClick={() => remove(index)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                )}
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
-                                {(section.layout || section.fieldIds).map(fieldId => {
-                                    if (fieldId.startsWith('section_')) {
-                                        // This is a nested section, render it.
-                                        const nestedSection = config.sections.find(s => s.id === fieldId);
-                                        if (!nestedSection) return null;
-                                        // We need to pass down the correct path prefix
-                                        // This part is getting complex. For now, let's assume no nested repeatable sections.
-                                        return <p key={fieldId} className="text-destructive text-xs">Nested sections not fully supported here yet.</p>
-                                    }
-
-                                    const fieldConfig = (config.fields || {})[fieldId];
-                                    if (!fieldConfig) return null;
-                                    const isFullWidth = fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
-                                    const path = `${section.id}.${index}.${fieldId}`;
-                                    const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, activeGuardStaff, setValue, settings);
-
-                                    return (
-                                        <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2")}>
-                                            <Label htmlFor={path}>
-                                                {fieldConfig?.label || fieldId}
-                                                {fieldConfig.required && <span className="text-destructive ml-1">*</span>}
-                                            </Label>
-                                            <Controller
-                                                name={path}
-                                                control={control}
-                                                rules={{ required: fieldConfig.required ? 'Este campo es obligatorio' : false }}
-                                                render={({ field, fieldState: { error } }) => (
-                                                    <div className="flex flex-col gap-1">
-                                                        <FieldComponent {...field} disabled={disabled} className={cn(error && "border-destructive")} />
-                                                        {error && <span className="text-[10px] text-destructive">{error.message}</span>}
-                                                    </div>
-                                                )}
-                                            />
+                {section.label && (
+                    isNested ? (
+                        <Label className="text-sm font-medium">
+                            {section.label}
+                            {fieldConfig.required && <span className="text-destructive ml-1">*</span>}
+                        </Label>
+                    ) : (
+                        <h3 className="text-lg font-semibold">
+                            {section.label}
+                            {fieldConfig.required && <span className="text-destructive ml-1">*</span>}
+                        </h3>
+                    )
+                )}
+                <div className="space-y-2">
+                    {fields.map((item, index) => (
+                        <div key={item.id} className="flex items-center gap-2">
+                            <div className="flex-1">
+                                <Controller
+                                    name={`${section.id}.${index}.${fieldId}`}
+                                    control={control}
+                                    rules={{ required: fieldConfig.required ? 'Este campo es obligatorio' : false }}
+                                    render={({ field, fieldState: { error } }) => (
+                                        <div className="flex flex-col gap-1 w-full">
+                                            <FieldComponent {...field} disabled={disabled} className={cn(error && "border-destructive")} />
+                                            {error && <span className="text-[10px] text-destructive">{error.message}</span>}
                                         </div>
-                                    );
-                                })}
+                                    )}
+                                />
                             </div>
+                            {!disabled && (
+                                <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive shrink-0" onClick={() => remove(index)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            )}
                         </div>
                     ))}
                 </div>
                 {!disabled && (
-                    <Button type="button" variant="outline" onClick={() => append(defaultItem)} className="mt-4">
-                        <PlusCircle className="mr-2 h-4 w-4" /> Añadir {section.repeatableItemLabel || section.label}
+                    <Button type="button" variant="outline" onClick={() => append(defaultSingleFieldItem)}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Añadir {fieldConfig.label}
                     </Button>
                 )}
             </div>
         );
     }
 
-    // Non-repeatable section
+    const isFullWidth = section.fieldIds.some((fid: string) => {
+        const fc = config.fields[fid];
+        return fc?.type === 'textarea' || fc?.isFullWidth;
+    });
+
+    // Simplified UI for multi-field repeatable sections
+    return (
+        <div className={cn("space-y-4", !isNested && "pt-4", isNested && isFullWidth && "sm:col-span-2")}>
+            {section.label && <h3 className="text-lg font-semibold">{section.label}</h3>}
+            <div className="space-y-3">
+                {fields.map((field, index) => (
+                    <div key={field.id} className="p-4 rounded-md border bg-muted/30 flex flex-col gap-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="font-medium">
+                                {section.repeatableItemLabel ? `${section.repeatableItemLabel} #${String(index + 1).padStart(2, '0')}` : `${section.label} #${String(index + 1).padStart(2, '0')}`}
+                            </h4>
+                            {!disabled && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-destructive -mr-2 -mt-2"
+                                    onClick={() => remove(index)}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
+                            {(section.layout || section.fieldIds).map((fieldId: string) => {
+                                if (fieldId.startsWith('section_')) {
+                                    // This is a nested section, render it.
+                                    const nestedSection = config.sections.find((s: SectionConfig) => s.id === fieldId);
+                                    if (!nestedSection) return null;
+                                    // We need to pass down the correct path prefix
+                                    // This part is getting complex. For now, let's assume no nested repeatable sections.
+                                    return <p key={fieldId} className="text-destructive text-xs">Nested sections not fully supported here yet.</p>
+                                }
+
+                                const fieldConfig = (config.fields || {})[fieldId];
+                                if (!fieldConfig) return null;
+                                const isFullWidth = fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
+                                const path = `${section.id}.${index}.${fieldId}`;
+                                const FieldComponent = getFieldComponent(fieldId, fieldConfig, roles, rolesLoaded, units, activeGuardStaff, setValue, settings);
+
+                                return (
+                                    <div key={fieldId} className={cn("space-y-2", isFullWidth && "sm:col-span-2")}>
+                                        <Label htmlFor={path}>
+                                            {fieldConfig?.label || fieldId}
+                                            {fieldConfig.required && <span className="text-destructive ml-1">*</span>}
+                                        </Label>
+                                        <Controller
+                                            name={path}
+                                            control={control}
+                                            rules={{ required: fieldConfig.required ? 'Este campo es obligatorio' : false }}
+                                            render={({ field, fieldState: { error } }) => (
+                                                <div className="flex flex-col gap-1">
+                                                    <FieldComponent {...field} disabled={disabled} className={cn(error && "border-destructive")} />
+                                                    {error && <span className="text-[10px] text-destructive">{error.message}</span>}
+                                                </div>
+                                            )}
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ))}
+            </div>
+            {!disabled && (
+                <Button type="button" variant="outline" onClick={() => append(defaultItem)} className="mt-4">
+                    <PlusCircle className="mr-2 h-4 w-4" /> Añadir {section.repeatableItemLabel || section.label}
+                </Button>
+            )}
+        </div>
+    );
+}
+
+function SingleSectionRenderer({ section, config, control, disabled, roles, rolesLoaded, activeGuardStaff, predefinedValues, units, setValue, settings, isNested }: any) {
     if (section.fieldIds.length === 0 && section.label) {
         return (
             <div className={cn(!isNested && "pt-4")}>
@@ -337,10 +309,10 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
         <div className={cn("space-y-4", !isNested && "pt-4")}>
             {section.label && <h3 className="text-lg font-semibold">{section.label}</h3>}
             <div className="grid grid-cols-1 sm:grid-cols-2 3xl:grid-cols-3 gap-x-4 gap-y-6">
-                {(section.layout || section.fieldIds).map(fieldId => {
+                {(section.layout || section.fieldIds).map((fieldId: string) => {
                     if (fieldId.startsWith('section_')) {
                         // Nested non-repeatable section
-                        const nestedSection = config.sections.find(s => s.id === fieldId);
+                        const nestedSection = config.sections.find((s: SectionConfig) => s.id === fieldId);
                         if (!nestedSection) return null;
                         return <SectionRenderer key={fieldId} section={nestedSection} config={config} control={control} disabled={disabled} roles={roles} rolesLoaded={rolesLoaded} activeGuardStaff={activeGuardStaff} predefinedValues={predefinedValues} units={units} setValue={setValue} settings={settings} isNested={true} />;
                     }
@@ -374,6 +346,50 @@ function SectionRenderer({ section, config, control, disabled, roles, rolesLoade
             </div>
         </div>
     );
+}
+
+function SectionRenderer(props: { section: SectionConfig, config: TemplateConfig, control: any, disabled: boolean, roles: StaffRole[], rolesLoaded: boolean, activeGuardStaff: StaffMember[], predefinedValues: Record<string, string>, units: string[], setValue: (name: string, value: any, options?: { shouldValidate?: boolean; shouldDirty?: boolean; }) => void, settings: any, isNested?: boolean }) {
+    const { section, config, control } = props;
+    const condition = section.condition;
+
+    // Always call useWatch, but conditionally enable it
+    const watchedFieldValue = useWatch({
+        control,
+        name: condition?.fieldId || 'dummy_field_to_avoid_errors',
+        disabled: !condition
+    });
+
+    if (condition) {
+        let actualValue = watchedFieldValue;
+
+        const pathParts = (condition.fieldId || '').split('.');
+        if (pathParts.length > 1) {
+            // NOTE: This useWatch logic for deep paths inside a condition check MIGHT still be risky if pathParts check changes.
+            // However, usually condition.fieldId is stable for a given section.id.
+            // For now, assume simple conditions. Deep path watching logic was inline and conditional.
+            // Ideally we should use watch() from useForm context if possible, or accept it is what it is.
+            // But strict hooks rules say NO hooks in if.
+            // The previous code had: if (pathParts.length > 1) { const watchedFormValues = useWatch({ control }); ... }
+            // This IS a violation if pathParts.length changes dynamically.
+            // We should useWatch the whole form or NOT useWatch conditionally.
+            // Let's rely on the top level useWatch for the specific field.
+        }
+
+        // Logic to evaluate condition
+        const fieldConfig = config.fields[condition.fieldId];
+        const options = fieldConfig?.snippetOptions || [];
+        const selectedIndex = options.findIndex(opt => opt.label === actualValue);
+
+        if (String(selectedIndex) !== condition.value) {
+            return null;
+        }
+    }
+
+    if (section.isRepeatable) {
+        return <RepeatableSectionRenderer {...props} />;
+    }
+
+    return <SingleSectionRenderer {...props} />;
 }
 
 export interface ReportFormRef {
