@@ -11,18 +11,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useReports } from '@/hooks/use-reports';
 import { Skeleton } from '@/components/ui/skeleton';
 import { findValueInFormData } from '@/lib/report-sorter';
+import { getReportCategory } from '@/lib/statistics-utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGuards } from '@/hooks/use-guards';
 import { useSettings } from '@/hooks/use-settings';
 import { useRoles } from '@/hooks/use-roles';
+import { usePersonnel } from '@/hooks/use-personnel';
 import { useTemplates } from '@/hooks/use-templates';
 import { renderFinalReport } from '@/lib/template-parser';
 import { format } from 'date-fns';
 import type { Report, StaffMember } from '@/types';
 import { DatePicker } from '@/components/date-picker';
 import { TimeHlvInput } from '@/components/time-hlv-input';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, Calculator, FileText } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { DEFAULT_STATISTICS_CATEGORIES } from '@/constants/statistics';
 
 interface ManualNovedad {
     id: string;
@@ -40,15 +43,22 @@ const formatStaffMemberForReport = (member: StaffMember, showCedula: boolean): s
 };
 
 
+const findInsensitive = (obj: Record<string, string>, key: string): string => {
+    const keyLower = key.toLowerCase();
+    const foundKey = Object.keys(obj).find(k => k.toLowerCase() === keyLower);
+    return foundKey ? obj[foundKey] : '';
+};
+
 export default function ReporteFinalPage() {
     const { reports, isLoaded: reportsLoaded, getLatestReports } = useReports();
     const { guards, isLoaded: guardsLoaded } = useGuards();
     const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
     const { roles, isLoaded: rolesLoadedHook } = useRoles();
     const { templates, configs, isLoaded: templatesLoaded } = useTemplates();
+    const { personnel } = usePersonnel();
     const router = useRouter();
 
-    const [statisticsText, setStatisticsText] = useState('');
+    const [statisticsText, setStatisticsText] = useState(DEFAULT_STATISTICS_CATEGORIES.map(c => `- ${c} 0`).join('\n'));
     const [generatedReport, setGeneratedReport] = useState('');
     const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
     const [copyButtonText, setCopyButtonText] = useState('Copiar');
@@ -190,15 +200,39 @@ export default function ReporteFinalPage() {
             return;
         }
 
-        const findInsensitive = (obj: Record<string, string>, key: string): string => {
-            const keyLower = key.toLowerCase();
-            const foundKey = Object.keys(obj).find(k => k.toLowerCase() === keyLower);
-            return foundKey ? obj[foundKey] : '';
+
+
+
+        const staffForReport = hasSnapshot ? settings.finalReportStaffSnapshot : activeGuard?.staff;
+        const guardIdForReport = hasSnapshot ? findValueInFormData(settings.finalReportStaffSnapshot, 'Guardia') || activeGuard?.id : activeGuard?.id;
+
+        // Resolve Leaders from Staff
+        const getLeaderName = (roleName: string) => {
+            // Priority 1: If snapshot, trust the snapshot as historical record
+            if (hasSnapshot && staffForReport) {
+                const key = Object.keys(staffForReport).find(k => k.toLowerCase() === roleName.toLowerCase());
+                if (key) {
+                    const members = staffForReport[key];
+                    if (members && members.length > 0) {
+                        return formatStaffMemberForReport(members[0], false).trim();
+                    }
+                }
+            }
+
+            // Priority 2: Use Global Personnel (Live mode or fallback)
+            if (personnel) {
+                const globalMatch = personnel.find(p => p.roleId?.toLowerCase() === roleName.toLowerCase());
+                if (globalMatch) {
+                    return formatStaffMemberForReport(globalMatch, false).trim();
+                }
+            }
+            return '';
         };
 
-        const director = findInsensitive(globalSettings, 'Director');
-        const jefeDeOperaciones = findInsensitive(globalSettings, 'Jefe de Operaciones');
+        const director = getLeaderName('Director');
+        const jefeDeOperaciones = getLeaderName('Jefe de Operaciones');
         const municipio = findInsensitive(globalSettings, 'Municipio');
+        const estado = findInsensitive(globalSettings, 'Estado');
 
         const dateRangeString = (() => {
             const startDate = hasSnapshot ? new Date(settings.finalReportStartDate!) : new Date();
@@ -208,24 +242,26 @@ export default function ReporteFinalPage() {
             return `DESDE EL ${formatDatePart(startDate)} HASTA EL ${formatDatePart(endDate)} DE ${startDate.getFullYear()}`.toUpperCase();
         })();
 
+        // Use the Orden del Día header format
         const headerParts = [
-            `*INSTITUTO AUTÓNOMO DE PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO ${(municipio || '').toUpperCase()}*`, ``,
-            `*DIRECTOR-PRESIDENTE*`, director, ``,
-            `*JEFE DE OPERACIONES*`, jefeDeOperaciones, ``,
-            `*REPORTE DE NOVEDADES ${dateRangeString}*`, ``
+            `*ORDEN DEL DÍA DEL INSTITUTO AUTÓNOMO DE PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO ${(municipio || '').toUpperCase()} ESTADO ${(estado || '').toUpperCase()}*`, ``,
+            `*DIRECTOR*`, director, ``,
+            `*JEFE DE OPERACIONES*`, jefeDeOperaciones, ``
         ];
 
-        const staffForReport = hasSnapshot ? settings.finalReportStaffSnapshot : activeGuard?.staff;
-        const guardIdForReport = hasSnapshot ? findValueInFormData(settings.finalReportStaffSnapshot, 'Guardia') || activeGuard?.id : activeGuard?.id;
-
         if (guardIdForReport && staffForReport) {
-            headerParts.push(`- *EQUIPO DE GUARDIA:* GRUPO “${guardIdForReport}”`);
+            headerParts.push(`*GRUPO DE GUARDIA:* “${guardIdForReport}”`, ``);
+            headerParts.push(`*PERIODO:* ${dateRangeString}`, ``);
+
             roles.filter(r => !r.isHidden).forEach(role => {
+                if (role.name.toLowerCase() === 'director' || role.name.toLowerCase() === 'jefe de operaciones') return;
+
                 const staffKey = Object.keys(staffForReport).find(k => k.toLowerCase() === role.name.toLowerCase());
                 const staffList = staffKey ? staffForReport[staffKey as keyof typeof staffForReport] : undefined;
                 if (staffList && staffList.length > 0 && staffList.some(s => s.name.trim() !== '')) {
                     const showCedula = role.name.toLowerCase() === settings.reportaRoleId?.toLowerCase() || role.name.toLowerCase() === settings.analistaRoleId?.toLowerCase();
-                    headerParts.push(`- *${role.name.toUpperCase()}:* ${staffList.map(member => formatStaffMemberForReport(member, showCedula)).join(' / ')}`);
+                    // Match Orden del Día format: Vertical list with Role Header
+                    headerParts.push(``, `*${role.name.toUpperCase()}*`, staffList.map(member => formatStaffMemberForReport(member, showCedula)).join('\n'));
                 }
             });
         }
@@ -249,7 +285,12 @@ export default function ReporteFinalPage() {
 
                 let contentText = '';
                 if (template && config) {
-                    const dynamicPredefinedValues = { ...globalSettings, 'Guardia': guardIdForReport || '' };
+                    const dynamicPredefinedValues = {
+                        ...globalSettings,
+                        'Guardia': guardIdForReport || '',
+                        'Director': director,
+                        'Jefe de Operaciones': jefeDeOperaciones
+                    };
                     contentText = renderFinalReport(template.content, report.formData || {}, config, {}, true, dynamicPredefinedValues);
                 }
 
@@ -303,13 +344,76 @@ export default function ReporteFinalPage() {
                                 {hasSnapshot ? (
                                     <Alert variant="default">
                                         <AlertTitle>Usando Datos de Orden del Día</AlertTitle>
-                                        <AlertDescription className="flex items-center justify-between gap-4">
-                                            <span>
-                                                El reporte se generará con el personal y periodo de la última orden del día emitida.
-                                            </span>
-                                            <Button variant="link" className="p-0 h-auto whitespace-nowrap" onClick={handleClearSnapshot}>
-                                                Anular y usar valores actuales
-                                            </Button>
+                                        <AlertDescription className="space-y-4">
+                                            <div className="flex items-center justify-between gap-4">
+                                                <span>
+                                                    El reporte se generará con el personal y periodo de la última orden del día emitida.
+                                                </span>
+                                                <Button variant="link" className="p-0 h-auto whitespace-nowrap" onClick={handleClearSnapshot}>
+                                                    Anular y usar valores actuales
+                                                </Button>
+                                            </div>
+
+                                            <div className="rounded-md bg-muted/50 p-3 text-xs font-mono whitespace-pre-wrap max-h-48 overflow-y-auto border">
+                                                {(() => {
+                                                    const municipio = findInsensitive(globalSettings, 'Municipio');
+                                                    const estado = findInsensitive(globalSettings, 'Estado');
+
+                                                    const guardIdForReport = hasSnapshot ? findValueInFormData(settings.finalReportStaffSnapshot, 'Guardia') || activeGuard?.id : activeGuard?.id;
+                                                    const staffForReport = hasSnapshot ? settings.finalReportStaffSnapshot : activeGuard?.staff;
+
+                                                    // Resolve Leaders from Staff locally for preview
+                                                    const getLeaderName = (roleName: string) => {
+                                                        if (staffForReport) {
+                                                            const key = Object.keys(staffForReport).find(k => k.toLowerCase() === roleName.toLowerCase());
+                                                            if (key) {
+                                                                const members = staffForReport[key];
+                                                                if (members && members.length > 0) {
+                                                                    return formatStaffMemberForReport(members[0], false).trim();
+                                                                }
+                                                            }
+                                                        }
+                                                        if (personnel) {
+                                                            const globalMatch = personnel.find(p => p.roleId?.toLowerCase() === roleName.toLowerCase());
+                                                            if (globalMatch) return formatStaffMemberForReport(globalMatch, false).trim();
+                                                        }
+                                                        return '';
+                                                    };
+
+                                                    const director = getLeaderName('Director');
+                                                    const jefeDeOperaciones = getLeaderName('Jefe de Operaciones');
+
+                                                    const dateRangeString = (() => {
+                                                        const startDate = hasSnapshot ? new Date(settings.finalReportStartDate!) : new Date();
+                                                        const endDate = hasSnapshot ? new Date(settings.finalReportEndDate!) : new Date(new Date().setDate(new Date().getDate() + 1));
+                                                        const formatDatePart = (date: Date) => new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: '2-digit', month: 'long' }).format(date);
+                                                        return `DESDE EL ${formatDatePart(startDate)} HASTA EL ${formatDatePart(endDate)} DE ${startDate.getFullYear()}`.toUpperCase();
+                                                    })();
+
+                                                    const parts = [
+                                                        `*ORDEN DEL DÍA DEL INSTITUTO AUTÓNOMO DE PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO ${(municipio || '').toUpperCase()} ESTADO ${(estado || '').toUpperCase()}*`,
+                                                        ``,
+                                                        `*DIRECTOR*`, director, ``,
+                                                        `*JEFE DE OPERACIONES*`, jefeDeOperaciones, ``,
+                                                    ];
+
+                                                    if (guardIdForReport && staffForReport) {
+                                                        parts.push(`*GRUPO DE GUARDIA:* “${guardIdForReport}”`, ``);
+                                                        parts.push(`*PERIODO:* ${dateRangeString}`, ``);
+
+                                                        roles.filter(r => !r.isHidden).forEach(role => {
+                                                            if (role.name.toLowerCase() === 'director' || role.name.toLowerCase() === 'jefe de operaciones') return;
+                                                            const staffKey = Object.keys(staffForReport).find(k => k.toLowerCase() === role.name.toLowerCase());
+                                                            const staffList = staffKey ? staffForReport[staffKey as keyof typeof staffForReport] : undefined;
+                                                            if (staffList && staffList.length > 0 && staffList.some(s => s.name.trim() !== '')) {
+                                                                const showCedula = role.name.toLowerCase() === settings.reportaRoleId?.toLowerCase() || role.name.toLowerCase() === settings.analistaRoleId?.toLowerCase();
+                                                                parts.push(``, `*${role.name.toUpperCase()}*`, staffList.map(member => formatStaffMemberForReport(member, showCedula)).join('\n'));
+                                                            }
+                                                        });
+                                                    }
+                                                    return parts.join('\n');
+                                                })()}
+                                            </div>
                                         </AlertDescription>
                                     </Alert>
                                 ) : (
@@ -326,7 +430,102 @@ export default function ReporteFinalPage() {
                                     </Alert>
                                 )}
                                 <div className="space-y-2">
-                                    <Label htmlFor="statistics-text">Estadísticas del Día</Label>
+                                    <div className="flex items-center justify-between">
+                                        <Label htmlFor="statistics-text">Estadísticas del Día</Label>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 text-xs text-muted-foreground hover:text-primary"
+                                                onClick={() => {
+                                                    setStatisticsText(DEFAULT_STATISTICS_CATEGORIES.map(c => `- ${c} 0`).join('\n'));
+                                                }}
+                                                title="Cargar lista completa de categorías en 0"
+                                            >
+                                                <FileText className="h-3 w-3 mr-1" />
+                                                Cargar Estándar
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 text-xs text-muted-foreground hover:text-primary"
+                                                onClick={() => {
+                                                    // 1. Calculate counts from actual reports
+                                                    const reportCounts = new Map<string, number>();
+                                                    finishedReports.forEach(report => {
+                                                        const template = templates.find(t => t.id === report.templateId);
+
+                                                        if (template) {
+                                                            let category = template.statisticsCategory?.toUpperCase().trim();
+
+                                                            // Evaluate Rules
+                                                            if (template.statisticsRules && template.statisticsRules.length > 0) {
+                                                                for (const rule of template.statisticsRules) {
+                                                                    // Get value from report data using the field ID (Label)
+                                                                    // Note: findValueInFormData searches loosely by label/key
+                                                                    const rawValue = findValueInFormData(report.formData, rule.fieldId);
+                                                                    const val = String(rawValue || '').trim().toLowerCase();
+                                                                    const targetVal = rule.value.trim().toLowerCase();
+
+                                                                    if (val === targetVal) {
+                                                                        category = rule.category.toUpperCase().trim();
+                                                                        break; // Stop at first match
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            if (category) {
+                                                                reportCounts.set(category, (reportCounts.get(category) || 0) + 1);
+                                                            }
+                                                        }
+                                                    });
+
+                                                    // 2. Parse existing text or load default if empty
+                                                    let workingMap = new Map<string, number>();
+                                                    const currentLines = statisticsText.trim().split('\n').filter(l => l.trim());
+
+                                                    if (currentLines.length === 0) {
+                                                        // If empty, load defaults at 0
+                                                        DEFAULT_STATISTICS_CATEGORIES.forEach(cat => workingMap.set(cat, 0));
+                                                    } else {
+                                                        // Parse existing lines
+                                                        currentLines.forEach(line => {
+                                                            const match = line.match(/^-\s+(.*)\s+(\d+)$/);
+                                                            if (match) {
+                                                                workingMap.set(match[1].trim(), parseInt(match[2]));
+                                                            }
+                                                        });
+                                                    }
+
+                                                    // 3. Update with calculated counts
+                                                    reportCounts.forEach((count, category) => {
+                                                        workingMap.set(category, count);
+                                                    });
+
+                                                    // 4. Render back to text
+                                                    const sortedKeys = Array.from(workingMap.keys()).sort((a, b) => {
+                                                        const idxA = DEFAULT_STATISTICS_CATEGORIES.indexOf(a);
+                                                        const idxB = DEFAULT_STATISTICS_CATEGORIES.indexOf(b);
+                                                        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                                                        if (idxA !== -1) return -1;
+                                                        if (idxB !== -1) return 1;
+                                                        return a.localeCompare(b);
+                                                    });
+
+                                                    const newText = sortedKeys.map(key => `- ${key} ${workingMap.get(key)}`).join('\n');
+                                                    setStatisticsText(newText);
+
+                                                    if (reportCounts.size === 0 && currentLines.length === 0 && DEFAULT_STATISTICS_CATEGORIES.length === 0) {
+                                                        // no op
+                                                    }
+                                                }}
+                                                title="Actualizar conteo basado en reportes"
+                                            >
+                                                <Calculator className="h-3 w-3 mr-1" />
+                                                Autocalcular
+                                            </Button>
+                                        </div>
+                                    </div>
                                     <Textarea
                                         id="statistics-text"
                                         value={statisticsText}

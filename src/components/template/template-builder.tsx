@@ -7,14 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useTemplates } from '@/hooks/use-templates';
 import { parseTemplate } from '@/lib/template-parser';
-import { Save, HelpCircle, X, FileText } from 'lucide-react';
+import { Save, HelpCircle, X, FileText, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { validateTemplateSyntax } from '@/lib/validators';
 import { ReportForm, ReportFormRef } from '@/components/report/report-form';
-import type { Template, TemplateConfig } from '@/types';
+import type { Template, TemplateConfig, StatisticRule } from '@/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface TemplateBuilderProps {
@@ -27,6 +28,8 @@ interface TemplateBuilderProps {
 export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, onCancel }: TemplateBuilderProps) {
     const [templateContent, setTemplateContent] = useState('');
     const [templateName, setTemplateName] = useState('');
+    const [statisticsCategory, setStatisticsCategory] = useState('');
+    const [statisticsRules, setStatisticsRules] = useState<StatisticRule[]>([]);
 
     // New state for report preview
     const formRef = useRef<ReportFormRef>(null);
@@ -40,9 +43,13 @@ export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, o
         if (initialTemplate) {
             setTemplateContent(initialTemplate.content);
             setTemplateName(initialTemplate.name);
+            setStatisticsCategory(initialTemplate.statisticsCategory || '');
+            setStatisticsRules(initialTemplate.statisticsRules || []);
         } else {
             setTemplateContent('');
             setTemplateName('');
+            setStatisticsCategory('');
+            setStatisticsRules([]);
         }
     }, [initialTemplate]);
 
@@ -57,7 +64,9 @@ export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, o
         content: templateContent,
         type: 'normal',
         isActive: true,
-    }), [templateContent, templateName]);
+        statisticsCategory: statisticsCategory,
+        statisticsRules: statisticsRules
+    }), [templateContent, templateName, statisticsCategory, statisticsRules]);
 
     // Creates a temporary config for the preview
     const previewConfig = useMemo<TemplateConfig>(() => {
@@ -109,7 +118,9 @@ export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, o
         if (isEditing && initialTemplate && onUpdate) {
             onUpdate(initialTemplate.id, {
                 name: templateName,
-                content: templateContent
+                content: templateContent,
+                statisticsCategory: statisticsCategory.trim() || undefined,
+                statisticsRules: statisticsRules
             });
             toast.success('Plantilla actualizada correctamente');
             if (onCancel) onCancel();
@@ -120,10 +131,14 @@ export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, o
                 content: templateContent,
                 type: 'normal',
                 isActive: true,
+                statisticsCategory: statisticsCategory.trim() || undefined,
+                statisticsRules: statisticsRules
             };
             addTemplate(newTemplate);
             setTemplateName('');
             setTemplateContent('');
+            setStatisticsCategory('');
+            setStatisticsRules([]);
         }
     };
 
@@ -147,6 +162,18 @@ export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, o
         { name: 'Dropdown', value: '{Motivo:dropdown(Opción A=Valor A|Opción B=Valor B)}' },
         { name: 'Área de Texto', value: '{Observaciones:textarea}' },
     ];
+
+    const parseFieldNames = (content: string) => {
+        // Simple regex to extract field names {FieldName} or {FieldName:type}
+        const matches = content.match(/\{([a-zA-Z0-9_\u00C0-\u00FF\s]+)(:[^}]+)?\}/g);
+        if (!matches) return [];
+        return matches.map(m => {
+            const clean = m.replace('{', '').replace('}', '');
+            return clean.split(':')[0].trim();
+        }).filter((v, i, a) => a.indexOf(v) === i); // Unique
+    };
+
+    const availableFields = useMemo(() => parseFieldNames(templateContent), [templateContent]);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -184,6 +211,96 @@ export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, o
                             placeholder="Ej: Reporte de Accidente Vial"
                             className="font-medium"
                         />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="stats-category">Categoría Estadística Por Defecto</Label>
+                        <Input
+                            id="stats-category"
+                            value={statisticsCategory}
+                            onChange={(e) => setStatisticsCategory(e.target.value)}
+                            placeholder="Ej: ATENCIONES PREHOSPITALARIAS"
+                            title="Categoría por defecto si no se cumplen reglas específicas"
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                            Categoría base. Puedes añadir excepciones abajo.
+                        </p>
+                    </div>
+
+                    <div className="space-y-2 border rounded-md p-3 bg-muted/20">
+                        <div className="flex items-center justify-between mb-2">
+                            <Label className="text-xs font-semibold uppercase">Reglas Condicionales</Label>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 text-xs"
+                                onClick={() => setStatisticsRules([...statisticsRules, { fieldId: '', condition: 'equals', value: '', category: '' }])}
+                            >
+                                <Plus className="h-3 w-3 mr-1" /> Regla
+                            </Button>
+                        </div>
+
+                        {statisticsRules.length === 0 ? (
+                            <p className="text-xs text-muted-foreground italic">No hay reglas definidas.</p>
+                        ) : (
+                            <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
+                                {statisticsRules.map((rule, idx) => (
+                                    <div key={idx} className="flex gap-2 items-center bg-background p-1 rounded border">
+                                        <div className="w-1/4 min-w-[80px]">
+                                            <Select
+                                                value={rule.fieldId}
+                                                onValueChange={(val) => {
+                                                    const newRules = [...statisticsRules];
+                                                    newRules[idx].fieldId = val;
+                                                    setStatisticsRules(newRules);
+                                                }}
+                                            >
+                                                <SelectTrigger className="h-7 text-xs">
+                                                    <SelectValue placeholder="Campo" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {availableFields.map(f => (
+                                                        <SelectItem key={f} value={f}>{f}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="w-[20px] flex justify-center text-xs text-muted-foreground font-bold">=</div>
+                                        <Input
+                                            className="h-7 text-xs flex-1 min-w-[80px]"
+                                            placeholder="Valor (Ej: Atendido)"
+                                            value={rule.value}
+                                            onChange={(e) => {
+                                                const newRules = [...statisticsRules];
+                                                newRules[idx].value = e.target.value;
+                                                setStatisticsRules(newRules);
+                                            }}
+                                        />
+                                        <div className="w-[15px] flex justify-center text-xs text-muted-foreground">→</div>
+                                        <Input
+                                            className="h-7 text-xs flex-1 min-w-[100px]"
+                                            placeholder="Categoría Resultado"
+                                            value={rule.category}
+                                            onChange={(e) => {
+                                                const newRules = [...statisticsRules];
+                                                newRules[idx].category = e.target.value;
+                                                setStatisticsRules(newRules);
+                                            }}
+                                        />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                            onClick={() => {
+                                                setStatisticsRules(statisticsRules.filter((_, i) => i !== idx));
+                                            }}
+                                        >
+                                            <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-2">

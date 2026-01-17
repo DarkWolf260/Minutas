@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { usePersonnel } from '@/hooks/use-personnel';
 import type { Staff, StaffMember } from '@/types';
 import { useRoles } from '@/hooks/use-roles';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
@@ -35,6 +36,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   const { definitions } = useFieldDefinitions();
   const { roles, isLoaded: rolesLoaded } = useRoles();
   const { settings, saveSettings } = useSettings();
+  const { personnel, isLoaded: personnelLoaded } = usePersonnel();
   const [periodo, setPeriodo] = useState('');
   const [staff, setStaff] = useState<Staff>({});
 
@@ -69,10 +71,22 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   }, []);
 
   useEffect(() => {
-    if (initialData && rolesLoaded) {
+    if (initialData && rolesLoaded && personnelLoaded) {
       const newStaffState: Staff = {};
       roles.forEach(role => {
-        newStaffState[role.name] = initialData[role.name] || [];
+        const roleNameLower = role.name.toLowerCase();
+        let assignedMembers = initialData[role.name] || [];
+
+        // Override Director/Chief assignments from Global Personnel
+        if (roleNameLower === 'director' || roleNameLower === 'jefe de operaciones' || roleNameLower === 'jefe de departamento') {
+          // Match personnel by roleId (assuming roleId stores role Name)
+          const globalMatch = personnel.find(p => p.roleId === role.name || p.roleId === roleNameLower);
+          if (globalMatch) {
+            // Create a fresh staff member entry based on global personnel
+            assignedMembers = [globalMatch];
+          }
+        }
+        newStaffState[role.name] = assignedMembers;
       });
       setStaff(newStaffState);
     } else if (rolesLoaded) {
@@ -82,7 +96,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
       });
       setStaff(newStaffState);
     }
-  }, [initialData, roles, rolesLoaded]);
+  }, [initialData, roles, rolesLoaded, personnel, personnelLoaded]);
 
   const handleRoleStaffUpdate = (roleName: string, members: StaffMember[]) => {
     setStaff(prev => ({
@@ -123,8 +137,25 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
       return foundKey ? obj[foundKey] : '';
     };
 
-    const director = findInsensitive(globalSettings, 'Director');
-    const jefeDeOperaciones = findInsensitive(globalSettings, 'Jefe de Operaciones');
+    const jefeDeOperaciones = (() => {
+      const key = Object.keys(staff).find(k => k.toLowerCase() === 'jefe de operaciones');
+      if (key && staff[key] && staff[key].length > 0) {
+        return formatStaffMember(staff[key][0]).trim();
+      }
+      return '';
+    })();
+
+    const director = (() => {
+      const key = Object.keys(staff).find(k => k.toLowerCase() === 'director');
+      if (key && staff[key] && staff[key].length > 0) {
+        return formatStaffMember(staff[key][0]).trim();
+      }
+      return '';
+    })();
+
+    // Fallback if not in staff list (though they should be if added as roles)
+    // We already removed them from globalSettings, so we rely on Staff.
+
     const municipio = findInsensitive(globalSettings, 'Municipio');
     const estado = findInsensitive(globalSettings, 'Estado');
 
@@ -143,6 +174,9 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
     ];
 
     Object.entries(staff).forEach(([role, personnel]) => {
+      // Skip Director and Jefe de Operaciones as they are in the header
+      if (role.toLowerCase() === 'director' || role.toLowerCase() === 'jefe de operaciones') return;
+
       if (personnel && personnel.length > 0 && personnel.some(p => p.name.trim() !== '')) {
         reportParts.push(``, `*${role.toUpperCase()}*`, personnel.map(formatStaffMember).join('\n'));
       }

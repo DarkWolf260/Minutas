@@ -115,12 +115,21 @@ export interface TemplateConfig {
   layout: string[]; // Order of fields and section IDs
 }
 
+export interface StatisticRule {
+  fieldId: string;
+  condition: 'equals' | 'contains';
+  value: string;
+  category: string;
+}
+
 export interface Template {
   id: string;
   name: string;
   content: string;
   type: 'normal' | 'relevante';
   isActive?: boolean;
+  statisticsCategory?: string;
+  statisticsRules?: StatisticRule[];
 }
 
 export interface ReportDraft {
