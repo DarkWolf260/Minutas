@@ -7,8 +7,12 @@ import type { Department, Staff } from '@/types';
 const DEPARTMENTS_STORAGE_KEY = 'app-departments';
 
 const defaultDepartments: Department[] = [
-  { id: 'capacitacion', name: 'Capacitación', staff: {} },
-  { id: 'gestion_riesgos', name: 'Gestión de Riesgos', staff: {} },
+  { id: 'ops', name: 'Departamento de Operaciones', staff: {} },
+  { id: 'cemuprad', name: 'CEMUPRAD', staff: {} },
+  { id: 'educ', name: 'Departamento de Educación', staff: {} },
+  { id: 'riesgos', name: 'Departamento de Gestión de Riesgos', staff: {} },
+  { id: 'it', name: 'Departamento de Informática', staff: {} },
+  { id: 'log', name: 'Departamento de Logística', staff: {} },
 ];
 
 export function useDepartments() {

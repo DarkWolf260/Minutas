@@ -106,6 +106,7 @@ export interface SectionConfig {
     operator?: '=' | '!=' | '>' | '<' | '>=' | '<=';
     value: string;
   };
+  statisticsCategory?: string; // New: Statistics category associated with this section
   originalContent?: string; // Used for re-parsing conditional blocks
 }
 

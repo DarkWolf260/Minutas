@@ -56,7 +56,14 @@ export function useTemplates() {
         const existingConfig = configs[template.id] || { fields: {}, sections: [], layout: [] };
 
         const finalConfig: TemplateConfig = {
-          sections: parsed.sections,
+          sections: parsed.sections.map((parsedSection: any) => {
+            // Unir por label es más estable que por ID auto-incrementado cuando cambia el texto
+            const existingSection = (existingConfig.sections || []).find((s: any) => s.label === parsedSection.label);
+            return {
+              ...parsedSection,
+              statisticsCategory: existingSection?.statisticsCategory
+            };
+          }),
           layout: parsed.layout,
           fields: {}
         };

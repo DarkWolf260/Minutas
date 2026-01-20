@@ -331,7 +331,8 @@ export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, o
                             ref={textareaRef}
                             value={templateContent}
                             onChange={(e) => setTemplateContent(e.target.value)}
-                            className="absolute inset-0 h-full w-full font-mono text-sm leading-relaxed resize-none p-4 border-0 focus-visible:ring-0"
+                            autoSize={false}
+                            className="absolute inset-0 h-full w-full font-mono text-sm leading-relaxed resize-none p-4 border-0 focus-visible:ring-0 overflow-auto"
                             placeholder="Escribe aquí tu plantilla. Ejemplo: Siendo las {Hora}, se reporta novedad..."
                         />
                     </div>

@@ -147,7 +147,7 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
             id: `report_${Date.now()}`,
             templateId: template.id,
             title: title,
-            timestamp: new Date().toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' }),
+            timestamp: new Date().toISOString(),
             content: content,
             isRelevant: template.type === 'relevante',
             status: 'En proceso',

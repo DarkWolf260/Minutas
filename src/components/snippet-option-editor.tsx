@@ -32,37 +32,43 @@ export const SnippetOptionEditor = ({ config, onUpdate }: SnippetOptionEditorPro
     };
 
     return (
-        <div className="p-3 pl-10 border-l-2 ml-4 mt-2 border-dashed bg-muted/30 rounded-r-md space-y-4">
-            <div className="space-y-2">
-                <Label className="font-semibold">Opciones del Selector</Label>
-                <p className="text-xs text-muted-foreground">Define las opciones que aparecerán en la lista desplegable y el texto que insertarán.</p>
-                <div className="space-y-3 pt-2">
-                    {(config.snippetOptions || []).map(option => (
-                        <div key={option.id} className="p-3 bg-background rounded-md border space-y-2">
-                            <div className="flex justify-between items-center">
-                                <Label className="text-sm font-medium">Opción</Label>
-                                <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => handleRemoveOption(option.id)}>
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </div>
-                            <Input
-                                placeholder="Nombre de la opción (ej: Vía Radio)"
-                                value={option.label}
-                                onChange={e => handleOptionChange(option.id, 'label', e.target.value)}
-                            />
-                            <Textarea
-                                placeholder="Texto a insertar"
-                                value={option.value}
-                                onChange={e => handleOptionChange(option.id, 'value', e.target.value)}
-                                rows={2}
-                            />
-                        </div>
-                    ))}
-                </div>
-                <Button variant="outline" size="sm" onClick={handleAddOption} className="mt-2">
-                    <PlusCircle className="mr-2 h-4 w-4" /> Añadir Opción
+        <div className="p-2 border rounded-md bg-muted/10 space-y-2 mt-2">
+            <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold flex items-center gap-2">
+                    <PlusCircle className="h-3 w-3 text-muted-foreground" />
+                    Opciones del Selector
+                </Label>
+                <Button variant="outline" size="sm" onClick={handleAddOption} className="h-6 text-[10px] px-2">
+                    Añadir Opción
                 </Button>
             </div>
+            <div className="space-y-1.5 pt-1">
+                {(config.snippetOptions || []).map(option => (
+                    <div key={option.id} className="p-2 bg-background rounded-md border flex flex-col gap-1.5 group relative">
+                        <div className="flex items-center gap-2">
+                            <Input
+                                placeholder="Nombre (ej: Vía Radio)"
+                                value={option.label}
+                                onChange={e => handleOptionChange(option.id, 'label', e.target.value)}
+                                className="h-7 text-[10px] flex-1"
+                            />
+                            <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoveOption(option.id)}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                        </div>
+                        <Textarea
+                            placeholder="Texto a insertar..."
+                            value={option.value}
+                            onChange={e => handleOptionChange(option.id, 'value', e.target.value)}
+                            className="text-[10px] min-h-[40px] p-1.5 resize-none"
+                            rows={2}
+                        />
+                    </div>
+                ))}
+            </div>
+            {(!config.snippetOptions || config.snippetOptions.length === 0) && (
+                <p className="text-[10px] text-muted-foreground italic text-center py-1">Sin opciones definidas.</p>
+            )}
         </div>
     );
 };

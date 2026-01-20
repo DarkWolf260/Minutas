@@ -244,7 +244,7 @@ function RepeatableSectionRenderer({ section, config, control, disabled, roles, 
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
                             {(section.layout || section.fieldIds).map((fieldId: string) => {
-                                if (fieldId.startsWith('section_')) {
+                                if (fieldId.startsWith('section_') || fieldId.startsWith('sec_') || fieldId.startsWith('cond_')) {
                                     // This is a nested section, render it.
                                     const nestedSection = config.sections.find((s: SectionConfig) => s.id === fieldId);
                                     if (!nestedSection) return null;
@@ -310,7 +310,7 @@ function SingleSectionRenderer({ section, config, control, disabled, roles, role
             {section.label && <h3 className="text-lg font-semibold">{section.label}</h3>}
             <div className="grid grid-cols-1 sm:grid-cols-2 3xl:grid-cols-3 gap-x-4 gap-y-6">
                 {(section.layout || section.fieldIds).map((fieldId: string) => {
-                    if (fieldId.startsWith('section_')) {
+                    if (fieldId.startsWith('section_') || fieldId.startsWith('sec_') || fieldId.startsWith('cond_')) {
                         // Nested non-repeatable section
                         const nestedSection = config.sections.find((s: SectionConfig) => s.id === fieldId);
                         if (!nestedSection) return null;
@@ -562,7 +562,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
 
         const addedTopLevelFields = new Set<string>();
         const topLevelFieldIds = finalConfig.layout.filter(id => {
-            if (id.startsWith('section_')) return false;
+            if (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) return false;
             const isAssigned = finalConfig.sections.some(s => s.fieldIds.includes(id));
             if (isAssigned) return false;
             if (addedTopLevelFields.has(id)) return false;
@@ -677,13 +677,13 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(({ template
         const addedTopLevelFields = new Set<string>();
 
         finalConfig.layout.forEach(id => {
-            if (id.startsWith('section_')) {
+            if (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) {
                 if (currentFieldChunk.length > 0) {
                     chunks.push(currentFieldChunk);
                     currentFieldChunk = [];
                 }
                 chunks.push(id);
-            } else if (id === 'section_separator') {
+            } else if (id === 'section_separator' || id === 'sec_separator') {
                 if (currentFieldChunk.length > 0) {
                     chunks.push(currentFieldChunk);
                     currentFieldChunk = [];

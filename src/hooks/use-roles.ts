@@ -7,15 +7,16 @@ import type { StaffRole } from '@/types';
 const ROLES_STORAGE_KEY = 'app-staff-roles';
 
 const defaultRoles: StaffRole[] = [
-    { name: 'Jefe de los Servicios', isSingle: true, departmentScope: ['OPERATIONS'] },
-    { name: 'Operador de Radio', isSingle: true, departmentScope: ['OPERATIONS'] },
-    { name: 'CEMUPRAD', isSingle: false, departmentScope: ['OPERATIONS'] },
-    { name: 'Técnico', isSingle: false, departmentScope: ['OPERATIONS'] },
-    { name: 'Auxiliar', isSingle: false, departmentScope: ['OPERATIONS'] },
-    { name: 'Conductor', isSingle: false, departmentScope: ['OPERATIONS'] },
-    { name: 'Permiso', isSingle: false, departmentScope: [] },
-    { name: 'Vacaciones', isSingle: false, departmentScope: [] },
-    { name: 'Apoyo', isSingle: false, departmentScope: [] },
+  { name: 'Director', isSingle: true, departmentScope: [] },
+  { name: 'Jefe de Operaciones', isSingle: true, departmentScope: ['OPERATIONS'] },
+  { name: 'Jefe de los Servicios', isSingle: true, departmentScope: ['OPERATIONS'] },
+  { name: 'Técnico', isSingle: false, departmentScope: ['OPERATIONS'] },
+  { name: 'Auxiliar', isSingle: false, departmentScope: ['OPERATIONS'] },
+  { name: 'Conductor', isSingle: false, departmentScope: ['OPERATIONS'] },
+  { name: 'Reposo', isSingle: false, departmentScope: [] },
+  { name: 'Permiso', isSingle: false, departmentScope: [] },
+  { name: 'Vacaciones', isSingle: false, departmentScope: [] },
+  { name: 'Apoyo', isSingle: false, departmentScope: [] },
 ];
 
 
@@ -30,18 +31,18 @@ export function useRoles() {
         const parsed = JSON.parse(storedRoles);
         // Migration for old roles without departmentScope and ensuring all fields exist
         const migrated = parsed.map((role: any) => ({
-            name: role.name,
-            isSingle: role.isSingle ?? false,
-            departmentScope: role.departmentScope ?? (defaultRoles.find(dr => dr.name === role.name)?.departmentScope || []), 
+          name: role.name,
+          isSingle: role.isSingle ?? false,
+          departmentScope: role.departmentScope ?? (defaultRoles.find(dr => dr.name === role.name)?.departmentScope || []),
         }));
-        
+
         // Add any default roles that might be missing from storage
         const allRoles = [...migrated];
         const migratedRoleNames = new Set(migrated.map((r: StaffRole) => r.name));
         defaultRoles.forEach(defaultRole => {
-            if (!migratedRoleNames.has(defaultRole.name)) {
-                allRoles.push(defaultRole);
-            }
+          if (!migratedRoleNames.has(defaultRole.name)) {
+            allRoles.push(defaultRole);
+          }
         });
 
         setRoles(allRoles);
@@ -52,7 +53,7 @@ export function useRoles() {
       console.error('Failed to load roles from localStorage', error);
       setRoles(defaultRoles);
     } finally {
-        setIsLoaded(true);
+      setIsLoaded(true);
     }
   }, []);
 

@@ -7,6 +7,9 @@ import {
     SnippetOption
 } from '../types';
 import { formatStaffMember } from './formatters';
+import { resolveSemanticConcept } from './integration-engine';
+import { recordReportAudit } from './audit-engine';
+import { ResolutionResult } from './integration-engine';
 
 /**
  * Tipos automáticos basados en el nombre del campo
@@ -34,7 +37,7 @@ const parseFieldTag = (
     const modifiers: string[] = [];
 
     // Valid FieldTypes for explicit detection
-    const VALID_FIELD_TYPES = new Set(['text', 'textarea', 'date', 'predefined', 'time-hlv', 'multi-text', 'dropdown']);
+    const VALID_FIELD_TYPES = new Set(['text', 'textarea', 'date', 'predefined', 'time-hlv', 'multi-text', 'dropdown', 'semantic']);
     const VALID_TEXT_MODS = new Set(['upper', 'lower', 'title']);
 
     otherSegments.forEach(segment => {
@@ -186,7 +189,7 @@ export function parseTemplate(templateContent: string): TemplateParserResult {
             return fieldId;
         };
 
-        const topLevelResult = parseContentRecursive(templateContent, 0, processFieldTag);
+        const topLevelResult = parseContentRecursive(templateContent, 0, processFieldTag, templateOptions);
 
         const sections = topLevelResult.sections;
         const layout = topLevelResult.layout;
@@ -194,7 +197,8 @@ export function parseTemplate(templateContent: string): TemplateParserResult {
         // Consolidar nombres de campos
         topLevelResult.fieldNames.forEach(fn => fieldNames.add(fn));
         sections.forEach(s => {
-            if (s.condition) fieldNames.add(s.condition.fieldId);
+            // Un campo en un condicional no significa que esté definido en el layout
+            // topLevelResult.fieldNames ya contiene los campos del layout
             s.fieldIds.forEach(fid => fieldNames.add(fid));
         });
 
@@ -234,7 +238,8 @@ export function parseTemplate(templateContent: string): TemplateParserResult {
 function parseContentRecursive(
     content: string,
     sectionIdCounter: number,
-    processFieldTag: (tag: string) => string
+    processFieldTag: (tag: string) => string,
+    templateOptions: Map<string, SnippetOption[]>
 ): { sections: SectionConfig[], layout: string[], fieldNames: Set<string> } {
     const sections: SectionConfig[] = [];
     const layout: string[] = [];
@@ -273,7 +278,15 @@ function parseContentRecursive(
             // Sintaxis {Campo}* -> Sección repetible automática de un solo campo
             const fieldTag = match[1];
             const fieldName = processFieldTag(fieldTag.slice(1, -1));
-            const sectionId = `section_${sectionIdCounter++}`;
+            // Generar ID estable basado únicamente en el label para máxima estabilidad
+            let sectionId = `sec_${fieldName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+
+            // Si ya existe este ID en esta sesión de parseo, añadir sufijo para evitar duplicados
+            let collisionCounter = 1;
+            const originalBaseId = sectionId;
+            while (sections.some(s => s.id === sectionId)) {
+                sectionId = `${originalBaseId}_${collisionCounter++}`;
+            }
 
             sections.push({
                 id: sectionId,
@@ -294,20 +307,25 @@ function parseContentRecursive(
             // Condicional avanzado con operadores: [?{Campo} op Valor]...[/]
             const condMatch = blockText.match(/^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(!=|>=|<=|>|<|=)\s*("[^"]*"|\S+?)\s*\]([\s\S]*?)\[\/\s*\]$/);
             if (condMatch) {
-                const sectionId = `section_${sectionIdCounter++}`;
                 let [_, condFieldName, operator, condValue, condInnerContent] = condMatch;
+                const { fieldId: conditionFieldId } = parseFieldTag(condFieldName.trim(), templateOptions);
+                let sectionId = `cond_${conditionFieldId.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+
+                let collisionCounter = 1;
+                const originalBaseId = sectionId;
+                while (sections.some(s => s.id === sectionId)) {
+                    sectionId = `${originalBaseId}_${collisionCounter++}`;
+                }
 
                 // Limpiar comillas del valor
                 if (condValue.startsWith('"') && condValue.endsWith('"')) {
                     condValue = condValue.slice(1, -1);
                 }
 
-                const nestedParse = parseContentRecursive(condInnerContent, sectionIdCounter, processFieldTag);
+                const nestedParse = parseContentRecursive(condInnerContent, sectionIdCounter, processFieldTag, templateOptions);
                 sectionIdCounter += nestedParse.sections.length;
 
-                const conditionFieldId = processFieldTag(condFieldName.trim());
                 nestedParse.fieldNames.forEach(fn => fieldNames.add(fn));
-                fieldNames.add(conditionFieldId);
 
                 sections.push(...nestedParse.sections);
 
@@ -315,7 +333,7 @@ function parseContentRecursive(
                     id: sectionId,
                     label: `Conditional for ${conditionFieldId}`,
                     isRepeatable: false,
-                    fieldIds: nestedParse.layout.filter(id => !id.startsWith('section_')),
+                    fieldIds: nestedParse.layout.filter(id => !id.startsWith('sec_') && !id.startsWith('cond_')),
                     layout: nestedParse.layout,
                     condition: { fieldId: conditionFieldId, operator: operator as any, value: condValue },
                     originalContent: condInnerContent,
@@ -329,8 +347,6 @@ function parseContentRecursive(
             if (innerContent.trim() === '""') {
                 layout.push('section_separator');
             } else {
-                const sectionId = `section_${sectionIdCounter++}`;
-
                 let singularTitle, pluralTitle, subTitle, oldFormatTitle;
                 let definitionPart = '';
 
@@ -352,17 +368,24 @@ function parseContentRecursive(
 
                 const fieldsContent = innerContent.substring(definitionPart.length);
 
-                const nestedParse = parseContentRecursive(fieldsContent, sectionIdCounter, processFieldTag);
+                const nestedParse = parseContentRecursive(fieldsContent, sectionIdCounter, processFieldTag, templateOptions);
                 sectionIdCounter += nestedParse.sections.length;
                 nestedParse.fieldNames.forEach(fn => fieldNames.add(fn));
 
                 sections.push(...nestedParse.sections);
 
-                let sectionLabel = oldFormatTitle || singularTitle || pluralTitle || subTitle || `Sección ${sections.length + 1}`;
+                let sectionLabel = oldFormatTitle || subTitle || pluralTitle || singularTitle || `Sección ${sections.length + 1}`;
+                let sectionId = `sec_${sectionLabel.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+
+                let collisionCounter = 1;
+                const originalBaseId = sectionId;
+                while (sections.some(s => s.id === sectionId)) {
+                    sectionId = `${originalBaseId}_${collisionCounter++}`;
+                }
 
                 const allFieldIds = new Set<string>();
                 (nestedParse.layout || []).forEach(id => {
-                    if (!id.startsWith('section_')) {
+                    if (!id.startsWith('sec_') && !id.startsWith('cond_')) {
                         allFieldIds.add(id);
                     }
                 });
@@ -593,12 +616,29 @@ export function renderFinalReport(
             fullRenderedContent = summaryContent;
         }
 
-        // Limpieza final
+        // Limpieza final y post-procesamiento semántico para tags literales no definidos como campos
         let finalOutput = fullRenderedContent
             .replace(/<<|>>/g, '') // Eliminar marcadores de resumen
             .replace(/\[\?.*?\][\s\S]*?\[\/\s*\]/g, '') // Eliminar bloques condicionales no procesados
             .replace(/\[""\]\s*/g, '') // Eliminar separadores
-            .replace(/\[[\s\S]*?\](?:\s*)?(\*)?/g, '') // Eliminar bloques de sección no procesados
+            .replace(/\[[\s\S]*?\](?:\s*)?(\*)?/g, ''); // Eliminar bloques de sección no procesados
+
+        // Resolución de tags semánticos literales
+        const semanticRegex = /\{([\s\S]+?):semantic\}/g;
+        const semanticAudit: ResolutionResult[] = [];
+
+        finalOutput = finalOutput.replace(semanticRegex, (_, concept) => {
+            const result = resolveSemanticConcept(concept.trim());
+            semanticAudit.push(result);
+            return String(result.value);
+        });
+
+        // Registrar auditoría si hay datos semánticos
+        if (data.id && semanticAudit.length > 0) {
+            recordReportAudit(data.id, semanticAudit);
+        }
+
+        finalOutput = finalOutput
             .replace(/\\\*/g, '*') // Convertir asteriscos escapados (\*) en asteriscos literales (*)
             .replace(/\n{3,}/g, '\n\n')
             .trim();
@@ -704,6 +744,13 @@ function renderContentWithSections(
             return value.join(', ');
         }
 
+        if (fieldConfig?.type === 'semantic') {
+            const result = resolveSemanticConcept(fieldId);
+            // Si estuviéramos en un flujo de generación real, registraríamos la auditoría aquí.
+            // Para simplicidad, devolvemos el valor.
+            return String(result.value);
+        }
+
         // Aplicar modificadores si existen
         const modifiers = config.fieldModifiers?.get(fieldId) || [];
         return applyTextModifier(String(value), modifiers);
@@ -730,12 +777,12 @@ function renderContentWithSections(
                 if (!Array.isArray(sectionData) || sectionData.length === 0) return false;
                 return sectionData.some(item =>
                     checkFieldsForContent(s.fieldIds, item) ||
-                    (s.layout || []).some(id => id.startsWith('section_') && checkSectionRecursive(sections.find((sec: any) => sec.id === id)!, item))
+                    (s.layout || []).some(id => (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) && checkSectionRecursive(sections.find((sec: any) => sec.id === id)!, item))
                 );
             } else {
                 const nestedContext = context[s.id] || context;
                 return checkFieldsForContent(s.fieldIds, nestedContext) ||
-                    (s.layout || []).some(id => id.startsWith('section_') && checkSectionRecursive(sections.find((sec: any) => sec.id === id)!, nestedContext));
+                    (s.layout || []).some(id => (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) && checkSectionRecursive(sections.find((sec: any) => sec.id === id)!, nestedContext));
             }
         };
 
@@ -755,7 +802,7 @@ function renderContentWithSections(
 
         const itemsWithContent = itemsToProcess.filter((item: any) =>
             section.fieldIds.some((fid: string) => hasContent(findValueForField(fid, item))) ||
-            (section.layout || []).some((id: string) => id.startsWith('section_') && sectionHasValues(sections.find((s: any) => s.id === id)!, item))
+            (section.layout || []).some((id: string) => (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) && sectionHasValues(sections.find((s: any) => s.id === id)!, item))
         );
 
         if (itemsWithContent.length === 0) return '';
@@ -765,7 +812,7 @@ function renderContentWithSections(
             const itemLayout = section.layout || section.fieldIds;
 
             itemLayout.forEach((id: string) => {
-                if (id.startsWith('section_')) {
+                if (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) {
                     const nestedSection = sections.find((s: any) => s.id === id);
                     if (nestedSection) {
                         const isVirtual = nestedSection.originalContent?.startsWith('{');
@@ -801,7 +848,7 @@ function renderContentWithSections(
                     labelPrefix = `- *${section.repeatableItemLabel}:*`;
                 }
 
-                if (section.fieldIds.length === 1 && !section.layout?.some((id: string) => id.startsWith('section_'))) {
+                if (section.fieldIds.length === 1 && !section.layout?.some((id: string) => (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')))) {
                     itemContent = `${labelPrefix} ${itemContent.trim()}`;
                 } else {
                     itemContent = `${labelPrefix}\n${itemContent}`;
@@ -848,8 +895,9 @@ function renderContentWithSections(
         finalContent = finalContent.replace(sectionRegex, rendered);
     });
 
-    // Limpieza final de tags sueltos
+    // Limpieza final de tags sueltos (omitimos tags semánticos para el post-procesamiento)
     finalContent = finalContent.replace(/\{([^:}]+?)(:dropdown\(.+?\)|:[a-zA-Z-]+)?(\|.+?)?\}/g, (match, fieldId) => {
+        if (match.includes(':semantic')) return match;
         fieldId = fieldId.trim();
         const formValue = findValueForField(fieldId);
         return hasContent(formValue) ? renderValue(formValue, fieldId) : '';

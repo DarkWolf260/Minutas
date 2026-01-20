@@ -60,7 +60,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
                 content: content,
                 formData: formData,
                 status: status,
-                timestamp: new Date().toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' }),
+                timestamp: new Date().toISOString(),
             };
             onSave(finalReport);
             setSaveButtonText('Guardado');
@@ -117,7 +117,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
             content: content,
             formData: formData,
             status: newStatus,
-            timestamp: new Date().toLocaleString('es-VE', { dateStyle: 'short', timeStyle: 'short' }),
+            timestamp: new Date().toISOString(),
         };
         onSave(finalReport);
         setSaveButtonText('Guardado');

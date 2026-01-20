@@ -16,6 +16,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { SnippetOptionEditor } from '@/components/snippet-option-editor';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { STATISTICS_SECTIONS } from '@/constants/statistics';
+import { ChevronDown, ChevronUp, Layers, BarChart3, Settings2 } from 'lucide-react';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const initialConfig: TemplateConfig = {
     fields: {},
@@ -46,17 +54,18 @@ const TargetFieldEditor = ({
     };
 
     return (
-        <div className="p-3 pl-10 border-l-2 ml-4 mt-2 border-dashed bg-muted/30 rounded-r-md space-y-2">
-            <div className="space-y-2">
-                <Label>Campo de Destino del Texto</Label>
-                <Select value={config.targetField} onValueChange={handleTargetChange}>
-                    <SelectTrigger><SelectValue placeholder="Selecciona un campo..." /></SelectTrigger>
-                    <SelectContent>
-                        {textareaFields.map(id => <SelectItem key={id} value={id}>{id}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">Elige el campo (debe ser Área de Texto y estar en la misma sección) donde se insertará el texto.</p>
+        <div className="p-2 border rounded-md bg-muted/30 space-y-2 mt-2 ml-4">
+            <div className="flex items-center gap-2">
+                <Settings2 className="h-4 w-4 text-muted-foreground" />
+                <Label className="text-xs font-semibold">Destino del Texto (para Dropdown)</Label>
             </div>
+            <Select value={config.targetField} onValueChange={handleTargetChange}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Selecciona un campo..." /></SelectTrigger>
+                <SelectContent>
+                    {textareaFields.map(id => <SelectItem key={id} value={id} className="text-xs">{id}</SelectItem>)}
+                </SelectContent>
+            </Select>
+            <p className="text-[10px] text-muted-foreground italic">El texto se enviará a este campo del reporte.</p>
         </div>
     );
 }
@@ -78,44 +87,51 @@ const FieldEditor = React.memo(function FieldEditor({
 }) {
     const { definitions } = useFieldDefinitions();
 
-    const typeDisplay: Record<string, string> = {
-        'text': 'Texto',
-        'textarea': 'Área de Texto',
-        'date': 'Fecha',
-        'predefined': 'Predefinido',
-        'time-hlv': 'Hora (HLV)',
-        'multi-text': 'Texto Múltiple',
-        'dropdown': 'Dropdown',
-    };
-
     const globalDefinition = definitions[fieldId];
     const finalType = fieldConfig.type || globalDefinition?.type || 'text';
     const isTypeDefinedInTemplate = !!parseTemplate(`{${fieldId}:${finalType}}`).fieldTypes.get(fieldId);
 
     return (
-        <Card className="bg-muted/50">
-            <div className="flex items-center justify-between gap-4 p-3">
-                <Label className="font-mono text-sm font-semibold flex-grow truncate" title={fieldId}>
-                    {fieldConfig.label || fieldId}
-                </Label>
+        <div className="border rounded-md bg-background shadow-xs hover:border-primary/30 transition-all p-2 mb-2">
+            <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2 overflow-hidden flex-1">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="p-1.5 bg-muted rounded text-primary flex-shrink-0">
+                                    <Layers className="h-3.5 w-3.5" />
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent>Campo: {fieldId}</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <Label className="text-xs font-semibold truncate" title={fieldId}>
+                        {fieldConfig.label || fieldId}
+                    </Label>
+                    {isTypeDefinedInTemplate && (
+                        <Badge variant="outline" className="text-[9px] py-0 px-1 bg-blue-50 text-blue-600 border-blue-200">Fijo</Badge>
+                    )}
+                </div>
                 <Select
                     value={finalType}
                     onValueChange={(value) => onConfigChange(fieldId, { type: value as FieldType })}
                     disabled={isTypeDefinedInTemplate}
                 >
-                    <SelectTrigger className="w-[150px] bg-background h-9">
+                    <SelectTrigger className="w-[120px] h-8 text-[11px] bg-background">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="text">Texto</SelectItem>
-                        <SelectItem value="textarea">Área de Texto</SelectItem>
-                        <SelectItem value="dropdown">Dropdown</SelectItem>
-                        <SelectItem value="time-hlv">Hora (HLV)</SelectItem>
+                        <SelectItem value="text" className="text-xs">Texto</SelectItem>
+                        <SelectItem value="textarea" className="text-xs">Área de Texto</SelectItem>
+                        <SelectItem value="dropdown" className="text-xs">Dropdown</SelectItem>
+                        <SelectItem value="time-hlv" className="text-xs">Hora (HLV)</SelectItem>
+                        <SelectItem value="date" className="text-xs">Fecha</SelectItem>
+                        <SelectItem value="semantic" className="text-xs">Estadística Fija</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
             {finalType === 'dropdown' && (
-                <>
+                <div className="mt-1">
                     <TargetFieldEditor
                         fieldId={fieldId}
                         config={fieldConfig}
@@ -124,14 +140,16 @@ const FieldEditor = React.memo(function FieldEditor({
                         siblingFieldIds={siblingFieldIds}
                     />
                     {!optionsDefinedInTemplate && (
-                        <SnippetOptionEditor
-                            config={fieldConfig}
-                            onUpdate={(newConfig) => onConfigChange(fieldId, newConfig)}
-                        />
+                        <div className="mt-2 scale-95 origin-top-left ml-4">
+                            <SnippetOptionEditor
+                                config={fieldConfig}
+                                onUpdate={(newConfig) => onConfigChange(fieldId, newConfig)}
+                            />
+                        </div>
                     )}
-                </>
+                </div>
             )}
-        </Card>
+        </div>
     );
 });
 
@@ -178,6 +196,23 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
         setHasChanges(true);
     }, []);
 
+    const handleSectionChange = (sectionId: string, updates: Partial<SectionConfig>) => {
+        setLocalConfig(prev => {
+            const updatedSections = (prev.sections || []).map(s =>
+                s.id === sectionId ? { ...s, ...updates } : s
+            );
+            return { ...prev, sections: updatedSections };
+        });
+        setHasChanges(true);
+    };
+
+    const statisticsOptions = useMemo(() => {
+        return STATISTICS_SECTIONS.flatMap(s => s.items.map(i => ({
+            value: `${i.code} ${i.label}`,
+            label: `${i.code} - ${i.label}`
+        })));
+    }, []);
+
     const sectionsById = useMemo(() =>
         (localConfig.sections || []).reduce((acc, section) => {
             acc[section.id] = section;
@@ -210,18 +245,42 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
 
                         <div className="space-y-4 p-1 rounded-md bg-muted/30">
                             {(localConfig.layout || []).map((itemId) => {
-                                if (itemId.startsWith('section_')) {
+                                if (itemId.startsWith('section_') || itemId.startsWith('sec_') || itemId.startsWith('cond_')) {
                                     const section = sectionsById[itemId];
                                     if (!section) return null;
                                     return (
-                                        <Card key={section.id} className="bg-background overflow-hidden shadow-sm">
-                                            <CardHeader className="p-4 bg-muted/60">
-                                                <CardTitle className="text-lg flex items-center gap-2">
-                                                    {section.label}
-                                                    {section.isRepeatable && <Badge variant="outline">Repetible</Badge>}
-                                                </CardTitle>
+                                        <Card key={section.id} className="bg-background overflow-hidden shadow-sm border-l-4 border-l-primary/30">
+                                            <CardHeader className="p-3 bg-muted/40 border-b">
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="flex items-center justify-between">
+                                                        <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-tight">
+                                                            {section.label}
+                                                            {section.isRepeatable && <Badge variant="secondary" className="text-[10px] h-5 bg-primary/10 text-primary border-primary/20">Repetible</Badge>}
+                                                        </CardTitle>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+                                                        <Select
+                                                            value={section.statisticsCategory || 'none'}
+                                                            onValueChange={(val) => handleSectionChange(section.id, { statisticsCategory: val === 'none' ? undefined : val })}
+                                                        >
+                                                            <SelectTrigger className="h-7 text-[10px] w-full bg-background/50 border-dashed">
+                                                                <SelectValue placeholder="Anexar Estadística..." />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="none" className="text-xs italic">Niguna estadística</SelectItem>
+                                                                {statisticsOptions.map(opt => (
+                                                                    <SelectItem key={opt.value} value={opt.value} className="text-[10px]">
+                                                                        {opt.label}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                </div>
                                             </CardHeader>
-                                            <CardContent className="p-4 space-y-2">
+                                            <CardContent className="p-2 space-y-0.5 bg-muted/5">
                                                 {section.layout?.map(fieldId => {
                                                     const fieldConfig = localConfig.fields[fieldId];
                                                     if (!fieldConfig) return null;
@@ -238,11 +297,11 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
                                                         />
                                                     )
                                                 })}
-                                                {section.fieldIds.length === 0 && <p className="text-sm text-muted-foreground text-center p-2">Esta sección no tiene campos definidos en la plantilla.</p>}
+                                                {section.fieldIds.length === 0 && <p className="text-[11px] text-muted-foreground text-center p-2 italic">Sin campos definidos.</p>}
                                             </CardContent>
                                         </Card>
                                     );
-                                } else if (itemId === 'section_separator') {
+                                } else if (itemId === 'section_separator' || itemId === 'sec_separator') {
                                     return <div key={itemId} className="h-px bg-foreground/20 my-4" />;
                                 }
                                 else {

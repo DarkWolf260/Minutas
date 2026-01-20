@@ -118,28 +118,16 @@ export function StructureManager({
         }
 
         const institutionalRoles: StaffRole[] = [
-            // Global (Director first)
             { name: 'Director', isSingle: true, departmentScope: [], isHidden: false },
-            { name: 'Administrador', isSingle: true, departmentScope: [], isHidden: true },
-            { name: 'Jefe de Recursos Humanos', isSingle: true, departmentScope: [], isHidden: true },
-            { name: 'Secretaria', isSingle: true, departmentScope: [], isHidden: true },
-            // Ops (Visible by default)
-            { name: 'Jefe de Operaciones', isSingle: true, departmentScope: [deptMap['ops']].filter(Boolean) as string[], isHidden: false },
-            { name: 'Jefe de Servicio', isSingle: true, departmentScope: [deptMap['ops'], 'OPERATIONS'].filter(Boolean) as string[], isHidden: false },
+            { name: 'Jefe de Operaciones', isSingle: true, departmentScope: [deptMap['ops'], 'OPERATIONS'].filter(Boolean) as string[], isHidden: false },
+            { name: 'Jefe de los Servicios', isSingle: true, departmentScope: [deptMap['ops'], 'OPERATIONS'].filter(Boolean) as string[], isHidden: false },
             { name: 'Técnico', isSingle: false, departmentScope: [deptMap['ops'], 'OPERATIONS'].filter(Boolean) as string[], isHidden: false },
             { name: 'Auxiliar', isSingle: false, departmentScope: [deptMap['ops'], 'OPERATIONS'].filter(Boolean) as string[], isHidden: false },
             { name: 'Conductor', isSingle: false, departmentScope: [deptMap['ops'], 'OPERATIONS'].filter(Boolean) as string[], isHidden: false },
-            // others (Hidden by default)
-            { name: 'Jefe de CEMUPRAD', isSingle: true, departmentScope: [deptMap['cemuprad']].filter(Boolean) as string[], isHidden: true },
-            { name: 'Analista de CEMUPRAD', isSingle: false, departmentScope: [deptMap['cemuprad']].filter(Boolean) as string[], isHidden: true },
-            { name: 'Auxiliar de CEMUPRAD', isSingle: false, departmentScope: [deptMap['cemuprad']].filter(Boolean) as string[], isHidden: true },
-            { name: 'Jefe de Educación', isSingle: true, departmentScope: [deptMap['educ']].filter(Boolean) as string[], isHidden: true },
-            { name: 'Auxiliar de Educación', isSingle: false, departmentScope: [deptMap['educ']].filter(Boolean) as string[], isHidden: true },
-            { name: 'Jefe de Gestión de Riesgos', isSingle: true, departmentScope: [deptMap['riesgos']].filter(Boolean) as string[], isHidden: true },
-            { name: 'Analista de Riesgos', isSingle: false, departmentScope: [deptMap['riesgos']].filter(Boolean) as string[], isHidden: true },
-            { name: 'Jefe de Informática', isSingle: true, departmentScope: [deptMap['it']].filter(Boolean) as string[], isHidden: true },
-            { name: 'Jefe de Logística', isSingle: true, departmentScope: [deptMap['log']].filter(Boolean) as string[], isHidden: true },
-            { name: 'Personal de Logística', isSingle: false, departmentScope: [deptMap['log']].filter(Boolean) as string[], isHidden: true },
+            { name: 'Reposo', isSingle: false, departmentScope: [], isHidden: false },
+            { name: 'Permiso', isSingle: false, departmentScope: [], isHidden: false },
+            { name: 'Vacaciones', isSingle: false, departmentScope: [], isHidden: false },
+            { name: 'Apoyo', isSingle: false, departmentScope: [], isHidden: false },
         ];
 
         const newRoles = [...roles];
@@ -237,9 +225,6 @@ export function StructureManager({
                                 <CardDescription className="text-xs">Unidades organizativas de la institución</CardDescription>
                             </div>
                         </div>
-                        <Button variant="outline" size="sm" onClick={handleLoadInstitutional} className="text-[10px] font-bold h-7 px-2">
-                            Cargar Estructura Institucional
-                        </Button>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex gap-2">

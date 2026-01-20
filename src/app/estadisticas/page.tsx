@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Fragment } from 'react';
 import { useReports } from '@/hooks/use-reports';
 import { useTemplates } from '@/hooks/use-templates';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -15,7 +15,7 @@ import { es } from 'date-fns/locale';
 
 export default function EstadisticasPage() {
     const { reports, isLoaded: reportsLoaded } = useReports();
-    const { templates, isLoaded: templatesLoaded } = useTemplates();
+    const { templates, configs, isLoaded: templatesLoaded } = useTemplates();
 
     const [year, setYear] = useState(new Date().getFullYear());
     const [month, setMonth] = useState(new Date().getMonth()); // 0-11
@@ -33,8 +33,8 @@ export default function EstadisticasPage() {
 
     const stats = useMemo(() => {
         if (!reportsLoaded || !templatesLoaded) return null;
-        return calculateMonthlyStats(reports, templates, month, year);
-    }, [reports, templates, month, year, reportsLoaded, templatesLoaded]);
+        return calculateMonthlyStats(reports, templates, configs, month, year);
+    }, [reports, templates, configs, month, year, reportsLoaded, templatesLoaded]);
 
     const daysInMonth = useMemo(() => {
         return new Date(year, month + 1, 0).getDate();
@@ -117,21 +117,46 @@ export default function EstadisticasPage() {
                             </TableHeader>
                             <TableBody>
                                 {STATISTICS_SECTIONS.map((section) => (
-                                    <>
+                                    <Fragment key={section.title}>
                                         {/* Section Header */}
-                                        <TableRow key={section.title} className="bg-muted/20 hover:bg-muted/20">
+                                        <TableRow key={section.title} className="hover:bg-muted/10 border-b-2">
                                             <TableCell
                                                 colSpan={2}
-                                                className={`sticky left-0 z-10 font-bold text-center border-b border-t border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] ${section.headerColor || 'bg-muted/40'}`}
+                                                className="sticky left-0 z-20 font-bold text-[11px] text-center border-r shadow-[2px_0_10px_-2px_rgba(0,0,0,0.1)] py-2"
+                                                style={{
+                                                    backgroundColor: section.headerColor?.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
+                                                        section.headerColor?.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
+                                                            section.headerColor?.includes('red') || section.headerColor?.includes('orange') ? 'rgba(239, 68, 68, 0.2)' :
+                                                                section.headerColor?.includes('amber') || section.headerColor?.includes('yellow') ? 'rgba(245, 158, 11, 0.2)' :
+                                                                    'rgba(156, 163, 175, 0.4)'
+                                                }}
                                             >
                                                 {section.title}
                                             </TableCell>
                                             {/* Fill remaining cells with same background for visual continuity */}
                                             {daysArray.map(day => (
-                                                <TableCell key={`hdr-${day}`} className={`p-0 border-b border-t border-r ${section.headerColor || 'bg-muted/40'}`} />
+                                                <TableCell key={`hdr-${day}`} className="p-0 border-r"
+                                                    style={{
+                                                        backgroundColor: section.headerColor?.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
+                                                            section.headerColor?.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
+                                                                section.headerColor?.includes('red') || section.headerColor?.includes('orange') ? 'rgba(239, 68, 68, 0.2)' :
+                                                                    section.headerColor?.includes('amber') || section.headerColor?.includes('yellow') ? 'rgba(245, 158, 11, 0.2)' :
+                                                                        'rgba(156, 163, 175, 0.4)'
+                                                    }}
+                                                />
                                             ))}
-                                            <TableCell className={`border-l border-b border-t ${section.headerColor || 'bg-muted/40'}`} />
+                                            <TableCell className="border-l"
+                                                style={{
+                                                    backgroundColor: section.headerColor?.includes('blue') ? 'rgba(59, 130, 246, 0.2)' :
+                                                        section.headerColor?.includes('green') ? 'rgba(34, 197, 94, 0.2)' :
+                                                            section.headerColor?.includes('red') || section.headerColor?.includes('orange') ? 'rgba(239, 68, 68, 0.2)' :
+                                                                section.headerColor?.includes('amber') || section.headerColor?.includes('yellow') ? 'rgba(245, 158, 11, 0.2)' :
+                                                                    'rgba(156, 163, 175, 0.4)'
+                                                }}
+                                            />
                                         </TableRow>
+
+                                        {/* Items ... code previously updated ... */}
 
                                         {/* Items */}
                                         {section.items.map((item) => {
@@ -143,30 +168,33 @@ export default function EstadisticasPage() {
                                                 catStats.forEach(val => total += val);
                                             }
 
+                                            // Only render rows with data or keep all but hide zeros? 
+                                            // User said "solo esté vacio por defecto", implying they want to see the labels but empty values.
+
                                             return (
-                                                <TableRow key={fullKey} className="hover:bg-muted/5">
-                                                    <TableCell className="font-bold text-xs py-2 sticky left-0 z-10 bg-background border-r text-center shadow-[inset_-1px_0_0_0_hsl(var(--border))]">
+                                                <TableRow key={fullKey} className="hover:bg-muted/5 group">
+                                                    <TableCell className="font-bold text-[10px] py-1.5 sticky left-0 z-10 bg-background border-r text-center shadow-[inset_-1px_0_0_0_hsl(var(--border))] group-hover:bg-muted/10">
                                                         {item.code}
                                                     </TableCell>
-                                                    <TableCell className="font-medium text-xs py-2 sticky left-[50px] z-10 bg-background border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] truncate max-w-[300px]" title={item.label}>
+                                                    <TableCell className="font-medium text-[10px] py-1.5 sticky left-[50px] z-10 bg-background border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] truncate max-w-[300px] group-hover:bg-muted/10" title={item.label}>
                                                         {item.label}
                                                     </TableCell>
 
                                                     {daysArray.map(day => {
                                                         const count = catStats?.get(day) || 0;
                                                         return (
-                                                            <TableCell key={day} className={`text-center p-0 text-xs border-r border-muted/50 ${count > 0 ? 'font-bold text-foreground bg-primary/10' : 'text-muted-foreground/20'}`}>
-                                                                {count > 0 ? count : '-'}
+                                                            <TableCell key={day} className={`text-center p-0 text-[10px] border-r border-muted/50 ${count > 0 ? 'font-bold text-foreground bg-primary/10' : ''}`}>
+                                                                {count > 0 ? count : ''}
                                                             </TableCell>
                                                         );
                                                     })}
-                                                    <TableCell className="text-center font-bold text-xs bg-muted/20 border-l">
-                                                        {total}
+                                                    <TableCell className="text-center font-bold text-[10px] bg-muted/20 border-l">
+                                                        {total > 0 ? total : ''}
                                                     </TableCell>
                                                 </TableRow>
                                             );
                                         })}
-                                    </>
+                                    </Fragment>
                                 ))}
                                 {/* Grand Total Row */}
                                 <TableRow className="bg-muted/30 font-bold border-t-2">
@@ -194,7 +222,7 @@ export default function EstadisticasPage() {
                                                     dayMap.forEach(val => grandTotal += val);
                                                 });
                                             }
-                                            return grandTotal;
+                                            return grandTotal > 0 ? grandTotal : '';
                                         })()}
                                     </TableCell>
                                 </TableRow>

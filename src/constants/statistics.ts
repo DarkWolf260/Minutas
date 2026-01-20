@@ -7,7 +7,7 @@ export interface StatisticsSection {
 export const STATISTICS_SECTIONS: StatisticsSection[] = [
     {
         title: "ESTADÍSTICA GENERAL / NOVEDADES",
-        headerColor: "bg-blue-100 dark:bg-blue-900/30",
+        headerColor: "bg-blue-500/20 dark:bg-blue-500/30",
         items: [
             { code: "1", label: "REPORTE DEL VEN 911" },
             { code: "1.1", label: "REPORTE DEL VEN 911 - ATENDIDOS" },
@@ -98,7 +98,7 @@ export const STATISTICS_SECTIONS: StatisticsSection[] = [
     },
     {
         title: "INSPECCIONES DE RIESGO",
-        headerColor: "bg-green-100 dark:bg-green-900/30",
+        headerColor: "bg-green-600/20 dark:bg-green-600/30", // Changed to a more vibrant green
         items: [
             { code: "1", label: "SOLICITUD DE INSPECCION" },
             { code: "2", label: "EVALUACIÓN DE DAÑOS Y ANÁLISIS DE NECESIDADES" },
@@ -136,7 +136,7 @@ export const STATISTICS_SECTIONS: StatisticsSection[] = [
     },
     {
         title: "ACCIDENTES Y RESCATE (MONTAÑA - ACUÁTICOS - AÉREOS)",
-        headerColor: "bg-orange-100 dark:bg-orange-900/30",
+        headerColor: "bg-red-600/20 dark:bg-red-600/30", // Changed to a more vibrant red/orange
         items: [
             { code: "1", label: "ACCIDENTES EN MONTAÑA" },
             { code: "1.2", label: "LESIONADO ACCIDENTE EN MONTAÑA" },
@@ -157,7 +157,7 @@ export const STATISTICS_SECTIONS: StatisticsSection[] = [
     },
     {
         title: "CAPACITACIÓN Y PREVENCIÓN",
-        headerColor: "bg-yellow-100 dark:bg-yellow-900/30",
+        headerColor: "bg-amber-500/20 dark:bg-amber-500/30",
         items: [
             { code: "1", label: "CONVERSATORIO (CONCIENTIZACION EN PUESTOS DE ATENCION)" },
             { code: "2", label: "CAPACITACIONES" },
