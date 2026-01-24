@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useReports } from '@/hooks/use-reports';
+import { useGuardHistory } from '@/hooks/use-guard-history';
 import { Skeleton } from '@/components/ui/skeleton';
 import { findValueInFormData } from '@/lib/report-sorter';
 import { getReportCategory } from '@/lib/statistics-utils';
@@ -23,7 +24,7 @@ import { format } from 'date-fns';
 import type { Report, StaffMember } from '@/types';
 import { DatePicker } from '@/components/date-picker';
 import { TimeHlvInput } from '@/components/time-hlv-input';
-import { PlusCircle, Trash2, Calculator, FileText } from 'lucide-react';
+import { PlusCircle, Trash2, Calculator, FileText, Save } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { DEFAULT_STATISTICS_CATEGORIES } from '@/constants/statistics';
 
@@ -50,12 +51,13 @@ const findInsensitive = (obj: Record<string, string>, key: string): string => {
 };
 
 export default function ReporteFinalPage() {
-    const { reports, isLoaded: reportsLoaded, getLatestReports } = useReports();
+    const { reports, isLoaded: reportsLoaded, getLatestReports, clearAllReports } = useReports();
     const { guards, isLoaded: guardsLoaded } = useGuards();
     const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
     const { roles, isLoaded: rolesLoadedHook } = useRoles();
     const { templates, configs, isLoaded: templatesLoaded } = useTemplates();
     const { personnel } = usePersonnel();
+    const { saveGuardReport } = useGuardHistory();
     const router = useRouter();
 
     const [statisticsText, setStatisticsText] = useState(DEFAULT_STATISTICS_CATEGORIES.map(c => `- ${c} 0`).join('\n'));
@@ -632,6 +634,26 @@ export default function ReporteFinalPage() {
                     <DialogFooter className="mt-auto pt-4">
                         <Button type="button" onClick={handleCopyToClipboard}>
                             {copyButtonText}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="default"
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => {
+                                saveGuardReport({
+                                    id: `report-${Date.now()}`,
+                                    date: settings.finalReportStartDate ? new Date(settings.finalReportStartDate).toISOString() : new Date().toISOString(),
+                                    generatedAt: new Date().toISOString(),
+                                    guardGroup: settings.activeGuardId || '',
+                                    content: generatedReport,
+                                    summary: `Reporte de Cierre - ${format(new Date(), 'dd/MM/yyyy')}`
+                                });
+                                setIsResultDialogOpen(false);
+                                clearAllReports();
+                            }}
+                        >
+                            <Save className="h-4 w-4 mr-2" />
+                            Guardar en Historial
                         </Button>
                         <DialogClose asChild>
                             <Button type="button" variant="secondary">

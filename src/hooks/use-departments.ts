@@ -1,8 +1,31 @@
+/**
+ * Hook for managing organizational departments with localStorage persistence.
+ * 
+ * Manages department structure and staff assignments with automatic migration
+ * from legacy string[] format to StaffMember[] format.
+ * 
+ * @returns Department state and operations
+ * @property {Department[]} departments - List of all departments
+ * @property {(name: string) => void} addDepartment - Create new department
+ * @property {(id: string) => void} removeDepartment - Delete department
+ * @property {(id: string, updates: Partial<Department>) => void} updateDepartment - Update department
+ * @property {(departments: Department[]) => void} saveDepartments - Batch update
+ * @property {boolean} isLoaded - Loading state
+ * 
+ * @example
+ * ```tsx
+ * const { departments, addDepartment, updateDepartment } = useDepartments();
+ * 
+ * addDepartment('Operaciones Especiales');
+ * updateDepartment('dept-1', { staff: [...newStaff] });
+ * ```
+ */
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import type { Department, Staff } from '@/types';
+import { useLocalStorage } from './use-local-storage';
 
 const DEPARTMENTS_STORAGE_KEY = 'app-departments';
 
@@ -16,78 +39,63 @@ const defaultDepartments: Department[] = [
 ];
 
 export function useDepartments() {
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(DEPARTMENTS_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const migratedDepartments = parsed.map((dept: any) => {
-            const newStaff: Staff = {};
-            if (!dept.staff) return { ...dept, staff: newStaff };
-
-            // Check if migration from string[] to StaffMember[] is needed
-            for (const roleName in dept.staff) {
-              const staffList = dept.staff[roleName];
-              if (Array.isArray(staffList) && staffList.length > 0 && typeof staffList[0] === 'string') {
-                // This is the old format (string[])
-                newStaff[roleName] = staffList.map((name: string) => ({
-                  id: `staff_${Date.now()}_${Math.random()}`,
-                  name: name,
-                  cedula: undefined
-                }));
-              } else {
-                // Already in new format (StaffMember[]) or empty
-                newStaff[roleName] = staffList;
-              }
-            }
-            return { ...dept, staff: newStaff };
-          });
-          setDepartments(migratedDepartments);
-        } else {
-          setDepartments(defaultDepartments);
+  const [departments, setDepartments, isLoaded] = useLocalStorage<Department[]>(
+    DEPARTMENTS_STORAGE_KEY,
+    defaultDepartments,
+    {
+      migrate: (parsed: any[]) => {
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+          return defaultDepartments;
         }
-      } else {
-        setDepartments(defaultDepartments);
+
+        // Migrate old format (string[]) to new format (StaffMember[])
+        return parsed.map((dept: any) => {
+          const newStaff: Staff = {};
+          if (!dept.staff) return { ...dept, staff: newStaff };
+
+          // Check if migration from string[] to StaffMember[] is needed
+          for (const roleName in dept.staff) {
+            const staffList = dept.staff[roleName];
+            if (Array.isArray(staffList) && staffList.length > 0 && typeof staffList[0] === 'string') {
+              // This is the old format (string[])
+              newStaff[roleName] = staffList.map((name: string) => ({
+                id: `staff_${Date.now()}_${Math.random()}`,
+                name: name,
+                cedula: undefined
+              }));
+            } else {
+              // Already in new format (StaffMember[]) or empty
+              newStaff[roleName] = staffList;
+            }
+          }
+          return { ...dept, staff: newStaff };
+        });
+      },
+      onError: (error, operation) => {
+        console.error(`Failed to ${operation} departments:`, error);
       }
-    } catch (error) {
-      console.error('Failed to load departments from localStorage', error);
-      setDepartments(defaultDepartments);
-    } finally {
-      setIsLoaded(true);
     }
-  }, []);
+  );
 
   const saveDepartments = useCallback((newDepartments: Department[]) => {
     setDepartments(newDepartments);
-    try {
-      localStorage.setItem(DEPARTMENTS_STORAGE_KEY, JSON.stringify(newDepartments));
-    } catch (error) {
-      console.error('Failed to save departments to localStorage', error);
-    }
-  }, []);
+  }, [setDepartments]);
 
   const addDepartment = useCallback((newDepartment: Department) => {
-    const updated = [...departments, newDepartment].sort((a, b) => a.name.localeCompare(b.name));
-    saveDepartments(updated);
-  }, [departments, saveDepartments]);
+    setDepartments(prev => [...prev, newDepartment].sort((a, b) => a.name.localeCompare(b.name)));
+  }, [setDepartments]);
 
   const removeDepartment = useCallback((departmentId: string) => {
-    const updated = departments.filter(d => d.id !== departmentId);
-    saveDepartments(updated);
-  }, [departments, saveDepartments]);
+    setDepartments(prev => prev.filter(d => d.id !== departmentId));
+  }, [setDepartments]);
 
   const updateDepartment = useCallback((updatedDepartment: Department) => {
-    const updated = departments.map(d => d.id === updatedDepartment.id ? updatedDepartment : d);
-    saveDepartments(updated);
-  }, [departments, saveDepartments]);
+    setDepartments(prev => prev.map(d => d.id === updatedDepartment.id ? updatedDepartment : d));
+  }, [setDepartments]);
 
   const clearAllDepartments = useCallback(() => {
-    saveDepartments(defaultDepartments);
-  }, [saveDepartments]);
+    setDepartments(defaultDepartments);
+  }, [setDepartments]);
 
 
   return { departments, addDepartment, removeDepartment, updateDepartment, isLoaded, clearAllDepartments, saveDepartments };

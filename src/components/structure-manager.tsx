@@ -89,7 +89,7 @@ export function StructureManager({
 
         // Since we want to link them correctly, we'll generate the IDs here
         const newDepts: Department[] = [...departments];
-        const deptMap: Record<string, string> = { 'global': 'global', 'OPERATIONS': 'OPERATIONS' };
+        const deptMap: Record<string, string> = { 'global': 'global' };
 
         const normalize = (s: string) => s.toLowerCase()
             .replace(/^departamento de /, '')
@@ -119,11 +119,15 @@ export function StructureManager({
 
         const institutionalRoles: StaffRole[] = [
             { name: 'Director', isSingle: true, departmentScope: [], isHidden: false },
-            { name: 'Jefe de Operaciones', isSingle: true, departmentScope: [deptMap['ops'], 'OPERATIONS'].filter(Boolean) as string[], isHidden: false },
-            { name: 'Jefe de los Servicios', isSingle: true, departmentScope: [deptMap['ops'], 'OPERATIONS'].filter(Boolean) as string[], isHidden: false },
-            { name: 'Técnico', isSingle: false, departmentScope: [deptMap['ops'], 'OPERATIONS'].filter(Boolean) as string[], isHidden: false },
-            { name: 'Auxiliar', isSingle: false, departmentScope: [deptMap['ops'], 'OPERATIONS'].filter(Boolean) as string[], isHidden: false },
-            { name: 'Conductor', isSingle: false, departmentScope: [deptMap['ops'], 'OPERATIONS'].filter(Boolean) as string[], isHidden: false },
+            { name: 'Jefe de Operaciones', isSingle: true, departmentScope: [deptMap['ops']].filter(Boolean) as string[], isHidden: false },
+            { name: 'Jefe de los Servicios', isSingle: true, departmentScope: [deptMap['ops']].filter(Boolean) as string[], isHidden: false },
+            { name: 'Analista de CEMUPRAD', isSingle: false, departmentScope: [deptMap['cemuprad']].filter(Boolean) as string[], isHidden: false },
+            { name: 'Auxiliar de CEMUPRAD', isSingle: false, departmentScope: [deptMap['cemuprad']].filter(Boolean) as string[], isHidden: false },
+            { name: 'Operador de radio', isSingle: false, departmentScope: [deptMap['ops']].filter(Boolean) as string[], isHidden: false },
+            { name: 'Técnico', isSingle: false, departmentScope: [deptMap['ops']].filter(Boolean) as string[], isHidden: false },
+            { name: 'Auxiliar', isSingle: false, departmentScope: [deptMap['ops']].filter(Boolean) as string[], isHidden: false },
+            { name: 'Conductor', isSingle: false, departmentScope: [deptMap['ops']].filter(Boolean) as string[], isHidden: false },
+            { name: 'Jefe de CEMUPRAD', isSingle: true, departmentScope: [deptMap['cemuprad']].filter(Boolean) as string[], isHidden: false },
             { name: 'Reposo', isSingle: false, departmentScope: [], isHidden: false },
             { name: 'Permiso', isSingle: false, departmentScope: [], isHidden: false },
             { name: 'Vacaciones', isSingle: false, departmentScope: [], isHidden: false },
@@ -205,7 +209,6 @@ export function StructureManager({
         if (selectedDeptId === 'all') return roles;
         return roles.filter(r => {
             if (selectedDeptId === 'global') return (r.departmentScope || []).length === 0;
-            if (selectedDeptId === 'OPERATIONS') return (r.departmentScope || []).includes('OPERATIONS');
             return (r.departmentScope || []).includes(selectedDeptId);
         });
     }, [roles, selectedDeptId]);
@@ -216,14 +219,20 @@ export function StructureManager({
                 {/* Departments Management */}
                 <Card className="shadow-sm border-muted/60">
                     <CardHeader className="pb-3">
-                        <div className="flex items-center gap-2">
-                            <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                                <Building2 className="h-4 w-4" />
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                                    <Building2 className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-lg">Departamentos</CardTitle>
+                                    <CardDescription className="text-xs">Unidades organizativas de la institución</CardDescription>
+                                </div>
                             </div>
-                            <div>
-                                <CardTitle className="text-lg">Departamentos</CardTitle>
-                                <CardDescription className="text-xs">Unidades organizativas de la institución</CardDescription>
-                            </div>
+                            <Button variant="outline" size="sm" onClick={handleLoadInstitutional} className="h-8 text-xs">
+                                <ShieldCheck className="mr-2 h-3.5 w-3.5" />
+                                Cargar Estructura Institucional
+                            </Button>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -329,7 +338,6 @@ export function StructureManager({
                                 <SelectContent>
                                     <SelectItem value="all">Todos los cargos</SelectItem>
                                     <SelectItem value="global">Cargos Globales</SelectItem>
-                                    <SelectItem value="OPERATIONS">Operaciones</SelectItem>
                                     {departments.map(d => (
                                         <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                                     ))}
@@ -375,7 +383,6 @@ export function StructureManager({
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="global">Cargos Globales</SelectItem>
-                                                    <SelectItem value="OPERATIONS">Operaciones</SelectItem>
                                                     {departments.map(d => (
                                                         <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                                                     ))}
@@ -523,7 +530,7 @@ function SortableRoleItem({ role, index, departments, onRemoveFromList }: { role
                     <p className={cn("text-sm font-bold truncate transition-opacity", role.isHidden && "opacity-40")}>{role.name}</p>
                     <p className="text-[10px] text-muted-foreground uppercase font-mono">
                         {(role.departmentScope ?? []).length > 0
-                            ? (role.departmentScope?.includes('OPERATIONS') ? 'Operaciones' : departments.find(d => d.id === (role.departmentScope ?? [])[0])?.name || 'Varios')
+                            ? (departments.find(d => d.id === (role.departmentScope ?? [])[0])?.name || 'Varios')
                             : 'Global'}
                     </p>
                 </div>

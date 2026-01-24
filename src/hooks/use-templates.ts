@@ -1,3 +1,32 @@
+/**
+ * Hook for managing report templates with field configuration.
+ * 
+ * Manages templates and their field configurations with automatic parsing,
+ * validation, and migration support. Handles dual storage for templates
+ * and their associated field configurations.
+ * 
+ * @returns Template state and operations
+ * @property {Template[]} templates - List of all templates
+ * @property {Record<string, TemplateConfig>} configs - Field configs per template
+ * @property {(template: Template) => void} addTemplate - Create new template
+ * @property {(id: string) => void} removeTemplate - Delete template
+ * @property {(template: Template) => void} updateTemplate - Update template
+ * @property {(id: string, config: TemplateConfig) => void} updateTemplateConfig - Update field config
+ * @property {(id: string) => void} toggleTemplateActive - Toggle template active state
+ * @property {() => void} clearAllTemplates - Delete all templates
+ * @property {boolean} isLoaded - Loading state
+ * 
+ * @example
+ * ```tsx
+ * const { templates, addTemplate, configs } = useTemplates();
+ * 
+ * addTemplate({
+ *   id: 'new-template',
+ *   name: 'Reporte de Emergencia',
+ *   content: '{Fecha}\n{Hora}\n...'
+ * });
+ * ```
+ */
 
 'use client';
 
@@ -7,34 +36,45 @@ import type { Template, TemplateConfig } from '@/types';
 import { parseTemplate } from '@/lib/template-parser';
 import { useFieldDefinitions } from './use-field-definitions';
 import { useSettings } from './use-settings';
+import { useLocalStorage } from './use-local-storage';
 
 const TEMPLATES_STORAGE_KEY = 'app-templates';
 const TEMPLATE_CONFIGS_STORAGE_KEY = 'app-template-configs';
 
 export function useTemplates() {
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [configs, setConfigs] = useState<Record<string, TemplateConfig>>({});
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [templates, setTemplates, isTemplatesLoaded] = useLocalStorage<Template[]>(
+    TEMPLATES_STORAGE_KEY,
+    [],
+    {
+      migrate: (initialTemplates: any[]) => {
+        return initialTemplates.map((t: Template) => ({ ...t, isActive: t.isActive ?? true }));
+      },
+      onError: (error, operation) => {
+        console.error(`Failed to ${operation} templates:`, error);
+        if (operation === 'load') {
+          toast.error('Error al cargar las plantillas.');
+        } else {
+          toast.error('No se pudo guardar la plantilla en el almacenamiento.');
+        }
+      }
+    }
+  );
+
+  const [configs, setConfigs, isConfigsLoaded] = useLocalStorage<Record<string, TemplateConfig>>(
+    TEMPLATE_CONFIGS_STORAGE_KEY,
+    {},
+    {
+      onError: (error, operation) => {
+        console.error(`Failed to ${operation} template configs:`, error);
+        if (operation === 'save') {
+          toast.error('Error al guardar la configuración de la plantilla.');
+        }
+      }
+    }
+  );
 
   const { definitions: globalDefinitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
   const { settings, isLoaded: settingsLoaded } = useSettings();
-
-  useEffect(() => {
-    try {
-      const storedTemplates = localStorage.getItem(TEMPLATES_STORAGE_KEY);
-      const initialTemplates = storedTemplates ? JSON.parse(storedTemplates) : [];
-      setTemplates(initialTemplates.map((t: Template) => ({ ...t, isActive: t.isActive ?? true })));
-
-      const storedConfigs = localStorage.getItem(TEMPLATE_CONFIGS_STORAGE_KEY);
-      setConfigs(storedConfigs ? JSON.parse(storedConfigs) : {});
-
-    } catch (error) {
-      console.error('Failed to load templates from localStorage', error);
-      toast.error('Error al cargar las plantillas.');
-    } finally {
-      setIsLoaded(true);
-    }
-  }, []);
 
   // Caché de parse para evitar re-parsing innecesario
   const parsedTemplates = useMemo(() => {
@@ -47,7 +87,7 @@ export function useTemplates() {
   }, [templates]);
 
   useEffect(() => {
-    if (isLoaded && definitionsLoaded && templates.length > 0) {
+    if (isTemplatesLoaded && definitionsLoaded && templates.length > 0) {
       const newConfigs: Record<string, TemplateConfig> = {};
 
       templates.forEach(template => {
@@ -74,16 +114,17 @@ export function useTemplates() {
           const typeFromTemplate = parsed.fieldTypes.get(fieldName);
           const optionsFromTemplate = parsed.templateOptions.get(fieldName);
 
-          const baseConfig = {
+          const baseConfig: FieldConfig = {
+            type: 'text', // Default type
+            label: fieldName,
             ...globalDef,
             ...existingFieldConfig,
-            label: fieldName,
           };
 
           if (typeFromTemplate) {
             baseConfig.type = typeFromTemplate;
-          } else if (!baseConfig.type) {
-            baseConfig.type = 'text';
+          } else if (globalDef?.type) {
+            baseConfig.type = globalDef.type;
           }
 
           if (optionsFromTemplate) {
@@ -97,32 +138,14 @@ export function useTemplates() {
       });
 
       if (JSON.stringify(newConfigs) !== JSON.stringify(configs)) {
-        saveConfigs(newConfigs);
+        setConfigs(newConfigs);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded, definitionsLoaded, templates]);
+  }, [isTemplatesLoaded, definitionsLoaded, templates]);
 
 
-  const saveTemplates = useCallback((newTemplates: Template[]) => {
-    setTemplates(newTemplates);
-    try {
-      localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(newTemplates));
-    } catch (error) {
-      console.error('Failed to save templates to localStorage', error);
-      toast.error('No se pudo guardar la plantilla en el almacenamiento.');
-    }
-  }, []);
 
-  const saveConfigs = useCallback((newConfigs: Record<string, TemplateConfig>) => {
-    setConfigs(newConfigs);
-    try {
-      localStorage.setItem(TEMPLATE_CONFIGS_STORAGE_KEY, JSON.stringify(newConfigs));
-    } catch (error) {
-      console.error('Failed to save template configs to localStorage', error);
-      toast.error('Error al guardar la configuración de la plantilla.');
-    }
-  }, []);
 
   const addTemplate = (newTemplate: Template) => {
     try {
@@ -138,7 +161,7 @@ export function useTemplates() {
       }
 
       const updatedTemplates = [...templates, { ...newTemplate, isActive: errors.length === 0 }]; // Disable if invalid
-      saveTemplates(updatedTemplates);
+      setTemplates(updatedTemplates);
 
       const newConfig: TemplateConfig = { fields: {}, sections, layout };
 
@@ -156,7 +179,7 @@ export function useTemplates() {
         }
       });
 
-      saveConfigs({ ...configs, [newTemplate.id]: newConfig });
+      setConfigs(prev => ({ ...prev, [newTemplate.id]: newConfig }));
 
     } catch (error) {
       console.error('Error adding template:', error);
@@ -166,38 +189,36 @@ export function useTemplates() {
 
   const removeTemplate = (templateId: string) => {
     const template = templates.find(t => t.id === templateId);
-    const updatedTemplates = templates.filter(t => t.id !== templateId);
-    saveTemplates(updatedTemplates);
-    const updatedConfigs = { ...configs };
-    delete updatedConfigs[templateId];
-    saveConfigs(updatedConfigs);
+    setTemplates(prev => prev.filter(t => t.id !== templateId));
+    setConfigs(prev => {
+      const updatedConfigs = { ...prev };
+      delete updatedConfigs[templateId];
+      return updatedConfigs;
+    });
     toast.success(`Plantilla "${template?.name || 'desconocida'}" eliminada.`);
   };
 
   const updateTemplateConfig = (templateId: string, config: TemplateConfig) => {
-    const updatedConfigs = { ...configs, [templateId]: config };
-    saveConfigs(updatedConfigs);
+    setConfigs(prev => ({ ...prev, [templateId]: config }));
     toast.success('Configuración de campos actualizada.');
   };
 
   const updateTemplate = (updatedTemplate: Template) => {
-    const updatedTemplates = templates.map(t => t.id === updatedTemplate.id ? updatedTemplate : t);
-    saveTemplates(updatedTemplates);
+    setTemplates(prev => prev.map(t => t.id === updatedTemplate.id ? updatedTemplate : t));
     toast.success('Plantilla actualizada.');
   };
 
   const toggleTemplateActive = useCallback((templateId: string) => {
-    const updatedTemplates = templates.map(t =>
+    setTemplates(prev => prev.map(t =>
       t.id === templateId ? { ...t, isActive: !(t.isActive ?? true) } : t
-    );
-    saveTemplates(updatedTemplates);
-  }, [templates, saveTemplates]);
+    ));
+  }, [setTemplates]);
 
   const clearAllTemplates = useCallback(() => {
-    saveTemplates([]);
-    saveConfigs({});
-  }, [saveTemplates, saveConfigs]);
+    setTemplates([]);
+    setConfigs({});
+  }, [setTemplates, setConfigs]);
 
 
-  return { templates, configs, addTemplate, removeTemplate, updateTemplate, updateTemplateConfig, toggleTemplateActive, clearAllTemplates, isLoaded: isLoaded && definitionsLoaded && settingsLoaded };
+  return { templates, configs, addTemplate, removeTemplate, updateTemplate, updateTemplateConfig, toggleTemplateActive, clearAllTemplates, isLoaded: isTemplatesLoaded && definitionsLoaded && settingsLoaded };
 }

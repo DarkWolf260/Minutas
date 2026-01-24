@@ -76,7 +76,7 @@ function RoleColumn({ id, title, roles, onPrepareRemove, onToggleRoleSingle, onP
         <Card ref={setNodeRef} className="flex flex-col bg-muted/50 min-h-64">
             <CardHeader className='p-3 border-b flex flex-row items-center justify-between'>
                 <CardTitle className='text-base'>{title}</CardTitle>
-                {id !== 'unassigned' && id !== 'OPERATIONS' && (
+                {id !== 'unassigned' && (
                     <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => onPrepareRemoveDepartment(id)}>
                         <Trash2 className="h-4 w-4" />
                     </Button>
@@ -137,7 +137,7 @@ export function RoleManagerDnD({
             const newRole: StaffRole = {
                 name: newRoleName.trim(),
                 isSingle: false,
-                departmentScope: ['OPERATIONS']
+                departmentScope: ['ops'] // Use dynamic ops ID instead of hardcoded OPERATIONS
             };
             onRolesChange([...roles, newRole]);
             setNewRoleName('');
@@ -154,10 +154,7 @@ export function RoleManagerDnD({
         setTimeout(() => setFeedback(''), 3000);
     };
 
-    const allDepartments = useMemo(() => ([
-        { id: 'OPERATIONS', name: 'Operaciones' },
-        ...departments
-    ]), [departments]);
+    const allDepartments = useMemo(() => departments, [departments]);
 
     const roleBuckets = useMemo(() => {
         const buckets: Record<string, StaffRole[]> = {

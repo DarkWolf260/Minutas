@@ -1,30 +1,57 @@
+/**
+ * Hook for managing incident reports with localStorage persistence.
+ * 
+ * Provides CRUD operations for emergency service reports with
+ * automatic QuotaExceededError handling and relevance filtering.
+ * 
+ * @returns Report state and operations
+ * @property {Report[]} reports - List of all reports
+ * @property {(report: Partial<Report>) => void} addReport - Create new report
+ * @property {(id: string) => void} removeReport - Delete report
+ * @property {(id: string, updates: Partial<Report>) => void} updateReport - Update report
+ * @property {() => void} clearAllReports - Delete all reports
+ * @property {boolean} isLoaded - Loading state
+ * 
+ * @example
+ * ```tsx
+ * const { reports, addReport, removeReport } = useReports();
+ * 
+ * addReport({
+ *   templateId: 'template-1',
+ *   title: 'Incidente en Zona Norte',
+ *   content: 'Detalles del incidente...'
+ * });
+ * ```
+ */
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { toast } from 'sonner';
 import type { Report } from '@/types';
+import { useLocalStorage } from './use-local-storage';
 
 const REPORTS_STORAGE_KEY = 'app-reports';
 
 export function useReports() {
-  const [reports, setReports] = useState<Report[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  // Load initial data from localStorage exactly once on mount.
-  useEffect(() => {
-    try {
-      const storedReports = localStorage.getItem(REPORTS_STORAGE_KEY);
-      if (storedReports) {
-        setReports(JSON.parse(storedReports));
+  const [reports, setReports, isLoaded] = useLocalStorage<Report[]>(
+    REPORTS_STORAGE_KEY,
+    [],
+    {
+      onError: (error, operation) => {
+        console.error(`Failed to ${operation} reports:`, error);
+        if (operation === 'save') {
+          if (error instanceof Error && error.name === 'QuotaExceededError') {
+            toast.error('El almacenamiento está lleno. No se pudo guardar.');
+          } else {
+            toast.error('Error al guardar en el almacenamiento local.');
+          }
+        } else if (operation === 'load') {
+          toast.error('No se pudieron cargar los reportes guardados.');
+        }
       }
-    } catch (error) {
-      console.error('Failed to load reports from localStorage', error);
-      toast.error('No se pudieron cargar los reportes guardados.');
-    } finally {
-      setIsLoaded(true);
     }
-  }, []);
+  );
 
   const getLatestReports = useCallback((): Report[] => {
     if (typeof window === 'undefined') return [];
@@ -37,39 +64,25 @@ export function useReports() {
     }
   }, []);
 
-  const saveReports = useCallback((newReports: Report[]) => {
-    setReports(newReports);
-    try {
-      localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(newReports));
-    } catch (error) {
-      console.error('Failed to save reports to localStorage', error);
-      if (error instanceof Error && error.name === 'QuotaExceededError') {
-        toast.error('El almacenamiento está lleno. No se pudo guardar.');
-      } else {
-        toast.error('Error al guardar en el almacenamiento local.');
-      }
-    }
-  }, []);
-
   const addReport = useCallback((newReport: Report) => {
-    saveReports([...reports, newReport]);
+    setReports(prev => [...prev, newReport]);
     toast.success('Reporte guardado correctamente.');
-  }, [reports, saveReports]);
+  }, [setReports]);
 
   const updateReport = useCallback((updatedReport: Report) => {
-    saveReports(reports.map(r => (r.id === updatedReport.id ? updatedReport : r)));
+    setReports(prev => prev.map(r => (r.id === updatedReport.id ? updatedReport : r)));
     toast.success('Reporte actualizado correctamente.');
-  }, [reports, saveReports]);
+  }, [setReports]);
 
   const removeReport = useCallback((reportId: string) => {
-    saveReports(reports.filter(r => r.id !== reportId));
+    setReports(prev => prev.filter(r => r.id !== reportId));
     toast.success('Reporte eliminado.');
-  }, [reports, saveReports]);
+  }, [setReports]);
 
   const clearAllReports = useCallback(() => {
-    saveReports([]);
+    setReports([]);
     toast.success('Todos los reportes han sido eliminados.');
-  }, [saveReports]);
+  }, [setReports]);
 
   return { reports, addReport, updateReport, removeReport, clearAllReports, isLoaded, getLatestReports };
 }

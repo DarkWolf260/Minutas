@@ -9,43 +9,43 @@ export const STATISTICS_SECTIONS: StatisticsSection[] = [
         title: "ESTADÍSTICA GENERAL / NOVEDADES",
         headerColor: "bg-blue-500/20 dark:bg-blue-500/30",
         items: [
-            { code: "1", label: "REPORTE DEL VEN 911" },
-            { code: "1.1", label: "REPORTE DEL VEN 911 - ATENDIDOS" },
-            { code: "1.2", label: "REPORTE DEL VEN 911 - ATENDIDO NO EFECTUADO" },
-            { code: "1.3", label: "REPORTE DEL VEN 911 - FALSA ALARMA CONFIRMADA" },
-            { code: "1.4", label: "LLAMADA DE EMERGENCIA" },
-            { code: "1.5", label: "LLAMADA DE EMERGENCIA - FALSA ALARMA" },
-            { code: "1.6", label: "ORGANISMO DE SEGURIDAD" },
-            { code: "1.7", label: "CIUDADANO COMUN" },
-            { code: "2", label: "ACCIDENTE DE T. ATENDIDOS URBANO" },
-            { code: "2.1", label: "ACCIDENTE DE T. ATENDIDOS EXTRA URBANO" },
-            { code: "2.2", label: "LESIONADOS ACCIDENTE T. URBANO" },
-            { code: "2.3", label: "LESIONADOS ACCIDENTE T. EXTRA URBANO" },
-            { code: "2.4", label: "RESCATADOS EN ACCIDENTE T." },
-            { code: "3", label: "FALLECIDOS ACCIDENTE TRANSITO" },
-            { code: "3.1", label: "FALLECIDOS X CAUSA NATURAL" },
+            { code: "1", label: "REPORTE DEL VEN 911" }, //verificar si en el reporte sale VEN 911
+            { code: "1.1", label: "REPORTE DEL VEN 911 - ATENDIDOS" }, //verificar la conclusión
+            { code: "1.2", label: "REPORTE DEL VEN 911 - ATENDIDO NO EFECTUADO" }, //verificar la conclusión
+            { code: "1.3", label: "REPORTE DEL VEN 911 - FALSA ALARMA CONFIRMADA" }, //verificar la conclusión
+            { code: "1.4", label: "LLAMADA DE EMERGENCIA" }, //verificar descipción de la novedad
+            { code: "1.5", label: "LLAMADA DE EMERGENCIA - FALSA ALARMA" }, //verificar descipción de la novedad
+            { code: "1.6", label: "ORGANISMO DE SEGURIDAD" }, //verificar descipción de la novedad
+            { code: "1.7", label: "CIUDADANO COMUN" }, //verificar descipción de la novedad
+            { code: "2", label: "ACCIDENTE DE T. ATENDIDOS URBANO" }, //asignar al reporte de accidente de tránsito
+            { code: "2.1", label: "ACCIDENTE DE T. ATENDIDOS EXTRA URBANO" }, //asignar al reporte de accidente de tránsito
+            { code: "2.2", label: "LESIONADOS ACCIDENTE T. URBANO" }, //asignar al reporte de accidente de tránsito
+            { code: "2.3", label: "LESIONADOS ACCIDENTE T. EXTRA URBANO" }, //asignar al reporte de accidente de tránsito
+            { code: "2.4", label: "RESCATADOS EN ACCIDENTE T." }, //asignar al reporte de accidente de tránsito
+            { code: "3", label: "FALLECIDOS ACCIDENTE TRANSITO" }, //asignar al reporte de accidente de tránsito
+            { code: "3.1", label: "FALLECIDOS X CAUSA NATURAL" }, //hacer general para cada tipo de fallecimiento
             { code: "3.2", label: "FALLECIDOS X CAUSA DESCONOCIDA" },
             { code: "3.3", label: "FALLECIDOS X ARMA DE FUEGO" },
             { code: "3.4", label: "FALLECIDOS X ARMA BLANCA" },
             { code: "3.5", label: "HERIDOS POR ARMA BLANCA" },
             { code: "3.6", label: "HERIDOS POR ARMA FULGO" },
-            { code: "3.7", label: "LESIONADO POR ELECTROCUCION" },
+            { code: "3.7", label: "LESIONADO POR ELECTROCUCION" }, // descartar
             { code: "3.8", label: "FALLECIDO POR ELECTROCUCION" },
-            { code: "4", label: "ATENCION AL PUBLICO" },
-            { code: "4.1", label: "ATENCIONES PREHOSPITALARIA" },
-            { code: "4.2", label: "ATENCION PREHOSPITALARIA EN RESIDENCIA" },
-            { code: "4.3", label: "ATENCIONES PREHOSPITALARIA EN SALA DE RADIO" },
-            { code: "4.4", label: "ATENCIONES PREHOSPITALARIA EN VIA / LUGAR PUBLICO" },
-            { code: "4.5", label: "ATENCIONES PREHOSPITALARIA EN INSTITUCION / COMERCIO" },
-            { code: "4.6", label: "ATENCIONES PREHOSPITALARIA EN GUARDIAS PREVENTIVAS" },
-            { code: "5", label: "SOLICITUD DE TRASLADO" },
-            { code: "5.1", label: "TRASLADOS URBANOS" },
-            { code: "5.2", label: "TRASLADOS EXTRAURBANOS" },
-            { code: "5.3", label: "TRASLADOS DE C.ASISTENCIALES A CENTROS ASISTENCIALES" },
+            { code: "4", label: "ATENCION AL PUBLICO" }, // verificar su uso
+            { code: "4.1", label: "ATENCIONES PREHOSPITALARIA" }, // asignar a la sección de paciente
+            { code: "4.2", label: "ATENCION PREHOSPITALARIA EN RESIDENCIA" }, // asignar al reporte de atención en residencia
+            { code: "4.3", label: "ATENCIONES PREHOSPITALARIA EN SALA DE RADIO" }, // asignar al reporte de atención en sala de radio
+            { code: "4.4", label: "ATENCIONES PREHOSPITALARIA EN VIA / LUGAR PUBLICO" }, // asignar al reporte de atención en via / lugar publico y opcionalmente en el de accidente de tránsito
+            { code: "4.5", label: "ATENCIONES PREHOSPITALARIA EN INSTITUCION / COMERCIO" }, // asignar al reporte de atención en institución / comercio
+            { code: "4.6", label: "ATENCIONES PREHOSPITALARIA EN GUARDIAS PREVENTIVAS" }, // asignar al reporte de atención en guardias preventivas
+            { code: "5", label: "SOLICITUD DE TRASLADO" }, // asignar a los reportes de traslado
+            { code: "5.1", label: "TRASLADOS URBANOS" }, // verificar si el municipio de origen y destino son iguales
+            { code: "5.2", label: "TRASLADOS EXTRAURBANOS" }, // verificar si el municipio de origen y destino son distintos
+            { code: "5.3", label: "TRASLADOS DE C.ASISTENCIALES A CENTROS ASISTENCIALES" }, // añadir etiqueta a las direcciones guardadas para que la aplicación verifique si es una dirección de un centro asistencial
             { code: "5.4", label: "TRASLADOS DE C.ASISTENCIALES A RESIDENCIAS" },
             { code: "5.5", label: "TRASLADOS DE RESIDENCIAS A C.ASISTENCIALES" },
             { code: "5.6", label: "TRASLADO DE VIA A C.ASISTENCIAL" },
-            { code: "6", label: "GUARDIAS PREVENTIVAS" },
+            { code: "6", label: "GUARDIAS PREVENTIVAS" }, // reporte de guardias preventivas
             { code: "6.1", label: "PUNTOS DE PREVENCION" },
             { code: "6.2", label: "PUNTO EN SANTUARIO" },
             { code: "6.3", label: "PUNTO EN BALNEARIO" },

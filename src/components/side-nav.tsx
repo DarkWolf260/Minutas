@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { Newspaper, Settings, Mountain, FileText, ClipboardList, ClipboardCheck, BookOpen, NotebookPen, TrendingUp, Users, CalendarCheck } from 'lucide-react';
+import { Newspaper, Settings, Mountain, FileText, ClipboardList, ClipboardCheck, BookOpen, NotebookPen, TrendingUp, Users, CalendarCheck, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -17,6 +17,7 @@ const navItems = [
   { href: '/direcciones', label: 'Direcciones', icon: NotebookPen },
   { href: '/personal', label: 'Personal', icon: Users },
   { href: '/estadisticas', label: 'Estadísticas', icon: TrendingUp },
+  { href: '/historial', label: 'Historial', icon: History },
   { href: '/documentation', label: 'Información', icon: BookOpen },
 ];
 

@@ -1,49 +1,35 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useLocalStorage } from './use-local-storage';
 
 const UNITS_STORAGE_KEY = 'app-units';
 
 const initialUnits: string[] = [];
 
 export function useUnits() {
-  const [units, setUnits] = useState<string[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    try {
-      const storedUnits = localStorage.getItem(UNITS_STORAGE_KEY);
-      if (storedUnits) {
-        const parsedUnits = JSON.parse(storedUnits);
-        if (Array.isArray(parsedUnits)) {
-            setUnits(parsedUnits);
-        } else {
-            setUnits(initialUnits);
-        }
-      } else {
-          setUnits(initialUnits);
+  const [units, setUnits, isLoaded] = useLocalStorage<string[]>(
+    UNITS_STORAGE_KEY,
+    initialUnits,
+    {
+      migrate: (parsed: any) => {
+        // Ensure it's an array
+        return Array.isArray(parsed) ? parsed : initialUnits;
+      },
+      onError: (error, operation) => {
+        console.error(`Failed to ${operation} units:`, error);
       }
-    } catch (error) {
-      console.error('Failed to load units from localStorage', error);
-      setUnits(initialUnits);
-    } finally {
-        setIsLoaded(true);
     }
-  }, []);
+  );
 
   const saveUnits = useCallback((newUnits: string[]) => {
     setUnits(newUnits);
-    try {
-      localStorage.setItem(UNITS_STORAGE_KEY, JSON.stringify(newUnits));
-    } catch (error) {
-      console.error('Failed to save units to localStorage', error);
-    }
-  }, []);
+  }, [setUnits]);
 
   const clearAllUnits = useCallback(() => {
-    saveUnits(initialUnits);
-  }, [saveUnits]);
+    setUnits(initialUnits);
+  }, [setUnits]);
 
   return { units, saveUnits, isLoaded, clearAllUnits };
 }

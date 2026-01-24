@@ -127,12 +127,8 @@ const validateSemantics = (
                     }
                 }
             } else if (!operator || operator === '=') {
-                // Si usa = con valor numérico pero no es dropdown, advertir
-                if (/^\d+$/.test(value)) {
-                    errors.push(
-                        `El campo '{${fieldId}}' se usa en un condicional pero no es un dropdown. Los condicionales solo funcionan con dropdowns.`
-                    );
-                }
+                // Validación opcional: podriamos advertir si parece numérico pero no es dropdown
+                // pero ahora permitimos todo tipo de comparaciones.
             }
         }
     });
@@ -418,7 +414,10 @@ function parseContentRecursive(
 /**
  * Evalúa una condición usando el operador especificado
  */
-function evaluateCondition(fieldValue: any, operator: string, targetValue: string): boolean {
+/**
+ * Evalúa una condición usando el operador especificado
+ */
+export function evaluateCondition(fieldValue: any, operator: string, targetValue: string): boolean {
     const sValue = String(fieldValue || '').trim();
     const tValue = String(targetValue || '').trim();
 
@@ -439,15 +438,18 @@ function evaluateCondition(fieldValue: any, operator: string, targetValue: strin
         }
     }
 
-    // Comparación de strings
+    // Comparación de strings (case insensitive para mayor facilidad)
+    const sValueLower = sValue.toLowerCase();
+    const tValueLower = tValue.toLowerCase();
+
     switch (operator) {
-        case '!=': return sValue !== tValue;
-        case '>': return sValue > tValue;
-        case '<': return sValue < tValue;
-        case '>=': return sValue >= tValue;
-        case '<=': return sValue <= tValue;
+        case '!=': return sValueLower !== tValueLower;
+        case '>': return sValueLower > tValueLower; // Alfabético
+        case '<': return sValueLower < tValueLower;
+        case '>=': return sValueLower >= tValueLower;
+        case '<=': return sValueLower <= tValueLower;
         case '=':
-        default: return sValue === tValue;
+        default: return sValueLower === tValueLower;
     }
 }
 

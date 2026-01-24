@@ -117,7 +117,10 @@ export default function PlantillasPage() {
   };
 
   const handleUpdateTemplateContent = (id: string, updates: Partial<Template>) => {
-    updateTemplate(id, updates);
+    const currentTemplate = templates.find(t => t.id === id);
+    if (currentTemplate) {
+      updateTemplate({ ...currentTemplate, ...updates });
+    }
     setEditingTemplate(null);
   };
 
@@ -469,6 +472,24 @@ El motivo fue {Motivo:dropdown(Accidente Leve=Un accidente leve.|Incendio=Un inc
 
 El reporte fue cerrado por {Funcionario a Cargo}.`}
               </div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-base mb-2">7. Automatización de Estadísticas (Reglas Condicionales)</h4>
+              <p>Además de la categoría por defecto, puedes configurar reglas para que el reporte se clasifique automáticamente según el contenido.</p>
+              <ul className="list-disc list-inside mt-2 space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <strong>Cómo funciona:</strong> El sistema evalúa el valor de un campo específico. Si coincide con tu regla, suma a la categoría que definas en lugar de la categoría por defecto.
+                </li>
+                <li>
+                  <strong>Configuración:</strong> En el panel "Editar Plantilla" (o al crear una nueva):
+                  <ol className="list-decimal list-inside pl-4 mt-1 space-y-1">
+                    <li>Haz clic en <span className="inline-flex items-center justify-center border rounded px-1 h-5 text-xs bg-muted">+ Regla</span>.</li>
+                    <li>Selecciona el <strong>Campo</strong> que determinará la estadística (ej: <code>Motivo</code>).</li>
+                    <li>Escribe el <strong>Valor</strong> exacto que debe tener (ej: <code>Falsa Alarma</code>).</li>
+                    <li>Escribe la <strong>Categoría Resultado</strong> donde se debe sumar (ej: <code>LLAMADA DE EMERGENCIA - FALSA ALARMA</code>).</li>
+                  </ol>
+                </li>
+              </ul>
             </div>
             <div className="border-t pt-4 space-y-4">
               <div>

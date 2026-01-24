@@ -22,12 +22,6 @@ export interface StaffMember {
   rank?: string; // Hierarchy / Rank
   roleId?: string;
   status?: PersonnelStatus;
-  specialties?: string[];
-  bloodType?: string;
-  emergencyContact?: string;
-  email?: string;
-  phone?: string;
-  joinDate?: string;
   department?: string;
 }
 
@@ -68,6 +62,15 @@ export interface Report {
   isRelevant: boolean;
   status?: 'En proceso' | 'Finalizado';
   formData?: Record<string, any>;
+}
+
+export interface GuardReport {
+  id: string;
+  date: string; // Date of the report/guard (ISO string)
+  generatedAt: string; // Timestamp of saving (ISO string)
+  guardGroup?: string; // e.g. "Guardia A" or "Guardia B" based on active guard
+  content: string; // The full text content of the report
+  summary?: string; // Short summary or title, e.g. "Reporte de Cierre - [Date]"
 }
 
 export type FieldType = 'text' | 'textarea' | 'date' | 'predefined' | 'time-hlv' | 'multi-text' | 'dropdown';

@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { PlusCircle, Trash2 } from 'lucide-react';
-import { parseTemplate, renderFinalReport } from '@/lib/template-parser';
+import { parseTemplate, renderFinalReport, evaluateCondition } from '@/lib/template-parser';
 import { cn } from '@/lib/utils';
 import { TimeHlvInput } from '@/components/time-hlv-input';
 import { DatePicker } from '@/components/date-picker';
@@ -378,10 +378,51 @@ function SectionRenderer(props: { section: SectionConfig, config: TemplateConfig
         // Logic to evaluate condition
         const fieldConfig = config.fields[condition.fieldId];
         const options = fieldConfig?.snippetOptions || [];
-        const selectedIndex = options.findIndex(opt => opt.label === actualValue);
 
-        if (String(selectedIndex) !== condition.value) {
-            return null;
+        // Legacy: Check if condition is checking for a specific index of a dropdown
+        // This is kept for backward compatibility with existing templates using [?{Field}=0]
+        if (fieldConfig?.type === 'dropdown' && /^\d+$/.test(condition.value)) {
+            const selectedIndex = options.findIndex(opt => opt.label === actualValue);
+            // Only use index logic if the value matches an index
+            if (selectedIndex !== -1) {
+                // Check if it matches exactly
+                if (String(selectedIndex) === condition.value) {
+                    // Condition met by index
+                } else {
+                    return null;
+                }
+            } else {
+                // If value is not in options (maybe free text?) or didn't match index logic
+                // Fallback to standard evaluation below
+                // Wait, if users wrote [?{Motivo}=0] and value is "Accidente", we must map "Accidente" -> Index and compare.
+                // If selectedIndex != condition.value, then it DOES NOT MATCH.
+
+                // However, we now want to allow [?{Motivo}=Accidente].
+                // If condition.value is "Accidente", /^\d+$/ is false. It goes to standard eval.
+
+                // If condition.value is "0":
+                // Case A: Motivo="Accidente" (which is index 0). selectedIndex=0. "0"==="0". Match.
+                // Case B: Motivo="Otro" (index 1). selectedIndex=1. "1"!=="0". No Match.
+
+                if (String(selectedIndex) !== condition.value) return null;
+            }
+        } else {
+            // Standard Evaluation using the shared logic (handles strings, numbers, operators)
+            // We need to import evaluateCondition from template-parser.
+            // Since we can't easily add the import in this scoped replace, we'll implement a safe local check
+            // or assume evaluateCondition is available if we add the import.
+            // Let's rely on adding the import statement in a separate replacement or use a MultiReplace to do both.
+
+            // For now, let's duplicate the simple string check to ensure strictness if import is hard?
+            // No, the task is to use the parser logic. I will add the import in a previous step or next step.
+            // Wait, I cannot add imports easily with replace_file_content if I don't target the top.
+            // I will assume I can add the import at the top of this file in a separate call or modify this block to not need it?
+            // Actually, evaluateCondition IS simple enough to inline here if I want to avoid Top-File edits multiple times.
+            // BUT, consistency is key. I'll use evaluateCondition and fix imports in next step.
+
+            if (!evaluateCondition(actualValue, condition.operator || '=', condition.value)) {
+                return null;
+            }
         }
     }
 

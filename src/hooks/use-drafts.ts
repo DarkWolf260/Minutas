@@ -1,49 +1,34 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { toast } from 'sonner';
 import type { ReportDraft } from '@/types';
+import { useLocalStorage } from './use-local-storage';
 
 const DRAFT_STORAGE_KEY = 'app-report-draft';
 
 export function useDrafts() {
-  const [draft, setDraft] = useState<ReportDraft | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    try {
-      const storedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
-      if (storedDraft) {
-        setDraft(JSON.parse(storedDraft));
+  const [draft, setDraft, isLoaded] = useLocalStorage<ReportDraft | null>(
+    DRAFT_STORAGE_KEY,
+    null,
+    {
+      onError: (error, operation) => {
+        console.error(`Failed to ${operation} draft:`, error);
+        if (operation === 'save' && error instanceof Error && error.name === 'QuotaExceededError') {
+          toast.error('No hay espacio para guardar el borrador.');
+        }
       }
-    } catch (error) {
-      console.error('Failed to load draft from localStorage', error);
-    } finally {
-      setIsLoaded(true);
     }
-  }, []);
+  );
 
   const saveDraft = useCallback((newDraft: ReportDraft) => {
-    try {
-      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(newDraft));
-      setDraft(newDraft);
-    } catch (error) {
-      console.error('Failed to save draft to localStorage', error);
-      if (error instanceof Error && error.name === 'QuotaExceededError') {
-        toast.error('No hay espacio para guardar el borrador.');
-      }
-    }
-  }, []);
+    setDraft(newDraft);
+  }, [setDraft]);
 
   const clearDraft = useCallback(() => {
-    try {
-      localStorage.removeItem(DRAFT_STORAGE_KEY);
-      setDraft(null);
-    } catch (error) {
-      console.error('Failed to clear draft from localStorage', error);
-    }
-  }, []);
+    setDraft(null);
+  }, [setDraft]);
 
   return { draft, saveDraft, clearDraft, isLoaded };
 }

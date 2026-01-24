@@ -1,0 +1,407 @@
+export const DEFAULT_ADDRESSES = [
+    {
+        id: "default_1",
+        name: "Sede de Protección Civil Guanta",
+        street: "Calle Oriente",
+        municipality: "Guanta",
+        parish: "Guanta",
+        sector: "La Picha",
+        peaceQuadrant: "#02 (PoliGuanta)",
+        latitude: "10.237117",
+        longitude: "-64.601718"
+    },
+    {
+        id: "default_2",
+        name: "Ambulatorio Dr. José David Sambrano",
+        municipality: "Guanta",
+        parish: "Guanta",
+        sector: "La Montañita",
+        peaceQuadrant: "#02 (PoliGuanta)",
+        latitude: "10.237724",
+        longitude: "-64.598292"
+    },
+    {
+        id: "default_3",
+        name: "SRI Eumelides Gutiérrez Rojas",
+        municipality: "Guanta",
+        parish: "Guanta",
+        sector: "La Montañita",
+        peaceQuadrant: "#02 (PoliGuanta)",
+        latitude: "10.237789",
+        longitude: "-64.598037"
+    },
+    {
+        id: "default_4",
+        name: "CDI Tito Gonzales Heredia",
+        municipality: "Guanta",
+        parish: "Chorrerón",
+        sector: "Casco Central",
+        peaceQuadrant: "#04 (PoliGuanta)",
+        latitude: "10.227816",
+        longitude: "-64.589314"
+    },
+    {
+        id: "default_5",
+        name: "IVSS Dr. Cesar Rodríguez",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        sector: "Urb. Guaraguao",
+        peaceQuadrant: "#01 (CPNB)",
+        latitude: "10.234026",
+        longitude: "-64.627798"
+    },
+    {
+        id: "default_6",
+        name: "Policlínica de PLC",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        sector: "Casco Central",
+        peaceQuadrant: "#03 (PoliSotillo)",
+        latitude: "10.222712",
+        longitude: "-64.632813"
+    },
+    {
+        id: "default_7",
+        name: "Centro Clínico Santa Ana",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        sector: "Urb. Caribe",
+        peaceQuadrant: "#10 (PoliAnzoátegui)",
+        latitude: "10.209308",
+        longitude: "-64.637369"
+    },
+    {
+        id: "default_8",
+        name: "Centro Clínico Vital Salud",
+        street: "Av. Bolívar, Beg Center",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        peaceQuadrant: "#10 (PoliAnzoátegui)",
+        latitude: "10.209045",
+        longitude: "-64.636814"
+    },
+    {
+        id: "default_9",
+        name: "Clínica Popular Jesús de Nazareth",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        sector: "Guanire",
+        peaceQuadrant: "#05 (PoliSotillo)",
+        latitude: "10.206559",
+        longitude: "-64.623814"
+    },
+    {
+        id: "default_10",
+        name: "Policlínica San José",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        sector: "Sierra Maestra",
+        peaceQuadrant: "#09 (PoliSotillo)",
+        latitude: "10.190798",
+        longitude: "-64.640190"
+    },
+    {
+        id: "default_11",
+        name: "Centro Médico Quirúrgico San Francisco",
+        street: "Calle Miranda, Edif. Centro Art Profesional #36",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        peaceQuadrant: "P-03 (PoliSotillo)",
+        latitude: "10.222506",
+        longitude: "-64.633414"
+    },
+    {
+        id: "default_12",
+        name: "CDI Donato Carmona",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        sector: "Guanire",
+        peaceQuadrant: "#05 (PoliSotillo)",
+        latitude: "10.205880",
+        longitude: "-64.617370"
+    },
+    {
+        id: "default_13",
+        name: "Clínica Santa Lucila",
+        street: "Calle Freites",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        sector: "Casco Central",
+        peaceQuadrant: "#03 (PoliSotillo)",
+        latitude: "10.221468",
+        longitude: "-64.633113"
+    },
+    {
+        id: "default_14",
+        name: "Centro de Especialidades Médicas Virgen Del Valle",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        sector: "Chuparín Central",
+        peaceQuadrant: "#05 (PoliSotillo)",
+        latitude: "10.204888",
+        longitude: "-64.627785"
+    },
+    {
+        id: "default_15",
+        name: "Centro Médico Meditotal",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        sector: "Casco Central",
+        peaceQuadrant: "#03 (PoliSotillo)",
+        latitude: "10.220941",
+        longitude: "-64.632851"
+    },
+    {
+        id: "default_16",
+        name: "Clínica Industrial PDVSA Puerto la Cruz",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        sector: "Urb. Gulf",
+        peaceQuadrant: "#04 (PoliAnzoátegui)",
+        latitude: "10.212031",
+        longitude: "-64.623297"
+    },
+    {
+        id: "default_17",
+        name: "Clínica La Trinidad",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        sector: "Urb. Gulf",
+        peaceQuadrant: "#05 (PoliSotillo)",
+        latitude: "10.206576",
+        longitude: "-64.626468"
+    },
+    {
+        id: "default_18",
+        name: "Av. Municipal",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        sector: "Sector Casco Central",
+        peaceQuadrant: "#03(PoliSotillo)",
+        latitude: "10.216613",
+        longitude: "-64.632520"
+    },
+    {
+        id: "default_19",
+        name: "Centro Médico Briceño",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Pozuelos",
+        sector: "Tierra Adentro",
+        peaceQuadrant: "#11 (PoliSotillo)",
+        latitude: "10.197951",
+        longitude: "-64.633426"
+    },
+    {
+        id: "default_20",
+        name: "Centro Nefrológico Nor-Oriental",
+        street: "Av. Municipal",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        sector: "Bella Vista",
+        peaceQuadrant: "#10 (PoliAnzoategui)",
+        latitude: "10.203696",
+        longitude: "-64.634909"
+    },
+    {
+        id: "default_21",
+        name: "CDI Fabricio Ojeda",
+        street: "Av. Municipal",
+        municipality: "Juan Antonio Sotillo",
+        parish: "Puerto La Cruz",
+        sector: "Bella Vista",
+        peaceQuadrant: "#10 (PoliAnzoategui)",
+        latitude: "10.201180",
+        longitude: "-64.635378"
+    },
+    {
+        id: "default_22",
+        name: "Unidad Medica Docente Las Garzas",
+        street: "Calle Sur 4",
+        municipality: "Simón Bolívar",
+        parish: "El Carmen",
+        sector: "Las Garzas",
+        peaceQuadrant: "#03 (CPNB)",
+        latitude: "10.179382",
+        longitude: "-64.666698"
+    },
+    {
+        id: "default_23",
+        name: "H. U. Dr. Luis Razetti",
+        municipality: "Simón Bolívar",
+        parish: "El Carmen",
+        peaceQuadrant: "#02 (CPNB)",
+        latitude: "10.158261",
+        longitude: "-64.637787"
+    },
+    {
+        id: "default_24",
+        name: "Hospital Rafael Tobias Guevara",
+        municipality: "Simón Bolívar",
+        parish: "El Carmen",
+        peaceQuadrant: "#02 (CPNB)",
+        latitude: "10.159203",
+        longitude: "-64.638691"
+    },
+    {
+        id: "default_25",
+        name: "Summasalud",
+        street: "Av. Intercomunal, Centro Empresarial Nueva Prensa",
+        municipality: "Simón Bolívar",
+        parish: "El Carmen",
+        peaceQuadrant: "#03 (CPNB)",
+        latitude: "10.180874",
+        longitude: "-64.662246"
+    },
+    {
+        id: "default_26",
+        name: "IVSS Dr. Domingo Guzmán Lander",
+        municipality: "Simón Bolívar",
+        parish: "El Carmen",
+        sector: "Las Garzas",
+        peaceQuadrant: "#03 (CPNB)",
+        latitude: "10.178840",
+        longitude: "-64.662738"
+    },
+    {
+        id: "default_27",
+        name: "Centro Médico Zambrano",
+        street: "Av. Caracas",
+        municipality: "Simón Bolívar",
+        parish: "San Cristóbal",
+        peaceQuadrant: "#12 (CPNB)",
+        latitude: "10.136455",
+        longitude: "-64.691254"
+    },
+    {
+        id: "default_28",
+        name: "CDI Miguel Noguera",
+        municipality: "Simón Bolívar",
+        parish: "El Carmen",
+        sector: "Mesones",
+        peaceQuadrant: "#23 (CPNB)",
+        latitude: "10.090273",
+        longitude: "-64.671694"
+    },
+    {
+        id: "default_29",
+        name: "SENAMECF",
+        street: "Tronconal 3ro",
+        municipality: "Simón Bolívar",
+        parish: "El Carmen",
+        peaceQuadrant: "#06 (CPNB)",
+        latitude: "10.159214",
+        longitude: "-64.672162"
+    },
+    {
+        id: "default_30",
+        name: "Clínica Nuestra Señora de la Candelaria (FASGANZ)",
+        municipality: "Simón Bolívar",
+        parish: "El Carmen",
+        peaceQuadrant: "#07 (CPNB)",
+        latitude: "10.164315",
+        longitude: "-64.683666"
+    },
+    {
+        id: "default_31",
+        name: "Hospital Militar tipo I Coronel Jorge Marcano",
+        municipality: "Simón Bolívar",
+        parish: "San Cristóbal",
+        sector: "La Ponderosa",
+        peaceQuadrant: "#21 (PoliBolívar)",
+        latitude: "10.106602",
+        longitude: "-64.695410"
+    },
+    {
+        id: "default_32",
+        name: "Centro de Especialidades Médicas Colina",
+        street: "Av. Guzman Lander",
+        municipality: "Simón Bolívar",
+        parish: "El Carmen",
+        sector: "Colinas del Neverí",
+        peaceQuadrant: "#08 (PoliBolívar)",
+        latitude: "10.161255",
+        longitude: "-64.685265"
+    },
+    {
+        id: "default_33",
+        name: "Maxiimagenes",
+        street: "Av. Municipal",
+        municipality: "Simón Bolívar",
+        parish: "El Carmen",
+        peaceQuadrant: "#07 (CPNB)",
+        latitude: "10.163821",
+        longitude: "-64.683719"
+    },
+    {
+        id: "default_34",
+        name: "Servicio de Oncología y Hematología",
+        street: "Av. Fuerzas Armadas, C.C. Neverí Plaza",
+        municipality: "Simón Bolívar",
+        parish: "San Cristóbal",
+        peaceQuadrant: "#16 (PoliBolívar)",
+        latitude: "10.148998",
+        longitude: "-64.685383"
+    },
+    {
+        id: "default_35",
+        name: "IPASME",
+        street: "Av. Fraternidad",
+        municipality: "Simón Bolívar",
+        parish: "El Carmen",
+        peaceQuadrant: "# 02 (CPNB)",
+        latitude: "10.175450",
+        longitude: "-64.679699"
+    },
+    {
+        id: "default_36",
+        name: "CDI Alberto Lovera",
+        street: "Carrera 7",
+        municipality: "Lcdo. Diego Bautista Urbaneja",
+        parish: "Lechería",
+        sector: "Casco Central",
+        peaceQuadrant: "#01 (PoliUrbaneja)",
+        latitude: "10.197292",
+        longitude: "-64.694793"
+    },
+    {
+        id: "default_37",
+        name: "Day Hospital",
+        street: "Av. Diego Bautista Urbaneja",
+        municipality: "Lcdo. Diego Bautista Urbaneja",
+        parish: "Lechería",
+        sector: "Casco Central",
+        peaceQuadrant: "#01 (PoliUrbaneja)",
+        latitude: "10.196544",
+        longitude: "-64.691653"
+    },
+    {
+        id: "default_38",
+        name: "Centro Médico Anzoátegui",
+        street: "Av. Diego Bautista Urbanejal",
+        municipality: "Lcdo. Diego Bautista Urbaneja",
+        parish: "Lechería",
+        peaceQuadrant: "#03 (PoliAnzoátegui)",
+        latitude: "10.175319",
+        longitude: "-64.684251"
+    },
+    {
+        id: 'default_39',
+        name: 'Puente La Volca',
+        municipality: 'Guanta',
+        parish: 'Chorrerón',
+        peaceQuadrant: '#04 (PoliGuanta)',
+        latitude: '10.222956',
+        longitude: '-64.588889'
+    },
+    {
+        id: 'default_40',
+        name: 'Plaza Miranda',
+        municipality: 'Guanta',
+        parish: 'Guanta',
+        sector: 'Casco Central',
+        peaceQuadrant: '#01 (PoliGuanta)',
+        latitude: '10.241556',
+        longitude: '-64.591694'
+    }
+];
+

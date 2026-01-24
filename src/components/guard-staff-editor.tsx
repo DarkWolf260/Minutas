@@ -56,11 +56,11 @@ export function StaffListEditor({ label, staffMembers, isSingle, onUpdate }: Sta
         const query = searchQuery.toLowerCase().trim();
         const activePersonnel = personnel.filter(p => p.status === 'activo' || !p.status);
 
-        if (!query) return activePersonnel.slice(0, 5);
+        if (!query) return activePersonnel.slice(0, 50); // Show up to 50 without search
         return activePersonnel.filter(p =>
             p.name.toLowerCase().includes(query) ||
             (p.cedula && p.cedula.includes(query))
-        ).slice(0, 10);
+        ); // Show all results when searching
     }, [personnel, searchQuery]);
 
     const canAdd = !isSingle || (isSingle && staffMembers.length === 0);
@@ -95,7 +95,7 @@ export function StaffListEditor({ label, staffMembers, isSingle, onUpdate }: Sta
                                 </div>
                             </PopoverAnchor>
                             <PopoverContent
-                                className="p-0 border-none shadow-xl rounded-md"
+                                className="p-0 border-none shadow-xl rounded-md w-80"
                                 align="start"
                                 sideOffset={5}
                                 onOpenAutoFocus={(e) => e.preventDefault()}
@@ -106,13 +106,22 @@ export function StaffListEditor({ label, staffMembers, isSingle, onUpdate }: Sta
                                     }
                                 }}
                             >
-                                <div className="bg-popover border rounded-md overflow-hidden w-[var(--radix-popover-anchor-width)]">
-                                    <div className="max-h-60 overflow-y-auto custom-scrollbar p-1">
+                                <div className="bg-popover border rounded-md overflow-hidden">
+                                    {/* Fixed header outside scroll */}
+                                    <div className="px-2 py-2 text-[10px] uppercase font-bold text-muted-foreground/70 tracking-widest bg-muted/30 border-b">
+                                        Personal Disponible
+                                    </div>
+                                    {/* Scrollable content */}
+                                    <div
+                                        className="max-h-[380px] overflow-y-auto p-1"
+                                        style={{ scrollbarWidth: 'thin' }}
+                                        onWheel={(e) => {
+                                            // Prevent popover from blocking wheel events
+                                            e.stopPropagation();
+                                        }}
+                                    >
                                         {filteredPersonnel.length > 0 ? (
                                             <div className="space-y-0.5">
-                                                <div className="px-2 py-1.5 text-[10px] uppercase font-bold text-muted-foreground/50 tracking-widest sticky top-0 bg-popover z-10">
-                                                    Personal Disponible
-                                                </div>
                                                 {filteredPersonnel.map(p => {
                                                     const isSelected = staffMembers.some(m => m.id === p.id || m.personnelId === p.id);
                                                     return (
@@ -127,7 +136,7 @@ export function StaffListEditor({ label, staffMembers, isSingle, onUpdate }: Sta
                                                             onClick={() => handleAdd(p)}
                                                         >
                                                             <div className="flex flex-col items-start min-w-0 flex-1">
-                                                                <span className="font-bold truncate w-full">{p.name}</span>
+                                                                <span className="font-bold w-full">{p.name}</span>
                                                                 <span className="text-[10px] opacity-60 font-mono tracking-tighter">{p.cedula || 'SIN CÉDULA'}</span>
                                                             </div>
                                                             {isSelected && <Check className="h-3 w-3 ml-2 opacity-50" />}
@@ -203,9 +212,16 @@ export function GuardStaffEditor({ guard, roles, onUpdate, onSave, scopeId }: Gu
     };
 
     const availableRoles = useMemo(() => {
-        return roles.filter(role =>
-            !role.departmentScope || role.departmentScope.length === 0 || role.departmentScope.includes(scopeId)
-        );
+        return roles.filter(role => {
+            // Explicit exclusions requested by user
+            if (role.name === 'Director' || role.name === 'Jefe de Operaciones') return false;
+
+            // Explicit inclusions requested by user
+            if (role.name === 'Analista de CEMUPRAD') return true;
+
+            // Default scope logic
+            return !role.departmentScope || role.departmentScope.length === 0 || role.departmentScope.includes(scopeId);
+        });
     }, [roles, scopeId]);
 
     return (

@@ -181,12 +181,16 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
         setLocalConfig(prev => {
             const updatedFields = { ...prev.fields };
 
-            updatedFields[fieldId] = { ...(updatedFields[fieldId] || { label: fieldId }), ...newConfig };
+            updatedFields[fieldId] = {
+                ...(updatedFields[fieldId] || { label: fieldId, type: 'text' }),
+                ...newConfig
+            } as FieldConfig;
 
             if (newConfig.type === 'time-hlv') {
                 Object.keys(updatedFields).forEach(fId => {
-                    if (fId !== fieldId && updatedFields[fId].type === 'time-hlv') {
-                        updatedFields[fId].type = 'text';
+                    const field = updatedFields[fId];
+                    if (field && fId !== fieldId && field.type === 'time-hlv') {
+                        updatedFields[fId] = { ...field, type: 'text' };
                     }
                 });
             }
@@ -244,12 +248,12 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
                         <h3 className="font-semibold text-lg mb-4">Estructura del Formulario</h3>
 
                         <div className="space-y-4 p-1 rounded-md bg-muted/30">
-                            {(localConfig.layout || []).map((itemId) => {
+                            {(localConfig.layout || []).map((itemId, index) => {
                                 if (itemId.startsWith('section_') || itemId.startsWith('sec_') || itemId.startsWith('cond_')) {
                                     const section = sectionsById[itemId];
                                     if (!section) return null;
                                     return (
-                                        <Card key={section.id} className="bg-background overflow-hidden shadow-sm border-l-4 border-l-primary/30">
+                                        <Card key={`${section.id}-${index}`} className="bg-background overflow-hidden shadow-sm border-l-4 border-l-primary/30">
                                             <CardHeader className="p-3 bg-muted/40 border-b">
                                                 <div className="flex flex-col gap-2">
                                                     <div className="flex items-center justify-between">
@@ -281,13 +285,13 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
                                                 </div>
                                             </CardHeader>
                                             <CardContent className="p-2 space-y-0.5 bg-muted/5">
-                                                {section.layout?.map(fieldId => {
+                                                {section.layout?.map((fieldId, fieldIdx) => {
                                                     const fieldConfig = localConfig.fields[fieldId];
                                                     if (!fieldConfig) return null;
 
                                                     return (
                                                         <FieldEditor
-                                                            key={`${section.id}-${fieldId}`}
+                                                            key={`${section.id}-${fieldId}-${fieldIdx}`}
                                                             fieldId={fieldId}
                                                             fieldConfig={fieldConfig}
                                                             allFields={localConfig.fields}
@@ -302,7 +306,7 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
                                         </Card>
                                     );
                                 } else if (itemId === 'section_separator' || itemId === 'sec_separator') {
-                                    return <div key={itemId} className="h-px bg-foreground/20 my-4" />;
+                                    return <div key={`${itemId}-${index}`} className="h-px bg-foreground/20 my-4" />;
                                 }
                                 else {
                                     const fieldId = itemId;
@@ -313,7 +317,7 @@ export function TemplateEditor({ template, config, onConfigChange, onTemplateCha
 
                                     return (
                                         <FieldEditor
-                                            key={fieldId}
+                                            key={`top-${fieldId}-${index}`}
                                             fieldId={fieldId}
                                             fieldConfig={fieldConfig}
                                             allFields={localConfig.fields}

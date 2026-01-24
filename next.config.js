@@ -1,10 +1,13 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-  /* config options here */
+  reactStrictMode: true,
+
   typescript: {
-    ignoreBuildErrors: true,
+    // Remove ignoreBuildErrors for better type safety
+    // ignoreBuildErrors: false,
   },
+
   images: {
     remotePatterns: [
       {
@@ -15,6 +18,10 @@ const nextConfig = {
       },
     ],
   },
+
+  // Performance optimizations
+  poweredByHeader: false,
+  compress: true,
 };
 
 module.exports = nextConfig;

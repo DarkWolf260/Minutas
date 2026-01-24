@@ -53,9 +53,16 @@ export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, o
         }
     }, [initialTemplate]);
 
+    // State for UI toggles
+    const [showRules, setShowRules] = useState(false);
+
+    // ... existing hooks ...
+
     const { definitions } = useFieldDefinitions();
     const { addTemplate } = useTemplates();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // ... preview logic ...
 
     // Creates a temporary template object for the preview
     const previewTemplate = useMemo<Template>(() => ({
@@ -70,15 +77,11 @@ export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, o
 
     // Creates a temporary config for the preview
     const previewConfig = useMemo<TemplateConfig>(() => {
-        const { sections, layout, fieldNames, fieldTypes, templateOptions } = parseTemplate(templateContent);
-
-        // Basic config construction similar to ReportForm's internal logic, 
-        // but we rely on ReportForm to do the heavy lifting of merging with definitions.
-        // Pass minimal config.
+        const { sections, layout } = parseTemplate(templateContent);
         return {
             sections,
             layout,
-            fields: {} // Validation and types will be handled by ReportForm's parser
+            fields: {}
         };
     }, [templateContent]);
 
@@ -140,6 +143,7 @@ export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, o
             setStatisticsCategory('');
             setStatisticsRules([]);
         }
+        toast.success(isEditing ? 'Plantilla actualizada' : 'Plantilla creada');
     };
 
     const handlePreviewReport = () => {
@@ -153,100 +157,106 @@ export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, o
     const globalTags = Object.keys(definitions).map(key => definitions[key]);
 
     const commonSnippets = [
-        { name: 'Sección Simple', value: '["Título de la sección" {Campo1} {Campo2}]' },
-        { name: 'Sección Repetible', value: '["Título de la sección"]* {Campo}' },
-        { name: 'S. Avanzada', value: '[singular="DATOS DEL LESIONADO" plural="DATOS DE LOS LESIONADOS" sub="Lesionado"]*\n- Nombre: {Nombre}\n- Cédula: {Cédula}\n' },
-        { name: 'Separador', value: '[""]' },
-        { name: 'Fecha', value: '{Fecha:date}' },
-        { name: 'Hora HLV', value: '{Hora:time-hlv}' },
-        { name: 'Dropdown', value: '{Motivo:dropdown(Opción A=Valor A|Opción B=Valor B)}' },
-        { name: 'Área de Texto', value: '{Observaciones:textarea}' },
+        { name: 'Sección', value: '["Título" {Campo}]' },
+        { name: 'S. Repet', value: '["Título"]* {Campo}' },
+        { name: 'S. Cond', value: '[?{Campo}=Val]\n["Título"]\n{Campo}\n[/]\n' },
+        { name: 'Fecha', value: '{Fecha}' },
+        { name: 'Hora', value: '{Hora}' },
+        { name: 'Lista', value: '{Campo:dropdown(A=1|B=2)}' },
     ];
 
     const parseFieldNames = (content: string) => {
-        // Simple regex to extract field names {FieldName} or {FieldName:type}
         const matches = content.match(/\{([a-zA-Z0-9_\u00C0-\u00FF\s]+)(:[^}]+)?\}/g);
         if (!matches) return [];
         return matches.map(m => {
             const clean = m.replace('{', '').replace('}', '');
             return clean.split(':')[0].trim();
-        }).filter((v, i, a) => a.indexOf(v) === i); // Unique
+        }).filter((v, i, a) => a.indexOf(v) === i);
     };
 
     const availableFields = useMemo(() => parseFieldNames(templateContent), [templateContent]);
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
             <Card className="flex flex-col h-full border-muted-foreground/20 shadow-md">
-                <CardHeader className="bg-muted/30 pb-4">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <CardTitle>{isEditing ? 'Editar Plantilla' : 'Constructor de Plantilla'}</CardTitle>
-                            <CardDescription>
-                                {isEditing
-                                    ? 'Modifica el contenido de la plantilla.'
-                                    : 'Escribe tu plantilla y usa los botones para añadir etiquetas y secciones.'}
-                            </CardDescription>
+                <CardHeader className="bg-muted/30 py-3 px-4">
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                            <CardTitle className="text-base">{isEditing ? 'Editar Plantilla' : 'Nueva Plantilla'}</CardTitle>
                         </div>
                         <div className="flex gap-2">
                             {isEditing && (
-                                <Button variant="ghost" size="sm" onClick={onCancel} title="Cancelar Edición">
+                                <Button variant="ghost" size="icon" onClick={onCancel} title="Cancelar" className="h-8 w-8">
                                     <X className="h-4 w-4" />
                                 </Button>
                             )}
-                            <Button variant="outline" size="sm" onClick={onOpenInfoDialog}>
-                                <HelpCircle className="mr-2 h-4 w-4" />
-                                Guía
+                            <Button variant="ghost" size="icon" onClick={onOpenInfoDialog} className="h-8 w-8">
+                                <HelpCircle className="h-4 w-4" />
+                            </Button>
+                            <Button onClick={handleSave} size="sm" className="h-8">
+                                <Save className="mr-2 h-4 w-4" />
+                                Guardar
                             </Button>
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col gap-4 pt-4 overflow-hidden">
-                    <div className="space-y-2">
-                        <Label htmlFor="template-name">Nombre de la Plantilla</Label>
-                        <Input
-                            id="template-name"
-                            value={templateName}
-                            onChange={(e) => setTemplateName(e.target.value)}
-                            placeholder="Ej: Reporte de Accidente Vial"
-                            className="font-medium"
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="stats-category">Categoría Estadística Por Defecto</Label>
-                        <Input
-                            id="stats-category"
-                            value={statisticsCategory}
-                            onChange={(e) => setStatisticsCategory(e.target.value)}
-                            placeholder="Ej: ATENCIONES PREHOSPITALARIAS"
-                            title="Categoría por defecto si no se cumplen reglas específicas"
-                        />
-                        <p className="text-[10px] text-muted-foreground">
-                            Categoría base. Puedes añadir excepciones abajo.
-                        </p>
-                    </div>
-
-                    <div className="space-y-2 border rounded-md p-3 bg-muted/20">
-                        <div className="flex items-center justify-between mb-2">
-                            <Label className="text-xs font-semibold uppercase">Reglas Condicionales</Label>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-6 text-xs"
-                                onClick={() => setStatisticsRules([...statisticsRules, { fieldId: '', condition: 'equals', value: '', category: '' }])}
-                            >
-                                <Plus className="h-3 w-3 mr-1" /> Regla
-                            </Button>
+                <CardContent className="flex-1 flex flex-col gap-3 p-4 overflow-hidden">
+                    {/* Compact Header Row */}
+                    <div className="flex gap-3">
+                        <div className="flex-1 space-y-1">
+                            <Label htmlFor="template-name" className="text-xs text-muted-foreground">Nombre</Label>
+                            <Input
+                                id="template-name"
+                                value={templateName}
+                                onChange={(e) => setTemplateName(e.target.value)}
+                                placeholder="Nombre de la plantilla"
+                                className="h-9"
+                            />
                         </div>
+                        <div className="flex-1 space-y-1">
+                            <Label htmlFor="stats-category" className="text-xs text-muted-foreground">Categoría Estadística (Defecto)</Label>
+                            <Input
+                                id="stats-category"
+                                value={statisticsCategory}
+                                onChange={(e) => setStatisticsCategory(e.target.value)}
+                                placeholder="Ej: SIN NOVEDAD"
+                                className="h-9"
+                            />
+                        </div>
+                    </div>
 
-                        {statisticsRules.length === 0 ? (
-                            <p className="text-xs text-muted-foreground italic">No hay reglas definidas.</p>
-                        ) : (
-                            <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
-                                {statisticsRules.map((rule, idx) => (
-                                    <div key={idx} className="flex gap-2 items-center bg-background p-1 rounded border">
-                                        <div className="w-1/4 min-w-[80px]">
+                    {/* Collapsible Rules Section */}
+                    <div className="border rounded-md bg-muted/20">
+                        <button
+                            type="button"
+                            onClick={() => setShowRules(!showRules)}
+                            className="w-full flex items-center justify-between p-2 text-xs font-semibold hover:bg-muted/40 transition-colors"
+                        >
+                            <div className="flex items-center gap-2">
+                                <span>Reglas Condicionales {statisticsRules.length > 0 && `(${statisticsRules.length})`}</span>
+                            </div>
+                            <div className="text-muted-foreground">
+                                {showRules ? 'Ocultar' : 'Mostrar/Editar'}
+                            </div>
+                        </button>
+
+                        {showRules && (
+                            <div className="p-2 border-t space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] text-muted-foreground">Reglas automáticas basadas en valores de campos.</span>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-6 text-xs"
+                                        onClick={() => setStatisticsRules([...statisticsRules, { fieldId: '', condition: 'equals', value: '', category: '' }])}
+                                    >
+                                        <Plus className="h-3 w-3 mr-1" /> Nueva Regla
+                                    </Button>
+                                </div>
+                                <div className="space-y-1 max-h-40 overflow-y-auto">
+                                    {statisticsRules.length === 0 && <p className="text-xs text-center text-muted-foreground py-2">Sin reglas.</p>}
+                                    {statisticsRules.map((rule, idx) => (
+                                        <div key={idx} className="flex gap-1 items-center bg-background p-1 rounded border">
                                             <Select
                                                 value={rule.fieldId}
                                                 onValueChange={(val) => {
@@ -255,144 +265,131 @@ export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, o
                                                     setStatisticsRules(newRules);
                                                 }}
                                             >
-                                                <SelectTrigger className="h-7 text-xs">
+                                                <SelectTrigger className="h-6 text-xs w-[120px]">
                                                     <SelectValue placeholder="Campo" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    {availableFields.map(f => (
-                                                        <SelectItem key={f} value={f}>{f}</SelectItem>
-                                                    ))}
+                                                    {availableFields.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
                                                 </SelectContent>
                                             </Select>
+                                            <span className="text-[10px] font-bold">=</span>
+                                            <Input
+                                                className="h-6 text-xs flex-1 min-w-[60px]"
+                                                placeholder="Valor"
+                                                value={rule.value}
+                                                onChange={(e) => {
+                                                    const newRules = [...statisticsRules];
+                                                    newRules[idx].value = e.target.value;
+                                                    setStatisticsRules(newRules);
+                                                }}
+                                            />
+                                            <span className="text-[10px]">→</span>
+                                            <Input
+                                                className="h-6 text-xs flex-1 min-w-[80px]"
+                                                placeholder="Categoría"
+                                                value={rule.category}
+                                                onChange={(e) => {
+                                                    const newRules = [...statisticsRules];
+                                                    newRules[idx].category = e.target.value;
+                                                    setStatisticsRules(newRules);
+                                                }}
+                                            />
+                                            <Button
+                                                variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                                onClick={() => setStatisticsRules(statisticsRules.filter((_, i) => i !== idx))}
+                                            >
+                                                <Trash2 className="h-3 w-3" />
+                                            </Button>
                                         </div>
-                                        <div className="w-[20px] flex justify-center text-xs text-muted-foreground font-bold">=</div>
-                                        <Input
-                                            className="h-7 text-xs flex-1 min-w-[80px]"
-                                            placeholder="Valor (Ej: Atendido)"
-                                            value={rule.value}
-                                            onChange={(e) => {
-                                                const newRules = [...statisticsRules];
-                                                newRules[idx].value = e.target.value;
-                                                setStatisticsRules(newRules);
-                                            }}
-                                        />
-                                        <div className="w-[15px] flex justify-center text-xs text-muted-foreground">→</div>
-                                        <Input
-                                            className="h-7 text-xs flex-1 min-w-[100px]"
-                                            placeholder="Categoría Resultado"
-                                            value={rule.category}
-                                            onChange={(e) => {
-                                                const newRules = [...statisticsRules];
-                                                newRules[idx].category = e.target.value;
-                                                setStatisticsRules(newRules);
-                                            }}
-                                        />
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                                            onClick={() => {
-                                                setStatisticsRules(statisticsRules.filter((_, i) => i !== idx));
-                                            }}
-                                        >
-                                            <Trash2 className="h-3 w-3" />
-                                        </Button>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
 
-                    <div className="space-y-2">
-                        <Label className="text-xs font-semibold uppercase text-muted-foreground">Etiquetas Globales</Label>
-                        <ScrollArea className="h-12 w-full whitespace-nowrap">
-                            <div className="flex w-max space-x-2 pb-2">
+                    {/* Unified Toolbar */}
+                    <div className="flex flex-wrap items-center gap-2 p-1 bg-muted/30 rounded-md border text-xs">
+                        <span className="font-semibold text-muted-foreground ml-1">Insertar:</span>
+
+                        <Select onValueChange={(val) => insertText(`{${val}}`)}>
+                            <SelectTrigger className="h-7 text-xs w-[130px] bg-background border-dashed">
+                                <SelectValue placeholder="Etiqueta Global" />
+                            </SelectTrigger>
+                            <SelectContent>
                                 {globalTags.map(tag => (
-                                    <Button key={tag.label} size="sm" variant="secondary" className="h-7 text-xs" onClick={() => insertText(`{${tag.label}}`)}>
-                                        {tag.label}
-                                    </Button>
+                                    <SelectItem key={tag.label} value={tag.label}>{tag.label}</SelectItem>
                                 ))}
-                            </div>
-                        </ScrollArea>
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-xs font-semibold uppercase text-muted-foreground">Fragmentos Útiles</Label>
-                        <div className="flex flex-wrap gap-2">
+                            </SelectContent>
+                        </Select>
+
+                        <div className="w-px h-4 bg-border mx-1" />
+
+                        <div className="flex flex-wrap gap-1">
                             {commonSnippets.map(snippet => (
-                                <Button key={snippet.name} size="sm" variant="outline" className="h-7 text-xs bg-background" onClick={() => insertText(snippet.value)}>
+                                <Button
+                                    key={snippet.name}
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 px-2 text-xs hover:bg-background hover:border hover:shadow-sm"
+                                    onClick={() => insertText(snippet.value)}
+                                    title={`Insertar: ${snippet.value}`}
+                                >
                                     {snippet.name}
                                 </Button>
                             ))}
                         </div>
                     </div>
 
-                    <div className="flex-1 min-h-0 relative rounded-md border shadow-sm">
+                    {/* Editor Area - Flex 1 to fill space */}
+                    <div className="flex-1 relative rounded-md border shadow-sm min-h-[200px]">
                         <Textarea
                             ref={textareaRef}
                             value={templateContent}
                             onChange={(e) => setTemplateContent(e.target.value)}
-                            autoSize={false}
-                            className="absolute inset-0 h-full w-full font-mono text-sm leading-relaxed resize-none p-4 border-0 focus-visible:ring-0 overflow-auto"
-                            placeholder="Escribe aquí tu plantilla. Ejemplo: Siendo las {Hora}, se reporta novedad..."
+                            className="absolute inset-0 h-full w-full font-mono text-sm leading-relaxed resize-none p-4 border-0 focus-visible:ring-0"
+                            placeholder="Escribe el contenido de tu plantilla aquí..."
                         />
-                    </div>
-
-                    <div className="border-t pt-4">
-                        <div className="flex gap-2">
-                            {isEditing && (
-                                <Button variant="outline" className="flex-1" onClick={onCancel}>
-                                    Cancelar
-                                </Button>
-                            )}
-                            <Button onClick={handleSave} className="flex-1">
-                                <Save className="mr-2 h-4 w-4" />
-                                {isEditing ? 'Actualizar Plantilla' : 'Guardar Nueva Plantilla'}
-                            </Button>
-                        </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="flex flex-col h-full border-muted-foreground/20 shadow-md bg-muted/10">
-                <CardHeader className="bg-muted/30 pb-4">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <CardTitle>Vista Previa en Vivo</CardTitle>
-                            <CardDescription>Así se verá exactamente el formulario para el usuario.</CardDescription>
-                        </div>
-                        <Button variant="secondary" size="sm" onClick={handlePreviewReport}>
-                            <FileText className="mr-2 h-4 w-4" />
-                            Ver Reporte Generado
+            {/* Preview Panel */}
+            <Card className="flex flex-col h-full border-muted-foreground/20 shadow-md bg-muted/10 hidden lg:flex">
+                <CardHeader className="bg-muted/30 py-3 px-4">
+                    <div className="flex justify-between items-center">
+                        <CardTitle className="text-base">Vista Previa</CardTitle>
+                        <Button variant="secondary" size="sm" onClick={handlePreviewReport} className="h-8 text-xs">
+                            <FileText className="mr-2 h-3 w-3" />
+                            Generar Texto
                         </Button>
                     </div>
                 </CardHeader>
                 <CardContent className="flex-1 p-0 overflow-hidden relative">
-                    <div className="absolute inset-0 overflow-auto p-4 sm:p-6">
-                        <div className="max-w-3xl mx-auto pointer-events-none opacity-90 select-none">
-                            {/* Pointer events none effectively makes it read-only/preview-only implicitly, 
-                                though we might want to let them click to see dropdowns work etc. 
-                                Let's remove pointer-events-none to allow interaction testing. */}
-                            <div className="pointer-events-auto opacity-100">
-                                <ReportForm
-                                    ref={formRef}
-                                    template={previewTemplate}
-                                    config={previewConfig}
-                                    onSubmit={() => { }} // No-op
-                                    disabled={false} // Enable interaction
-                                />
-                            </div>
+                    <div className="absolute inset-0 overflow-auto p-4">
+                        <div className="max-w-3xl mx-auto">
+                            <ReportForm
+                                ref={formRef}
+                                template={previewTemplate}
+                                config={previewConfig}
+                                onSubmit={() => { }}
+                                disabled={false}
+                            />
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
+            {/* Mobile Preview Button (Floating) */}
+            <div className="lg:hidden fixed bottom-4 right-4 z-50">
+                <Button onClick={handlePreviewReport} className="shadow-lg rounded-full h-12 w-12" size="icon">
+                    <FileText className="h-6 w-6" />
+                </Button>
+            </div>
+
             <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
                 <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
                     <DialogHeader>
-                        <DialogTitle>Vista Previa del Reporte Final</DialogTitle>
-                        <DialogDescription>
-                            Esta es una simulación de cómo se verá el texto generado basado en los datos actuales del formulario de prueba.
-                        </DialogDescription>
+                        <DialogTitle>Vista Previa del Reporte</DialogTitle>
                     </DialogHeader>
                     <div className="flex-1 overflow-auto bg-muted/20 p-4 rounded-md border mt-2">
                         <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed">
