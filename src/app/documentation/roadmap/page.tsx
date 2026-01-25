@@ -30,7 +30,7 @@ export default function RoadmapPage() {
     return (
         <div className="p-4 sm:p-6 lg:p-8">
             <div className="max-w-4xl mx-auto">
-                 <Card className="shadow-lg">
+                <Card className="shadow-lg">
                     <CardHeader>
                         <CardTitle>Hoja de Ruta de la Aplicación</CardTitle>
                         <CardDescription>
@@ -61,7 +61,7 @@ export default function RoadmapPage() {
                                 <CompletedItem>
                                     <span className="font-semibold">Configuración General y de Personal:</span> Almacenamiento de datos del municipio, directivos y personal de cada guardia (con cédula opcional).
                                 </CompletedItem>
-                                 <CompletedItem>
+                                <CompletedItem>
                                     <span className="font-semibold">Etiquetas Dinámicas Configurables:</span> Selección del cargo para las etiquetas <Code>{'{Reporta}'}</Code> y <Code>{'{Analista}'}</Code> desde Configuración.
                                 </CompletedItem>
                                 <CompletedItem>
@@ -69,6 +69,12 @@ export default function RoadmapPage() {
                                 </CompletedItem>
                                 <CompletedItem>
                                     <span className="font-semibold">Interfaz Adaptable:</span> Diseño responsivo que se ajusta a diferentes tamaños de pantalla.
+                                </CompletedItem>
+                                <CompletedItem>
+                                    <span className="font-semibold">Control de Duplicados y Acciones Masivas:</span> Prevención de registros duplicados por Cédula y herramientas de borrado en lote.
+                                </CompletedItem>
+                                <CompletedItem>
+                                    <span className="font-semibold">Importación CSV Avanzada:</span> Soporte robusto para diferentes formatos de archivo y codificaciones (UTF-8 BOM).
                                 </CompletedItem>
                                 <CompletedItem>
                                     <span className="font-semibold">Modo Oscuro:</span> Una opción de tema oscuro para la interfaz.
@@ -88,19 +94,7 @@ export default function RoadmapPage() {
                                     <span className="font-semibold">Mejoras en el Editor de Plantillas:</span> Permitir más tipos de campos (listas desplegables, checkboxes) y validaciones.
                                 </PendingItem>
                                 <PendingItem>
-                                    Certificado SUSCERTE
-                                    <Badge variant="secondary" className="ml-2">Seguridad</Badge>
-                                </PendingItem>
-                                <PendingItem>
-                                    Hosting nacional contratado
-                                    <Badge variant="secondary" className="ml-2">Infraestructura</Badge>
-                                </PendingItem>
-                                <PendingItem>
                                     Cifrado AES-256 implementado
-                                    <Badge variant="secondary" className="ml-2">Seguridad</Badge>
-                                </PendingItem>
-                                <PendingItem>
-                                    2FA obligatorio para personal
                                     <Badge variant="secondary" className="ml-2">Seguridad</Badge>
                                 </PendingItem>
                                 <PendingItem>
@@ -126,52 +120,6 @@ export default function RoadmapPage() {
                                 💡 Ideas a Futuro
                             </h2>
                             <ul className="space-y-3">
-                                <PendingItem>
-                                    <div>
-                                        <span className="font-semibold">Sistema de Reportes Multi-Nivel:</span> Implementar un flujo de trabajo jerárquico para la creación, revisión y consolidación de reportes.
-                                        <Badge variant="secondary" className="ml-2">Arquitectura</Badge>
-
-                                        <p className="font-semibold text-card-foreground mt-4 mb-2">Fases de Desarrollo Propuestas:</p>
-
-                                        <ol className="list-decimal list-inside space-y-4 text-sm text-muted-foreground">
-                                            <li>
-                                                <span className="font-semibold text-card-foreground">Fase 1: Cimientos y Autenticación</span>
-                                                <ul className="list-disc list-inside pl-6 mt-2 space-y-1">
-                                                    <li>Desarrollo del sistema de autenticación de usuarios y gestión de roles (Operador, Supervisor, Administrador).</li>
-                                                    <li>Implementación de una base de datos centralizada para reemplazar `localStorage`.</li>
-                                                    <li>Definición de la estructura de datos para soportar los diferentes niveles y estados de los reportes.</li>
-                                                </ul>
-                                            </li>
-                                            <li>
-                                                <span className="font-semibold text-card-foreground">Fase 2: Flujo de Trabajo del Operador (Nivel Municipal)</span>
-                                                <ul className="list-disc list-inside pl-6 mt-2 space-y-1">
-                                                    <li>Adaptación de la vista de creación de reportes actual.</li>
-                                                    <li>Componente para subir evidencia (imágenes, documentos).</li>
-                                                    <li>Desarrollo de la vista "Mis Reportes" con sus estados (Borrador, Enviado, Aprobado, Rechazado).</li>
-                                                </ul>
-                                            </li>
-                                            <li>
-                                                <span className="font-semibold text-card-foreground">Fase 3: Flujo de Trabajo del Supervisor (Nivel Estadal)</span>
-                                                <ul className="list-disc list-inside pl-6 mt-2 space-y-1">
-                                                    <li>Creación del Dashboard del Supervisor para ver reportes pendientes de su región.</li>
-                                                    <li>Desarrollo del componente visualizador de reportes para revisión, con opciones para Aprobar/Rechazar.</li>
-                                                    <li>Implementación del sistema de notificaciones para comunicar el estado de los reportes al nivel municipal.</li>
-                                                </ul>
-                                            </li>
-                                            <li>
-                                                <span className="font-semibold text-card-foreground">Fase 4: Dashboard y Estadísticas (Nivel Nacional y Estadal)</span>
-                                                <ul className="list-disc list-inside pl-6 mt-2 space-y-1">
-                                                    <li>Desarrollo del Dashboard Nacional con vista consolidada de todos los reportes.</li>
-                                                    <li>Creación de componentes de visualización de datos (gráficos, tablas) para estadísticas.</li>
-                                                    <li>Implementación de filtros avanzados (por fecha, estado, municipio) y funcionalidad de exportación de datos.</li>
-                                                </ul>
-                                            </li>
-                                        </ol>
-                                    </div>
-                                </PendingItem>
-                                <PendingItem>
-                                    <span className="font-semibold">Exportación a PDF/A:</span> Generar documentos PDF/A profesionales a partir de los reportes.
-                                </PendingItem>
                                 <PendingItem>
                                     <span className="font-semibold">Notificaciones:</span> Sistema de alertas para novedades importantes o recordatorios.
                                 </PendingItem>

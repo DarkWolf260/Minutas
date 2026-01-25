@@ -165,7 +165,7 @@ export function AddEditPersonnelDialog({
                         {/* Cargo */}
                         <div className="space-y-2">
                             <Label htmlFor="role">Cargo Predeterminado</Label>
-                            <Select value={roleId} onChange Value={setRoleId}>
+                            <Select value={roleId} onValueChange={setRoleId}>
                                 <SelectTrigger id="role">
                                     <SelectValue placeholder="Seleccionar cargo..." />
                                 </SelectTrigger>
@@ -220,8 +220,8 @@ export function AddEditPersonnelDialog({
                     <div className="space-y-2">
                         <Label>Especialidades</Label>
                         <MultiInput
-                            values={specialties}
-                            onChange={setSpecialties}
+                            value={specialties}
+                            onChange={(vals) => setSpecialties(Array.isArray(vals) ? vals : [vals])}
                             placeholder="Ej. Primeros Auxilios, Rescate..."
                         />
                     </div>

@@ -55,13 +55,45 @@ export function usePersonnel() {
     );
 
     const addMember = useCallback((member: Omit<StaffMember, 'id'>) => {
+        // Prevent generic/empty cedula duplicates if provided
+        if (member.cedula && personnel.some(p => p.cedula === member.cedula)) {
+            return null;
+        }
+
         const newMember: StaffMember = {
             ...member,
             id: `personnel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         };
         setPersonnel(prev => [...prev, newMember]);
         return newMember;
-    }, [setPersonnel]);
+    }, [setPersonnel, personnel]);
+
+    const addMembers = useCallback((members: Omit<StaffMember, 'id'>[]) => {
+        const existingCedulas = new Set(personnel.filter(p => p.cedula).map(p => p.cedula));
+
+        const newMembers: StaffMember[] = [];
+        const skippedCount = { duplicates: 0 };
+
+        members.forEach(m => {
+            if (m.cedula && existingCedulas.has(m.cedula)) {
+                skippedCount.duplicates++;
+                return;
+            }
+
+            newMembers.push({
+                ...m,
+                id: `personnel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${Math.random().toString(36).substr(2, 5)}`,
+            });
+
+            if (m.cedula) existingCedulas.add(m.cedula);
+        });
+
+        if (newMembers.length > 0) {
+            setPersonnel(prev => [...prev, ...newMembers]);
+        }
+
+        return { added: newMembers, skipped: skippedCount.duplicates };
+    }, [setPersonnel, personnel]);
 
     const updateMember = useCallback((id: string, updates: Partial<StaffMember>) => {
         setPersonnel(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
@@ -71,16 +103,28 @@ export function usePersonnel() {
         setPersonnel(prev => prev.filter(m => m.id !== id));
     }, [setPersonnel]);
 
+    const removeMembers = useCallback((ids: string[]) => {
+        setPersonnel(prev => prev.filter(m => !ids.includes(m.id)));
+    }, [setPersonnel]);
+
     const savePersonnel = useCallback((newPersonnel: StaffMember[]) => {
         setPersonnel(newPersonnel);
     }, [setPersonnel]);
+
+    const isCedulaDuplicate = useCallback((cedula: string, excludeId?: string) => {
+        if (!cedula) return false;
+        return personnel.some(p => p.cedula === cedula && p.id !== excludeId);
+    }, [personnel]);
 
     return {
         personnel,
         isLoaded,
         addMember,
+        addMembers,
         updateMember,
         removeMember,
-        savePersonnel
+        removeMembers,
+        savePersonnel,
+        isCedulaDuplicate
     };
 }

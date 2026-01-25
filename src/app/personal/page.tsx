@@ -30,10 +30,23 @@ import { PersonnelTable } from './components/personnel-table';
 import { AddEditPersonnelDialog } from './components/add-edit-personnel-dialog';
 import { AttendanceManager } from './components/attendance-manager';
 import { GuardAssignmentPanel } from './components/guard-assignment-panel';
+import { downloadPersonnelTemplate, parsePersonnelCSV } from '@/lib/csv-utils';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Trash2 } from 'lucide-react';
 
 function PersonnelPageContent() {
     // Hooks
-    const { personnel, addMember, updateMember, removeMember, isLoaded: personnelLoaded, savePersonnel } = usePersonnel();
+    const {
+        personnel,
+        addMember,
+        addMembers,
+        updateMember,
+        removeMember,
+        removeMembers,
+        isLoaded: personnelLoaded,
+        savePersonnel,
+        isCedulaDuplicate
+    } = usePersonnel();
     const { roles, saveRoles, isLoaded: rolesLoaded } = useRoles();
     const { departments, saveDepartments, isLoaded: deptsLoaded } = useDepartments();
     const { guards, saveGuards, isLoaded: guardsLoaded } = useGuards();
@@ -44,6 +57,8 @@ function PersonnelPageContent() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<StaffMember | null>(null);
     const [viewHistoryMember, setViewHistoryMember] = useState<StaffMember | null>(null);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
 
     // Attendance state
     const [attendanceDate, setAttendanceDate] = useState(new Date());
@@ -75,13 +90,25 @@ function PersonnelPageContent() {
     };
 
     const handleSave = (data: Partial<StaffMember>) => {
+        // Validation: Cédula duplicate
+        if (data.cedula && isCedulaDuplicate(data.cedula, editingMember?.id)) {
+            toast.error('Ya existe una persona registrada con esta cédula');
+            return;
+        }
+
         if (editingMember) {
             // Update existing
             updateMember(editingMember.id, data);
+            toast.success('Cambios guardados');
         } else {
             // Add new - ensure name is provided
             if (data.name) {
-                addMember(data as Omit<StaffMember, 'id'>);
+                const result = addMember(data as Omit<StaffMember, 'id'>);
+                if (result) {
+                    toast.success('Personal añadido');
+                } else {
+                    toast.error('Error al añadir personal');
+                }
             }
         }
         setIsDialogOpen(false);
@@ -95,7 +122,16 @@ function PersonnelPageContent() {
 
     const handleDelete = (id: string) => {
         removeMember(id);
+        setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
         toast.success('Personal eliminado');
+    };
+
+    const handleBulkDelete = () => {
+        if (selectedIds.length === 0) return;
+        removeMembers(selectedIds);
+        setSelectedIds([]);
+        setIsBulkDeleteConfirmOpen(false);
+        toast.success(`${selectedIds.length} personas eliminadas`);
     };
 
     const handleViewHistory = (member: StaffMember) => {
@@ -106,14 +142,7 @@ function PersonnelPageContent() {
 
     // CSV Export
     const downloadTemplate = () => {
-        const csv = 'Jerarquía,Nombre y Apellido,Cédula,Cargo,Departamento,Estatus\nOPC,Juan Pérez,V-12345678,Técnico,,activo';
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'plantilla_personal.csv';
-        a.click();
-        URL.revokeObjectURL(url);
+        downloadPersonnelTemplate();
     };
 
     // CSV Import
@@ -127,29 +156,16 @@ function PersonnelPageContent() {
             if (!content) return;
 
             try {
-                const lines = content.split('\n');
-                const startIdx = lines[0]?.toLowerCase().includes('nombre') ? 1 : 0;
-                let imported = 0;
+                const importedMembers = parsePersonnelCSV(content);
+                const { added, skipped } = addMembers(importedMembers);
 
-                for (let i = startIdx; i < lines.length; i++) {
-                    const line = lines[i]?.trim();
-                    if (!line) continue;
-
-                    const parts = line.split(',').map(p => p.trim());
-                    if (parts.length >= 2 && parts[1]) {
-                        addMember({
-                            rank: parts[0] || 'OPC',
-                            name: parts[1],
-                            cedula: parts[2] || undefined,
-                            roleId: parts[3] || undefined,
-                            department: parts[4] || undefined,
-                            status: (parts[5] as any) || 'activo',
-                        });
-                        imported++;
-                    }
+                if (skipped > 0 && added.length > 0) {
+                    toast.success(`${added.length} personas importadas, ${skipped} omitidas por ser duplicadas.`);
+                } else if (skipped > 0 && added.length === 0) {
+                    toast.warning(`No se importaron datos. Todas las personas (${skipped}) ya existen.`);
+                } else {
+                    toast.success(`${added.length} personas importadas correctamente.`);
                 }
-
-                toast.success(`${imported} personas importadas correctamente`);
             } catch (error) {
                 toast.error('Error al importar el archivo CSV');
                 console.error(error);
@@ -162,11 +178,23 @@ function PersonnelPageContent() {
     return (
         <div className="container mx-auto p-8 space-y-6">
             {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold mb-2">Personal</h1>
-                <p className="text-muted-foreground">
-                    Administra el personal, sus cargos y la conformación de las guardias.
-                </p>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold mb-2">Personal</h1>
+                    <p className="text-muted-foreground">
+                        Administra el personal, sus cargos y la conformación de las guardias.
+                    </p>
+                </div>
+                {selectedIds.length > 0 && (
+                    <Button
+                        variant="destructive"
+                        onClick={() => setIsBulkDeleteConfirmOpen(true)}
+                        className="shadow-sm"
+                    >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Borrar seleccionados ({selectedIds.length})
+                    </Button>
+                )}
             </div>
 
             {/* Main Tabs */}
@@ -222,6 +250,8 @@ function PersonnelPageContent() {
                                 onEdit={handleEdit}
                                 onDelete={handleDelete}
                                 onViewHistory={handleViewHistory}
+                                selectedIds={selectedIds}
+                                onSelectionChange={setSelectedIds}
                             />
                         </CardContent>
                     </Card>
@@ -272,6 +302,15 @@ function PersonnelPageContent() {
                 departments={departments}
                 onSave={handleSave}
                 onCancel={handleCancel}
+            />
+
+            <ConfirmDialog
+                open={isBulkDeleteConfirmOpen}
+                onOpenChange={setIsBulkDeleteConfirmOpen}
+                title="¿Eliminar personal seleccionado?"
+                message={`Estás a punto de eliminar a ${selectedIds.length} personas. Esta acción no se puede deshacer.`}
+                onConfirm={handleBulkDelete}
+                variant="destructive"
             />
         </div>
     );

@@ -15,7 +15,7 @@ export default function ChangelogPage() {
     return (
         <div className="p-4 sm:p-6 lg:p-8">
             <div className="max-w-4xl mx-auto">
-                 <Card className="shadow-lg">
+                <Card className="shadow-lg">
                     <CardHeader>
                         <CardTitle>Historial de Cambios</CardTitle>
                         <CardDescription>
@@ -24,8 +24,32 @@ export default function ChangelogPage() {
                     </CardHeader>
                     <CardContent className="space-y-8 pt-6">
                         <section>
-                            <h2 className="text-xl font-semibold mb-3">Versión 0.9.0 <Badge variant="outline">Actual</Badge></h2>
-                            <p className="text-sm text-muted-foreground mb-4">Lanzada el DD/MM/AAAA.</p>
+                            <h2 className="text-xl font-semibold mb-3">Versión 1.1.0 <Badge variant="outline">Actual</Badge></h2>
+                            <p className="text-sm text-muted-foreground mb-4">Lanzada el {new Date().toLocaleDateString('es-ES')}.</p>
+                            <ul className="space-y-2 list-disc list-inside">
+                                <li><span className="font-semibold">Adaptación Móvil:</span> Refactorización completa de la interfaz para teléfonos y tabletas, incluyendo un nuevo menú lateral y navegación optimizada.</li>
+                                <li><span className="font-semibold">Mejora:</span> Rediseño del Constructor de Plantillas con doble panel y vista previa interactiva en móviles.</li>
+                                <li><span className="font-semibold">Mejora:</span> Optimización de tipografía y espaciado global para una interfaz más compacta en dispositivos pequeños.</li>
+                                <li><span className="font-semibold">Estabilidad:</span> Corrección de errores de ejecución (`TooltipProvider`) y reforzamiento de tipos en toda la aplicación.</li>
+                                <li><span className="font-semibold">Corrección:</span> Ajuste de diseño en diálogos y tablas para evitar desbordamientos en pantallas estrechas.</li>
+                            </ul>
+                        </section>
+                        <Separator />
+                        <section>
+                            <h2 className="text-xl font-semibold mb-3">Versión 1.0.0</h2>
+                            <p className="text-sm text-muted-foreground mb-4">Lanzada el 24/01/2026.</p>
+                            <ul className="space-y-2 list-disc list-inside">
+                                <li><span className="font-semibold">Nueva Funcionalidad:</span> Control de duplicados en personal basado en la Cédula (manual e importación).</li>
+                                <li><span className="font-semibold">Nueva Funcionalidad:</span> Selección múltiple y borrado masivo de personal con confirmación.</li>
+                                <li><span className="font-semibold">Mejora:</span> Importador de CSV reforzado (auto-detección de delimitadores, soporte para UTF-8 BOM y diferentes finales de línea).</li>
+                                <li><span className="font-semibold">Mejora:</span> Refactorización del almacenamiento local para mayor consistencia y rendimiento.</li>
+                                <li><span className="font-semibold">Corrección de Error:</span> Se corrigieron inconsistencias en el guardado rápido de datos de personal.</li>
+                            </ul>
+                        </section>
+                        <Separator />
+                        <section>
+                            <h2 className="text-xl font-semibold mb-3">Versión 0.9.0</h2>
+                            <p className="text-sm text-muted-foreground mb-4">Lanzada el 20/01/2026.</p>
                             <ul className="space-y-2 list-disc list-inside">
                                 <li><span className="font-semibold">Nueva Funcionalidad:</span> Añadida la opción de Cédula opcional para el personal.</li>
                                 <li><span className="font-semibold">Nueva Funcionalidad:</span> Añadida la pestaña de "Historial de Cambios" a la página de Información.</li>

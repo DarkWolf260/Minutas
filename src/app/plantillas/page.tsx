@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Upload, FileText, Trash2, HelpCircle, PlusCircle, AlertTriangle, Download, Pencil } from 'lucide-react';
+import { Upload, FileText, Trash2, HelpCircle, PlusCircle, AlertTriangle, Download, Pencil, ChevronLeft } from 'lucide-react';
 import { useTemplates } from '@/hooks/use-templates';
 import type { Template } from '@/types';
 import { TemplateEditor } from '@/components/template/template-editor';
@@ -134,26 +134,43 @@ export default function PlantillasPage() {
 
   return (
     <>
-      <div className="h-screen flex flex-col bg-muted/30">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col">
-          <TabsList className="self-center sm:self-start mb-4">
-            <TabsTrigger value="builder">Constructor</TabsTrigger>
-            <TabsTrigger value="editor">Gestionar Plantillas</TabsTrigger>
-          </TabsList>
+      <div className="flex flex-col h-[calc(100vh-3.5rem)] sm:h-screen bg-muted/30 overflow-hidden">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+          <div className="p-4 sm:px-6 sm:py-4 border-b bg-background flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold">Plantillas</h1>
+              <p className="text-sm text-muted-foreground">Gestiona y construye plantillas para reportes.</p>
+            </div>
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="builder" className="flex-1 sm:flex-initial">Constructor</TabsTrigger>
+              <TabsTrigger value="editor" className="flex-1 sm:flex-initial">Gestionar</TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="builder" className="flex-1 flex-grow overflow-hidden">
-            <TemplateBuilder
-              onOpenInfoDialog={() => setIsInfoDialogOpen(true)}
-              initialTemplate={editingTemplate}
-              onUpdate={handleUpdateTemplateContent}
-              onCancel={handleCancelEdit}
-            />
+          <TabsContent
+            value="builder"
+            className="flex-1 h-full min-h-0 m-0 p-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
+          >
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-4 sm:p-6 lg:p-8">
+              <TemplateBuilder
+                onOpenInfoDialog={() => setIsInfoDialogOpen(true)}
+                initialTemplate={editingTemplate}
+                onUpdate={handleUpdateTemplateContent}
+                onCancel={handleCancelEdit}
+              />
+            </div>
           </TabsContent>
 
-          <TabsContent value="editor" className="flex-1 flex-grow overflow-hidden">
-            <div className="flex h-full gap-6">
-              <aside className="w-96 flex-col bg-card flex rounded-lg border shadow-sm">
-                <CardHeader>
+          <TabsContent
+            value="editor"
+            className="flex-1 h-full min-h-0 m-0 p-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
+          >
+            <div className="flex flex-1 min-h-0 overflow-hidden h-full sm:p-4 gap-6">
+              <aside className={cn(
+                "h-full w-full sm:w-96 flex-col bg-card flex sm:rounded-lg border sm:shadow-sm shrink-0 min-h-0",
+                selectedTemplateId ? "hidden sm:flex" : "flex"
+              )}>
+                <CardHeader className="p-4 sm:p-6">
                   <CardTitle>Plantillas</CardTitle>
                   <CardDescription>
                     Sube y gestiona tus plantillas de reportes.
@@ -284,17 +301,32 @@ export default function PlantillasPage() {
                 </ScrollArea>
               </aside>
 
-              <main className="flex-1">
+              <main className={cn(
+                "flex-1 overflow-hidden",
+                !selectedTemplateId ? "hidden sm:block" : "block"
+              )}>
+                {selectedTemplateId && (
+                  <div className="sm:hidden border-b p-2 bg-card">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedTemplateId(null)}
+                    >
+                      <ChevronLeft className="mr-2 h-4 w-4" />
+                      Volver a la lista
+                    </Button>
+                  </div>
+                )}
                 {selectedTemplate ? (
                   <TemplateEditor
                     key={selectedTemplate.id}
                     template={selectedTemplate}
-                    config={configs[selectedTemplate.id] || {}}
+                    config={(configs[selectedTemplate.id] || { fields: {}, sections: [], layout: [] }) as any}
                     onConfigChange={(config) => updateTemplateConfig(selectedTemplate.id, config)}
                     onTemplateChange={updateTemplate}
                   />
                 ) : (
-                  <Card className="h-full flex items-center justify-center">
+                  <Card className="h-full flex items-center justify-center sm:rounded-lg">
                     <CardContent className="text-center space-y-4 p-12">
                       <FileText className="h-16 w-16 mx-auto text-muted-foreground/50" />
                       <div>

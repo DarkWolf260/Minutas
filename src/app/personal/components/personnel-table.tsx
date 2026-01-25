@@ -12,6 +12,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Search, FileEdit, Trash2, Activity } from 'lucide-react';
 import type { StaffMember, PersonnelStatus } from '@/types';
 import { cn } from '@/lib/utils';
@@ -21,19 +22,23 @@ interface PersonnelTableProps {
     onEdit: (member: StaffMember) => void;
     onDelete: (id: string) => void;
     onViewHistory: (member: StaffMember) => void;
+    selectedIds: string[];
+    onSelectionChange: (ids: string[]) => void;
 }
 
 /**
  * Personnel table component with search and filtering
  * 
  * Displays all personnel with actions for edit, delete, and view history.
- * Includes built-in search functionality.
+ * Includes built-in search functionality and multi-selection support.
  */
 export function PersonnelTable({
     personnel,
     onEdit,
     onDelete,
-    onViewHistory
+    onViewHistory,
+    selectedIds,
+    onSelectionChange
 }: PersonnelTableProps) {
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -92,13 +97,28 @@ export function PersonnelTable({
             </div>
 
             {/* Personnel Table */}
-            <div className="rounded-md border">
+            <div className="rounded-md border overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Nombre</TableHead>
-                            <TableHead>Cédula</TableHead>
-                            <TableHead>Jerarquía</TableHead>
+                            <TableHead className="w-[40px]">
+                                <Checkbox
+                                    checked={filteredPersonnel.length > 0 && selectedIds.length === filteredPersonnel.length}
+                                    onCheckedChange={(checked) => {
+                                        if (checked) {
+                                            onSelectionChange(filteredPersonnel.map(p => p.id));
+                                        } else {
+                                            onSelectionChange([]);
+                                        }
+                                    }}
+                                    aria-label="Seleccionar todos"
+                                />
+                            </TableHead>
+                            <TableHead className="w-[120px]">Jerarquía</TableHead>
+                            <TableHead className="min-w-[150px]">Nombre</TableHead>
+                            <TableHead className="hidden md:table-cell">Cédula</TableHead>
+                            <TableHead className="hidden lg:table-cell">Cargo</TableHead>
+                            <TableHead className="hidden lg:table-cell">Departamento</TableHead>
                             <TableHead>Estado</TableHead>
                             <TableHead className="text-right">Acciones</TableHead>
                         </TableRow>
@@ -106,19 +126,43 @@ export function PersonnelTable({
                     <TableBody>
                         {filteredPersonnel.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                                     {searchQuery ? 'No se encontraron resultados' : 'No hay personal registrado'}
                                 </TableCell>
                             </TableRow>
                         ) : (
                             filteredPersonnel.map((member) => (
-                                <TableRow key={member.id}>
-                                    <TableCell className="font-medium">{member.name}</TableCell>
-                                    <TableCell className="font-mono text-sm">
+                                <TableRow key={member.id} className={cn(selectedIds.includes(member.id) && "bg-muted/50")}>
+                                    <TableCell>
+                                        <Checkbox
+                                            checked={selectedIds.includes(member.id)}
+                                            onCheckedChange={(checked) => {
+                                                if (checked) {
+                                                    onSelectionChange([...selectedIds, member.id]);
+                                                } else {
+                                                    onSelectionChange(selectedIds.filter(id => id !== member.id));
+                                                }
+                                            }}
+                                            aria-label={`Seleccionar ${member.name}`}
+                                        />
+                                    </TableCell>
+                                    <TableCell>{member.rank || '-'}</TableCell>
+                                    <TableCell className="font-medium whitespace-nowrap">
+                                        <div className="flex flex-col">
+                                            <span>{member.name}</span>
+                                            <span className="text-xs text-muted-foreground md:hidden font-mono mt-0.5">
+                                                C.I. {member.cedula || 'N/A'}
+                                            </span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="hidden md:table-cell font-mono text-sm">
                                         {member.cedula || '-'}
                                     </TableCell>
-                                    <TableCell>
-                                        <Badge variant="outline">{member.rank || '-'}</Badge>
+                                    <TableCell className="hidden lg:table-cell">
+                                        {member.roleId && member.roleId !== 'none' ? member.roleId : <span className="text-muted-foreground">Sin cargo</span>}
+                                    </TableCell>
+                                    <TableCell className="hidden lg:table-cell">
+                                        {member.department && member.department !== 'none' ? member.department : <span className="text-muted-foreground italic">N/A</span>}
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant={getStatusVariant(member.status)}>
@@ -126,33 +170,35 @@ export function PersonnelTable({
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-2">
+                                        <div className="flex justify-end gap-1">
                                             <Button
                                                 variant="ghost"
-                                                size="sm"
+                                                size="icon"
+                                                className="h-8 w-8"
                                                 onClick={() => onViewHistory(member)}
-                                                aria-label={`Ver historial de ${member.name}`}
+                                                title={`Ver historial de ${member.name}`}
                                             >
                                                 <Activity className="h-4 w-4" />
                                             </Button>
                                             <Button
                                                 variant="ghost"
-                                                size="sm"
+                                                size="icon"
+                                                className="h-8 w-8"
                                                 onClick={() => onEdit(member)}
-                                                aria-label={`Editar ${member.name}`}
+                                                title={`Editar ${member.name}`}
                                             >
                                                 <FileEdit className="h-4 w-4" />
                                             </Button>
                                             <Button
                                                 variant="ghost"
-                                                size="sm"
+                                                size="icon"
+                                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                                                 onClick={() => {
                                                     if (window.confirm(`¿Eliminar a ${member.name}?`)) {
                                                         onDelete(member.id);
                                                     }
                                                 }}
-                                                className="text-destructive hover:text-destructive"
-                                                aria-label={`Eliminar ${member.name}`}
+                                                title={`Eliminar ${member.name}`}
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>

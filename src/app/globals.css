@@ -4,6 +4,15 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-size: 14px;
+  }
+  @media (min-width: 640px) {
+    html {
+      font-size: 16px;
+    }
+  }
+
   :root {
     --background: 210 33% 97%; /* Light gray (#F0F4F8) */
     --foreground: 224 71% 4%;
@@ -58,9 +67,7 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }

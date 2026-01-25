@@ -28,7 +28,7 @@ export const STATISTICS_SECTIONS: StatisticsSection[] = [
             { code: "3.3", label: "FALLECIDOS X ARMA DE FUEGO" },
             { code: "3.4", label: "FALLECIDOS X ARMA BLANCA" },
             { code: "3.5", label: "HERIDOS POR ARMA BLANCA" },
-            { code: "3.6", label: "HERIDOS POR ARMA FULGO" },
+            { code: "3.6", label: "HERIDOS POR ARMA FUEGO" },
             { code: "3.7", label: "LESIONADO POR ELECTROCUCION" }, // descartar
             { code: "3.8", label: "FALLECIDO POR ELECTROCUCION" },
             { code: "4", label: "ATENCION AL PUBLICO" }, // verificar su uso

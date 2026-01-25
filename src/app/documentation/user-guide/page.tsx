@@ -46,7 +46,7 @@ export default function UserGuidePage() {
 
     return (
         <div className="p-4 sm:p-6 lg:p-8">
-             <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto">
                 <Card className="shadow-lg">
                     <CardHeader>
                         <CardTitle>Guía de Usuario del Sistema</CardTitle>
@@ -99,7 +99,7 @@ export default function UserGuidePage() {
                                             Si un campo en tu reporte está vacío (porque es un reporte nuevo, o porque nunca lo rellenaste), la aplicación intentará rellenarlo con el valor que hayas configurado en <Badge variant="outline">Plantillas {'>'} Etiquetas Globales</Badge>. Este es el valor "por defecto".
                                         </p>
                                     </li>
-                                     <li>
+                                    <li>
                                         <span className="font-semibold text-card-foreground">El Valor Dinámico (Configuración)</span>
                                         <p className="pl-6 mt-1">
                                             Algunas etiquetas, como <Code>{'{Reporta}'}</Code> y <Code>{'{Analista}'}</Code>, no se rellenan manualmente ni tienen un valor fijo. Su contenido se genera automáticamente basado en la guardia activa y el cargo que hayas seleccionado en <Badge variant="outline">Configuración {'>'} Configuración de Etiquetas</Badge>. Esta lógica se aplica si el campo no tiene un valor guardado en el reporte.
@@ -231,6 +231,34 @@ export default function UserGuidePage() {
                                             <li><Code>["Título Informativo"]</Code>: Si una sección solo tiene un título y ningún campo, se renderiza como un encabezado: <Code>{'- *Título Informativo*'}</Code>.</li>
                                         </ul>
                                     </li>
+                                </ul>
+                            </div>
+                        </DocSection>
+                        <DocSection
+                            title="3. Gestión de Personal y Datos"
+                            description="Herramientas avanzadas para mantener actualizada tu base de datos de personal."
+                        >
+                            <div>
+                                <h3 className="font-semibold text-lg mb-2">Control de Duplicados (Cédula)</h3>
+                                <p className="text-muted-foreground leading-relaxed">
+                                    Para mantener la integridad de los datos, el sistema utiliza la <strong>Cédula</strong> como identificador único. Si intentas añadir a una persona cuya cédula ya existe (ya sea manualmente o vía CSV), el sistema te avisará. En el caso de las importaciones masivas, los duplicados se omiten automáticamente y se genera un reporte del número de personas añadidas vs. omitidas.
+                                </p>
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-lg mb-2">Acciones Masivas y Selección</h3>
+                                <p className="text-muted-foreground leading-relaxed">
+                                    La tabla de personal permite seleccionar múltiples filas usando las casillas a la izquierda. Esto habilita el botón de <strong>"Borrar seleccionados"</strong>, que permite realizar limpiezas rápidas de la base de datos tras una confirmación de seguridad.
+                                </p>
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-lg mb-2">Importación de CSV Robusta</h3>
+                                <p className="text-muted-foreground leading-relaxed">
+                                    El importador ha sido mejorado para ser compatible con una amplia gama de configuraciones regionales y editores (Excel, Notepad, Google Sheets). Soporta:
+                                </p>
+                                <ul className="list-disc list-inside mt-2 space-y-1 text-muted-foreground">
+                                    <li>Delimitadores automáticos (Coma <code>,</code> o Punto y Coma <code>;</code>).</li>
+                                    <li>Codificación UTF-8 con o sin BOM.</li>
+                                    <li>Diferentes finales de línea (Windows y Unix).</li>
                                 </ul>
                             </div>
                         </DocSection>

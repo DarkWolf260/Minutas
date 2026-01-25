@@ -20,7 +20,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, Dispatch, SetStateAction } from 'react';
+import { useState, useEffect, useCallback, useMemo, Dispatch, SetStateAction } from 'react';
 
 export interface UseLocalStorageOptions<T> {
     /**
@@ -84,20 +84,27 @@ export function useLocalStorage<T>(
         }
     }, [key]); // Only re-run if key changes
 
+    // Flag to avoid saving on initial mount/load
+    const isReady = useMemo(() => isLoaded, [isLoaded]);
+
+    // Save to localStorage when data changes
+    useEffect(() => {
+        if (!isLoaded) return;
+
+        try {
+            localStorage.setItem(key, serialize(data));
+        } catch (error) {
+            console.error(`[useLocalStorage] Failed to save "${key}":`, error);
+            onError?.(error, 'save');
+        }
+    }, [key, data, serialize, isLoaded, onError]);
+
     // Save to localStorage with support for updater functions
     const saveData = useCallback<Dispatch<SetStateAction<T>>>(
         (value) => {
-            try {
-                // Support both direct values and updater functions
-                const newValue = value instanceof Function ? value(data) : value;
-                setData(newValue);
-                localStorage.setItem(key, serialize(newValue));
-            } catch (error) {
-                console.error(`[useLocalStorage] Failed to save "${key}":`, error);
-                onError?.(error, 'save');
-            }
+            setData(value);
         },
-        [key, serialize, data, onError]
+        [setData]
     );
 
     return [data, saveData, isLoaded];

@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, FileText, AlertTriangle, Trash2, PlusCircle } from 'lucide-react';
+import { Search, FileText, AlertTriangle, Trash2, PlusCircle, ChevronLeft } from 'lucide-react';
 import { ReportViewer } from '@/components/report/report-viewer';
 import { ReportGenerator } from '@/components/report/report-generator';
 import { useReports } from '@/hooks/use-reports';
@@ -100,7 +100,7 @@ function NovedadesPageContent() {
     if (preSelectedId && reports.find(r => r.id === preSelectedId)) {
       setSelectedReportId(preSelectedId);
     } else if (filteredReports.length > 0) { // Fallback to the first report in the list.
-      setSelectedReportId(filteredReports[0].id);
+      setSelectedReportId(filteredReports[0]!.id);
     } else { // No reports to select.
       setSelectedReportId(null);
     }
@@ -160,8 +160,12 @@ function NovedadesPageContent() {
 
   return (
     <>
-      <div className="flex h-screen bg-background">
-        <aside className="h-full w-80 flex-col border-r bg-card flex">
+      <div className="flex flex-col h-[calc(100vh-3.5rem)] sm:h-screen bg-background overflow-hidden sm:flex-row">
+        {/* Sidebar / List - Hidden on mobile if a report is being viewed/created */}
+        <aside className={cn(
+          "h-full w-full sm:w-80 flex-col border-r bg-card flex",
+          (selectedReportId || creatingReport) ? "hidden sm:flex" : "flex"
+        )}>
           <div className="flex items-center justify-between border-b p-3">
             <h2 className="text-lg font-semibold">Novedades</h2>
             <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
@@ -232,23 +236,50 @@ function NovedadesPageContent() {
           </ScrollArea>
         </aside>
 
-        <main className="flex-1">
+        <main className={cn(
+          "flex-1 overflow-hidden",
+          (!selectedReportId && !creatingReport) ? "hidden sm:block" : "block"
+        )}>
+          {/* Mobile Back Button */}
+          {(selectedReportId || creatingReport) && (
+            <div className="sm:hidden border-b p-2 bg-card">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedReportId(null);
+                  setCreatingReport(null);
+                }}
+              >
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                Volver a la lista
+              </Button>
+            </div>
+          )}
+
           {creatingReport ? (
             <ReportGenerator
               key={creatingReport.id}
               template={creatingReport}
-              config={configs[creatingReport.id] || {}}
+              config={(configs[creatingReport.id] || { fields: {}, sections: [], layout: [] }) as any}
               initialData={initialDraftData}
               onCancel={handleCancelCreation}
               onSave={handleSaveNewReport}
             />
-          ) : (
+          ) : selectedReport ? (
             <ReportViewer
               key={selectedReportId}
               report={selectedReport}
               onSave={updateReport}
               onDelete={(id) => setReportToDelete(id)}
             />
+          ) : (
+            <div className="hidden sm:flex h-full items-center justify-center text-muted-foreground p-6 text-center">
+              <div className="max-w-xs space-y-2">
+                <FileText className="h-12 w-12 mx-auto opacity-20" />
+                <p>Selecciona un reporte de la lista para verlo o editarlo.</p>
+              </div>
+            </div>
           )}
         </main>
       </div>

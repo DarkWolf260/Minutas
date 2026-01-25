@@ -23,6 +23,7 @@ export interface StaffMember {
   roleId?: string;
   status?: PersonnelStatus;
   department?: string;
+  specialties?: string[];
 }
 
 export interface StaffRole {
