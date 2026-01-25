@@ -109,13 +109,16 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
     let startDate, endDate;
     const parts = periodo.split(' AL ');
     if (parts.length === 2) {
-      const [startStr, endStr] = parts;
-      const startParts = startStr.split('/');
-      const endParts = endStr.split('/');
-      if (startParts.length === 3 && endParts.length === 3) {
-        // DD/MM/YYYY -> YYYY-MM-DD for Date constructor
-        startDate = new Date(`${startParts[2]}-${startParts[1]}-${startParts[0]}T00:00:00`);
-        endDate = new Date(`${endParts[2]}-${endParts[1]}-${endParts[0]}T00:00:00`);
+      const startStr = parts[0];
+      const endStr = parts[1];
+      if (startStr && endStr) {
+        const startParts = startStr.split('/');
+        const endParts = endStr.split('/');
+        if (startParts.length === 3 && endParts.length === 3) {
+          // DD/MM/YYYY -> YYYY-MM-DD for Date constructor
+          startDate = new Date(`${startParts[2]}-${startParts[1]}-${startParts[0]}T00:00:00`);
+          endDate = new Date(`${endParts[2]}-${endParts[1]}-${endParts[0]}T00:00:00`);
+        }
       }
     }
 
@@ -134,21 +137,29 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
       if (!obj) return '';
       const keyLower = key.toLowerCase();
       const foundKey = Object.keys(obj).find(k => k.toLowerCase() === keyLower);
-      return foundKey ? obj[foundKey] : '';
+      return foundKey ? (obj[foundKey] ?? '') : '';
     };
 
     const jefeDeOperaciones = (() => {
       const key = Object.keys(staff).find(k => k.toLowerCase() === 'jefe de operaciones');
-      if (key && staff[key] && staff[key].length > 0) {
-        return formatStaffMember(staff[key][0]).trim();
+      if (key) {
+        const list = staff[key];
+        if (list && list.length > 0) {
+          const first = list[0];
+          if (first) return formatStaffMember(first).trim();
+        }
       }
       return '';
     })();
 
     const director = (() => {
       const key = Object.keys(staff).find(k => k.toLowerCase() === 'director');
-      if (key && staff[key] && staff[key].length > 0) {
-        return formatStaffMember(staff[key][0]).trim();
+      if (key) {
+        const list = staff[key];
+        if (list && list.length > 0) {
+          const first = list[0];
+          if (first) return formatStaffMember(first).trim();
+        }
       }
       return '';
     })();

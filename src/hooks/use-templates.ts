@@ -32,7 +32,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
-import type { Template, TemplateConfig } from '@/types';
+import type { Template, TemplateConfig, FieldConfig } from '@/types';
 import { parseTemplate } from '@/lib/template-parser';
 import { useFieldDefinitions } from './use-field-definitions';
 import { useSettings } from './use-settings';

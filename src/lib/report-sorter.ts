@@ -11,7 +11,7 @@ import type { Report } from '@/types';
  */
 export const findValueInFormData = (formData: Record<string, any> | undefined, keyToFind: string): any | null => {
     if (!formData) return null;
-    
+
     const lowerKeyToFind = keyToFind.toLowerCase();
 
     // Check top-level fields first
@@ -56,8 +56,15 @@ const getReportDateTime = (report: Report): Date | null => {
         return null;
     }
 
-    const hours = parseInt(timeMatch[1], 10);
-    const minutes = parseInt(timeMatch[2], 10);
+    const h = timeMatch[1];
+    const m = timeMatch[2];
+
+    if (h === undefined || m === undefined) {
+        return null;
+    }
+
+    const hours = parseInt(h, 10);
+    const minutes = parseInt(m, 10);
 
     if (isNaN(hours) || isNaN(minutes) || hours > 23 || minutes > 59) {
         return null;
@@ -110,7 +117,7 @@ export function sortReports<T extends Report>(reports: T[], direction: 'asc' | '
         const idB = parseInt(b.id.replace(/[^0-9]/g, ''), 10);
 
         if (isNaN(idA) || isNaN(idB)) return 0;
-        
+
         return (idA - idB) * directionMultiplier;
     });
 }

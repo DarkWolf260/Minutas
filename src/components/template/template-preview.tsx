@@ -47,9 +47,6 @@ function generateMockData(
                 const options = templateOptions.get(fieldName);
                 data[fieldName] = options?.[0]?.label || 'Opción 1';
                 break;
-            case 'number':
-                data[fieldName] = '42';
-                break;
             case 'textarea':
                 data[fieldName] = 'Descripción detallada de ejemplo para el campo de texto largo.';
                 break;

@@ -96,8 +96,8 @@ export function PersonnelTable({
                 </p>
             </div>
 
-            {/* Personnel Table */}
-            <div className="rounded-md border overflow-x-auto">
+            {/* Personnel Table - Desktop */}
+            <div className="rounded-md border overflow-x-auto hidden md:block">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -209,6 +209,89 @@ export function PersonnelTable({
                         )}
                     </TableBody>
                 </Table>
+            </div>
+
+            {/* Personnel Cards - Mobile */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
+                {filteredPersonnel.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-8 border rounded-lg border-dashed">
+                        {searchQuery ? 'No se encontraron resultados' : 'No hay personal registrado'}
+                    </div>
+                ) : (
+                    filteredPersonnel.map((member) => (
+                        <div key={member.id} className={cn("flex flex-col border rounded-lg p-4 space-y-3 transition-colors", selectedIds.includes(member.id) ? "bg-muted/50 border-primary/50" : "bg-card")}>
+                            <div className="flex justify-between items-start">
+                                <div className="flex gap-3">
+                                    <Checkbox
+                                        checked={selectedIds.includes(member.id)}
+                                        onCheckedChange={(checked) => {
+                                            if (checked) {
+                                                onSelectionChange([...selectedIds, member.id]);
+                                            } else {
+                                                onSelectionChange(selectedIds.filter(id => id !== member.id));
+                                            }
+                                        }}
+                                        aria-label={`Seleccionar ${member.name}`}
+                                    />
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-card-foreground leading-tight">{member.name}</span>
+                                        <span className="text-xs text-muted-foreground font-mono">C.I. {member.cedula || 'N/A'}</span>
+                                    </div>
+                                </div>
+                                <Badge variant={getStatusVariant(member.status)} className="text-[10px] uppercase px-1.5 h-5">
+                                    {getStatusLabel(member.status)}
+                                </Badge>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs border-t pt-3">
+                                <div>
+                                    <span className="text-muted-foreground block mb-0.5">Jerarquía</span>
+                                    <span className="font-medium">{member.rank || '-'}</span>
+                                </div>
+                                <div>
+                                    <span className="text-muted-foreground block mb-0.5">Cargo</span>
+                                    <span className="font-medium truncate block">
+                                        {member.roleId && member.roleId !== 'none' ? member.roleId : 'Sin cargo'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-between items-center bg-muted/30 -mx-4 -mb-4 p-2 px-4 border-t rounded-b-lg">
+                                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Acciones</span>
+                                <div className="flex gap-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => onViewHistory(member)}
+                                    >
+                                        <Activity className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => onEdit(member)}
+                                    >
+                                        <FileEdit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                        onClick={() => {
+                                            if (window.confirm(`¿Eliminar a ${member.name}?`)) {
+                                                onDelete(member.id);
+                                            }
+                                        }}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
         </div>
     );

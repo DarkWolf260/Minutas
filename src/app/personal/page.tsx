@@ -199,36 +199,40 @@ function PersonnelPageContent() {
 
             {/* Main Tabs */}
             <Tabs defaultValue="personnel" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-4 max-w-2xl">
-                    <TabsTrigger value="personnel" className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        Funcionarios
-                    </TabsTrigger>
-                    <TabsTrigger value="structure" className="flex items-center gap-2">
-                        <LayoutGrid className="h-4 w-4" />
-                        Estructura
-                    </TabsTrigger>
-                    <TabsTrigger value="guards" className="flex items-center gap-2">
-                        <ShieldCheck className="h-4 w-4" />
-                        Guardias
-                    </TabsTrigger>
-                    <TabsTrigger value="attendance" className="flex items-center gap-2">
-                        <CalendarCheck className="h-4 w-4" />
-                        Asistencia
-                    </TabsTrigger>
-                </TabsList>
+                <div className="overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <TabsList className="flex w-max sm:grid sm:w-full sm:grid-cols-4 sm:max-w-2xl">
+                        <TabsTrigger value="personnel" className="flex items-center gap-1.5 px-3">
+                            <User className="h-3.5 w-3.5" />
+                            <span className="text-xs sm:text-sm">Funcionarios</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="structure" className="flex items-center gap-1.5 px-3">
+                            <LayoutGrid className="h-3.5 w-3.5" />
+                            <span className="text-xs sm:text-sm">Estructura</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="guards" className="flex items-center gap-1.5 px-3">
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            <span className="text-xs sm:text-sm">Guardias</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="attendance" className="flex items-center gap-1.5 px-3">
+                            <CalendarCheck className="h-3.5 w-3.5" />
+                            <span className="text-xs sm:text-sm">Asistencia</span>
+                        </TabsTrigger>
+                    </TabsList>
+                </div>
 
                 {/* Personnel Tab */}
                 <TabsContent value="personnel" className="space-y-6 mt-0">
-                    <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="sm" onClick={downloadTemplate}>
-                            <Download className="mr-2 h-4 w-4" />
-                            Plantilla
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                        <Button variant="outline" size="sm" onClick={downloadTemplate} className="h-8 text-xs">
+                            <Download className="mr-1.5 h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Plantilla</span>
+                            <span className="sm:hidden">CSV</span>
                         </Button>
                         <div className="relative">
-                            <Button variant="outline" size="sm" className="relative overflow-hidden cursor-pointer">
-                                <Upload className="mr-2 h-4 w-4" />
-                                Importar CSV
+                            <Button variant="outline" size="sm" className="relative overflow-hidden cursor-pointer h-8 text-xs">
+                                <Upload className="mr-1.5 h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">Importar CSV</span>
+                                <span className="sm:hidden">Importar</span>
                                 <input
                                     type="file"
                                     accept=".csv"
@@ -237,9 +241,9 @@ function PersonnelPageContent() {
                                 />
                             </Button>
                         </div>
-                        <Button size="sm" onClick={handleAddNew}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Añadir Personal
+                        <Button size="sm" onClick={handleAddNew} className="h-8 text-xs shadow-sm">
+                            <PlusCircle className="mr-1.5 h-3.5 w-3.5" />
+                            Personal
                         </Button>
                     </div>
 

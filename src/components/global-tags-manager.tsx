@@ -70,15 +70,17 @@ export function GlobalTagsManager() {
                                 const config = definitions[key];
                                 if (!config) return null;
                                 return (
-                                    <div key={key} className="flex items-center gap-4 rounded-md border p-3 bg-card">
-                                        <Label htmlFor={key} className="w-48 font-semibold shrink-0">{config.label}</Label>
-                                        <Input
-                                            id={key}
-                                            value={config.value || ''}
-                                            onChange={(e) => handleUpdateDefinition(key, { ...config, value: e.target.value })}
-                                            className="bg-background"
-                                            disabled={key === 'Hora' || key === 'Fecha'}
-                                        />
+                                    <div key={key} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 rounded-md border p-3 bg-card">
+                                        <Label htmlFor={key} className="sm:w-48 font-semibold shrink-0">{config.label}</Label>
+                                        <div className="flex-1">
+                                            <Input
+                                                id={key}
+                                                value={config.value || ''}
+                                                onChange={(e) => handleUpdateDefinition(key, { ...config, value: e.target.value })}
+                                                className="bg-background w-full"
+                                                disabled={key === 'Hora' || key === 'Fecha'}
+                                            />
+                                        </div>
                                     </div>
                                 )
                             })}

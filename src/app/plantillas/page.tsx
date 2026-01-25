@@ -156,6 +156,7 @@ export default function PlantillasPage() {
                 onOpenInfoDialog={() => setIsInfoDialogOpen(true)}
                 initialTemplate={editingTemplate}
                 onUpdate={handleUpdateTemplateContent}
+                onAdd={addTemplate}
                 onCancel={handleCancelEdit}
               />
             </div>

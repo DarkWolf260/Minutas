@@ -49,8 +49,9 @@ export function DatePicker({ value, onChange, disabled }: DatePickerProps) {
           {date ? (() => {
             const formatted = format(date, 'dd/MMMM/yyyy', { locale: es });
             const parts = formatted.split('/');
-            if (parts.length === 3) {
-              parts[1] = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+            const month = parts[1];
+            if (parts.length === 3 && month) {
+              parts[1] = month.charAt(0).toUpperCase() + month.slice(1);
               return parts.join('/');
             }
             return formatted;

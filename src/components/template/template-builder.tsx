@@ -23,10 +23,11 @@ interface TemplateBuilderProps {
     onOpenInfoDialog: () => void;
     initialTemplate?: Template | null;
     onUpdate?: (id: string, updates: Partial<Template>) => void;
+    onAdd?: (newTemplate: Template) => void;
     onCancel?: () => void;
 }
 
-export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, onCancel }: TemplateBuilderProps) {
+export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, onAdd, onCancel }: TemplateBuilderProps) {
     const [templateContent, setTemplateContent] = useState('');
     const [templateName, setTemplateName] = useState('');
     const [statisticsCategory, setStatisticsCategory] = useState('');
@@ -58,13 +59,8 @@ export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, o
     // State for UI toggles
     const [showRules, setShowRules] = useState(false);
 
-    // ... existing hooks ...
-
     const { definitions } = useFieldDefinitions();
-    const { addTemplate } = useTemplates();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-    // ... preview logic ...
 
     // Creates a temporary template object for the preview
     const previewTemplate = useMemo<Template>(() => ({
@@ -129,7 +125,7 @@ export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, o
             });
             toast.success('Plantilla actualizada correctamente');
             if (onCancel) onCancel();
-        } else {
+        } else if (onAdd) {
             const newTemplate: Template = {
                 id: `template_${Date.now()}`,
                 name: templateName,
@@ -139,13 +135,13 @@ export function TemplateBuilder({ onOpenInfoDialog, initialTemplate, onUpdate, o
                 statisticsCategory: statisticsCategory.trim() || undefined,
                 statisticsRules: statisticsRules
             };
-            addTemplate(newTemplate);
+            onAdd(newTemplate);
             setTemplateName('');
             setTemplateContent('');
             setStatisticsCategory('');
             setStatisticsRules([]);
+            toast.success('Plantilla creada correctamente');
         }
-        toast.success(isEditing ? 'Plantilla actualizada' : 'Plantilla creada');
     };
 
     const handlePreviewReport = () => {

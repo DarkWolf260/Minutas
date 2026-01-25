@@ -176,13 +176,14 @@ export default function SettingsPage() {
                     <CardContent className="space-y-6 pt-6">
                         <div className="space-y-2">
                             <Label>Añadir Nueva Unidad</Label>
-                            <div className="flex gap-2 max-w-sm">
+                            <div className="flex flex-col sm:flex-row gap-2 sm:max-w-sm">
                                 <Input
                                     value={newUnit}
                                     onChange={(e) => setNewUnit(e.target.value)}
                                     placeholder="Ej: Alpha 3"
+                                    className="flex-1"
                                 />
-                                <Button onClick={handleAddUnit}>
+                                <Button onClick={handleAddUnit} className="w-full sm:w-auto">
                                     <PlusCircle className="mr-2 h-4 w-4" />
                                     Añadir
                                 </Button>
@@ -229,14 +230,20 @@ export default function SettingsPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {Object.keys(resetOptions).map(key => (
-                            <div key={key} className="flex items-center justify-between p-3 rounded-md border border-dashed border-destructive/50">
-                                <div>
-                                    <h4 className="font-semibold">{resetOptions[key].buttonLabel}</h4>
-                                    <p className="text-sm text-muted-foreground">{resetOptions[key].description.split('.')[0]}.</p>
+                        {Object.entries(resetOptions).map(([key, option]) => (
+                            <div key={key} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 rounded-md border border-dashed border-destructive/50">
+                                <div className="space-y-1">
+                                    <h4 className="font-semibold text-destructive">{option.buttonLabel}</h4>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                        {option.description.split('.')[0]}.
+                                    </p>
                                 </div>
-                                <Button variant="destructive" onClick={() => setActionToConfirm(key)}>
-                                    {resetOptions[key].buttonLabel}
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => setActionToConfirm(key)}
+                                    className="w-full sm:w-auto shrink-0 shadow-sm"
+                                >
+                                    {option.buttonLabel}
                                 </Button>
                             </div>
                         ))}
@@ -248,9 +255,11 @@ export default function SettingsPage() {
             <AlertDialog open={!!actionToConfirm} onOpenChange={(open) => !open && setActionToConfirm(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>{actionToConfirm ? resetOptions[actionToConfirm].title : ''}</AlertDialogTitle>
+                        <AlertDialogTitle>
+                            {actionToConfirm && resetOptions[actionToConfirm]?.title}
+                        </AlertDialogTitle>
                         <AlertDialogDescription>
-                            {actionToConfirm ? resetOptions[actionToConfirm].description : ''}
+                            {actionToConfirm && resetOptions[actionToConfirm]?.description}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

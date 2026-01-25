@@ -28,7 +28,7 @@ const parseFieldTag = (
 ): { fieldId: string; fieldType: FieldType; modifiers: string[]; isFullWidth: boolean; isRequired: boolean } => {
     // Split by colon to get ID and segments
     const segments = tagContent.split(':').map(s => s.trim());
-    const fieldId = segments[0];
+    const fieldId = segments[0] || '';
     const otherSegments = segments.slice(1);
 
     let fieldType: FieldType = AUTOMATIC_FIELD_TYPES[fieldId.toLowerCase()] || 'text';
@@ -43,9 +43,9 @@ const parseFieldTag = (
     otherSegments.forEach(segment => {
         // 1. Dropdown with inline options: dropdown(A=Val1|B=Val2)
         const dropdownMatch = segment.match(/^dropdown\((.+)\)$/);
-        if (dropdownMatch) {
+        const optionsString = dropdownMatch?.[1];
+        if (dropdownMatch && optionsString) {
             fieldType = 'dropdown';
-            const optionsString = dropdownMatch[1];
             const options: SnippetOption[] = optionsString.split('|').map((opt, i) => {
                 const eqIdx = opt.indexOf('=');
                 if (eqIdx > -1) {
@@ -273,6 +273,7 @@ function parseContentRecursive(
         if (isRepeatableField) {
             // Sintaxis {Campo}* -> Sección repetible automática de un solo campo
             const fieldTag = match[1];
+            if (!fieldTag) continue;
             const fieldName = processFieldTag(fieldTag.slice(1, -1));
             // Generar ID estable basado únicamente en el label para máxima estabilidad
             let sectionId = `sec_${fieldName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
@@ -302,8 +303,12 @@ function parseContentRecursive(
         } else if (isAdvancedCond) {
             // Condicional avanzado con operadores: [?{Campo} op Valor]...[/]
             const condMatch = blockText.match(/^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(!=|>=|<=|>|<|=)\s*("[^"]*"|\S+?)\s*\]([\s\S]*?)\[\/\s*\]$/);
-            if (condMatch) {
-                let [_, condFieldName, operator, condValue, condInnerContent] = condMatch;
+            if (condMatch && condMatch[1] && condMatch[2] && condMatch[3] && condMatch[4]) {
+                const condFieldName = condMatch[1] as string;
+                const operator = condMatch[2] as string;
+                let condValue = condMatch[3] as string;
+                const condInnerContent = condMatch[4] as string;
+
                 const { fieldId: conditionFieldId } = parseFieldTag(condFieldName.trim(), templateOptions);
                 let sectionId = `cond_${conditionFieldId.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
 
@@ -468,20 +473,22 @@ function applyTextModifier(value: any, modifierInput?: string | string[]): strin
 
         // default("fallback")
         const defaultMatch = m.match(/^default\("([^"]*)"\)$/);
-        if (defaultMatch) {
+        const fallback = defaultMatch?.[1];
+        if (defaultMatch && fallback !== undefined) {
             if (!result || result.trim() === '') {
-                result = defaultMatch[1];
+                result = fallback;
             }
             continue;
         }
 
         // format("formatString")
         const formatMatch = m.match(/^format\("([^"]*)"\)$/);
-        if (formatMatch) {
+        const formatStr = formatMatch?.[1];
+        if (formatMatch && formatStr) {
             try {
                 const date = new Date(result);
                 if (!isNaN(date.getTime())) {
-                    result = format(date, formatMatch[1], { locale: es });
+                    result = format(date, formatStr, { locale: es });
                 }
             } catch (e) {
                 // Silenciar error de formato
@@ -543,8 +550,12 @@ export function renderContent(
             return applyTextModifier(val, allModifiers);
         } else if (block.startsWith('[?')) {
             const condMatch = block.match(/^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(!=|>=|<=|>|<|=)\s*("[^"]*"|\S+?)\s*\]([\s\S]*?)\[\/\s*\]$/);
-            if (condMatch) {
-                let [_, condFieldName, operator, targetValue, innerContent] = condMatch;
+            if (condMatch && condMatch[1] && condMatch[2] && condMatch[3] && condMatch[4]) {
+                const condFieldName = condMatch[1];
+                const operator = condMatch[2];
+                let targetValue = condMatch[3];
+                const innerContent = condMatch[4];
+
                 const condFieldId = condFieldName.trim();
 
                 if (targetValue.startsWith('"') && targetValue.endsWith('"')) {
@@ -558,7 +569,8 @@ export function renderContent(
                 const options = config.templateOptions.get(condFieldId);
                 if (options && /^\d+$/.test(String(actualValue))) {
                     const idx = parseInt(String(actualValue), 10);
-                    if (options[idx]) valToCompare = options[idx].value;
+                    const opt = options[idx];
+                    if (opt) valToCompare = opt.value;
                 }
 
                 if (evaluateCondition(valToCompare, operator, targetValue)) {
@@ -595,12 +607,14 @@ export function renderFinalReport(
         };
 
         fieldNames.forEach(fieldName => {
-            finalConfig.fields[fieldName] = config.fields[fieldName] || { type: 'text', label: fieldName };
-            if (templateOptions.has(fieldName)) {
-                finalConfig.fields[fieldName].snippetOptions = templateOptions.get(fieldName);
+            const fieldConfig = config.fields[fieldName] || { type: 'text', label: fieldName };
+            finalConfig.fields[fieldName] = fieldConfig;
+            const options = templateOptions.get(fieldName);
+            if (options) {
+                fieldConfig.snippetOptions = options;
             }
             if (fieldTypes.has(fieldName)) {
-                finalConfig.fields[fieldName].type = fieldTypes.get(fieldName);
+                fieldConfig.type = fieldTypes.get(fieldName);
             }
         });
 
@@ -715,8 +729,11 @@ function renderContentWithSections(
                 ...(fieldConfig.snippetOptions || []),
                 ...(config.templateOptions?.get(fieldId) || [])
             ];
-            const selectedOption = allOptions.find((opt: any) => opt.label === value);
-            return selectedOption ? selectedOption.value : '';
+            const selectedOption = allOptions.find((opt: any) => opt && opt.label === value);
+            if (selectedOption && typeof selectedOption === 'object' && 'value' in selectedOption) {
+                return String(selectedOption.value);
+            }
+            return '';
         }
 
         if (fieldConfig?.type === 'date' && typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}$/)) {
@@ -726,8 +743,9 @@ function renderContentWithSections(
 
                 const formattedDate = format(date, "dd/MMMM/yyyy", { locale: es });
                 const parts = formattedDate.split('/');
-                if (parts.length === 3) {
-                    parts[1] = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+                const monthName = parts[1];
+                if (parts.length === 3 && monthName) {
+                    parts[1] = monthName.charAt(0).toUpperCase() + monthName.slice(1);
                     return parts.join('/');
                 }
                 return formattedDate;

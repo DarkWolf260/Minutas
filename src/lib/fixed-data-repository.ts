@@ -61,7 +61,7 @@ export function getDataPoint(id: string, version?: number): DataPoint | null {
     }
 
     // Retornar la versión más reciente
-    return [...history].sort((a, b) => b.version - a.version)[0];
+    return [...history].sort((a, b) => b.version - a.version)[0] ?? null;
 }
 
 /**
@@ -87,8 +87,10 @@ export function getCatalog(): FixedDataCatalog {
  * Registra un nuevo dato (Simulado)
  */
 export function registerDataPoint(data: DataPoint): void {
-    if (!FIXED_DATA_STORE[data.id]) {
-        FIXED_DATA_STORE[data.id] = [];
+    let history = FIXED_DATA_STORE[data.id];
+    if (!history) {
+        history = [];
+        FIXED_DATA_STORE[data.id] = history;
     }
-    FIXED_DATA_STORE[data.id].push(data);
+    history.push(data);
 }

@@ -145,16 +145,22 @@ export function StructureManager({
                 }
             } else {
                 // Update existing role's scope and hidden state
-                newRoles[existingIndex] = {
-                    ...newRoles[existingIndex],
-                    departmentScope: r.departmentScope,
-                    isHidden: r.isHidden
-                };
+                const existingRole = newRoles[existingIndex];
+                if (existingRole) {
+                    newRoles[existingIndex] = {
+                        ...existingRole,
+                        departmentScope: r.departmentScope,
+                        isHidden: r.isHidden
+                    };
 
-                // If it's the director, move to front
-                if (r.name === 'Director' && existingIndex > 0) {
-                    const [director] = newRoles.splice(existingIndex, 1);
-                    newRoles.unshift(director);
+                    // If it's the director, move to front
+                    if (r.name === 'Director' && existingIndex > 0) {
+                        const removed = newRoles.splice(existingIndex, 1);
+                        const director = removed[0];
+                        if (director) {
+                            newRoles.unshift(director);
+                        }
+                    }
                 }
             }
         });
@@ -199,8 +205,11 @@ export function StructureManager({
         if (newIndex < 0 || newIndex >= newRoles.length) return;
 
         const temp = newRoles[index];
-        newRoles[index] = newRoles[newIndex];
-        newRoles[newIndex] = temp;
+        const target = newRoles[newIndex];
+        if (temp && target) {
+            newRoles[index] = target;
+            newRoles[newIndex] = temp;
+        }
 
         onRolesChange(newRoles);
     };

@@ -160,14 +160,15 @@ export function RoleManagerDnD({
         const buckets: Record<string, StaffRole[]> = {
             unassigned: []
         };
-        allDepartments.forEach(d => buckets[d.id] = []);
+        allDepartments.forEach(d => { buckets[d.id] = []; });
 
         roles.forEach(role => {
             const scope = (role.departmentScope ?? [])[0] || 'unassigned';
-            if (buckets[scope]) {
-                buckets[scope].push(role);
+            const bucket = buckets[scope];
+            if (bucket) {
+                bucket.push(role);
             } else {
-                buckets.unassigned.push(role);
+                buckets.unassigned?.push(role);
             }
         });
         return buckets;
@@ -184,7 +185,10 @@ export function RoleManagerDnD({
         if (roleBuckets[id]) {
             return id;
         }
-        return Object.keys(roleBuckets).find((key) => roleBuckets[key].some((r: StaffRole) => r.name === id));
+        return Object.keys(roleBuckets).find((key) => {
+            const bucket = roleBuckets[key];
+            return bucket ? bucket.some((r: StaffRole) => r.name === id) : false;
+        });
     }
 
     function handleDragStart(event: DragStartEvent) {
@@ -207,9 +211,12 @@ export function RoleManagerDnD({
         const activeIndex = roles.findIndex((r: StaffRole) => r.name === activeId);
         if (activeIndex === -1) return;
 
+        const currentRole = roles[activeIndex];
+        if (!currentRole) return;
+
         const newRoles = [...roles];
         newRoles[activeIndex] = {
-            ...newRoles[activeIndex],
+            ...currentRole,
             departmentScope: overContainer === 'unassigned' ? [] : [overContainer],
         };
 
@@ -283,7 +290,7 @@ export function RoleManagerDnD({
                     <RoleColumn
                         id="unassigned"
                         title="Cargos Globales"
-                        roles={roleBuckets.unassigned}
+                        roles={roleBuckets.unassigned || []}
                         onPrepareRemove={onPrepareRemoveRole}
                         onToggleRoleSingle={handleToggleSingle}
                         onPrepareRemoveDepartment={() => { }}

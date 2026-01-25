@@ -67,8 +67,21 @@ export function calculateMonthlyStats(
         // Try DD/MM/YYYY HH:MM (ES-VE style)
         const match = ts.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:,\s*(\d{1,2}):(\d{1,2}))?/);
         if (match) {
-            const [_, day, month, year, hours, mins] = match;
-            return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours || '0'), parseInt(mins || '0'));
+            const dStr = match[1];
+            const mStr = match[2];
+            const yStr = match[3];
+            const hStr = match[4];
+            const minStr = match[5];
+
+            if (dStr && mStr && yStr) {
+                return new Date(
+                    parseInt(yStr),
+                    parseInt(mStr) - 1,
+                    parseInt(dStr),
+                    parseInt(hStr || '0'),
+                    parseInt(minStr || '0')
+                );
+            }
         }
         return new Date(NaN);
     };
@@ -119,10 +132,12 @@ export function calculateMonthlyStats(
 
                         // 3. Check if the code parts match (assuming "X.Y" format)
                         const codeMatch = cat.match(/^(\d+(\.\d+)*)/);
-                        if (codeMatch && sdk.startsWith(codeMatch[1])) {
+                        const catCode = codeMatch?.[1];
+                        if (codeMatch && catCode && sdk.startsWith(catCode)) {
                             // If codes match, check if label is also present
                             const labelPart = cat.substring(codeMatch[0].length).replace(/[^A-Z]/g, '');
-                            const sLabelPart = sdk.substring(sdk.match(/^(\d+(\.\d+)*)/)?.[0].length || 0).replace(/[^A-Z]/g, '');
+                            const sdkMatch = sdk.match(/^(\d+(\.\d+)*)/);
+                            const sLabelPart = sdk.substring(sdkMatch?.[0].length || 0).replace(/[^A-Z]/g, '');
                             if (labelPart && sLabelPart && (sLabelPart.includes(labelPart) || labelPart.includes(sLabelPart))) return true;
                         }
 

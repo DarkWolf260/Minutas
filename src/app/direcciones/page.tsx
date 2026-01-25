@@ -33,6 +33,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 const AddressMap = dynamic(() => import('@/components/address-map').then(mod => mod.AddressMap), {
     ssr: false,
     loading: () => <Skeleton className="h-full w-full" />
@@ -48,6 +50,7 @@ export default function DireccionesPage() {
     const [selectedForMap, setSelectedForMap] = useState<Address | null>(null);
     const [initialCoords, setInitialCoords] = useState<{ lat: string; lng: string } | null>(null);
     const [copiedAddressId, setCopiedAddressId] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState('list');
 
     useEffect(() => {
         if (isLoaded && addresses.length > 0 && !selectedForMap) {
@@ -180,156 +183,173 @@ export default function DireccionesPage() {
 
     return (
         <>
-            <div className="p-4 sm:p-6 lg:p-8 h-full">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-[calc(100vh-4rem)]">
-                    {/* Left Column */}
-                    <Card className="shadow-lg flex flex-col h-full overflow-hidden">
-                        <CardHeader>
-                            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                                <div>
-                                    <CardTitle>Gestor de Direcciones</CardTitle>
-                                    <CardDescription>Añade, edita y visualiza direcciones.</CardDescription>
-                                </div>
-                                <Button onClick={() => handleOpenForm()}>
-                                    <PlusCircle className="mr-2 h-4 w-4" />
-                                    Añadir Dirección
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="flex flex-col flex-1 min-h-0">
-                            <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <Label htmlFor="search">Buscar</Label>
-                                    <Input
-                                        id="search"
-                                        placeholder="Por nombre, parroquia..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <Label htmlFor="municipality-filter">Filtrar por Municipio</Label>
-                                    <Select value={municipalityFilter} onValueChange={setMunicipalityFilter}>
-                                        <SelectTrigger id="municipality-filter">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {uniqueMunicipalities.map(mun => (
-                                                <SelectItem key={mun} value={mun === 'Todos los municipios' ? 'all' : mun}>
-                                                    {mun}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            <ScrollArea className="flex-1 pr-1">
-                                {filteredAddresses.length > 0 ? (
-                                    <div className="space-y-4 pr-3">
-                                        {filteredAddresses.map(address => (
-                                            <Card key={address.id} className={cn("flex flex-col transition-all", selectedForMap?.id === address.id && 'border-primary ring-1 ring-primary')}>
-                                                <CardHeader>
-                                                    <CardTitle className="flex items-start gap-2 text-lg">
-                                                        <NotebookPen className="h-5 w-5 mt-0.5 text-primary shrink-0" />
-                                                        <span className="flex-1">{address.name}</span>
-                                                    </CardTitle>
-                                                </CardHeader>
-                                                <CardContent className="text-sm text-muted-foreground flex-grow space-y-3">
-                                                    {(address.street || address.houseNumber) && (
-                                                        <div>
-                                                            <p className="font-semibold text-card-foreground/90">Dirección Específica:</p>
+            <div className="p-4 sm:p-6 lg:p-8 flex flex-col h-screen max-h-screen overflow-hidden">
+                <Tabs
+                    value={activeTab}
+                    onValueChange={setActiveTab}
+                    className="flex flex-col h-full space-y-4"
+                >
+                    <div className="flex justify-between items-center md:hidden">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="list">Lista de Direcciones</TabsTrigger>
+                            <TabsTrigger value="map">Ver en Mapa</TabsTrigger>
+                        </TabsList>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1 min-h-0">
+                        {/* Left Column - List */}
+                        <TabsContent
+                            value="list"
+                            className="m-0 h-full flex flex-col min-h-0 data-[state=inactive]:hidden md:data-[state=inactive]:flex"
+                        >
+                            <Card className="shadow-lg flex flex-col h-full overflow-hidden">
+                                <CardHeader className="pb-4">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                                        <div>
+                                            <CardTitle>Gestor de Direcciones</CardTitle>
+                                            <CardDescription>Añade, edita y visualiza direcciones.</CardDescription>
+                                        </div>
+                                        <Button onClick={() => handleOpenForm()} className="w-full sm:w-auto">
+                                            <PlusCircle className="mr-2 h-4 w-4" />
+                                            Añadir
+                                        </Button>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="flex flex-col flex-1 min-h-0 pt-0">
+                                    <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <Label htmlFor="search" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Buscar</Label>
+                                            <Input
+                                                id="search"
+                                                placeholder="Por nombre, parroquia..."
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                className="h-9"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label htmlFor="municipality-filter" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Municipio</Label>
+                                            <Select value={municipalityFilter} onValueChange={setMunicipalityFilter}>
+                                                <SelectTrigger id="municipality-filter" className="h-9">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {uniqueMunicipalities.map(mun => (
+                                                        <SelectItem key={mun} value={mun === 'Todos los municipios' ? 'all' : mun}>
+                                                            {mun}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <ScrollArea className="flex-1 -mx-2 px-2">
+                                        {filteredAddresses.length > 0 ? (
+                                            <div className="space-y-4 pb-4">
+                                                {filteredAddresses.map(address => (
+                                                    <Card key={address.id} className={cn("flex flex-col transition-all overflow-hidden", selectedForMap?.id === address.id && 'border-primary ring-1 ring-primary')}>
+                                                        <CardHeader className="p-4 bg-muted/20">
+                                                            <CardTitle className="flex items-start gap-2 text-base leading-tight">
+                                                                <NotebookPen className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                                                                <span className="flex-1">{address.name}</span>
+                                                            </CardTitle>
+                                                        </CardHeader>
+                                                        <CardContent className="p-4 text-sm text-muted-foreground space-y-2">
+                                                            {(address.street || address.houseNumber) && (
+                                                                <p>
+                                                                    <span className="font-semibold text-card-foreground/90">Dir: </span>
+                                                                    {`${address.street || ''}${address.street && address.houseNumber ? ', ' : ''}${address.houseNumber || ''}`}
+                                                                </p>
+                                                            )}
                                                             <p>
-                                                                {`${address.street || ''}${address.street && address.houseNumber ? ', ' : ''}${address.houseNumber || ''}`}
+                                                                <span className="font-semibold text-card-foreground/90">Ubic: </span>
+                                                                {[
+                                                                    `Mcp. ${address.municipality}`,
+                                                                    `Pqa. ${address.parish}`,
+                                                                    address.sector ? `Sctor. ${address.sector}` : null
+                                                                ].filter(Boolean).join(', ')}
                                                             </p>
-                                                        </div>
-                                                    )}
-                                                    <div>
-                                                        <p className="font-semibold text-card-foreground/90">Ubicación:</p>
-                                                        <p>
-                                                            {[
-                                                                `Mcp. ${address.municipality}`,
-                                                                `Pqa. ${address.parish}`,
-                                                                address.sector ? `Sctor. ${address.sector}` : null,
-                                                                address.peaceQuadrant
-                                                            ].filter(Boolean).join(', ')}
-                                                        </p>
-                                                    </div>
-                                                    {(address.latitude && address.longitude) && (
-                                                        <div>
-                                                            <p className="font-semibold text-card-foreground/90">Coordenadas:</p>
-                                                            <p className="font-mono text-xs">{address.latitude}, {address.longitude}</p>
-                                                        </div>
-                                                    )}
-                                                    {address.details && (
-                                                        <div>
-                                                            <p className="font-semibold text-card-foreground/90">Detalles Adicionales:</p>
-                                                            <p className="italic">"{address.details}"</p>
-                                                        </div>
-                                                    )}
-                                                </CardContent>
-                                                <CardFooter className="flex justify-end gap-2 bg-muted/50 p-2">
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="outline" size="sm">
-                                                                {copiedAddressId === address.id ? (
-                                                                    <>
-                                                                        <Check className="mr-2 h-4 w-4" /> Copiado
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <ClipboardCopy className="mr-2 h-4 w-4" /> Copiar
-                                                                    </>
-                                                                )}
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem onClick={() => handleCopyAddress(address, false)}>
-                                                                Sin coordenadas
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem
-                                                                onClick={() => handleCopyAddress(address, true)}
+                                                            <p>
+                                                                <span className="font-semibold text-card-foreground/90">Cuadrante: </span>
+                                                                {address.peaceQuadrant}
+                                                            </p>
+                                                        </CardContent>
+                                                        <CardFooter className="flex flex-wrap justify-end gap-2 bg-muted/50 p-2">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button variant="ghost" size="sm" className="h-8">
+                                                                        {copiedAddressId === address.id ? (
+                                                                            <Check className="h-4 w-4" />
+                                                                        ) : (
+                                                                            <ClipboardCopy className="h-4 w-4" />
+                                                                        )}
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end">
+                                                                    <DropdownMenuItem onClick={() => handleCopyAddress(address, false)}>
+                                                                        Copiar dirección
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => handleCopyAddress(address, true)}
+                                                                        disabled={!address.latitude || !address.longitude}
+                                                                    >
+                                                                        Copiar con coordenadas
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="h-8"
+                                                                onClick={() => {
+                                                                    setSelectedForMap(address);
+                                                                    if (window.innerWidth < 768) setActiveTab('map');
+                                                                }}
                                                                 disabled={!address.latitude || !address.longitude}
                                                             >
-                                                                Con coordenadas
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                    <Button variant="outline" size="sm" onClick={() => setSelectedForMap(address)} disabled={!address.latitude || !address.longitude}>
-                                                        <Eye className="mr-2 h-4 w-4" /> Ver
-                                                    </Button>
-                                                    <Button variant="outline" size="sm" onClick={() => handleOpenForm(address)}>
-                                                        <Edit className="mr-2 h-4 w-4" /> Editar
-                                                    </Button>
-                                                    <Button variant="destructive" size="sm" onClick={() => setAddressToDelete(address)}>
-                                                        <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-                                                    </Button>
-                                                </CardFooter>
-                                            </Card>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                                        <MapPin className="mx-auto h-12 w-12 text-muted-foreground" />
-                                        <h3 className="mt-4 text-lg font-semibold">No se encontraron direcciones</h3>
-                                        <p className="mt-1 text-sm text-muted-foreground">
-                                            {searchQuery || municipalityFilter !== 'all' ? 'Prueba con otra búsqueda o filtro.' : 'Empieza añadiendo una nueva dirección.'}
-                                        </p>
-                                    </div>
-                                )}
-                            </ScrollArea>
-                        </CardContent>
-                    </Card>
-                    {/* Right Column */}
-                    <div className="h-96 md:h-full">
-                        <AddressMap
-                            latitude={selectedForMap?.latitude}
-                            longitude={selectedForMap?.longitude}
-                            name={selectedForMap?.name}
-                            addresses={addresses}
-                            onMapClick={handleMapClick}
-                        />
+                                                                <Eye className="mr-2 h-4 w-4" /> Ver
+                                                            </Button>
+                                                            <Button variant="outline" size="sm" className="h-8" onClick={() => handleOpenForm(address)}>
+                                                                <Edit className="mr-2 h-4 w-4" /> Editar
+                                                            </Button>
+                                                            <Button variant="ghost" size="sm" className="h-8 text-destructive hover:bg-destructive/10" onClick={() => setAddressToDelete(address)}>
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </CardFooter>
+                                                    </Card>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                                                <MapPin className="mx-auto h-12 w-12 text-muted-foreground" />
+                                                <h3 className="mt-4 text-lg font-semibold">Sin resultados</h3>
+                                                <p className="mt-1 text-sm text-muted-foreground px-4">
+                                                    {searchQuery || municipalityFilter !== 'all' ? 'Prueba con otra búsqueda o filtro.' : 'Empieza añadiendo una nueva dirección.'}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </ScrollArea>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        {/* Right Column - Map */}
+                        <TabsContent
+                            value="map"
+                            className="m-0 h-full flex flex-col min-h-0 data-[state=inactive]:hidden md:data-[state=inactive]:flex"
+                        >
+                            <div className="h-full rounded-lg overflow-hidden border shadow-lg">
+                                <AddressMap
+                                    latitude={selectedForMap?.latitude}
+                                    longitude={selectedForMap?.longitude}
+                                    name={selectedForMap?.name}
+                                    addresses={addresses}
+                                    onMapClick={handleMapClick}
+                                />
+                            </div>
+                        </TabsContent>
                     </div>
-                </div>
+                </Tabs>
             </div>
 
             <AddressFormDialog

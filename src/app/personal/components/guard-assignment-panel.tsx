@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { GuardStaffEditor } from '@/components/guard-staff-editor';
 import { PlusCircle, Trash2, ShieldCheck, ExternalLink } from 'lucide-react';
-import type { Guard, StaffMember, StaffRole } from '@/types';
+import type { Guard, StaffMember, StaffRole, Department } from '@/types';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -85,19 +85,10 @@ export function GuardAssignmentPanel({
         }
     };
 
-    const handleStaffUpdate = (updatedStaff: Guard['staff']) => {
-        if (!selectedGuard) return;
-
-        const updatedGuard: Guard = {
-            ...selectedGuard,
-            staff: updatedStaff
-        };
-
-        const updatedGuards = guards.map(g =>
-            g.id === selectedGuard.id ? updatedGuard : g
-        );
-
-        onGuardUpdate(updatedGuards);
+    const handleStaffUpdate = (updatedGuard: Guard | Department) => {
+        onGuardUpdate(guards.map(g =>
+            g.id === updatedGuard.id ? updatedGuard as Guard : g
+        ));
     };
 
     return (
@@ -180,7 +171,8 @@ export function GuardAssignmentPanel({
                                 guard={selectedGuard}
                                 onUpdate={handleStaffUpdate}
                                 roles={roles}
-                                personnel={personnel}
+                                onSave={() => toast.success('Personal de guardia actualizado')}
+                                scopeId="OPERATIONS"
                             />
                         </CardContent>
                     </Card>

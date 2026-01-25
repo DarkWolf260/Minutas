@@ -41,14 +41,15 @@ export function MultiInput({ value = [], onChange, options = [], placeholder, di
             handleAddValue(inputValue);
             setOpen(false);
         } else if (e.key === 'Backspace' && inputValue === '' && value.length > 0 && !isSingle) {
-            handleRemoveValue(value[value.length - 1]);
+            const lastValue = value[value.length - 1];
+            if (lastValue) handleRemoveValue(lastValue);
         }
     };
 
     const handleRemoveValue = (valueToRemove: string) => {
         onChange(value.filter(v => v !== valueToRemove));
     };
-    
+
     const handleSelectOption = (option: string) => {
         handleAddValue(option);
         setOpen(false);
@@ -59,16 +60,16 @@ export function MultiInput({ value = [], onChange, options = [], placeholder, di
 
     const currentValuesSet = new Set(value);
 
-    const filteredOptions = options.filter(option => 
+    const filteredOptions = options.filter(option =>
         !currentValuesSet.has(option) && option.toLowerCase().includes(displayValue.toLowerCase())
     );
-    
+
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <div 
-                    role="combobox" 
-                    aria-expanded={open} 
+                <div
+                    role="combobox"
+                    aria-expanded={open}
                     className={cn(
                         "flex flex-wrap items-center gap-2 rounded-md border border-input p-1.5 min-h-10 relative",
                         disabled && "cursor-not-allowed opacity-50 bg-muted"
@@ -104,7 +105,7 @@ export function MultiInput({ value = [], onChange, options = [], placeholder, di
                 </div>
             </PopoverTrigger>
             <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
-                 <div className="p-1 max-h-60 overflow-y-auto">
+                <div className="p-1 max-h-60 overflow-y-auto">
                     {filteredOptions.length > 0 ? (
                         filteredOptions.map(option => (
                             <Button
@@ -122,7 +123,7 @@ export function MultiInput({ value = [], onChange, options = [], placeholder, di
                         </p>
                     )}
                     {displayValue && !options.includes(displayValue) && !currentValuesSet.has(displayValue) && (
-                         <Button
+                        <Button
                             variant="ghost"
                             className="w-full justify-start h-8 px-2 font-normal text-primary"
                             onClick={() => handleSelectOption(displayValue)}

@@ -57,10 +57,13 @@ export function CSVManager({ personnel, roles, departments, onImport }: CSVManag
                 const errors: string[] = [];
 
                 // Skip header
-                const startIdx = lines[0].toLowerCase().includes('nombre') ? 1 : 0;
+                const firstLine = lines[0];
+                const startIdx = firstLine && firstLine.toLowerCase().includes('nombre') ? 1 : 0;
 
                 for (let i = startIdx; i < lines.length; i++) {
-                    const line = lines[i].trim();
+                    const rawLine = lines[i];
+                    if (!rawLine) continue;
+                    const line = rawLine.trim();
                     if (!line) continue;
 
                     const [rank, name, cedula, role, department] = line.split(',').map(s => s.trim());

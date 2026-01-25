@@ -47,7 +47,7 @@ const formatStaffMemberForReport = (member: StaffMember, showCedula: boolean): s
 const findInsensitive = (obj: Record<string, string>, key: string): string => {
     const keyLower = key.toLowerCase();
     const foundKey = Object.keys(obj).find(k => k.toLowerCase() === keyLower);
-    return foundKey ? obj[foundKey] : '';
+    return foundKey ? (obj[foundKey] ?? '') : '';
 };
 
 export default function ReporteFinalPage() {
@@ -108,8 +108,9 @@ export default function ReporteFinalPage() {
     const globalSettings = useMemo(() => {
         return Object.values(configs).reduce((acc, config) => {
             Object.keys(config.fields).forEach(fieldName => {
-                if (config.fields[fieldName].type === 'predefined' && config.fields[fieldName].value) {
-                    acc[fieldName] = config.fields[fieldName].value!;
+                const field = config.fields[fieldName];
+                if (field && field.type === 'predefined' && field.value) {
+                    acc[fieldName] = field.value;
                 }
             });
             return acc;
@@ -159,8 +160,10 @@ export default function ReporteFinalPage() {
             const timeMatch = horaStr.match(/(\d{2}):(\d{2})/);
             if (!timeMatch) return null;
 
-            const [hours, minutes] = timeMatch.slice(1).map(Number);
-            if (isNaN(hours) || isNaN(minutes)) return null;
+            const mappedValues = timeMatch.slice(1).map(Number);
+            const hours = mappedValues[0];
+            const minutes = mappedValues[1];
+            if (hours === undefined || minutes === undefined || isNaN(hours) || isNaN(minutes)) return null;
 
             const sortDate = new Date(`${fechaStr}T00:00:00`);
             if (isNaN(sortDate.getTime())) return null;
@@ -172,8 +175,10 @@ export default function ReporteFinalPage() {
             const horaStr = novedad.time;
             const timeMatch = horaStr.match(/(\d{2}):(\d{2})/);
             if (!timeMatch) return null;
-            const [hours, minutes] = timeMatch.slice(1).map(Number);
-            if (isNaN(hours) || isNaN(minutes)) return null;
+            const mappedValues = timeMatch.slice(1).map(Number);
+            const hours = mappedValues[0];
+            const minutes = mappedValues[1];
+            if (hours === undefined || minutes === undefined || isNaN(hours) || isNaN(minutes)) return null;
 
             const sortDate = new Date(novedad.date);
             sortDate.setHours(hours, minutes, 0, 0);
@@ -215,8 +220,9 @@ export default function ReporteFinalPage() {
                 const key = Object.keys(staffForReport).find(k => k.toLowerCase() === roleName.toLowerCase());
                 if (key) {
                     const members = staffForReport[key];
-                    if (members && members.length > 0) {
-                        return formatStaffMemberForReport(members[0], false).trim();
+                    const firstMember = members ? members[0] : undefined;
+                    if (firstMember) {
+                        return formatStaffMemberForReport(firstMember, false).trim();
                     }
                 }
             }
@@ -370,8 +376,9 @@ export default function ReporteFinalPage() {
                                                             const key = Object.keys(staffForReport).find(k => k.toLowerCase() === roleName.toLowerCase());
                                                             if (key) {
                                                                 const members = staffForReport[key];
-                                                                if (members && members.length > 0) {
-                                                                    return formatStaffMemberForReport(members[0], false).trim();
+                                                                const firstMember = members ? members[0] : undefined;
+                                                                if (firstMember) {
+                                                                    return formatStaffMemberForReport(firstMember, false).trim();
                                                                 }
                                                             }
                                                         }
@@ -493,7 +500,7 @@ export default function ReporteFinalPage() {
                                                         // Parse existing lines
                                                         currentLines.forEach(line => {
                                                             const match = line.match(/^-\s+(.*)\s+(\d+)$/);
-                                                            if (match) {
+                                                            if (match && match[1] !== undefined && match[2] !== undefined) {
                                                                 workingMap.set(match[1].trim(), parseInt(match[2]));
                                                             }
                                                         });
