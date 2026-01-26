@@ -8,6 +8,7 @@ import type { Guard, Staff, StaffRole, Department, StaffMember } from '@/types';
 import { Trash2, Search, Check, Calculator } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePersonnel } from '@/hooks/use-personnel';
+import { LEADER_ROLES } from '@/constants/roles';
 import {
     Popover,
     PopoverContent,
@@ -214,7 +215,7 @@ export function GuardStaffEditor({ guard, roles, onUpdate, onSave, scopeId }: Gu
     const availableRoles = useMemo(() => {
         return roles.filter(role => {
             // Explicit exclusions requested by user
-            if (role.name === 'Director' || role.name === 'Jefe de Operaciones') return false;
+            if (role.name === LEADER_ROLES.DIRECTOR || role.name === LEADER_ROLES.JEFE_OPERACIONES) return false;
 
             // Explicit inclusions requested by user
             if (role.name === 'Analista de CEMUPRAD') return true;

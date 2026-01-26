@@ -89,7 +89,7 @@ function PersonnelPageContent() {
         setIsDialogOpen(true);
     };
 
-    const handleSave = (data: Partial<StaffMember>) => {
+    const handleSave = async (data: Partial<StaffMember>) => {
         // Validation: Cédula duplicate
         if (data.cedula && isCedulaDuplicate(data.cedula, editingMember?.id)) {
             toast.error('Ya existe una persona registrada con esta cédula');
@@ -98,12 +98,12 @@ function PersonnelPageContent() {
 
         if (editingMember) {
             // Update existing
-            updateMember(editingMember.id, data);
+            await updateMember(editingMember.id, data);
             toast.success('Cambios guardados');
         } else {
             // Add new - ensure name is provided
             if (data.name) {
-                const result = addMember(data as Omit<StaffMember, 'id'>);
+                const result = await addMember(data as Omit<StaffMember, 'id'>);
                 if (result) {
                     toast.success('Personal añadido');
                 } else {
@@ -151,13 +151,13 @@ function PersonnelPageContent() {
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             const content = e.target?.result as string;
             if (!content) return;
 
             try {
                 const importedMembers = parsePersonnelCSV(content);
-                const { added, skipped } = addMembers(importedMembers);
+                const { added, skipped } = await addMembers(importedMembers);
 
                 if (skipped > 0 && added.length > 0) {
                     toast.success(`${added.length} personas importadas, ${skipped} omitidas por ser duplicadas.`);

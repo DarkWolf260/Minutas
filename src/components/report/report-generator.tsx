@@ -114,10 +114,10 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
     const saveDraftLogicRef = useRef<((formData: Record<string, any>) => void) | null>(null);
 
     useEffect(() => {
-        saveDraftLogicRef.current = (formData: Record<string, any>) => {
+        saveDraftLogicRef.current = async (formData: Record<string, any>) => {
             if (template && formData) {
                 const draft: ReportDraft = { templateId: template.id, formData };
-                saveDraft(draft);
+                await saveDraft(draft);
             }
         };
     }, [template, saveDraft]);
@@ -139,9 +139,9 @@ export function ReportGenerator({ template, config, initialData, onCancel, onSav
         debouncedSaveDraft(formData);
     }, [debouncedSaveDraft]);
 
-    const handleCreateReport = (formData: Record<string, any>, content: string, title: string) => {
+    const handleCreateReport = async (formData: Record<string, any>, content: string, title: string) => {
         debouncedSaveDraft.cancel();
-        clearDraft();
+        await clearDraft();
 
         const newReport: Report = {
             id: `report_${Date.now()}`,

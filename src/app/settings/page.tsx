@@ -17,6 +17,7 @@ import { useRoles } from '@/hooks/use-roles';
 import { useReports } from '@/hooks/use-reports';
 import { useTemplates } from '@/hooks/use-templates';
 import { useGuards } from '@/hooks/use-guards';
+import { useDrafts } from '@/hooks/use-drafts';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useSettings } from '@/hooks/use-settings';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -41,52 +42,55 @@ export default function SettingsPage() {
     const { clearAllTemplates } = useTemplates();
     const { clearAllGuards } = useGuards();
     const { clearAllDefinitions } = useFieldDefinitions();
+    const { clearDraft } = useDrafts();
 
     const [newUnit, setNewUnit] = useState('');
     const [actionToConfirm, setActionToConfirm] = useState<string | null>(null);
 
     const isLoaded = unitsLoaded && rolesLoaded && deptsLoaded && settingsLoaded;
 
-    const handleAddUnit = () => {
+    const handleAddUnit = async () => {
         if (newUnit && !units.includes(newUnit)) {
-            saveUnits([...units, newUnit].sort());
+            await saveUnits([...units, newUnit].sort());
             setNewUnit('');
         }
     };
 
-    const handleRemoveUnit = (unitToRemove: string) => {
-        saveUnits(units.filter(u => u !== unitToRemove));
+    const handleRemoveUnit = async (unitToRemove: string) => {
+        await saveUnits(units.filter(u => u !== unitToRemove));
     };
 
-    const handleConfirmReset = () => {
+    const handleConfirmReset = async () => {
         if (!actionToConfirm) return;
 
         switch (actionToConfirm) {
             case 'reports':
-                clearAllReports();
+                await clearAllReports();
                 break;
             case 'templates':
-                clearAllTemplates();
+                await clearAllTemplates();
                 break;
             case 'staff':
-                clearAllRoles();
-                clearAllDepartments();
-                clearAllGuards();
-                clearAllUnits();
+                await clearAllRoles();
+                await clearAllDepartments();
+                await clearAllGuards();
+                await clearAllUnits();
                 break;
             case 'definitions':
-                clearAllDefinitions();
+                await clearAllDefinitions();
                 break;
             case 'all':
-                clearAllReports();
-                clearAllTemplates();
-                clearAllRoles();
-                clearAllDepartments();
-                clearAllGuards();
-                clearAllUnits();
-                clearAllDefinitions();
-                clearAllSettings();
-                localStorage.removeItem('app-report-draft');
+                await Promise.all([
+                    clearAllReports(),
+                    clearAllTemplates(),
+                    clearAllRoles(),
+                    clearAllDepartments(),
+                    clearAllGuards(),
+                    clearAllUnits(),
+                    clearAllDefinitions(),
+                    clearAllSettings(),
+                    clearDraft()
+                ]);
                 localStorage.removeItem('report-app-welcome-seen');
                 window.location.reload();
                 break;
@@ -95,8 +99,8 @@ export default function SettingsPage() {
         setActionToConfirm(null);
     };
 
-    const handleReportTagRoleChange = (value: string) => {
-        saveSettings({ ...settings, reportaRoleId: value, analistaRoleId: value });
+    const handleReportTagRoleChange = async (value: string) => {
+        await saveSettings({ ...settings, reportaRoleId: value, analistaRoleId: value });
     };
 
     const resetOptions: { [key: string]: { title: string; description: string; buttonLabel: string; } } = {

@@ -44,7 +44,7 @@ export function GuardAssignmentPanel({
 
     const selectedGuard = guards.find(g => g.id === selectedGuardId);
 
-    const handleAddGuard = () => {
+    const handleAddGuard = async () => {
         if (!newGuardName.trim()) {
             toast.error('El nombre de la guardia es obligatorio');
             return;
@@ -65,16 +65,16 @@ export function GuardAssignmentPanel({
             a.id.localeCompare(b.id)
         );
 
-        onGuardUpdate(updatedGuards);
+        await onGuardUpdate(updatedGuards);
         setSelectedGuardId(guardId);
         setNewGuardName('');
         toast.success(`Guardia ${guardId} creada`);
     };
 
-    const handleRemoveGuard = (guardId: string) => {
+    const handleRemoveGuard = async (guardId: string) => {
         if (window.confirm(`¿Eliminar Guardia "${guardId}"?`)) {
             const updatedGuards = guards.filter(g => g.id !== guardId);
-            onGuardUpdate(updatedGuards);
+            await onGuardUpdate(updatedGuards);
 
             // Select first guard if current was deleted
             if (selectedGuardId === guardId && updatedGuards.length > 0) {
@@ -85,8 +85,8 @@ export function GuardAssignmentPanel({
         }
     };
 
-    const handleStaffUpdate = (updatedGuard: Guard | Department) => {
-        onGuardUpdate(guards.map(g =>
+    const handleStaffUpdate = async (updatedGuard: Guard | Department) => {
+        await onGuardUpdate(guards.map(g =>
             g.id === updatedGuard.id ? updatedGuard as Guard : g
         ));
     };

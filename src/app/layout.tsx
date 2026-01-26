@@ -10,6 +10,8 @@ import { Toaster } from '@/components/toaster';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
+import { DatabaseProvider } from '@/lib/db/db-provider';
+
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
@@ -37,21 +39,23 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <TooltipProvider>
-            <div className="flex min-h-screen w-full flex-col sm:flex-row">
-              <SideNav />
-              <div className="flex flex-1 flex-col sm:pl-14">
-                <MobileNav />
-                <main className="flex-1 bg-muted/30 p-0 sm:p-0">
-                  <ErrorBoundary name="MainContent">
-                    {children}
-                  </ErrorBoundary>
-                </main>
+          <DatabaseProvider>
+            <TooltipProvider>
+              <div className="flex min-h-screen w-full flex-col sm:flex-row">
+                <SideNav />
+                <div className="flex flex-1 flex-col sm:pl-14">
+                  <MobileNav />
+                  <main className="flex-1 bg-muted/30 p-0 sm:p-0">
+                    <ErrorBoundary name="MainContent">
+                      {children}
+                    </ErrorBoundary>
+                  </main>
+                </div>
               </div>
-            </div>
-            <WelcomeDialog />
-            <Toaster />
-          </TooltipProvider>
+              <WelcomeDialog />
+              <Toaster />
+            </TooltipProvider>
+          </DatabaseProvider>
         </ThemeProvider>
       </body>
     </html>

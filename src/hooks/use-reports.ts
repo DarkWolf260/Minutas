@@ -26,63 +26,87 @@
 
 'use client';
 
-import { useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { Report } from '@/types';
-import { useLocalStorage } from './use-local-storage';
-
-const REPORTS_STORAGE_KEY = 'app-reports';
+import { useDatabase } from '@/lib/db/db-provider';
 
 export function useReports() {
-  const [reports, setReports, isLoaded] = useLocalStorage<Report[]>(
-    REPORTS_STORAGE_KEY,
-    [],
-    {
-      onError: (error, operation) => {
-        console.error(`Failed to ${operation} reports:`, error);
-        if (operation === 'save') {
-          if (error instanceof Error && error.name === 'QuotaExceededError') {
-            toast.error('El almacenamiento está lleno. No se pudo guardar.');
-          } else {
-            toast.error('Error al guardar en el almacenamiento local.');
-          }
-        } else if (operation === 'load') {
-          toast.error('No se pudieron cargar los reportes guardados.');
-        }
-      }
-    }
-  );
+  const db = useDatabase();
+  const [reports, setReports] = useState<Report[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  const getLatestReports = useCallback((): Report[] => {
-    if (typeof window === 'undefined') return [];
+  useEffect(() => {
+    if (!db) return;
+
+    const sub = db.reports.find({
+      sort: [{ timestamp: 'desc' }]
+    }).$.subscribe(data => {
+      setReports(data.map(d => d.toJSON()) as Report[]);
+      setIsLoaded(true);
+    });
+
+    return () => sub.unsubscribe();
+  }, [db]);
+
+  const getLatestReports = useCallback(async (): Promise<Report[]> => {
+    if (!db) return [];
+    const docs = await db.reports.find({
+      sort: [{ timestamp: 'desc' }]
+    }).exec();
+    return docs.map(d => d.toJSON()) as Report[];
+  }, [db]);
+
+  const addReport = useCallback(async (newReport: Report) => {
+    if (!db) return;
     try {
-      const storedReports = localStorage.getItem(REPORTS_STORAGE_KEY);
-      return storedReports ? JSON.parse(storedReports) : [];
+      await db.reports.insert(newReport);
+      toast.success('Reporte guardado correctamente.');
     } catch (error) {
-      console.error('Failed to read reports from localStorage', error);
-      return [];
+      console.error('Failed to add report:', error);
+      toast.error('Error al guardar el reporte.');
     }
-  }, []);
+  }, [db]);
 
-  const addReport = useCallback((newReport: Report) => {
-    setReports(prev => [...prev, newReport]);
-    toast.success('Reporte guardado correctamente.');
-  }, [setReports]);
+  const updateReport = useCallback(async (updatedReport: Report) => {
+    if (!db) return;
+    try {
+      const doc = await db.reports.findOne(updatedReport.id).exec();
+      if (doc) {
+        await doc.patch(updatedReport);
+        toast.success('Reporte actualizado correctamente.');
+      }
+    } catch (error) {
+      console.error('Failed to update report:', error);
+      toast.error('Error al actualizar el reporte.');
+    }
+  }, [db]);
 
-  const updateReport = useCallback((updatedReport: Report) => {
-    setReports(prev => prev.map(r => (r.id === updatedReport.id ? updatedReport : r)));
-    toast.success('Reporte actualizado correctamente.');
-  }, [setReports]);
+  const removeReport = useCallback(async (reportId: string) => {
+    if (!db) return;
+    try {
+      const doc = await db.reports.findOne(reportId).exec();
+      if (doc) {
+        await doc.remove();
+        toast.success('Reporte eliminado.');
+      }
+    } catch (error) {
+      console.error('Failed to remove report:', error);
+      toast.error('Error al eliminar el reporte.');
+    }
+  }, [db]);
 
-  const removeReport = useCallback((reportId: string) => {
-    setReports(prev => prev.filter(r => r.id !== reportId));
-    toast.success('Reporte eliminado.');
-  }, [setReports]);
-
-  const clearAllReports = useCallback(() => {
-    setReports([]);
-    toast.success('Todos los reportes han sido eliminados.');
-  }, [setReports]);
+  const clearAllReports = useCallback(async () => {
+    if (!db) return;
+    try {
+      const allDocs = await db.reports.find().exec();
+      await Promise.all(allDocs.map(d => d.remove()));
+      toast.success('Todos los reportes han sido eliminados.');
+    } catch (error) {
+      console.error('Failed to clear reports:', error);
+      toast.error('Error al eliminar los reportes.');
+    }
+  }, [db]);
 
   return { reports, addReport, updateReport, removeReport, clearAllReports, isLoaded, getLatestReports };
 }

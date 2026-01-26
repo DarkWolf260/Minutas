@@ -1,44 +1,50 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { GuardReport } from '@/types';
-import { useLocalStorage } from './use-local-storage';
-
-const GUARD_HISTORY_STORAGE_KEY = 'app-guard-history';
+import { useDatabase } from '@/lib/db/db-provider';
 
 export function useGuardHistory() {
-    const [reports, setReports, isLoaded] = useLocalStorage<GuardReport[]>(
-        GUARD_HISTORY_STORAGE_KEY,
-        [],
-        {
-            onError: (error, operation) => {
-                console.error(`Failed to ${operation} guard history:`, error);
-                if (operation === 'load') {
-                    toast.error('No se pudo cargar el historial de guardias.');
-                } else if (operation === 'save') {
-                    if (error instanceof Error && error.name === 'QuotaExceededError') {
-                        toast.error('Almacenamiento lleno. No se pudo guardar.');
-                    } else {
-                        toast.error('Error al guardar el historial.');
-                    }
-                }
-            }
+    const db = useDatabase();
+    const [reports, setReports] = useState<GuardReport[]>([]);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    useEffect(() => {
+        if (!db) return;
+
+        const sub = db.guard_history.find().$.subscribe(data => {
+            setReports(data.map(d => d.toJSON()) as GuardReport[]);
+            setIsLoaded(true);
+        });
+
+        return () => sub.unsubscribe();
+    }, [db]);
+
+    const saveGuardReport = useCallback(async (report: GuardReport) => {
+        if (!db) return;
+        try {
+            await db.guard_history.insert(report);
+            toast.success('Reporte guardado en el historial.');
+        } catch (error) {
+            console.error('Failed to save guard report:', error);
+            toast.error('Error al guardar el historial.');
         }
-    );
+    }, [db]);
 
-    const saveGuardReport = useCallback((report: GuardReport) => {
-        setReports(prev => [...prev, report]);
-        toast.success('Reporte guardado en el historial.');
-    }, [setReports]);
-
-    const deleteGuardReport = useCallback((id: string) => {
-        setReports(prev => prev.filter(r => r.id !== id));
-        toast.success('Reporte eliminado del historial.');
-    }, [setReports]);
+    const deleteGuardReport = useCallback(async (id: string) => {
+        if (!db) return;
+        try {
+            const doc = await db.guard_history.findOne(id).exec();
+            if (doc) await doc.remove();
+            toast.success('Reporte eliminado del historial.');
+        } catch (error) {
+            console.error('Failed to delete guard report:', error);
+            toast.error('Error al eliminar el reporte.');
+        }
+    }, [db]);
 
     const getGuardReportById = useCallback((id: string) => {
-        // This still needs the current reports value
         return reports.find(r => r.id === id);
     }, [reports]);
 

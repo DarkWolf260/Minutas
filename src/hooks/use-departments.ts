@@ -23,11 +23,9 @@
 
 'use client';
 
-import { useCallback } from 'react';
-import type { Department, Staff } from '@/types';
-import { useLocalStorage } from './use-local-storage';
-
-const DEPARTMENTS_STORAGE_KEY = 'app-departments';
+import { useState, useEffect, useCallback } from 'react';
+import type { Department } from '@/types';
+import { useDatabase } from '@/lib/db/db-provider';
 
 const defaultDepartments: Department[] = [
   { id: 'ops', name: 'Departamento de Operaciones', staff: {} },
@@ -39,63 +37,78 @@ const defaultDepartments: Department[] = [
 ];
 
 export function useDepartments() {
-  const [departments, setDepartments, isLoaded] = useLocalStorage<Department[]>(
-    DEPARTMENTS_STORAGE_KEY,
-    defaultDepartments,
-    {
-      migrate: (parsed: any[]) => {
-        if (!Array.isArray(parsed) || parsed.length === 0) {
-          return defaultDepartments;
-        }
+  const db = useDatabase();
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-        // Migrate old format (string[]) to new format (StaffMember[])
-        return parsed.map((dept: any) => {
-          const newStaff: Staff = {};
-          if (!dept.staff) return { ...dept, staff: newStaff };
+  useEffect(() => {
+    if (!db) return;
 
-          // Check if migration from string[] to StaffMember[] is needed
-          for (const roleName in dept.staff) {
-            const staffList = dept.staff[roleName];
-            if (Array.isArray(staffList) && staffList.length > 0 && typeof staffList[0] === 'string') {
-              // This is the old format (string[])
-              newStaff[roleName] = staffList.map((name: string) => ({
-                id: `staff_${Date.now()}_${Math.random()}`,
-                name: name,
-                cedula: undefined
-              }));
-            } else {
-              // Already in new format (StaffMember[]) or empty
-              newStaff[roleName] = staffList;
-            }
-          }
-          return { ...dept, staff: newStaff };
-        });
-      },
-      onError: (error, operation) => {
-        console.error(`Failed to ${operation} departments:`, error);
+    const sub = db.departments.find().$.subscribe(data => {
+      if (data.length > 0) {
+        setDepartments(data.map(d => d.toJSON()) as Department[]);
+      } else {
+        // Initial departments if DB is empty
+        db.departments.bulkInsert(defaultDepartments).catch(err => console.error('Failed to insert default departments:', err));
       }
+      setIsLoaded(true);
+    });
+
+    return () => sub.unsubscribe();
+  }, [db]);
+
+  const saveDepartments = useCallback(async (newDepartments: Department[]) => {
+    if (!db) return;
+    try {
+      const allDocs = await db.departments.find().exec();
+      const newIds = new Set(newDepartments.map(d => d.id));
+      const toDelete = allDocs.filter(d => !newIds.has(d.id));
+      if (toDelete.length > 0) await Promise.all(toDelete.map(d => d.remove()));
+      await db.departments.bulkUpsert(newDepartments);
+    } catch (error) {
+      console.error('Failed to save departments:', error);
     }
-  );
+  }, [db]);
 
-  const saveDepartments = useCallback((newDepartments: Department[]) => {
-    setDepartments(newDepartments);
-  }, [setDepartments]);
+  const addDepartment = useCallback(async (newDepartment: Department) => {
+    if (!db) return;
+    try {
+      await db.departments.insert(newDepartment);
+    } catch (error) {
+      console.error('Failed to add department:', error);
+    }
+  }, [db]);
 
-  const addDepartment = useCallback((newDepartment: Department) => {
-    setDepartments(prev => [...prev, newDepartment].sort((a, b) => a.name.localeCompare(b.name)));
-  }, [setDepartments]);
+  const removeDepartment = useCallback(async (departmentId: string) => {
+    if (!db) return;
+    try {
+      const doc = await db.departments.findOne(departmentId).exec();
+      if (doc) await doc.remove();
+    } catch (error) {
+      console.error('Failed to remove department:', error);
+    }
+  }, [db]);
 
-  const removeDepartment = useCallback((departmentId: string) => {
-    setDepartments(prev => prev.filter(d => d.id !== departmentId));
-  }, [setDepartments]);
+  const updateDepartment = useCallback(async (updatedDepartment: Department) => {
+    if (!db) return;
+    try {
+      const doc = await db.departments.findOne(updatedDepartment.id).exec();
+      if (doc) await doc.patch(updatedDepartment);
+    } catch (error) {
+      console.error('Failed to update department:', error);
+    }
+  }, [db]);
 
-  const updateDepartment = useCallback((updatedDepartment: Department) => {
-    setDepartments(prev => prev.map(d => d.id === updatedDepartment.id ? updatedDepartment : d));
-  }, [setDepartments]);
-
-  const clearAllDepartments = useCallback(() => {
-    setDepartments(defaultDepartments);
-  }, [setDepartments]);
+  const clearAllDepartments = useCallback(async () => {
+    if (!db) return;
+    try {
+      const allDocs = await db.departments.find().exec();
+      await Promise.all(allDocs.map(d => d.remove()));
+      await db.departments.bulkInsert(defaultDepartments);
+    } catch (error) {
+      console.error('Failed to clear departments:', error);
+    }
+  }, [db]);
 
 
   return { departments, addDepartment, removeDepartment, updateDepartment, isLoaded, clearAllDepartments, saveDepartments };

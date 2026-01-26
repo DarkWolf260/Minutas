@@ -1,11 +1,8 @@
-
 'use client';
 
-import { useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { AppSettings } from '@/types';
-import { useLocalStorage } from './use-local-storage';
-
-const SETTINGS_STORAGE_KEY = 'app-settings';
+import { useDatabase } from '@/lib/db/db-provider';
 
 const defaultSettings: AppSettings = {
   activeGuardId: '',
@@ -16,27 +13,44 @@ const defaultSettings: AppSettings = {
 };
 
 export function useSettings() {
-  const [settings, setSettings, isLoaded] = useLocalStorage<AppSettings>(
-    SETTINGS_STORAGE_KEY,
-    defaultSettings,
-    {
-      migrate: (stored: any) => {
-        // Merge stored settings with defaults to ensure all required fields exist
-        return { ...defaultSettings, ...stored };
-      },
-      onError: (error, operation) => {
-        console.error(`Failed to ${operation} settings:`, error);
+  const db = useDatabase();
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!db) return;
+
+    const sub = db.settings.findOne('app-settings').$.subscribe(doc => {
+      if (doc) {
+        setSettings(doc.toJSON() as AppSettings);
+      } else {
+        // If not found, insert default
+        db.settings.insert({ ...defaultSettings, id: 'app-settings' })
+          .catch(err => console.error('Failed to insert default settings:', err));
       }
+      setIsLoaded(true);
+    });
+
+    return () => sub.unsubscribe();
+  }, [db]);
+
+  const saveSettings = useCallback(async (newSettings: AppSettings) => {
+    if (!db) return;
+    try {
+      await db.settings.upsert({ ...newSettings, id: 'app-settings' });
+    } catch (error) {
+      console.error('Failed to save settings:', error);
     }
-  );
+  }, [db]);
 
-  const saveSettings = useCallback((newSettings: AppSettings) => {
-    setSettings(newSettings);
-  }, [setSettings]);
-
-  const clearAllSettings = useCallback(() => {
-    setSettings(defaultSettings);
-  }, [setSettings]);
+  const clearAllSettings = useCallback(async () => {
+    if (!db) return;
+    try {
+      await db.settings.upsert({ ...defaultSettings, id: 'app-settings' });
+    } catch (error) {
+      console.error('Failed to clear settings:', error);
+    }
+  }, [db]);
 
   return { settings, saveSettings, isLoaded, clearAllSettings };
 }

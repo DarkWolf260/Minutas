@@ -121,16 +121,16 @@ function NovedadesPageContent() {
     return reports.find(report => report.id === selectedReportId) ?? null;
   }, [selectedReportId, reports, creatingReport]);
 
-  const handleDeleteReport = (id: string) => {
-    removeReport(id);
+  const handleDeleteReport = async (id: string) => {
+    await removeReport(id);
     if (selectedReportId === id) {
       setSelectedReportId(null);
     }
     setReportToDelete(null);
   }
 
-  const handleClearAll = () => {
-    clearAllReports();
+  const handleClearAll = async () => {
+    await clearAllReports();
     setReportToDelete(null);
   };
 
@@ -144,16 +144,16 @@ function NovedadesPageContent() {
     }
   };
 
-  const handleSaveNewReport = (report: Report) => {
-    clearDraft();
-    addReport(report);
+  const handleSaveNewReport = async (report: Report) => {
+    await clearDraft();
+    await addReport(report);
     setCreatingReport(null);
     setInitialDraftData(undefined);
     router.push(`/?selected=${report.id}`);
   }
 
-  const handleCancelCreation = () => {
-    clearDraft();
+  const handleCancelCreation = async () => {
+    await clearDraft();
     setCreatingReport(null);
     setInitialDraftData(undefined);
   };

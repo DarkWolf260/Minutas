@@ -31,61 +31,64 @@
 
 'use client';
 
-import { useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { AttendanceRecord, AttendanceStatus } from '@/types';
-import { useLocalStorage } from './use-local-storage';
-
-const ATTENDANCE_STORAGE_KEY = 'app-attendance';
+import { useDatabase } from '@/lib/db/db-provider';
 
 export function useAttendance() {
-    const [records, setRecords, isLoaded] = useLocalStorage<AttendanceRecord[]>(
-        ATTENDANCE_STORAGE_KEY,
-        [],
-        {
-            onError: (error, operation) => {
-                console.error(`Failed to ${operation} attendance:`, error);
-            }
-        }
-    );
+    const db = useDatabase();
+    const [records, setRecords] = useState<AttendanceRecord[]>([]);
+    const [isLoaded, setIsLoaded] = useState(false);
 
-    const markAttendance = useCallback((memberId: string, date: string, status: AttendanceStatus, checkInTime?: string, note?: string) => {
-        setRecords(prev => {
-            const newRecords = [...prev];
-            const existingIndex = newRecords.findIndex(r => r.memberId === memberId && r.date === date);
+    useEffect(() => {
+        if (!db) return;
 
-            if (existingIndex > -1) {
-                const existing = newRecords[existingIndex];
-                if (existing) {
-                    newRecords[existingIndex] = {
-                        ...existing,
-                        status,
-                        checkInTime: checkInTime || existing.checkInTime,
-                        note: note || existing.note,
-                    };
-                }
-            } else {
-                newRecords.push({
-                    id: `attendance_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    memberId,
-                    date,
-                    status,
-                    checkInTime,
-                    note,
-                    createdAt: new Date().toISOString(),
-                });
-            }
-
-            return newRecords;
+        const sub = db.attendance.find().$.subscribe(data => {
+            setRecords(data.map(d => d.toJSON()) as AttendanceRecord[]);
+            setIsLoaded(true);
         });
-    }, [setRecords]);
+
+        return () => sub.unsubscribe();
+    }, [db]);
+
+    const markAttendance = useCallback(async (memberId: string, date: string, status: AttendanceStatus, checkInTime?: string, note?: string) => {
+        if (!db) return;
+
+        const existingDoc = await db.attendance.findOne({
+            selector: { memberId, date }
+        }).exec();
+
+        if (existingDoc) {
+            await existingDoc.patch({
+                status,
+                checkInTime: checkInTime || existingDoc.toJSON().checkInTime,
+                note: note || existingDoc.toJSON().note,
+            });
+        } else {
+            await db.attendance.insert({
+                id: `attendance_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                memberId,
+                date,
+                status,
+                checkInTime,
+                note,
+                createdAt: new Date().toISOString(),
+            });
+        }
+    }, [db]);
 
     const getRecordsByDate = useCallback((date: string) => {
         return records.filter(r => r.date === date);
     }, [records]);
 
-    const saveRecords = useCallback((newRecords: AttendanceRecord[]) => {
-        setRecords(newRecords);
-    }, [setRecords]);
+    const saveRecords = useCallback(async (newRecords: AttendanceRecord[]) => {
+        if (!db) return;
+        const allDocs = await db.attendance.find().exec();
+        await Promise.all(allDocs.map(d => d.remove()));
+        if (newRecords.length > 0) {
+            await db.attendance.bulkInsert(newRecords);
+        }
+    }, [db]);
 
     return {
         records,

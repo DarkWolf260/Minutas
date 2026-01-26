@@ -59,10 +59,10 @@ export function AttendanceManager({
     };
 
     // Handle attendance marking
-    const handleMark = (memberId: string, status: AttendanceStatus) => {
+    const handleMark = async (memberId: string, status: AttendanceStatus) => {
         const now = new Date();
         const timeString = format(now, 'HH:mm');
-        onMarkAttendance(memberId, dateString, status, timeString);
+        await onMarkAttendance(memberId, dateString, status, timeString);
     };
 
     // Calculate stats

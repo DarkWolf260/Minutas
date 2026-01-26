@@ -29,32 +29,29 @@
 
 'use client';
 
-import { useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { StaffMember } from '@/types';
-import { useLocalStorage } from './use-local-storage';
-
-const PERSONNEL_STORAGE_KEY = 'app-personnel';
+import { useDatabase } from '@/lib/db/db-provider';
 
 export function usePersonnel() {
-    const [personnel, setPersonnel, isLoaded] = useLocalStorage<StaffMember[]>(
-        PERSONNEL_STORAGE_KEY,
-        [],
-        {
-            migrate: (parsed: any[]) => {
-                // Migration: Ensure all members have a status if missing and specialties array
-                return parsed.map((m: any) => ({
-                    ...m,
-                    status: m.status || 'activo',
-                    specialties: m.specialties || [],
-                }));
-            },
-            onError: (error, operation) => {
-                console.error(`Failed to ${operation} personnel:`, error);
-            }
-        }
-    );
+    const db = useDatabase();
+    const [personnel, setPersonnel] = useState<StaffMember[]>([]);
+    const [isLoaded, setIsLoaded] = useState(false);
 
-    const addMember = useCallback((member: Omit<StaffMember, 'id'>) => {
+    useEffect(() => {
+        if (!db) return;
+
+        const sub = db.personnel.find().$.subscribe(data => {
+            setPersonnel(data.map(d => d.toJSON()) as StaffMember[]);
+            setIsLoaded(true);
+        });
+
+        return () => sub.unsubscribe();
+    }, [db]);
+
+    const addMember = useCallback(async (member: Omit<StaffMember, 'id'>) => {
+        if (!db) return null;
+
         // Prevent generic/empty cedula duplicates if provided
         if (member.cedula && personnel.some(p => p.cedula === member.cedula)) {
             return null;
@@ -64,52 +61,75 @@ export function usePersonnel() {
             ...member,
             id: `personnel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         };
-        setPersonnel(prev => [...prev, newMember]);
+
+        await db.personnel.insert(newMember);
         return newMember;
-    }, [setPersonnel, personnel]);
+    }, [db, personnel]);
 
-    const addMembers = useCallback((members: Omit<StaffMember, 'id'>[]) => {
+    const addMembers = useCallback(async (members: Omit<StaffMember, 'id'>[]) => {
+        if (!db) return { added: [], skipped: 0 };
+
         const existingCedulas = new Set(personnel.filter(p => p.cedula).map(p => p.cedula));
-
         const newMembers: StaffMember[] = [];
-        const skippedCount = { duplicates: 0 };
+        let skippedCount = 0;
 
         members.forEach(m => {
             if (m.cedula && existingCedulas.has(m.cedula)) {
-                skippedCount.duplicates++;
+                skippedCount++;
                 return;
             }
 
-            newMembers.push({
-                ...m,
-                id: `personnel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${Math.random().toString(36).substr(2, 5)}`,
-            });
+            const id = `personnel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${Math.random().toString(36).substr(2, 5)}`;
+            newMembers.push({ ...m, id });
 
             if (m.cedula) existingCedulas.add(m.cedula);
         });
 
         if (newMembers.length > 0) {
-            setPersonnel(prev => [...prev, ...newMembers]);
+            await db.personnel.bulkInsert(newMembers);
         }
 
-        return { added: newMembers, skipped: skippedCount.duplicates };
-    }, [setPersonnel, personnel]);
+        return { added: newMembers, skipped: skippedCount };
+    }, [db, personnel]);
 
-    const updateMember = useCallback((id: string, updates: Partial<StaffMember>) => {
-        setPersonnel(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
-    }, [setPersonnel]);
+    const updateMember = useCallback(async (id: string, updates: Partial<StaffMember>) => {
+        if (!db) return;
+        const doc = await db.personnel.findOne(id).exec();
+        if (doc) {
+            await doc.patch(updates);
+        }
+    }, [db]);
 
-    const removeMember = useCallback((id: string) => {
-        setPersonnel(prev => prev.filter(m => m.id !== id));
-    }, [setPersonnel]);
+    const removeMember = useCallback(async (id: string) => {
+        if (!db) return;
+        const doc = await db.personnel.findOne(id).exec();
+        if (doc) {
+            await doc.remove();
+        }
+    }, [db]);
 
-    const removeMembers = useCallback((ids: string[]) => {
-        setPersonnel(prev => prev.filter(m => !ids.includes(m.id)));
-    }, [setPersonnel]);
+    const removeMembers = useCallback(async (ids: string[]) => {
+        if (!db) return;
+        const query = db.personnel.find({
+            selector: {
+                id: { $in: ids }
+            }
+        });
+        await query.remove();
+    }, [db]);
 
-    const savePersonnel = useCallback((newPersonnel: StaffMember[]) => {
-        setPersonnel(newPersonnel);
-    }, [setPersonnel]);
+    const savePersonnel = useCallback(async (newPersonnel: StaffMember[]) => {
+        if (!db) return;
+        // In RxDB, "savePersonnel" (batch update everything) is less common, 
+        // but we can implement it by removing all and inserting new ones if needed,
+        // or better, just leave it as it's mostly used for imports or complex sync.
+        // For compatibility with old API:
+        const allDocs = await db.personnel.find().exec();
+        await Promise.all(allDocs.map(d => d.remove()));
+        if (newPersonnel.length > 0) {
+            await db.personnel.bulkInsert(newPersonnel);
+        }
+    }, [db]);
 
     const isCedulaDuplicate = useCallback((cedula: string, excludeId?: string) => {
         if (!cedula) return false;

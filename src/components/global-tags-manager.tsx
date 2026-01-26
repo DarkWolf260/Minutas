@@ -20,9 +20,9 @@ export function GlobalTagsManager() {
 
     // Unused handlers removed for cleanliness
 
-    const handleUpdateDefinition = (fieldName: string, newConfig: FieldConfig) => {
+    const handleUpdateDefinition = async (fieldName: string, newConfig: FieldConfig) => {
         const newDefinitions = { ...definitions, [fieldName]: newConfig };
-        saveDefinitions(newDefinitions);
+        await saveDefinitions(newDefinitions);
     };
 
     const allDefaultFieldKeys = useMemo(() => [

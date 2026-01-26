@@ -23,11 +23,9 @@
 
 'use client';
 
-import { useCallback } from 'react';
-import type { Guard, Staff } from '@/types';
-import { useLocalStorage } from './use-local-storage';
-
-const GUARDS_STORAGE_KEY = 'app-guards';
+import { useState, useEffect, useCallback } from 'react';
+import type { Guard } from '@/types';
+import { useDatabase } from '@/lib/db/db-provider';
 
 const defaultGuards: Guard[] = [
   { id: 'A', staff: {} },
@@ -37,51 +35,45 @@ const defaultGuards: Guard[] = [
 ];
 
 export function useGuards() {
-  const [guards, setGuards, isLoaded] = useLocalStorage<Guard[]>(
-    GUARDS_STORAGE_KEY,
-    defaultGuards,
-    {
-      migrate: (parsedGuards: any[]) => {
-        if (!parsedGuards || parsedGuards.length === 0) {
-          return defaultGuards;
-        }
+  const db = useDatabase();
+  const [guards, setGuards] = useState<Guard[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-        // Migrate old format (string[]) to new format (StaffMember[])
-        return parsedGuards.map((guard: any) => {
-          const newStaff: Staff = {};
-          if (!guard.staff) return { ...guard, staff: newStaff };
+  useEffect(() => {
+    if (!db) return;
 
-          // Check if migration from string[] to StaffMember[] is needed
-          for (const roleName in guard.staff) {
-            const staffList = guard.staff[roleName];
-            if (Array.isArray(staffList) && staffList.length > 0 && typeof staffList[0] === 'string') {
-              // This is the old format (string[])
-              newStaff[roleName] = staffList.map((name: string) => ({
-                id: `staff_${Date.now()}_${Math.random()}`,
-                name: name,
-                cedula: undefined
-              }));
-            } else {
-              // Already in new format (StaffMember[]) or empty
-              newStaff[roleName] = staffList;
-            }
-          }
-          return { ...guard, staff: newStaff };
-        });
-      },
-      onError: (error, operation) => {
-        console.error(`Failed to ${operation} guards:`, error);
+    const sub = db.guards.find().$.subscribe(data => {
+      if (data.length > 0) {
+        setGuards(data.map(d => d.toJSON()) as Guard[]);
+      } else {
+        // Initial guards if DB is empty
+        db.guards.bulkInsert(defaultGuards).catch(err => console.error('Failed to insert default guards:', err));
       }
+      setIsLoaded(true);
+    });
+
+    return () => sub.unsubscribe();
+  }, [db]);
+
+  const saveGuards = useCallback(async (newGuards: Guard[]) => {
+    if (!db) return;
+    try {
+      await db.guards.bulkUpsert(newGuards);
+    } catch (error) {
+      console.error('Failed to save guards:', error);
     }
-  );
+  }, [db]);
 
-  const saveGuards = useCallback((newGuards: Guard[]) => {
-    setGuards(newGuards);
-  }, [setGuards]);
-
-  const clearAllGuards = useCallback(() => {
-    setGuards(defaultGuards);
-  }, [setGuards]);
+  const clearAllGuards = useCallback(async () => {
+    if (!db) return;
+    try {
+      const allDocs = await db.guards.find().exec();
+      await Promise.all(allDocs.map(d => d.remove()));
+      await db.guards.bulkInsert(defaultGuards);
+    } catch (error) {
+      console.error('Failed to clear guards:', error);
+    }
+  }, [db]);
 
   return { guards, saveGuards, isLoaded, clearAllGuards };
 }

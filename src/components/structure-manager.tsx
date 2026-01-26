@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { LEADER_ROLES } from '@/constants/roles';
 
 interface StructureManagerProps {
     roles: StaffRole[];
@@ -63,19 +64,19 @@ export function StructureManager({
     const [newRoleName, setNewRoleName] = useState('');
     const [selectedDeptId, setSelectedDeptId] = useState<string>('all');
 
-    const handleAddDept = () => {
+    const handleAddDept = async () => {
         if (!newDeptName.trim()) return;
-        onAddDepartment(newDeptName.trim());
+        await onAddDepartment(newDeptName.trim());
         setNewDeptName('');
     };
 
-    const handleAddRole = () => {
+    const handleAddRole = async () => {
         if (!newRoleName.trim()) return;
-        onAddRole(newRoleName.trim());
+        await onAddRole(newRoleName.trim());
         setNewRoleName('');
     };
 
-    const handleLoadInstitutional = () => {
+    const handleLoadInstitutional = async () => {
         if (!window.confirm('¿Estás seguro de cargar la estructura institucional? Esto añadirá los departamentos y cargos estándar (no eliminará los actuales).')) return;
 
         const institutionalDepts = [
@@ -114,12 +115,12 @@ export function StructureManager({
 
         // Update departments first
         if (newDepts.length > departments.length) {
-            onDepartmentsChange(newDepts);
+            await onDepartmentsChange(newDepts);
         }
 
         const institutionalRoles: StaffRole[] = [
-            { name: 'Director', isSingle: true, departmentScope: [], isHidden: false },
-            { name: 'Jefe de Operaciones', isSingle: true, departmentScope: [deptMap['ops']].filter(Boolean) as string[], isHidden: false },
+            { name: LEADER_ROLES.DIRECTOR, isSingle: true, departmentScope: [], isHidden: false },
+            { name: LEADER_ROLES.JEFE_OPERACIONES, isSingle: true, departmentScope: [deptMap['ops']].filter(Boolean) as string[], isHidden: false },
             { name: 'Jefe de los Servicios', isSingle: true, departmentScope: [deptMap['ops']].filter(Boolean) as string[], isHidden: false },
             { name: 'Analista de CEMUPRAD', isSingle: false, departmentScope: [deptMap['cemuprad']].filter(Boolean) as string[], isHidden: false },
             { name: 'Auxiliar de CEMUPRAD', isSingle: false, departmentScope: [deptMap['cemuprad']].filter(Boolean) as string[], isHidden: false },
@@ -138,7 +139,7 @@ export function StructureManager({
         institutionalRoles.forEach(r => {
             const existingIndex = newRoles.findIndex(ext => ext.name.toLowerCase() === r.name.toLowerCase());
             if (existingIndex === -1) {
-                if (r.name === 'Director') {
+                if (r.name === LEADER_ROLES.DIRECTOR) {
                     newRoles.unshift(r); // Add Director at the beginning
                 } else {
                     newRoles.push(r);
@@ -154,7 +155,7 @@ export function StructureManager({
                     };
 
                     // If it's the director, move to front
-                    if (r.name === 'Director' && existingIndex > 0) {
+                    if (r.name === LEADER_ROLES.DIRECTOR && existingIndex > 0) {
                         const removed = newRoles.splice(existingIndex, 1);
                         const director = removed[0];
                         if (director) {
@@ -165,22 +166,22 @@ export function StructureManager({
             }
         });
 
-        onRolesChange(newRoles);
+        await onRolesChange(newRoles);
         toast.success('Estructura institucional actualizada correctamente.');
     };
 
-    const handleUpdateRole = (roleName: string, updates: Partial<StaffRole>) => {
+    const handleUpdateRole = async (roleName: string, updates: Partial<StaffRole>) => {
         const newRoles = roles.map(r => r.name === roleName ? { ...r, ...updates } : r);
-        onRolesChange(newRoles);
+        await onRolesChange(newRoles);
     };
 
-    const handleAssignDept = (roleName: string, deptId: string) => {
+    const handleAssignDept = async (roleName: string, deptId: string) => {
         const newRoles = roles.map(r =>
             r.name === roleName
                 ? { ...r, departmentScope: deptId === 'global' ? [] : [deptId] }
                 : r
         );
-        onRolesChange(newRoles);
+        await onRolesChange(newRoles);
     };
 
     const sensors = useSensors(
@@ -190,16 +191,16 @@ export function StructureManager({
         })
     );
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
         if (over && active.id !== over.id) {
             const oldIndex = roles.findIndex((r) => r.name === active.id);
             const newIndex = roles.findIndex((r) => r.name === over.id);
-            onRolesChange(arrayMove(roles, oldIndex, newIndex));
+            await onRolesChange(arrayMove(roles, oldIndex, newIndex));
         }
     };
 
-    const handleMoveRole = (index: number, direction: 'up' | 'down') => {
+    const handleMoveRole = async (index: number, direction: 'up' | 'down') => {
         const newRoles = [...roles];
         const newIndex = direction === 'up' ? index - 1 : index + 1;
         if (newIndex < 0 || newIndex >= newRoles.length) return;
@@ -211,7 +212,7 @@ export function StructureManager({
             newRoles[newIndex] = temp;
         }
 
-        onRolesChange(newRoles);
+        await onRolesChange(newRoles);
     };
 
     const filteredRoles = useMemo(() => {
@@ -307,9 +308,9 @@ export function StructureManager({
                                             variant="ghost"
                                             size="icon"
                                             className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
-                                            onClick={(e) => {
+                                            onClick={async (e) => {
                                                 e.stopPropagation();
-                                                onRemoveDepartment(dept.id);
+                                                await onRemoveDepartment(dept.id);
                                             }}
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -410,7 +411,7 @@ export function StructureManager({
                                                 variant="ghost"
                                                 size="icon"
                                                 className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
-                                                onClick={() => onRemoveRole(role.name)}
+                                                onClick={async () => await onRemoveRole(role.name)}
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
@@ -478,9 +479,9 @@ export function StructureManager({
                                         role={role}
                                         index={idx}
                                         departments={departments}
-                                        onRemoveFromList={() => {
+                                        onRemoveFromList={async () => {
                                             const newRoles = roles.map(r => r.name === role.name ? { ...r, isHidden: true } : r);
-                                            onRolesChange(newRoles);
+                                            await onRolesChange(newRoles);
                                             toast.info(`Cargo "${role.name}" quitado de la organización.`);
                                         }}
                                     />
@@ -498,7 +499,7 @@ export function StructureManager({
             </Card>
 
             <div className="flex justify-end pt-2">
-                <Button onClick={() => { onSave(); toast.success('Estructura guardada correctamente'); }} className="shadow-lg px-8">
+                <Button onClick={async () => { await onSave(); toast.success('Estructura guardada correctamente'); }} className="shadow-lg px-8">
                     Guardar Cambios de Estructura
                 </Button>
             </div>

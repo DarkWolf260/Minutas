@@ -1,8 +1,11 @@
 
 'use client';
 
-export type PersonnelStatus = 'activo' | 'vacaciones' | 'permiso' | 'reposo' | 'apoyo';
-export type AttendanceStatus = 'presente' | 'tarde' | 'permiso' | 'ausente';
+import { PERSONNEL_STATUS } from '@/constants/personnel';
+import { ATTENDANCE_STATUS } from '@/constants/attendance';
+
+export type PersonnelStatus = typeof PERSONNEL_STATUS[keyof typeof PERSONNEL_STATUS];
+export type AttendanceStatus = typeof ATTENDANCE_STATUS[keyof typeof ATTENDANCE_STATUS];
 
 export interface AttendanceRecord {
   id: string;
@@ -44,6 +47,7 @@ export interface Guard {
 }
 
 export interface AppSettings {
+  id?: string;
   // This is now managed via global field definitions
   activeGuardId?: string;
   guardShiftDuration?: number;
@@ -138,8 +142,10 @@ export interface Template {
 }
 
 export interface ReportDraft {
+  id?: string;
   templateId: string;
   formData: Record<string, any>;
+  lastSaved?: string;
 }
 
 export interface Department {

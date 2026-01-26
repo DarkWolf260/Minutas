@@ -48,7 +48,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     const saveLogicRef = useRef<((formData: Record<string, any>) => void) | null>(null);
 
     useEffect(() => {
-        saveLogicRef.current = (formData: Record<string, any>) => {
+        saveLogicRef.current = async (formData: Record<string, any>) => {
             if (!report || !template) return;
 
             const content = renderFinalReport(template.content, formData, config, {});
@@ -62,7 +62,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
                 status: status,
                 timestamp: new Date().toISOString(),
             };
-            onSave(finalReport);
+            await onSave(finalReport);
             setSaveButtonText('Guardado');
         };
     }, [report, template, config, status, onSave]);
@@ -94,14 +94,14 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
         setTimeout(() => setCopyButtonText('Copiar'), 2000);
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!formRef.current) return;
         const formData = formRef.current.getValues();
         debouncedSave.cancel();
-        saveLogicRef.current?.(formData);
+        await saveLogicRef.current?.(formData);
     };
 
-    const handleStatusChange = (newStatus: 'En proceso' | 'Finalizado') => {
+    const handleStatusChange = async (newStatus: 'En proceso' | 'Finalizado') => {
         setStatus(newStatus);
 
         if (!formRef.current) return;
@@ -119,7 +119,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
             status: newStatus,
             timestamp: new Date().toISOString(),
         };
-        onSave(finalReport);
+        await onSave(finalReport);
         setSaveButtonText('Guardado');
     }
 

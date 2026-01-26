@@ -4,6 +4,13 @@
  */
 
 import { z } from 'zod';
+import { PERSONNEL_STATUS } from '@/constants/personnel';
+import { ATTENDANCE_STATUS } from '@/constants/attendance';
+
+export const PERSONNEL_VALIDATION = {
+    MAX_NAME_LENGTH: 100,
+    MAX_NOTE_LENGTH: 500,
+} as const;
 
 // Cedula validation regex (Venezuelan ID format)
 const cedulaRegex = /^[VE]-?\d{6,8}$/i;
@@ -15,7 +22,7 @@ export const PersonnelSchema = z.object({
     id: z.string().optional(),
     name: z.string()
         .min(1, 'El nombre es obligatorio')
-        .max(100, 'El nombre es demasiado largo')
+        .max(PERSONNEL_VALIDATION.MAX_NAME_LENGTH, 'El nombre es demasiado largo')
         .trim(),
     cedula: z.string()
         .regex(cedulaRegex, 'Formato de cédula inválido (ej: V-12345678)')
@@ -24,7 +31,13 @@ export const PersonnelSchema = z.object({
     rank: z.string().optional(),
     role: z.string().optional(),
     department: z.string().optional(),
-    status: z.enum(['activo', 'vacaciones', 'permiso', 'reposo', 'apoyo'], {
+    status: z.enum([
+        PERSONNEL_STATUS.ACTIVO,
+        PERSONNEL_STATUS.VACACIONES,
+        PERSONNEL_STATUS.PERMISO,
+        PERSONNEL_STATUS.REPOSO,
+        PERSONNEL_STATUS.APOYO
+    ], {
         errorMap: () => ({ message: 'Estado inválido' })
     }).optional(),
 });
@@ -48,11 +61,16 @@ export type GuardFormData = z.infer<typeof GuardSchema>;
  */
 export const AttendanceSchema = z.object({
     memberId: z.string().min(1, 'ID de miembro requerido'),
-    status: z.enum(['presente', 'tarde', 'permiso', 'ausente'], {
+    status: z.enum([
+        ATTENDANCE_STATUS.PRESENTE,
+        ATTENDANCE_STATUS.TARDE,
+        ATTENDANCE_STATUS.PERMISO,
+        ATTENDANCE_STATUS.AUSENTE
+    ], {
         errorMap: () => ({ message: 'Estado de asistencia inválido' })
     }),
     checkInTime: z.string().optional(),
-    note: z.string().max(500, 'La nota es demasiado larga').optional(),
+    note: z.string().max(PERSONNEL_VALIDATION.MAX_NOTE_LENGTH, 'La nota es demasiado larga').optional(),
 });
 
 export type AttendanceFormData = z.infer<typeof AttendanceSchema>;
@@ -82,7 +100,7 @@ export function formatZodError(error: z.ZodError): string {
  * Helper function to validate and return typed data or error
  */
 export function validatePersonnel(data: unknown): { success: true; data: PersonnelFormData } |
-    { success: false; error: string } {
+{ success: false; error: string } {
     const result = PersonnelSchema.safeParse(data);
     if (result.success) {
         return { success: true, data: result.data };
@@ -91,7 +109,7 @@ export function validatePersonnel(data: unknown): { success: true; data: Personn
 }
 
 export function validateGuard(data: unknown): { success: true; data: GuardFormData } |
-    { success: false; error: string } {
+{ success: false; error: string } {
     const result = GuardSchema.safeParse(data);
     if (result.success) {
         return { success: true, data: result.data };

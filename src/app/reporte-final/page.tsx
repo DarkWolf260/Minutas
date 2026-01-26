@@ -27,6 +27,9 @@ import { TimeHlvInput } from '@/components/time-hlv-input';
 import { PlusCircle, Trash2, Calculator, FileText, Save } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { DEFAULT_STATISTICS_CATEGORIES } from '@/constants/statistics';
+import { LEADER_ROLES } from '@/constants/roles';
+import { PERSONNEL_STATUS } from '@/constants/personnel';
+import { ATTENDANCE_STATUS } from '@/constants/attendance';
 
 interface ManualNovedad {
     id: string;
@@ -196,9 +199,8 @@ export default function ReporteFinalPage() {
     }, [manualNovedades]);
 
     const finishedReports = useMemo(() => {
-        const latestReports = getLatestReports();
-        return latestReports.filter(report => report.status === 'Finalizado');
-    }, [reports, getLatestReports]);
+        return reports.filter(report => report.status === 'Finalizado');
+    }, [reports]);
 
     const handleGenerateReport = () => {
         if (finishedReports.length === 0 && !statisticsText.trim() && manualNovedades.length === 0) {
@@ -237,8 +239,8 @@ export default function ReporteFinalPage() {
             return '';
         };
 
-        const director = getLeaderName('Director');
-        const jefeDeOperaciones = getLeaderName('Jefe de Operaciones');
+        const director = getLeaderName(LEADER_ROLES.DIRECTOR);
+        const jefeDeOperaciones = getLeaderName(LEADER_ROLES.JEFE_OPERACIONES);
         const municipio = findInsensitive(globalSettings, 'Municipio');
         const estado = findInsensitive(globalSettings, 'Estado');
 
@@ -262,7 +264,8 @@ export default function ReporteFinalPage() {
             headerParts.push(`*PERIODO:* ${dateRangeString}`, ``);
 
             roles.filter(r => !r.isHidden).forEach(role => {
-                if (role.name.toLowerCase() === 'director' || role.name.toLowerCase() === 'jefe de operaciones') return;
+                if (role.name.toLowerCase() === LEADER_ROLES.DIRECTOR.toLowerCase() ||
+                    role.name.toLowerCase() === LEADER_ROLES.JEFE_OPERACIONES.toLowerCase()) return;
 
                 const staffKey = Object.keys(staffForReport).find(k => k.toLowerCase() === role.name.toLowerCase());
                 const staffList = staffKey ? staffForReport[staffKey as keyof typeof staffForReport] : undefined;
@@ -296,8 +299,8 @@ export default function ReporteFinalPage() {
                     const dynamicPredefinedValues = {
                         ...globalSettings,
                         'Guardia': guardIdForReport || '',
-                        'Director': director,
-                        'Jefe de Operaciones': jefeDeOperaciones
+                        [LEADER_ROLES.DIRECTOR]: director,
+                        [LEADER_ROLES.JEFE_OPERACIONES]: jefeDeOperaciones
                     };
                     contentText = renderFinalReport(template.content, report.formData || {}, config, {}, true, dynamicPredefinedValues);
                 }
@@ -389,8 +392,8 @@ export default function ReporteFinalPage() {
                                                         return '';
                                                     };
 
-                                                    const director = getLeaderName('Director');
-                                                    const jefeDeOperaciones = getLeaderName('Jefe de Operaciones');
+                                                    const director = getLeaderName(LEADER_ROLES.DIRECTOR);
+                                                    const jefeDeOperaciones = getLeaderName(LEADER_ROLES.JEFE_OPERACIONES);
 
                                                     const dateRangeString = (() => {
                                                         const startDate = hasSnapshot ? new Date(settings.finalReportStartDate!) : new Date();
@@ -411,7 +414,8 @@ export default function ReporteFinalPage() {
                                                         parts.push(`*PERIODO:* ${dateRangeString}`, ``);
 
                                                         roles.filter(r => !r.isHidden).forEach(role => {
-                                                            if (role.name.toLowerCase() === 'director' || role.name.toLowerCase() === 'jefe de operaciones') return;
+                                                            if (role.name.toLowerCase() === LEADER_ROLES.DIRECTOR.toLowerCase() ||
+                                                                role.name.toLowerCase() === LEADER_ROLES.JEFE_OPERACIONES.toLowerCase()) return;
                                                             const staffKey = Object.keys(staffForReport).find(k => k.toLowerCase() === role.name.toLowerCase());
                                                             const staffList = staffKey ? staffForReport[staffKey as keyof typeof staffForReport] : undefined;
                                                             if (staffList && staffList.length > 0 && staffList.some(s => s.name.trim() !== '')) {
@@ -544,11 +548,11 @@ export default function ReporteFinalPage() {
                                     />
                                 </div>
                                 <div>
-                                    <h4 className="font-semibold mb-2">Novedades Registradas ({finishedReports.length} de {getLatestReports().length} finalizadas)</h4>
+                                    <h4 className="font-semibold mb-2">Novedades Registradas ({finishedReports.length} de {reports.length} finalizadas)</h4>
                                     <ScrollArea className="h-48 rounded-md border p-4 bg-muted/50">
                                         {reports.length > 0 ? (
                                             <ul className="space-y-2">
-                                                {getLatestReports().map(report => (
+                                                {reports.map(report => (
                                                     <li key={report.id} className="text-sm">
                                                         - {report.title}
                                                         {report.status === 'Finalizado' ? (

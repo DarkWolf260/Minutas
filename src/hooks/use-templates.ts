@@ -36,45 +36,41 @@ import type { Template, TemplateConfig, FieldConfig } from '@/types';
 import { parseTemplate } from '@/lib/template-parser';
 import { useFieldDefinitions } from './use-field-definitions';
 import { useSettings } from './use-settings';
-import { useLocalStorage } from './use-local-storage';
-
-const TEMPLATES_STORAGE_KEY = 'app-templates';
-const TEMPLATE_CONFIGS_STORAGE_KEY = 'app-template-configs';
+import { useDatabase } from '@/lib/db/db-provider';
 
 export function useTemplates() {
-  const [templates, setTemplates, isTemplatesLoaded] = useLocalStorage<Template[]>(
-    TEMPLATES_STORAGE_KEY,
-    [],
-    {
-      migrate: (initialTemplates: any[]) => {
-        return initialTemplates.map((t: Template) => ({ ...t, isActive: t.isActive ?? true }));
-      },
-      onError: (error, operation) => {
-        console.error(`Failed to ${operation} templates:`, error);
-        if (operation === 'load') {
-          toast.error('Error al cargar las plantillas.');
-        } else {
-          toast.error('No se pudo guardar la plantilla en el almacenamiento.');
-        }
-      }
-    }
-  );
-
-  const [configs, setConfigs, isConfigsLoaded] = useLocalStorage<Record<string, TemplateConfig>>(
-    TEMPLATE_CONFIGS_STORAGE_KEY,
-    {},
-    {
-      onError: (error, operation) => {
-        console.error(`Failed to ${operation} template configs:`, error);
-        if (operation === 'save') {
-          toast.error('Error al guardar la configuración de la plantilla.');
-        }
-      }
-    }
-  );
+  const db = useDatabase();
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [configs, setConfigs] = useState<Record<string, TemplateConfig>>({});
+  const [isTemplatesLoaded, setIsTemplatesLoaded] = useState(false);
+  const [isConfigsLoaded, setIsConfigsLoaded] = useState(false);
 
   const { definitions: globalDefinitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
   const { settings, isLoaded: settingsLoaded } = useSettings();
+
+  useEffect(() => {
+    if (!db) return;
+
+    const subTemplates = db.templates.find().$.subscribe(data => {
+      setTemplates(data.map(d => d.toJSON()) as Template[]);
+      setIsTemplatesLoaded(true);
+    });
+
+    const subConfigs = db.template_configs.find().$.subscribe(data => {
+      const configMap: Record<string, TemplateConfig> = {};
+      data.forEach(d => {
+        const item = d.toJSON();
+        configMap[item.id] = item.config as TemplateConfig;
+      });
+      setConfigs(configMap);
+      setIsConfigsLoaded(true);
+    });
+
+    return () => {
+      subTemplates.unsubscribe();
+      subConfigs.unsubscribe();
+    };
+  }, [db]);
 
   // Caché de parse para evitar re-parsing innecesario
   const parsedTemplates = useMemo(() => {
@@ -87,8 +83,9 @@ export function useTemplates() {
   }, [templates]);
 
   useEffect(() => {
-    if (isTemplatesLoaded && definitionsLoaded && templates.length > 0) {
+    if (isTemplatesLoaded && definitionsLoaded && templates.length > 0 && db) {
       const newConfigs: Record<string, TemplateConfig> = {};
+      let changed = false;
 
       templates.forEach(template => {
         const cacheKey = `${template.id}-${template.content.length}`;
@@ -97,7 +94,6 @@ export function useTemplates() {
 
         const finalConfig: TemplateConfig = {
           sections: parsed.sections.map((parsedSection: any) => {
-            // Unir por label es más estable que por ID auto-incrementado cuando cambia el texto
             const existingSection = (existingConfig.sections || []).find((s: any) => s.label === parsedSection.label);
             return {
               ...parsedSection,
@@ -115,7 +111,7 @@ export function useTemplates() {
           const optionsFromTemplate = parsed.templateOptions.get(fieldName);
 
           const baseConfig: FieldConfig = {
-            type: 'text', // Default type
+            type: 'text',
             label: fieldName,
             ...globalDef,
             ...existingFieldConfig,
@@ -137,49 +133,44 @@ export function useTemplates() {
         newConfigs[template.id] = finalConfig;
       });
 
+      // Check if actually changed to avoid infinite loop
       if (JSON.stringify(newConfigs) !== JSON.stringify(configs)) {
-        setConfigs(newConfigs);
+        changed = true;
+      }
+
+      if (changed) {
+        // Persist change to RxDB
+        const entries = Object.entries(newConfigs).map(([id, config]) => ({ id, config }));
+        db.template_configs.bulkUpsert(entries).catch(err => console.error('Failed to sync template configs:', err));
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isTemplatesLoaded, definitionsLoaded, templates]);
+  }, [isTemplatesLoaded, isConfigsLoaded, definitionsLoaded, templates, db, parsedTemplates, configs, globalDefinitions]);
 
-
-
-
-  const addTemplate = (newTemplate: Template) => {
+  const addTemplate = async (newTemplate: Template) => {
+    if (!db) return;
     try {
       const { sections, layout, fieldNames, fieldTypes, templateOptions, errors } = parseTemplate(newTemplate.content);
 
       if (errors.length > 0) {
         toast.error(`La plantilla tiene errores: ${errors[0]}`);
-        // We still allow adding it so they can fix it, but warn them? 
-        // Text files are edited externally usually. Or maybe we block it?
-        // Let's add it but warn.
       } else {
         toast.success(`Plantilla "${newTemplate.name}" agregada correctamente.`);
       }
 
-      const updatedTemplates = [...templates, { ...newTemplate, isActive: errors.length === 0 }]; // Disable if invalid
-      setTemplates(updatedTemplates);
+      await db.templates.insert({ ...newTemplate, isActive: errors.length === 0 });
 
       const newConfig: TemplateConfig = { fields: {}, sections, layout };
-
       fieldNames.forEach(fieldName => {
         newConfig.fields[fieldName] = {
           ...(globalDefinitions[fieldName] || { type: 'text', label: fieldName }),
         };
         const typeFromTemplate = fieldTypes.get(fieldName);
-        if (typeFromTemplate) {
-          newConfig.fields[fieldName].type = typeFromTemplate;
-        }
+        if (typeFromTemplate) newConfig.fields[fieldName].type = typeFromTemplate;
         const optionsFromTemplate = templateOptions.get(fieldName);
-        if (optionsFromTemplate) {
-          newConfig.fields[fieldName].snippetOptions = optionsFromTemplate;
-        }
+        if (optionsFromTemplate) newConfig.fields[fieldName].snippetOptions = optionsFromTemplate;
       });
 
-      setConfigs(prev => ({ ...prev, [newTemplate.id]: newConfig }));
+      await db.template_configs.upsert({ id: newTemplate.id, config: newConfig });
 
     } catch (error) {
       console.error('Error adding template:', error);
@@ -187,38 +178,68 @@ export function useTemplates() {
     }
   };
 
-  const removeTemplate = (templateId: string) => {
-    const template = templates.find(t => t.id === templateId);
-    setTemplates(prev => prev.filter(t => t.id !== templateId));
-    setConfigs(prev => {
-      const updatedConfigs = { ...prev };
-      delete updatedConfigs[templateId];
-      return updatedConfigs;
-    });
-    toast.success(`Plantilla "${template?.name || 'desconocida'}" eliminada.`);
+  const removeTemplate = async (templateId: string) => {
+    if (!db) return;
+    try {
+      const templateDoc = await db.templates.findOne(templateId).exec();
+      if (templateDoc) await templateDoc.remove();
+
+      const configDoc = await db.template_configs.findOne(templateId).exec();
+      if (configDoc) await configDoc.remove();
+
+      toast.success('Plantilla eliminada.');
+    } catch (error) {
+      console.error('Failed to remove template:', error);
+      toast.error('Error al eliminar la plantilla.');
+    }
   };
 
-  const updateTemplateConfig = (templateId: string, config: TemplateConfig) => {
-    setConfigs(prev => ({ ...prev, [templateId]: config }));
-    toast.success('Configuración de campos actualizada.');
+  const updateTemplateConfig = async (templateId: string, config: TemplateConfig) => {
+    if (!db) return;
+    try {
+      await db.template_configs.upsert({ id: templateId, config });
+      toast.success('Configuración de campos actualizada.');
+    } catch (error) {
+      console.error('Failed to update template config:', error);
+    }
   };
 
-  const updateTemplate = (updatedTemplate: Template) => {
-    setTemplates(prev => prev.map(t => t.id === updatedTemplate.id ? updatedTemplate : t));
-    toast.success('Plantilla actualizada.');
+  const updateTemplate = async (updatedTemplate: Template) => {
+    if (!db) return;
+    try {
+      const doc = await db.templates.findOne(updatedTemplate.id).exec();
+      if (doc) await doc.patch(updatedTemplate);
+      toast.success('Plantilla actualizada.');
+    } catch (error) {
+      console.error('Failed to update template:', error);
+    }
   };
 
-  const toggleTemplateActive = useCallback((templateId: string) => {
-    setTemplates(prev => prev.map(t =>
-      t.id === templateId ? { ...t, isActive: !(t.isActive ?? true) } : t
-    ));
-  }, [setTemplates]);
+  const toggleTemplateActive = useCallback(async (templateId: string) => {
+    if (!db) return;
+    const doc = await db.templates.findOne(templateId).exec();
+    if (doc) {
+      await doc.patch({ isActive: !(doc.toJSON().isActive ?? true) });
+    }
+  }, [db]);
 
-  const clearAllTemplates = useCallback(() => {
-    setTemplates([]);
-    setConfigs({});
-  }, [setTemplates, setConfigs]);
+  const clearAllTemplates = useCallback(async () => {
+    if (!db) return;
+    const allTemplates = await db.templates.find().exec();
+    await Promise.all(allTemplates.map(d => d.remove()));
+    const allConfigs = await db.template_configs.find().exec();
+    await Promise.all(allConfigs.map(d => d.remove()));
+  }, [db]);
 
-
-  return { templates, configs, addTemplate, removeTemplate, updateTemplate, updateTemplateConfig, toggleTemplateActive, clearAllTemplates, isLoaded: isTemplatesLoaded && definitionsLoaded && settingsLoaded };
+  return {
+    templates,
+    configs,
+    addTemplate,
+    removeTemplate,
+    updateTemplate,
+    updateTemplateConfig,
+    toggleTemplateActive,
+    clearAllTemplates,
+    isLoaded: isTemplatesLoaded && definitionsLoaded && settingsLoaded
+  };
 }
