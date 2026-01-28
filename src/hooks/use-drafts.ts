@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { ReportDraft } from '@/types';
 import { useDatabase } from '@/lib/db/db-provider';
+import { logger } from '@/lib/logger';
 
 export function useDrafts() {
   const db = useDatabase();
@@ -12,7 +13,7 @@ export function useDrafts() {
   useEffect(() => {
     if (!db) return;
 
-    const sub = db.drafts.findOne('active-draft').$.subscribe(doc => {
+    const sub = db.drafts.findOne('active-draft').$.subscribe((doc) => {
       if (doc) {
         setDraft(doc.toJSON() as ReportDraft);
       } else {
@@ -24,14 +25,21 @@ export function useDrafts() {
     return () => sub.unsubscribe();
   }, [db]);
 
-  const saveDraft = useCallback(async (newDraft: ReportDraft) => {
-    if (!db) return;
-    try {
-      await db.drafts.upsert({ ...newDraft, id: 'active-draft', lastSaved: new Date().toISOString() });
-    } catch (error) {
-      console.error('Failed to save draft:', error);
-    }
-  }, [db]);
+  const saveDraft = useCallback(
+    async (newDraft: ReportDraft) => {
+      if (!db) return;
+      try {
+        await db.drafts.upsert({
+          ...newDraft,
+          id: 'active-draft',
+          lastSaved: new Date().toISOString(),
+        });
+      } catch (error) {
+        logger.error('Failed to save draft', error, { feature: 'Drafts' });
+      }
+    },
+    [db]
+  );
 
   const clearDraft = useCallback(async () => {
     if (!db) return;
@@ -39,7 +47,7 @@ export function useDrafts() {
       const doc = await db.drafts.findOne('active-draft').exec();
       if (doc) await doc.remove();
     } catch (error) {
-      console.error('Failed to clear draft:', error);
+      logger.error('Failed to clear draft', error, { feature: 'Drafts' });
     }
   }, [db]);
 

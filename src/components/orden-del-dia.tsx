@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -30,7 +29,7 @@ interface OrdenDelDiaFormProps {
 const formatStaffMember = (member: StaffMember): string => {
   const rank = member.rank ? `${member.rank} ` : '';
   return `${rank}${member.name}`;
-}
+};
 
 export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormProps) {
   const { definitions } = useFieldDefinitions();
@@ -73,14 +72,20 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   useEffect(() => {
     if (initialData && rolesLoaded && personnelLoaded) {
       const newStaffState: Staff = {};
-      roles.forEach(role => {
+      roles.forEach((role) => {
         const roleNameLower = role.name.toLowerCase();
         let assignedMembers = initialData[role.name] || [];
 
         // Override Director/Chief assignments from Global Personnel
-        if (roleNameLower === 'director' || roleNameLower === 'jefe de operaciones' || roleNameLower === 'jefe de departamento') {
+        if (
+          roleNameLower === 'director' ||
+          roleNameLower === 'jefe de operaciones' ||
+          roleNameLower === 'jefe de departamento'
+        ) {
           // Match personnel by roleId (assuming roleId stores role Name)
-          const globalMatch = personnel.find(p => p.roleId === role.name || p.roleId === roleNameLower);
+          const globalMatch = personnel.find(
+            (p) => p.roleId === role.name || p.roleId === roleNameLower
+          );
           if (globalMatch) {
             // Create a fresh staff member entry based on global personnel
             assignedMembers = [globalMatch];
@@ -91,7 +96,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
       setStaff(newStaffState);
     } else if (rolesLoaded) {
       const newStaffState: Staff = {};
-      roles.forEach(role => {
+      roles.forEach((role) => {
         newStaffState[role.name] = [];
       });
       setStaff(newStaffState);
@@ -99,9 +104,9 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   }, [initialData, roles, rolesLoaded, personnel, personnelLoaded]);
 
   const handleRoleStaffUpdate = (roleName: string, members: StaffMember[]) => {
-    setStaff(prev => ({
+    setStaff((prev) => ({
       ...prev,
-      [roleName]: members
+      [roleName]: members,
     }));
   };
 
@@ -136,12 +141,12 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
     const findInsensitive = (obj: Record<string, string>, key: string): string => {
       if (!obj) return '';
       const keyLower = key.toLowerCase();
-      const foundKey = Object.keys(obj).find(k => k.toLowerCase() === keyLower);
+      const foundKey = Object.keys(obj).find((k) => k.toLowerCase() === keyLower);
       return foundKey ? (obj[foundKey] ?? '') : '';
     };
 
     const jefeDeOperaciones = (() => {
-      const key = Object.keys(staff).find(k => k.toLowerCase() === 'jefe de operaciones');
+      const key = Object.keys(staff).find((k) => k.toLowerCase() === 'jefe de operaciones');
       if (key) {
         const list = staff[key];
         if (list && list.length > 0) {
@@ -153,7 +158,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
     })();
 
     const director = (() => {
-      const key = Object.keys(staff).find(k => k.toLowerCase() === 'director');
+      const key = Object.keys(staff).find((k) => k.toLowerCase() === 'director');
       if (key) {
         const list = staff[key];
         if (list && list.length > 0) {
@@ -188,8 +193,12 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
       // Skip Director and Jefe de Operaciones as they are in the header
       if (role.toLowerCase() === 'director' || role.toLowerCase() === 'jefe de operaciones') return;
 
-      if (personnel && personnel.length > 0 && personnel.some(p => p.name.trim() !== '')) {
-        reportParts.push(``, `*${role.toUpperCase()}*`, personnel.map(formatStaffMember).join('\n'));
+      if (personnel && personnel.length > 0 && personnel.some((p) => p.name.trim() !== '')) {
+        reportParts.push(
+          ``,
+          `*${role.toUpperCase()}*`,
+          personnel.map(formatStaffMember).join('\n')
+        );
       }
     });
 
@@ -212,25 +221,39 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
       <div className="space-y-6 pt-4 max-h-[70vh] overflow-y-auto pr-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Grupo de Guardia</Label>
+            <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
+              Grupo de Guardia
+            </Label>
             <Input readOnly value={`“${selectedGuard}”`} className="bg-muted/50" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="periodo" className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Periodo</Label>
-            <Input id="periodo" value={periodo} onChange={(e) => setPeriodo(e.target.value)} className="bg-background" />
+            <Label
+              htmlFor="periodo"
+              className="text-xs uppercase font-bold text-muted-foreground tracking-wider"
+            >
+              Periodo
+            </Label>
+            <Input
+              id="periodo"
+              value={periodo}
+              onChange={(e) => setPeriodo(e.target.value)}
+              className="bg-background"
+            />
           </div>
         </div>
 
         <div className="space-y-4">
-          {roles.filter(r => !r.isHidden).map(role => (
-            <StaffListEditor
-              key={role.name}
-              label={role.name}
-              staffMembers={staff[role.name] || []}
-              isSingle={role.isSingle}
-              onUpdate={(members) => handleRoleStaffUpdate(role.name, members)}
-            />
-          ))}
+          {roles
+            .filter((r) => !r.isHidden)
+            .map((role) => (
+              <StaffListEditor
+                key={role.name}
+                label={role.name}
+                staffMembers={staff[role.name] || []}
+                isSingle={role.isSingle}
+                onUpdate={(members) => handleRoleStaffUpdate(role.name, members)}
+              />
+            ))}
         </div>
       </div>
       <div className="flex justify-end pt-6">
@@ -253,7 +276,12 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
             />
           </div>
           <DialogFooter className="mt-auto pt-4">
-            <Button type="button" variant="outline" onClick={handleUseForFinalReport} disabled={isSnapshotSaved}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleUseForFinalReport}
+              disabled={isSnapshotSaved}
+            >
               {isSnapshotSaved ? 'Guardado para Reporte Final' : 'Usar para Reporte Final'}
             </Button>
             <Button type="button" onClick={handleCopyToClipboard}>

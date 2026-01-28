@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useRef, ChangeEvent } from 'react';
@@ -32,21 +31,30 @@ const formatHlv = (digits: string): string => {
 
 // Calculates the correct cursor position after formatting.
 const getCursorPosition = (digitCount: number): number => {
-    if (digitCount <= 2) return digitCount; // e.g., "12|"
-    if (digitCount <= 4) return digitCount + 1; // e.g., "12:34|"
+  if (digitCount <= 2) return digitCount; // e.g., "12|"
+  if (digitCount <= 4) return digitCount + 1; // e.g., "12:34|"
 
-    // After 4 digits, we are in range mode. "12:34 HLV - " is 13 chars.
-    const baseForRange = 13;
-    const rangeDigits = digitCount - 4;
+  // After 4 digits, we are in range mode. "12:34 HLV - " is 13 chars.
+  const baseForRange = 13;
+  const rangeDigits = digitCount - 4;
 
-    if (rangeDigits <= 2) return baseForRange + rangeDigits;
-    if (rangeDigits <= 4) return baseForRange + rangeDigits + 1;
-    
-    return 24; // Default to the end
+  if (rangeDigits <= 2) return baseForRange + rangeDigits;
+  if (rangeDigits <= 4) return baseForRange + rangeDigits + 1;
+
+  return 24; // Default to the end
 };
 
-
-export function TimeHlvInput({ value: propValue, onChange: onFormChange, disabled = false, showHelperText = true }: { value: string; onChange: (value: string) => void; disabled?: boolean; showHelperText?: boolean }) {
+export function TimeHlvInput({
+  value: propValue,
+  onChange: onFormChange,
+  disabled = false,
+  showHelperText = true,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  showHelperText?: boolean;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Extract only digits from the prop value
@@ -55,7 +63,7 @@ export function TimeHlvInput({ value: propValue, onChange: onFormChange, disable
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newRawValue = e.target.value;
     const newDigits = newRawValue.replace(/\D/g, '').slice(0, MAX_DIGITS);
-    
+
     const formatted = formatHlv(newDigits);
     onFormChange(formatted);
 
@@ -102,7 +110,7 @@ export function TimeHlvInput({ value: propValue, onChange: onFormChange, disable
         }
       }
     }
-    
+
     // If we corrected anything, update the form.
     if (correctedDigits !== digits) {
       onFormChange(formatHlv(correctedDigits));

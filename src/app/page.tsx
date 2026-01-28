@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Suspense, useState, useMemo, useEffect, useRef } from 'react';
@@ -23,7 +22,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
@@ -48,7 +47,9 @@ function NovedadesPageContent() {
   const [reportToDelete, setReportToDelete] = useState<string | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [creatingReport, setCreatingReport] = useState<Template | null>(null);
-  const [initialDraftData, setInitialDraftData] = useState<Record<string, any> | undefined>(undefined);
+  const [initialDraftData, setInitialDraftData] = useState<Record<string, any> | undefined>(
+    undefined
+  );
 
   const sortedReports = useMemo(() => {
     return sortReports(reports, 'asc');
@@ -58,9 +59,10 @@ function NovedadesPageContent() {
     if (!searchQuery) {
       return sortedReports;
     }
-    return sortedReports.filter(report =>
-      report.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      report.content.toLowerCase().includes(searchQuery.toLowerCase())
+    return sortedReports.filter(
+      (report) =>
+        report.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        report.content.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [sortedReports, searchQuery]);
 
@@ -74,7 +76,7 @@ function NovedadesPageContent() {
 
     // 1. Handle draft restoration first.
     if (draftIsLoaded && draft) {
-      const template = templates.find(t => t.id === draft.templateId);
+      const template = templates.find((t) => t.id === draft.templateId);
       if (template) {
         setInitialDraftData(draft.formData);
         setCreatingReport(template);
@@ -91,17 +93,19 @@ function NovedadesPageContent() {
 
     // 3. If a valid report is already selected, do nothing.
     // The user's selection should be preserved.
-    if (selectedReportId && reports.find(r => r.id === selectedReportId)) {
+    if (selectedReportId && reports.find((r) => r.id === selectedReportId)) {
       return;
     }
 
     // 4. If we're here, there's no valid selection. Let's pick one.
     // Give priority to the URL parameter.
-    if (preSelectedId && reports.find(r => r.id === preSelectedId)) {
+    if (preSelectedId && reports.find((r) => r.id === preSelectedId)) {
       setSelectedReportId(preSelectedId);
-    } else if (filteredReports.length > 0) { // Fallback to the first report in the list.
+    } else if (filteredReports.length > 0) {
+      // Fallback to the first report in the list.
       setSelectedReportId(filteredReports[0]!.id);
-    } else { // No reports to select.
+    } else {
+      // No reports to select.
       setSelectedReportId(null);
     }
   }, [
@@ -118,7 +122,7 @@ function NovedadesPageContent() {
 
   const selectedReport = useMemo(() => {
     if (!selectedReportId || creatingReport) return null;
-    return reports.find(report => report.id === selectedReportId) ?? null;
+    return reports.find((report) => report.id === selectedReportId) ?? null;
   }, [selectedReportId, reports, creatingReport]);
 
   const handleDeleteReport = async (id: string) => {
@@ -127,7 +131,7 @@ function NovedadesPageContent() {
       setSelectedReportId(null);
     }
     setReportToDelete(null);
-  }
+  };
 
   const handleClearAll = async () => {
     await clearAllReports();
@@ -135,7 +139,7 @@ function NovedadesPageContent() {
   };
 
   const handleSelectTemplate = (templateId: string) => {
-    const template = templates.find(t => t.id === templateId);
+    const template = templates.find((t) => t.id === templateId);
     if (template) {
       setInitialDraftData(undefined);
       setSelectedReportId(null);
@@ -150,7 +154,7 @@ function NovedadesPageContent() {
     setCreatingReport(null);
     setInitialDraftData(undefined);
     router.push(`/?selected=${report.id}`);
-  }
+  };
 
   const handleCancelCreation = async () => {
     await clearDraft();
@@ -162,10 +166,12 @@ function NovedadesPageContent() {
     <>
       <div className="flex flex-col h-[calc(100vh-3.5rem)] sm:h-screen bg-background overflow-hidden sm:flex-row">
         {/* Sidebar / List - Hidden on mobile if a report is being viewed/created */}
-        <aside className={cn(
-          "h-full w-full sm:w-80 flex-col border-r bg-card flex",
-          (selectedReportId || creatingReport) ? "hidden sm:flex" : "flex"
-        )}>
+        <aside
+          className={cn(
+            'h-full w-full sm:w-80 flex-col border-r bg-card flex',
+            selectedReportId || creatingReport ? 'hidden sm:flex' : 'flex'
+          )}
+        >
           <div className="flex items-center justify-between border-b p-3">
             <h2 className="text-lg font-semibold">Novedades</h2>
             <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
@@ -218,9 +224,7 @@ function NovedadesPageContent() {
                               <span>{report.status}</span>
                             </div>
                           )}
-                          {horaValue && (
-                            <span className="truncate">{String(horaValue)}</span>
-                          )}
+                          {horaValue && <span className="truncate">{String(horaValue)}</span>}
                         </div>
                       </div>
                     </div>
@@ -236,10 +240,12 @@ function NovedadesPageContent() {
           </ScrollArea>
         </aside>
 
-        <main className={cn(
-          "flex-1 overflow-hidden",
-          (!selectedReportId && !creatingReport) ? "hidden sm:block" : "block"
-        )}>
+        <main
+          className={cn(
+            'flex-1 overflow-hidden',
+            !selectedReportId && !creatingReport ? 'hidden sm:block' : 'block'
+          )}
+        >
           {/* Mobile Back Button */}
           {(selectedReportId || creatingReport) && (
             <div className="sm:hidden border-b p-2 bg-card">
@@ -261,7 +267,9 @@ function NovedadesPageContent() {
             <ReportGenerator
               key={creatingReport.id}
               template={creatingReport}
-              config={(configs[creatingReport.id] || { fields: {}, sections: [], layout: [] }) as any}
+              config={
+                (configs[creatingReport.id] || { fields: {}, sections: [], layout: [] }) as any
+              }
               initialData={initialDraftData}
               onCancel={handleCancelCreation}
               onSave={handleSaveNewReport}
@@ -284,20 +292,26 @@ function NovedadesPageContent() {
         </main>
       </div>
 
-      <AlertDialog open={!!reportToDelete} onOpenChange={(open) => !open && setReportToDelete(null)}>
+      <AlertDialog
+        open={!!reportToDelete}
+        onOpenChange={(open) => !open && setReportToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
               {reportToDelete === 'ALL'
-                ? "Esta acción no se puede deshacer. Se eliminarán permanentemente TODOS los reportes guardados."
-                : "Esta acción no se puede deshacer. El reporte será eliminado permanentemente."
-              }
+                ? 'Esta acción no se puede deshacer. Se eliminarán permanentemente TODOS los reportes guardados.'
+                : 'Esta acción no se puede deshacer. El reporte será eliminado permanentemente.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setReportToDelete(null)}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => reportToDelete === 'ALL' ? handleClearAll() : handleDeleteReport(reportToDelete!)}>
+            <AlertDialogAction
+              onClick={() =>
+                reportToDelete === 'ALL' ? handleClearAll() : handleDeleteReport(reportToDelete!)
+              }
+            >
               Sí, eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -313,15 +327,31 @@ function NovedadesPageContent() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-2 max-h-96 overflow-y-auto">
-            {templates.filter(t => t.isActive).length > 0 ? templates.filter(t => t.isActive).map(template => (
-              <button key={template.id} onClick={() => handleSelectTemplate(template.id)} className="w-full text-left p-3 rounded-md hover:bg-muted transition-colors flex items-center gap-3">
-                <FileText className="h-5 w-5 text-primary" />
-                <span className="flex-1">{template.name}</span>
-              </button>
-            )) : (
+            {templates.filter((t) => t.isActive).length > 0 ? (
+              templates
+                .filter((t) => t.isActive)
+                .map((template) => (
+                  <button
+                    key={template.id}
+                    onClick={() => handleSelectTemplate(template.id)}
+                    className="w-full text-left p-3 rounded-md hover:bg-muted transition-colors flex items-center gap-3"
+                  >
+                    <FileText className="h-5 w-5 text-primary" />
+                    <span className="flex-1">{template.name}</span>
+                  </button>
+                ))
+            ) : (
               <div className="text-center text-muted-foreground py-10">
                 <p>No has subido o activado ninguna plantilla.</p>
-                <Button variant="link" onClick={() => { setIsCreateDialogOpen(false); router.push('/plantillas'); }}>Ir a Plantillas</Button>
+                <Button
+                  variant="link"
+                  onClick={() => {
+                    setIsCreateDialogOpen(false);
+                    router.push('/plantillas');
+                  }}
+                >
+                  Ir a Plantillas
+                </Button>
               </div>
             )}
           </div>
@@ -333,26 +363,30 @@ function NovedadesPageContent() {
 
 export default function NovedadesPage() {
   return (
-    <Suspense fallback={
-      <div className="flex h-screen bg-background">
-        <aside className="h-full w-80 flex-col border-r bg-card flex animate-pulse">
-          <div className="flex items-center justify-between border-b p-3">
-            <div className="h-6 w-32 bg-muted rounded"></div>
-            <div className="h-8 w-24 bg-muted rounded"></div>
-          </div>
-          <div className="p-3"><div className="h-10 w-full bg-muted rounded"></div></div>
-          <div className="p-3 space-y-2">
-            <div className="h-12 w-full bg-muted rounded"></div>
-            <div className="h-12 w-full bg-muted rounded"></div>
-            <div className="h-12 w-full bg-muted rounded"></div>
-          </div>
-        </aside>
-        <main className="flex-1 p-6">
-          <div className="h-full w-full bg-muted rounded-lg animate-pulse"></div>
-        </main>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex h-screen bg-background">
+          <aside className="h-full w-80 flex-col border-r bg-card flex animate-pulse">
+            <div className="flex items-center justify-between border-b p-3">
+              <div className="h-6 w-32 bg-muted rounded"></div>
+              <div className="h-8 w-24 bg-muted rounded"></div>
+            </div>
+            <div className="p-3">
+              <div className="h-10 w-full bg-muted rounded"></div>
+            </div>
+            <div className="p-3 space-y-2">
+              <div className="h-12 w-full bg-muted rounded"></div>
+              <div className="h-12 w-full bg-muted rounded"></div>
+              <div className="h-12 w-full bg-muted rounded"></div>
+            </div>
+          </aside>
+          <main className="flex-1 p-6">
+            <div className="h-full w-full bg-muted rounded-lg animate-pulse"></div>
+          </main>
+        </div>
+      }
+    >
       <NovedadesPageContent />
     </Suspense>
-  )
+  );
 }

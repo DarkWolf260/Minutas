@@ -1,199 +1,199 @@
 export interface StatisticsSection {
-    title: string;
-    items: { code: string; label: string; }[];
-    headerColor?: string;
+  title: string;
+  items: { code: string; label: string }[];
+  headerColor?: string;
 }
 
 export const STATISTICS_SECTIONS: StatisticsSection[] = [
-    {
-        title: "ESTADÍSTICA GENERAL / NOVEDADES",
-        headerColor: "bg-blue-500/20 dark:bg-blue-500/30",
-        items: [
-            { code: "1", label: "REPORTE DEL VEN 911" }, //verificar si en el reporte sale VEN 911
-            { code: "1.1", label: "REPORTE DEL VEN 911 - ATENDIDOS" }, //verificar la conclusión
-            { code: "1.2", label: "REPORTE DEL VEN 911 - ATENDIDO NO EFECTUADO" }, //verificar la conclusión
-            { code: "1.3", label: "REPORTE DEL VEN 911 - FALSA ALARMA CONFIRMADA" }, //verificar la conclusión
-            { code: "1.4", label: "LLAMADA DE EMERGENCIA" }, //verificar descipción de la novedad
-            { code: "1.5", label: "LLAMADA DE EMERGENCIA - FALSA ALARMA" }, //verificar descipción de la novedad
-            { code: "1.6", label: "ORGANISMO DE SEGURIDAD" }, //verificar descipción de la novedad
-            { code: "1.7", label: "CIUDADANO COMUN" }, //verificar descipción de la novedad
-            { code: "2", label: "ACCIDENTE DE T. ATENDIDOS URBANO" }, //asignar al reporte de accidente de tránsito
-            { code: "2.1", label: "ACCIDENTE DE T. ATENDIDOS EXTRA URBANO" }, //asignar al reporte de accidente de tránsito
-            { code: "2.2", label: "LESIONADOS ACCIDENTE T. URBANO" }, //asignar al reporte de accidente de tránsito
-            { code: "2.3", label: "LESIONADOS ACCIDENTE T. EXTRA URBANO" }, //asignar al reporte de accidente de tránsito
-            { code: "2.4", label: "RESCATADOS EN ACCIDENTE T." }, //asignar al reporte de accidente de tránsito
-            { code: "3", label: "FALLECIDOS ACCIDENTE TRANSITO" }, //asignar al reporte de accidente de tránsito
-            { code: "3.1", label: "FALLECIDOS X CAUSA NATURAL" }, //hacer general para cada tipo de fallecimiento
-            { code: "3.2", label: "FALLECIDOS X CAUSA DESCONOCIDA" },
-            { code: "3.3", label: "FALLECIDOS X ARMA DE FUEGO" },
-            { code: "3.4", label: "FALLECIDOS X ARMA BLANCA" },
-            { code: "3.5", label: "HERIDOS POR ARMA BLANCA" },
-            { code: "3.6", label: "HERIDOS POR ARMA FUEGO" },
-            { code: "3.7", label: "LESIONADO POR ELECTROCUCION" }, // descartar
-            { code: "3.8", label: "FALLECIDO POR ELECTROCUCION" },
-            { code: "4", label: "ATENCION AL PUBLICO" }, // verificar su uso
-            { code: "4.1", label: "ATENCIONES PREHOSPITALARIA" }, // asignar a la sección de paciente
-            { code: "4.2", label: "ATENCION PREHOSPITALARIA EN RESIDENCIA" }, // asignar al reporte de atención en residencia
-            { code: "4.3", label: "ATENCIONES PREHOSPITALARIA EN SALA DE RADIO" }, // asignar al reporte de atención en sala de radio
-            { code: "4.4", label: "ATENCIONES PREHOSPITALARIA EN VIA / LUGAR PUBLICO" }, // asignar al reporte de atención en via / lugar publico y opcionalmente en el de accidente de tránsito
-            { code: "4.5", label: "ATENCIONES PREHOSPITALARIA EN INSTITUCION / COMERCIO" }, // asignar al reporte de atención en institución / comercio
-            { code: "4.6", label: "ATENCIONES PREHOSPITALARIA EN GUARDIAS PREVENTIVAS" }, // asignar al reporte de atención en guardias preventivas
-            { code: "5", label: "SOLICITUD DE TRASLADO" }, // asignar a los reportes de traslado
-            { code: "5.1", label: "TRASLADOS URBANOS" }, // verificar si el municipio de origen y destino son iguales
-            { code: "5.2", label: "TRASLADOS EXTRAURBANOS" }, // verificar si el municipio de origen y destino son distintos
-            { code: "5.3", label: "TRASLADOS DE C.ASISTENCIALES A CENTROS ASISTENCIALES" }, // añadir etiqueta a las direcciones guardadas para que la aplicación verifique si es una dirección de un centro asistencial
-            { code: "5.4", label: "TRASLADOS DE C.ASISTENCIALES A RESIDENCIAS" },
-            { code: "5.5", label: "TRASLADOS DE RESIDENCIAS A C.ASISTENCIALES" },
-            { code: "5.6", label: "TRASLADO DE VIA A C.ASISTENCIAL" },
-            { code: "6", label: "GUARDIAS PREVENTIVAS" }, // reporte de guardias preventivas
-            { code: "6.1", label: "PUNTOS DE PREVENCION" },
-            { code: "6.2", label: "PUNTO EN SANTUARIO" },
-            { code: "6.3", label: "PUNTO EN BALNEARIO" },
-            { code: "6.4", label: "RECORRIDO PREVENTIVO" },
-            { code: "6.5", label: "EVENTO DEPORTIVO" },
-            { code: "6.6", label: "EVENTOS ESPECIALES" },
-            { code: "6.7", label: "EVENTO EN LUGAR PUBLICO Y/O PRIVADO" },
-            { code: "7", label: "APOYO A OTRAS INSTITUCIONES" },
-            { code: "7.1", label: "APOYO SOCIAL" },
-            { code: "8", label: "FUMIGACION" },
-            { code: "8.1", label: "INSTITUCION PUBLICA" },
-            { code: "8.2", label: "EMPRESA PRIVADA" },
-            { code: "8.3", label: "UNIDADES EDUCATIVAS" },
-            { code: "8.4", label: "CENTROS CULTURALES Y/O DEPORTIVOS" },
-            { code: "8.5", label: "CENTROS MEDICOS" },
-            { code: "8.6", label: "CASAS/EDIFICIOS" },
-            { code: "9", label: "NIÑOS EXTRAVIADOS Y/O RECUPERADOS" },
-            { code: "10", label: "OPERACIÓN SAR" },
-            { code: "10.1", label: "RESCATADO EN OPERACIÓN SAR" },
-            { code: "10.2", label: "RECUPERACION DE CADAVER EN OPERACIÓN SAR" },
-            { code: "11", label: "AUXILIO VIAL" },
-            { code: "12", label: "FALLA DEL SERVICIO ELECTRICO" },
-            { code: "13", label: "FALLA DEL SERVICIO DE COMUNICACIONES" },
-            { code: "14", label: "EVENTO METEREOLOGICO" },
-            { code: "15", label: "INCENDIO" },
-            { code: "15.1", label: "CONATO DE INCENDIO" },
-            { code: "15.2", label: "INCENDIO DE VIVIENDA" },
-            { code: "15.3", label: "INCENDIO DE COMERCIO" },
-            { code: "15.4", label: "INCENDIO DE DESECHOS" },
-            { code: "15.5", label: "INCENDIO DE EDIFICIO RESIDENCIAL" },
-            { code: "15.6", label: "INCENDIO INDUSTRIAL" },
-            { code: "15.7", label: "INCENDIO DE VEGETACION" },
-            { code: "15.8", label: "INCENDIO FORESTAL" },
-            { code: "15.9", label: "INCENDIO ESTRUCTURAL" },
-            { code: "15.10", label: "INCENDIO VEHICULAR" },
-            { code: "15.11", label: "INCENDIO DE EMBARCACION" },
-            { code: "15.12", label: "INCENDIO DE HIDROCARBUROS" },
-            { code: "15.13", label: "INCENDIOS POR FUEGOS ARTIFICIALES" },
-            { code: "15.14", label: "LESIONADO EN INCENDIO" },
-            { code: "15.15", label: "FALLECIDO EN INCENDIO" },
-            { code: "16", label: "MITIGACION DE RIESGOS" },
-            { code: "16.1", label: "PODA DE ARBOLES" },
-            { code: "16.2", label: "TALA DE ARBOLES" },
-            { code: "16.3", label: "FUGA DE GAS" },
-            { code: "16.4", label: "REMOCION DE ESCOMBROS" },
-            { code: "16.5", label: "DERRAME DE HIDROCARBUROS (CONTENSION)" },
-            { code: "16.6", label: "REUBICACION DE ABEJAS" },
-            { code: "16.7", label: "RESCATE / REUBICACION DE FAUNA SILVESTRE" },
-        ]
-    },
-    {
-        title: "INSPECCIONES DE RIESGO",
-        headerColor: "bg-green-600/20 dark:bg-green-600/30", // Changed to a more vibrant green
-        items: [
-            { code: "1", label: "SOLICITUD DE INSPECCION" },
-            { code: "2", label: "EVALUACIÓN DE DAÑOS Y ANÁLISIS DE NECESIDADES" },
-            { code: "3", label: "INSPECCIONES DE RIESGO" },
-            { code: "3.1", label: "INSP. ESTRUCTURA" },
-            { code: "3.2", label: "INSP. VIVIENDA" },
-            { code: "3.3", label: "INSP. PLANTELES EDUCATIVOS" },
-            { code: "3.4", label: "INSP. PLANTELES DEPORTIVOS" },
-            { code: "3.5", label: "INSP. INSTITUCIONES DE SALUD" },
-            { code: "3.6", label: "INSP. CENTRO COMERCIALES" },
-            { code: "3.7", label: "INSP. SANTUARIOS" },
-            { code: "3.8", label: "INSP. VIALIDAD" },
-            { code: "3.9", label: "INSP. PUENTES" },
-            { code: "3.10", label: "INSP. POSTES / ALUMBRADO" },
-            { code: "3.11", label: "INSP. TERMINAL MARITIMO" },
-            { code: "3.12", label: "INSP. AREAS DE RECREACION / PARQUES / PLAZAS" },
-            { code: "3.13", label: "INSP. ALJIBES / LAGUNA / QUEBRADA / RIO" },
-            { code: "3.14", label: "INSP. TANQUES DE ALMACENAMIENTO" },
-            { code: "3.15", label: "INSP. TERRENO" },
-            { code: "3.16", label: "INSP. MURO" },
-            { code: "3.17", label: "INSP. ÁRBOL" },
-            { code: "3.18", label: "INSP. DRENAJES" },
-            { code: "3.19", label: "INSP. DE BALNEARIOS" },
-            { code: "3.20", label: "INSP. COLMENA DE ABEJA" },
-            { code: "3.21", label: "INSP. DE CAMPO" },
-            { code: "4", label: "SINIESTRO" },
-            { code: "4.1", label: "ANEGACIÓN" },
-            { code: "4.2", label: "DESLIZAMIENTO/DERRUMBE" },
-            { code: "4.3", label: "COLAPSO DE ESTRUCTURA" },
-            { code: "4.4", label: "LESIONADO POR COLAPSO DE ESTRUCTURA" },
-            { code: "4.5", label: "FALLECIDOS POR COLAPSO DE ESTRUCTURA" },
-            { code: "5", label: "INFORME REALIZADO" },
-            { code: "6", label: "INFORME ENTREGADO" },
-        ]
-    },
-    {
-        title: "ACCIDENTES Y RESCATE (MONTAÑA - ACUÁTICOS - AÉREOS)",
-        headerColor: "bg-red-600/20 dark:bg-red-600/30", // Changed to a more vibrant red/orange
-        items: [
-            { code: "1", label: "ACCIDENTES EN MONTAÑA" },
-            { code: "1.2", label: "LESIONADO ACCIDENTE EN MONTAÑA" },
-            { code: "1.3", label: "FALLECIDO ACCIDENTE MONTAÑA" },
-            { code: "1.4", label: "SALVADOS ACCIDENTE MONTAÑA" },
-            { code: "1.5", label: "DESAPARECIDOS ACT. MONTAÑA" },
-            { code: "2.1", label: "FALLECIDOS INMERSION" },
-            { code: "3", label: "SALVADOS INMERSION" },
-            { code: "3.1", label: "ACCIDENTE ACUATICOS" },
-            { code: "3.2", label: "LESIONADOS ACCIDENTE ACUATICOS" },
-            { code: "3.3", label: "SALVADOS ACCIDENTE ACUATICOS" },
-            { code: "3.4", label: "FALLECIDOS ACCIDENTE ACUATICOS" },
-            { code: "4", label: "ACCIDENTE AEREOS" },
-            { code: "4.1", label: "LESIONADOS ACCIDENTE AEREOS" },
-            { code: "4.2", label: "SALVADOS ACCIDENTE AEREOS" },
-            { code: "4.3", label: "FALLECIDOS ACCIDENTE AEREOS" },
-        ]
-    },
-    {
-        title: "CAPACITACIÓN Y PREVENCIÓN",
-        headerColor: "bg-amber-500/20 dark:bg-amber-500/30",
-        items: [
-            { code: "1", label: "CONVERSATORIO (CONCIENTIZACION EN PUESTOS DE ATENCION)" },
-            { code: "2", label: "CAPACITACIONES" },
-            { code: "2.1", label: "CAPACITACIONES A COMUNIDADES EDUCATIVAS" },
-            { code: "2.2", label: "CAPACITACIONES A COMUNIDADES EN GENERAL" },
-            { code: "2.3", label: "CAPACITACIONES A EMPRESAS PRIVADAS" },
-            { code: "2.4", label: "CAPACITACIONES A VOLUNTARIOS Y FUNCIONARIOS" },
-            { code: "2.5", label: "CAPACITACIONES A ORGANISMOS PUBLICOS" },
-            { code: "3", label: "PARTICIPANTES EN CAPACITACIONES" },
-            { code: "3.1", label: "PERSONAS CAPACITADAS EN COMUNIDADES EDUCATIVAS" },
-            { code: "3.2", label: "PERSONAS CAPACITADAS EN COMUNIDADES EN GENERAL" },
-            { code: "3.3", label: "PERSONAS CAPACITADAS EN EMPRESAS PRIVADAS" },
-            { code: "3.4", label: "VOLUNTARIOS Y FUNCIONARIOS CAPACITADOS" },
-            { code: "3.5", label: "PERSONAS CAPACITADAS EN ORGANISMOS PUBLICOS" },
-            { code: "4", label: "SIMULACROS" },
-            { code: "4.1", label: "SIMULACROS EN COMUNIDADES EDUCATIVAS" },
-            { code: "4.2", label: "SIMULACROS EN COMUNIDAD GENERAL" },
-            { code: "4.3", label: "SIMULACROS EN EMPRESAS PUBLICAS O PRIVADAS" },
-            { code: "5", label: "PARTICIPANTES EN SIMULACROS EN COMUNIDADES EDUCATIVAS" },
-            { code: "5.1", label: "PARTICIPANTES EN SIMULACROS EN COMUNIDAD GENERAL" },
-            { code: "5.2", label: "PARTICIPANTES EN SIMULACROS EN EMPRESAS" },
-            { code: "6", label: "REUNIONES DE COORDINACION" },
-            { code: "6.1", label: "REUNIONES DE COORDINACION COMUNIDADES EDUCATIVAS" },
-            { code: "6.2", label: "REUNIONES DE COORDINACION COMUNIDADES EN GENERAL" },
-            { code: "6.3", label: "REUNIONES DE COORDINACION ORGANISMOS PUBLICOS" },
-            { code: "6.4", label: "REUNIONES EN COORDINACION EMPRESAS PRIVADAS" },
-            { code: "6.5", label: "REUNIONES DE COORDINACION CON VOLUNTARIOS" },
-            { code: "7", label: "PERSONAS ASISTENTES EN REUNION COMUNIDADES EDUCATIVAS" },
-            { code: "7.1", label: "PERSONAS ASISTENTES EN REUNION COMUNIDADES EN GENERAL" },
-            { code: "7.2", label: "PERSONAS ASISTENTES EN REUNION DE ORGANISMOS PUBLICOS" },
-            { code: "7.3", label: "PERSONAS ASISTENTES A REUNION DE EMPRESAS PRIVADAS" },
-            { code: "7.4", label: "PERSONAS ASISTENTES A REUNION DE VOLUNTARIOS" }
-        ]
-    }
+  {
+    title: 'ESTADÍSTICA GENERAL / NOVEDADES',
+    headerColor: 'bg-blue-500/20 dark:bg-blue-500/30',
+    items: [
+      { code: '1', label: 'REPORTE DEL VEN 911' }, //verificar si en el reporte sale VEN 911
+      { code: '1.1', label: 'REPORTE DEL VEN 911 - ATENDIDOS' }, //verificar la conclusión
+      { code: '1.2', label: 'REPORTE DEL VEN 911 - ATENDIDO NO EFECTUADO' }, //verificar la conclusión
+      { code: '1.3', label: 'REPORTE DEL VEN 911 - FALSA ALARMA CONFIRMADA' }, //verificar la conclusión
+      { code: '1.4', label: 'LLAMADA DE EMERGENCIA' }, //verificar descipción de la novedad
+      { code: '1.5', label: 'LLAMADA DE EMERGENCIA - FALSA ALARMA' }, //verificar descipción de la novedad
+      { code: '1.6', label: 'ORGANISMO DE SEGURIDAD' }, //verificar descipción de la novedad
+      { code: '1.7', label: 'CIUDADANO COMUN' }, //verificar descipción de la novedad
+      { code: '2', label: 'ACCIDENTE DE T. ATENDIDOS URBANO' }, //asignar al reporte de accidente de tránsito
+      { code: '2.1', label: 'ACCIDENTE DE T. ATENDIDOS EXTRA URBANO' }, //asignar al reporte de accidente de tránsito
+      { code: '2.2', label: 'LESIONADOS ACCIDENTE T. URBANO' }, //asignar al reporte de accidente de tránsito
+      { code: '2.3', label: 'LESIONADOS ACCIDENTE T. EXTRA URBANO' }, //asignar al reporte de accidente de tránsito
+      { code: '2.4', label: 'RESCATADOS EN ACCIDENTE T.' }, //asignar al reporte de accidente de tránsito
+      { code: '3', label: 'FALLECIDOS ACCIDENTE TRANSITO' }, //asignar al reporte de accidente de tránsito
+      { code: '3.1', label: 'FALLECIDOS X CAUSA NATURAL' }, //hacer general para cada tipo de fallecimiento
+      { code: '3.2', label: 'FALLECIDOS X CAUSA DESCONOCIDA' },
+      { code: '3.3', label: 'FALLECIDOS X ARMA DE FUEGO' },
+      { code: '3.4', label: 'FALLECIDOS X ARMA BLANCA' },
+      { code: '3.5', label: 'HERIDOS POR ARMA BLANCA' },
+      { code: '3.6', label: 'HERIDOS POR ARMA FUEGO' },
+      { code: '3.7', label: 'LESIONADO POR ELECTROCUCION' }, // descartar
+      { code: '3.8', label: 'FALLECIDO POR ELECTROCUCION' },
+      { code: '4', label: 'ATENCION AL PUBLICO' }, // verificar su uso
+      { code: '4.1', label: 'ATENCIONES PREHOSPITALARIA' }, // asignar a la sección de paciente
+      { code: '4.2', label: 'ATENCION PREHOSPITALARIA EN RESIDENCIA' }, // asignar al reporte de atención en residencia
+      { code: '4.3', label: 'ATENCIONES PREHOSPITALARIA EN SALA DE RADIO' }, // asignar al reporte de atención en sala de radio
+      { code: '4.4', label: 'ATENCIONES PREHOSPITALARIA EN VIA / LUGAR PUBLICO' }, // asignar al reporte de atención en via / lugar publico y opcionalmente en el de accidente de tránsito
+      { code: '4.5', label: 'ATENCIONES PREHOSPITALARIA EN INSTITUCION / COMERCIO' }, // asignar al reporte de atención en institución / comercio
+      { code: '4.6', label: 'ATENCIONES PREHOSPITALARIA EN GUARDIAS PREVENTIVAS' }, // asignar al reporte de atención en guardias preventivas
+      { code: '5', label: 'SOLICITUD DE TRASLADO' }, // asignar a los reportes de traslado
+      { code: '5.1', label: 'TRASLADOS URBANOS' }, // verificar si el municipio de origen y destino son iguales
+      { code: '5.2', label: 'TRASLADOS EXTRAURBANOS' }, // verificar si el municipio de origen y destino son distintos
+      { code: '5.3', label: 'TRASLADOS DE C.ASISTENCIALES A CENTROS ASISTENCIALES' }, // añadir etiqueta a las direcciones guardadas para que la aplicación verifique si es una dirección de un centro asistencial
+      { code: '5.4', label: 'TRASLADOS DE C.ASISTENCIALES A RESIDENCIAS' },
+      { code: '5.5', label: 'TRASLADOS DE RESIDENCIAS A C.ASISTENCIALES' },
+      { code: '5.6', label: 'TRASLADO DE VIA A C.ASISTENCIAL' },
+      { code: '6', label: 'GUARDIAS PREVENTIVAS' }, // reporte de guardias preventivas
+      { code: '6.1', label: 'PUNTOS DE PREVENCION' },
+      { code: '6.2', label: 'PUNTO EN SANTUARIO' },
+      { code: '6.3', label: 'PUNTO EN BALNEARIO' },
+      { code: '6.4', label: 'RECORRIDO PREVENTIVO' },
+      { code: '6.5', label: 'EVENTO DEPORTIVO' },
+      { code: '6.6', label: 'EVENTOS ESPECIALES' },
+      { code: '6.7', label: 'EVENTO EN LUGAR PUBLICO Y/O PRIVADO' },
+      { code: '7', label: 'APOYO A OTRAS INSTITUCIONES' },
+      { code: '7.1', label: 'APOYO SOCIAL' },
+      { code: '8', label: 'FUMIGACION' },
+      { code: '8.1', label: 'INSTITUCION PUBLICA' },
+      { code: '8.2', label: 'EMPRESA PRIVADA' },
+      { code: '8.3', label: 'UNIDADES EDUCATIVAS' },
+      { code: '8.4', label: 'CENTROS CULTURALES Y/O DEPORTIVOS' },
+      { code: '8.5', label: 'CENTROS MEDICOS' },
+      { code: '8.6', label: 'CASAS/EDIFICIOS' },
+      { code: '9', label: 'NIÑOS EXTRAVIADOS Y/O RECUPERADOS' },
+      { code: '10', label: 'OPERACIÓN SAR' },
+      { code: '10.1', label: 'RESCATADO EN OPERACIÓN SAR' },
+      { code: '10.2', label: 'RECUPERACION DE CADAVER EN OPERACIÓN SAR' },
+      { code: '11', label: 'AUXILIO VIAL' },
+      { code: '12', label: 'FALLA DEL SERVICIO ELECTRICO' },
+      { code: '13', label: 'FALLA DEL SERVICIO DE COMUNICACIONES' },
+      { code: '14', label: 'EVENTO METEREOLOGICO' },
+      { code: '15', label: 'INCENDIO' },
+      { code: '15.1', label: 'CONATO DE INCENDIO' },
+      { code: '15.2', label: 'INCENDIO DE VIVIENDA' },
+      { code: '15.3', label: 'INCENDIO DE COMERCIO' },
+      { code: '15.4', label: 'INCENDIO DE DESECHOS' },
+      { code: '15.5', label: 'INCENDIO DE EDIFICIO RESIDENCIAL' },
+      { code: '15.6', label: 'INCENDIO INDUSTRIAL' },
+      { code: '15.7', label: 'INCENDIO DE VEGETACION' },
+      { code: '15.8', label: 'INCENDIO FORESTAL' },
+      { code: '15.9', label: 'INCENDIO ESTRUCTURAL' },
+      { code: '15.10', label: 'INCENDIO VEHICULAR' },
+      { code: '15.11', label: 'INCENDIO DE EMBARCACION' },
+      { code: '15.12', label: 'INCENDIO DE HIDROCARBUROS' },
+      { code: '15.13', label: 'INCENDIOS POR FUEGOS ARTIFICIALES' },
+      { code: '15.14', label: 'LESIONADO EN INCENDIO' },
+      { code: '15.15', label: 'FALLECIDO EN INCENDIO' },
+      { code: '16', label: 'MITIGACION DE RIESGOS' },
+      { code: '16.1', label: 'PODA DE ARBOLES' },
+      { code: '16.2', label: 'TALA DE ARBOLES' },
+      { code: '16.3', label: 'FUGA DE GAS' },
+      { code: '16.4', label: 'REMOCION DE ESCOMBROS' },
+      { code: '16.5', label: 'DERRAME DE HIDROCARBUROS (CONTENSION)' },
+      { code: '16.6', label: 'REUBICACION DE ABEJAS' },
+      { code: '16.7', label: 'RESCATE / REUBICACION DE FAUNA SILVESTRE' },
+    ],
+  },
+  {
+    title: 'INSPECCIONES DE RIESGO',
+    headerColor: 'bg-green-600/20 dark:bg-green-600/30', // Changed to a more vibrant green
+    items: [
+      { code: '1', label: 'SOLICITUD DE INSPECCION' },
+      { code: '2', label: 'EVALUACIÓN DE DAÑOS Y ANÁLISIS DE NECESIDADES' },
+      { code: '3', label: 'INSPECCIONES DE RIESGO' },
+      { code: '3.1', label: 'INSP. ESTRUCTURA' },
+      { code: '3.2', label: 'INSP. VIVIENDA' },
+      { code: '3.3', label: 'INSP. PLANTELES EDUCATIVOS' },
+      { code: '3.4', label: 'INSP. PLANTELES DEPORTIVOS' },
+      { code: '3.5', label: 'INSP. INSTITUCIONES DE SALUD' },
+      { code: '3.6', label: 'INSP. CENTRO COMERCIALES' },
+      { code: '3.7', label: 'INSP. SANTUARIOS' },
+      { code: '3.8', label: 'INSP. VIALIDAD' },
+      { code: '3.9', label: 'INSP. PUENTES' },
+      { code: '3.10', label: 'INSP. POSTES / ALUMBRADO' },
+      { code: '3.11', label: 'INSP. TERMINAL MARITIMO' },
+      { code: '3.12', label: 'INSP. AREAS DE RECREACION / PARQUES / PLAZAS' },
+      { code: '3.13', label: 'INSP. ALJIBES / LAGUNA / QUEBRADA / RIO' },
+      { code: '3.14', label: 'INSP. TANQUES DE ALMACENAMIENTO' },
+      { code: '3.15', label: 'INSP. TERRENO' },
+      { code: '3.16', label: 'INSP. MURO' },
+      { code: '3.17', label: 'INSP. ÁRBOL' },
+      { code: '3.18', label: 'INSP. DRENAJES' },
+      { code: '3.19', label: 'INSP. DE BALNEARIOS' },
+      { code: '3.20', label: 'INSP. COLMENA DE ABEJA' },
+      { code: '3.21', label: 'INSP. DE CAMPO' },
+      { code: '4', label: 'SINIESTRO' },
+      { code: '4.1', label: 'ANEGACIÓN' },
+      { code: '4.2', label: 'DESLIZAMIENTO/DERRUMBE' },
+      { code: '4.3', label: 'COLAPSO DE ESTRUCTURA' },
+      { code: '4.4', label: 'LESIONADO POR COLAPSO DE ESTRUCTURA' },
+      { code: '4.5', label: 'FALLECIDOS POR COLAPSO DE ESTRUCTURA' },
+      { code: '5', label: 'INFORME REALIZADO' },
+      { code: '6', label: 'INFORME ENTREGADO' },
+    ],
+  },
+  {
+    title: 'ACCIDENTES Y RESCATE (MONTAÑA - ACUÁTICOS - AÉREOS)',
+    headerColor: 'bg-red-600/20 dark:bg-red-600/30', // Changed to a more vibrant red/orange
+    items: [
+      { code: '1', label: 'ACCIDENTES EN MONTAÑA' },
+      { code: '1.2', label: 'LESIONADO ACCIDENTE EN MONTAÑA' },
+      { code: '1.3', label: 'FALLECIDO ACCIDENTE MONTAÑA' },
+      { code: '1.4', label: 'SALVADOS ACCIDENTE MONTAÑA' },
+      { code: '1.5', label: 'DESAPARECIDOS ACT. MONTAÑA' },
+      { code: '2.1', label: 'FALLECIDOS INMERSION' },
+      { code: '3', label: 'SALVADOS INMERSION' },
+      { code: '3.1', label: 'ACCIDENTE ACUATICOS' },
+      { code: '3.2', label: 'LESIONADOS ACCIDENTE ACUATICOS' },
+      { code: '3.3', label: 'SALVADOS ACCIDENTE ACUATICOS' },
+      { code: '3.4', label: 'FALLECIDOS ACCIDENTE ACUATICOS' },
+      { code: '4', label: 'ACCIDENTE AEREOS' },
+      { code: '4.1', label: 'LESIONADOS ACCIDENTE AEREOS' },
+      { code: '4.2', label: 'SALVADOS ACCIDENTE AEREOS' },
+      { code: '4.3', label: 'FALLECIDOS ACCIDENTE AEREOS' },
+    ],
+  },
+  {
+    title: 'CAPACITACIÓN Y PREVENCIÓN',
+    headerColor: 'bg-amber-500/20 dark:bg-amber-500/30',
+    items: [
+      { code: '1', label: 'CONVERSATORIO (CONCIENTIZACION EN PUESTOS DE ATENCION)' },
+      { code: '2', label: 'CAPACITACIONES' },
+      { code: '2.1', label: 'CAPACITACIONES A COMUNIDADES EDUCATIVAS' },
+      { code: '2.2', label: 'CAPACITACIONES A COMUNIDADES EN GENERAL' },
+      { code: '2.3', label: 'CAPACITACIONES A EMPRESAS PRIVADAS' },
+      { code: '2.4', label: 'CAPACITACIONES A VOLUNTARIOS Y FUNCIONARIOS' },
+      { code: '2.5', label: 'CAPACITACIONES A ORGANISMOS PUBLICOS' },
+      { code: '3', label: 'PARTICIPANTES EN CAPACITACIONES' },
+      { code: '3.1', label: 'PERSONAS CAPACITADAS EN COMUNIDADES EDUCATIVAS' },
+      { code: '3.2', label: 'PERSONAS CAPACITADAS EN COMUNIDADES EN GENERAL' },
+      { code: '3.3', label: 'PERSONAS CAPACITADAS EN EMPRESAS PRIVADAS' },
+      { code: '3.4', label: 'VOLUNTARIOS Y FUNCIONARIOS CAPACITADOS' },
+      { code: '3.5', label: 'PERSONAS CAPACITADAS EN ORGANISMOS PUBLICOS' },
+      { code: '4', label: 'SIMULACROS' },
+      { code: '4.1', label: 'SIMULACROS EN COMUNIDADES EDUCATIVAS' },
+      { code: '4.2', label: 'SIMULACROS EN COMUNIDAD GENERAL' },
+      { code: '4.3', label: 'SIMULACROS EN EMPRESAS PUBLICAS O PRIVADAS' },
+      { code: '5', label: 'PARTICIPANTES EN SIMULACROS EN COMUNIDADES EDUCATIVAS' },
+      { code: '5.1', label: 'PARTICIPANTES EN SIMULACROS EN COMUNIDAD GENERAL' },
+      { code: '5.2', label: 'PARTICIPANTES EN SIMULACROS EN EMPRESAS' },
+      { code: '6', label: 'REUNIONES DE COORDINACION' },
+      { code: '6.1', label: 'REUNIONES DE COORDINACION COMUNIDADES EDUCATIVAS' },
+      { code: '6.2', label: 'REUNIONES DE COORDINACION COMUNIDADES EN GENERAL' },
+      { code: '6.3', label: 'REUNIONES DE COORDINACION ORGANISMOS PUBLICOS' },
+      { code: '6.4', label: 'REUNIONES EN COORDINACION EMPRESAS PRIVADAS' },
+      { code: '6.5', label: 'REUNIONES DE COORDINACION CON VOLUNTARIOS' },
+      { code: '7', label: 'PERSONAS ASISTENTES EN REUNION COMUNIDADES EDUCATIVAS' },
+      { code: '7.1', label: 'PERSONAS ASISTENTES EN REUNION COMUNIDADES EN GENERAL' },
+      { code: '7.2', label: 'PERSONAS ASISTENTES EN REUNION DE ORGANISMOS PUBLICOS' },
+      { code: '7.3', label: 'PERSONAS ASISTENTES A REUNION DE EMPRESAS PRIVADAS' },
+      { code: '7.4', label: 'PERSONAS ASISTENTES A REUNION DE VOLUNTARIOS' },
+    ],
+  },
 ];
 
-export const DEFAULT_STATISTICS_CATEGORIES = STATISTICS_SECTIONS.flatMap(section =>
-    section.items.map(item => `${item.code} ${item.label}`)
+export const DEFAULT_STATISTICS_CATEGORIES = STATISTICS_SECTIONS.flatMap((section) =>
+  section.items.map((item) => `${item.code} ${item.label}`)
 );

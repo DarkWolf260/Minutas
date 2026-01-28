@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -9,9 +8,6 @@ import 'leaflet/dist/leaflet.css';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Map as MapIcon, Satellite } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-
-
 
 import type { Address } from '@/types';
 
@@ -27,17 +23,19 @@ type MapType = 'street' | 'satellite';
 
 const TILE_LAYERS = {
   street: {
-    url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">HOT</a>'
+    url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">HOT</a>',
   },
   satellite: {
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    attribution:
+      'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
   },
   labels: {
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-    attribution: ''
-  }
+    attribution: '',
+  },
 };
 
 const ChangeView = ({ center, zoom }: { center: [number, number]; zoom: number }) => {
@@ -46,20 +44,38 @@ const ChangeView = ({ center, zoom }: { center: [number, number]; zoom: number }
     map.setView(center, zoom, { animate: false });
   }, [center, zoom, map]);
   return null;
-}
+};
 
 const MapResizer = ({ mapType }: { mapType: string }) => {
   const map = useMap();
   useEffect(() => {
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+
+    window.addEventListener('resize', handleResize);
+
     const timer = setTimeout(() => {
       map.invalidateSize();
     }, 200);
-    return () => clearTimeout(timer);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timer);
+    };
   }, [map, mapType]);
   return null;
 };
 
-const TempMarkerWithPopup = ({ position, onCreateClick, icon }: { position: LatLng, onCreateClick: () => void, icon: L.Icon }) => {
+const TempMarkerWithPopup = ({
+  position,
+  onCreateClick,
+  icon,
+}: {
+  position: LatLng;
+  onCreateClick: () => void;
+  icon: L.Icon;
+}) => {
   const map = useMap();
 
   useEffect(() => {
@@ -81,8 +97,13 @@ const TempMarkerWithPopup = ({ position, onCreateClick, icon }: { position: LatL
   );
 };
 
-
-export function AddressMap({ latitude, longitude, name, addresses = [], onMapClick }: AddressMapProps) {
+export function AddressMap({
+  latitude,
+  longitude,
+  name,
+  addresses = [],
+  onMapClick,
+}: AddressMapProps) {
   const [mapType, setMapType] = useState<MapType>('street');
   const [tempMarkerPos, setTempMarkerPos] = useState<LatLng | null>(null);
 
@@ -109,14 +130,12 @@ export function AddressMap({ latitude, longitude, name, addresses = [], onMapCli
     }
   }, [isValid, latitude, longitude]);
 
-
-  const center = useMemo<[number, number]>(() =>
-    isValid ? [lat, lon] : [10.16, -64.68],
+  const center = useMemo<[number, number]>(
+    () => (isValid ? [lat, lon] : [10.16, -64.68]),
     [isValid, lat, lon]
   );
 
-  const zoom = useMemo(() => isValid ? 16 : 9, [isValid]);
-
+  const zoom = useMemo(() => (isValid ? 16 : 9), [isValid]);
 
   const MapEventsHandler = () => {
     useMapEvents({
@@ -134,7 +153,7 @@ export function AddressMap({ latitude, longitude, name, addresses = [], onMapCli
       onMapClick({ lat: tempMarkerPos.lat, lng: tempMarkerPos.lng });
       setTempMarkerPos(null); // Clear marker after clicking the button
     }
-  }
+  };
 
   // Create icon instance memoized
   const customIcon = useMemo(() => {
@@ -146,7 +165,7 @@ export function AddressMap({ latitude, longitude, name, addresses = [], onMapCli
       iconAnchor: [12, 41],
       popupAnchor: [1, -34],
       tooltipAnchor: [16, -28],
-      shadowSize: [41, 41]
+      shadowSize: [41, 41],
     });
   }, []);
 
@@ -157,7 +176,11 @@ export function AddressMap({ latitude, longitude, name, addresses = [], onMapCli
           <div>
             <CardTitle>Mapa Interactivo</CardTitle>
             <CardDescription>
-              {tempMarkerPos ? 'Confirma la creación del nuevo punto' : (name ? `Ubicación: ${name}` : 'Haz clic para añadir un punto')}
+              {tempMarkerPos
+                ? 'Confirma la creación del nuevo punto'
+                : name
+                  ? `Ubicación: ${name}`
+                  : 'Haz clic para añadir un punto'}
             </CardDescription>
           </div>
           <div className="flex gap-1 bg-muted p-1 rounded-md self-start sm:self-center">
@@ -198,21 +221,18 @@ export function AddressMap({ latitude, longitude, name, addresses = [], onMapCli
             url={TILE_LAYERS[mapType].url}
           />
           {mapType === 'satellite' && (
-            <TileLayer
-              key="satellite-labels"
-              url={TILE_LAYERS.labels.url}
-              opacity={0.8}
-            />
+            <TileLayer key="satellite-labels" url={TILE_LAYERS.labels.url} opacity={0.8} />
           )}
           <MapEventsHandler />
           {/* All saved addresses */}
-          {addresses.map(address => {
+          {addresses.map((address) => {
             const aLat = parseFloat(address.latitude || '');
             const aLon = parseFloat(address.longitude || '');
             if (isNaN(aLat) || isNaN(aLon)) return null;
 
             // Highlight the currently selected address if it matches
-            const isSelected = address.id === (addresses.find(a => a.name === name && a.latitude === latitude)?.id);
+            const isSelected =
+              address.id === addresses.find((a) => a.name === name && a.latitude === latitude)?.id;
 
             return (
               <Marker
@@ -225,9 +245,13 @@ export function AddressMap({ latitude, longitude, name, addresses = [], onMapCli
                   <div className="text-sm">
                     <p className="font-bold border-b border-muted pb-1 mb-1">{address.name}</p>
                     <p className="text-[10px] text-muted-foreground">
-                      {[address.municipality, address.parish, address.sector].filter(Boolean).join(', ')}
+                      {[address.municipality, address.parish, address.sector]
+                        .filter(Boolean)
+                        .join(', ')}
                     </p>
-                    {address.details && <p className="text-[10px] italic mt-1 font-mono">"{address.details}"</p>}
+                    {address.details && (
+                      <p className="text-[10px] italic mt-1 font-mono">"{address.details}"</p>
+                    )}
                   </div>
                 </Popup>
               </Marker>
@@ -236,7 +260,11 @@ export function AddressMap({ latitude, longitude, name, addresses = [], onMapCli
 
           {/* Temporary marker for new locations */}
           {tempMarkerPos && (
-            <TempMarkerWithPopup position={tempMarkerPos} onCreateClick={handleCreateClick} icon={customIcon} />
+            <TempMarkerWithPopup
+              position={tempMarkerPos}
+              onCreateClick={handleCreateClick}
+              icon={customIcon}
+            />
           )}
         </MapContainer>
       </CardContent>

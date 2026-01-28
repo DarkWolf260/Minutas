@@ -1,0 +1,126 @@
+/**
+ * Template Evaluator - Condition & Modifier Evaluation
+ * 
+ * Evaluates conditional expressions and applies text modifiers
+ */
+
+/**
+ * Evaluates a conditional expression
+ * 
+ * @param fieldValue - The actual value of the field
+ * @param operator - The comparison operator (=, !=, >, <, >=, <=)
+ * @param targetValue - The value to compare against
+ * @returns True if the condition is met
+ * 
+ * @example
+ * ```typescript
+ * evaluateCondition('Robo', '=', 'Robo') // true
+ * evaluateCondition(5, '>', '3') // true
+ * evaluateCondition('Active', '!=', 'Inactive') // true
+ * ```
+ */
+/**
+ * Evaluates a conditional expression
+ * 
+ * Supports numeric and string comparisons using standard operators.
+ * 
+ * @param fieldValue - The actual value of the field
+ * @param operator - The comparison operator (=, !=, >, <, >=, <=)
+ * @param targetValue - The value to compare against
+ * @returns True if the condition is met
+ * 
+ * @example
+ * ```typescript
+ * evaluateCondition('Robo', '=', 'Robo') // true
+ * evaluateCondition(5, '>', '3') // true
+ * evaluateCondition('Active', '!=', 'Inactive') // true
+ * ```
+ */
+export function evaluateCondition(
+    fieldValue: any,
+    operator: string,
+    targetValue: string
+): boolean {
+    if (fieldValue === undefined || fieldValue === null) {
+        return operator === '!=';
+    }
+
+    const val = coerceForComparison(fieldValue);
+    const target = coerceForComparison(targetValue);
+
+    switch (operator) {
+        case '=':
+        case '==':
+            return val === target;
+        case '!=':
+            return val !== target;
+        case '>':
+            return val > target;
+        case '<':
+            return val < target;
+        case '>=':
+            return val >= target;
+        case '<=':
+            return val <= target;
+        default:
+            return false;
+    }
+}
+
+/**
+ * Applies text modifiers to a value
+ * 
+ * @param value - The value to modify
+ * @param modifiers - Array of modifier names (upper, lower, title, etc.)
+ * @returns Modified string value
+ * 
+ * @example
+ * ```typescript
+ * applyModifiers('hello world', ['upper']) // 'HELLO WORLD'
+ * applyModifiers('HELLO WORLD', ['lower']) // 'hello world'
+ * applyModifiers('hello world', ['title']) // 'Hello World'
+ * ```
+ */
+export function applyModifiers(value: any, modifiers: string | string[]): string {
+    if (value === undefined || value === null) return '';
+
+    let result = String(value);
+    const mods = Array.isArray(modifiers) ? modifiers : [modifiers];
+
+    mods.forEach((mod) => {
+        const trimmedMod = mod.trim().toLowerCase();
+        if (trimmedMod === 'upper') {
+            result = result.toUpperCase();
+        } else if (trimmedMod === 'lower') {
+            result = result.toLowerCase();
+        } else if (trimmedMod === 'title') {
+            result = result
+                .toLowerCase()
+                .split(' ')
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+    });
+
+    return result;
+}
+
+/**
+ * Formats a value based on its field type (Reserved for future specialized formatting)
+ */
+export function formatValue(value: any, fieldType: string): string {
+    return String(value);
+}
+
+/**
+ * Coerces values for comparison (handles numeric strings)
+ */
+function coerceForComparison(value: any): string | number {
+    const s = String(value).trim();
+    // If it looks like a number, treat it as a number for comparison
+    if (s !== '' && !isNaN(Number(s))) {
+        return Number(s);
+    }
+    return s;
+}
+

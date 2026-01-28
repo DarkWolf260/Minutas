@@ -1,19 +1,18 @@
 /**
- * Hook for managing staff roles with localStorage persistence.
- * 
- * Manages organizational roles with department scope, single/multi assignment,
- * and automatic migration support for adding departmentScope to existing roles.
- * 
+ * Hook for managing staff roles with RxDB persistence.
+ *
+ * Manages organizational roles with department scope and single/multi assignment using RxDB.
+ *
  * @returns Role state and operations
  * @property {StaffRole[]} roles - List of all roles
  * @property {(roles: StaffRole[]) => void} saveRoles - Update roles list
  * @property {() => void} clearAllRoles - Reset to default roles
  * @property {boolean} isLoaded - Loading state
- * 
+ *
  * @example
  * ```tsx
  * const { roles, saveRoles } = useRoles();
- * 
+ *
  * const updatedRoles = [...roles, {
  *   name: 'Coordinador',
  *   isSingle: true,
@@ -28,6 +27,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { StaffRole } from '@/types';
 import { useDatabase } from '@/lib/db/db-provider';
+import { logger } from '@/lib/logger';
 import { LEADER_ROLES } from '@/constants/roles';
 import { PERSONNEL_STATUS } from '@/constants/personnel';
 
@@ -42,10 +42,27 @@ const defaultRoles: StaffRole[] = [
   { name: 'Auxiliar', isSingle: false, departmentScope: ['ops'] },
   { name: 'Conductor', isSingle: false, departmentScope: ['ops'] },
   { name: 'Jefe de CEMUPRAD', isSingle: true, departmentScope: ['cemuprad'] },
-  { name: PERSONNEL_STATUS.REPOSO.charAt(0).toUpperCase() + PERSONNEL_STATUS.REPOSO.slice(1), isSingle: false, departmentScope: [] },
-  { name: PERSONNEL_STATUS.PERMISO.charAt(0).toUpperCase() + PERSONNEL_STATUS.PERMISO.slice(1), isSingle: false, departmentScope: [] },
-  { name: PERSONNEL_STATUS.VACACIONES.charAt(0).toUpperCase() + PERSONNEL_STATUS.VACACIONES.slice(1), isSingle: false, departmentScope: [] },
-  { name: PERSONNEL_STATUS.APOYO.charAt(0).toUpperCase() + PERSONNEL_STATUS.APOYO.slice(1), isSingle: false, departmentScope: [] },
+  {
+    name: PERSONNEL_STATUS.REPOSO.charAt(0).toUpperCase() + PERSONNEL_STATUS.REPOSO.slice(1),
+    isSingle: false,
+    departmentScope: [],
+  },
+  {
+    name: PERSONNEL_STATUS.PERMISO.charAt(0).toUpperCase() + PERSONNEL_STATUS.PERMISO.slice(1),
+    isSingle: false,
+    departmentScope: [],
+  },
+  {
+    name:
+      PERSONNEL_STATUS.VACACIONES.charAt(0).toUpperCase() + PERSONNEL_STATUS.VACACIONES.slice(1),
+    isSingle: false,
+    departmentScope: [],
+  },
+  {
+    name: PERSONNEL_STATUS.APOYO.charAt(0).toUpperCase() + PERSONNEL_STATUS.APOYO.slice(1),
+    isSingle: false,
+    departmentScope: [],
+  },
 ];
 
 export function useRoles() {
@@ -56,12 +73,14 @@ export function useRoles() {
   useEffect(() => {
     if (!db) return;
 
-    const sub = db.roles.find().$.subscribe(data => {
+    const sub = db.roles.find().$.subscribe((data) => {
       if (data.length > 0) {
-        setRoles(data.map(d => d.toJSON()) as StaffRole[]);
+        setRoles(data.map((d) => d.toJSON()) as StaffRole[]);
       } else {
         // Initial roles if DB is empty
-        db.roles.bulkInsert(defaultRoles).catch(err => console.error('Failed to insert default roles:', err));
+        db.roles
+          .bulkInsert(defaultRoles)
+          .catch((err) => logger.error('Failed to insert default roles', err, { feature: 'Roles' }));
       }
       setIsLoaded(true);
     });
@@ -69,31 +88,34 @@ export function useRoles() {
     return () => sub.unsubscribe();
   }, [db]);
 
-  const saveRoles = useCallback(async (newRoles: StaffRole[]) => {
-    if (!db) return;
-    try {
-      const allDocs = await db.roles.find().exec();
-      const newNames = new Set(newRoles.map(r => r.name));
-      const toDelete = allDocs.filter(d => !newNames.has(d.name));
+  const saveRoles = useCallback(
+    async (newRoles: StaffRole[]) => {
+      if (!db) return;
+      try {
+        const allDocs = await db.roles.find().exec();
+        const newNames = new Set(newRoles.map((r) => r.name));
+        const toDelete = allDocs.filter((d) => !newNames.has(d.name));
 
-      if (toDelete.length > 0) {
-        await Promise.all(toDelete.map(d => d.remove()));
+        if (toDelete.length > 0) {
+          await Promise.all(toDelete.map((d) => d.remove()));
+        }
+
+        await db.roles.bulkUpsert(newRoles);
+      } catch (error) {
+        logger.error('Failed to save roles', error, { feature: 'Roles' });
       }
-
-      await db.roles.bulkUpsert(newRoles);
-    } catch (error) {
-      console.error('Failed to save roles:', error);
-    }
-  }, [db]);
+    },
+    [db]
+  );
 
   const clearAllRoles = useCallback(async () => {
     if (!db) return;
     try {
       const allDocs = await db.roles.find().exec();
-      await Promise.all(allDocs.map(d => d.remove()));
+      await Promise.all(allDocs.map((d) => d.remove()));
       await db.roles.bulkInsert(defaultRoles);
     } catch (error) {
-      console.error('Failed to clear roles:', error);
+      logger.error('Failed to clear roles', error, { feature: 'Roles' });
     }
   }, [db]);
 

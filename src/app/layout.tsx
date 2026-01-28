@@ -1,4 +1,3 @@
-
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -9,20 +8,31 @@ import { WelcomeDialog } from '@/components/welcome-dialog';
 import { Toaster } from '@/components/toaster';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { PWARegistration } from '@/components/pwa-registration';
 
 import { DatabaseProvider } from '@/lib/db/db-provider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'Generador de Reportes',
-  description: 'Un nuevo proyecto para generar reportes.',
+  title: 'Minutas - Gestión Operativa',
+  description: 'Sistema administrativo de reportes de novedades operativas.',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Minutas',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#ffffff',
+  themeColor: '#0f172a',
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -46,13 +56,12 @@ export default function RootLayout({
                 <div className="flex flex-1 flex-col sm:pl-14">
                   <MobileNav />
                   <main className="flex-1 bg-muted/30 p-0 sm:p-0">
-                    <ErrorBoundary name="MainContent">
-                      {children}
-                    </ErrorBoundary>
+                    <ErrorBoundary name="MainContent">{children}</ErrorBoundary>
                   </main>
                 </div>
               </div>
               <WelcomeDialog />
+              <PWARegistration />
               <Toaster />
             </TooltipProvider>
           </DatabaseProvider>

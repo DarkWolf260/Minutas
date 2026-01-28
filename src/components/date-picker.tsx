@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -9,11 +8,7 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface DatePickerProps {
   value: string; // expecting YYYY-MM-DD
@@ -46,26 +41,24 @@ export function DatePicker({ value, onChange, disabled }: DatePickerProps) {
           disabled={disabled}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? (() => {
-            const formatted = format(date, 'dd/MMMM/yyyy', { locale: es });
-            const parts = formatted.split('/');
-            const month = parts[1];
-            if (parts.length === 3 && month) {
-              parts[1] = month.charAt(0).toUpperCase() + month.slice(1);
-              return parts.join('/');
-            }
-            return formatted;
-          })() : <span>Selecciona una fecha</span>}
+          {date ? (
+            (() => {
+              const formatted = format(date, 'dd/MMMM/yyyy', { locale: es });
+              const parts = formatted.split('/');
+              const month = parts[1];
+              if (parts.length === 3 && month) {
+                parts[1] = month.charAt(0).toUpperCase() + month.slice(1);
+                return parts.join('/');
+              }
+              return formatted;
+            })()
+          ) : (
+            <span>Selecciona una fecha</span>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={handleSelect}
-          initialFocus
-          locale={es}
-        />
+        <Calendar mode="single" selected={date} onSelect={handleSelect} initialFocus locale={es} />
       </PopoverContent>
     </Popover>
   );

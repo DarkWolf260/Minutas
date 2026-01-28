@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useMemo } from 'react';
@@ -7,7 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Upload, FileText, Trash2, HelpCircle, PlusCircle, AlertTriangle, Download, Pencil, ChevronLeft } from 'lucide-react';
+import {
+  Upload,
+  FileText,
+  Trash2,
+  HelpCircle,
+  PlusCircle,
+  AlertTriangle,
+  Download,
+  Pencil,
+  ChevronLeft,
+} from 'lucide-react';
 import { useTemplates } from '@/hooks/use-templates';
 import type { Template } from '@/types';
 import { TemplateEditor } from '@/components/template/template-editor';
@@ -21,7 +30,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
@@ -36,23 +45,26 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { parseTemplate } from '@/lib/template-parser';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { TemplateBuilder } from '@/components/template/template-builder';
 import { Badge } from '@/components/ui/badge';
 
-
 export default function PlantillasPage() {
-  const { templates, addTemplate, removeTemplate, updateTemplate, configs, updateTemplateConfig, toggleTemplateActive, clearAllTemplates } = useTemplates();
+  const {
+    templates,
+    addTemplate,
+    removeTemplate,
+    updateTemplate,
+    configs,
+    updateTemplateConfig,
+    toggleTemplateActive,
+    clearAllTemplates,
+  } = useTemplates();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
-  const [activeTab, setActiveTab] = useState("builder");
+  const [activeTab, setActiveTab] = useState('builder');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,7 +110,7 @@ export default function PlantillasPage() {
   const handleEditContentClick = (e: React.MouseEvent, template: Template) => {
     e.stopPropagation();
     setEditingTemplate(template);
-    setActiveTab("builder");
+    setActiveTab('builder');
   };
 
   const handleConfirmDelete = () => {
@@ -117,7 +129,7 @@ export default function PlantillasPage() {
   };
 
   const handleUpdateTemplateContent = (id: string, updates: Partial<Template>) => {
-    const currentTemplate = templates.find(t => t.id === id);
+    const currentTemplate = templates.find((t) => t.id === id);
     if (currentTemplate) {
       updateTemplate({ ...currentTemplate, ...updates });
     }
@@ -130,20 +142,30 @@ export default function PlantillasPage() {
     // let's stay in builder but reset
   };
 
-  const selectedTemplate = templates.find(t => t.id === selectedTemplateId) || null;
+  const selectedTemplate = templates.find((t) => t.id === selectedTemplateId) || null;
 
   return (
     <>
       <div className="flex flex-col h-[calc(100vh-3.5rem)] sm:h-screen bg-muted/30 overflow-hidden">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex-1 flex flex-col min-h-0"
+        >
           <div className="p-4 sm:px-6 sm:py-4 border-b bg-background flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex flex-col">
               <h1 className="text-xl font-bold">Plantillas</h1>
-              <p className="text-sm text-muted-foreground">Gestiona y construye plantillas para reportes.</p>
+              <p className="text-sm text-muted-foreground">
+                Gestiona y construye plantillas para reportes.
+              </p>
             </div>
             <TabsList className="w-full sm:w-auto">
-              <TabsTrigger value="builder" className="flex-1 sm:flex-initial">Constructor</TabsTrigger>
-              <TabsTrigger value="editor" className="flex-1 sm:flex-initial">Gestionar</TabsTrigger>
+              <TabsTrigger value="builder" className="flex-1 sm:flex-initial">
+                Constructor
+              </TabsTrigger>
+              <TabsTrigger value="editor" className="flex-1 sm:flex-initial">
+                Gestionar
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -167,15 +189,15 @@ export default function PlantillasPage() {
             className="flex-1 h-full min-h-0 m-0 p-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
           >
             <div className="flex flex-1 min-h-0 overflow-hidden h-full sm:p-4 gap-6">
-              <aside className={cn(
-                "h-full w-full sm:w-96 flex-col bg-card flex sm:rounded-lg border sm:shadow-sm shrink-0 min-h-0",
-                selectedTemplateId ? "hidden sm:flex" : "flex"
-              )}>
+              <aside
+                className={cn(
+                  'h-full w-full sm:w-96 flex-col bg-card flex sm:rounded-lg border sm:shadow-sm shrink-0 min-h-0',
+                  selectedTemplateId ? 'hidden sm:flex' : 'flex'
+                )}
+              >
                 <CardHeader className="p-4 sm:p-6">
                   <CardTitle>Plantillas</CardTitle>
-                  <CardDescription>
-                    Sube y gestiona tus plantillas de reportes.
-                  </CardDescription>
+                  <CardDescription>Sube y gestiona tus plantillas de reportes.</CardDescription>
                 </CardHeader>
                 <div className="p-4 pt-0 space-y-2">
                   <Button className="w-full" onClick={handleUploadClick}>
@@ -195,7 +217,8 @@ export default function PlantillasPage() {
                     <div className="space-y-1 p-4 pt-0">
                       {templates.map((template, index) => {
                         const { layout, fieldNames, errors } = parseTemplate(template.content);
-                        const isValid = (layout.length > 0 || fieldNames.size > 0) && errors.length === 0;
+                        const isValid =
+                          (layout.length > 0 || fieldNames.size > 0) && errors.length === 0;
 
                         return (
                           <div
@@ -209,9 +232,16 @@ export default function PlantillasPage() {
                               className="flex items-center gap-3 flex-grow cursor-pointer"
                               onClick={() => setSelectedTemplateId(template.id)}
                             >
-                              <FileText className={cn("h-4 w-4 text-primary", !isValid && "text-destructive")} />
+                              <FileText
+                                className={cn(
+                                  'h-4 w-4 text-primary',
+                                  !isValid && 'text-destructive'
+                                )}
+                              />
                               <span className="flex-1 font-medium">{template.name}</span>
-                              {!isValid && <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />}
+                              {!isValid && (
+                                <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
+                              )}
                             </div>
                             <div className="flex items-center gap-1 flex-shrink-0">
                               <Tooltip>
@@ -226,7 +256,9 @@ export default function PlantillasPage() {
                                     <Pencil className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent><p>Editar Contenido</p></TooltipContent>
+                                <TooltipContent>
+                                  <p>Editar Contenido</p>
+                                </TooltipContent>
                               </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -240,7 +272,9 @@ export default function PlantillasPage() {
                                     <Download className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent><p>Exportar</p></TooltipContent>
+                                <TooltipContent>
+                                  <p>Exportar</p>
+                                </TooltipContent>
                               </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -262,13 +296,13 @@ export default function PlantillasPage() {
                                       <p className="font-semibold mb-1">Plantilla inválida:</p>
                                       <ul className="list-disc pl-3 space-y-1">
                                         {errors.length > 0 ? (
-                                          errors.slice(0, 3).map((err, i) => (
-                                            <li key={i}>{err}</li>
-                                          ))
+                                          errors.slice(0, 3).map((err, i) => <li key={i}>{err}</li>)
                                         ) : (
                                           <li>La plantilla está vacía o mal formada.</li>
                                         )}
-                                        {errors.length > 3 && <li>...y {errors.length - 3} más.</li>}
+                                        {errors.length > 3 && (
+                                          <li>...y {errors.length - 3} más.</li>
+                                        )}
                                       </ul>
                                     </div>
                                   )}
@@ -286,11 +320,13 @@ export default function PlantillasPage() {
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent><p>Eliminar</p></TooltipContent>
+                                <TooltipContent>
+                                  <p>Eliminar</p>
+                                </TooltipContent>
                               </Tooltip>
                             </div>
                           </div>
-                        )
+                        );
                       })}
                       {templates.length === 0 && (
                         <div className="p-4 text-center text-sm text-muted-foreground">
@@ -302,17 +338,15 @@ export default function PlantillasPage() {
                 </ScrollArea>
               </aside>
 
-              <main className={cn(
-                "flex-1 overflow-hidden",
-                !selectedTemplateId ? "hidden sm:block" : "block"
-              )}>
+              <main
+                className={cn(
+                  'flex-1 overflow-hidden',
+                  !selectedTemplateId ? 'hidden sm:block' : 'block'
+                )}
+              >
                 {selectedTemplateId && (
                   <div className="sm:hidden border-b p-2 bg-card">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedTemplateId(null)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedTemplateId(null)}>
                       <ChevronLeft className="mr-2 h-4 w-4" />
                       Volver a la lista
                     </Button>
@@ -322,7 +356,13 @@ export default function PlantillasPage() {
                   <TemplateEditor
                     key={selectedTemplate.id}
                     template={selectedTemplate}
-                    config={(configs[selectedTemplate.id] || { fields: {}, sections: [], layout: [] }) as any}
+                    config={
+                      (configs[selectedTemplate.id] || {
+                        fields: {},
+                        sections: [],
+                        layout: [],
+                      }) as any
+                    }
                     onConfigChange={(config) => updateTemplateConfig(selectedTemplate.id, config)}
                     onTemplateChange={updateTemplate}
                   />
@@ -342,27 +382,27 @@ export default function PlantillasPage() {
               </main>
             </div>
           </TabsContent>
-
-
         </Tabs>
       </div>
 
-      <AlertDialog open={!!templateToDelete} onOpenChange={(open) => !open && setTemplateToDelete(null)}>
+      <AlertDialog
+        open={!!templateToDelete}
+        onOpenChange={(open) => !open && setTemplateToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
               {templateToDelete === 'ALL'
                 ? 'Esta acción no se puede deshacer. Se eliminarán permanentemente TODAS las plantillas y sus configuraciones.'
-                : 'Esta acción no se puede deshacer. La plantilla será eliminada permanentemente.'
-              }
+                : 'Esta acción no se puede deshacer. La plantilla será eliminada permanentemente.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setTemplateToDelete(null)}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete}>
-              Sí, eliminar
-            </AlertDialogAction>
+            <AlertDialogCancel onClick={() => setTemplateToDelete(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete}>Sí, eliminar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -378,36 +418,63 @@ export default function PlantillasPage() {
           <div className="py-4 space-y-6 text-sm max-h-[70vh] overflow-y-auto pr-4">
             <div>
               <h4 className="font-semibold text-base mb-2">1. Lo Básico: Campos de Formulario</h4>
-              <p>Para definir un campo que el usuario deberá rellenar, enciérralo entre llaves <code>{`{ }`}</code>. Cada campo que definas se convertirá en un elemento del formulario (un campo de texto, un selector de fecha, etc.).</p>
+              <p>
+                Para definir un campo que el usuario deberá rellenar, enciérralo entre llaves{' '}
+                <code>{`{ }`}</code>. Cada campo que definas se convertirá en un elemento del
+                formulario (un campo de texto, un selector de fecha, etc.).
+              </p>
               <div className="mt-2 p-3 bg-muted rounded-md text-xs font-mono">
-                <p>Siendo las {`{Hora}`}, se presentó una novedad en {`{Lugar}`}.</p>
+                <p>
+                  Siendo las {`{Hora}`}, se presentó una novedad en {`{Lugar}`}.
+                </p>
               </div>
             </div>
             <div>
               <h4 className="font-semibold text-base mb-2">2. Organizando con Secciones</h4>
-              <p>Puedes agrupar campos y organizar la estructura de tu formulario y reporte usando secciones. Se definen con corchetes <code>[ ]</code>.</p>
+              <p>
+                Puedes agrupar campos y organizar la estructura de tu formulario y reporte usando
+                secciones. Se definen con corchetes <code>[ ]</code>.
+              </p>
 
               <div className="mt-4 space-y-4">
                 <div>
                   <h5 className="font-medium mb-1">a) Sección Simple (Título y Campos)</h5>
-                  <p className="text-muted-foreground">Úsala para agrupar campos bajo un mismo título.</p>
+                  <p className="text-muted-foreground">
+                    Úsala para agrupar campos bajo un mismo título.
+                  </p>
                   <div className="mt-2 p-3 bg-muted rounded-md text-xs font-mono">
-                    <p>["Datos de la Unidad" {`{Unidad a Cargo}`} {`{PAB}`}]</p>
+                    <p>
+                      ["Datos de la Unidad" {`{Unidad a Cargo}`} {`{PAB}`}]
+                    </p>
                   </div>
-                  <p className='mt-2 text-xs text-muted-foreground'><strong>Tip:</strong> Si omites los campos y dejas solo el título, <code>["Título Informativo"]</code>, la sección actuará como un simple encabezado en el formulario y en el reporte final (ej: <span className="font-mono">- *Título Informativo*</span>).</p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    <strong>Tip:</strong> Si omites los campos y dejas solo el título,{' '}
+                    <code>["Título Informativo"]</code>, la sección actuará como un simple
+                    encabezado en el formulario y en el reporte final (ej:{' '}
+                    <span className="font-mono">- *Título Informativo*</span>).
+                  </p>
                 </div>
 
                 <div>
                   <h5 className="font-medium mb-1">b) Sección Repetible (Listas)</h5>
-                  <p className="text-muted-foreground">Añade un asterisco <code>*</code> después de la sección para que los usuarios puedan añadir múltiples entradas de esa sección (como una lista de vehículos o personal).</p>
+                  <p className="text-muted-foreground">
+                    Añade un asterisco <code>*</code> después de la sección para que los usuarios
+                    puedan añadir múltiples entradas de esa sección (como una lista de vehículos o
+                    personal).
+                  </p>
                   <div className="mt-2 p-3 bg-muted rounded-md text-xs font-mono">
-                    <p>["Vehículos Involucrados"]* {`{Placa}`} {`{Modelo}`}</p>
+                    <p>
+                      ["Vehículos Involucrados"]* {`{Placa}`} {`{Modelo}`}
+                    </p>
                   </div>
                 </div>
 
                 <div>
                   <h5 className="font-medium mb-1">c) Separador Visual</h5>
-                  <p className="text-muted-foreground">Para crear una línea de separación en el formulario y un espacio en el reporte, usa comillas vacías.</p>
+                  <p className="text-muted-foreground">
+                    Para crear una línea de separación en el formulario y un espacio en el reporte,
+                    usa comillas vacías.
+                  </p>
                   <div className="mt-2 p-3 bg-muted rounded-md text-xs font-mono">
                     <p>[""]</p>
                   </div>
@@ -415,52 +482,104 @@ export default function PlantillasPage() {
               </div>
             </div>
             <div>
-              <h4 className="font-semibold text-base mb-2">3. Avanzado: Secciones Repetibles con Títulos Inteligentes</h4>
-              <p>Esta es la forma más potente de crear secciones repetibles, ideal para cuando el título debe cambiar según la cantidad de elementos (ej. "1 Lesionado" vs. "Múltiples Lesionados").</p>
+              <h4 className="font-semibold text-base mb-2">
+                3. Avanzado: Secciones Repetibles con Títulos Inteligentes
+              </h4>
+              <p>
+                Esta es la forma más potente de crear secciones repetibles, ideal para cuando el
+                título debe cambiar según la cantidad de elementos (ej. "1 Lesionado" vs. "Múltiples
+                Lesionados").
+              </p>
               <div className="mt-2 p-3 bg-muted rounded-md text-xs font-mono whitespace-pre-wrap">
                 {`[singular="DATOS DEL LESIONADO" plural="DATOS DE LOS LESIONADOS" sub="Lesionado"]*
 - Nombre y Apellido: {Nombre y apellido}
 - Cédula: {Cédula}
 `}
               </div>
-              <p className='mt-2 text-sm text-muted-foreground'>Así funciona cada parte:</p>
+              <p className="mt-2 text-sm text-muted-foreground">Así funciona cada parte:</p>
               <ul className="list-disc list-inside mt-2 space-y-1 text-sm text-muted-foreground">
-                <li><code>singular="..."</code>: Título principal si hay <strong>un solo</strong> elemento. Se formatea como: `- *TÍTULO*`.</li>
-                <li><code>plural="..."</code>: Título principal si hay <strong>más de un</strong> elemento.</li>
-                <li><code>sub="..."</code>: Subtítulo para <strong>cada</strong> elemento individual. Si se define, se numera automáticamente (ej. `- *Lesionado #01*`). Si se omite, no se añade ningún subtítulo por elemento.</li>
-                <li>Si no se añaden elementos, toda la sección (títulos y contenido) se ocultará del reporte final.</li>
+                <li>
+                  <code>singular="..."</code>: Título principal si hay <strong>un solo</strong>{' '}
+                  elemento. Se formatea como: `- *TÍTULO*`.
+                </li>
+                <li>
+                  <code>plural="..."</code>: Título principal si hay <strong>más de un</strong>{' '}
+                  elemento.
+                </li>
+                <li>
+                  <code>sub="..."</code>: Subtítulo para <strong>cada</strong> elemento individual.
+                  Si se define, se numera automáticamente (ej. `- *Lesionado #01*`). Si se omite, no
+                  se añade ningún subtítulo por elemento.
+                </li>
+                <li>
+                  Si no se añaden elementos, toda la sección (títulos y contenido) se ocultará del
+                  reporte final.
+                </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-base mb-2">4. Avanzado: Especificar Tipos y Opciones</h4>
-              <p>Puedes definir el tipo y las opciones de un campo directamente en la plantilla para mayor control.</p>
+              <h4 className="font-semibold text-base mb-2">
+                4. Avanzado: Especificar Tipos y Opciones
+              </h4>
+              <p>
+                Puedes definir el tipo y las opciones de un campo directamente en la plantilla para
+                mayor control.
+              </p>
               <ul className="list-disc list-inside mt-2 space-y-4 text-sm text-muted-foreground">
                 <li>
-                  <strong>Tipos de Campo</strong>: Usa la sintaxis <code>{`{NombreCampo:tipo}`}</code>.
+                  <strong>Tipos de Campo</strong>: Usa la sintaxis{' '}
+                  <code>{`{NombreCampo:tipo}`}</code>.
                   <ul className="list-disc list-inside pl-6 mt-2 space-y-1">
-                    <li><code>{`{Descripción:textarea}`}</code></li>
-                    <li><code>{`{Fecha de Cierre:date}`}</code></li>
-                    <li><code>{`{Hora de Llamada:time-hlv}`}</code></li>
-                    <li><code>{`{Motivo:dropdown}`}</code></li>
+                    <li>
+                      <code>{`{Descripción:textarea}`}</code>
+                    </li>
+                    <li>
+                      <code>{`{Fecha de Cierre:date}`}</code>
+                    </li>
+                    <li>
+                      <code>{`{Hora de Llamada:time-hlv}`}</code>
+                    </li>
+                    <li>
+                      <code>{`{Motivo:dropdown}`}</code>
+                    </li>
                   </ul>
-                  <p className="mt-2">Tipos disponibles: <code>text</code>, <code>textarea</code>, <code>date</code>, <code>time-hlv</code>, <code>dropdown</code>.</p>
+                  <p className="mt-2">
+                    Tipos disponibles: <code>text</code>, <code>textarea</code>, <code>date</code>,{' '}
+                    <code>time-hlv</code>, <code>dropdown</code>.
+                  </p>
                 </li>
                 <li>
-                  <strong>Opciones para Dropdown</strong>: Define las opciones directamente en la plantilla.
+                  <strong>Opciones para Dropdown</strong>: Define las opciones directamente en la
+                  plantilla.
                   <div className="mt-2 p-3 bg-muted rounded-md text-xs font-mono whitespace-pre-wrap">
                     {`{Motivo:dropdown(Llamada Radio=Se recibe llamada vía radio...|Llamada Telefónica=Se recibe llamada telefónica...)}`}
                   </div>
-                  <p className="mt-2">Usa <code>( )</code> después de <code>:dropdown</code>. Separa el nombre de la opción y su valor con <code>=</code>. Separa cada par de opciones con <code>|</code>. El sistema usará el primer <code>=</code> como separador, permitiendo que el valor contenga caracteres <code>=</code>.</p>
+                  <p className="mt-2">
+                    Usa <code>( )</code> después de <code>:dropdown</code>. Separa el nombre de la
+                    opción y su valor con <code>=</code>. Separa cada par de opciones con{' '}
+                    <code>|</code>. El sistema usará el primer <code>=</code> como separador,
+                    permitiendo que el valor contenga caracteres <code>=</code>.
+                  </p>
                 </li>
               </ul>
               <p className="mt-2 text-sm text-muted-foreground">
-                Si defines el tipo o las opciones aquí, las configuraciones correspondientes en el editor de plantillas se desactivarán para evitar conflictos.
+                Si defines el tipo o las opciones aquí, las configuraciones correspondientes en el
+                editor de plantillas se desactivarán para evitar conflictos.
               </p>
             </div>
             <div>
-              <h4 className="font-semibold text-base mb-2">5. Secciones Condicionales <Badge variant="destructive">En Desarrollo</Badge></h4>
-              <p>Puedes mostrar u ocultar una sección entera basándote en la opción seleccionada en un dropdown. Esto es ideal para formularios que cambian según la selección del usuario.</p>
-              <p className="text-muted-foreground mt-2">Usa la sintaxis <code>[?{`{NombreDelDropdown}`}=Índice] ... [/]</code>, donde el índice empieza en 0.</p>
+              <h4 className="font-semibold text-base mb-2">
+                5. Secciones Condicionales <Badge variant="destructive">En Desarrollo</Badge>
+              </h4>
+              <p>
+                Puedes mostrar u ocultar una sección entera basándote en la opción seleccionada en
+                un dropdown. Esto es ideal para formularios que cambian según la selección del
+                usuario.
+              </p>
+              <p className="text-muted-foreground mt-2">
+                Usa la sintaxis <code>[?{`{NombreDelDropdown}`}=Índice] ... [/]</code>, donde el
+                índice empieza en 0.
+              </p>
               <div className="mt-2 p-3 bg-muted rounded-md text-xs font-mono whitespace-pre-wrap">
                 {`{Tipo de Atención:dropdown(En sitio=Se atendió en el sitio|Traslado=Se realizó traslado)}
 
@@ -476,12 +595,19 @@ export default function PlantillasPage() {
 [/]
 `}
               </div>
-              <p className='mt-2 text-sm text-muted-foreground'>Así funciona:</p>
+              <p className="mt-2 text-sm text-muted-foreground">Así funciona:</p>
               <ul className="list-disc list-inside mt-2 space-y-1 text-sm text-muted-foreground">
-                <li><code>[?</code>: Inicia una sección condicional.</li>
-                <li><code>{`{NombreDelDropdown}`}=0</code>: La condición. El bloque solo se mostrará si se selecciona la <strong>primera opción</strong> ("En sitio") del dropdown.</li>
+                <li>
+                  <code>[?</code>: Inicia una sección condicional.
+                </li>
+                <li>
+                  <code>{`{NombreDelDropdown}`}=0</code>: La condición. El bloque solo se mostrará
+                  si se selecciona la <strong>primera opción</strong> ("En sitio") del dropdown.
+                </li>
                 <li>El contenido dentro puede ser cualquier otra sección o campo.</li>
-                <li><code>[/]</code>: Cierra el bloque condicional.</li>
+                <li>
+                  <code>[/]</code>: Cierra el bloque condicional.
+                </li>
               </ul>
             </div>
             <div>
@@ -507,19 +633,42 @@ El reporte fue cerrado por {Funcionario a Cargo}.`}
               </div>
             </div>
             <div>
-              <h4 className="font-semibold text-base mb-2">7. Automatización de Estadísticas (Reglas Condicionales)</h4>
-              <p>Además de la categoría por defecto, puedes configurar reglas para que el reporte se clasifique automáticamente según el contenido.</p>
+              <h4 className="font-semibold text-base mb-2">
+                7. Automatización de Estadísticas (Reglas Condicionales)
+              </h4>
+              <p>
+                Además de la categoría por defecto, puedes configurar reglas para que el reporte se
+                clasifique automáticamente según el contenido.
+              </p>
               <ul className="list-disc list-inside mt-2 space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <strong>Cómo funciona:</strong> El sistema evalúa el valor de un campo específico. Si coincide con tu regla, suma a la categoría que definas en lugar de la categoría por defecto.
+                  <strong>Cómo funciona:</strong> El sistema evalúa el valor de un campo específico.
+                  Si coincide con tu regla, suma a la categoría que definas en lugar de la categoría
+                  por defecto.
                 </li>
                 <li>
-                  <strong>Configuración:</strong> En el panel "Editar Plantilla" (o al crear una nueva):
+                  <strong>Configuración:</strong> En el panel "Editar Plantilla" (o al crear una
+                  nueva):
                   <ol className="list-decimal list-inside pl-4 mt-1 space-y-1">
-                    <li>Haz clic en <span className="inline-flex items-center justify-center border rounded px-1 h-5 text-xs bg-muted">+ Regla</span>.</li>
-                    <li>Selecciona el <strong>Campo</strong> que determinará la estadística (ej: <code>Motivo</code>).</li>
-                    <li>Escribe el <strong>Valor</strong> exacto que debe tener (ej: <code>Falsa Alarma</code>).</li>
-                    <li>Escribe la <strong>Categoría Resultado</strong> donde se debe sumar (ej: <code>LLAMADA DE EMERGENCIA - FALSA ALARMA</code>).</li>
+                    <li>
+                      Haz clic en{' '}
+                      <span className="inline-flex items-center justify-center border rounded px-1 h-5 text-xs bg-muted">
+                        + Regla
+                      </span>
+                      .
+                    </li>
+                    <li>
+                      Selecciona el <strong>Campo</strong> que determinará la estadística (ej:{' '}
+                      <code>Motivo</code>).
+                    </li>
+                    <li>
+                      Escribe el <strong>Valor</strong> exacto que debe tener (ej:{' '}
+                      <code>Falsa Alarma</code>).
+                    </li>
+                    <li>
+                      Escribe la <strong>Categoría Resultado</strong> donde se debe sumar (ej:{' '}
+                      <code>LLAMADA DE EMERGENCIA - FALSA ALARMA</code>).
+                    </li>
                   </ol>
                 </li>
               </ul>
@@ -528,13 +677,24 @@ El reporte fue cerrado por {Funcionario a Cargo}.`}
               <div>
                 <h4 className="font-semibold text-base mb-2">Paso Final: Configuración</h4>
                 <p>
-                  Una vez que subas tu plantilla, selecciónala en la lista. En el panel de la derecha podrás configurar cualquier detalle que no hayas especificado en el archivo `.txt`, como el "campo de destino" para los dropdowns.
+                  Una vez que subas tu plantilla, selecciónala en la lista. En el panel de la
+                  derecha podrás configurar cualquier detalle que no hayas especificado en el
+                  archivo `.txt`, como el "campo de destino" para los dropdowns.
                 </p>
               </div>
               <div>
                 <h4 className="font-semibold text-base mb-2">Más Información</h4>
                 <p className="text-muted-foreground">
-                  Para una explicación detallada sobre cómo la aplicación guarda los datos y renderiza los reportes, consulta la página de <Link href="/documentation" className="text-primary underline hover:text-primary/80" onClick={() => setIsInfoDialogOpen(false)}>Documentación</Link>.
+                  Para una explicación detallada sobre cómo la aplicación guarda los datos y
+                  renderiza los reportes, consulta la página de{' '}
+                  <Link
+                    href="/documentation"
+                    className="text-primary underline hover:text-primary/80"
+                    onClick={() => setIsInfoDialogOpen(false)}
+                  >
+                    Documentación
+                  </Link>
+                  .
                 </p>
               </div>
             </div>

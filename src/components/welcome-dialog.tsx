@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Rocket } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const WELCOME_MESSAGE_KEY = 'report-app-welcome-seen';
 
@@ -27,22 +28,22 @@ export function WelcomeDialog() {
         setIsOpen(true);
       }
     } catch (error) {
-        // localStorage can be disabled in some environments (e.g. private browsing)
-        console.warn('Could not access localStorage. Welcome message might reappear.', error);
-        // We can still show it once per session if localStorage is off
-        if (!sessionStorage.getItem(WELCOME_MESSAGE_KEY)) {
-             setIsOpen(true);
-        }
+      // localStorage can be disabled in some environments (e.g. private browsing)
+      logger.warn('Could not access localStorage', { feature: 'UI', metadata: { component: 'WelcomeDialog', error } });
+      // We can still show it once per session if localStorage is off
+      if (!sessionStorage.getItem(WELCOME_MESSAGE_KEY)) {
+        setIsOpen(true);
+      }
     }
   }, []);
 
   const handleClose = () => {
     try {
-        localStorage.setItem(WELCOME_MESSAGE_KEY, 'true');
+      localStorage.setItem(WELCOME_MESSAGE_KEY, 'true');
     } catch (error) {
-        console.warn('Could not save to localStorage.', error);
-        // Fallback to sessionStorage for the current session
-        sessionStorage.setItem(WELCOME_MESSAGE_KEY, 'true');
+      logger.warn('Could not save to localStorage', { feature: 'UI', metadata: { component: 'WelcomeDialog', error } });
+      // Fallback to sessionStorage for the current session
+      sessionStorage.setItem(WELCOME_MESSAGE_KEY, 'true');
     }
     setIsOpen(false);
   };
@@ -60,15 +61,26 @@ export function WelcomeDialog() {
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 text-sm text-muted-foreground space-y-4">
-            <p>
-                Esta aplicación se encuentra en desarrollo y fue creada para facilitar la creación de reportes en base a plantillas que tú mismo puedes subir y personalizar.
-            </p>
-            <p className="font-semibold text-foreground">
-                Tu privacidad es importante: todos los datos que ingreses, incluyendo plantillas y reportes, se guardan exclusivamente de forma local en tu navegador. No se comparte ninguna información con terceros.
-            </p>
-             <p>
-                Para sacar el máximo provecho a la aplicación, te recomendamos leer la <Link href="/documentation" className="text-primary underline hover:text-primary/80" onClick={handleClose}>documentación</Link>.
-            </p>
+          <p>
+            Esta aplicación se encuentra en desarrollo y fue creada para facilitar la creación de
+            reportes en base a plantillas que tú mismo puedes subir y personalizar.
+          </p>
+          <p className="font-semibold text-foreground">
+            Tu privacidad es importante: todos los datos que ingreses, incluyendo plantillas y
+            reportes, se guardan exclusivamente de forma local en tu navegador. No se comparte
+            ninguna información con terceros.
+          </p>
+          <p>
+            Para sacar el máximo provecho a la aplicación, te recomendamos leer la{' '}
+            <Link
+              href="/documentation"
+              className="text-primary underline hover:text-primary/80"
+              onClick={handleClose}
+            >
+              documentación
+            </Link>
+            .
+          </p>
         </div>
         <DialogFooter>
           <DialogClose asChild>

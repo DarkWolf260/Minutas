@@ -1,9 +1,8 @@
 /**
- * Hook for managing incident reports with localStorage persistence.
- * 
- * Provides CRUD operations for emergency service reports with
- * automatic QuotaExceededError handling and relevance filtering.
- * 
+ * Hook for managing incident reports with RxDB persistence.
+ *
+ * Provides CRUD operations for emergency service reports using RxDB.
+ *
  * @returns Report state and operations
  * @property {Report[]} reports - List of all reports
  * @property {(report: Partial<Report>) => void} addReport - Create new report
@@ -11,11 +10,11 @@
  * @property {(id: string, updates: Partial<Report>) => void} updateReport - Update report
  * @property {() => void} clearAllReports - Delete all reports
  * @property {boolean} isLoaded - Loading state
- * 
+ *
  * @example
  * ```tsx
  * const { reports, addReport, removeReport } = useReports();
- * 
+ *
  * addReport({
  *   templateId: 'template-1',
  *   title: 'Incidente en Zona Norte',
@@ -28,85 +27,150 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { z } from 'zod';
 import type { Report } from '@/types';
 import { useDatabase } from '@/lib/db/db-provider';
+import { logger } from '@/lib/logger';
+import { ReportSchema, generateFormDataSchema } from '@/lib/validations/schemas';
+import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
+import { useTemplates } from './use-templates';
 
 export function useReports() {
   const db = useDatabase();
+  const { configs } = useTemplates();
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     if (!db) return;
 
-    const sub = db.reports.find({
-      sort: [{ timestamp: 'desc' }]
-    }).$.subscribe(data => {
-      setReports(data.map(d => d.toJSON()) as Report[]);
-      setIsLoaded(true);
-    });
+    const sub = db.reports
+      .find({
+        sort: [{ timestamp: 'desc' }],
+      })
+      .$.subscribe((data) => {
+        setReports(data.map((d) => d.toJSON()) as Report[]);
+        setIsLoaded(true);
+      });
 
     return () => sub.unsubscribe();
   }, [db]);
 
   const getLatestReports = useCallback(async (): Promise<Report[]> => {
     if (!db) return [];
-    const docs = await db.reports.find({
-      sort: [{ timestamp: 'desc' }]
-    }).exec();
-    return docs.map(d => d.toJSON()) as Report[];
+    const docs = await db.reports
+      .find({
+        sort: [{ timestamp: 'desc' }],
+      })
+      .exec();
+    return docs.map((d) => d.toJSON()) as Report[];
   }, [db]);
 
-  const addReport = useCallback(async (newReport: Report) => {
-    if (!db) return;
-    try {
-      await db.reports.insert(newReport);
-      toast.success('Reporte guardado correctamente.');
-    } catch (error) {
-      console.error('Failed to add report:', error);
-      toast.error('Error al guardar el reporte.');
-    }
-  }, [db]);
+  const validateReportContent = useCallback((report: Report) => {
+    // 1. Base validation
+    const validatedReport = ReportSchema.parse(report);
 
-  const updateReport = useCallback(async (updatedReport: Report) => {
-    if (!db) return;
-    try {
-      const doc = await db.reports.findOne(updatedReport.id).exec();
-      if (doc) {
-        await doc.patch(updatedReport);
-        toast.success('Reporte actualizado correctamente.');
+    // 2. Dynamic validation for formData if config exists
+    const config = configs[report.templateId];
+    if (config && report.formData) {
+      try {
+        const dynamicSchema = generateFormDataSchema(config as any);
+        dynamicSchema.parse(report.formData);
+      } catch (err) {
+        if (err instanceof z.ZodError) {
+          logger.error('Dynamic form validation failed', {
+            issues: err.issues,
+            templateId: report.templateId,
+            formData: report.formData,
+          });
+        } else {
+          logger.error('Dynamic form validation failed (non-zod)', err);
+        }
+        throw err;
       }
-    } catch (error) {
-      console.error('Failed to update report:', error);
-      toast.error('Error al actualizar el reporte.');
     }
-  }, [db]);
 
-  const removeReport = useCallback(async (reportId: string) => {
-    if (!db) return;
-    try {
-      const doc = await db.reports.findOne(reportId).exec();
-      if (doc) {
-        await doc.remove();
-        toast.success('Reporte eliminado.');
+    return validatedReport;
+  }, [configs]);
+
+  const addReport = useCallback(
+    async (newReport: Report) => {
+      if (!db) return;
+      try {
+        const validatedReport = validateReportContent(newReport);
+        await db.reports.insert(validatedReport);
+        logger.info('Report added', { id: validatedReport.id, title: validatedReport.title });
+        toast.success('Reporte guardado correctamente.');
+      } catch (error) {
+        logger.error('Failed to add report', error, {
+          feature: 'Reports',
+          reportId: newReport?.id,
+          templateId: newReport?.templateId,
+        });
+        toast.error(getUserFriendlyErrorMessage(error));
       }
-    } catch (error) {
-      console.error('Failed to remove report:', error);
-      toast.error('Error al eliminar el reporte.');
-    }
-  }, [db]);
+    },
+    [db, validateReportContent]
+  );
+
+  const updateReport = useCallback(
+    async (updatedReport: Report) => {
+      if (!db) return;
+      try {
+        const validatedReport = validateReportContent(updatedReport);
+        const doc = await db.reports.findOne(validatedReport.id).exec();
+        if (doc) {
+          await doc.patch(validatedReport);
+          logger.info('Report updated', { id: validatedReport.id });
+          toast.success('Reporte actualizado correctamente.');
+        } else {
+          toast.error('Reporte no encontrado.');
+        }
+      } catch (error) {
+        logger.error('Failed to update report', error, { feature: 'Reports' });
+        toast.error(getUserFriendlyErrorMessage(error));
+      }
+    },
+    [db, validateReportContent]
+  );
+
+  const removeReport = useCallback(
+    async (reportId: string) => {
+      if (!db) return;
+      try {
+        const doc = await db.reports.findOne(reportId).exec();
+        if (doc) {
+          await doc.remove();
+          logger.info('Report removed', { id: reportId });
+          toast.success('Reporte eliminado.');
+        }
+      } catch (error) {
+        logger.error('Failed to remove report', error, { feature: 'Reports' });
+        toast.error('Error al eliminar el reporte.');
+      }
+    },
+    [db]
+  );
 
   const clearAllReports = useCallback(async () => {
     if (!db) return;
     try {
       const allDocs = await db.reports.find().exec();
-      await Promise.all(allDocs.map(d => d.remove()));
+      await Promise.all(allDocs.map((d) => d.remove()));
       toast.success('Todos los reportes han sido eliminados.');
     } catch (error) {
-      console.error('Failed to clear reports:', error);
+      logger.error('Failed to clear reports', error, { feature: 'Reports' });
       toast.error('Error al eliminar los reportes.');
     }
   }, [db]);
 
-  return { reports, addReport, updateReport, removeReport, clearAllReports, isLoaded, getLatestReports };
+  return {
+    reports,
+    addReport,
+    updateReport,
+    removeReport,
+    clearAllReports,
+    isLoaded,
+    getLatestReports,
+  };
 }

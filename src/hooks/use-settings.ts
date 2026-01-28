@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { AppSettings } from '@/types';
 import { useDatabase } from '@/lib/db/db-provider';
+import { logger } from '@/lib/logger';
 
 const defaultSettings: AppSettings = {
   activeGuardId: '',
@@ -10,6 +11,7 @@ const defaultSettings: AppSettings = {
   finalReportStaffSnapshot: {},
   finalReportStartDate: '',
   finalReportEndDate: '',
+  reportaRoleIds: [],
 };
 
 export function useSettings() {
@@ -20,13 +22,14 @@ export function useSettings() {
   useEffect(() => {
     if (!db) return;
 
-    const sub = db.settings.findOne('app-settings').$.subscribe(doc => {
+    const sub = db.settings.findOne('app-settings').$.subscribe((doc) => {
       if (doc) {
         setSettings(doc.toJSON() as AppSettings);
       } else {
         // If not found, insert default
-        db.settings.insert({ ...defaultSettings, id: 'app-settings' })
-          .catch(err => console.error('Failed to insert default settings:', err));
+        db.settings
+          .insert({ ...defaultSettings, id: 'app-settings' })
+          .catch((err) => logger.error('Failed to insert default settings', err, { feature: 'Settings' }));
       }
       setIsLoaded(true);
     });
@@ -34,21 +37,24 @@ export function useSettings() {
     return () => sub.unsubscribe();
   }, [db]);
 
-  const saveSettings = useCallback(async (newSettings: AppSettings) => {
-    if (!db) return;
-    try {
-      await db.settings.upsert({ ...newSettings, id: 'app-settings' });
-    } catch (error) {
-      console.error('Failed to save settings:', error);
-    }
-  }, [db]);
+  const saveSettings = useCallback(
+    async (newSettings: AppSettings) => {
+      if (!db) return;
+      try {
+        await db.settings.upsert({ ...newSettings, id: 'app-settings' });
+      } catch (error) {
+        logger.error('Failed to save settings', error, { feature: 'Settings' });
+      }
+    },
+    [db]
+  );
 
   const clearAllSettings = useCallback(async () => {
     if (!db) return;
     try {
       await db.settings.upsert({ ...defaultSettings, id: 'app-settings' });
     } catch (error) {
-      console.error('Failed to clear settings:', error);
+      logger.error('Failed to clear settings', error, { feature: 'Settings' });
     }
   }, [db]);
 

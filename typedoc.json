@@ -1,0 +1,50 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "entryPoints": [
+        "src/lib/**/*.ts",
+        "src/hooks/**/*.ts",
+        "src/types/**/*.ts"
+    ],
+    "exclude": [
+        "**/__tests__/**",
+        "**/*.test.ts",
+        "**/*.spec.ts",
+        "**/node_modules/**"
+    ],
+    "out": "docs/api",
+    "plugin": [
+        "typedoc-plugin-markdown"
+    ],
+    "readme": "none",
+    "hideGenerator": true,
+    "includeVersion": true,
+    "entryPointStrategy": "expand",
+    "categorizeByGroup": true,
+    "categoryOrder": [
+        "Hooks",
+        "Template Engine",
+        "Utilities",
+        "Validators",
+        "Types",
+        "*"
+    ],
+    "groupOrder": [
+        "Functions",
+        "Classes",
+        "Interfaces",
+        "Type Aliases",
+        "*"
+    ],
+    "sort": [
+        "source-order"
+    ],
+    "excludePrivate": true,
+    "excludeProtected": false,
+    "excludeInternal": true,
+    "searchInComments": true,
+    "validation": {
+        "notExported": false,
+        "invalidLink": true,
+        "notDocumented": false
+    }
+}

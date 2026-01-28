@@ -1,11 +1,10 @@
-
 'use client';
 
 import { PERSONNEL_STATUS } from '@/constants/personnel';
 import { ATTENDANCE_STATUS } from '@/constants/attendance';
 
-export type PersonnelStatus = typeof PERSONNEL_STATUS[keyof typeof PERSONNEL_STATUS];
-export type AttendanceStatus = typeof ATTENDANCE_STATUS[keyof typeof ATTENDANCE_STATUS];
+export type PersonnelStatus = (typeof PERSONNEL_STATUS)[keyof typeof PERSONNEL_STATUS];
+export type AttendanceStatus = (typeof ATTENDANCE_STATUS)[keyof typeof ATTENDANCE_STATUS];
 
 export interface AttendanceRecord {
   id: string;
@@ -54,8 +53,7 @@ export interface AppSettings {
   finalReportStaffSnapshot?: Staff;
   finalReportStartDate?: string;
   finalReportEndDate?: string;
-  reportaRoleId?: string;
-  analistaRoleId?: string;
+  reportaRoleIds?: string[];
 }
 
 export interface Report {
@@ -78,7 +76,15 @@ export interface GuardReport {
   summary?: string; // Short summary or title, e.g. "Reporte de Cierre - [Date]"
 }
 
-export type FieldType = 'text' | 'textarea' | 'date' | 'predefined' | 'time-hlv' | 'multi-text' | 'dropdown';
+export type FieldType =
+  | 'text'
+  | 'textarea'
+  | 'date'
+  | 'predefined'
+  | 'time-hlv'
+  | 'multi-text'
+  | 'dropdown'
+  | 'semantic';
 
 export type TextModifier = 'upper' | 'lower' | 'title';
 
@@ -105,7 +111,7 @@ export interface SectionConfig {
   label: string;
   isRepeatable: boolean;
   fieldIds: string[];
-  layout?: string[]; // Order of fields and section IDs within this section
+  layout?: string[];
   repeatableItemLabel?: string; // This is the `sub` value
   pluralTitle?: string;
   singularTitle?: string;
@@ -126,8 +132,7 @@ export interface TemplateConfig {
 
 export interface StatisticRule {
   fieldId: string;
-  condition: 'equals' | 'contains';
-  value: string;
+  condition: string; // The value to match (e.g., "Robo", "Accidente")
   category: string;
 }
 
@@ -184,4 +189,11 @@ export interface TemplateParserResult {
   requiredFields: Map<string, boolean>;
   errors: string[];
 }
-
+export interface PersonnelAssignment {
+  id: string; // personnelId_date
+  personnelId: string;
+  date: string; // YYYY-MM-DD
+  guardId: string; // e.g. "A", "B", "C", "D" or departmentId
+  roleName: string;
+  timestamp: string; // ISO format
+}

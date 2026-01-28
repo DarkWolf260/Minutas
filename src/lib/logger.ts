@@ -1,0 +1,56 @@
+/**
+ * Production-ready logging utility
+ * Automatically removes logs in production, keeps error/warn for debugging
+ */
+
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+class Logger {
+  private log(level: LogLevel, message: string, ...args: unknown[]) {
+    // In production, only allow warn and error
+    if (!isDevelopment && (level === 'debug' || level === 'info')) {
+      return;
+    }
+
+    const timestamp = new Date().toISOString();
+    const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
+
+    switch (level) {
+      case 'error':
+        console.error(prefix, message, ...args);
+        break;
+      case 'warn':
+        console.warn(prefix, message, ...args);
+        break;
+      default:
+        // Development only
+        if (isDevelopment) {
+          console.log(prefix, message, ...args);
+        }
+    }
+  }
+
+  debug(message: string, ...args: unknown[]) {
+    this.log('debug', message, ...args);
+  }
+
+  info(message: string, ...args: unknown[]) {
+    this.log('info', message, ...args);
+  }
+
+  warn(message: string, ...args: unknown[]) {
+    this.log('warn', message, ...args);
+  }
+
+  error(message: string, error?: unknown, ...args: unknown[]) {
+    if (error instanceof Error) {
+      this.log('error', message, { error: error.message, stack: error.stack }, ...args);
+    } else {
+      this.log('error', message, error, ...args);
+    }
+  }
+}
+
+export const logger = new Logger();

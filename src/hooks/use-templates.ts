@@ -37,6 +37,9 @@ import { parseTemplate } from '@/lib/template-parser';
 import { useFieldDefinitions } from './use-field-definitions';
 import { useSettings } from './use-settings';
 import { useDatabase } from '@/lib/db/db-provider';
+import { TemplateSchema } from '@/lib/validations/schemas';
+import { logger } from '@/lib/logger';
+import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
 
 export function useTemplates() {
   const db = useDatabase();
@@ -141,7 +144,7 @@ export function useTemplates() {
       if (changed) {
         // Persist change to RxDB
         const entries = Object.entries(newConfigs).map(([id, config]) => ({ id, config }));
-        db.template_configs.bulkUpsert(entries).catch(err => console.error('Failed to sync template configs:', err));
+        db.template_configs.bulkUpsert(entries).catch(err => logger.error('Failed to sync template configs', err, { feature: 'Templates' }));
       }
     }
   }, [isTemplatesLoaded, isConfigsLoaded, definitionsLoaded, templates, db, parsedTemplates, configs, globalDefinitions]);
@@ -149,15 +152,20 @@ export function useTemplates() {
   const addTemplate = async (newTemplate: Template) => {
     if (!db) return;
     try {
-      const { sections, layout, fieldNames, fieldTypes, templateOptions, errors } = parseTemplate(newTemplate.content);
+      // Validate with Zod first
+      const validatedTemplate = TemplateSchema.parse(newTemplate);
+
+      const { sections, layout, fieldNames, fieldTypes, templateOptions, errors } = parseTemplate(validatedTemplate.content);
 
       if (errors.length > 0) {
         toast.error(`La plantilla tiene errores: ${errors[0]}`);
+        logger.warn('Template has parsing errors', { id: validatedTemplate.id, errors });
       } else {
-        toast.success(`Plantilla "${newTemplate.name}" agregada correctamente.`);
+        toast.success(`Plantilla "${validatedTemplate.name}" agregada correctamente.`);
+        logger.info('Template added', { id: validatedTemplate.id, name: validatedTemplate.name });
       }
 
-      await db.templates.insert({ ...newTemplate, isActive: errors.length === 0 });
+      await db.templates.insert({ ...validatedTemplate, isActive: errors.length === 0 });
 
       const newConfig: TemplateConfig = { fields: {}, sections, layout };
       fieldNames.forEach(fieldName => {
@@ -170,11 +178,11 @@ export function useTemplates() {
         if (optionsFromTemplate) newConfig.fields[fieldName].snippetOptions = optionsFromTemplate;
       });
 
-      await db.template_configs.upsert({ id: newTemplate.id, config: newConfig });
+      await db.template_configs.upsert({ id: validatedTemplate.id, config: newConfig });
 
     } catch (error) {
-      console.error('Error adding template:', error);
-      toast.error('Error al procesar la plantilla. Verifica el formato.');
+      logger.error('Error adding template', error);
+      toast.error(getUserFriendlyErrorMessage(error));
     }
   };
 
@@ -187,9 +195,10 @@ export function useTemplates() {
       const configDoc = await db.template_configs.findOne(templateId).exec();
       if (configDoc) await configDoc.remove();
 
+      logger.info('Template removed', { id: templateId });
       toast.success('Plantilla eliminada.');
     } catch (error) {
-      console.error('Failed to remove template:', error);
+      logger.error('Failed to remove template', error);
       toast.error('Error al eliminar la plantilla.');
     }
   };
@@ -200,18 +209,27 @@ export function useTemplates() {
       await db.template_configs.upsert({ id: templateId, config });
       toast.success('Configuración de campos actualizada.');
     } catch (error) {
-      console.error('Failed to update template config:', error);
+      logger.error('Failed to update template config', error, { feature: 'Templates', metadata: { templateId } });
     }
   };
 
   const updateTemplate = async (updatedTemplate: Template) => {
     if (!db) return;
     try {
-      const doc = await db.templates.findOne(updatedTemplate.id).exec();
-      if (doc) await doc.patch(updatedTemplate);
-      toast.success('Plantilla actualizada.');
+      // Validate with Zod
+      const validatedTemplate = TemplateSchema.parse(updatedTemplate);
+
+      const doc = await db.templates.findOne(validatedTemplate.id).exec();
+      if (doc) {
+        await doc.patch(validatedTemplate);
+        logger.info('Template updated', { id: validatedTemplate.id });
+        toast.success('Plantilla actualizada.');
+      } else {
+        toast.error('Plantilla no encontrada.');
+      }
     } catch (error) {
-      console.error('Failed to update template:', error);
+      logger.error('Failed to update template', error);
+      toast.error(getUserFriendlyErrorMessage(error));
     }
   };
 
