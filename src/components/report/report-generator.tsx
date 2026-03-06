@@ -22,9 +22,8 @@ import { debounce } from '@/lib/utils';
 import { useSettings } from '@/hooks/use-settings';
 import { useGuards } from '@/hooks/use-guards';
 import { parseTemplate } from '@/lib/template-parser';
-import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { toast } from 'sonner';
-import { formatStaffMemberForAutocomplete } from '@/lib/formatters';
+import { generateId } from '@/lib/utils/id';
 
 interface ReportGeneratorProps {
   template: Template;
@@ -48,16 +47,28 @@ export function ReportGenerator({
   const [copyButtonText, setCopyButtonText] = useState('Copiar');
   const { settings } = useSettings();
   const { guards } = useGuards();
-  const { definitions } = useFieldDefinitions();
 
-  const finalInitialData = useMemo(() => {
+  const { finalInitialData } = useMemo(() => {
+    const parsedTemplate = parseTemplate(template.content);
+    const initialSections = parsedTemplate.sections;
+    const initialFieldNames = Array.from(parsedTemplate.fieldNames);
     const newInitialData = initialData ? JSON.parse(JSON.stringify(initialData)) : {};
 
-    const { sections, fieldNames: allTemplateFields } = parseTemplate(template.content);
+    if (!settings?.activeGuardId || !guards) {
+      return {
+        sections: initialSections,
+        allTemplateFields: initialFieldNames,
+        finalInitialData: newInitialData
+      };
+    }
 
     const activeGuard = guards.find((g) => g.id === settings.activeGuardId);
     if (!activeGuard) {
-      return newInitialData;
+      return {
+        sections: initialSections,
+        allTemplateFields: initialFieldNames,
+        finalInitialData: newInitialData
+      };
     }
 
     const dataToInject: Record<string, any> = {};
@@ -86,7 +97,7 @@ export function ReportGenerator({
     // Explicitly add Guardia ID to be injected
     dataToInject['Guardia'] = activeGuard.id;
 
-    allTemplateFields.forEach((templateFieldKey) => {
+    initialFieldNames.forEach((templateFieldKey) => {
       const lowerTemplateFieldKey = templateFieldKey.toLowerCase();
 
       const canonicalKey = Object.keys(dataToInject).find(
@@ -97,7 +108,7 @@ export function ReportGenerator({
         const valueToInject = dataToInject[canonicalKey];
         if (valueToInject === undefined) return;
 
-        const parentSection = sections.find((s) =>
+        const parentSection = initialSections.find((s) =>
           s.fieldIds.some((sf) => sf.toLowerCase() === lowerTemplateFieldKey)
         );
 
@@ -118,32 +129,28 @@ export function ReportGenerator({
       }
     });
 
-    return newInitialData;
+    return {
+      sections: initialSections,
+      allTemplateFields: initialFieldNames,
+      finalInitialData: newInitialData
+    };
   }, [
     template.content,
     initialData,
-    settings.activeGuardId,
-    settings.reportaRoleIds,
+    settings,
     guards,
   ]);
 
-  const saveDraftLogicRef = useRef<((formData: Record<string, any>) => void) | null>(null);
-
-  useEffect(() => {
-    saveDraftLogicRef.current = async (formData: Record<string, any>) => {
-      if (template && formData) {
-        const draft: ReportDraft = { templateId: template.id, formData };
-        await saveDraft(draft);
-      }
-    };
+  const saveDraftLogic = useCallback(async (formData: Record<string, any>) => {
+    if (template && formData) {
+      const draft: ReportDraft = { templateId: template.id, formData };
+      await saveDraft(draft);
+    }
   }, [template, saveDraft]);
 
   const debouncedSaveDraft = useMemo(
-    () =>
-      debounce((formData: Record<string, any>) => {
-        saveDraftLogicRef.current?.(formData);
-      }, 30000),
-    []
+    () => debounce((formData: Record<string, any>) => saveDraftLogic(formData), 30000),
+    [saveDraftLogic]
   );
 
   useEffect(() => {
@@ -168,7 +175,7 @@ export function ReportGenerator({
     await clearDraft();
 
     const newReport: Report = {
-      id: `report_${Date.now()}`,
+      id: generateId('report'),
       templateId: template.id,
       title: title,
       timestamp: new Date().toISOString(),

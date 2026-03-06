@@ -33,6 +33,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { AttendanceRecord, AttendanceStatus } from '@/types';
 import { useDatabase } from '@/lib/db/db-provider';
+import { generateId } from '@/lib/utils/id';
 
 export function useAttendance() {
   const db = useDatabase();
@@ -74,7 +75,7 @@ export function useAttendance() {
         });
       } else {
         await db.attendance.insert({
-          id: `attendance_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          id: generateId('attendance'),
           memberId,
           date,
           status,

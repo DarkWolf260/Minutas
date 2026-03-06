@@ -1,17 +1,14 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
-import Link from 'next/link';
+import { useState, useRef } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Upload,
   FileText,
   Trash2,
-  HelpCircle,
-  PlusCircle,
   AlertTriangle,
   Download,
   Pencil,
@@ -41,13 +38,13 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { parseTemplate } from '@/lib/template-parser';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { TemplateBuilder } from '@/components/template/template-builder';
 import { Badge } from '@/components/ui/badge';
+import { generateId } from '@/lib/utils/id';
 
 export default function PlantillasPage() {
   const {
@@ -74,7 +71,7 @@ export default function PlantillasPage() {
       reader.onload = (e) => {
         const content = e.target?.result as string;
         const newTemplate: Template = {
-          id: `template_${Date.now()}`,
+          id: generateId('template'),
           name: file.name.replace(/\.txt$/, ''),
           content,
           type: 'normal',
@@ -444,12 +441,12 @@ export default function PlantillasPage() {
                   </p>
                   <div className="mt-2 p-3 bg-muted rounded-md text-xs font-mono">
                     <p>
-                      ["Datos de la Unidad" {`{Unidad a Cargo}`} {`{PAB}`}]
+                      [&quot;Datos de la Unidad&quot; {`{Unidad a Cargo}`} {`{PAB}`}]
                     </p>
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    <strong>Tip:</strong> Si omites los campos y dejas solo el título,{' '}
-                    <code>["Título Informativo"]</code>, la sección actuará como un simple
+                    <strong>Tip:</strong> Si omites los campos y dejas solo el título,&nbsp;
+                    <code>[&quot;Título Informativo&quot;]</code>, la sección actuará como un simple
                     encabezado en el formulario y en el reporte final (ej:{' '}
                     <span className="font-mono">- *Título Informativo*</span>).
                   </p>
@@ -464,7 +461,7 @@ export default function PlantillasPage() {
                   </p>
                   <div className="mt-2 p-3 bg-muted rounded-md text-xs font-mono">
                     <p>
-                      ["Vehículos Involucrados"]* {`{Placa}`} {`{Modelo}`}
+                      [&quot;Vehículos Involucrados&quot;]* {`{Placa}`} {`{Modelo}`}
                     </p>
                   </div>
                 </div>
@@ -476,7 +473,7 @@ export default function PlantillasPage() {
                     usa comillas vacías.
                   </p>
                   <div className="mt-2 p-3 bg-muted rounded-md text-xs font-mono">
-                    <p>[""]</p>
+                    <p>[&quot;&quot;]</p>
                   </div>
                 </div>
               </div>
@@ -491,7 +488,7 @@ export default function PlantillasPage() {
                 Lesionados").
               </p>
               <div className="mt-2 p-3 bg-muted rounded-md text-xs font-mono whitespace-pre-wrap">
-                {`[singular="DATOS DEL LESIONADO" plural="DATOS DE LOS LESIONADOS" sub="Lesionado"]*
+                {`[singular=&quot;DATOS DEL LESIONADO&quot; plural=&quot;DATOS DE LOS LESIONADOS&quot; sub=&quot;Lesionado&quot;]*
 - Nombre y Apellido: {Nombre y apellido}
 - Cédula: {Cédula}
 `}
@@ -584,12 +581,12 @@ export default function PlantillasPage() {
                 {`{Tipo de Atención:dropdown(En sitio=Se atendió en el sitio|Traslado=Se realizó traslado)}
 
 [?{Tipo de Atención}=0]
-    ["Datos de Atención en Sitio"]
+    [&quot;Datos de Atención en Sitio&quot;]
     {Detalles del sitio}
 [/]
 
 [?{Tipo de Atención}=1]
-    ["Datos del Traslado"]
+    [&quot;Datos del Traslado&quot;]
     {Unidad de Traslado}
     {Destino}
 [/]
@@ -602,7 +599,7 @@ export default function PlantillasPage() {
                 </li>
                 <li>
                   <code>{`{NombreDelDropdown}`}=0</code>: La condición. El bloque solo se mostrará
-                  si se selecciona la <strong>primera opción</strong> ("En sitio") del dropdown.
+                  si se selecciona la <strong>primera opción</strong> (&quot;En sitio&quot;) del dropdown.
                 </li>
                 <li>El contenido dentro puede ser cualquier otra sección o campo.</li>
                 <li>
@@ -658,7 +655,7 @@ El reporte fue cerrado por {Funcionario a Cargo}.`}
                       .
                     </li>
                     <li>
-                      Selecciona el <strong>Campo</strong> que determinará la estadística (ej:{' '}
+                      Selecciona el <strong>Campo</strong> que determinará la estadística (ej:&nbsp;
                       <code>Motivo</code>).
                     </li>
                     <li>
@@ -680,21 +677,6 @@ El reporte fue cerrado por {Funcionario a Cargo}.`}
                   Una vez que subas tu plantilla, selecciónala en la lista. En el panel de la
                   derecha podrás configurar cualquier detalle que no hayas especificado en el
                   archivo `.txt`, como el "campo de destino" para los dropdowns.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-semibold text-base mb-2">Más Información</h4>
-                <p className="text-muted-foreground">
-                  Para una explicación detallada sobre cómo la aplicación guarda los datos y
-                  renderiza los reportes, consulta la página de{' '}
-                  <Link
-                    href="/documentation"
-                    className="text-primary underline hover:text-primary/80"
-                    onClick={() => setIsInfoDialogOpen(false)}
-                  >
-                    Documentación
-                  </Link>
-                  .
                 </p>
               </div>
             </div>

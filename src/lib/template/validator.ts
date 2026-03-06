@@ -185,7 +185,7 @@ export function isValidFieldName(fieldName: string): boolean {
  */
 export function isValidOperatorForType(
     operator: string,
-    fieldType: FieldType
+    _fieldType: FieldType
 ): boolean {
     const validOperators = ['=', '!=', '>', '<', '>=', '<='];
 

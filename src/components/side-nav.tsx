@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
 import {
   Newspaper,
   Settings,
@@ -11,11 +10,9 @@ import {
   FileText,
   ClipboardList,
   ClipboardCheck,
-  BookOpen,
   NotebookPen,
   TrendingUp,
   Users,
-  CalendarCheck,
   History,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -23,14 +20,11 @@ import { ThemeToggle } from '@/components/theme-toggle';
 
 const navItems = [
   { href: '/', label: 'Novedades', icon: Newspaper },
-  { href: '/plantillas', label: 'Plantillas', icon: FileText },
   { href: '/orden-del-dia', label: 'Orden del Día', icon: ClipboardList },
   { href: '/reporte-final', label: 'Reporte Final', icon: ClipboardCheck },
   { href: '/direcciones', label: 'Direcciones', icon: NotebookPen },
   { href: '/personal', label: 'Personal', icon: Users },
-  { href: '/estadisticas', label: 'Estadísticas', icon: TrendingUp },
   { href: '/historial', label: 'Historial', icon: History },
-  { href: '/documentation', label: 'Información', icon: BookOpen },
 ];
 
 export function SideNav() {
@@ -54,9 +48,8 @@ export function SideNav() {
                   href={item.href}
                   className={cn(
                     'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
-                    (pathname === item.href ||
-                      (item.href === '/documentation' && pathname.startsWith('/documentation'))) &&
-                      'bg-accent text-accent-foreground'
+                    pathname === item.href &&
+                    'bg-accent text-accent-foreground'
                   )}
                 >
                   <item.icon className="h-5 w-5" />

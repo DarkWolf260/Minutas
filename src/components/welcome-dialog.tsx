@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+
 import {
   Dialog,
   DialogContent,
@@ -69,17 +69,6 @@ export function WelcomeDialog() {
             Tu privacidad es importante: todos los datos que ingreses, incluyendo plantillas y
             reportes, se guardan exclusivamente de forma local en tu navegador. No se comparte
             ninguna información con terceros.
-          </p>
-          <p>
-            Para sacar el máximo provecho a la aplicación, te recomendamos leer la{' '}
-            <Link
-              href="/documentation"
-              className="text-primary underline hover:text-primary/80"
-              onClick={handleClose}
-            >
-              documentación
-            </Link>
-            .
           </p>
         </div>
         <DialogFooter>

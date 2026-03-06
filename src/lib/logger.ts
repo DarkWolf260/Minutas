@@ -14,6 +14,16 @@ class Logger {
       return;
     }
 
+    // Support log level override via URL in development
+    if (isDevelopment && typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const forceLevel = params.get('logLevel') as LogLevel | null;
+      if (forceLevel && level === 'debug' && forceLevel !== 'debug') {
+        // Simple filter logic: if logLevel is set, don't show debug unless explicitly asked
+        return;
+      }
+    }
+
     const timestamp = new Date().toISOString();
     const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
 

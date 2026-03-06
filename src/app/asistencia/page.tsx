@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import type { AttendanceStatus } from '@/types';
 import { usePersonnel } from '@/hooks/use-personnel';
 import { useAttendance } from '@/hooks/use-attendance';
 import { useGuards } from '@/hooks/use-guards';
@@ -14,7 +15,6 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import {
   CheckCircle2,
@@ -23,10 +23,8 @@ import {
   XCircle,
   Calendar as CalendarIcon,
   Download,
-  Share2,
   Search,
   UserCircle,
-  ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -58,7 +56,7 @@ const ATTENDANCE_STATUS_CONFIG = {
 
 export default function AttendancePage() {
   const { personnel } = usePersonnel();
-  const { records, markAttendance, getRecordsByDate } = useAttendance();
+  const { markAttendance, getRecordsByDate } = useAttendance();
   const { guards } = useGuards();
   const { settings } = useSettings();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -66,7 +64,7 @@ export default function AttendancePage() {
   const [filterGuardId, setFilterGuardId] = useState<string>('todos');
 
   // Set default filter to active guard when loaded
-  useMemo(() => {
+  useEffect(() => {
     if (settings.activeGuardId) {
       setFilterGuardId(settings.activeGuardId);
     }
@@ -144,7 +142,7 @@ export default function AttendancePage() {
     );
   }, [personnel, searchQuery, filterGuardId, guards]);
 
-  const handleStatusChange = (memberId: string, status: any) => {
+  const handleStatusChange = (memberId: string, status: AttendanceStatus) => {
     const time =
       status === 'presente' || status === 'tarde' ? format(new Date(), 'HH:mm') : undefined;
     markAttendance(memberId, formattedDate, status, time);

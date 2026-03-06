@@ -7,9 +7,13 @@
  * - Fields: {FieldName}, {FieldName:type}, {FieldName|modifier}
  * - Repeatable fields: {FieldName}*
  * - Sections: [Label]content[/]
+ * - Self-contained Sections: ["Title" {Field}]
+ * - Visual Separators: [""]
  * - Repeatable sections: [Label]*content[/]
  * - Conditionals: [?{Field} op value]content[/]
  *   where op can be: =, !=, >, <, >=, <=
+ * - Mapping Conditionals: [?{Field}] Key=Value [/]
+ *   Implicitly defines dropdown options and report translation.
  */
 
 import type { Token, ConditionalExpression } from './types';
@@ -120,7 +124,8 @@ function extractFieldToken(
     const raw = template.substring(startPos, finalPos);
 
     // Extract just the field ID (before : or |)
-    const id = content.split(/[:|]/)[0]?.trim() || content.trim();
+    const id = content.split(/[:|]/)[0]?.trim() || '';
+    if (!id) return null;
 
     return {
         type: 'field',
@@ -154,10 +159,10 @@ function extractSectionToken(
     }
 
     pos++; // Skip closing ]
-    const raw = template.substring(startPos, pos);
 
     // Check if this is a section end marker: [/]
     if (content.trim() === '/') {
+        const raw = template.substring(startPos, pos);
         return {
             type: 'section_end',
             raw,
@@ -166,9 +171,18 @@ function extractSectionToken(
         };
     }
 
-    // Check if this is a conditional: [?{Field} op value]
+    // Capture optional * after ] for repeatable sections: [Label]*
+    let isRepeatable = false;
+    if (template[pos] === '*') {
+        isRepeatable = true;
+        pos++; // include the * in the token
+    }
+
+    const raw = template.substring(startPos, pos);
+
+    // Check if this is a conditional: [?{Field} op value] or [?{Field}]
     const conditionalMatch = content.match(
-        /^\?\s*\{\s*([^\}]+)\s*\}\s*(!=|>=|<=|>|<|=)\s*(.+)$/
+        /^\?\s*\{\s*([^\}]+)\s*\}\s*(?:(!=|>=|<=|>|<|=)\s*(.+))?$/
     );
 
     if (conditionalMatch) {
@@ -180,7 +194,7 @@ function extractSectionToken(
             label: undefined,
             condition: {
                 fieldId: fieldId?.trim() || '',
-                operator: operator as ConditionalExpression['operator'],
+                operator: (operator as ConditionalExpression['operator']) || '=',
                 value: cleanValue,
             },
             raw,
@@ -190,13 +204,14 @@ function extractSectionToken(
     }
 
     // Regular section: [Label] or [Label]*
-    const label = content.replace(/\*$/, '').trim();
-    const isRepeatable = content.endsWith('*');
+    // The label itself should NOT contain *, that's now captured above.
+    const label = content.trim();
 
     return {
         type: 'section_start',
         label: label || undefined,
         condition: undefined,
+        isRepeatable,
         raw,
         position: startPos,
         endPos: pos,
@@ -204,16 +219,4 @@ function extractSectionToken(
 }
 
 
-/**
- * Checks if a character is a special template character
- */
-function isSpecialChar(char: string): boolean {
-    return char === '{' || char === '}' || char === '[' || char === ']';
-}
 
-/**
- * Escapes special characters in regex
- */
-function escapeRegex(str: string): string {
-    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}

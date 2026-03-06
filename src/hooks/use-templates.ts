@@ -32,7 +32,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
-import type { Template, TemplateConfig, FieldConfig } from '@/types';
+import type { Template, TemplateConfig, FieldConfig, SectionConfig } from '@/types';
 import { parseTemplate } from '@/lib/template-parser';
 import { useFieldDefinitions } from './use-field-definitions';
 import { useSettings } from './use-settings';
@@ -49,7 +49,7 @@ export function useTemplates() {
   const [isConfigsLoaded, setIsConfigsLoaded] = useState(false);
 
   const { definitions: globalDefinitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
-  const { settings, isLoaded: settingsLoaded } = useSettings();
+  const { isLoaded: settingsLoaded } = useSettings();
 
   useEffect(() => {
     if (!db) return;
@@ -85,10 +85,11 @@ export function useTemplates() {
     return cache;
   }, [templates]);
 
+  // Optimize config synchronization to avoid unnecessary writes and re-renders
   useEffect(() => {
     if (isTemplatesLoaded && definitionsLoaded && templates.length > 0 && db) {
       const newConfigs: Record<string, TemplateConfig> = {};
-      let changed = false;
+      let hasSignificantChanges = false;
 
       templates.forEach(template => {
         const cacheKey = `${template.id}-${template.content.length}`;
@@ -96,8 +97,8 @@ export function useTemplates() {
         const existingConfig = configs[template.id] || { fields: {}, sections: [], layout: [] };
 
         const finalConfig: TemplateConfig = {
-          sections: parsed.sections.map((parsedSection: any) => {
-            const existingSection = (existingConfig.sections || []).find((s: any) => s.label === parsedSection.label);
+          sections: parsed.sections.map((parsedSection: SectionConfig) => {
+            const existingSection = (existingConfig.sections || []).find((s: SectionConfig) => s.label === parsedSection.label);
             return {
               ...parsedSection,
               statisticsCategory: existingSection?.statisticsCategory
@@ -134,17 +135,22 @@ export function useTemplates() {
         });
 
         newConfigs[template.id] = finalConfig;
+
+        // Check if this specific template config actually changed from what we have in state
+        if (JSON.stringify(finalConfig) !== JSON.stringify(existingConfig)) {
+          hasSignificantChanges = true;
+        }
       });
 
-      // Check if actually changed to avoid infinite loop
-      if (JSON.stringify(newConfigs) !== JSON.stringify(configs)) {
-        changed = true;
-      }
-
-      if (changed) {
-        // Persist change to RxDB
-        const entries = Object.entries(newConfigs).map(([id, config]) => ({ id, config }));
-        db.template_configs.bulkUpsert(entries).catch(err => logger.error('Failed to sync template configs', err, { feature: 'Templates' }));
+      if (hasSignificantChanges) {
+        // Use a small timeout to debounce bulkUpsert if multiple renders happen quickly
+        const timeoutId = setTimeout(() => {
+          const entries = Object.entries(newConfigs).map(([id, config]) => ({ id, config }));
+          db.template_configs.bulkUpsert(entries).catch(err =>
+            logger.error('Failed to sync template configs', err, { feature: 'Templates' })
+          );
+        }, 100);
+        return () => clearTimeout(timeoutId);
       }
     }
   }, [isTemplatesLoaded, isConfigsLoaded, definitionsLoaded, templates, db, parsedTemplates, configs, globalDefinitions]);

@@ -19,7 +19,6 @@ import { useReports } from '@/hooks/use-reports';
 import { useGuardHistory } from '@/hooks/use-guard-history';
 import { Skeleton } from '@/components/ui/skeleton';
 import { findValueInFormData } from '@/lib/report-sorter';
-import { getReportCategory } from '@/lib/statistics-utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGuards } from '@/hooks/use-guards';
 import { useSettings } from '@/hooks/use-settings';
@@ -35,8 +34,7 @@ import { PlusCircle, Trash2, Calculator, FileText, Save } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { DEFAULT_STATISTICS_CATEGORIES } from '@/constants/statistics';
 import { LEADER_ROLES } from '@/constants/roles';
-import { PERSONNEL_STATUS } from '@/constants/personnel';
-import { ATTENDANCE_STATUS } from '@/constants/attendance';
+import { generateId } from '@/lib/utils/id';
 
 interface ManualNovedad {
   id: string;
@@ -60,7 +58,7 @@ const findInsensitive = (obj: Record<string, string>, key: string): string => {
 };
 
 export default function ReporteFinalPage() {
-  const { reports, isLoaded: reportsLoaded, getLatestReports, clearAllReports } = useReports();
+  const { reports, isLoaded: reportsLoaded, clearAllReports } = useReports();
   const { guards, isLoaded: guardsLoaded } = useGuards();
   const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
   const { roles, isLoaded: rolesLoadedHook } = useRoles();
@@ -95,14 +93,14 @@ export default function ReporteFinalPage() {
     endDate.setHours(9, 0, 0, 0);
 
     const defaultStartNovedad: ManualNovedad = {
-      id: `manual_${Date.now()}_start`,
+      id: `${generateId('manual')}_start`,
       date: startDate,
       time: '09:00 HLV',
       text: 'Se inicia la guardia preventiva de 24 horas',
     };
 
     const defaultEndNovedad: ManualNovedad = {
-      id: `manual_${Date.now()}_end`,
+      id: `${generateId('manual')}_end`,
       date: endDate,
       time: '09:00 HLV',
       text: 'Se da culminación a la guardia preventiva de 24 horas',
@@ -155,7 +153,7 @@ export default function ReporteFinalPage() {
     if (!newNovedadTime || !newNovedadText) return;
 
     const newNovedad: ManualNovedad = {
-      id: `manual_${Date.now()}`,
+      id: generateId('manual'),
       date: newNovedadDate,
       time: newNovedadTime,
       text: newNovedadText,
@@ -230,8 +228,8 @@ export default function ReporteFinalPage() {
 
     const staffForReport = hasSnapshot ? settings.finalReportStaffSnapshot : activeGuard?.staff;
     const guardIdForReport = hasSnapshot
-      ? findValueInFormData(settings.finalReportStaffSnapshot, 'Guardia') || activeGuard?.id
-      : activeGuard?.id;
+      ? String(findValueInFormData(settings.finalReportStaffSnapshot, 'Guardia') || activeGuard?.id || '')
+      : activeGuard?.id || '';
 
     // Resolve Leaders from Staff
     const getLeaderName = (roleName: string) => {
@@ -360,7 +358,7 @@ export default function ReporteFinalPage() {
           if (template && config) {
             const dynamicPredefinedValues = {
               ...globalSettings,
-              Guardia: guardIdForReport || '',
+              Guardia: guardIdForReport,
               [LEADER_ROLES.DIRECTOR]: director,
               [LEADER_ROLES.JEFE_OPERACIONES]: jefeDeOperaciones,
             };
@@ -834,7 +832,7 @@ export default function ReporteFinalPage() {
               className="bg-green-600 hover:bg-green-700 text-white"
               onClick={() => {
                 saveGuardReport({
-                  id: `report-${Date.now()}`,
+                  id: generateId('report'),
                   date: settings.finalReportStartDate
                     ? new Date(settings.finalReportStartDate).toISOString()
                     : new Date().toISOString(),

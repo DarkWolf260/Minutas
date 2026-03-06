@@ -1,11 +1,11 @@
 'use client';
 
-import { Suspense, useState, useMemo, useEffect, useRef } from 'react';
+import { Suspense, useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, FileText, AlertTriangle, Trash2, PlusCircle, ChevronLeft } from 'lucide-react';
+import { Search, FileText, AlertTriangle, PlusCircle, ChevronLeft } from 'lucide-react';
 import { ReportViewer } from '@/components/report/report-viewer';
 import { ReportGenerator } from '@/components/report/report-generator';
 import { useReports } from '@/hooks/use-reports';
@@ -67,8 +67,10 @@ function NovedadesPageContent() {
   }, [sortedReports, searchQuery]);
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    if (!isMounted) {
+      setIsMounted(true);
+    }
+  }, [isMounted]);
 
   useEffect(() => {
     if (!isMounted) return;
@@ -77,7 +79,7 @@ function NovedadesPageContent() {
     // 1. Handle draft restoration first.
     if (draftIsLoaded && draft) {
       const template = templates.find((t) => t.id === draft.templateId);
-      if (template) {
+      if (template && (creatingReport?.id !== template.id || initialDraftData !== draft.formData)) {
         setInitialDraftData(draft.formData);
         setCreatingReport(template);
         return;
@@ -97,15 +99,12 @@ function NovedadesPageContent() {
       return;
     }
 
-    // 4. If we're here, there's no valid selection. Let's pick one.
+    // 4. If we're here, there's no valid selection.
     // Give priority to the URL parameter.
     if (preSelectedId && reports.find((r) => r.id === preSelectedId)) {
       setSelectedReportId(preSelectedId);
-    } else if (filteredReports.length > 0) {
-      // Fallback to the first report in the list.
-      setSelectedReportId(filteredReports[0]!.id);
     } else {
-      // No reports to select.
+      // PROMPT: "no se seleccione ningun reporte automaticamente" (don't select any report automatically)
       setSelectedReportId(null);
     }
   }, [
@@ -118,6 +117,8 @@ function NovedadesPageContent() {
     draftIsLoaded,
     templates,
     clearDraft,
+    initialDraftData,
+    selectedReportId,
   ]);
 
   const selectedReport = useMemo(() => {
@@ -153,6 +154,8 @@ function NovedadesPageContent() {
     await addReport(report);
     setCreatingReport(null);
     setInitialDraftData(undefined);
+    // Explicitly set the selected ID to ensure it opens immediately
+    setSelectedReportId(report.id);
     router.push(`/?selected=${report.id}`);
   };
 

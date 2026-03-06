@@ -22,14 +22,27 @@ export function useSettings() {
   useEffect(() => {
     if (!db) return;
 
-    const sub = db.settings.findOne('app-settings').$.subscribe((doc) => {
+    const sub = db.settings.findOne('app-settings').$.subscribe(async (doc) => {
       if (doc) {
         setSettings(doc.toJSON() as AppSettings);
       } else {
-        // If not found, insert default
-        db.settings
-          .insert({ ...defaultSettings, id: 'app-settings' })
-          .catch((err) => logger.error('Failed to insert default settings', err, { feature: 'Settings' }));
+        // If not found, attempt to insert safely
+        try {
+          await db.settings.insert({ ...defaultSettings, id: 'app-settings' });
+        } catch (err: unknown) {
+          // Check for RxDB conflict (409 or 'CONFLICT')
+          const e = err as Record<string, unknown>;
+          const writeError = (e.parameters as Record<string, unknown> | undefined)?.writeError as Record<string, unknown> | undefined;
+          const isConflict =
+            e.code === 'CONFLICT' ||
+            e.status === 409 ||
+            (typeof e.message === 'string' && e.message.includes('conflict')) ||
+            writeError?.status === 409;
+
+          if (!isConflict) {
+            logger.error('Failed to insert default settings', err, { feature: 'Settings' });
+          }
+        }
       }
       setIsLoaded(true);
     });

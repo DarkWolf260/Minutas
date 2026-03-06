@@ -25,7 +25,7 @@ export interface AuditRecord {
     concept: string;
     dataId: string;
     version: number;
-    appliedValue: any;
+    appliedValue: string | number;
     confidence: number;
   }[];
 }

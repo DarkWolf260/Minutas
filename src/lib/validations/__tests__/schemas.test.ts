@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { TemplateSchema } from '../schemas';
 import { z } from 'zod';
 
@@ -137,13 +137,6 @@ describe('Template Validation Schema', () => {
         });
 
         it('should validate UUID format for id', () => {
-            const invalidId = {
-                id: 'not-a-uuid',
-                name: 'Test',
-                content: 'Content',
-                type: 'normal' as const,
-                timestamp: new Date().toISOString(),
-            };
 
             const validId = {
                 id: '550e8400-e29b-41d4-a716-446655440000',
@@ -154,7 +147,6 @@ describe('Template Validation Schema', () => {
             };
 
             // Note: Check if schema actually validates UUID format
-            const invalidResult = TemplateSchema.safeParse(invalidId);
             const validResult = TemplateSchema.safeParse(validId);
 
             // If UUID validation is enforced, this should fail

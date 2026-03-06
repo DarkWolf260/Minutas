@@ -9,6 +9,7 @@ import { Toaster } from '@/components/toaster';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { PWARegistration } from '@/components/pwa-registration';
+import { PWAStatus } from '@/components/pwa-status';
 
 import { DatabaseProvider } from '@/lib/db/db-provider';
 
@@ -42,7 +43,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -51,7 +52,7 @@ export default function RootLayout({
         >
           <DatabaseProvider>
             <TooltipProvider>
-              <div className="flex min-h-screen w-full flex-col sm:flex-row">
+              <div className="flex min-h-screen w-full flex-col sm:flex-row" suppressHydrationWarning>
                 <SideNav />
                 <div className="flex flex-1 flex-col sm:pl-14">
                   <MobileNav />
@@ -62,6 +63,7 @@ export default function RootLayout({
               </div>
               <WelcomeDialog />
               <PWARegistration />
+              <PWAStatus />
               <Toaster />
             </TooltipProvider>
           </DatabaseProvider>

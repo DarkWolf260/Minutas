@@ -1,6 +1,8 @@
-import { TemplateParserResult, SectionConfig } from '../types';
-import { recordReportAudit } from './audit-engine';
-import { evaluateCondition, applyModifiers } from './template/evaluator';
+import { TemplateParserResult, SectionConfig, FormDataRecord, FieldConfig, SnippetOption } from '../types';
+import type { ResolutionResult } from './template/renderer';
+
+/** No-op audit recorder (audit-engine was removed during cleanup) */
+const recordReportAudit = (_reportId: string, _audit: ResolutionResult[]): void => { };
 import { tokenize } from './template/lexer';
 import { parse } from './template/parser';
 import {
@@ -46,8 +48,8 @@ export function renderContent(
  */
 export function renderFinalReport(
   template: string,
-  data: Record<string, any>,
-  config: { fields: Record<string, any>; sections: SectionConfig[]; layout: string[] },
+  data: FormDataRecord,
+  config: { fields: Record<string, FieldConfig>; sections: SectionConfig[]; layout: string[] },
   predefinedValues: Record<string, string>,
   summaryOnly: boolean = false,
   dynamicPredefinedValues: Record<string, string> = {}
@@ -72,15 +74,19 @@ export function renderFinalReport(
  */
 export function renderContentWithSections(
   content: string,
-  data: Record<string, any>,
-  config: { fields: Record<string, any>; sections: SectionConfig[]; layout: string[] },
+  data: FormDataRecord,
+  config: { fields: Record<string, FieldConfig>; sections: SectionConfig[]; layout: string[] },
   predefinedValues: Record<string, string>,
   dynamicPredefinedValues: Record<string, string> = {}
 ): string {
   return renderContentWithSectionsFromModule(
     content,
     data,
-    config,
+    {
+      ...config,
+      templateOptions: new Map<string, SnippetOption[]>(),
+      fieldModifiers: new Map<string, string[]>(),
+    },
     predefinedValues,
     dynamicPredefinedValues
   );

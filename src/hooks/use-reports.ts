@@ -98,7 +98,7 @@ export function useReports() {
       if (!db) return;
       try {
         const validatedReport = validateReportContent(newReport);
-        await db.reports.insert(validatedReport);
+        await db.reports.insert(validatedReport as Report);
         logger.info('Report added', { id: validatedReport.id, title: validatedReport.title });
         toast.success('Reporte guardado correctamente.');
       } catch (error) {
@@ -120,7 +120,7 @@ export function useReports() {
         const validatedReport = validateReportContent(updatedReport);
         const doc = await db.reports.findOne(validatedReport.id).exec();
         if (doc) {
-          await doc.patch(validatedReport);
+          await doc.patch(validatedReport as Partial<Report>);
           logger.info('Report updated', { id: validatedReport.id });
           toast.success('Reporte actualizado correctamente.');
         } else {

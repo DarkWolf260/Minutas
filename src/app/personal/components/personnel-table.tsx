@@ -13,12 +13,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, FileEdit, Trash2, Activity } from 'lucide-react';
-import type { StaffMember, PersonnelStatus } from '@/types';
+import { Search, FileEdit, Trash2, Activity, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import type { StaffMember, PersonnelStatus, Department } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface PersonnelTableProps {
   personnel: StaffMember[];
+  departments: Department[];
   onEdit: (member: StaffMember) => void;
   onDelete: (id: string) => void;
   onViewHistory: (member: StaffMember) => void;
@@ -34,6 +35,7 @@ interface PersonnelTableProps {
  */
 export function PersonnelTable({
   personnel,
+  departments,
   onEdit,
   onDelete,
   onViewHistory,
@@ -41,19 +43,58 @@ export function PersonnelTable({
   onSelectionChange,
 }: PersonnelTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortKey, setSortKey] = useState<keyof StaffMember>('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
-  // Filter personnel based on search query
+  // Map dept id → name for display
+  const deptNameById = useMemo(
+    () => new Map(departments.map((d) => [d.id, d.name])),
+    [departments]
+  );
+
+  const getDeptName = (deptId?: string) => {
+    if (!deptId || deptId === 'none') return null;
+    // If the stored value is already a name (not found as id), show it as-is
+    return deptNameById.get(deptId) ?? deptId;
+  };
+
+  const toggleSort = (key: keyof StaffMember) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: keyof StaffMember }) => {
+    if (sortKey !== field) return <ChevronsUpDown className="ml-1 h-3 w-3 inline opacity-40" />;
+    return sortDir === 'asc'
+      ? <ChevronUp className="ml-1 h-3 w-3 inline" />
+      : <ChevronDown className="ml-1 h-3 w-3 inline" />;
+  };
+
+  // Filter and sort personnel
   const filteredPersonnel = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
-    if (!query) return personnel;
+    let result = query
+      ? personnel.filter(
+        (p) =>
+          p.name.toLowerCase().includes(query) ||
+          (p.cedula && p.cedula.toLowerCase().includes(query)) ||
+          (p.rank && p.rank.toLowerCase().includes(query))
+      )
+      : [...personnel];
 
-    return personnel.filter(
-      (p) =>
-        p.name.toLowerCase().includes(query) ||
-        (p.cedula && p.cedula.toLowerCase().includes(query)) ||
-        (p.rank && p.rank.toLowerCase().includes(query))
-    );
-  }, [personnel, searchQuery]);
+    result.sort((a, b) => {
+      const aVal = String(a[sortKey] ?? '').toLowerCase();
+      const bVal = String(b[sortKey] ?? '').toLowerCase();
+      const cmp = aVal.localeCompare(bVal, 'es', { sensitivity: 'base' });
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+
+    return result;
+  }, [personnel, searchQuery, sortKey, sortDir]);
 
   // Get status badge variant
   const getStatusVariant = (
@@ -119,12 +160,22 @@ export function PersonnelTable({
                   aria-label="Seleccionar todos"
                 />
               </TableHead>
-              <TableHead className="w-[120px]">Jerarquía</TableHead>
-              <TableHead className="min-w-[150px]">Nombre</TableHead>
-              <TableHead className="hidden md:table-cell">Cédula</TableHead>
+              <TableHead className="w-[120px] cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort('rank')}>
+                Jerarquía<SortIcon field="rank" />
+              </TableHead>
+              <TableHead className="min-w-[150px] cursor-pointer select-none" onClick={() => toggleSort('name')}>
+                Nombre<SortIcon field="name" />
+              </TableHead>
+              <TableHead className="hidden md:table-cell cursor-pointer select-none" onClick={() => toggleSort('cedula')}>
+                Cédula<SortIcon field="cedula" />
+              </TableHead>
               <TableHead className="hidden lg:table-cell">Cargo</TableHead>
-              <TableHead className="hidden lg:table-cell">Departamento</TableHead>
-              <TableHead>Estado</TableHead>
+              <TableHead className="hidden lg:table-cell cursor-pointer select-none" onClick={() => toggleSort('department')}>
+                Departamento<SortIcon field="department" />
+              </TableHead>
+              <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('status')}>
+                Estado<SortIcon field="status" />
+              </TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -174,11 +225,12 @@ export function PersonnelTable({
                     )}
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
-                    {member.department && member.department !== 'none' ? (
-                      member.department
-                    ) : (
-                      <span className="text-muted-foreground italic">N/A</span>
-                    )}
+                    {(() => {
+                      const deptName = getDeptName(member.department);
+                      return deptName
+                        ? deptName
+                        : <span className="text-muted-foreground italic">N/A</span>;
+                    })()}
                   </TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(member.status)}>

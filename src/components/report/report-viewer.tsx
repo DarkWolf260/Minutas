@@ -11,8 +11,8 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
-import type { Report, Template, TemplateConfig } from '@/types';
-import { Trash2, Copy, CheckIcon, FileText, Eye, Save } from 'lucide-react';
+import type { Report, TemplateConfig } from '@/types';
+import { Trash2, Copy, CheckIcon, Eye, Save, FileText } from 'lucide-react';
 import { useTemplates } from '@/hooks/use-templates';
 import { ReportForm, type ReportFormRef } from './report-form';
 import { Label } from '@/components/ui/label';
@@ -59,34 +59,27 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
   );
   const isFinalizado = useMemo(() => status === 'Finalizado', [status]);
 
-  const saveLogicRef = useRef<((formData: Record<string, any>) => void) | null>(null);
+  const saveLogic = useCallback(async (formData: Record<string, any>) => {
+    if (!report || !template) return;
 
-  useEffect(() => {
-    saveLogicRef.current = async (formData: Record<string, any>) => {
-      if (!report || !template) return;
+    const content = renderFinalReport(template.content, formData, config, {});
+    const newTitle = String(formData.titulo || formData.title || template.name);
 
-      const content = renderFinalReport(template.content, formData, config, {});
-      const newTitle = formData.titulo || formData.title || template.name;
-
-      const finalReport: Report = {
-        ...report,
-        title: newTitle,
-        content: content,
-        formData: formData,
-        status: status,
-        timestamp: new Date().toISOString(),
-      };
-      await onSave(finalReport);
-      setSaveButtonText('Guardado');
+    const finalReport: Report = {
+      ...report,
+      title: newTitle,
+      content: content,
+      formData: formData,
+      status: status,
+      timestamp: new Date().toISOString(),
     };
+    await onSave(finalReport);
+    setSaveButtonText('Guardado');
   }, [report, template, config, status, onSave]);
 
   const debouncedSave = useMemo(
-    () =>
-      debounce((formData: Record<string, any>) => {
-        saveLogicRef.current?.(formData);
-      }, 30000),
-    []
+    () => debounce((formData: Record<string, any>) => saveLogic(formData), 30000),
+    [saveLogic]
   );
 
   useEffect(() => {
@@ -112,7 +105,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     if (!formRef.current) return;
     const formData = formRef.current.getValues();
     debouncedSave.cancel();
-    await saveLogicRef.current?.(formData);
+    await saveLogic(formData);
   };
 
   const handleStatusChange = async (newStatus: 'En proceso' | 'Finalizado') => {
@@ -124,7 +117,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
 
     if (!report || !template) return;
     const content = renderFinalReport(template.content, formData, config, {});
-    const newTitle = formData.titulo || formData.title || template.name;
+    const newTitle = String(formData.titulo || formData.title || template.name);
     const finalReport: Report = {
       ...report,
       title: newTitle,
@@ -247,7 +240,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
                   template={template}
                   config={config}
                   initialData={report.formData}
-                  onSubmit={() => {}} // Not used here, handled by manual save
+                  onSubmit={() => { }} // Not used here, handled by manual save
                   disabled={isFinalizado}
                   onDataChange={handleDataChange}
                 />

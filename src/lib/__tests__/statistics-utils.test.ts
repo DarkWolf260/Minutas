@@ -4,8 +4,8 @@
  * Unit tests for statistics utility functions
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { getReportCategory, calculateMonthlyStats, type MonthlyStats } from '../statistics-utils';
+import { describe, it, expect } from 'vitest';
+import { getReportCategory, calculateMonthlyStats } from '../statistics-utils';
 import type { Report, Template, TemplateConfig } from '@/types';
 
 // Mock data factories
@@ -34,14 +34,7 @@ function createMockTemplate(overrides: Partial<Template> = {}): Template {
     };
 }
 
-function createMockConfig(overrides: Partial<TemplateConfig> = {}): TemplateConfig {
-    return {
-        fields: {},
-        sections: [],
-        layout: [],
-        ...overrides,
-    };
-}
+
 
 describe('statistics-utils', () => {
     describe('getReportCategory', () => {

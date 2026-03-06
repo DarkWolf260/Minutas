@@ -53,8 +53,9 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
+import { generateId } from '@/lib/utils/id';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const AddressMap = dynamic(() => import('@/components/address-map').then((mod) => mod.AddressMap), {
   ssr: false,
@@ -74,9 +75,9 @@ export default function DireccionesPage() {
   const [activeTab, setActiveTab] = useState('list');
 
   useEffect(() => {
-    if (isLoaded && addresses.length > 0 && !selectedForMap) {
+    if (isLoaded && addresses.length > 0) {
       const firstWithCoords = addresses.find((addr) => !!addr.latitude && !!addr.longitude);
-      if (firstWithCoords) {
+      if (firstWithCoords && (!selectedForMap || (selectedForMap as any).id !== firstWithCoords.id)) {
         setSelectedForMap(firstWithCoords);
       }
     }
@@ -107,7 +108,7 @@ export default function DireccionesPage() {
         setSelectedForMap(address);
       }
     } else {
-      const newAddress = { ...address, id: `address_${Date.now()}` };
+      const newAddress = { ...address, id: generateId('address') };
       addAddress(newAddress);
       if (newAddress.latitude && newAddress.longitude) {
         setSelectedForMap(newAddress);

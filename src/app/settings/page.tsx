@@ -1,16 +1,18 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import type { StaffRole, Department } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Trash2, GripVertical, AlertTriangle } from 'lucide-react';
+
+import { PlusCircle, Trash2, AlertTriangle, FileText, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 import { useDepartments } from '@/hooks/use-departments';
-import { GuardStaffEditor } from '@/components/guard-staff-editor';
+
 import { useUnits } from '@/hooks/use-units';
 import { useRoles } from '@/hooks/use-roles';
 import { useReports } from '@/hooks/use-reports';
@@ -38,14 +40,12 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+
+
 export default function SettingsPage() {
   const { units, saveUnits, isLoaded: unitsLoaded, clearAllUnits } = useUnits();
-  const { roles: initialRoles, saveRoles, isLoaded: rolesLoaded, clearAllRoles } = useRoles();
+  const { roles: initialRoles, isLoaded: rolesLoaded, clearAllRoles } = useRoles();
   const {
-    departments,
-    addDepartment,
-    removeDepartment,
-    updateDepartment,
     isLoaded: deptsLoaded,
     clearAllDepartments,
   } = useDepartments();
@@ -192,6 +192,31 @@ export default function SettingsPage() {
   return (
     <>
       <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Quick access to Templates */}
+        <Card className="max-w-4xl mx-auto shadow-lg">
+          <CardHeader>
+            <CardTitle>Plantillas</CardTitle>
+            <CardDescription>
+              Gestiona las plantillas usadas para generar los reportes de novedades.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link
+              href="/plantillas"
+              className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <FileText className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                <div>
+                  <p className="font-medium">Ir a Plantillas</p>
+                  <p className="text-xs text-muted-foreground">Crear, editar y gestionar plantillas de reportes</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+            </Link>
+          </CardContent>
+        </Card>
+
         <Card className="max-w-4xl mx-auto shadow-lg">
           <CardHeader>
             <CardTitle>Configuración de Personal que Reporta</CardTitle>
@@ -366,7 +391,7 @@ export default function SettingsPage() {
             ))}
           </CardContent>
         </Card>
-      </div>
+      </div >
 
       <AlertDialog
         open={!!actionToConfirm}

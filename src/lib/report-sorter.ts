@@ -1,4 +1,4 @@
-import type { Report } from '@/types';
+import type { Report, FormDataRecord, FormDataValue } from '@/types';
 
 /**
  * Finds a value in the report's formData, checking both top-level and nested section data.
@@ -35,9 +35,9 @@ import type { Report } from '@/types';
  * - Returns first match found
  */
 export const findValueInFormData = (
-  formData: Record<string, any> | undefined,
+  formData: FormDataRecord | undefined,
   keyToFind: string
-): any | null => {
+): FormDataValue | null => {
   if (!formData) return null;
 
   const lowerKeyToFind = keyToFind.toLowerCase();

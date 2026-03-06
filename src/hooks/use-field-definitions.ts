@@ -33,8 +33,8 @@ const defaultDefinitions: Record<string, FieldConfig> = {
 
 export function useFieldDefinitions() {
   const db = useDatabase();
-  const { settings, isLoaded: settingsLoaded } = useSettings();
-  const { guards, isLoaded: guardsLoaded } = useGuards();
+  const { isLoaded: settingsLoaded } = useSettings();
+  const { isLoaded: guardsLoaded } = useGuards();
 
   const [definitions, setDefinitions] = useState<Record<string, FieldConfig>>({});
   const [isLoaded, setIsLoaded] = useState(false);

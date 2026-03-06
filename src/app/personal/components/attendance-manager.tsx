@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { CalendarCheck, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import type { StaffMember, AttendanceStatus } from '@/types';

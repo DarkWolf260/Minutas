@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import {
@@ -22,7 +22,7 @@ import { OrdenDelDiaForm } from '@/components/orden-del-dia';
 export default function OrdenDelDiaPage() {
   const { guards, isLoaded: guardsLoaded } = useGuards();
   const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
-  const { roles, isLoaded: rolesLoaded } = useRoles();
+  const { isLoaded: rolesLoaded } = useRoles();
 
   const [selectedGuardId, setSelectedGuardId] = useState<string>('');
 
@@ -31,12 +31,13 @@ export default function OrdenDelDiaPage() {
     if (
       settingsLoaded &&
       settings.activeGuardId &&
+      selectedGuardId !== settings.activeGuardId &&
       guardsLoaded &&
       guards.some((g) => g.id === settings.activeGuardId)
     ) {
       setSelectedGuardId(settings.activeGuardId);
     }
-  }, [settings, settingsLoaded, guards, guardsLoaded]);
+  }, [settings, settingsLoaded, guards, guardsLoaded, selectedGuardId]);
 
   const handleActiveGuardChange = (guardId: string) => {
     if (!guardId) return;

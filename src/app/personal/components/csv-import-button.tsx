@@ -1,0 +1,199 @@
+'use client';
+
+import { useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Download, Upload } from 'lucide-react';
+import { toast } from 'sonner';
+import type { StaffMember } from '@/types';
+
+interface CsvImportButtonProps {
+    onImport: (members: Omit<StaffMember, 'id'>[]) => Promise<{ added: StaffMember[]; skipped: number } | undefined>;
+    personnel: StaffMember[];
+}
+
+/** 
+ * Parsea el estado del CSV a un valor válido de PersonnelStatus
+ */
+function parseStatus(raw: string): StaffMember['status'] {
+    const s = raw.toLowerCase().trim();
+    if (s === 'activo' || s === 'active') return 'activo';
+    if (s === 'vacaciones' || s === 'vacation') return 'vacaciones';
+    if (s === 'permiso' || s === 'leave') return 'permiso';
+    if (s === 'reposo' || s === 'rest') return 'reposo';
+    if (s === 'apoyo' || s === 'support') return 'apoyo';
+    return 'activo'; // default
+}
+
+/**
+ * Botón de importación / exportación de personal por CSV.
+ *
+ * Columnas esperadas (en cualquier orden de cabecera, insensible a case+acentos):
+ *   Jerarquía | Nombre y Apellido | Cédula | Cargo | Departamento | Estatus
+ */
+export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [importing, setImporting] = useState(false);
+
+    // --- Normalize header key (remove accents, lowercase, spaces to underscore) ---
+    const normalize = (s: string) =>
+        s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, '_');
+
+    const COLUMN_MAP: Record<string, keyof Omit<StaffMember, 'id'>> = {
+        jerarquia: 'rank',
+        nombre_y_apellido: 'name',
+        nombre: 'name',
+        cedula: 'cedula',
+        cargo: 'cargo' as keyof Omit<StaffMember, 'id'>,
+        departamento: 'department',
+        estatus: 'status',
+        estado: 'status',
+        titulo: 'titulo' as keyof Omit<StaffMember, 'id'>,
+        titulo_academico: 'titulo' as keyof Omit<StaffMember, 'id'>,
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setImporting(true);
+        const reader = new FileReader();
+
+        reader.onload = async (ev) => {
+            try {
+                const raw = ev.target?.result as string;
+                // Strip BOM if present
+                const content = raw.startsWith('\uFEFF') ? raw.slice(1) : raw;
+                const lines = content.split(/\r?\n/).filter((l) => l.trim());
+
+                if (lines.length < 2) {
+                    toast.error('El archivo CSV está vacío o no tiene datos.');
+                    return;
+                }
+
+                // Parse header
+                const headers = lines[0]!.split(',').map((h) => normalize(h));
+                const colIdx = (key: string) => headers.indexOf(normalize(key));
+
+                // Build column indices from COLUMN_MAP
+                const fieldIndices = new Map<keyof Omit<StaffMember, 'id'>, number>();
+                headers.forEach((h, i) => {
+                    const field = COLUMN_MAP[h];
+                    if (field !== undefined && !fieldIndices.has(field)) {
+                        fieldIndices.set(field, i);
+                    }
+                });
+
+                if (!fieldIndices.has('name')) {
+                    toast.error("El CSV debe tener una columna 'Nombre y Apellido' o 'Nombre'.");
+                    return;
+                }
+
+                // Parse rows
+                const members: Omit<StaffMember, 'id'>[] = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const cols = lines[i]!.split(',').map((c) => c.trim());
+                    const getCol = (field: keyof Omit<StaffMember, 'id'>) => {
+                        const idx = fieldIndices.get(field);
+                        return idx !== undefined ? (cols[idx] ?? '') : '';
+                    };
+
+                    const name = getCol('name');
+                    if (!name) continue; // skip empty rows
+
+                    const rawStatus = getCol('status');
+                    const rawCargo = getCol('cargo' as keyof Omit<StaffMember, 'id'>);
+                    const rawTitulo = getCol('titulo' as keyof Omit<StaffMember, 'id'>);
+
+                    members.push({
+                        name,
+                        cedula: getCol('cedula') || undefined,
+                        rank: getCol('rank') || undefined,
+                        cargo: rawCargo || undefined,
+                        titulo: rawTitulo || undefined,
+                        department: getCol('department') || undefined,
+                        status: rawStatus ? parseStatus(rawStatus) : 'activo',
+                    });
+                }
+
+                if (members.length === 0) {
+                    toast.error('No se encontraron filas válidas en el CSV.');
+                    return;
+                }
+
+                const result = await onImport(members);
+                if (result) {
+                    const { added, skipped } = result;
+                    if (added.length > 0) {
+                        toast.success(
+                            `${added.length} funcionario${added.length > 1 ? 's' : ''} importado${added.length > 1 ? 's' : ''}` +
+                            (skipped > 0 ? ` (${skipped} omitido${skipped > 1 ? 's' : ''} por cédula duplicada)` : '')
+                        );
+                    } else if (skipped > 0) {
+                        toast.warning(`Todos los registros ya existen (${skipped} cédula${skipped > 1 ? 's' : ''} duplicada${skipped > 1 ? 's' : ''}).`);
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                toast.error('Error al procesar el archivo CSV.');
+            } finally {
+                setImporting(false);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+            }
+        };
+
+        reader.readAsText(file, 'UTF-8');
+    };
+
+    const handleExport = () => {
+        const headers = ['Jerarquía', 'Nombre y Apellido', 'Cédula', 'Cargo', 'Departamento', 'Estatus'];
+        const rows = personnel.map((p) => [
+            p.rank ?? '',
+            p.name,
+            p.cedula ?? '',
+            p.cargo ?? '',
+            p.department ?? '',
+            p.status ?? 'activo',
+        ]);
+        const csv = [headers, ...rows]
+            .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+            .join('\n');
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `personal_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        toast.success('Exportación lista');
+    };
+
+    return (
+        <div className="flex gap-1.5">
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={handleFileChange}
+                disabled={importing}
+            />
+            <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={importing}
+            >
+                <Upload className="mr-1.5 h-3.5 w-3.5" />
+                {importing ? 'Importando…' : 'Importar CSV'}
+            </Button>
+            <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+                onClick={handleExport}
+            >
+                <Download className="mr-1.5 h-3.5 w-3.5" />
+                Exportar
+            </Button>
+        </div>
+    );
+}

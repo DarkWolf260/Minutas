@@ -1,11 +1,7 @@
-/**
- * Validation schemas for personnel management
- * Using Zod for runtime type-safe validation
- */
-
 import { z } from 'zod';
 import { PERSONNEL_STATUS } from '@/constants/personnel';
 import { ATTENDANCE_STATUS } from '@/constants/attendance';
+import { GuardSchema } from '@/lib/validations/schemas';
 
 export const PERSONNEL_VALIDATION = {
   MAX_NAME_LENGTH: 100,
@@ -50,17 +46,6 @@ export const PersonnelSchema = z.object({
 });
 
 export type PersonnelFormData = z.infer<typeof PersonnelSchema>;
-
-/**
- * Guard validation schema
- */
-export const GuardSchema = z.object({
-  id: z
-    .string()
-    .min(1, 'El identificador es obligatorio')
-    .max(10, 'El identificador es demasiado largo')
-    .trim(),
-});
 
 export type GuardFormData = z.infer<typeof GuardSchema>;
 

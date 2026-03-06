@@ -5,7 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2026-01-28
+## [1.7.0] - 2026-01-29
+
+### Added
+- **Smart Mapping (Key=Value)**: Mapping blocks `[?{Field}] Key=Value [/]` now define dropdown options where Key is for the UI and Value is for the report.
+- **Automatic Translation**: Field tags `{Field}` now automatically use the mapped long text if a matching mapping block exists.
+- **Visual Separators**: Support for dedicated separator sections `[""]` in templates to improve form organization.
+np
+### Changed
+- **Silent Mapping Blocks**: Mapping definition blocks are now invisible in the final report to prevent text duplication.
+- **Global Deduplication**: Form fields are now globally deduplicated across multiple sections to prevent React key collisions and redundant inputs.
+- **UI Cleanup**: Removed technical labels for conditional sections in the report form for a cleaner user experience.
+
+### Fixed
+- **Mapping Preview**: Fixed a bug where mapped values were not appearing in the report preview.
+- **Cascading Sections**: Fixed UI issues with nested sections appearing in the wrong order or duplicate positions.
+- **Recursive Initialization**: Improved form initialization for deeply nested template structures.
+
+## [1.6.0] - 2026-01-28
 
 ### Added
 - **Multi-role reporting**: Users can now select and prioritize multiple roles for the `[Reporta]` tag in App Settings.

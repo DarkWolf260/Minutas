@@ -3,7 +3,7 @@
 import { useState, useMemo, Fragment } from 'react';
 import { useReports } from '@/hooks/use-reports';
 import { useTemplates } from '@/hooks/use-templates';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -22,9 +22,7 @@ import {
 } from '@/components/ui/table';
 import { ChevronLeft, ChevronRight, FileDown } from 'lucide-react';
 import { calculateMonthlyStats } from '@/lib/statistics-utils';
-import { STATISTICS_SECTIONS, DEFAULT_STATISTICS_CATEGORIES } from '@/constants/statistics';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { STATISTICS_SECTIONS } from '@/constants/statistics';
 
 export default function EstadisticasPage() {
   const { reports, isLoaded: reportsLoaded } = useReports();
@@ -173,10 +171,10 @@ export default function EstadisticasPage() {
                             : section.headerColor?.includes('green')
                               ? 'rgba(34, 197, 94, 0.2)'
                               : section.headerColor?.includes('red') ||
-                                  section.headerColor?.includes('orange')
+                                section.headerColor?.includes('orange')
                                 ? 'rgba(239, 68, 68, 0.2)'
                                 : section.headerColor?.includes('amber') ||
-                                    section.headerColor?.includes('yellow')
+                                  section.headerColor?.includes('yellow')
                                   ? 'rgba(245, 158, 11, 0.2)'
                                   : 'rgba(156, 163, 175, 0.4)',
                         }}
@@ -194,10 +192,10 @@ export default function EstadisticasPage() {
                               : section.headerColor?.includes('green')
                                 ? 'rgba(34, 197, 94, 0.2)'
                                 : section.headerColor?.includes('red') ||
-                                    section.headerColor?.includes('orange')
+                                  section.headerColor?.includes('orange')
                                   ? 'rgba(239, 68, 68, 0.2)'
                                   : section.headerColor?.includes('amber') ||
-                                      section.headerColor?.includes('yellow')
+                                    section.headerColor?.includes('yellow')
                                     ? 'rgba(245, 158, 11, 0.2)'
                                     : 'rgba(156, 163, 175, 0.4)',
                           }}
@@ -211,10 +209,10 @@ export default function EstadisticasPage() {
                             : section.headerColor?.includes('green')
                               ? 'rgba(34, 197, 94, 0.2)'
                               : section.headerColor?.includes('red') ||
-                                  section.headerColor?.includes('orange')
+                                section.headerColor?.includes('orange')
                                 ? 'rgba(239, 68, 68, 0.2)'
                                 : section.headerColor?.includes('amber') ||
-                                    section.headerColor?.includes('yellow')
+                                  section.headerColor?.includes('yellow')
                                   ? 'rgba(245, 158, 11, 0.2)'
                                   : 'rgba(156, 163, 175, 0.4)',
                         }}

@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { OnlineStatus } from '@/components/online-status';
 import {
   Newspaper,
   Settings,
   FileText,
   ClipboardList,
   ClipboardCheck,
-  BookOpen,
   NotebookPen,
   TrendingUp,
   Users,
@@ -29,7 +29,6 @@ const navItems = [
   { href: '/personal', label: 'Personal', icon: Users },
   { href: '/estadisticas', label: 'Estadísticas', icon: TrendingUp },
   { href: '/historial', label: 'Historial', icon: History },
-  { href: '/documentation', label: 'Información', icon: BookOpen },
   { href: '/settings', label: 'Configuración', icon: Settings },
 ];
 
@@ -84,7 +83,7 @@ export function MobileNav() {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
-        {/* Optional breadcrumbs or context-specific buttons could go here */}
+        <OnlineStatus />
       </div>
     </header>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -15,11 +15,26 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { usePersonnel } from '@/hooks/use-personnel';
-import type { Staff, StaffMember } from '@/types';
 import { useRoles } from '@/hooks/use-roles';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useSettings } from '@/hooks/use-settings';
+import { compareRanks } from '@/lib/utils';
 import { StaffListEditor } from './guard-staff-editor';
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+  closestCenter,
+  DragOverlay,
+  defaultDropAnimationSideEffects,
+} from '@dnd-kit/core';
+import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { GripVertical } from 'lucide-react';
+import type { Staff, StaffMember, StaffRole, FieldConfig } from '@/types';
 
 interface OrdenDelDiaFormProps {
   selectedGuard: string;
@@ -43,12 +58,35 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
   const [copyButtonText, setCopyButtonText] = useState('Copiar');
   const [isSnapshotSaved, setIsSnapshotSaved] = useState(false);
+  const isInitialized = useRef(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const activeMember = useMemo(() => {
+    if (!activeId) return null;
+    for (const roleMembers of Object.values(staff)) {
+      const found = roleMembers.find((m) => m.id === activeId);
+      if (found) return found;
+    }
+    return null;
+  }, [staff, activeId]);
 
   const globalSettings = useMemo(() => {
     const settings: Record<string, string> = {};
     Object.entries(definitions).forEach(([key, config]) => {
-      if (config.type === 'predefined') {
-        settings[key] = config.value || '';
+      const fieldConfig = config as FieldConfig;
+      if (fieldConfig.type === 'predefined') {
+        settings[key] = fieldConfig.value || '';
       }
     });
     return settings;
@@ -70,11 +108,13 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   }, []);
 
   useEffect(() => {
-    if (initialData && rolesLoaded && personnelLoaded) {
+    if (isInitialized.current) return;
+
+    if (rolesLoaded && personnelLoaded) {
       const newStaffState: Staff = {};
-      roles.forEach((role) => {
+      roles.forEach((role: StaffRole) => {
         const roleNameLower = role.name.toLowerCase();
-        let assignedMembers = initialData[role.name] || [];
+        let assignedMembers = (initialData && initialData[role.name]) || [];
 
         // Override Director/Chief assignments from Global Personnel
         if (
@@ -82,32 +122,114 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
           roleNameLower === 'jefe de operaciones' ||
           roleNameLower === 'jefe de departamento'
         ) {
-          // Match personnel by roleId (assuming roleId stores role Name)
           const globalMatch = personnel.find(
-            (p) => p.roleId === role.name || p.roleId === roleNameLower
+            (p: StaffMember) => p.roleId === role.name || p.roleId === roleNameLower
           );
           if (globalMatch) {
-            // Create a fresh staff member entry based on global personnel
             assignedMembers = [globalMatch];
           }
         }
-        newStaffState[role.name] = assignedMembers;
+
+        // Apply Hierarchical Sorting as DEFAULT
+        // (This only happens on initialization, manual DND will then take over)
+        newStaffState[role.name] = [...assignedMembers].sort((a, b) =>
+          compareRanks(a.rank, b.rank)
+        );
       });
+
       setStaff(newStaffState);
-    } else if (rolesLoaded) {
-      const newStaffState: Staff = {};
-      roles.forEach((role) => {
-        newStaffState[role.name] = [];
-      });
-      setStaff(newStaffState);
+      isInitialized.current = true;
     }
   }, [initialData, roles, rolesLoaded, personnel, personnelLoaded]);
 
   const handleRoleStaffUpdate = (roleName: string, members: StaffMember[]) => {
-    setStaff((prev) => ({
+    setStaff((prev: Staff) => ({
       ...prev,
       [roleName]: members,
     }));
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    if (!over) return;
+
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    // Find source container
+    let activeContainer: string | null = null;
+    for (const [roleName, members] of Object.entries(staff)) {
+      if (members.some((m) => m.id === activeId)) {
+        activeContainer = roleName;
+        break;
+      }
+    }
+
+    // Find destination container
+    let overContainer: string | null = null;
+    if (staff[overId]) {
+      overContainer = overId;
+    } else {
+      for (const [roleName, members] of Object.entries(staff)) {
+        if (members.some((m) => m.id === overId)) {
+          overContainer = roleName;
+          break;
+        }
+      }
+    }
+
+    if (!activeContainer || !overContainer) return;
+
+    if (activeContainer === overContainer) {
+      const containerMembers = staff[activeContainer];
+      if (!containerMembers) return;
+
+      const oldIndex = containerMembers.findIndex((m) => m.id === activeId);
+      const newIndex = containerMembers.findIndex((m) => m.id === overId);
+      if (oldIndex !== -1 && newIndex !== -1) {
+        handleRoleStaffUpdate(activeContainer, arrayMove(containerMembers, oldIndex, newIndex));
+      }
+    } else {
+      const sourceMembers = staff[activeContainer];
+      if (!sourceMembers) return;
+
+      const activeIndex = sourceMembers.findIndex((m) => m.id === activeId);
+      const activeItem = sourceMembers[activeIndex];
+      if (!activeItem) return;
+
+      const destMembers = staff[overContainer] || [];
+      const overIndex = destMembers.findIndex((m) => m.id === overId);
+
+      const targetRole = roles.find((r) => r.name === overContainer);
+
+      setStaff((prev) => {
+        const newStaff = { ...prev };
+        if (activeContainer) {
+          newStaff[activeContainer] = (prev[activeContainer] || []).filter((m) => m.id !== activeId);
+        }
+
+        if (overContainer) {
+          const currentDestMembers = prev[overContainer] || [];
+          if (targetRole?.isSingle) {
+            newStaff[overContainer] = [activeItem];
+          } else {
+            const updatedDestMembers = [...currentDestMembers];
+            if (overIndex === -1) {
+              updatedDestMembers.push(activeItem);
+            } else {
+              updatedDestMembers.splice(overIndex, 0, activeItem);
+            }
+            newStaff[overContainer] = updatedDestMembers;
+          }
+        }
+        return newStaff;
+      });
+    }
   };
 
   const handleUseForFinalReport = () => {
@@ -189,15 +311,19 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
       `*PERIODO:* ${periodo}`,
     ];
 
-    Object.entries(staff).forEach(([role, personnel]) => {
+    Object.entries(staff).forEach(([role, personnelList]) => {
       // Skip Director and Jefe de Operaciones as they are in the header
       if (role.toLowerCase() === 'director' || role.toLowerCase() === 'jefe de operaciones') return;
 
-      if (personnel && personnel.length > 0 && personnel.some((p) => p.name.trim() !== '')) {
+      if (
+        personnelList &&
+        personnelList.length > 0 &&
+        personnelList.some((p: StaffMember) => p.name.trim() !== '')
+      ) {
         reportParts.push(
           ``,
           `*${role.toUpperCase()}*`,
-          personnel.map(formatStaffMember).join('\n')
+          personnelList.map(formatStaffMember).join('\n')
         );
       }
     });
@@ -242,19 +368,55 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
           </div>
         </div>
 
-        <div className="space-y-4">
-          {roles
-            .filter((r) => !r.isHidden)
-            .map((role) => (
-              <StaffListEditor
-                key={role.name}
-                label={role.name}
-                staffMembers={staff[role.name] || []}
-                isSingle={role.isSingle}
-                onUpdate={(members) => handleRoleStaffUpdate(role.name, members)}
-              />
-            ))}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="space-y-4">
+            {roles
+              .filter((r: StaffRole) => !r.isHidden)
+              .map((role: StaffRole) => (
+                <StaffListEditor
+                  key={role.name}
+                  label={role.name}
+                  staffMembers={staff[role.name] || []}
+                  isSingle={role.isSingle}
+                  onUpdate={(members) => handleRoleStaffUpdate(role.name, members)}
+                />
+              ))}
+          </div>
+          <DragOverlay
+            dropAnimation={{
+              sideEffects: defaultDropAnimationSideEffects({
+                styles: {
+                  active: {
+                    opacity: '0.4',
+                  },
+                },
+              }),
+            }}
+          >
+            {activeId && activeMember ? (
+              <div className="flex items-center justify-between p-3 pl-4 bg-background border rounded-lg shadow-xl ring-2 ring-primary/20">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="text-muted-foreground shrink-0 cursor-grabbing p-1.5">
+                    <GripVertical className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-sm text-foreground/90 truncate">
+                      {activeMember.name}
+                    </p>
+                    <p className="text-[10px] font-mono text-muted-foreground/70 tracking-tighter uppercase">
+                      {activeMember.cedula || 'SIN CÉDULA'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </div>
       <div className="flex justify-end pt-6">
         <Button onClick={handleGenerateOrder}>Generar Orden del Día</Button>

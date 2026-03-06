@@ -1,16 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   User,
   LayoutGrid,
   ShieldCheck,
-  CalendarCheck,
-  Download,
-  Upload,
   PlusCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -18,21 +15,21 @@ import { usePersonnel } from '@/hooks/use-personnel';
 import { useRoles } from '@/hooks/use-roles';
 import { useDepartments } from '@/hooks/use-departments';
 import { useGuards } from '@/hooks/use-guards';
-import { useAttendance } from '@/hooks/use-attendance';
+
 import { useReports } from '@/hooks/use-reports';
 import type { StaffMember } from '@/types';
 import { StructureManager } from '@/components/structure-manager';
-import { logger } from '@/lib/logger';
 import { DataTableSkeleton } from '@/components/ui/loading-skeleton';
 import { FeatureErrorBoundary } from '@/components/error-boundary-feature';
 
 // Extracted components
 import { PersonnelTable } from './components/personnel-table';
 import { AddEditPersonnelDialog } from './components/add-edit-personnel-dialog';
-import { AttendanceManager } from './components/attendance-manager';
+
 import { GuardAssignmentPanel } from './components/guard-assignment-panel';
 import { PersonnelHistoryDialog } from './components/personnel-history-dialog';
-import { downloadPersonnelTemplate, parsePersonnelCSV } from '@/lib/csv-utils';
+import { CsvImportButton } from './components/csv-import-button';
+
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Trash2 } from 'lucide-react';
 
@@ -46,14 +43,13 @@ function PersonnelPageContent() {
     removeMember,
     removeMembers,
     isLoaded: personnelLoaded,
-    savePersonnel,
     isCedulaDuplicate,
   } = usePersonnel();
   const { roles, saveRoles, isLoaded: rolesLoaded } = useRoles();
   const { departments, saveDepartments, isLoaded: deptsLoaded } = useDepartments();
   const { guards, saveGuards, isLoaded: guardsLoaded } = useGuards();
-  const { records, markAttendance, isLoaded: attendanceLoaded } = useAttendance();
-  const { reports } = useReports();
+
+  useReports();
 
   // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -63,12 +59,11 @@ function PersonnelPageContent() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
 
-  // Attendance state
-  const [attendanceDate, setAttendanceDate] = useState(new Date());
+
 
   // Loading state
   const isLoading =
-    !personnelLoaded || !rolesLoaded || !deptsLoaded || !guardsLoaded || !attendanceLoaded;
+    !personnelLoaded || !rolesLoaded || !deptsLoaded || !guardsLoaded;
 
   if (isLoading) {
     return (
@@ -145,42 +140,7 @@ function PersonnelPageContent() {
     setIsHistoryDialogOpen(true);
   };
 
-  // CSV Export
-  const downloadTemplate = () => {
-    downloadPersonnelTemplate();
-  };
 
-  // CSV Import
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const content = e.target?.result as string;
-      if (!content) return;
-
-      try {
-        const importedMembers = parsePersonnelCSV(content);
-        const { added, skipped } = await addMembers(importedMembers);
-
-        if (skipped > 0 && added.length > 0) {
-          toast.success(
-            `${added.length} personas importadas, ${skipped} omitidas por ser duplicadas.`
-          );
-        } else if (skipped > 0 && added.length === 0) {
-          toast.warning(`No se importaron datos. Todas las personas (${skipped}) ya existen.`);
-        } else {
-          toast.success(`${added.length} personas importadas correctamente.`);
-        }
-      } catch (error) {
-        toast.error('Error al importar el archivo CSV');
-        logger.error('Failed to import personnel CSV', error, { feature: 'Personnel' });
-      }
-    };
-    reader.readAsText(file);
-    event.target.value = ''; // Reset input
-  };
 
   return (
     <div className="container mx-auto p-8 space-y-6">
@@ -207,7 +167,7 @@ function PersonnelPageContent() {
       {/* Main Tabs */}
       <Tabs defaultValue="personnel" className="space-y-6">
         <div className="overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
-          <TabsList className="flex w-max sm:grid sm:w-full sm:grid-cols-4 sm:max-w-2xl">
+          <TabsList className="flex w-max sm:grid sm:w-full sm:grid-cols-3 sm:max-w-xl">
             <TabsTrigger value="personnel" className="flex items-center gap-1.5 px-3">
               <User className="h-3.5 w-3.5" />
               <span className="text-xs sm:text-sm">Funcionarios</span>
@@ -220,38 +180,14 @@ function PersonnelPageContent() {
               <ShieldCheck className="h-3.5 w-3.5" />
               <span className="text-xs sm:text-sm">Guardias</span>
             </TabsTrigger>
-            <TabsTrigger value="attendance" className="flex items-center gap-1.5 px-3">
-              <CalendarCheck className="h-3.5 w-3.5" />
-              <span className="text-xs sm:text-sm">Asistencia</span>
-            </TabsTrigger>
+
           </TabsList>
         </div>
 
         {/* Personnel Tab */}
         <TabsContent value="personnel" className="space-y-6 mt-0">
           <div className="flex flex-wrap items-center justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={downloadTemplate} className="h-8 text-xs">
-              <Download className="mr-1.5 h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Plantilla</span>
-              <span className="sm:hidden">CSV</span>
-            </Button>
-            <div className="relative">
-              <Button
-                variant="outline"
-                size="sm"
-                className="relative overflow-hidden cursor-pointer h-8 text-xs"
-              >
-                <Upload className="mr-1.5 h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Importar CSV</span>
-                <span className="sm:hidden">Importar</span>
-                <input
-                  type="file"
-                  accept=".csv"
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                  onChange={handleFileUpload}
-                />
-              </Button>
-            </div>
+            <CsvImportButton onImport={addMembers} personnel={personnel} />
             <Button size="sm" onClick={handleAddNew} className="h-8 text-xs shadow-sm">
               <PlusCircle className="mr-1.5 h-3.5 w-3.5" />
               Personal
@@ -262,6 +198,7 @@ function PersonnelPageContent() {
             <CardContent className="pt-6">
               <PersonnelTable
                 personnel={personnel}
+                departments={departments}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onViewHistory={handleViewHistory}
@@ -279,10 +216,6 @@ function PersonnelPageContent() {
             departments={departments}
             onRolesChange={saveRoles}
             onDepartmentsChange={saveDepartments}
-            onAddDepartment={() => { }}
-            onRemoveDepartment={() => { }}
-            onAddRole={() => { }}
-            onRemoveRole={() => { }}
             onSave={() => { }}
           />
         </TabsContent>
@@ -297,16 +230,7 @@ function PersonnelPageContent() {
           />
         </TabsContent>
 
-        {/* Attendance Tab */}
-        <TabsContent value="attendance">
-          <AttendanceManager
-            personnel={personnel}
-            date={attendanceDate}
-            onDateChange={setAttendanceDate}
-            attendanceRecords={records}
-            onMarkAttendance={markAttendance}
-          />
-        </TabsContent>
+
       </Tabs>
 
       {/* Add/Edit Dialog */}

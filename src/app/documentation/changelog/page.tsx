@@ -24,10 +24,36 @@ export default function ChangelogPage() {
           <CardContent className="space-y-8 pt-6">
             <section>
               <h2 className="text-xl font-semibold mb-3">
-                Versión 1.6.0 <Badge variant="outline">Actual</Badge>
+                Versión 1.7.0 <Badge variant="outline">Actual</Badge>
               </h2>
               <p className="text-sm text-muted-foreground mb-4">
                 Lanzada hoy, {new Date().toLocaleDateString('es-ES')}.
+              </p>
+              <ul className="space-y-2 list-disc list-inside">
+                <li>
+                  <span className="font-semibold">Mapeo Inteligente (Clave=Valor):</span> Los bloques <Code>{'[?{Campo}] Key=Value [/]'}</Code> ahora definen opciones de menú donde la Clave es para la UI y el Valor es el texto largo que se imprime en el reporte.
+                </li>
+                <li>
+                  <span className="font-semibold">Traducción Automática:</span> Las etiquetas <Code>{'{Campo}'}</Code> ahora usan automáticamente el texto mapeado si existe una coincidencia, permitiendo reportes más limpios y profesionales.
+                </li>
+                <li>
+                  <span className="font-semibold">Bloques "Silenciosos":</span> Se rediseñó el motor para que los bloques de definición de mapeo sean invisibles en el reporte final, eliminando cualquier duplicidad de texto.
+                </li>
+                <li>
+                  <span className="font-semibold">Deduplicación Global:</span> Los campos del formulario ahora se unifican automáticamente a través de múltiples secciones, evitando entradas redundantes y errores de claves duplicadas.
+                </li>
+                <li>
+                  <span className="font-semibold">Separadores Visuales:</span> Soporte para secciones de separación <Code>{'[""]'}</Code> que permiten organizar mejor los formularios extensos.
+                </li>
+              </ul>
+            </section>
+            <Separator />
+            <section>
+              <h2 className="text-xl font-semibold mb-3">
+                Versión 1.6.0
+              </h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Lanzada el 28/01/2026.
               </p>
               <ul className="space-y-2 list-disc list-inside">
                 <li>

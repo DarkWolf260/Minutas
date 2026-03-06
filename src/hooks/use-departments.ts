@@ -51,7 +51,17 @@ export function useDepartments() {
         // Initial departments if DB is empty
         db.departments
           .bulkInsert(defaultDepartments)
-          .catch((err) => logger.error('Failed to insert default departments', err, { feature: 'Departments' }));
+          .catch((err) => {
+            const isConflict =
+              err.code === 'CONFLICT' ||
+              err.status === 409 ||
+              err.message?.includes('conflict') ||
+              err.parameters?.writeError?.status === 409;
+
+            if (!isConflict) {
+              logger.error('Failed to insert default departments', err, { feature: 'Departments' });
+            }
+          });
       }
       setIsLoaded(true);
     });

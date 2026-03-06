@@ -35,6 +35,7 @@ import { useDatabase } from '@/lib/db/db-provider';
 import { StaffMemberSchema } from '@/lib/validations/schemas';
 import { logger } from '@/lib/logger';
 import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
+import { generateId } from '@/lib/utils/id';
 
 export function usePersonnel() {
   const db = useDatabase();
@@ -59,7 +60,7 @@ export function usePersonnel() {
         // Generate ID and create complete member object
         const memberWithId: StaffMember = {
           ...newMember,
-          id: crypto.randomUUID(),
+          id: generateId('personnel'),
         };
 
         // Validate with Zod
@@ -89,7 +90,7 @@ export function usePersonnel() {
           return;
         }
 
-        const id = `personnel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${Math.random().toString(36).substr(2, 5)}`;
+        const id = generateId('personnel');
         newMembers.push({ ...m, id });
 
         if (m.cedula) existingCedulas.add(m.cedula);
@@ -154,14 +155,42 @@ export function usePersonnel() {
   const savePersonnel = useCallback(
     async (newPersonnel: StaffMember[]) => {
       if (!db) return;
-      // In RxDB, "savePersonnel" (batch update everything) is less common,
-      // but we can implement it by removing all and inserting new ones if needed,
-      // or better, just leave it as it's mostly used for imports or complex sync.
-      // For compatibility with old API:
-      const allDocs = await db.personnel.find().exec();
-      await Promise.all(allDocs.map((d) => d.remove()));
-      if (newPersonnel.length > 0) {
-        await db.personnel.bulkInsert(newPersonnel);
+      // Diff-based approach: compute adds, updates, and removes
+      // instead of destructive delete-all + re-insert
+      const existingDocs = await db.personnel.find().exec();
+      const existingMap = new Map(existingDocs.map((d) => [d.id, d]));
+      const newMap = new Map(newPersonnel.map((p) => [p.id, p]));
+
+      // Documents to remove (exist in DB but not in new list)
+      const toRemove = existingDocs.filter((d) => !newMap.has(d.id));
+
+      // Documents to insert (exist in new list but not in DB)
+      const toInsert = newPersonnel.filter((p) => !existingMap.has(p.id));
+
+      // Documents to update (exist in both, check for changes)
+      const toUpdate: { doc: typeof existingDocs[0]; data: StaffMember }[] = [];
+      for (const p of newPersonnel) {
+        const existing = existingMap.get(p.id);
+        if (existing) {
+          const existingData = existing.toMutableJSON();
+          const hasChanges = JSON.stringify(existingData) !== JSON.stringify(p);
+          if (hasChanges) {
+            toUpdate.push({ doc: existing, data: p });
+          }
+        }
+      }
+
+      // Execute all operations
+      if (toRemove.length > 0) {
+        await Promise.all(toRemove.map((d) => d.remove()));
+      }
+      if (toUpdate.length > 0) {
+        await Promise.all(
+          toUpdate.map(({ doc, data }) => doc.patch(data))
+        );
+      }
+      if (toInsert.length > 0) {
+        await db.personnel.bulkInsert(toInsert);
       }
     },
     [db]

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, KeyboardEvent, useRef } from 'react';
+import React, { useState, KeyboardEvent, useRef, forwardRef } from 'react';
 import { Input } from './input';
 import { Badge } from './badge';
 import { X, ChevronsUpDown } from 'lucide-react';
@@ -15,146 +15,167 @@ interface MultiInputProps {
   placeholder?: string;
   disabled?: boolean;
   isSingle?: boolean;
+  className?: string; // Added className
+  onBlur?: () => void; // Added onBlur
 }
 
-export function MultiInput({
-  value = [],
-  onChange,
-  options = [],
-  placeholder,
-  disabled,
-  isSingle = false,
-}: MultiInputProps) {
-  const [inputValue, setInputValue] = useState('');
-  const [open, setOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
+  (
+    {
+      value = [],
+      onChange,
+      options = [],
+      placeholder,
+      disabled,
+      isSingle = false,
+      className,
+      onBlur,
+    },
+    ref
+  ) => {
+    const [inputValue, setInputValue] = useState('');
+    const [open, setOpen] = useState(false);
+    const internalInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAddValue = (newValue: string) => {
-    const trimmed = newValue.trim();
-    if (isSingle) {
-      onChange(trimmed);
-    } else {
-      if (trimmed && !value.includes(trimmed)) {
-        onChange([...value, trimmed]);
+    const handleAddValue = (newValue: string) => {
+      const trimmed = newValue.trim();
+      if (isSingle) {
+        onChange(trimmed);
+      } else {
+        if (trimmed && !value.includes(trimmed)) {
+          onChange([...value, trimmed]);
+        }
       }
-    }
-    setInputValue('');
-  };
+      setInputValue('');
+    };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddValue(inputValue);
+    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleAddValue(inputValue);
+        setOpen(false);
+      } else if (e.key === 'Backspace' && inputValue === '' && value.length > 0 && !isSingle) {
+        const lastValue = value[value.length - 1];
+        if (lastValue) handleRemoveValue(lastValue);
+      }
+    };
+
+    const handleRemoveValue = (valueToRemove: string) => {
+      onChange(value.filter((v) => v !== valueToRemove));
+    };
+
+    const handleSelectOption = (option: string) => {
+      handleAddValue(option);
       setOpen(false);
-    } else if (e.key === 'Backspace' && inputValue === '' && value.length > 0 && !isSingle) {
-      const lastValue = value[value.length - 1];
-      if (lastValue) handleRemoveValue(lastValue);
-    }
-  };
+      internalInputRef.current?.focus();
+    };
 
-  const handleRemoveValue = (valueToRemove: string) => {
-    onChange(value.filter((v) => v !== valueToRemove));
-  };
+    const displayValue = isSingle ? (Array.isArray(value) ? value[0] || '' : value) : inputValue;
 
-  const handleSelectOption = (option: string) => {
-    handleAddValue(option);
-    setOpen(false);
-    inputRef.current?.focus();
-  };
+    const currentValuesSet = new Set(value);
 
-  const displayValue = isSingle ? (Array.isArray(value) ? value[0] || '' : value) : inputValue;
+    const filteredOptions = options.filter(
+      (option) =>
+        !currentValuesSet.has(option) && option.toLowerCase().includes(displayValue.toLowerCase())
+    );
 
-  const currentValuesSet = new Set(value);
-
-  const filteredOptions = options.filter(
-    (option) =>
-      !currentValuesSet.has(option) && option.toLowerCase().includes(displayValue.toLowerCase())
-  );
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <div
-          role="combobox"
-          aria-expanded={open}
-          className={cn(
-            'flex flex-wrap items-center gap-2 rounded-md border border-input p-1.5 min-h-10 relative',
-            disabled && 'cursor-not-allowed opacity-50 bg-muted'
-          )}
-          onClick={() => !disabled && inputRef.current?.focus()}
-        >
-          {!isSingle &&
-            value.map((item) => (
-              <Badge key={item} variant="secondary" className="gap-1.5 pr-1 text-sm">
-                {item}
-                {!disabled && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveValue(item);
-                    }}
-                    className="rounded-full hover:bg-muted-foreground/20"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </Badge>
-            ))}
-          <Input
-            ref={inputRef}
-            value={isSingle ? (Array.isArray(value) ? value[0] || '' : value || '') : inputValue}
-            onChange={(e) => {
-              if (isSingle) {
-                onChange(e.target.value);
-              } else {
-                setInputValue(e.target.value);
-              }
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            disabled={disabled}
-            className="flex-1 border-0 shadow-none focus-visible:ring-0 p-0 h-8 bg-transparent min-w-[100px]"
-          />
-          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50 absolute right-3 top-1/2 -translate-y-1/2" />
-        </div>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] p-0"
-        onOpenAutoFocus={(e) => e.preventDefault()}
-      >
-        <div className="p-1 max-h-60 overflow-y-auto">
-          {filteredOptions.length > 0 ? (
-            filteredOptions.map((option) => (
-              <Button
-                key={option}
-                variant="ghost"
-                className="w-full justify-start h-8 px-2 font-normal"
-                onClick={() => handleSelectOption(option)}
-              >
-                {option}
-              </Button>
-            ))
-          ) : (
-            <p className="p-2 text-center text-xs text-muted-foreground">
-              {options.length > 0 && currentValuesSet.size === options.length
-                ? 'Todas las opciones seleccionadas.'
-                : 'No hay opciones disponibles.'}
-            </p>
-          )}
-          {displayValue &&
-            !options.includes(displayValue) &&
-            !currentValuesSet.has(displayValue) && (
-              <Button
-                variant="ghost"
-                className="w-full justify-start h-8 px-2 font-normal text-primary"
-                onClick={() => handleSelectOption(displayValue)}
-              >
-                Añadir "{displayValue}"
-              </Button>
+    return (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <div
+            role="combobox"
+            aria-expanded={open}
+            aria-haspopup="listbox"
+            aria-controls="multi-input-options"
+            className={cn(
+              'flex flex-wrap items-center gap-2 rounded-md border border-input p-1.5 min-h-10 relative bg-background',
+              disabled && 'cursor-not-allowed opacity-50 bg-muted',
+              className // Apply className to container
             )}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
+            onClick={() => !disabled && internalInputRef.current?.focus()}
+          >
+            {!isSingle &&
+              value.map((item) => (
+                <Badge key={item} variant="secondary" className="gap-1.5 pr-1 text-sm">
+                  {item}
+                  {!disabled && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveValue(item);
+                      }}
+                      className="rounded-full hover:bg-muted-foreground/20"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </Badge>
+              ))}
+            <Input
+              ref={(node) => {
+                internalInputRef.current = node;
+                if (typeof ref === 'function') ref(node);
+                else if (ref) ref.current = node;
+              }}
+              value={isSingle ? (Array.isArray(value) ? value[0] || '' : value || '') : inputValue}
+              onChange={(e) => {
+                if (isSingle) {
+                  onChange(e.target.value);
+                } else {
+                  setInputValue(e.target.value);
+                }
+              }}
+              onBlur={onBlur} // Pass onBlur
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              disabled={disabled}
+              className="flex-1 border-0 shadow-none focus-visible:ring-0 p-0 h-8 bg-transparent min-w-[100px]"
+            />
+            <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50 absolute right-3 top-1/2 -translate-y-1/2" />
+          </div>
+        </PopoverTrigger>
+        <PopoverContent
+          id="multi-input-options"
+          className="w-[var(--radix-popover-trigger-width)] p-0"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          <div role="listbox" className="p-1 max-h-60 overflow-y-auto">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => (
+                <Button
+                  key={option}
+                  variant="ghost"
+                  className="w-full justify-start h-8 px-2 font-normal"
+                  role="option"
+                  onClick={() => handleSelectOption(option)}
+                >
+                  {option}
+                </Button>
+              ))
+            ) : (
+              <p className="p-2 text-center text-xs text-muted-foreground">
+                {options.length > 0 && currentValuesSet.size === options.length
+                  ? 'Todas las opciones seleccionadas.'
+                  : 'No hay opciones disponibles.'}
+              </p>
+            )}
+            {displayValue &&
+              !options.includes(displayValue) &&
+              !currentValuesSet.has(displayValue) && (
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start h-8 px-2 font-normal text-primary"
+                  role="option"
+                  onClick={() => handleSelectOption(displayValue)}
+                >
+                  Añadir &quot;{displayValue}&quot;
+                </Button>
+              )}
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
+  }
+);
+MultiInput.displayName = 'MultiInput';

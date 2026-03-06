@@ -4,7 +4,6 @@ import { useCallback } from 'react';
 import { useDatabase } from '@/lib/db/db-provider';
 import type { PersonnelAssignment, Staff } from '@/types';
 import { logger } from '@/lib/logger';
-import { format } from 'date-fns';
 
 /**
  * Hook for managing personnel assignment history.

@@ -16,11 +16,10 @@ export function GlobalTagsManager() {
   const {
     definitions,
     saveDefinitions,
-    removeDefinition,
     isLoaded: definitionsLoaded,
   } = useFieldDefinitions();
   const { roles, isLoaded: rolesLoaded } = useRoles();
-  const { units, isLoaded: unitsLoaded } = useUnits();
+  const { isLoaded: unitsLoaded } = useUnits();
   const orderedFields = useMemo(() => Object.keys(definitions), [definitions]);
 
   // Unused handlers removed for cleanliness

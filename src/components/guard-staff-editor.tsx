@@ -5,13 +5,35 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { Guard, Staff, StaffRole, Department, StaffMember } from '@/types';
-import { Trash2, Search, Check, Calculator } from 'lucide-react';
+import { Trash2, Search, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePersonnel } from '@/hooks/use-personnel';
 import { usePersonnelHistory } from '@/hooks/use-personnel-history';
-import { LEADER_ROLES } from '@/constants/roles';
+
 import { format } from 'date-fns';
-import { Popover, PopoverContent, PopoverTrigger, PopoverAnchor } from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover';
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+  closestCenter,
+  DragOverlay,
+  defaultDropAnimationSideEffects,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical } from 'lucide-react';
 
 interface StaffListEditorProps {
   label: string;
@@ -20,7 +42,65 @@ interface StaffListEditorProps {
   onUpdate: (newMembers: StaffMember[]) => void;
 }
 
+function SortableStaffItem({
+  member,
+  onRemove,
+}: {
+  member: StaffMember;
+  onRemove: (id: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: member.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 100 : 'auto',
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        'flex items-center justify-between p-3 pl-4 hover:bg-muted/20 transition-colors group bg-card border-b last:border-0',
+        isDragging && 'opacity-30 border-primary/50 bg-muted/30'
+      )}
+    >
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab p-1.5 text-muted-foreground hover:text-foreground shrink-0 touch-none active:cursor-grabbing rounded hover:bg-muted transition-colors"
+        >
+          <GripVertical className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-bold text-sm text-foreground/90 truncate">{member.name}</p>
+          <p className="text-[10px] font-mono text-muted-foreground/70 tracking-tighter uppercase">
+            {member.cedula || 'SIN CÉDULA'}
+          </p>
+        </div>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 opacity-0 group-hover:opacity-100 transition-all rounded-lg"
+        onClick={() => onRemove(member.id)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
 export function StaffListEditor({ label, staffMembers, isSingle, onUpdate }: StaffListEditorProps) {
+  const { setNodeRef } = useDroppable({
+    id: label,
+  });
   const { personnel } = usePersonnel();
   const [searchQuery, setSearchQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -162,39 +242,31 @@ export function StaffListEditor({ label, staffMembers, isSingle, onUpdate }: Sta
         )}
 
         <div
+          ref={setNodeRef}
           className={cn(
-            'divide-y divide-muted/50 max-h-48 overflow-y-auto',
+            'divide-y divide-muted/50 min-h-[40px]',
             staffMembers.length === 0 && canAdd && 'hidden'
           )}
         >
-          {staffMembers.length > 0
-            ? staffMembers.map((member) => (
-              <div
-                key={member.id}
-                className="flex items-center justify-between p-3 pl-4 hover:bg-muted/20 transition-colors group"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-sm text-foreground/90 truncate">{member.name}</p>
-                  <p className="text-[10px] font-mono text-muted-foreground/70 tracking-tighter uppercase">
-                    {member.cedula || 'SIN CÉDULA'}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 opacity-0 group-hover:opacity-100 transition-all rounded-lg"
-                  onClick={() => handleRemove(member.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+          {staffMembers.length > 0 ? (
+            <SortableContext
+              id={label}
+              items={staffMembers.map((m) => m.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="divide-y divide-muted/50">
+                {staffMembers.map((member) => (
+                  <SortableStaffItem key={member.id} member={member} onRemove={handleRemove} />
+                ))}
               </div>
-            ))
-            : !canAdd && (
+            </SortableContext>
+          ) : (
+            !canAdd && (
               <div className="p-4 text-center text-[10px] uppercase font-bold text-muted-foreground/50 tracking-widest italic">
                 Cargo No Asignado
               </div>
-            )}
+            )
+          )}
         </div>
       </div>
     </div>
@@ -206,7 +278,6 @@ interface GuardStaffEditorProps {
   roles: StaffRole[];
   onUpdate: (updatedGuard: Guard | Department) => void;
   onSave: () => void;
-  scopeId: string;
 }
 
 export function GuardStaffEditor({
@@ -214,14 +285,117 @@ export function GuardStaffEditor({
   roles,
   onUpdate,
   onSave,
-  scopeId,
 }: GuardStaffEditorProps) {
   const [staff, setStaff] = useState<Staff>(guard.staff || {});
   const { recordAssignments } = usePersonnelHistory();
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const activeMember = useMemo(() => {
+    if (!activeId) return null;
+    for (const roleMembers of Object.values(staff)) {
+      const found = roleMembers.find((m) => m.id === activeId);
+      if (found) return found;
+    }
+    return null;
+  }, [staff, activeId]);
 
   useEffect(() => {
     setStaff(guard.staff || {});
   }, [guard.staff]);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    if (!over) return;
+
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    // Find source container
+    let activeContainer: string | null = null;
+    for (const [roleName, members] of Object.entries(staff)) {
+      if (members.some((m) => m.id === activeId)) {
+        activeContainer = roleName;
+        break;
+      }
+    }
+
+    // Find destination container
+    let overContainer: string | null = null;
+    if (staff[overId]) {
+      overContainer = overId;
+    } else {
+      for (const [roleName, members] of Object.entries(staff)) {
+        if (members.some((m) => m.id === overId)) {
+          overContainer = roleName;
+          break;
+        }
+      }
+    }
+
+    if (!activeContainer || !overContainer) return;
+
+    if (activeContainer === overContainer) {
+      const containerMembers = staff[activeContainer];
+      if (!containerMembers) return;
+
+      const oldIndex = containerMembers.findIndex((m) => m.id === activeId);
+      const newIndex = containerMembers.findIndex((m) => m.id === overId);
+      if (oldIndex !== -1 && newIndex !== -1) {
+        handleListUpdate(activeContainer, arrayMove(containerMembers, oldIndex, newIndex));
+      }
+    } else {
+      const sourceMembers = staff[activeContainer];
+      if (!sourceMembers) return;
+
+      const activeIndex = sourceMembers.findIndex((m) => m.id === activeId);
+      const activeItem = sourceMembers[activeIndex];
+      if (!activeItem) return;
+
+      const destMembers = staff[overContainer] || [];
+      const overIndex = destMembers.findIndex((m) => m.id === overId);
+
+      const targetRole = roles.find((r) => r.name === overContainer);
+
+      setStaff((prev) => {
+        const newStaff = { ...prev };
+        if (activeContainer) {
+          newStaff[activeContainer] = (prev[activeContainer] || []).filter((m) => m.id !== activeId);
+        }
+
+        if (overContainer) {
+          const currentDestMembers = prev[overContainer] || [];
+          if (targetRole?.isSingle) {
+            newStaff[overContainer] = [activeItem];
+          } else {
+            const updatedDestMembers = [...currentDestMembers];
+            if (overIndex === -1) {
+              updatedDestMembers.push(activeItem);
+            } else {
+              updatedDestMembers.splice(overIndex, 0, activeItem);
+            }
+            newStaff[overContainer] = updatedDestMembers;
+          }
+        }
+        return newStaff;
+      });
+    }
+  };
 
   const handleSave = async () => {
     onUpdate({ ...guard, staff });
@@ -239,42 +413,64 @@ export function GuardStaffEditor({
   };
 
   const availableRoles = useMemo(() => {
-    return roles.filter((role) => {
-      // Explicit exclusions requested by user
-      if (role.name === LEADER_ROLES.DIRECTOR || role.name === LEADER_ROLES.JEFE_OPERACIONES)
-        return false;
-
-      // Explicit inclusions requested by user
-      if (role.name === 'Analista de CEMUPRAD') return true;
-
-      // Default scope logic
-      return (
-        !role.departmentScope ||
-        role.departmentScope.length === 0 ||
-        role.departmentScope.includes(scopeId)
-      );
-    });
-  }, [roles, scopeId]);
+    return roles.filter((role) => !role.isHidden);
+  }, [roles]);
 
   return (
     <div className="space-y-4 p-1">
-      <div className="space-y-4">
-        {availableRoles.map((role) => (
-          <StaffListEditor
-            key={role.name}
-            label={role.name}
-            staffMembers={staff[role.name] || []}
-            isSingle={role.isSingle}
-            onUpdate={(members) => handleListUpdate(role.name, members)}
-          />
-        ))}
-        {availableRoles.length === 0 && (
-          <p className="p-4 text-center text-sm text-muted-foreground">
-            No hay cargos definidos para este departamento. Puedes definirlos en "Gestión de
-            Personal".
-          </p>
-        )}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="space-y-4">
+          {availableRoles.map((role) => (
+            <StaffListEditor
+              key={role.name}
+              label={role.name}
+              staffMembers={staff[role.name] || []}
+              isSingle={role.isSingle}
+              onUpdate={(members) => handleListUpdate(role.name, members)}
+            />
+          ))}
+          {availableRoles.length === 0 && (
+            <p className="p-4 text-center text-sm text-muted-foreground">
+              No hay cargos definidos para este departamento. Puedes definirlos en "Gestión de
+              Personal".
+            </p>
+          )}
+        </div>
+        <DragOverlay
+          dropAnimation={{
+            sideEffects: defaultDropAnimationSideEffects({
+              styles: {
+                active: {
+                  opacity: '0.4',
+                },
+              },
+            }),
+          }}
+        >
+          {activeId && activeMember ? (
+            <div className="flex items-center justify-between p-3 pl-4 bg-background border rounded-lg shadow-xl ring-2 ring-primary/20">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="text-muted-foreground shrink-0 cursor-grabbing p-1.5">
+                  <GripVertical className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-sm text-foreground/90 truncate">
+                    {activeMember.name}
+                  </p>
+                  <p className="text-[10px] font-mono text-muted-foreground/70 tracking-tighter uppercase">
+                    {activeMember.cedula || 'SIN CÉDULA'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       <div className="flex justify-end pt-2">
         <Button onClick={handleSave}>Guardar Personal</Button>

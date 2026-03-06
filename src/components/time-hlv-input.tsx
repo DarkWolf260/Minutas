@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useRef, ChangeEvent } from 'react';
+import { useMemo, useRef, ChangeEvent, forwardRef } from 'react';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 const MAX_DIGITS = 8;
 
@@ -44,98 +45,110 @@ const getCursorPosition = (digitCount: number): number => {
   return 24; // Default to the end
 };
 
-export function TimeHlvInput({
-  value: propValue,
-  onChange: onFormChange,
-  disabled = false,
-  showHelperText = true,
-}: {
+interface TimeHlvInputProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
   showHelperText?: boolean;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Extract only digits from the prop value
-  const digits = useMemo(() => (propValue || '').replace(/\D/g, ''), [propValue]);
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const newRawValue = e.target.value;
-    const newDigits = newRawValue.replace(/\D/g, '').slice(0, MAX_DIGITS);
-
-    const formatted = formatHlv(newDigits);
-    onFormChange(formatted);
-
-    // After the state updates and re-renders, set the cursor position correctly.
-    requestAnimationFrame(() => {
-      if (inputRef.current) {
-        const cursorPosition = getCursorPosition(newDigits.length);
-        inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
-      }
-    });
-  };
-
-  // On blur, validate and correct the time if needed (e.g., 25:00 -> 23:59)
-  const handleBlur = () => {
-    if (!digits) return;
-    let correctedDigits = digits;
-
-    // Correct start time
-    if (correctedDigits.length >= 2) {
-      let hours = parseInt(correctedDigits.slice(0, 2), 10);
-      if (hours > 23) {
-        correctedDigits = '23' + correctedDigits.slice(2);
-      }
-    }
-    if (correctedDigits.length >= 4) {
-      let minutes = parseInt(correctedDigits.slice(2, 4), 10);
-      if (minutes > 59) {
-        correctedDigits = correctedDigits.slice(0, 2) + '59' + correctedDigits.slice(4);
-      }
-    }
-
-    // Correct end time if it's a range
-    if (correctedDigits.length > 4) {
-      if (correctedDigits.length >= 6) {
-        let endHours = parseInt(correctedDigits.slice(4, 6), 10);
-        if (endHours > 23) {
-          correctedDigits = correctedDigits.slice(0, 4) + '23' + correctedDigits.slice(6);
-        }
-      }
-      if (correctedDigits.length >= 8) {
-        let endMinutes = parseInt(correctedDigits.slice(6, 8), 10);
-        if (endMinutes > 59) {
-          correctedDigits = correctedDigits.slice(0, 6) + '59';
-        }
-      }
-    }
-
-    // If we corrected anything, update the form.
-    if (correctedDigits !== digits) {
-      onFormChange(formatHlv(correctedDigits));
-    }
-  };
-
-  const formattedValue = useMemo(() => formatHlv(digits), [digits]);
-
-  return (
-    <>
-      <Input
-        ref={inputRef}
-        type="text"
-        value={formattedValue}
-        onChange={handleChange}
-        onBlur={handleBlur}
-        placeholder="--:-- HLV"
-        className="font-mono"
-        disabled={disabled}
-      />
-      {showHelperText && (
-        <p className="text-xs text-muted-foreground mt-1">
-          Este campo no solo es para la hora de inicio, sigue escribiendo
-        </p>
-      )}
-    </>
-  );
+  className?: string; // Added className
+  onBlur?: () => void; // Added onBlur
 }
+
+export const TimeHlvInput = forwardRef<HTMLInputElement, TimeHlvInputProps>(
+  ({ value: propValue, onChange: onFormChange, disabled = false, showHelperText = true, className, onBlur }, ref) => {
+    const internalInputRef = useRef<HTMLInputElement>(null);
+
+    // Extract only digits from the prop value
+    const digits = useMemo(() => (propValue || '').replace(/\D/g, ''), [propValue]);
+
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+      const newRawValue = e.target.value;
+      const newDigits = newRawValue.replace(/\D/g, '').slice(0, MAX_DIGITS);
+
+      const formatted = formatHlv(newDigits);
+      onFormChange(formatted);
+
+      // After the state updates and re-renders, set the cursor position correctly.
+      requestAnimationFrame(() => {
+        if (internalInputRef.current) {
+          const cursorPosition = getCursorPosition(newDigits.length);
+          internalInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+        }
+      });
+    };
+
+    // On blur, validate and correct the time if needed (e.g., 25:00 -> 23:59)
+    const handleBlur = () => {
+      if (!digits) {
+        if (onBlur) onBlur(); // Call external onBlur even if no digits
+        return;
+      }
+      let correctedDigits = digits;
+
+      // Correct start time
+      if (correctedDigits.length >= 2) {
+        let hours = parseInt(correctedDigits.slice(0, 2), 10);
+        if (hours > 23) {
+          correctedDigits = '23' + correctedDigits.slice(2);
+        }
+      }
+      if (correctedDigits.length >= 4) {
+        let minutes = parseInt(correctedDigits.slice(2, 4), 10);
+        if (minutes > 59) {
+          correctedDigits = correctedDigits.slice(0, 2) + '59' + correctedDigits.slice(4);
+        }
+      }
+
+      // Correct end time if it's a range
+      if (correctedDigits.length > 4) {
+        if (correctedDigits.length >= 6) {
+          let endHours = parseInt(correctedDigits.slice(4, 6), 10);
+          if (endHours > 23) {
+            correctedDigits = correctedDigits.slice(0, 4) + '23' + correctedDigits.slice(6);
+          }
+        }
+        if (correctedDigits.length >= 8) {
+          let endMinutes = parseInt(correctedDigits.slice(6, 8), 10);
+          if (endMinutes > 59) {
+            correctedDigits = correctedDigits.slice(0, 6) + '59';
+          }
+        }
+      }
+
+      // If we corrected anything, update the form.
+      if (correctedDigits !== digits) {
+        onFormChange(formatHlv(correctedDigits));
+      }
+
+      // Call external onBlur
+      if (onBlur) onBlur();
+    };
+
+    const formattedValue = useMemo(() => formatHlv(digits), [digits]);
+
+    return (
+      <>
+        <Input
+          ref={(node) => {
+            internalInputRef.current = node;
+            if (typeof ref === 'function') ref(node);
+            else if (ref) ref.current = node;
+          }}
+          type="text"
+          value={formattedValue}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          placeholder="--:-- HLV"
+          className={cn("font-mono", className)}
+          disabled={disabled}
+        />
+        {showHelperText && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Este campo no solo es para la hora de inicio, sigue escribiendo
+          </p>
+        )}
+      </>
+    );
+  }
+);
+TimeHlvInput.displayName = 'TimeHlvInput';

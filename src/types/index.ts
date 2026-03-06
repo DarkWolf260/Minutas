@@ -1,10 +1,23 @@
-'use client';
-
 import { PERSONNEL_STATUS } from '@/constants/personnel';
 import { ATTENDANCE_STATUS } from '@/constants/attendance';
 
 export type PersonnelStatus = (typeof PERSONNEL_STATUS)[keyof typeof PERSONNEL_STATUS];
 export type AttendanceStatus = (typeof ATTENDANCE_STATUS)[keyof typeof ATTENDANCE_STATUS];
+
+/** Represents any value that can appear in a form data field */
+export type FormDataValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | StaffMember
+  | StaffMember[]
+  | FormDataValue[]
+  | { [key: string]: FormDataValue };
+
+/** Typed record for template form data (replaces Record<string, any>) */
+export type FormDataRecord = Record<string, FormDataValue>;
 
 export interface AttendanceRecord {
   id: string;
@@ -22,6 +35,8 @@ export interface StaffMember {
   name: string;
   cedula?: string;
   rank?: string; // Hierarchy / Rank
+  cargo?: string; // Job title / Position
+  titulo?: string; // Academic title (optional, not shown in table)
   roleId?: string;
   status?: PersonnelStatus;
   department?: string;
@@ -33,6 +48,7 @@ export interface StaffRole {
   isSingle: boolean; // True for roles that can only have one person
   departmentScope: string[]; // Array of department IDs, 'OPERATIONS' for guards. Empty array means global.
   isHidden?: boolean; // If true, this role won't appear in the default Orden del Día / Reports
+  order?: number; // Sorting order for reports
 }
 
 // Staff is a record mapping a role name to a list of personnel for that role.
@@ -64,7 +80,7 @@ export interface Report {
   content: string;
   isRelevant: boolean;
   status?: 'En proceso' | 'Finalizado';
-  formData?: Record<string, any>;
+  formData?: FormDataRecord;
 }
 
 export interface GuardReport {
@@ -122,6 +138,9 @@ export interface SectionConfig {
   };
   statisticsCategory?: string; // New: Statistics category associated with this section
   originalContent?: string; // Used for re-parsing conditional blocks
+  isSeparator?: boolean; // True if this section is just a visual separator
+  isMapping?: boolean; // True if this is a mapping conditional [?{Field}] Key=Value [/]
+  isSelfContained?: boolean; // True if this is a self-contained section ["Title" {field}]
 }
 
 export interface TemplateConfig {
@@ -149,7 +168,7 @@ export interface Template {
 export interface ReportDraft {
   id?: string;
   templateId: string;
-  formData: Record<string, any>;
+  formData: FormDataRecord;
   lastSaved?: string;
 }
 

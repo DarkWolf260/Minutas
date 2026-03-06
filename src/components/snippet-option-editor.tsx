@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { FieldConfig, SnippetOption } from '@/types';
 import { PlusCircle, Trash2 } from 'lucide-react';
+import { generateId } from '@/lib/utils/id';
 
 interface SnippetOptionEditorProps {
   config: FieldConfig;
@@ -21,7 +22,7 @@ export const SnippetOptionEditor = ({ config, onUpdate }: SnippetOptionEditorPro
   };
 
   const handleAddOption = () => {
-    const newOption: SnippetOption = { id: `opt_${Date.now()}`, label: '', value: '' };
+    const newOption: SnippetOption = { id: generateId('opt'), label: '', value: '' };
     const newOptions = [...(config.snippetOptions || []), newOption];
     onUpdate({ ...config, snippetOptions: newOptions });
   };

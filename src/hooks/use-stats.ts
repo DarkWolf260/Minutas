@@ -6,7 +6,6 @@ import { useReports } from './use-reports';
 import { useTemplates } from './use-templates';
 import { useAddresses } from './use-addresses';
 import { format } from 'date-fns/format';
-import { startOfWeek } from 'date-fns/startOfWeek';
 import { eachDayOfInterval } from 'date-fns/eachDayOfInterval';
 import { subDays } from 'date-fns/subDays';
 import { es } from 'date-fns/locale';
@@ -36,7 +35,7 @@ export function useStats() {
         try {
           const month = format(new Date(report.timestamp), 'MMM yyyy', { locale: es });
           reportsByMonth[month] = (reportsByMonth[month] || 0) + 1;
-        } catch (error) {
+        } catch {
           logger.warn('Invalid timestamp for report', { feature: 'Stats', metadata: { reportId: report.id } });
         }
       }
@@ -56,7 +55,7 @@ export function useStats() {
         try {
           const reportDate = format(new Date(r.timestamp), 'yyyy-MM-dd');
           return reportDate === dayFull;
-        } catch (error) {
+        } catch {
           return false;
         }
       }).length;
@@ -97,7 +96,7 @@ export function useStats() {
         .map((r) => {
           try {
             return format(new Date(r.timestamp), 'yyyy-MM-dd');
-          } catch (error) {
+          } catch {
             return '';
           }
         })
@@ -112,7 +111,7 @@ export function useStats() {
       .sort((a, b) => {
         try {
           return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-        } catch (error) {
+        } catch {
           return 0;
         }
       })

@@ -5,18 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { GuardStaffEditor } from '@/components/guard-staff-editor';
-import { PlusCircle, Trash2, ShieldCheck, ExternalLink } from 'lucide-react';
+import { PlusCircle, Trash2, ShieldCheck } from 'lucide-react';
 import type { Guard, StaffMember, StaffRole, Department } from '@/types';
+import { LEADER_ROLES } from '@/constants/roles';
 import { toast } from 'sonner';
-import Link from 'next/link';
 
 interface GuardAssignmentPanelProps {
   guards: Guard[];
@@ -54,13 +47,22 @@ export function GuardAssignmentPanel({
       return;
     }
 
+    // Pre-load Director and Jefe de Operaciones from the personnel list
+    const preStaff: Record<string, StaffMember[]> = {};
+    const leaderRoles = [LEADER_ROLES.DIRECTOR, LEADER_ROLES.JEFE_OPERACIONES];
+    leaderRoles.forEach((roleName) => {
+      const member = personnel.find(
+        (p) => p.roleId?.toLowerCase() === roleName.toLowerCase()
+      );
+      if (member) preStaff[roleName] = [member];
+    });
+
     const newGuard: Guard = {
       id: guardId,
-      staff: {},
+      staff: preStaff,
     };
 
     const updatedGuards = [...guards, newGuard].sort((a, b) => a.id.localeCompare(b.id));
-
     await onGuardUpdate(updatedGuards);
     setSelectedGuardId(guardId);
     setNewGuardName('');
@@ -166,7 +168,6 @@ export function GuardAssignmentPanel({
                 onUpdate={handleStaffUpdate}
                 roles={roles}
                 onSave={() => toast.success('Personal de guardia actualizado')}
-                scopeId="OPERATIONS"
               />
             </CardContent>
           </Card>

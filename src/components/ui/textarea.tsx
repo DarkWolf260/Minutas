@@ -13,7 +13,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     const internalRef = React.useRef<HTMLTextAreaElement>(null);
     React.useImperativeHandle(ref, () => internalRef.current!);
 
-    const { rows, ...rest } = props;
+    const { rows: _rows, ...rest } = props;
 
     React.useLayoutEffect(() => {
       const textarea = internalRef.current;

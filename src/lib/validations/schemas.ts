@@ -1,11 +1,14 @@
 /**
  * Zod Validation Schemas for Minutas Project
- * 
+ *
  * This file contains all the Zod schemas for validating data throughout the application.
  * Schemas match the TypeScript interfaces defined in src/types/index.ts
  */
 
 import { z } from 'zod';
+import type { FieldConfig, SectionConfig } from '@/types';
+import { PERSONNEL_STATUS } from '@/constants/personnel';
+import { ATTENDANCE_STATUS } from '@/constants/attendance';
 
 // ============================================================================
 // BASE SCHEMAS
@@ -13,22 +16,27 @@ import { z } from 'zod';
 
 /**
  * Schema for validating StaffMember / Personnel
+ * Matches: types/index.ts → StaffMember
  */
 export const StaffMemberSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
-    personnelId: z.string().min(1, 'ID de personal es requerido'),
+    personnelId: z.string().optional(),
     name: z.string().min(1, 'Nombre es requerido').max(200, 'Nombre muy largo'),
-    cedula: z
-        .string()
-        .regex(/^\d{1,2}-\d{4}-\d{4}$/, 'Formato de cédula inválido (Ej: 1-1234-5678)')
-        .optional(),
+    cedula: z.string().optional(),
     rank: z.string().optional(),
-    unit: z.string().optional(),
-    position: z.string().optional(),
-    phone: z.string().optional(),
-    email: z.string().email('Email inválido').optional(),
-    isActive: z.boolean().default(true),
-    notes: z.string().optional(),
+    roleId: z.string().optional(),
+    status: z.enum(
+        [
+            PERSONNEL_STATUS.ACTIVO,
+            PERSONNEL_STATUS.VACACIONES,
+            PERSONNEL_STATUS.PERMISO,
+            PERSONNEL_STATUS.REPOSO,
+            PERSONNEL_STATUS.APOYO,
+        ],
+        { errorMap: () => ({ message: 'Estado de personal inválido' }) }
+    ).optional(),
+    department: z.string().optional(),
+    specialties: z.array(z.string()).optional(),
 });
 
 export type ValidatedStaffMember = z.infer<typeof StaffMemberSchema>;
@@ -85,86 +93,83 @@ export type ValidatedReport = z.infer<typeof ReportSchema>;
 
 /**
  * Schema for Department
+ * Matches: types/index.ts → Department
  */
 export const DepartmentSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
     name: z.string().min(1, 'Nombre es requerido').max(100, 'Nombre muy largo'),
-    code: z.string().max(20, 'Código muy largo').optional(),
-    description: z.string().max(500, 'Descripción muy larga').optional(),
+    staff: z.record(z.array(StaffMemberSchema)).default({}),
 });
 
 export type ValidatedDepartment = z.infer<typeof DepartmentSchema>;
 
 /**
  * Schema for Guard
+ * Matches: types/index.ts → Guard
  */
 export const GuardSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
-    name: z.string().min(1, 'Nombre de guardia es requerido').max(100, 'Nombre muy largo'),
-    description: z.string().max(500, 'Descripción muy larga').optional(),
-    staff: z.array(StaffMemberSchema).default([]),
-    schedule: z
-        .object({
-            start: z.string().regex(/^\d{2}:\d{2}$/, 'Formato de hora inválido (HH:MM)'),
-            end: z.string().regex(/^\d{2}:\d{2}$/, 'Formato de hora inválido (HH:MM)'),
-        })
-        .optional(),
+    staff: z.record(z.array(StaffMemberSchema)).default({}),
 });
 
 export type ValidatedGuard = z.infer<typeof GuardSchema>;
 
 /**
  * Schema for Address
+ * Matches: types/index.ts → Address
  */
 export const AddressSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
     name: z.string().min(1, 'Nombre de dirección es requerido').max(200, 'Nombre muy largo'),
-    fullAddress: z.string().min(1, 'Dirección completa es requerida').max(500, 'Dirección muy larga'),
-    coordinates: z
-        .object({
-            lat: z.number().min(-90).max(90, 'Latitud debe estar entre -90 y 90'),
-            lng: z.number().min(-180).max(180, 'Longitud debe estar entre -180 y 180'),
-        })
-        .optional(),
-    category: z.string().max(50, 'Categoría muy larga').optional(),
-    notes: z.string().max(1000, 'Notas muy largas').optional(),
+    street: z.string().optional(),
+    houseNumber: z.string().optional(),
+    municipality: z.string().min(1, 'Municipio es requerido'),
+    parish: z.string().min(1, 'Parroquia es requerida'),
+    sector: z.string().optional(),
+    peaceQuadrant: z.string().min(1, 'Cuadrante de paz es requerido'),
+    latitude: z.string().optional(),
+    longitude: z.string().optional(),
+    details: z.string().optional(),
 });
 
 export type ValidatedAddress = z.infer<typeof AddressSchema>;
 
 /**
  * Schema for AttendanceRecord
+ * Matches: types/index.ts → AttendanceRecord
  */
 export const AttendanceRecordSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
-    personnelId: z.string().min(1, 'ID de personal es requerido'),
-    guardId: z.string().optional(),
-    date: z.string().date('Formato de fecha inválido (YYYY-MM-DD)'),
-    status: z.enum(['present', 'absent', 'late', 'excused', 'on-leave'], {
-        errorMap: () => ({ message: 'Estado de asistencia inválido' }),
-    }),
-    checkIn: z.string().optional(),
-    checkOut: z.string().optional(),
-    notes: z.string().max(500, 'Notas muy largas').optional(),
+    memberId: z.string().min(1, 'ID de miembro es requerido'),
+    date: z.string().min(1, 'Fecha es requerida'),
+    status: z.enum(
+        [
+            ATTENDANCE_STATUS.PRESENTE,
+            ATTENDANCE_STATUS.TARDE,
+            ATTENDANCE_STATUS.PERMISO,
+            ATTENDANCE_STATUS.AUSENTE,
+        ],
+        { errorMap: () => ({ message: 'Estado de asistencia inválido' }) }
+    ),
+    checkInTime: z.string().optional(),
+    note: z.string().max(500, 'Nota muy larga').optional(),
+    createdAt: z.string().min(1, 'Fecha de creación es requerida'),
 });
 
 export type ValidatedAttendanceRecord = z.infer<typeof AttendanceRecordSchema>;
 
 /**
  * Schema for AppSettings
+ * Matches: types/index.ts → AppSettings
  */
 export const AppSettingsSchema = z.object({
-    id: z.literal('app-settings'),
-    theme: z.enum(['light', 'dark', 'system']).default('system'),
-    language: z.enum(['es', 'en']).default('es'),
-    autoSaveDrafts: z.boolean().default(true),
-    defaultTemplate: z.string().uuid().optional(),
-    notifications: z
-        .object({
-            enabled: z.boolean().default(true),
-            sound: z.boolean().default(false),
-        })
-        .optional(),
+    id: z.string().optional(),
+    activeGuardId: z.string().optional(),
+    guardShiftDuration: z.number().optional(),
+    finalReportStaffSnapshot: z.record(z.array(StaffMemberSchema)).optional(),
+    finalReportStartDate: z.string().optional(),
+    finalReportEndDate: z.string().optional(),
+    reportaRoleIds: z.array(z.string()).optional(),
 });
 
 export type ValidatedAppSettings = z.infer<typeof AppSettingsSchema>;
@@ -181,31 +186,25 @@ export const FieldTypeSchema = z.enum([
     'predefined',
     'multi-text',
     'dropdown',
-    'number',
+    'semantic',
 ]);
+
+const SnippetOptionSchema = z.object({
+    id: z.string(),
+    label: z.string(),
+    value: z.string(),
+});
 
 export const FieldConfigSchema = z.object({
     type: FieldTypeSchema,
-    label: z.string().optional(),
-    required: z.boolean().default(false),
-    fullWidth: z.boolean().default(false),
-    placeholder: z.string().optional(),
-    defaultValue: z.string().optional(),
-    options: z
-        .array(
-            z.object({
-                label: z.string(),
-                value: z.string(),
-            })
-        )
-        .optional(),
-    validation: z
-        .object({
-            min: z.number().optional(),
-            max: z.number().optional(),
-            pattern: z.string().optional(),
-        })
-        .optional(),
+    label: z.string(),
+    required: z.boolean().optional(),
+    value: z.string().optional(),
+    sectionId: z.string().optional(),
+    targetField: z.string().optional(),
+    snippetOptions: z.array(SnippetOptionSchema).optional(),
+    modifiers: z.array(z.enum(['upper', 'lower', 'title'])).optional(),
+    isFullWidth: z.boolean().optional(),
 });
 
 export type ValidatedFieldConfig = z.infer<typeof FieldConfigSchema>;
@@ -251,11 +250,11 @@ export const dateValidator = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de
 /**
  * Helper to create a Zod schema for a single field
  */
-function createFieldZodSchema(fieldId: string, config: any) {
+function createFieldZodSchema(fieldId: string, config: FieldConfig) {
     let fieldSchema: z.ZodTypeAny;
 
     const lowerId = (fieldId || '').toLowerCase();
-    const type = config.type || 'text';
+    const type: string = config.type || 'text';
 
     // Prioritize explicit type first
     switch (type) {
@@ -308,7 +307,7 @@ function createFieldZodSchema(fieldId: string, config: any) {
  * Generates a dynamic Zod schema for report form data based on template configuration.
  * Handles top-level fields, nested sections, and repeatable blocks.
  */
-export function generateFormDataSchema(config: { fields: Record<string, any>; sections?: any[]; layout?: string[] }) {
+export function generateFormDataSchema(config: { fields: Record<string, FieldConfig>; sections?: SectionConfig[]; layout?: string[] }) {
     const shape: Record<string, z.ZodTypeAny> = {};
     const fields = config.fields;
     const sections = config.sections || [];

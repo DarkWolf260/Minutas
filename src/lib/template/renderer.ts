@@ -6,18 +6,43 @@
 
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import type { TemplateParserResult, SectionConfig } from '@/types';
+import type { TemplateParserResult, SectionConfig, FieldConfig, FieldType, SnippetOption, FormDataRecord, FormDataValue } from '@/types';
 import { formatStaffMember } from '../formatters';
-import { resolveSemanticConcept } from '../integration-engine';
+/** Inline type for semantic resolution results (previously in integration-engine.ts) */
+export interface ResolutionResult {
+    concept: string;
+    value: string;
+    source: string;
+}
+
+/** Inline stub: resolves a semantic concept to its string value */
+function resolveSemanticConcept(concept: string): ResolutionResult {
+    return { concept, value: concept, source: 'inline' };
+}
 import { evaluateCondition, applyModifiers as applyTextModifier } from './evaluator';
 import { parseFieldTag } from './parser';
 import { logger } from '../logger';
 
+/** Internal config shape used during rendering (combines parsed template + field definitions) */
+interface TemplateRenderConfig {
+    fields: Record<string, FieldConfig>;
+    sections: SectionConfig[];
+    layout: string[];
+    templateOptions: Map<string, SnippetOption[]>;
+    fieldModifiers: Map<string, string[]>;
+}
+
 /**
  * Renders template content with data substitution
  * 
- * Simplified version for compatibility - handles basic field replacement
- * and conditional sections
+ * Logic flow:
+ * 1. Pass 1: Scan for mapping conditionals [?{Field}] Key=Value [/]
+ *    - These are definition-only blocks (don't produce output).
+ *    - Used to build a translation map for {Field} tags.
+ * 2. Pass 2: Global substitution
+ *    - {Field} tags: Use the translation map from Pass 1 if a match is found.
+ *    - Standard Conditionals: Evaluation strictly for visibility logic.
+ *    - Mapping Blocks: Removed (return empty string) to avoid duplication.
  * 
  * @param content - Template content string
  * @param data - Data object for substitution
@@ -30,23 +55,65 @@ export function renderContent(
     config: TemplateParserResult
 ): string {
     if (!content) return '';
-    const localData = (data || {}) as Record<string, any>;
+    const localData = (data || {}) as FormDataRecord;
+
+    // First, pass: collect all mapping results for fields
+    const mappingResults: Record<string, string> = {};
+    const mappingRegex = /\[\?\s*\{[\s\S]+?\}\s*(?:(?:!=|>=|<=|>|<|=)\s*(?:"[^"]*"|\S+?))?\s*\]([\s\S]*?)\[\/\s*\]/g;
+
+    let mappingMatch;
+    while ((mappingMatch = mappingRegex.exec(content)) !== null) {
+        const block = mappingMatch[0];
+        const innerContent = mappingMatch[1];
+        const condMatch = block.match(/^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(?:(!=|>=|<=|>|<|=)\s*("(.*?)"|(\S+?)))?\s*\]/);
+
+        if (condMatch && condMatch[1]) {
+            const condFieldId = condMatch[1].trim();
+            const operator = condMatch[2];
+            const actualValue = localData[condFieldId];
+            const options = config.templateOptions.get(condFieldId);
+
+            if (!operator) {
+                let keyToCompare = actualValue;
+                if (options) {
+                    const opt = options.find((o: SnippetOption) => o.value === actualValue || o.label === actualValue);
+                    if (opt) keyToCompare = opt.label;
+                }
+
+                const lines = (innerContent || '').split('\n');
+                for (const line of lines) {
+                    const eqIdx = line.indexOf('=');
+                    if (eqIdx > -1) {
+                        const key = line.substring(0, eqIdx).trim();
+                        const val = line.substring(eqIdx + 1).trim();
+                        if (evaluateCondition(keyToCompare, '=', key)) {
+                            mappingResults[condFieldId] = val;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     const blockRegex =
-        /(\{[\s\S]+?\}|\[\?\s*\{[\s\S]+?\}\s*(?:!=|>=|<=|>|<|=)\s*(?:"[^"]*"|\S+?)\s*\][\s\S]*?\[\/\s*\])/g;
+        /(\{[\s\S]+?\}|\[\?\s*\{[\s\S]+?\}\s*(?:(?:!=|>=|<=|>|<|=)\s*(?:"[^"]*"|\S+?))?\s*\][\s\S]*?\[\/\s*\])/g;
 
     return content.replace(blockRegex, (block) => {
         if (block.startsWith('{')) {
             const tag = block.slice(1, -1);
             const { fieldId, modifiers } = parseFieldTag(tag, new Map());
 
-            let val = localData[fieldId];
+            // If we have a mapping result for this field, use it
+            let val = mappingResults[fieldId] !== undefined ? mappingResults[fieldId] : localData[fieldId];
 
-            // Manejo de dropdowns: convertir índice a valor
-            const options = config.templateOptions.get(fieldId);
-            if (options && typeof val === 'string' && /^\d+$/.test(val)) {
-                const idx = parseInt(val, 10);
-                if (options[idx]) val = options[idx].value;
+            // If not already mapped, handle standard dropdown value conversion
+            if (mappingResults[fieldId] === undefined) {
+                const options = config.templateOptions.get(fieldId);
+                if (options && typeof val === 'string' && /^\d+$/.test(val)) {
+                    const idx = parseInt(val, 10);
+                    if (options[idx]) val = options[idx].value;
+                }
             }
 
             // Unir modificadores de la etiqueta con los modificadores detectados globalmente
@@ -56,29 +123,32 @@ export function renderContent(
             return applyTextModifier(val, allModifiers);
         } else if (block.startsWith('[?')) {
             const condMatch = block.match(
-                /^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(!=|>=|<=|>|<|=)\s*("(.*?)"|(\S+?))\s*\]([\s\S]*?)\[\/\s*\]$/
+                /^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(?:(!=|>=|<=|>|<|=)\s*("(.*?)"|(\S+?)))?\s*\]([\s\S]*?)\[\/\s*\]$/
             );
-            if (condMatch && condMatch[1] && condMatch[2] && condMatch[6]) {
-                const condFieldName = condMatch[1];
+            if (condMatch && condMatch[1] && condMatch[6]) {
                 const operator = condMatch[2];
-                let targetValue = condMatch[4] || condMatch[5] || '';
-                const innerContent = condMatch[6];
+                if (operator) {
+                    // Standard condition
+                    const condFieldId = condMatch[1].trim();
+                    const targetValue = condMatch[4] || condMatch[5] || '';
+                    const innerContent = condMatch[6];
+                    const actualValue = localData[condFieldId];
 
-                const condFieldId = condFieldName.trim();
+                    let valToCompare = actualValue;
+                    const options = config.templateOptions.get(condFieldId);
+                    if (options && /^\d+$/.test(String(actualValue))) {
+                        const idx = parseInt(String(actualValue), 10);
+                        const opt = options[idx];
+                        if (opt) valToCompare = opt.value;
+                    }
 
-                const actualValue = localData[condFieldId];
-
-                // Manejo de dropdowns en condicionales
-                let valToCompare = actualValue;
-                const options = config.templateOptions.get(condFieldId);
-                if (options && /^\d+$/.test(String(actualValue))) {
-                    const idx = parseInt(String(actualValue), 10);
-                    const opt = options[idx];
-                    if (opt) valToCompare = opt.value;
-                }
-
-                if (evaluateCondition(valToCompare, operator, targetValue)) {
-                    return renderContent(innerContent, data, config);
+                    if (evaluateCondition(valToCompare, operator, targetValue)) {
+                        return renderContent(innerContent, data, config);
+                    }
+                } else {
+                    // Mapping conditional is now handled by the {Field} tag
+                    // We return empty string here so the definition doesn't print itself.
+                    return '';
                 }
             }
             return '';
@@ -99,13 +169,12 @@ function escapeRegExp(string: string): string {
  */
 function findValueForField(
     fieldId: string,
-    data: Record<string, any>,
+    data: FormDataRecord,
     sections: SectionConfig[],
     predefinedValues: Record<string, string>,
     dynamicPredefinedValues: Record<string, string>,
-    itemData?: Record<string, any>
-): any {
-    const source = itemData || data;
+    itemData?: FormDataRecord
+): FormDataValue {
     const lowerCaseFieldId = fieldId.toLowerCase();
 
     // 1. Check dynamic predefined values
@@ -133,11 +202,12 @@ function findValueForField(
     for (const section of sections.filter((s) => !s.isRepeatable && s.id in data)) {
         const sectionData = data[section.id];
         if (sectionData && typeof sectionData === 'object' && !Array.isArray(sectionData)) {
-            if (sectionData[fieldId] !== undefined) return sectionData[fieldId];
-            const foundKeyInSection = Object.keys(sectionData).find(
+            const dataObj = sectionData as Record<string, any>;
+            if (dataObj[fieldId] !== undefined) return dataObj[fieldId];
+            const foundKeyInSection = Object.keys(dataObj).find(
                 (k) => k.toLowerCase() === lowerCaseFieldId
             );
-            if (foundKeyInSection) return sectionData[foundKeyInSection];
+            if (foundKeyInSection) return dataObj[foundKeyInSection];
         }
     }
 
@@ -155,10 +225,11 @@ function findValueForField(
  * Helper: Renders a value based on its type and field config
  */
 function renderValue(
-    value: any,
+    value: FormDataValue,
     fieldId: string,
-    fields: Record<string, any>,
-    config: any
+    fields: Record<string, FieldConfig>,
+    config: TemplateRenderConfig,
+    data?: FormDataRecord
 ): string {
     if (value === undefined || value === null) return '';
 
@@ -171,9 +242,18 @@ function renderValue(
             ...(fieldConfig.snippetOptions || []),
             ...(config.templateOptions?.get(fieldId) || []),
         ];
-        const selectedOption = allOptions.find((opt: any) => opt && opt.label === value);
+        const selectedOption = allOptions.find((opt: SnippetOption) => opt && opt.label === value);
         if (selectedOption && typeof selectedOption === 'object' && 'value' in selectedOption) {
-            return String(selectedOption.value);
+            const resolved = String(selectedOption.value);
+            // If the mapped value contains {field} references, expand them with context data
+            if (resolved.includes('{') && data) {
+                return resolved.replace(/\{([\s\S]+?)(?::[^}]*)?\}/g, (_, fieldRef: string) => {
+                    const key = fieldRef.trim();
+                    const found = Object.keys(data).find((k) => k.toLowerCase() === key.toLowerCase());
+                    return found ? String(data[found] ?? '') : '';
+                });
+            }
+            return resolved;
         }
         return '';
     }
@@ -196,7 +276,7 @@ function renderValue(
                 return parts.join('/');
             }
             return formattedDate;
-        } catch (e) {
+        } catch {
             return value;
         }
     }
@@ -207,7 +287,7 @@ function renderValue(
             if (typeof value[0] === 'object' && value[0] !== null && 'name' in value[0]) {
                 const showCedula =
                     fieldId.toLowerCase() === 'reporta' || fieldId.toLowerCase() === 'analista';
-                return value.map((member: any) => formatStaffMember(member, showCedula)).join(', ');
+                return value.map((member) => formatStaffMember(member as import('@/types').StaffMember, showCedula)).join(', ');
             }
         }
         return value.join(', ');
@@ -227,7 +307,7 @@ function renderValue(
 /**
  * Helper: Checks if a value has content
  */
-function hasContent(value: any): boolean {
+function hasContent(value: FormDataValue): boolean {
     if (value === undefined || value === null) return false;
     if (typeof value === 'string' && value.trim() === '') return false;
     if (Array.isArray(value) && value.length === 0) return false;
@@ -239,13 +319,13 @@ function hasContent(value: any): boolean {
  */
 function sectionHasValues(
     section: SectionConfig,
-    data: Record<string, any>,
+    data: FormDataRecord,
     sections: SectionConfig[],
     predefinedValues: Record<string, string>,
     dynamicPredefinedValues: Record<string, string>,
-    dataContext?: any
+    dataContext?: FormDataRecord
 ): boolean {
-    const checkFieldsForContent = (fieldIds: string[], context: any): boolean => {
+    const checkFieldsForContent = (fieldIds: string[], context: FormDataRecord): boolean => {
         return fieldIds.some((fieldId) => {
             const value = findValueForField(
                 fieldId,
@@ -259,21 +339,21 @@ function sectionHasValues(
         });
     };
 
-    const checkSectionRecursive = (s: SectionConfig, context: any): boolean => {
+    const checkSectionRecursive = (s: SectionConfig, context: FormDataRecord): boolean => {
         if (s.isRepeatable) {
-            const sectionData = context[s.id];
+            const sectionData = context[s.id] as FormDataValue[];
             if (!Array.isArray(sectionData) || sectionData.length === 0) return false;
             return sectionData.some(
                 (item) =>
-                    checkFieldsForContent(s.fieldIds, item) ||
+                    checkFieldsForContent(s.fieldIds, item as FormDataRecord) ||
                     (s.layout || []).some(
                         (id) =>
                             (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) &&
-                            checkSectionRecursive(sections.find((sec) => sec.id === id)!, item)
+                            checkSectionRecursive(sections.find((sec) => sec.id === id)!, item as FormDataRecord)
                     )
             );
         } else {
-            const nestedContext = context[s.id] || context;
+            const nestedContext = (context[s.id] || context) as FormDataRecord;
             return (
                 checkFieldsForContent(s.fieldIds, nestedContext) ||
                 (s.layout || []).some(
@@ -285,7 +365,7 @@ function sectionHasValues(
         }
     };
 
-    const context = dataContext || (data[section.id] ? data[section.id] : data);
+    const context = dataContext || (data[section.id] ? data[section.id] as FormDataRecord : data);
     return checkSectionRecursive(section, context);
 }
 
@@ -294,26 +374,55 @@ function sectionHasValues(
  */
 function renderSection(
     sectionId: string,
-    data: Record<string, any>,
+    data: FormDataRecord,
     sections: SectionConfig[],
-    fields: Record<string, any>,
-    config: any,
+    fields: Record<string, FieldConfig>,
+    config: TemplateRenderConfig,
     predefinedValues: Record<string, string>,
     dynamicPredefinedValues: Record<string, string>,
-    currentData: any
+    currentData: FormDataRecord
 ): string {
     const section = sections.find((s) => s.id === sectionId);
     if (!section) return '';
 
-    let renderedItems = '';
-    const itemsToProcess = section.isRepeatable
-        ? Array.isArray(data[section.id])
-            ? data[section.id]
-            : []
-        : [data[section.id] || data];
+    // Evaluate condition if present
+    if (section.condition) {
+        const valToCompare = findValueForField(
+            section.condition.fieldId,
+            data,
+            sections,
+            predefinedValues,
+            dynamicPredefinedValues,
+            currentData
+        );
 
-    const itemsWithContent = itemsToProcess.filter(
-        (item: any) =>
+        if (section.isMapping) {
+            // We just perform the evaluation to ensure logic works if needed,
+            // but we return empty string because {Tag} will handle the actual output.
+            return '';
+        }
+
+        if (!evaluateCondition(valToCompare, section.condition.operator || '=', section.condition.value)) {
+            return '';
+        }
+    }
+
+    let renderedItems = '';
+    // For singular/plural sections (implicitly repeatable), data can come either as:
+    //   array:  data[section.id] = [{field: val}, ...]
+    //   or as top-level fields in the report data (single item case)
+    const hasSingularPlural = !!(section.singularTitle || section.pluralTitle);
+    const itemsToProcess = section.isRepeatable
+        ? Array.isArray(currentData[section.id])
+            ? currentData[section.id]
+            : Array.isArray(data[section.id])
+                ? data[section.id]
+                // Singular/plural: fall back to treating top-level data as one item
+                : hasSingularPlural ? [currentData] : []
+        : [currentData[section.id] || (data[section.id] ? data[section.id] : currentData)];
+
+    const itemsWithContent = (itemsToProcess as FormDataRecord[]).filter(
+        (item: FormDataRecord) =>
             section.fieldIds.some((fid: string) =>
                 hasContent(findValueForField(fid, data, sections, predefinedValues, dynamicPredefinedValues, item))
             ) ||
@@ -334,9 +443,13 @@ function renderSection(
     if (itemsWithContent.length === 0) return '';
 
     renderedItems = itemsWithContent
-        .map((item: any, index: number) => {
+        .map((item: FormDataRecord, index: number) => {
             let itemContent = section.originalContent || '';
-            const itemLayout = section.layout || section.fieldIds;
+            let itemLayout = section.layout || section.fieldIds;
+            if (section.isSelfContained) {
+                // Auto-contained sections don't have separate layouts
+                itemLayout = section.fieldIds;
+            }
 
             itemLayout.forEach((id: string) => {
                 if (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) {
@@ -344,77 +457,99 @@ function renderSection(
                     if (nestedSection) {
                         const isVirtual = nestedSection.originalContent?.startsWith('{');
                         let nestedRegex;
+                        let header = '';
+                        let nestedBody = '';
                         if (isVirtual) {
                             nestedRegex = new RegExp(`${escapeRegExp(nestedSection.originalContent || '')}\\*`, 'g');
                         } else {
-                            let header = '';
-                            if (
+                            if (nestedSection.condition) {
+                                const cond = nestedSection.condition;
+                                const opPart = cond.operator && cond.value
+                                    ? `\\s*${escapeRegExp(cond.operator)}\\s*(?:"${escapeRegExp(cond.value)}"|${escapeRegExp(cond.value)})`
+                                    : '';
+                                header = `\\?\\s*\\{\\s*${escapeRegExp(cond.fieldId)}\\s*\\}${opPart}`;
+                            } else if (
                                 nestedSection.singularTitle ||
                                 nestedSection.pluralTitle ||
                                 nestedSection.repeatableItemLabel
                             ) {
                                 header += nestedSection.singularTitle
-                                    ? `singular="${nestedSection.singularTitle}"\\s*`
+                                    ? `singular="${escapeRegExp(nestedSection.singularTitle)}"\\s*`
                                     : '';
-                                header += nestedSection.pluralTitle ? `plural="${nestedSection.pluralTitle}"\\s*` : '';
+                                header += nestedSection.pluralTitle ? `plural="${escapeRegExp(nestedSection.pluralTitle)}"\\s*` : '';
                                 header += nestedSection.repeatableItemLabel
-                                    ? `sub="${nestedSection.repeatableItemLabel}"\\s*`
+                                    ? `sub="${escapeRegExp(nestedSection.repeatableItemLabel)}"\\s*`
                                     : '';
-                            } else if (nestedSection.label) {
+                            } else if (nestedSection.label && nestedSection.label !== 'separator') {
                                 header = `"${escapeRegExp(nestedSection.label)}"?\\s*`;
+                            } else if (nestedSection.isSeparator || nestedSection.label === 'separator') {
+                                header = '""';
                             }
+
+                            const nestedBody = nestedSection.originalContent || '';
                             nestedRegex = new RegExp(
-                                `\\[\\s*${header}${escapeRegExp(nestedSection.originalContent || '')}\\s*\\]${nestedSection.isRepeatable ? '\\s*\\*' : ''}`,
-                                'g'
+                                `\\[\\s*${header}\\s*\\]${escapeRegExp(nestedBody)}\\[\\/\\s*\\]${nestedSection.isRepeatable ? '\\s*\\*' : ''}`,
+                                'gs'
                             );
                         }
-                        const renderedNested = renderSection(
-                            id,
-                            data,
-                            sections,
-                            fields,
-                            config,
-                            predefinedValues,
-                            dynamicPredefinedValues,
-                            item
-                        );
-                        itemContent = itemContent.replace(nestedRegex, renderedNested);
+                        // Check if this conditional block behaves only as a dependency declaration
+                        // (i.e. it only contains fields and whitespace, no static text)
+                        let isDependencyBlock = false;
+                        if (nestedSection.condition && !nestedSection.isMapping) {
+                            const pureContent = (nestedSection.originalContent || '')
+                                .replace(/\{[^}]+\}/g, '')
+                                .replace(/[\s\n\r\t]/g, '');
+                            if (pureContent === '') {
+                                isDependencyBlock = true;
+                            }
+                        }
+
+                        if (isDependencyBlock) {
+                            // Enhanced regex to capture adjacent spaces/newlines so we don't leave massive gaps
+                            const cleanRegex = new RegExp(
+                                `\\s*\\[\\s*${header}\\s*\\]${escapeRegExp(nestedBody)}\\[\\/\\s*\\]${nestedSection.isRepeatable ? '\\s*\\*' : ''}\\s*`,
+                                'gs'
+                            );
+                            itemContent = itemContent.replace(cleanRegex, '\n');
+                        } else {
+                            const renderedNested = renderSection(
+                                id,
+                                data,
+                                sections,
+                                fields,
+                                config,
+                                predefinedValues,
+                                dynamicPredefinedValues,
+                                item
+                            );
+                            itemContent = itemContent.replace(nestedRegex, renderedNested);
+                        }
                     }
                 } else {
                     const val = findValueForField(id, data, sections, predefinedValues, dynamicPredefinedValues, item);
                     itemContent = itemContent.replace(
-                        new RegExp(`\\{${escapeRegExp(id)}(:dropdown\\(.*?\\)|:[a-zA-Z-]+)?\\}(\\*)?`, 'g'),
-                        renderValue(val, id, fields, config)
+                        new RegExp(`\\{${escapeRegExp(id)}(:dropdown\\(.*?\\)|:[a-zA-Z0-9_-]+)*\\}(\\*)?`, 'g'),
+                        renderValue(val, id, fields, config, { ...data, ...item })
                     );
                 }
             });
 
-            if (section.repeatableItemLabel) {
-                let labelPrefix = '';
-                if (itemsWithContent.length > 1) {
-                    labelPrefix = `- *${section.repeatableItemLabel} #${String(index + 1).padStart(2, '0')}:*`;
-                } else {
-                    labelPrefix = `- *${section.repeatableItemLabel}:*`;
-                }
-
-                if (
-                    section.fieldIds.length === 1 &&
-                    !section.layout?.some(
-                        (id: string) => id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')
-                    )
-                ) {
-                    itemContent = `${labelPrefix} ${itemContent.trim()}`;
-                } else {
-                    itemContent = `${labelPrefix}\n${itemContent}`;
-                }
+            if (section.repeatableItemLabel && itemsWithContent.length > 1) {
+                // Format: - *NOVEDAD #01*\ncontent — only when multiple items
+                const labelPrefix = `- *${section.repeatableItemLabel} #${String(index + 1).padStart(2, '0')}*`;
+                itemContent = `${labelPrefix}\n${itemContent.trim()}`;
             }
             return itemContent;
         })
-        .join('\n');
+        .join('\n\n');
 
-    const title = itemsWithContent.length === 1 ? section.singularTitle : section.pluralTitle;
-    if (title) {
-        renderedItems = `- *${title}*\n${renderedItems}`;
+    // Add section title only for singular/plural sections (not plain labeled ones)
+    if (section.singularTitle || section.pluralTitle) {
+        const title = itemsWithContent.length > 1 && section.pluralTitle
+            ? section.pluralTitle
+            : (section.singularTitle || section.pluralTitle!);
+        const header = `- *${title}*`;
+        renderedItems = `${header}\n${renderedItems}`;
     }
 
     return renderedItems;
@@ -428,8 +563,8 @@ function renderSection(
  */
 export function renderContentWithSections(
     template: string,
-    data: Record<string, any>,
-    config: any,
+    data: FormDataRecord,
+    config: TemplateRenderConfig,
     predefinedValues: Record<string, string>,
     dynamicPredefinedValues: Record<string, string> = {}
 ): string {
@@ -437,27 +572,60 @@ export function renderContentWithSections(
     const { sections = [], fields = {} } = config;
 
     // Process top-level layout items
-    const topLevelSections = sections.filter((s: any) => {
+    const topLevelSections = sections.filter((s: SectionConfig) => {
         return config.layout.includes(s.id);
     });
 
-    topLevelSections.forEach((section: any) => {
+    topLevelSections.forEach((section: SectionConfig) => {
         const isVirtual = section.originalContent?.startsWith('{');
         let sectionRegex;
-        const baseContent = escapeRegExp(section.originalContent || '###NEVERMATCH###');
 
-        if (isVirtual) {
-            sectionRegex = new RegExp(`${escapeRegExp(section.originalContent)}\\*`, 'g');
+        if (section.isSelfContained) {
+            // Self-contained sections: ["Title" {field1} {field2}] — no closing [/]
+            // labelPart handles: [Label], ["Label"], ["Label" extra text...{fields}]
+            // For quoted labels, bodyContent already starts with whatever follows the
+            // closing title quote (including static text and \n), so we DON'T add \s*
+            // between labelPart and bodyContent.
+            let labelPart = '';
+            if (section.singularTitle || section.pluralTitle || section.repeatableItemLabel) {
+                // Build labelPart from the actual attribute syntax used in the template
+                let attrPart = '';
+                if (section.singularTitle) attrPart += `singular\\s*=\\s*"${escapeRegExp(section.singularTitle)}"\\s*`;
+                if (section.pluralTitle) attrPart += `plural\\s*=\\s*"${escapeRegExp(section.pluralTitle)}"\\s*`;
+                if (section.repeatableItemLabel) attrPart += `sub\\s*=\\s*"${escapeRegExp(section.repeatableItemLabel)}"\\s*`;
+                labelPart = attrPart;
+            } else if (section.label) {
+                const escaped = escapeRegExp(section.label);
+                labelPart = `(?:"${escaped}"|${escaped})`;
+            }
+            const bodyContent = section.originalContent || '';
+            const fullBlockPattern = `\\[\\s*${labelPart}${escapeRegExp(bodyContent)}\\s*\\]${section.isRepeatable ? '\\*?' : ''}`;
+            sectionRegex = new RegExp(fullBlockPattern, 'gs');
+        } else if (isVirtual) {
+            sectionRegex = new RegExp(`${escapeRegExp(section.originalContent || '')}\\*`, 'g');
         } else {
             let headerPart = '';
-            if (section.singularTitle || section.pluralTitle || section.repeatableItemLabel) {
-                headerPart += section.singularTitle ? `singular="${section.singularTitle}"\\s*` : '';
-                headerPart += section.pluralTitle ? `plural="${section.pluralTitle}"\\s*` : '';
-                headerPart += section.repeatableItemLabel ? `sub="${section.repeatableItemLabel}"\\s*` : '';
-            } else if (section.label) {
-                headerPart = `"${escapeRegExp(section.label)}"?\\s*`;
+            if (section.condition) {
+                const cond = section.condition;
+                const opPart = cond.operator && cond.value
+                    ? `\\s*${escapeRegExp(cond.operator)}\\s*(?:"${escapeRegExp(cond.value)}"|${escapeRegExp(cond.value)})`
+                    : '';
+                headerPart = `\\?\\s*\\{\\s*${escapeRegExp(cond.fieldId)}\\s*\\}${opPart}`;
+            } else if (section.singularTitle || section.pluralTitle || section.repeatableItemLabel) {
+                headerPart += section.singularTitle ? `singular="${escapeRegExp(section.singularTitle)}"\\s*` : '';
+                headerPart += section.pluralTitle ? `plural="${escapeRegExp(section.pluralTitle)}"\\s*` : '';
+                headerPart += section.repeatableItemLabel ? `sub="${escapeRegExp(section.repeatableItemLabel)}"\\s*` : '';
+            } else if (section.label && section.label !== 'separator') {
+                // section.label is stored WITHOUT quotes (parser strips them).
+                // Template may have: [Label]  or  ["Label"]  or  ["Label" any extra text]
+                const escaped = escapeRegExp(section.label);
+                headerPart = `(?:"${escaped}"[^\\]]*|${escaped})\\s*`;
+            } else if (section.isSeparator || section.label === 'separator') {
+                headerPart = '""';
             }
-            const fullBlockPattern = `\\[\\s*${headerPart}${baseContent}\\s*\\]${section.isRepeatable ? '\\s*\\*' : ''}`;
+
+            const bodyContent = section.originalContent || '';
+            const fullBlockPattern = `\\[\\s*${headerPart}\\s*\\]${section.isRepeatable ? '\\*?' : ''}${escapeRegExp(bodyContent)}\\[\\/\\s*\\]`;
             sectionRegex = new RegExp(fullBlockPattern, 'g');
         }
 
@@ -473,6 +641,7 @@ export function renderContentWithSections(
         );
         finalContent = finalContent.replace(sectionRegex, rendered);
     });
+
 
     // Final cleanup of loose tags (omit semantic tags for post-processing)
     finalContent = finalContent.replace(
@@ -509,21 +678,21 @@ export function renderContentWithSections(
  */
 export function renderFinalReport(
     template: string,
-    data: Record<string, any>,
-    config: { fields: Record<string, any>; sections: SectionConfig[]; layout: string[] },
+    data: FormDataRecord,
+    config: { fields: Record<string, FieldConfig>; sections: SectionConfig[]; layout: string[] },
     predefinedValues: Record<string, string>,
     summaryOnly: boolean = false,
     dynamicPredefinedValues: Record<string, string> = {},
-    parseTemplate: (template: string) => any,
-    recordReportAudit: (reportId: string, audit: any[]) => void
+    parseTemplate: (template: string) => TemplateParserResult,
+    recordReportAudit: (reportId: string, audit: ResolutionResult[]) => void
 ): string {
     try {
         const { sections, layout, fieldNames, fieldTypes, templateOptions, fieldModifiers } =
             parseTemplate(template);
 
         // Build final config with all necessary data
-        const finalConfig = {
-            fields: {} as Record<string, any>,
+        const finalConfig: TemplateRenderConfig = {
+            fields: {} as Record<string, FieldConfig>,
             sections,
             layout,
             templateOptions,
@@ -531,9 +700,9 @@ export function renderFinalReport(
         };
 
         fieldNames.forEach((fieldName: string) => {
-            const fieldConfig = config.fields[fieldName]
+            const fieldConfig: FieldConfig = config.fields[fieldName]
                 ? { ...config.fields[fieldName] }
-                : { type: 'text', label: fieldName };
+                : { type: 'text' as FieldType, label: fieldName };
 
             finalConfig.fields[fieldName] = fieldConfig;
             const options = templateOptions.get(fieldName);
@@ -541,7 +710,7 @@ export function renderFinalReport(
                 fieldConfig.snippetOptions = options;
             }
             if (fieldTypes.has(fieldName)) {
-                fieldConfig.type = fieldTypes.get(fieldName);
+                fieldConfig.type = fieldTypes.get(fieldName)!;
             }
         });
 
@@ -574,7 +743,7 @@ export function renderFinalReport(
 
         // Resolve literal semantic tags
         const semanticRegex = /\{([\s\S]+?):semantic\}/g;
-        const semanticAudit: any[] = [];
+        const semanticAudit: ResolutionResult[] = [];
 
         finalOutput = finalOutput.replace(semanticRegex, (_, concept) => {
             const result = resolveSemanticConcept(concept.trim());
@@ -584,7 +753,7 @@ export function renderFinalReport(
 
         // Record audit if there's semantic data
         if (data.id && semanticAudit.length > 0) {
-            recordReportAudit(data.id, semanticAudit);
+            recordReportAudit(String(data.id), semanticAudit);
         }
 
         finalOutput = finalOutput

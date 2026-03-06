@@ -1,12 +1,9 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, CheckSquare, Square, Mountain, GitCommit } from 'lucide-react';
-import Link from 'next/link';
-import { Separator } from '@/components/ui/separator';
+import { AlertTriangle } from 'lucide-react';
 
 const Code = ({ children }: { children: React.ReactNode }) => (
   <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold text-card-foreground">
@@ -32,22 +29,10 @@ const DocSection = ({
   </section>
 );
 
-const CompletedItem = ({ children }: { children: React.ReactNode }) => (
-  <li className="flex items-start gap-3">
-    <CheckSquare className="h-5 w-5 flex-shrink-0 mt-0.5 text-green-500" />
-    <span className="flex-1">{children}</span>
-  </li>
-);
 
-const PendingItem = ({ children }: { children: React.ReactNode }) => (
-  <li className="flex items-start gap-3">
-    <Square className="h-5 w-5 flex-shrink-0 mt-0.5 text-muted-foreground" />
-    <span className="flex-1">{children}</span>
-  </li>
-);
 
 export default function UserGuidePage() {
-  const appVersion = '1.6.0';
+
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">

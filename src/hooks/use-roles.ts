@@ -32,36 +32,40 @@ import { LEADER_ROLES } from '@/constants/roles';
 import { PERSONNEL_STATUS } from '@/constants/personnel';
 
 const defaultRoles: StaffRole[] = [
-  { name: LEADER_ROLES.DIRECTOR, isSingle: true, departmentScope: [] },
-  { name: LEADER_ROLES.JEFE_OPERACIONES, isSingle: true, departmentScope: ['ops'] },
-  { name: 'Jefe de los Servicios', isSingle: true, departmentScope: ['ops'] },
-  { name: 'Analista de CEMUPRAD', isSingle: false, departmentScope: ['cemuprad'] },
-  { name: 'Auxiliar de CEMUPRAD', isSingle: false, departmentScope: ['cemuprad'] },
-  { name: 'Operador de radio', isSingle: false, departmentScope: ['ops'] },
-  { name: 'Técnico', isSingle: false, departmentScope: ['ops'] },
-  { name: 'Auxiliar', isSingle: false, departmentScope: ['ops'] },
-  { name: 'Conductor', isSingle: false, departmentScope: ['ops'] },
-  { name: 'Jefe de CEMUPRAD', isSingle: true, departmentScope: ['cemuprad'] },
+  { name: LEADER_ROLES.DIRECTOR, isSingle: true, departmentScope: [], order: 0 },
+  { name: LEADER_ROLES.JEFE_OPERACIONES, isSingle: true, departmentScope: ['ops'], order: 1 },
+  { name: 'Jefe de los Servicios', isSingle: true, departmentScope: ['ops'], order: 2 },
+  { name: 'Analista de CEMUPRAD', isSingle: false, departmentScope: ['cemuprad'], order: 3 },
+  { name: 'Auxiliar de CEMUPRAD', isSingle: false, departmentScope: ['cemuprad'], order: 4 },
+  { name: 'Operador de radio', isSingle: false, departmentScope: ['ops'], order: 5 },
+  { name: 'Técnico', isSingle: false, departmentScope: ['ops'], order: 6 },
+  { name: 'Auxiliar', isSingle: false, departmentScope: ['ops'], order: 7 },
+  { name: 'Conductor', isSingle: false, departmentScope: ['ops'], order: 8 },
+  { name: 'Jefe de CEMUPRAD', isSingle: true, departmentScope: ['cemuprad'], order: 9 },
   {
     name: PERSONNEL_STATUS.REPOSO.charAt(0).toUpperCase() + PERSONNEL_STATUS.REPOSO.slice(1),
     isSingle: false,
     departmentScope: [],
+    order: 10,
   },
   {
     name: PERSONNEL_STATUS.PERMISO.charAt(0).toUpperCase() + PERSONNEL_STATUS.PERMISO.slice(1),
     isSingle: false,
     departmentScope: [],
+    order: 11,
   },
   {
     name:
       PERSONNEL_STATUS.VACACIONES.charAt(0).toUpperCase() + PERSONNEL_STATUS.VACACIONES.slice(1),
     isSingle: false,
     departmentScope: [],
+    order: 12,
   },
   {
     name: PERSONNEL_STATUS.APOYO.charAt(0).toUpperCase() + PERSONNEL_STATUS.APOYO.slice(1),
     isSingle: false,
     departmentScope: [],
+    order: 13,
   },
 ];
 
@@ -73,17 +77,31 @@ export function useRoles() {
   useEffect(() => {
     if (!db) return;
 
-    const sub = db.roles.find().$.subscribe((data) => {
-      if (data.length > 0) {
-        setRoles(data.map((d) => d.toJSON()) as StaffRole[]);
-      } else {
-        // Initial roles if DB is empty
-        db.roles
-          .bulkInsert(defaultRoles)
-          .catch((err) => logger.error('Failed to insert default roles', err, { feature: 'Roles' }));
-      }
-      setIsLoaded(true);
-    });
+    const sub = db.roles
+      .find({
+        sort: [{ order: 'asc' }],
+      })
+      .$.subscribe((data) => {
+        if (data.length > 0) {
+          setRoles(data.map((d) => d.toJSON()) as StaffRole[]);
+        } else {
+          // Initial roles if DB is empty
+          db.roles
+            .bulkInsert(defaultRoles)
+            .catch((err) => {
+              const isConflict =
+                err.code === 'CONFLICT' ||
+                err.status === 409 ||
+                err.message?.includes('conflict') ||
+                err.parameters?.writeError?.status === 409;
+
+              if (!isConflict) {
+                logger.error('Failed to insert default roles', err, { feature: 'Roles' });
+              }
+            });
+        }
+        setIsLoaded(true);
+      });
 
     return () => sub.unsubscribe();
   }, [db]);
@@ -91,6 +109,10 @@ export function useRoles() {
   const saveRoles = useCallback(
     async (newRoles: StaffRole[]) => {
       if (!db) return;
+
+      // Optimistic update for immediate UI response
+      setRoles(newRoles);
+
       try {
         const allDocs = await db.roles.find().exec();
         const newNames = new Set(newRoles.map((r) => r.name));
@@ -103,6 +125,7 @@ export function useRoles() {
         await db.roles.bulkUpsert(newRoles);
       } catch (error) {
         logger.error('Failed to save roles', error, { feature: 'Roles' });
+        // The subscription will eventually revert the state to the DB version if it fails
       }
     },
     [db]

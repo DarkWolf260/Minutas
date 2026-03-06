@@ -37,7 +37,7 @@
  * ```
  */
 export function evaluateCondition(
-    fieldValue: any,
+    fieldValue: unknown,
     operator: string,
     targetValue: string
 ): boolean {
@@ -81,7 +81,7 @@ export function evaluateCondition(
  * applyModifiers('hello world', ['title']) // 'Hello World'
  * ```
  */
-export function applyModifiers(value: any, modifiers: string | string[]): string {
+export function applyModifiers(value: unknown, modifiers: string | string[]): string {
     if (value === undefined || value === null) return '';
 
     let result = String(value);
@@ -99,6 +99,13 @@ export function applyModifiers(value: any, modifiers: string | string[]): string
                 .split(' ')
                 .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(' ');
+        } else if (trimmedMod.startsWith('default(')) {
+            if (!result || result.trim() === '') {
+                const match = mod.match(/default\("?(.*?)"?\)/i);
+                if (match && match[1]) {
+                    result = match[1];
+                }
+            }
         }
     });
 
@@ -108,14 +115,14 @@ export function applyModifiers(value: any, modifiers: string | string[]): string
 /**
  * Formats a value based on its field type (Reserved for future specialized formatting)
  */
-export function formatValue(value: any, fieldType: string): string {
+export function formatValue(value: unknown, _fieldType: string): string {
     return String(value);
 }
 
 /**
  * Coerces values for comparison (handles numeric strings)
  */
-function coerceForComparison(value: any): string | number {
+function coerceForComparison(value: unknown): string | number {
     const s = String(value).trim();
     // If it looks like a number, treat it as a number for comparison
     if (s !== '' && !isNaN(Number(s))) {

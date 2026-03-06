@@ -16,7 +16,7 @@ import { Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import type { StaffMember, StaffRole, Department } from '@/types';
 import { validatePersonnel } from '@/lib/validations/personnel';
-import { RANK_OPTIONS } from '@/constants/personnel';
+import { generateId } from '@/lib/utils/id';
 
 interface CSVManagerProps {
   personnel: StaffMember[];
@@ -98,7 +98,7 @@ export function CSVManager({ personnel, roles, departments, onImport }: CSVManag
           }
 
           newMembers.push({
-            id: `personnel_${Date.now()}_${Math.random().toString(36).slice(2, 7)}_${i}`,
+            id: generateId('personnel'),
             ...validation.data,
             status: 'activo',
           });
@@ -110,7 +110,7 @@ export function CSVManager({ personnel, roles, departments, onImport }: CSVManag
           onImport(newMembers);
           toast.success(`${newMembers.length} funcionarios importados`);
         }
-      } catch (error) {
+      } catch {
         toast.error('Error al procesar el archivo CSV');
       } finally {
         setIsImporting(false);

@@ -57,6 +57,7 @@ export function AddEditPersonnelDialog({
   const [department, setDepartment] = useState('none');
   const [status, setStatus] = useState<PersonnelStatus>('activo');
   const [specialties, setSpecialties] = useState<string[]>([]);
+  const [titulo, setTitulo] = useState('');
 
   // Initialize form with member data when editing
   useEffect(() => {
@@ -65,11 +66,20 @@ export function AddEditPersonnelDialog({
       setCedula(member.cedula || '');
       setRank(member.rank || 'OPC');
       setRoleId(member.roleId || 'none');
-      setDepartment(member.department || 'none');
+
+      // Resolve department: the stored value might be a dept.id OR a dept.name
+      // (CSV imports store the raw name). Look up the id from the departments list.
+      const storedDept = member.department || '';
+      const matchById = departments.find((d) => d.id === storedDept);
+      const matchByName = departments.find(
+        (d) => d.name.toLowerCase() === storedDept.toLowerCase()
+      );
+      setDepartment(matchById?.id || matchByName?.id || 'none');
+
       setStatus(member.status || 'activo');
       setSpecialties(member.specialties || []);
+      setTitulo((member as StaffMember & { titulo?: string }).titulo || '');
     } else {
-      // Reset form when adding new
       setName('');
       setCedula('');
       setRank('OPC');
@@ -77,8 +87,9 @@ export function AddEditPersonnelDialog({
       setDepartment('none');
       setStatus('activo');
       setSpecialties([]);
+      setTitulo('');
     }
-  }, [member, open]);
+  }, [member, open, departments]);
 
   const handleSubmit = () => {
     // Validation
@@ -88,7 +99,7 @@ export function AddEditPersonnelDialog({
     }
 
     // Prepare data
-    const data: Partial<StaffMember> = {
+    const data: Partial<StaffMember> & { titulo?: string } = {
       name: name.trim(),
       cedula: cedula || undefined,
       rank,
@@ -96,6 +107,7 @@ export function AddEditPersonnelDialog({
       department: department === 'none' ? undefined : department,
       status,
       specialties: specialties.length > 0 ? specialties : undefined,
+      titulo: titulo.trim() || undefined,
     };
 
     // Add ID if editing
@@ -221,6 +233,18 @@ export function AddEditPersonnelDialog({
               value={specialties}
               onChange={(vals) => setSpecialties(Array.isArray(vals) ? vals : [vals])}
               placeholder="Ej. Primeros Auxilios, Rescate..."
+            />
+          </div>
+
+          {/* Título (opcional, no visible en tabla) */}
+          <div className="space-y-2">
+            <Label htmlFor="titulo">Título Académico <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+            <Input
+              id="titulo"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              placeholder="Ej. Licenciado en Criminalística"
+              autoComplete="off"
             />
           </div>
         </div>
