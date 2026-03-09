@@ -22,13 +22,9 @@ import {
 
 const navItems = [
   { href: '/', label: 'Novedades', icon: Newspaper },
-  { href: '/plantillas', label: 'Plantillas', icon: FileText },
   { href: '/orden-del-dia', label: 'Orden del Día', icon: ClipboardList },
-  { href: '/reporte-final', label: 'Reporte Final', icon: ClipboardCheck },
   { href: '/direcciones', label: 'Direcciones', icon: NotebookPen },
   { href: '/personal', label: 'Personal', icon: Users },
-  { href: '/estadisticas', label: 'Estadísticas', icon: TrendingUp },
-  { href: '/historial', label: 'Historial', icon: History },
   { href: '/settings', label: 'Configuración', icon: Settings },
 ];
 

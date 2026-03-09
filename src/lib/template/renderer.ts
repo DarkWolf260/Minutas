@@ -528,7 +528,7 @@ function renderSection(
                 } else {
                     const val = findValueForField(id, data, sections, predefinedValues, dynamicPredefinedValues, item);
                     itemContent = itemContent.replace(
-                        new RegExp(`\\{${escapeRegExp(id)}(:dropdown\\(.*?\\)|:[a-zA-Z0-9_-]+)*\\}(\\*)?`, 'g'),
+                        new RegExp(`\\{${escapeRegExp(id)}(:[^|}]+)*(?:\\|.*?)?\\}(\\*)?`, 'g'),
                         renderValue(val, id, fields, config, { ...data, ...item })
                     );
                 }
@@ -645,7 +645,7 @@ export function renderContentWithSections(
 
     // Final cleanup of loose tags (omit semantic tags for post-processing)
     finalContent = finalContent.replace(
-        /\{([^:}]+?)(:dropdown\(.+?\)|:[a-zA-Z-]+)?(\|.+?)?\}/g,
+        /\{([^:}]+?)(:[^|}]+)*(?:\|.+?)?\}/g,
         (match, fieldId) => {
             if (match.includes(':semantic')) return match;
             fieldId = fieldId.trim();

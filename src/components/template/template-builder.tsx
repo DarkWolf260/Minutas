@@ -97,11 +97,20 @@ export function TemplateBuilder({
 
   // Creates a temporary config for the preview
   const previewConfig = useMemo<TemplateConfig>(() => {
-    const { sections, layout } = parseTemplate(templateContent);
+    const { sections, layout, defaultValues } = parseTemplate(templateContent);
+
+    // Populate preview config fields with default values
+    const fields: Record<string, any> = {};
+    if (defaultValues) {
+      defaultValues.forEach((value, key) => {
+        fields[key] = { defaultValue: value };
+      });
+    }
+
     return {
       sections,
       layout,
-      fields: {},
+      fields,
     };
   }, [templateContent]);
 

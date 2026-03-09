@@ -76,6 +76,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
         fieldModifiers,
         fieldWidths,
         requiredFields,
+        defaultValues,
       } = parseTemplate(template.content);
 
       const newConfig: TemplateConfig = {
@@ -140,6 +141,11 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
           label: (mergedConfig as any).label || fieldId,
         } as FieldConfig;
 
+        // Apply fallback parsed default value
+        if (defaultValues.has(fieldId)) {
+          newConfig.fields[fieldId].defaultValue = defaultValues.get(fieldId);
+        }
+
         if (templateOptions.has(fieldId)) {
           newConfig.fields[fieldId].snippetOptions = templateOptions.get(fieldId);
           // A mapping block [?{campo}] implicitly makes this a dropdown
@@ -195,6 +201,8 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
 
               if (foundKey) {
                 target[fieldId] = predefinedValues[foundKey];
+              } else if (finalConfig.fields[fieldId]?.defaultValue !== undefined) {
+                target[fieldId] = finalConfig.fields[fieldId].defaultValue;
               } else {
                 const role = roles.find((r: any) => r.name.toLowerCase() === keyLower);
                 if (role) {

@@ -115,6 +115,7 @@ export interface FieldConfig {
   label: string;
   required?: boolean;
   value?: string;
+  defaultValue?: string;
   sectionId?: string;
   targetField?: string;
   snippetOptions?: SnippetOption[];
@@ -206,6 +207,7 @@ export interface TemplateParserResult {
   fieldModifiers: Map<string, string[]>;
   fieldWidths: Map<string, boolean>;
   requiredFields: Map<string, boolean>;
+  defaultValues: Map<string, string>;
   errors: string[];
 }
 export interface PersonnelAssignment {

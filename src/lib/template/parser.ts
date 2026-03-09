@@ -29,6 +29,7 @@ export function parseFieldTag(
     modifiers: string[];
     isFullWidth: boolean;
     isRequired: boolean;
+    defaultValue?: string;
 } {
     const segments = tagContent.split(':').map((s) => s.trim());
     const fieldId = segments[0] || '';
@@ -37,6 +38,7 @@ export function parseFieldTag(
     let fieldType: FieldType = AUTOMATIC_FIELD_TYPES[fieldId.toLowerCase()] || 'text';
     let isFullWidth = false;
     let isRequired = false;
+    let defaultValue: string | undefined = undefined;
     const modifiers: string[] = [];
 
     const VALID_FIELD_TYPES = new Set<FieldType>([
@@ -89,7 +91,10 @@ export function parseFieldTag(
             const pipeParts = segment.split('|');
             pipeParts.forEach((part) => {
                 const trimmed = part.trim();
-                if (trimmed === 'full') isFullWidth = true;
+                const defMatch = trimmed.match(/^def=\((.*)\)$/);
+                if (defMatch) {
+                    defaultValue = defMatch[1];
+                } else if (trimmed === 'full') isFullWidth = true;
                 else if (trimmed === 'req') isRequired = true;
                 else if (VALID_TEXT_MODS.has(trimmed)) modifiers.push(trimmed);
                 else if (trimmed) modifiers.push(trimmed);
@@ -97,7 +102,7 @@ export function parseFieldTag(
         }
     });
 
-    return { fieldId, fieldType, modifiers, isFullWidth, isRequired };
+    return { fieldId, fieldType, modifiers, isFullWidth, isRequired, defaultValue };
 }
 
 /**
@@ -112,6 +117,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
     const fieldModifiers = new Map<string, string[]>();
     const fieldWidths = new Map<string, boolean>();
     const requiredFields = new Map<string, boolean>();
+    const defaultValues = new Map<string, string>();
     const globalRenderedFields = new Set<string>();
 
     // Refactored internal parser for recursion
@@ -152,6 +158,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                 if (config.modifiers.length > 0) fieldModifiers.set(fieldId, config.modifiers);
                 if (config.isFullWidth) fieldWidths.set(fieldId, true);
                 if (config.isRequired) requiredFields.set(fieldId, true);
+                if (config.defaultValue) defaultValues.set(fieldId, config.defaultValue);
 
                 if (token.raw.endsWith('}*')) {
                     const sectionId = generateSectionId(fieldId, [...sections, ...subSections]);
@@ -437,6 +444,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
         fieldModifiers,
         fieldWidths,
         requiredFields,
+        defaultValues,
         errors: [],
     };
 }
