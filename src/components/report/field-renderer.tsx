@@ -96,7 +96,7 @@ export const FieldRenderer = memo(
                 return (
                     <Select
                         onValueChange={handleSelectChange}
-                        value={selectedStaffId}
+                        value={selectedStaffId || ''}
                         disabled={disabled}
                     >
                         <SelectTrigger className={className} ref={ref} onBlur={onBlur}>

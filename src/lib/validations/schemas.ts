@@ -285,13 +285,9 @@ function createFieldZodSchema(fieldId: string, config: FieldConfig) {
             }
     }
 
-    // For dynamic schema, we must make all fields optional because they might be conditionally hidden
-    // The frontend react-hook-form already strictly enforces required fields depending on whether they are mapped and visible.
-    if (config.type !== 'multi-text') {
-        fieldSchema = fieldSchema.optional().or(z.literal(''));
-    } else {
-        fieldSchema = fieldSchema.optional();
-    }
+    // For dynamic schema, we must be extremely permissive because fields might be 
+    // conditionally hidden or contain complex rehydrated objects (like StaffMember).
+    fieldSchema = (fieldSchema || z.any()).nullable().optional();
 
     return fieldSchema;
 }
@@ -326,28 +322,24 @@ export function generateFormDataSchema(config: { fields: Record<string, FieldCon
 
     // 3. Add sections
     sections.forEach(section => {
+        const sectionShape: Record<string, z.ZodTypeAny> = {};
+        if (section.fieldIds) {
+            section.fieldIds.forEach((fieldId: string) => {
+                const fieldConfig = fields[fieldId];
+                if (fieldConfig) {
+                    sectionShape[fieldId] = createFieldZodSchema(fieldId, fieldConfig);
+                }
+            });
+        }
+        
+        const sectionSchema = z.object(sectionShape).passthrough().nullable().optional();
+        
         if (section.isRepeatable) {
-            const sectionShape: Record<string, z.ZodTypeAny> = {};
-            if (section.fieldIds) {
-                section.fieldIds.forEach((fieldId: string) => {
-                    const fieldConfig = fields[fieldId];
-                    if (fieldConfig) {
-                        sectionShape[fieldId] = createFieldZodSchema(fieldId, fieldConfig);
-                    }
-                });
-            }
-            const sectionSchema = z.object(sectionShape).passthrough();
-            shape[section.id] = z.array(sectionSchema);
+            shape[section.id] = z.array(sectionSchema.unwrap ? sectionSchema.unwrap().unwrap() : sectionSchema as any).nullable().optional();
+            // Simplified for RxDB compatibility:
+            shape[section.id] = z.array(z.any()).nullable().optional();
         } else {
-            // Flatten non-repeatable section fields into top level
-            if (section.fieldIds) {
-                section.fieldIds.forEach((fieldId: string) => {
-                    const fieldConfig = fields[fieldId];
-                    if (fieldConfig) {
-                        shape[fieldId] = createFieldZodSchema(fieldId, fieldConfig);
-                    }
-                });
-            }
+            shape[section.id] = sectionSchema;
         }
     });
 
