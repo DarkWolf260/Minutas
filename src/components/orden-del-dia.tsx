@@ -58,7 +58,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
   const [copyButtonText, setCopyButtonText] = useState('Copiar');
   const [isSnapshotSaved, setIsSnapshotSaved] = useState(false);
-  const isInitialized = useRef(false);
+  const lastInitializedGuard = useRef<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -108,7 +108,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   }, []);
 
   useEffect(() => {
-    if (isInitialized.current) return;
+    if (lastInitializedGuard.current === selectedGuard) return;
 
     if (rolesLoaded && personnelLoaded) {
       const newStaffState: Staff = {};
@@ -138,9 +138,9 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
       });
 
       setStaff(newStaffState);
-      isInitialized.current = true;
+      lastInitializedGuard.current = selectedGuard;
     }
-  }, [initialData, roles, rolesLoaded, personnel, personnelLoaded]);
+  }, [initialData, roles, rolesLoaded, personnel, personnelLoaded, selectedGuard]);
 
   const handleRoleStaffUpdate = (roleName: string, members: StaffMember[]) => {
     setStaff((prev: Staff) => ({
