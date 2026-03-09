@@ -21,6 +21,8 @@ import { useDrafts } from '@/hooks/use-drafts';
 import { debounce } from '@/lib/utils';
 import { useSettings } from '@/hooks/use-settings';
 import { useGuards } from '@/hooks/use-guards';
+import { usePersonnel } from '@/hooks/use-personnel';
+import { formatStaffMember, formatStaffReporta } from '@/lib/formatters';
 import { parseTemplate } from '@/lib/template-parser';
 import { toast } from 'sonner';
 import { generateId } from '@/lib/utils/id';
@@ -47,6 +49,7 @@ export function ReportGenerator({
   const [copyButtonText, setCopyButtonText] = useState('Copiar');
   const { settings } = useSettings();
   const { guards } = useGuards();
+  const { personnel } = usePersonnel();
 
   const { finalInitialData } = useMemo(() => {
     const parsedTemplate = parseTemplate(template.content);
@@ -54,7 +57,7 @@ export function ReportGenerator({
     const initialFieldNames = Array.from(parsedTemplate.fieldNames);
     const newInitialData = initialData ? JSON.parse(JSON.stringify(initialData)) : {};
 
-    if (!settings?.activeGuardId || !guards) {
+    if (!settings?.activeGuardId || !guards || !personnel) {
       return {
         sections: initialSections,
         allTemplateFields: initialFieldNames,
@@ -73,6 +76,12 @@ export function ReportGenerator({
 
     const dataToInject: Record<string, any> = {};
 
+    // Helper to rehydrate staff member from database
+    const rehydrate = (member: StaffMember) => {
+      const latest = personnel.find(p => p.id === member.id);
+      return latest || member;
+    };
+
     // Get Jefe de los servicios
     const jefeDeServiciosKey = Object.keys(activeGuard.staff || {}).find(
       (k) => k.toLowerCase() === 'jefe de los servicios'
@@ -80,7 +89,7 @@ export function ReportGenerator({
     if (jefeDeServiciosKey) {
       const jefeStaff = activeGuard.staff[jefeDeServiciosKey] || [];
       if (jefeStaff.length > 0) {
-        dataToInject['Jefe de los Servicios'] = jefeStaff.map((member) => member.name);
+        dataToInject['Jefe de los Servicios'] = jefeStaff.map((member) => formatStaffMember(rehydrate(member)));
       }
     }
 
@@ -91,7 +100,7 @@ export function ReportGenerator({
         const roleStaff = activeGuard.staff[roleId] || [];
         reportingPersonnel.push(...roleStaff);
       });
-      dataToInject['Reporta'] = reportingPersonnel;
+      dataToInject['Reporta'] = reportingPersonnel.map(p => rehydrate(p));
     }
 
     // Explicitly add Guardia ID to be injected
@@ -114,11 +123,8 @@ export function ReportGenerator({
 
         if (parentSection) {
           if (!parentSection.isRepeatable) {
-            if (!newInitialData[parentSection.id]) {
-              newInitialData[parentSection.id] = {};
-            }
-            if (newInitialData[parentSection.id][templateFieldKey] === undefined) {
-              newInitialData[parentSection.id][templateFieldKey] = valueToInject;
+            if (newInitialData[templateFieldKey] === undefined) {
+              newInitialData[templateFieldKey] = valueToInject;
             }
           }
         } else {
@@ -139,6 +145,7 @@ export function ReportGenerator({
     initialData,
     settings,
     guards,
+    personnel
   ]);
 
   const saveDraftLogic = useCallback(async (formData: Record<string, any>) => {
@@ -189,7 +196,7 @@ export function ReportGenerator({
   };
 
   const handleCancel = () => {
-    debouncedSaveDraft.flush();
+    debouncedSaveDraft.cancel();
     onCancel();
   };
 

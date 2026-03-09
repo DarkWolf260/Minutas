@@ -37,6 +37,7 @@ export const StaffMemberSchema = z.object({
     ).optional(),
     department: z.string().optional(),
     specialties: z.array(z.string()).optional(),
+    titulo: z.string().optional(),
 });
 
 export type ValidatedStaffMember = z.infer<typeof StaffMemberSchema>;
@@ -271,7 +272,7 @@ function createFieldZodSchema(fieldId: string, config: FieldConfig) {
             fieldSchema = z.string().regex(/^$|^[\d-]{2}:[\d-]{2} HLV( - [\d-]{2}:[\d-]{2} HLV)?$/, 'Formato de hora inválido');
             break;
         case 'multi-text':
-            fieldSchema = z.array(z.string());
+            fieldSchema = z.array(z.any());
             break;
         default:
             // Generic text or custom types - apply smart defaults based on name

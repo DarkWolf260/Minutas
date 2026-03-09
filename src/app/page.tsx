@@ -83,8 +83,6 @@ function NovedadesPageContent() {
         setInitialDraftData(draft.formData);
         setCreatingReport(template);
         return;
-      } else {
-        clearDraft();
       }
     }
 

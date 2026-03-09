@@ -7,15 +7,11 @@ import { LEADER_ROLES } from '@/constants/roles';
 const INSTITUTIONAL_STRUCTURE = `
 CARGOS GLOBALES
 - Director
-- Sub-Director
 - Jefe de operaciones
 - Jefe de los servicios
 
 GENERICO
 - Auxiliar
-- Jefe de guardia
-- Supervisor
-- Oficial de servicio
 `;
 
 export function getInstitutionalData() {

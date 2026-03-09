@@ -20,6 +20,8 @@ import { useRoles } from '@/hooks/use-roles';
 import { useGuards } from '@/hooks/use-guards';
 import { useUnits } from '@/hooks/use-units';
 import { useSettings } from '@/hooks/use-settings';
+import { usePersonnel } from '@/hooks/use-personnel';
+import { formatStaffMember, formatStaffMemberForDisplay, formatStaffReporta } from '@/lib/formatters';
 import { toast } from 'sonner';
 
 import { FieldRenderer } from './field-renderer';
@@ -47,6 +49,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
     const { guards, isLoaded: guardsLoaded } = useGuards();
     const { settings, isLoaded: settingsLoaded } = useSettings();
     const { units } = useUnits();
+    const { personnel } = usePersonnel();
 
     const activeGuardStaff = useMemo(() => {
       if (!settingsLoaded || !guardsLoaded || !settings?.activeGuardId) return [];
@@ -191,7 +194,17 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       (data?: FormDataRecord) => {
         const initialFormValues: FormDataRecord = data ? JSON.parse(JSON.stringify(data)) : {};
 
+        const activeGuard = settings?.activeGuardId 
+          ? guards.find((g) => g.id === settings.activeGuardId) 
+          : null;
+
+        const rehydrate = (member: any) => {
+          const latest = personnel.find(p => p.id === member.id);
+          return latest || member;
+        };
+
         const applyDefaults = (target: FormDataRecord, fieldIds: string[]) => {
+          if (!target) return;
           fieldIds.forEach((fieldId) => {
             if (target[fieldId] === undefined || target[fieldId] === null) {
               const keyLower = fieldId.toLowerCase();
@@ -199,14 +212,50 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
                 (k) => k.toLowerCase() === keyLower
               );
 
-              if (foundKey) {
+              if (foundKey && predefinedValues[foundKey]) {
                 target[fieldId] = predefinedValues[foundKey];
               } else if (finalConfig.fields[fieldId]?.defaultValue !== undefined) {
                 target[fieldId] = finalConfig.fields[fieldId].defaultValue;
               } else {
+                const MANUAL_FIELDS = ['técnico', 'auxiliar', 'conductor'];
                 const role = roles.find((r: any) => r.name.toLowerCase() === keyLower);
-                if (role) {
-                  target[fieldId] = [];
+                
+                if (role && !MANUAL_FIELDS.includes(keyLower)) {
+                  let initialStaff: any[] = [];
+                  if (activeGuard && activeGuard.staff) {
+                    const staffList = activeGuard.staff[role.name];
+                    if (staffList && staffList.length > 0) {
+                      const isReporta = keyLower === 'reporta';
+                      initialStaff = isReporta 
+                        ? staffList.map((s) => rehydrate(s))
+                        : staffList.map((s) => formatStaffMember(rehydrate(s)));
+                    }
+                  }
+
+                  // Fallback for Leader Roles (Director, Jefe de Operaciones) if guard list is empty
+                  if (initialStaff.length === 0) {
+                    const roleLower = role.name.toLowerCase();
+                    if (roleLower === 'director' || roleLower === 'jefe de operaciones' || roleLower === 'jefe de los servicios') {
+                      const globalMatches = personnel.filter(
+                        (p) => p.roleId?.toLowerCase() === roleLower
+                      );
+                      if (globalMatches.length > 0) {
+                        const isReporta = keyLower === 'reporta';
+                        initialStaff = isReporta
+                          ? globalMatches
+                          : globalMatches.map((p) => formatStaffMember(p));
+                      }
+                    }
+                  }
+
+                  target[fieldId] = initialStaff;
+                } else if (
+                  keyLower === 'guardia' ||
+                  keyLower === 'grupo' ||
+                  keyLower === 'grupo de guardia' ||
+                  keyLower === 'guardia de servicio'
+                ) {
+                  target[fieldId] = settings?.activeGuardId || '';
                 } else if (fieldId === 'Unidad') {
                   target[fieldId] = [];
                 } else {
@@ -251,6 +300,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
               sectionData.push(defaultItem);
             } else {
               sectionData.forEach((item: FormDataRecord) => {
+                if (!item) return;
                 applyDefaults(item, section.fieldIds);
                 (section.layout || section.fieldIds).forEach((id) => {
                   if (
@@ -286,7 +336,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
 
         return initialFormValues;
       },
-      [finalConfig, predefinedValues, roles]
+      [finalConfig, predefinedValues, roles, guards, settings?.activeGuardId, personnel]
     );
 
 

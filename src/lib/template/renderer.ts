@@ -7,7 +7,7 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { TemplateParserResult, SectionConfig, FieldConfig, FieldType, SnippetOption, FormDataRecord, FormDataValue } from '@/types';
-import { formatStaffMember } from '../formatters';
+import { formatStaffMember, formatStaffReporta } from '../formatters';
 /** Inline type for semantic resolution results (previously in integration-engine.ts) */
 export interface ResolutionResult {
     concept: string;
@@ -57,7 +57,7 @@ export function renderContent(
     if (!content) return '';
     const localData = (data || {}) as FormDataRecord;
 
-    // First, pass: collect all mapping results for fields
+    // First pass: collect all mapping results for fields
     const mappingResults: Record<string, string> = {};
     const mappingRegex = /\[\?\s*\{[\s\S]+?\}\s*(?:(?:!=|>=|<=|>|<|=)\s*(?:"[^"]*"|\S+?))?\s*\]([\s\S]*?)\[\/\s*\]/g;
 
@@ -70,12 +70,21 @@ export function renderContent(
         if (condMatch && condMatch[1]) {
             const condFieldId = condMatch[1].trim();
             const operator = condMatch[2];
-            const actualValue = localData[condFieldId];
+            
+            // Re-use findValueForField for robust case-insensitive lookup
+            const actualValue = findValueForField(
+                condFieldId, 
+                localData, 
+                config.sections || [], 
+                {}, 
+                {}
+            );
+            
             const options = config.templateOptions.get(condFieldId);
 
             if (!operator) {
                 let keyToCompare = actualValue;
-                if (options) {
+                if (options && typeof actualValue === 'string') {
                     const opt = options.find((o: SnippetOption) => o.value === actualValue || o.label === actualValue);
                     if (opt) keyToCompare = opt.label;
                 }
@@ -255,7 +264,7 @@ function renderValue(
             }
             return resolved;
         }
-        return '';
+        return String(value);
     }
 
     // Date rendering
@@ -285,8 +294,11 @@ function renderValue(
     if (Array.isArray(value)) {
         if (value.length > 0) {
             if (typeof value[0] === 'object' && value[0] !== null && 'name' in value[0]) {
-                const showCedula =
-                    fieldId.toLowerCase() === 'reporta' || fieldId.toLowerCase() === 'analista';
+                const isReporta = fieldId.toLowerCase() === 'reporta';
+                if (isReporta) {
+                    return value.map((member) => formatStaffReporta(member as import('@/types').StaffMember)).join(', ');
+                }
+                const showCedula = fieldId.toLowerCase() === 'analista';
                 return value.map((member) => formatStaffMember(member as import('@/types').StaffMember, showCedula)).join(', ');
             }
         }
@@ -380,7 +392,8 @@ function renderSection(
     config: TemplateRenderConfig,
     predefinedValues: Record<string, string>,
     dynamicPredefinedValues: Record<string, string>,
-    currentData: FormDataRecord
+    currentData: FormDataRecord,
+    mappingResults: Record<string, string> = {}
 ): string {
     const section = sections.find((s) => s.id === sectionId);
     if (!section) return '';
@@ -520,13 +533,20 @@ function renderSection(
                                 config,
                                 predefinedValues,
                                 dynamicPredefinedValues,
-                                item
+                                item,
+                                mappingResults
                             );
                             itemContent = itemContent.replace(nestedRegex, renderedNested);
                         }
                     }
                 } else {
-                    const val = findValueForField(id, data, sections, predefinedValues, dynamicPredefinedValues, item);
+                    const baseVal = findValueForField(id, data, sections, predefinedValues, dynamicPredefinedValues, item);
+                    
+                    // Case-insensitive mapping results lookup
+                    const lowerId = id.toLowerCase();
+                    const mappingKey = Object.keys(mappingResults).find(k => k.toLowerCase() === lowerId);
+                    const val = mappingKey !== undefined ? mappingResults[mappingKey] : baseVal;
+                    
                     itemContent = itemContent.replace(
                         new RegExp(`\\{${escapeRegExp(id)}(:[^|}]+)*(?:\\|.*?)?\\}(\\*)?`, 'g'),
                         renderValue(val, id, fields, config, { ...data, ...item })
@@ -568,8 +588,43 @@ export function renderContentWithSections(
     predefinedValues: Record<string, string>,
     dynamicPredefinedValues: Record<string, string> = {}
 ): string {
-    let finalContent = template;
     const { sections = [], fields = {} } = config;
+    let finalContent = template;
+
+    // First pass: collect all mapping results for fields
+    const mappingResults: Record<string, string> = {};
+    const mappingRegex = /\[\?\s*\{[\s\S]+?\}\s*(?:(?:!=|>=|<=|>|<|=)\s*(?:"[^"]*"|\S+?))?\s*\]([\s\S]*?)\[\/\s*\]/g;
+    let mappingMatch;
+    while ((mappingMatch = mappingRegex.exec(template)) !== null) {
+        const block = mappingMatch[0];
+        const innerContent = mappingMatch[1];
+        const condMatch = block.match(/^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(?:(!=|>=|<=|>|<|=)\s*("(.*?)"|(\S+?)))?\s*\]/);
+        if (condMatch && condMatch[1]) {
+            const condFieldId = condMatch[1].trim();
+            const operator = condMatch[2];
+            const actualValue = findValueForField(condFieldId, data, sections, predefinedValues, dynamicPredefinedValues);
+            if (!operator) {
+                let keyToCompare = actualValue;
+                const options = config.templateOptions?.get(condFieldId);
+                if (options && typeof actualValue === 'string') {
+                    const opt = options.find((o) => o.value === actualValue || o.label === actualValue);
+                    if (opt) keyToCompare = opt.label;
+                }
+                const lines = (innerContent || '').split('\n');
+                for (const line of lines) {
+                    const eqIdx = line.indexOf('=');
+                    if (eqIdx > -1) {
+                        const key = line.substring(0, eqIdx).trim();
+                        const val = line.substring(eqIdx + 1).trim();
+                        if (evaluateCondition(keyToCompare, '=', key)) {
+                            mappingResults[condFieldId] = val;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     // Process top-level layout items
     const topLevelSections = sections.filter((s: SectionConfig) => {
@@ -637,7 +692,8 @@ export function renderContentWithSections(
             config,
             predefinedValues,
             dynamicPredefinedValues,
-            data
+            data,
+            mappingResults
         );
         finalContent = finalContent.replace(sectionRegex, rendered);
     });
@@ -646,10 +702,16 @@ export function renderContentWithSections(
     // Final cleanup of loose tags (omit semantic tags for post-processing)
     finalContent = finalContent.replace(
         /\{([^:}]+?)(:[^|}]+)*(?:\|.+?)?\}/g,
-        (match, fieldId) => {
+        (match, fieldId: string) => {
             if (match.includes(':semantic')) return match;
             fieldId = fieldId.trim();
-            const formValue = findValueForField(fieldId, data, sections, predefinedValues, dynamicPredefinedValues);
+            const lowerFieldId = fieldId.toLowerCase();
+            const baseVal = findValueForField(fieldId, data, sections, predefinedValues, dynamicPredefinedValues);
+            
+            // Case-insensitive mapping results lookup
+            const mappingKey = Object.keys(mappingResults).find(k => k.toLowerCase() === lowerFieldId);
+            const formValue = mappingKey !== undefined ? mappingResults[mappingKey] : baseVal;
+            
             return hasContent(formValue) ? renderValue(formValue, fieldId, fields, config) : '';
         }
     );

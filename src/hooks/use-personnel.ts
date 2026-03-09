@@ -67,10 +67,10 @@ export function usePersonnel() {
         const validatedMember = StaffMemberSchema.parse(memberWithId);
         await db.personnel.insert(validatedMember);
         logger.info('Personnel added', { id: validatedMember.id, name: validatedMember.name });
-        toast.success('Personal agregado correctamente.');
       } catch (error) {
         logger.error('Failed to add personnel', error);
         toast.error(getUserFriendlyErrorMessage(error));
+        throw error; // Re-throw so caller knows it failed
       }
     },
     [db]
@@ -115,14 +115,15 @@ export function usePersonnel() {
         if (doc) {
           await doc.patch(validatedUpdates);
           logger.info('Personnel updated', { id, updates: validatedUpdates });
-          toast.success('Personal actualizado correctamente.');
         } else {
           logger.warn('Personnel not found for update', { id });
           toast.error('Miembro del personal no encontrado.');
+          throw new Error('Personnel not found');
         }
       } catch (error) {
         logger.error('Failed to update personnel', error);
         toast.error(getUserFriendlyErrorMessage(error));
+        throw error;
       }
     },
     [db]

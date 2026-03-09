@@ -116,7 +116,6 @@ export function AddEditPersonnelDialog({
     }
 
     onSave(data);
-    toast.success(isEditMode ? 'Personal actualizado' : 'Personal añadido');
   };
 
   const handleClose = () => {

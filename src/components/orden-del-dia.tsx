@@ -36,15 +36,12 @@ import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { GripVertical } from 'lucide-react';
 import type { Staff, StaffMember, StaffRole, FieldConfig } from '@/types';
 
+import { formatStaffMember } from '@/lib/formatters';
+
 interface OrdenDelDiaFormProps {
   selectedGuard: string;
   initialData: Staff | undefined;
 }
-
-const formatStaffMember = (member: StaffMember): string => {
-  const rank = member.rank ? `${member.rank} ` : '';
-  return `${rank}${member.name}`;
-};
 
 export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormProps) {
   const { definitions } = useFieldDefinitions();
@@ -116,14 +113,22 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
         const roleNameLower = role.name.toLowerCase();
         let assignedMembers = (initialData && initialData[role.name]) || [];
 
-        // Override Director/Chief assignments from Global Personnel
+        // Rehydrate ALL assigned members with latest metadata from personnel database
+        // This ensures they get the latest Rank and Title even if the guard snapshot is old.
+        assignedMembers = assignedMembers.map(member => {
+            const latestData = personnel.find(p => p.id === member.id);
+            return latestData || member;
+        });
+
+        // Override/Priority for Leader Roles from Global Personnel (Role based lookup)
         if (
           roleNameLower === 'director' ||
           roleNameLower === 'jefe de operaciones' ||
+          roleNameLower === 'jefe de los servicios' ||
           roleNameLower === 'jefe de departamento'
         ) {
           const globalMatch = personnel.find(
-            (p: StaffMember) => p.roleId === role.name || p.roleId === roleNameLower
+            (p: StaffMember) => p.roleId?.toLowerCase() === roleNameLower
           );
           if (globalMatch) {
             assignedMembers = [globalMatch];
@@ -131,7 +136,6 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
         }
 
         // Apply Hierarchical Sorting as DEFAULT
-        // (This only happens on initialization, manual DND will then take over)
         newStaffState[role.name] = [...assignedMembers].sort((a, b) =>
           compareRanks(a.rank, b.rank)
         );
@@ -323,7 +327,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
         reportParts.push(
           ``,
           `*${role.toUpperCase()}*`,
-          personnelList.map(formatStaffMember).join('\n')
+          personnelList.map(m => formatStaffMember(m)).join('\n')
         );
       }
     });
