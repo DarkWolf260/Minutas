@@ -141,6 +141,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                     idx++;
                     continue;
                 }
+
                 subFieldNames.add(fieldId);
                 fieldNames.add(fieldId);
 
@@ -275,6 +276,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                     }
                 }
 
+
                 const innerResult = parseInternal(inner);
 
                 // Implicit dropdown options extraction from mapping conditionals
@@ -362,8 +364,8 @@ export function parse(tokens: Token[]): TemplateParserResult {
     const finalResult = parseInternal(tokens);
     sections.push(...finalResult.subSections);
     layout.push(...finalResult.subLayout);
-    finalResult.subFieldNames.forEach(fn => fieldNames.add(fn));
 
+    finalResult.subFieldNames.forEach(fn => fieldNames.add(fn));
     // Reconcile mapping conditional values
     // If a condition requests a label that matches a dropdown option for the target field,
     // convert the condition to expect the underlying value instead.
@@ -373,7 +375,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
             const targetOpts = templateOptions.get(targetFieldId);
             if (targetOpts && targetOpts.length > 0) {
                 const matchedOpt = targetOpts.find(
-                    opt => opt.label.trim().toLowerCase() === section.condition!.value.trim().toLowerCase()
+                    opt => opt.label.trim() === section.condition!.value.trim()
                 );
                 if (matchedOpt) {
                     section.condition.value = matchedOpt.value;
@@ -382,9 +384,53 @@ export function parse(tokens: Token[]): TemplateParserResult {
         }
     });
 
+    // Emulate replacing fields with their conditional sections in layout and non-condition sections
+    // This allows conditionals to wrap fields even when they appear in self-contained Sections
+    const conditionalSections = sections.filter(s => s.condition && !s.isMapping);
+
+    const fieldToConditionMap = new Map<string, string[]>();
+    conditionalSections.forEach(condSec => {
+        condSec.fieldIds.forEach(fieldId => {
+            const existing = fieldToConditionMap.get(fieldId) || [];
+            existing.push(condSec.id);
+            fieldToConditionMap.set(fieldId, existing);
+        });
+    });
+
+    sections.forEach(sec => {
+        if (sec.condition) return;
+
+        // Determine the base layout to modify (use fieldIds if layout is empty)
+        const baseLayout = (sec.layout && sec.layout.length > 0) ? sec.layout : [...sec.fieldIds];
+
+        // Always set the layout with replaced condition wrappers
+        sec.layout = baseLayout.flatMap(fid => fieldToConditionMap.get(fid) || [fid])
+            .filter((val, idx, self) => self.indexOf(val) === idx);
+
+        // CRITICAL: We do NOT mutate sec.fieldIds here because renderer.ts relies on the
+        // original raw field IDs to match `{Field}` tags in the generated text!
+    });
+
+    const absorbedItems = new Set<string>();
+    sections.forEach(sec => {
+        if (!sec.condition && !sec.isMapping) {
+            sec.fieldIds.forEach(id => absorbedItems.add(id));
+            if (sec.layout) sec.layout.forEach(id => absorbedItems.add(id));
+        }
+    });
+
+    // Also update global layout
+    const updatedLayout = layout.flatMap(fid => fieldToConditionMap.get(fid) || [fid])
+        .filter((val, idx, self) => self.indexOf(val) === idx)
+        .filter(val => {
+            // Remove condition sections from root layout if they are absorbed inside another section
+            if (val.startsWith('cond_') && absorbedItems.has(val)) return false;
+            return true;
+        });
+
     return {
         sections,
-        layout,
+        layout: updatedLayout,
         fieldNames,
         fieldTypes,
         templateOptions,

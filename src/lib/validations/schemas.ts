@@ -284,20 +284,12 @@ function createFieldZodSchema(fieldId: string, config: FieldConfig) {
             }
     }
 
-    // Apply required if flag is set
-    if (config.required) {
-        if (config.type === 'multi-text') {
-            fieldSchema = (fieldSchema as z.ZodArray<any>).min(1, `El campo "${config.label || fieldId}" es requerido`);
-        } else {
-            fieldSchema = (fieldSchema as z.ZodString).min(1, `El campo "${config.label || fieldId}" es requerido`);
-        }
+    // For dynamic schema, we must make all fields optional because they might be conditionally hidden
+    // The frontend react-hook-form already strictly enforces required fields depending on whether they are mapped and visible.
+    if (config.type !== 'multi-text') {
+        fieldSchema = fieldSchema.optional().or(z.literal(''));
     } else {
-        // If not required, allow optional/empty
-        if (config.type !== 'multi-text') {
-            fieldSchema = fieldSchema.optional().or(z.literal(''));
-        } else {
-            fieldSchema = fieldSchema.optional();
-        }
+        fieldSchema = fieldSchema.optional();
     }
 
     return fieldSchema;
@@ -333,21 +325,28 @@ export function generateFormDataSchema(config: { fields: Record<string, FieldCon
 
     // 3. Add sections
     sections.forEach(section => {
-        const sectionShape: Record<string, z.ZodTypeAny> = {};
-        if (section.fieldIds) {
-            section.fieldIds.forEach((fieldId: string) => {
-                const fieldConfig = fields[fieldId];
-                if (fieldConfig) {
-                    sectionShape[fieldId] = createFieldZodSchema(fieldId, fieldConfig);
-                }
-            });
-        }
-
-        const sectionSchema = z.object(sectionShape).passthrough();
         if (section.isRepeatable) {
+            const sectionShape: Record<string, z.ZodTypeAny> = {};
+            if (section.fieldIds) {
+                section.fieldIds.forEach((fieldId: string) => {
+                    const fieldConfig = fields[fieldId];
+                    if (fieldConfig) {
+                        sectionShape[fieldId] = createFieldZodSchema(fieldId, fieldConfig);
+                    }
+                });
+            }
+            const sectionSchema = z.object(sectionShape).passthrough();
             shape[section.id] = z.array(sectionSchema);
         } else {
-            shape[section.id] = sectionSchema;
+            // Flatten non-repeatable section fields into top level
+            if (section.fieldIds) {
+                section.fieldIds.forEach((fieldId: string) => {
+                    const fieldConfig = fields[fieldId];
+                    if (fieldConfig) {
+                        shape[fieldId] = createFieldZodSchema(fieldId, fieldConfig);
+                    }
+                });
+            }
         }
     });
 

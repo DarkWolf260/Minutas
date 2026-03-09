@@ -21,10 +21,8 @@ import { ThemeToggle } from '@/components/theme-toggle';
 const navItems = [
   { href: '/', label: 'Novedades', icon: Newspaper },
   { href: '/orden-del-dia', label: 'Orden del Día', icon: ClipboardList },
-  { href: '/reporte-final', label: 'Reporte Final', icon: ClipboardCheck },
   { href: '/direcciones', label: 'Direcciones', icon: NotebookPen },
   { href: '/personal', label: 'Personal', icon: Users },
-  { href: '/historial', label: 'Historial', icon: History },
 ];
 
 export function SideNav() {

@@ -71,13 +71,13 @@ export function validateTemplateSyntax(content: string): { valid: boolean; error
   }
 
   // Count conditional markers
-  const openCond = (content.match(/\[\?\{/g) || []).length;
+  const openCond = (content.match(/\[\?/g) || []).length;
   const closeCond = (content.match(/\[\/\s*\]/g) || []).length;
 
   if (openCond !== closeCond) {
     return {
       valid: false,
-      error: 'Secciones condicionales [?{...}] no están cerradas correctamente con [/].',
+      error: 'Secciones condicionales [?...] no están cerradas correctamente con [/].',
     };
   }
 

@@ -54,9 +54,10 @@ export const findValueInFormData = (
     const value = formData[key];
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       // Now check the fields within that section object
-      for (const nestedKey in value) {
+      const sectionRecord = value as Record<string, FormDataValue>;
+      for (const nestedKey in sectionRecord) {
         if (nestedKey.toLowerCase() === lowerKeyToFind) {
-          return value[nestedKey];
+          return sectionRecord[nestedKey];
         }
       }
     }

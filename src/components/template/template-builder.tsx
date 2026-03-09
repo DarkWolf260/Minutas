@@ -179,7 +179,7 @@ export function TemplateBuilder({
   const commonSnippets = [
     { name: 'Sección', value: '["Título" {Campo}]' },
     { name: 'S. Repet', value: '["Título"]* {Campo}' },
-    { name: 'S. Cond', value: '[?{Campo}=Val]\n["Título"]\n{Campo}\n[/]\n' },
+    { name: 'S. Cond', value: '[?Campo=Val]\n["Título"]\n{Campo}\n[/]\n' },
     { name: 'Fecha', value: '{Fecha}' },
     { name: 'Hora', value: '{Hora}' },
     { name: 'Lista', value: '{Campo:dropdown(A=1|B=2)}' },

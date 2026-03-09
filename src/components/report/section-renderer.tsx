@@ -38,10 +38,11 @@ export interface SectionRendererProps {
     pathPrefix?: string;
     /** If provided, this value is used directly for condition evaluation instead of internal useWatch */
     conditionValue?: FormDataValue;
+    wrapperClassName?: string;
 }
 
 export function SectionRenderer(props: SectionRendererProps) {
-    const { section, pathPrefix = '' } = props;
+    const { section, config, pathPrefix = '', conditionValue } = props;
     const condition = section.condition;
 
     const watchPath = condition
@@ -58,10 +59,36 @@ export function SectionRenderer(props: SectionRendererProps) {
         disabled: !condition
     });
 
+    let actualValueToEvaluate = conditionValue !== undefined ? conditionValue : watchedFieldValue;
+
     if (condition) {
+        // If the field has snippet options (dropdown), check if we need to compare
+        // against the value or the label. 'actualValueToEvaluate' might be the label.
+
+        // Find fieldConfig case-insensitively since template allows `{Campo}` and `{campo}` interchangeably
+        const fieldConfigKey = Object.keys(config.fields).find(k => k.toLowerCase() === condition.fieldId.toLowerCase());
+        const fieldConfig = fieldConfigKey ? config.fields[fieldConfigKey] : config.fields[condition.fieldId];
+
+        if (fieldConfig?.snippetOptions?.length) {
+            const options = fieldConfig.snippetOptions;
+            const targetValue = condition.value;
+            // Does the targetValue match any option's value or label?
+            const matchedOpt = options.find(
+                (opt: any) => opt.value === targetValue || opt.label === targetValue
+            );
+
+            if (matchedOpt) {
+                // Determine if actualValueToEvaluate is the label or value, and normalize
+                // comparison against the targetValue's represented concept
+                if (actualValueToEvaluate === matchedOpt.label || actualValueToEvaluate === String(matchedOpt.value)) {
+                    actualValueToEvaluate = targetValue;
+                }
+            }
+        }
+
         if (
             !evaluateCondition(
-                watchedFieldValue,
+                actualValueToEvaluate,
                 condition.operator || '=',
                 condition.value
             )
@@ -97,6 +124,12 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
     const fieldNamePrefix = pathPrefix
         ? `${pathPrefix}.${section.id}`
         : section.id;
+
+    const layoutItems = section.layout && section.layout.length > 0 ? section.layout : section.fieldIds;
+    if (layoutItems.length === 0 && !section.label && !section.isSeparator) {
+        return null;
+    }
+
     const { fields, append, remove } = useFieldArray({
         control,
         name: fieldNamePrefix,
@@ -133,7 +166,8 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                 className={cn(
                     'space-y-4',
                     !isNested && 'pt-4',
-                    isNested && isFullWidth && 'sm:col-span-2'
+                    isNested && isFullWidth && 'sm:col-span-2',
+                    props.wrapperClassName
                 )}
             >
                 {section.label &&
@@ -159,6 +193,7 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                                 <Controller
                                     name={`${fieldNamePrefix}.${index}.${fieldId}`}
                                     control={control}
+                                    shouldUnregister={true}
                                     rules={{
                                         required: fieldConfig.required
                                             ? 'Este campo es obligatorio'
@@ -230,7 +265,8 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
             className={cn(
                 'space-y-4',
                 !isNested && 'pt-4',
-                isNested && isFullWidth && 'sm:col-span-2'
+                isNested && isFullWidth && 'sm:col-span-2',
+                props.wrapperClassName
             )}
         >
             {section.label && (
@@ -323,6 +359,7 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                                             <Controller
                                                 name={path}
                                                 control={control}
+                                                shouldUnregister={true}
                                                 rules={{
                                                     required: fieldConfig.required
                                                         ? 'Este campo es obligatorio'
@@ -395,13 +432,16 @@ function SingleSectionRenderer(props: SectionRendererProps) {
         pathPrefix = '',
     } = props;
 
-    const fieldNamePrefix = pathPrefix
-        ? `${pathPrefix}.${section.id}`
-        : section.id;
+    const fieldNamePrefix = pathPrefix;
+
+    const layoutItems = section.layout && section.layout.length > 0 ? section.layout : section.fieldIds;
+    if (layoutItems.length === 0 && !section.label && !section.isSeparator) {
+        return null;
+    }
 
     if (section.fieldIds.length === 0 && section.label) {
         return (
-            <div className={cn(!isNested && 'pt-4')}>
+            <div className={cn(!isNested && 'pt-4', props.wrapperClassName)}>
                 <h3 className="text-lg font-semibold">{section.label}</h3>
             </div>
         );
@@ -409,14 +449,14 @@ function SingleSectionRenderer(props: SectionRendererProps) {
 
     if (section.isSeparator) {
         return (
-            <div className="py-6 sm:col-span-2 3xl:col-span-3">
+            <div className={cn("py-6 sm:col-span-2 3xl:col-span-3", props.wrapperClassName)}>
                 <Separator className="bg-border" />
             </div>
         );
     }
 
     return (
-        <div className={cn('space-y-4', !isNested && 'pt-4')}>
+        <div className={cn('space-y-4', !isNested && 'pt-4', props.wrapperClassName)}>
             {section.label && (
                 <h3 className="text-lg font-semibold">{section.label}</h3>
             )}
@@ -434,26 +474,23 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                             );
                             if (!nestedSection) return null;
                             return (
-                                <div
+                                <SectionRenderer
                                     key={`${fieldId}-${fIdx}`}
-                                    className="sm:col-span-2 3xl:col-span-3"
-                                >
-                                    <SectionRenderer
-                                        section={nestedSection}
-                                        config={config}
-                                        control={control}
-                                        disabled={disabled}
-                                        roles={roles}
-                                        rolesLoaded={rolesLoaded}
-                                        activeGuardStaff={activeGuardStaff}
-                                        predefinedValues={predefinedValues}
-                                        units={units}
-                                        setValue={setValue}
-                                        settings={settings}
-                                        isNested={true}
-                                        pathPrefix={fieldNamePrefix}
-                                    />
-                                </div>
+                                    section={nestedSection}
+                                    config={config}
+                                    control={control}
+                                    disabled={disabled}
+                                    roles={roles}
+                                    rolesLoaded={rolesLoaded}
+                                    activeGuardStaff={activeGuardStaff}
+                                    predefinedValues={predefinedValues}
+                                    units={units}
+                                    setValue={setValue}
+                                    settings={settings}
+                                    isNested={true}
+                                    pathPrefix={fieldNamePrefix}
+                                    wrapperClassName="sm:col-span-2 3xl:col-span-3"
+                                />
                             );
                         }
 
@@ -461,7 +498,7 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                         if (!fieldConfig) return null;
                         const isFullWidth =
                             fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
-                        const path = `${fieldNamePrefix}.${fieldId}`;
+                        const path = fieldNamePrefix ? `${fieldNamePrefix}.${fieldId}` : fieldId;
 
                         return (
                             <div
@@ -480,6 +517,7 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                                 <Controller
                                     name={path}
                                     control={control}
+                                    shouldUnregister={true}
                                     rules={{
                                         required: fieldConfig.required
                                             ? 'Este campo es obligatorio'

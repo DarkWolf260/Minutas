@@ -258,28 +258,14 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
           } else {
             if (section.id === 'section_separator') return;
 
-            if (section.isSelfContained) {
-              // Self-contained sections use nested paths (section.id.fieldId)
-              if (!target[section.id]) {
-                target[section.id] = {};
+            // Since we flattened pathPrefix for single sections in section-renderer to support
+            // global conditionals, we must also apply defaults at the root target instead of nesting.
+            applyDefaults(target, section.fieldIds);
+            (section.layout || section.fieldIds).forEach((id) => {
+              if (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) {
+                initializeSection(id, target);
               }
-              const sectionObject = target[section.id] as FormDataRecord;
-              applyDefaults(sectionObject, section.fieldIds);
-              (section.layout || section.fieldIds).forEach((id) => {
-                if (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) {
-                  initializeSection(id, sectionObject as FormDataRecord);
-                }
-              });
-            } else {
-              // Non-self-contained sections (conditional blocks): their Controllers use
-              // root-level names (no prefix), so we must initialize at the root target.
-              applyDefaults(target, section.fieldIds);
-              (section.layout || section.fieldIds).forEach((id) => {
-                if (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) {
-                  initializeSection(id, target);
-                }
-              });
-            }
+            });
           }
         };
 
@@ -462,6 +448,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
                         <Controller
                           name={fieldId}
                           control={control}
+                          shouldUnregister={true}
                           render={({ field }) => (
                             <FieldRenderer
                               fieldId={fieldId}

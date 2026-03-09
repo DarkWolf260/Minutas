@@ -180,9 +180,9 @@ function extractSectionToken(
 
     const raw = template.substring(startPos, pos);
 
-    // Check if this is a conditional: [?{Field} op value] or [?{Field}]
+    // Check if this is a conditional: [?{Field} op value] or [?{Field}] or [?Field op value] or [?Field]
     const conditionalMatch = content.match(
-        /^\?\s*\{\s*([^\}]+)\s*\}\s*(?:(!=|>=|<=|>|<|=)\s*(.+))?$/
+        /^\?\s*(?:\{\s*)?([^\}=!<>]+?)(?:\s*\})?\s*(?:(!=|>=|<=|>|<|=)\s*(.+))?$/
     );
 
     if (conditionalMatch) {
