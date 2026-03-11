@@ -106,7 +106,7 @@ export function renderContent(
     }
 
     const blockRegex =
-        /(\{[\s\S]+?\}|\[\?\s*\{[\s\S]+?\}\s*(?:(?:!=|>=|<=|>|<|=)\s*(?:"[^"]*"|\S+?))?\s*\][\s\S]*?\[\/\s*\])/g;
+        /(\{[^{}]+?\}|\[\?\s*\{[^{}]+?\}\s*(?:(?:!=|>=|<=|>|<|=)\s*(?:"[^"]*"|\S+?))?\s*\][\s\S]*?\[\/\s*\])/g;
 
     return content.replace(blockRegex, (block) => {
         if (block.startsWith('{')) {
@@ -544,7 +544,7 @@ function renderSection(
                     const val = mappingKey !== undefined ? mappingResults[mappingKey] : baseVal;
                     
                     itemContent = itemContent.replace(
-                        new RegExp(`\\{${escapeRegExp(id)}(:[^|}]+)*(?:\\|.*?)?\\}(\\*)?`, 'g'),
+                        new RegExp(`\\{${escapeRegExp(id)}(:[^|}{]+)*(?:\\|[^{}]+?)?\\}(\\*)?`, 'g'),
                         renderValue(val, id, fields, config, { ...data, ...item })
                     );
                 }
@@ -713,7 +713,7 @@ export function renderContentWithSections(
 
     // Final cleanup of loose tags (omit semantic tags for post-processing)
     finalContent = finalContent.replace(
-        /\{([^:}]+?)(:[^|}]+)*(?:\|.+?)?\}/g,
+        /\{([^:{}]+?)(:[^|}{]+)*(?:\|[^{}]+?)?\}/g,
         (match, fieldId: string) => {
             if (match.includes(':semantic')) return match;
             fieldId = fieldId.trim();
