@@ -169,7 +169,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                         fieldIds: [fieldId],
                         layout: [fieldId],
                         repeatableItemLabel: fieldId.toUpperCase(),
-                        originalContent: `{${fieldId}}`,
+                        originalContent: rawWithoutStar,
                     };
 
                     if (!globalRenderedFields.has(sectionId)) {

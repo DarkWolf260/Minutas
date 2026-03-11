@@ -458,11 +458,7 @@ function renderSection(
     renderedItems = itemsWithContent
         .map((item: FormDataRecord, index: number) => {
             let itemContent = section.originalContent || '';
-            let itemLayout = section.layout || section.fieldIds;
-            if (section.isSelfContained) {
-                // Auto-contained sections don't have separate layouts
-                itemLayout = section.fieldIds;
-            }
+            let itemLayout = section.layout && section.layout.length > 0 ? section.layout : section.fieldIds;
 
             itemLayout.forEach((id: string) => {
                 if (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) {
@@ -554,14 +550,30 @@ function renderSection(
                 }
             });
 
-            if (section.repeatableItemLabel && itemsWithContent.length > 1) {
-                // Format: - *NOVEDAD #01*\ncontent — only when multiple items
-                const labelPrefix = `- *${section.repeatableItemLabel} #${String(index + 1).padStart(2, '0')}*`;
-                itemContent = `${labelPrefix}\n${itemContent.trim()}`;
+            if (section.repeatableItemLabel) {
+                const isVirtual = section.originalContent?.trim().startsWith('{') && section.originalContent?.trim().endsWith('}');
+                
+                if (isVirtual) {
+                    if (itemsWithContent.length > 1) {
+                        const labelPrefix = `- *${section.repeatableItemLabel} #${String(index + 1).padStart(2, '0')}:*`;
+                        itemContent = `${labelPrefix} ${itemContent.trim()}`;
+                    } else {
+                        const labelPrefix = `- *${section.repeatableItemLabel}:*`;
+                        itemContent = `${labelPrefix} ${itemContent.trim()}`;
+                    }
+                } else if (itemsWithContent.length > 1) {
+                    // Format: - *NOVEDAD #01*\ncontent — only when multiple items
+                    const labelPrefix = `- *${section.repeatableItemLabel} #${String(index + 1).padStart(2, '0')}*`;
+                    itemContent = `${labelPrefix}\n${itemContent.trim()}`;
+                }
             }
             return itemContent;
         })
-        .join('\n\n');
+        .join(
+            (section.originalContent?.trim().startsWith('{') && section.originalContent?.trim().endsWith('}'))
+                ? '\n'
+                : '\n\n'
+        );
 
     // Add section title only for singular/plural sections (not plain labeled ones)
     if (section.singularTitle || section.pluralTitle) {

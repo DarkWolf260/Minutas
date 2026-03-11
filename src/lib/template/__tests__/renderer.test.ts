@@ -114,6 +114,34 @@ describe('Template Renderer - Secciones Repetibles', () => {
 
         expect(result).toContain('Dato descripcion');
     });
+
+    it('should correctly parse and render the Destino repeatable textarea field', () => {
+        const template = '["INFORMACIÓN GEOGRÁFICA"\n- *UBICACIÓN:* {Ubicación:textarea:req}\n- *DESTINO:* {Destino:textarea:req}*\n]';
+        const parsed = parseTemplate(template);
+        
+        expect(parsed.fieldNames.has('Ubicación')).toBe(true);
+        expect(parsed.fieldNames.has('Destino')).toBe(true);
+        expect(parsed.fieldTypes.get('Ubicación')).toBe('textarea');
+        expect(parsed.fieldTypes.get('Destino')).toBe('textarea');
+        
+        const destinoSection = parsed.sections.find(s => s.fieldIds.includes('Destino') && s.isRepeatable);
+        expect(destinoSection).toBeDefined();
+        
+        const data: Record<string, unknown> = {
+            'Ubicación': 'Av. Principal',
+            [destinoSection!.id]: [
+                { 'Destino': 'Hospital Central' },
+                { 'Destino': 'Clínica Sucre' }
+            ]
+        };
+
+        const config = buildConfig(template);
+        const result = renderFinalReport(template, data as never, config, {});
+        
+        expect(result).toContain('Av. Principal');
+        expect(result).toContain('Hospital Central');
+        expect(result).toContain('Clínica Sucre');
+    });
 });
 
 describe('Template Renderer - Secciones Auto-Contenidas', () => {

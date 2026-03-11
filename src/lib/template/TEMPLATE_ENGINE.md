@@ -82,6 +82,14 @@ Novedades: {novedad}*
 
 Esto crea una sección repetible donde el campo `novedad` puede tener múltiples instancias.
 
+Ejemplo con campos de direcciones repetibles:
+```text
+["INFORMACIÓN GEOGRÁFICA"
+- *UBICACIÓN:* {Ubicación:textarea:req}
+- *DESTINO:* {Destino:textarea:req}*
+]
+```
+
 ---
 
 ## 3. Secciones `[Label]...[/]`
