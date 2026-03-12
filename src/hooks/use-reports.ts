@@ -25,7 +25,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import type { Report } from '@/types';
@@ -172,7 +172,7 @@ export function useReports() {
     }
   }, [db, currentWorkspace]);
 
-  return {
+  return useMemo(() => ({
     reports,
     addReport,
     updateReport,
@@ -180,5 +180,5 @@ export function useReports() {
     clearAllReports,
     isLoaded,
     getLatestReports,
-  };
+  }), [reports, addReport, updateReport, removeReport, clearAllReports, isLoaded, getLatestReports]);
 }

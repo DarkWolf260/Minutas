@@ -52,10 +52,12 @@ interface TimeHlvInputProps {
   showHelperText?: boolean;
   className?: string; // Added className
   onBlur?: () => void; // Added onBlur
+  name?: string;
+  id?: string;
 }
 
 export const TimeHlvInput = forwardRef<HTMLInputElement, TimeHlvInputProps>(
-  ({ value: propValue, onChange: onFormChange, disabled = false, showHelperText = true, className, onBlur }, ref) => {
+  ({ value: propValue, onChange: onFormChange, disabled = false, showHelperText = true, className, onBlur, name, id }, ref) => {
     const internalInputRef = useRef<HTMLInputElement>(null);
 
     // Extract only digits from the prop value
@@ -141,6 +143,9 @@ export const TimeHlvInput = forwardRef<HTMLInputElement, TimeHlvInputProps>(
           placeholder="--:-- HLV"
           className={cn("font-mono", className)}
           disabled={disabled}
+          autoComplete="off"
+          name={name}
+          id={id}
         />
         {showHelperText && (
           <p className="text-xs text-muted-foreground mt-1">

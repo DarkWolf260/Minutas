@@ -1,16 +1,17 @@
 'use client';
 
-import { Suspense, useState, useMemo, useEffect } from 'react';
+import React, { Suspense, useState, useMemo, useEffect, useRef, memo, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search, FileText, AlertTriangle, PlusCircle, ChevronLeft } from 'lucide-react';
 import { ReportViewer } from '@/components/report/report-viewer';
-import { ReportGenerator } from '@/components/report/report-generator';
 import { useReports } from '@/hooks/use-reports';
 import { useTemplates } from '@/hooks/use-templates';
 import { useDrafts } from '@/hooks/use-drafts';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ReportGenerator, type ReportGeneratorRef } from '@/components/report/report-generator';
 import type { Report, Template } from '@/types';
 import { cn } from '@/lib/utils';
 import {
@@ -30,6 +31,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
 import { sortReports } from '@/lib/report-sorter';
 import { findValueInFormData } from '@/lib/report-sorter';
 
@@ -37,11 +45,11 @@ function NovedadesPageContent() {
   const { reports, addReport, updateReport, removeReport, clearAllReports } = useReports();
   const { templates, configs } = useTemplates();
   const { draft, clearDraft, isLoaded: draftIsLoaded } = useDrafts();
-  const searchParams = useSearchParams();
   const router = useRouter();
+  const isMobile = useIsMobile();
+  const generatorRef = useRef<ReportGeneratorRef>(null);
 
   const [isMounted, setIsMounted] = useState(false);
-  const preSelectedId = searchParams.get('selected');
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [reportToDelete, setReportToDelete] = useState<string | null>(null);
@@ -50,6 +58,14 @@ function NovedadesPageContent() {
   const [initialDraftData, setInitialDraftData] = useState<Record<string, any> | undefined>(
     undefined
   );
+  const [isNavigatingBack, setIsNavigatingBack] = useState(false);
+
+  useEffect(() => {
+    if (isNavigatingBack) {
+      const timer = setTimeout(() => setIsNavigatingBack(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isNavigatingBack]);
 
   const sortedReports = useMemo(() => {
     return sortReports(reports, 'asc');
@@ -59,8 +75,8 @@ function NovedadesPageContent() {
     if (!searchQuery) {
       return sortedReports;
     }
-    return sortedReports.filter(
-      (report) =>
+        return sortedReports.filter(
+      (report: Report) =>
         report.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         report.content.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -72,96 +88,63 @@ function NovedadesPageContent() {
     }
   }, [isMounted]);
 
-  useEffect(() => {
-    if (!isMounted) return;
-    // This effect handles draft restoration and default report selection.
-
-    // 1. Handle draft restoration first.
-    if (draftIsLoaded && draft) {
-      const template = templates.find((t) => t.id === draft.templateId);
-      if (template && (creatingReport?.id !== template.id || initialDraftData !== draft.formData)) {
-        setInitialDraftData(draft.formData);
-        setCreatingReport(template);
-        return;
-      }
-    }
-
-    // 2. If we are in creation mode, do nothing else.
-    if (creatingReport) {
-      return;
-    }
-
-    // 3. If a valid report is already selected, do nothing.
-    // The user's selection should be preserved.
-    if (selectedReportId && reports.find((r) => r.id === selectedReportId)) {
-      return;
-    }
-
-    // 4. If we're here, there's no valid selection.
-    // Give priority to the URL parameter.
-    if (preSelectedId && reports.find((r) => r.id === preSelectedId)) {
-      setSelectedReportId(preSelectedId);
-    } else {
-      // PROMPT: "no se seleccione ningun reporte automaticamente" (don't select any report automatically)
-      setSelectedReportId(null);
-    }
-  }, [
-    isMounted,
-    preSelectedId,
-    reports,
-    filteredReports,
-    creatingReport,
-    draft,
-    draftIsLoaded,
-    templates,
-    clearDraft,
-    initialDraftData,
-    selectedReportId,
-  ]);
+  // No longer in NovedadesPageContent, moved to DashboardContent to handle hook suspension properly
 
   const selectedReport = useMemo(() => {
     if (!selectedReportId || creatingReport) return null;
     return reports.find((report) => report.id === selectedReportId) ?? null;
   }, [selectedReportId, reports, creatingReport]);
 
-  const handleDeleteReport = async (id: string) => {
+  const handleDeleteReport = useCallback(async (id: string) => {
+    // Immediate state reset to stop flickers
+    setReportToDelete(null);
     await removeReport(id);
     if (selectedReportId === id) {
+      router.push('/');
       setSelectedReportId(null);
     }
-    setReportToDelete(null);
-  };
+  }, [removeReport, selectedReportId, router]);
 
-  const handleClearAll = async () => {
+  const handleClearAll = useCallback(async () => {
+    setReportToDelete(null);
     await clearAllReports();
-    setReportToDelete(null);
-  };
+  }, [clearAllReports]);
 
-  const handleSelectTemplate = (templateId: string) => {
-    const template = templates.find((t) => t.id === templateId);
+  const handleSelectTemplate = useCallback((templateId: string) => {
+    const template = templates.find((t: Template) => t.id === templateId);
     if (template) {
+      generatorRef.current?.cancel();
       setInitialDraftData(undefined);
       setSelectedReportId(null);
       setCreatingReport(template);
       setIsCreateDialogOpen(false);
+      // Clear URL to prevent it from re-opening the previous report
+      router.push('/');
     }
-  };
+  }, [templates, router]);
 
-  const handleSaveNewReport = async (report: Report) => {
+  const handleSaveNewReport = useCallback(async (report: Report) => {
+    setIsNavigatingBack(true);
     await clearDraft();
     await addReport(report);
-    setCreatingReport(null);
+    
+    // Perform state transition
     setInitialDraftData(undefined);
-    // Explicitly set the selected ID to ensure it opens immediately
+    setCreatingReport(null);
     setSelectedReportId(report.id);
+    
+    // Sync URL - effect will handle the rest but won't "clear" due to isNavigatingBack
     router.push(`/?selected=${report.id}`);
-  };
+  }, [clearDraft, addReport, router]);
 
-  const handleCancelCreation = async () => {
+  const handleCancelCreation = useCallback(async () => {
+    setIsNavigatingBack(true);
+    generatorRef.current?.cancel();
     await clearDraft();
     setCreatingReport(null);
     setInitialDraftData(undefined);
-  };
+    router.push('/');
+  }, [clearDraft, router]);
 
   return (
     <>
@@ -183,6 +166,8 @@ function NovedadesPageContent() {
           <div className="relative p-3">
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
+              id="report-search"
+              name="report-search"
               placeholder="Buscar reporte..."
               className="pl-8"
               value={searchQuery}
@@ -197,8 +182,10 @@ function NovedadesPageContent() {
                   <button
                     key={report.id}
                     onClick={() => {
+                      setIsNavigatingBack(true);
                       setSelectedReportId(report.id);
                       setCreatingReport(null);
+                      router.push(`/?selected=${report.id}`);
                     }}
                     className={cn(
                       'w-full rounded-md p-3 text-left transition-colors hover:bg-muted/50',
@@ -243,45 +230,52 @@ function NovedadesPageContent() {
 
         <main
           className={cn(
-            'flex-1 overflow-hidden',
+            'flex-1 overflow-hidden flex flex-col min-h-0',
             !selectedReportId && !creatingReport ? 'hidden sm:block' : 'block'
           )}
         >
-          {/* Mobile Back Button */}
-          {(selectedReportId || creatingReport) && (
-            <div className="sm:hidden border-b p-2 bg-card">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSelectedReportId(null);
-                  setCreatingReport(null);
-                }}
-              >
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                Volver a la lista
-              </Button>
-            </div>
-          )}
+          <MobileHeader
+            isMobile={isMobile}
+            isMounted={isMounted}
+            creatingReport={creatingReport}
+            selectedReport={selectedReport}
+            isNavigatingBack={isNavigatingBack}
+            handleCancelCreation={handleCancelCreation}
+            setIsNavigatingBack={setIsNavigatingBack}
+            setSelectedReportId={setSelectedReportId}
+          />
 
-          {creatingReport ? (
-            <ReportGenerator
-              key={creatingReport.id}
-              template={creatingReport}
-              config={
-                (configs[creatingReport.id] || { fields: {}, sections: [], layout: [] }) as any
+          {creatingReport || selectedReportId ? (
+            <Suspense
+              fallback={
+                <div className="flex-1 p-6">
+                  <div className="h-full w-full bg-muted/20 rounded-lg animate-pulse"></div>
+                </div>
               }
-              initialData={initialDraftData}
-              onCancel={handleCancelCreation}
-              onSave={handleSaveNewReport}
-            />
-          ) : selectedReport ? (
-            <ReportViewer
-              key={selectedReportId}
-              report={selectedReport}
-              onSave={updateReport}
-              onDelete={(id) => setReportToDelete(id)}
-            />
+            >
+              <DashboardContent
+                reports={reports}
+                templates={templates}
+                configs={configs}
+                draft={draft}
+                draftIsLoaded={draftIsLoaded}
+                isMounted={isMounted}
+                isMobile={isMobile}
+                selectedReportId={selectedReportId}
+                setSelectedReportId={setSelectedReportId}
+                creatingReport={creatingReport}
+                setCreatingReport={setCreatingReport}
+                initialDraftData={initialDraftData}
+                setInitialDraftData={setInitialDraftData}
+                isNavigatingBack={isNavigatingBack}
+                setIsNavigatingBack={setIsNavigatingBack}
+                generatorRef={generatorRef}
+                handleCancelCreation={handleCancelCreation}
+                handleSaveNewReport={handleSaveNewReport}
+                updateReport={updateReport}
+                setReportToDelete={setReportToDelete}
+              />
+            </Suspense>
           ) : (
             <div className="hidden sm:flex h-full items-center justify-center text-muted-foreground p-6 text-center">
               <div className="max-w-xs space-y-2">
@@ -293,101 +287,393 @@ function NovedadesPageContent() {
         </main>
       </div>
 
-      <AlertDialog
-        open={!!reportToDelete}
-        onOpenChange={(open) => !open && setReportToDelete(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {reportToDelete === 'ALL'
-                ? 'Esta acción no se puede deshacer. Se eliminarán permanentemente TODOS los reportes guardados.'
-                : 'Esta acción no se puede deshacer. El reporte será eliminado permanentemente.'}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setReportToDelete(null)}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() =>
-                reportToDelete === 'ALL' ? handleClearAll() : handleDeleteReport(reportToDelete!)
-              }
-            >
-              Sí, eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Crear Novedad</DialogTitle>
-            <DialogDescription>
-              Selecciona una plantilla para empezar a generar un nuevo reporte.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-2 max-h-96 overflow-y-auto">
-            {templates.filter((t) => t.isActive).length > 0 ? (
-              templates
-                .filter((t) => t.isActive)
-                .map((template) => (
-                  <button
-                    key={template.id}
-                    onClick={() => handleSelectTemplate(template.id)}
-                    className="w-full text-left p-3 rounded-md hover:bg-muted transition-colors flex items-center gap-3"
-                  >
-                    <FileText className="h-5 w-5 text-primary" />
-                    <span className="flex-1">{template.name}</span>
-                  </button>
-                ))
-            ) : (
-              <div className="text-center text-muted-foreground py-10">
-                <p>No has subido o activado ninguna plantilla.</p>
-                <Button
-                  variant="link"
-                  onClick={() => {
-                    setIsCreateDialogOpen(false);
-                    router.push('/plantillas');
-                  }}
-                >
-                  Ir a Plantillas
-                </Button>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <NovedadesDialogs
+        isMounted={isMounted}
+        isMobile={isMobile}
+        isCreateDialogOpen={isCreateDialogOpen}
+        setIsCreateDialogOpen={setIsCreateDialogOpen}
+        reportToDelete={reportToDelete}
+        setReportToDelete={setReportToDelete}
+        templates={templates}
+        handleSelectTemplate={handleSelectTemplate}
+        handleClearAll={handleClearAll}
+        handleDeleteReport={handleDeleteReport}
+      />
     </>
   );
 }
 
-export default function NovedadesPage() {
+// Separate memoized component for dialogs to prevent re-render loops
+const NovedadesDialogs = memo(function NovedadesDialogs({
+  isMounted,
+  isMobile,
+  isCreateDialogOpen,
+  setIsCreateDialogOpen,
+  reportToDelete,
+  setReportToDelete,
+  templates,
+  handleSelectTemplate,
+  handleClearAll,
+  handleDeleteReport,
+}: {
+  isMounted: boolean;
+  isMobile: boolean;
+  isCreateDialogOpen: boolean;
+  setIsCreateDialogOpen: (open: boolean) => void;
+  reportToDelete: string | null;
+  setReportToDelete: (id: string | null) => void;
+  templates: Template[];
+  handleSelectTemplate: (id: string) => void;
+  handleClearAll: () => void;
+  handleDeleteReport: (id: string) => void;
+}) {
+  if (!isMounted) return null;
+
   return (
-    <Suspense
-      fallback={
-        <div className="flex h-screen bg-background">
-          <aside className="h-full w-80 flex-col border-r bg-card flex animate-pulse">
-            <div className="flex items-center justify-between border-b p-3">
-              <div className="h-6 w-32 bg-muted rounded"></div>
-              <div className="h-8 w-24 bg-muted rounded"></div>
+    <>
+      {/* Delete Confirmation - Responsive */}
+      {isMobile ? (
+        <Sheet
+          open={!!reportToDelete}
+          onOpenChange={(open) => !open && setReportToDelete(null)}
+        >
+          <SheetContent side="bottom" className="rounded-t-xl p-6">
+            <SheetHeader className="text-left">
+              <SheetTitle>¿Estás seguro?</SheetTitle>
+              <SheetDescription>
+                {reportToDelete === 'ALL'
+                  ? 'Esta acción no se puede deshacer. Se eliminarán permanentemente TODOS los reportes guardados.'
+                  : 'Esta acción no se puede deshacer. El reporte será eliminado permanentemente.'}
+              </SheetDescription>
+            </SheetHeader>
+            <div className="py-6 space-y-3">
+              <Button
+                variant="destructive"
+                className="w-full h-12 text-base font-semibold"
+                onClick={() => {
+                  const id = reportToDelete;
+                  setReportToDelete(null);
+                  if (id === 'ALL') handleClearAll();
+                  else if (id) handleDeleteReport(id);
+                }}
+              >
+                Sí, eliminar
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full h-12 text-base"
+                onClick={() => setReportToDelete(null)}
+              >
+                Cancelar
+              </Button>
             </div>
-            <div className="p-3">
-              <div className="h-10 w-full bg-muted rounded"></div>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Dialog
+          open={!!reportToDelete}
+          onOpenChange={(open) => !open && setReportToDelete(null)}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>¿Estás seguro?</DialogTitle>
+              <DialogDescription>
+                {reportToDelete === 'ALL'
+                  ? 'Esta acción no se puede deshacer. Se eliminarán permanentemente TODOS los reportes guardados.'
+                  : 'Esta acción no se puede deshacer. El reporte será eliminado permanentemente.'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-3 mt-4">
+              <Button variant="outline" onClick={() => setReportToDelete(null)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  const id = reportToDelete;
+                  setReportToDelete(null);
+                  if (id === 'ALL') handleClearAll();
+                  else if (id) handleDeleteReport(id);
+                }}
+              >
+                Sí, eliminar
+              </Button>
             </div>
-            <div className="p-3 space-y-2">
-              <div className="h-12 w-full bg-muted rounded"></div>
-              <div className="h-12 w-full bg-muted rounded"></div>
-              <div className="h-12 w-full bg-muted rounded"></div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Selection of Template - Responsive with Hydration Guard */}
+      {isMobile ? (
+        <Sheet open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <SheetContent side="bottom" className="rounded-t-xl p-6">
+            <SheetHeader className="text-left">
+              <SheetTitle>Crear Novedad</SheetTitle>
+              <SheetDescription>
+                Selecciona una plantilla para empezar a generar un nuevo reporte.
+              </SheetDescription>
+            </SheetHeader>
+            <div className="py-4 space-y-2 max-h-[60vh] overflow-y-auto">
+              {templates.filter((t) => t.isActive).length > 0 ? (
+                templates
+                  .filter((t) => t.isActive)
+                  .map((template) => (
+                    <button
+                      key={template.id}
+                      onClick={() => handleSelectTemplate(template.id)}
+                      className="w-full text-left p-4 rounded-xl border bg-card hover:bg-muted transition-colors flex items-center gap-4 active:scale-[0.98] transition-all"
+                    >
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-primary" />
+                      </div>
+                      <span className="font-medium text-base">{template.name}</span>
+                    </button>
+                  ))
+              ) : (
+                <div className="text-center text-muted-foreground py-10">
+                  <p>No has subido o activado ninguna plantilla.</p>
+                  <Button
+                    variant="link"
+                    onClick={() => {
+                      setIsCreateDialogOpen(false);
+                      // Handled by parent router.push
+                    }}
+                  >
+                    Ir a Plantillas
+                  </Button>
+                </div>
+              )}
             </div>
-          </aside>
-          <main className="flex-1 p-6">
-            <div className="h-full w-full bg-muted rounded-lg animate-pulse"></div>
-          </main>
-        </div>
-      }
-    >
-      <NovedadesPageContent />
-    </Suspense>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Crear Novedad</DialogTitle>
+              <DialogDescription>
+                Selecciona una plantilla para empezar a generar un nuevo reporte.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-2 max-h-96 overflow-y-auto">
+              {templates.filter((t) => t.isActive).length > 0 ? (
+                templates
+                  .filter((t) => t.isActive)
+                  .map((template) => (
+                    <button
+                      key={template.id}
+                      onClick={() => handleSelectTemplate(template.id)}
+                      className="w-full text-left p-3 rounded-md hover:bg-muted transition-colors flex items-center gap-3"
+                    >
+                      <FileText className="h-5 w-5 text-primary" />
+                      <span className="flex-1">{template.name}</span>
+                    </button>
+                  ))
+              ) : (
+                <div className="text-center text-muted-foreground py-10">
+                  <p>No has subido o activado ninguna plantilla.</p>
+                  <Button
+                    variant="link"
+                    onClick={() => {
+                      setIsCreateDialogOpen(false);
+                      // Handled by parent router.push
+                    }}
+                  >
+                    Ir a Plantillas
+                  </Button>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
+});
+
+function DashboardContent({
+  reports,
+  templates,
+  configs,
+  draft,
+  draftIsLoaded,
+  isMounted,
+  isMobile,
+  selectedReportId,
+  setSelectedReportId,
+  creatingReport,
+  setCreatingReport,
+  initialDraftData,
+  setInitialDraftData,
+  isNavigatingBack,
+  setIsNavigatingBack,
+  generatorRef,
+  handleCancelCreation,
+  handleSaveNewReport,
+  updateReport,
+  setReportToDelete,
+}: {
+  reports: Report[];
+  templates: Template[];
+  configs: Record<string, any>;
+  draft: any;
+  draftIsLoaded: boolean;
+  isMounted: boolean;
+  isMobile: boolean;
+  selectedReportId: string | null;
+  setSelectedReportId: (id: string | null) => void;
+  creatingReport: Template | null;
+  setCreatingReport: (t: Template | null) => void;
+  initialDraftData: any;
+  setInitialDraftData: (d: any) => void;
+  isNavigatingBack: boolean;
+  setIsNavigatingBack: (b: boolean) => void;
+  generatorRef: any;
+  handleCancelCreation: () => void;
+  handleSaveNewReport: (r: Report) => void;
+  updateReport: any;
+  setReportToDelete: (id: string | null) => void;
+}) {
+  const searchParams = useSearchParams();
+  const preSelectedId = searchParams.get('selected');
+
+  // 1. Separate Draft Restoration (Only on mount/load)
+  useEffect(() => {
+    if (!isMounted || !draftIsLoaded) return;
+
+    if (draft && !preSelectedId && !creatingReport && !selectedReportId && !isNavigatingBack) {
+      const template = templates.find((t: Template) => t.id === draft.templateId);
+      if (template) {
+        setInitialDraftData(draft.formData);
+        setCreatingReport(template);
+      }
+    }
+  }, [
+    isMounted,
+    draftIsLoaded,
+    draft,
+    templates,
+    preSelectedId,
+    creatingReport,
+    selectedReportId,
+    isNavigatingBack,
+    setInitialDraftData,
+    setCreatingReport,
+  ]);
+
+  // 2. Focused URL Synchronization
+  useEffect(() => {
+    if (!isMounted) return;
+
+    if (creatingReport || isNavigatingBack) {
+      return;
+    }
+
+    if (preSelectedId) {
+      if (preSelectedId !== selectedReportId) {
+        const report = reports.find((r: Report) => r.id === preSelectedId);
+        if (report) {
+          setSelectedReportId(preSelectedId);
+        }
+      }
+    } else if (selectedReportId) {
+      setSelectedReportId(null);
+    }
+  }, [
+    isMounted,
+    preSelectedId,
+    selectedReportId,
+    creatingReport,
+    reports,
+    isNavigatingBack,
+    setSelectedReportId,
+  ]);
+
+  const selectedReport = useMemo(() => {
+    if (creatingReport) return null;
+    return reports.find((report: Report) => report.id === selectedReportId) ?? null;
+  }, [selectedReportId, reports, creatingReport]);
+
+  return (
+    <div className="flex flex-col h-full overflow-hidden bg-background min-h-0">
+
+      {creatingReport ? (
+        <ReportGenerator
+          ref={generatorRef}
+          template={creatingReport}
+          config={configs[creatingReport.id]}
+          initialData={initialDraftData}
+          onCancel={handleCancelCreation}
+          onSave={handleSaveNewReport}
+        />
+      ) : selectedReport ? (
+        <ReportViewer
+          key={selectedReportId}
+          report={selectedReport}
+          onSave={updateReport}
+          onDelete={(id: string) => setReportToDelete(id)}
+        />
+      ) : (
+        <div className="hidden sm:flex h-full items-center justify-center text-muted-foreground p-6 text-center">
+          <div className="max-w-xs space-y-2">
+            <FileText className="h-12 w-12 mx-auto opacity-20" />
+            <p>Selecciona un reporte de la lista para verlo o editarlo.</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Re-added MobileHeader for structural stability
+function MobileHeader({
+  isMobile,
+  isMounted,
+  creatingReport,
+  selectedReport,
+  isNavigatingBack,
+  handleCancelCreation,
+  setIsNavigatingBack,
+  setSelectedReportId,
+}: {
+  isMobile: boolean;
+  isMounted: boolean;
+  creatingReport: Template | null;
+  selectedReport: Report | null;
+  isNavigatingBack: boolean;
+  handleCancelCreation: () => void;
+  setIsNavigatingBack: (b: boolean) => void;
+  setSelectedReportId: (id: string | null) => void;
+}) {
+  const router = useRouter();
+  if (!isMobile || !isMounted) return null;
+  if (!creatingReport && !selectedReport) return null;
+
+  return (
+    <div className="sm:hidden border-b p-3 bg-card flex items-center justify-between sticky top-0 z-10 h-14 shrink-0">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          setIsNavigatingBack(true);
+          if (creatingReport) {
+            handleCancelCreation();
+          } else {
+            router.push('/');
+            setSelectedReportId(null);
+          }
+        }}
+      >
+        <ChevronLeft className="mr-2 h-4 w-4" />
+        Volver a la lista
+      </Button>
+      <div className="text-sm font-medium truncate ml-2">
+        {creatingReport ? creatingReport.name : selectedReport?.title}
+      </div>
+    </div>
+  );
+}
+
+export default function NovedadesPage() {
+  return <NovedadesPageContent />;
 }

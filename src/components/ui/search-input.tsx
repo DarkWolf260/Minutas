@@ -15,6 +15,8 @@ interface SearchInputProps {
   debounce?: number;
   className?: string;
   autoFocus?: boolean;
+  id?: string;
+  name?: string;
 }
 
 export function SearchInput({
@@ -24,6 +26,8 @@ export function SearchInput({
   debounce = 0,
   className,
   autoFocus,
+  id,
+  name,
 }: SearchInputProps) {
   const [localValue, setLocalValue] = useState(value);
 
@@ -55,6 +59,9 @@ export function SearchInput({
     <div className={cn('relative', className)}>
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       <Input
+        id={id}
+        name={name}
+        autoComplete="off"
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
         placeholder={placeholder}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { FieldConfig } from '@/types';
 import { format } from 'date-fns';
 import { useSettings } from './use-settings';
@@ -164,12 +164,12 @@ export function useFieldDefinitions() {
     }
   }, [db, currentWorkspace]);
 
-  return {
+  return useMemo(() => ({
     definitions,
     updateDefinition,
     removeDefinition,
     saveDefinitions,
     isLoaded: isLoaded && settingsLoaded && guardsLoaded,
     clearAllDefinitions,
-  };
+  }), [definitions, updateDefinition, removeDefinition, saveDefinitions, isLoaded, settingsLoaded, guardsLoaded, clearAllDefinitions]);
 }

@@ -30,7 +30,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import type { Template, TemplateConfig, FieldConfig, SectionConfig } from '@/types';
 import { parseTemplate } from '@/lib/template-parser';
@@ -39,7 +39,26 @@ import { useSettings } from './use-settings';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { TemplateSchema } from '@/lib/validations/schemas';
 import { logger } from '@/lib/logger';
-import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
+const getUserFriendlyErrorMessage = (error: any) => {
+  if (error?.message) return error.message;
+  return 'Error desconocido';
+};
+
+/**
+ * Stable stringify that sorts object keys recursively
+ */
+function stableStringify(obj: any): string {
+  if (obj === null || typeof obj !== 'object') {
+    return JSON.stringify(obj);
+  }
+
+  if (Array.isArray(obj)) {
+    return '[' + obj.map(stableStringify).join(',') + ']';
+  }
+
+  const keys = Object.keys(obj).sort();
+  return '{' + keys.map(k => `${JSON.stringify(k)}:${stableStringify(obj[k])}`).join(',') + '}';
+}
 
 export function useTemplates() {
   const db = useDatabase();
@@ -51,6 +70,9 @@ export function useTemplates() {
 
   const { definitions: globalDefinitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
   const { isLoaded: settingsLoaded } = useSettings();
+
+  // Use a ref to track what was last synced to the DB to break the update loop
+  const lastSyncedConfigsRef = useRef<string>('');
 
   useEffect(() => {
     if (!db || !currentWorkspace) return;
@@ -147,12 +169,18 @@ export function useTemplates() {
         newConfigs[template.id] = finalConfig;
 
         // Check if this specific template config actually changed from what we have in state
-        if (JSON.stringify(finalConfig) !== JSON.stringify(existingConfig)) {
+        const configStr = stableStringify(finalConfig);
+        const existingStr = stableStringify(existingConfig);
+
+        if (configStr !== existingStr) {
           hasSignificantChanges = true;
         }
       });
 
       if (hasSignificantChanges) {
+        const fullNewConfigsStr = stableStringify(newConfigs);
+        lastSyncedConfigsRef.current = fullNewConfigsStr;
+
         // Use a small timeout to debounce bulkUpsert if multiple renders happen quickly
         const timeoutId = setTimeout(() => {
           const entries = Object.entries(newConfigs).map(([id, config]) => ({
@@ -162,6 +190,7 @@ export function useTemplates() {
             name: id,
             data: config,
           }));
+          
           db.configs.bulkUpsert(entries as any).catch((err: any) =>
             logger.error('Failed to sync template configs', err, { feature: 'Templates' })
           );
@@ -169,7 +198,7 @@ export function useTemplates() {
         return () => clearTimeout(timeoutId);
       }
     }
-  }, [isTemplatesLoaded, isConfigsLoaded, definitionsLoaded, templates, db, currentWorkspace, parsedTemplates, configs, globalDefinitions]);
+  }, [isTemplatesLoaded, definitionsLoaded, templates, db, currentWorkspace, parsedTemplates, globalDefinitions]);
 
   const addTemplate = async (newTemplate: Template) => {
     if (!db || !currentWorkspace) return;
@@ -198,9 +227,15 @@ export function useTemplates() {
           ...(globalDefinitions[fieldName] || { type: 'text', label: fieldName }),
         };
         const typeFromTemplate = fieldTypes.get(fieldName);
-        if (typeFromTemplate) newConfig.fields[fieldName].type = typeFromTemplate;
+        if (typeFromTemplate) {
+          const field = newConfig.fields[fieldName];
+          if (field) field.type = typeFromTemplate;
+        }
         const optionsFromTemplate = templateOptions.get(fieldName);
-        if (optionsFromTemplate) newConfig.fields[fieldName].snippetOptions = optionsFromTemplate;
+        if (optionsFromTemplate) {
+          const field = newConfig.fields[fieldName];
+          if (field) field.snippetOptions = optionsFromTemplate;
+        }
       });
 
       await db.configs.upsert({
@@ -296,7 +331,7 @@ export function useTemplates() {
     await Promise.all(allConfigs.map((d: any) => d.remove()));
   }, [db, currentWorkspace]);
 
-  return {
+  return useMemo(() => ({
     templates,
     configs,
     addTemplate,
@@ -306,5 +341,17 @@ export function useTemplates() {
     toggleTemplateActive,
     clearAllTemplates,
     isLoaded: isTemplatesLoaded && definitionsLoaded && settingsLoaded
-  };
+  }), [
+    templates, 
+    configs, 
+    addTemplate, 
+    removeTemplate, 
+    updateTemplate, 
+    updateTemplateConfig, 
+    toggleTemplateActive, 
+    clearAllTemplates, 
+    isTemplatesLoaded, 
+    definitionsLoaded, 
+    settingsLoaded
+  ]);
 }

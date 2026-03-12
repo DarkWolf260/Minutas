@@ -107,7 +107,7 @@ export function AddressFormDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">
             <div className="space-y-4 pr-4 max-h-[calc(100vh-20rem)] overflow-y-auto">
               <FormField
                 control={form.control}

@@ -8,6 +8,7 @@ import 'leaflet/dist/leaflet.css';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Map as MapIcon, Satellite } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 import type { Address } from '@/types';
 
@@ -183,23 +184,33 @@ export function AddressMap({
                   : 'Haz clic para añadir un punto'}
             </CardDescription>
           </div>
-          <div className="flex gap-1 bg-muted p-1 rounded-md self-start sm:self-center">
+          <div className="flex gap-1 bg-muted p-1 rounded-lg self-start sm:self-center">
             <Button
               size="sm"
               variant={mapType === 'street' ? 'secondary' : 'ghost'}
               onClick={() => setMapType('street')}
-              className="h-8 px-3"
+              className={cn(
+                "h-7 px-3 text-xs transition-all",
+                mapType === 'street' 
+                  ? "bg-background shadow-sm text-foreground hover:bg-background" 
+                  : "text-muted-foreground hover:text-foreground"
+              )}
             >
-              <MapIcon className="mr-2 h-4 w-4" />
+              <MapIcon className="mr-2 h-3.5 w-3.5" />
               Calle
             </Button>
             <Button
               size="sm"
               variant={mapType === 'satellite' ? 'secondary' : 'ghost'}
               onClick={() => setMapType('satellite')}
-              className="h-8 px-3"
+              className={cn(
+                "h-7 px-3 text-xs transition-all",
+                mapType === 'satellite' 
+                  ? "bg-background shadow-sm text-foreground hover:bg-background" 
+                  : "text-muted-foreground hover:text-foreground"
+              )}
             >
-              <Satellite className="mr-2 h-4 w-4" />
+              <Satellite className="mr-2 h-3.5 w-3.5" />
               Satélite
             </Button>
           </div>

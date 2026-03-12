@@ -15,8 +15,10 @@ interface MultiInputProps {
   placeholder?: string;
   disabled?: boolean;
   isSingle?: boolean;
-  className?: string; // Added className
-  onBlur?: () => void; // Added onBlur
+  className?: string;
+  onBlur?: () => void;
+  name?: string;
+  id?: string;
 }
 
 export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
@@ -30,6 +32,8 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
       isSingle = false,
       className,
       onBlur,
+      name,
+      id,
     },
     ref
   ) => {
@@ -131,6 +135,8 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
               placeholder={placeholder}
               disabled={disabled}
               className="flex-1 border-0 shadow-none focus-visible:ring-0 p-0 h-8 bg-transparent min-w-[100px]"
+              name={name}
+              id={id}
             />
             <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50 absolute right-3 top-1/2 -translate-y-1/2" />
           </div>

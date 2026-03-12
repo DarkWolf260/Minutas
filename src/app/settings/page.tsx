@@ -386,6 +386,8 @@ export default function SettingsPage() {
               <Label>Añadir Nueva Unidad</Label>
               <div className="flex flex-col sm:flex-row gap-2 sm:max-w-sm">
                 <Input
+                  id="new-unit"
+                  name="new-unit"
                   value={newUnit}
                   onChange={(e) => setNewUnit(e.target.value)}
                   placeholder="Ej: Alpha 3"
@@ -499,6 +501,8 @@ export default function SettingsPage() {
               {isCreatingWorkspace ? (
                 <div className="flex items-center gap-2">
                   <Input
+                    id="new-workspace-name"
+                    name="new-workspace-name"
                     placeholder="Nombre de la nueva área..."
                     value={newWorkspaceName}
                     onChange={(e) => setNewWorkspaceName(e.target.value)}
@@ -581,6 +585,7 @@ export default function SettingsPage() {
                 <div className="flex flex-col sm:flex-row gap-2 sm:max-w-md">
                   <Input
                     id="room-id"
+                    name="room-id"
                     value={targetRoomId}
                     onChange={(e) => setTargetRoomId(e.target.value)}
                     placeholder="Ej: equipo-alfa-2026"

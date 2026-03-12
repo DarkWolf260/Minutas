@@ -16,10 +16,12 @@ interface DatePickerProps {
   disabled?: boolean;
   className?: string;
   onBlur?: () => void;
+  name?: string;
+  id?: string;
 }
 
 export const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
-  ({ value, onChange, disabled, className, onBlur }, ref) => {
+  ({ value, onChange, disabled, className, onBlur, name, id }, ref) => {
     // value is 'YYYY-MM-DD'. new Date() will parse this as UTC midnight.
     // To show the correct day in the user's timezone, we need to treat it as a local date.
     const dateCandidate = value ? new Date(value + 'T00:00:00') : undefined;
@@ -46,6 +48,8 @@ export const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
             )}
             disabled={disabled}
             onBlur={onBlur}
+            name={name}
+            id={id}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {date ? (

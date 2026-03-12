@@ -99,7 +99,7 @@ export const FieldRenderer = memo(
                         value={selectedStaffId || ''}
                         disabled={disabled}
                     >
-                        <SelectTrigger className={className} ref={ref} onBlur={onBlur}>
+                        <SelectTrigger className={className} ref={ref} onBlur={onBlur} id={fieldId}>
                             <SelectValue placeholder="Selecciona el personal..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -132,6 +132,8 @@ export const FieldRenderer = memo(
                             ref={ref}
                             onBlur={onBlur}
                             isTextarea
+                            name={name}
+                            id={fieldId}
                         />
                     );
                 }
@@ -147,6 +149,8 @@ export const FieldRenderer = memo(
                                 className={className}
                                 rows={1}
                                 ref={ref}
+                                name={name}
+                                id={fieldId}
                             />
                         );
                     case 'time-hlv':
@@ -158,6 +162,8 @@ export const FieldRenderer = memo(
                                 className={className}
                                 ref={ref}
                                 onBlur={onBlur}
+                                name={name}
+                                id={fieldId}
                             />
                         );
                     case 'date':
@@ -169,6 +175,8 @@ export const FieldRenderer = memo(
                                 className={className}
                                 ref={ref}
                                 onBlur={onBlur}
+                                name={name}
+                                id={fieldId}
                             />
                         );
                     case 'multi-text':
@@ -183,6 +191,8 @@ export const FieldRenderer = memo(
                                 placeholder="Escribe y presiona Enter para añadir..."
                                 ref={ref}
                                 onBlur={onBlur}
+                                name={name}
+                                id={fieldId}
                             />
                         );
                     case 'dropdown': {
@@ -209,7 +219,7 @@ export const FieldRenderer = memo(
                                 value={(typeof value === 'string' ? value : '')}
                                 disabled={disabled}
                             >
-                                <SelectTrigger className={`w-full ${className || ''}`} ref={ref} onBlur={onBlur}>
+                                <SelectTrigger className={`w-full ${className || ''}`} ref={ref} onBlur={onBlur} id={fieldId}>
                                     <SelectValue placeholder="Selecciona una opción..." />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -235,6 +245,8 @@ export const FieldRenderer = memo(
                         className={className}
                         ref={ref}
                         onBlur={onBlur}
+                        name={name}
+                        id={fieldId}
                     />
                 );
             }
@@ -249,6 +261,8 @@ export const FieldRenderer = memo(
                         placeholder="Selecciona o escribe una dirección..."
                         ref={ref}
                         onBlur={onBlur}
+                        name={name}
+                        id={fieldId}
                     />
                 );
             }
@@ -266,6 +280,8 @@ export const FieldRenderer = memo(
                         placeholder="Buscar o añadir unidades..."
                         ref={ref}
                         onBlur={onBlur}
+                        name={name}
+                        id={fieldId}
                     />
                 );
             }
@@ -299,12 +315,16 @@ export const FieldRenderer = memo(
                         isSingle={role.isSingle}
                         ref={ref}
                         onBlur={onBlur}
+                        name={name}
+                        id={fieldId}
                     />
                 );
             }
 
             return (
                 <Input
+                    id={fieldId}
+                    name={name}
                     value={(typeof value === 'string' || typeof value === 'number' ? value : '')}
                     onChange={(e) => onChange(e.target.value)}
                     onBlur={onBlur}

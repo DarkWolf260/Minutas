@@ -208,6 +208,8 @@ export default function AttendancePage() {
             <div className="relative w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                id="attendance-search"
+                name="attendance-search"
                 placeholder="Buscar por nombre o cédula..."
                 className="pl-10 h-10 bg-white/50 border-slate-200/60 focus:bg-white transition-all rounded-xl"
                 value={searchQuery}
