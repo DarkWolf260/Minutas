@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useP2P } from '@/lib/db/p2p-provider';
 import { Zap } from 'lucide-react';
+import { NotificationBell } from '@/components/notification-bell';
 
 const navItems = [
   { href: '/', label: 'Novedades', icon: Newspaper },
@@ -76,6 +77,7 @@ export function SideNav() {
           ))}
         </nav>
         <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">
+          <NotificationBell />
           <ThemeToggle />
           <Tooltip>
             <TooltipTrigger asChild>

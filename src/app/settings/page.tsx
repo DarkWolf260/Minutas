@@ -34,7 +34,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { useP2P } from '@/lib/db/p2p-provider';
 import { useSettings } from '@/hooks/use-settings';
@@ -59,7 +66,6 @@ import {
   Info,
   Layers,
   Monitor,
-  PlusCircle, 
   AlertTriangle, 
   FileText, 
   ChevronRight
@@ -80,6 +86,7 @@ export default function SettingsPage() {
   const { clearAllGuards } = useGuards();
   const { clearAllDefinitions } = useFieldDefinitions();
   const { clearDraft } = useDrafts();
+  const isMobile = useIsMobile();
 
   const db = useDatabase();
   const { currentWorkspace, workspaces, switchWorkspace, deleteWorkspace, createWorkspace } = useWorkspaceManager();
@@ -103,7 +110,6 @@ export default function SettingsPage() {
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [actionToConfirm, setActionToConfirm] = useState<string | null>(null);
-  const [newUnit, setNewUnit] = useState('');
   const hasInitialized = useRef(false);
 
   // Reset initialization flag when workspace changes
@@ -208,16 +214,6 @@ export default function SettingsPage() {
 
   const isLoaded = unitsLoaded && rolesLoaded && deptsLoaded && settingsLoaded;
 
-  const handleAddUnit = async () => {
-    if (newUnit && !units.includes(newUnit)) {
-      await saveUnits([...units, newUnit].sort());
-      setNewUnit('');
-    }
-  };
-
-  const handleRemoveUnit = async (unitToRemove: string) => {
-    await saveUnits(units.filter((u) => u !== unitToRemove));
-  };
 
   const handleConfirmReset = async () => {
     if (!actionToConfirm) return;
@@ -258,38 +254,6 @@ export default function SettingsPage() {
     setActionToConfirm(null);
   };
 
-  /* REPORTING ROLES LOGIC */
-  const handleAddReportRole = async (roleName: string) => {
-    if (roleName && !settings.reportaRoleIds?.includes(roleName)) {
-      await saveSettings({
-        ...settings,
-        reportaRoleIds: [...(settings.reportaRoleIds || []), roleName],
-      });
-    }
-  };
-
-  const handleRemoveReportRole = async (roleName: string) => {
-    await saveSettings({
-      ...settings,
-      reportaRoleIds: (settings.reportaRoleIds || []).filter((r) => r !== roleName),
-    });
-  };
-
-  const handleMoveReportRole = async (index: number, direction: 'up' | 'down') => {
-    if (!settings.reportaRoleIds) return;
-    const newRoles = [...settings.reportaRoleIds];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-
-    if (targetIndex >= 0 && targetIndex < newRoles.length) {
-      const temp = newRoles[index];
-      const target = newRoles[targetIndex];
-      if (temp !== undefined && target !== undefined) {
-        newRoles[index] = target;
-        newRoles[targetIndex] = temp;
-        await saveSettings({ ...settings, reportaRoleIds: newRoles });
-      }
-    }
-  };
 
   const resetOptions: {
     [key: string]: { title: string; description: string; buttonLabel: string };
@@ -364,145 +328,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="max-w-4xl mx-auto shadow-lg">
-          <CardHeader>
-            <CardTitle>Configuración de Personal que Reporta</CardTitle>
-            <CardDescription>
-              Gestiona los cargos que se usarán para rellenar la etiqueta [Reporta].
-              El orden en la lista determina la prioridad al mostrar el personal.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-6">
-            <div className="space-y-2 max-w-sm">
-              <Label>Añadir Cargo a Reporta</Label>
-              <Select onValueChange={handleAddReportRole}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un cargo para añadir..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {initialRoles
-                    .filter((role) => !settings.reportaRoleIds?.includes(role.name))
-                    .map((role) => (
-                      <SelectItem key={role.name} value={role.name}>
-                        {role.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
 
-            <div className="space-y-2">
-              <Label>Cargos Seleccionados (Prioridad de arriba a abajo)</Label>
-              <div className="space-y-2 rounded-md border p-2">
-                {settings.reportaRoleIds && settings.reportaRoleIds.length > 0 ? (
-                  settings.reportaRoleIds.map((roleName, index) => (
-                    <div
-                      key={roleName}
-                      className="flex items-center justify-between rounded-md p-3 bg-muted/30 hover:bg-muted/50 transition-colors border"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
-                          {index + 1}
-                        </span>
-                        <span className="font-medium">{roleName}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleMoveReportRole(index, 'up')}
-                          disabled={index === 0}
-                          title="Subir prioridad"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6" /></svg>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleMoveReportRole(index, 'down')}
-                          disabled={index === (settings.reportaRoleIds?.length || 0) - 1}
-                          title="Bajar prioridad"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                        </Button>
-                        <Separator orientation="vertical" className="h-6 mx-1" />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                          onClick={() => handleRemoveReportRole(roleName)}
-                          title="Eliminar de la lista"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="p-8 text-center text-sm text-muted-foreground border border-dashed rounded-md bg-muted/5">
-                    No has seleccionado ningún cargo para el reporte.
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="max-w-4xl mx-auto shadow-lg">
-          <CardHeader>
-            <CardTitle>Gestión de Unidades</CardTitle>
-            <CardDescription>
-              Añade o elimina unidades de la lista de vehículos operativos.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-6">
-            <div className="space-y-2">
-              <Label>Añadir Nueva Unidad</Label>
-              <div className="flex flex-col sm:flex-row gap-2 sm:max-w-sm">
-                <Input
-                  id="new-unit"
-                  name="new-unit"
-                  value={newUnit}
-                  onChange={(e) => setNewUnit(e.target.value)}
-                  placeholder="Ej: Alpha 3"
-                  className="flex-1"
-                />
-                <Button onClick={handleAddUnit} className="w-full sm:w-auto">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Añadir
-                </Button>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Unidades Existentes</Label>
-              <div className="space-y-2 max-h-60 overflow-y-auto rounded-md border p-2">
-                {units.length > 0 ? (
-                  units.map((unit) => (
-                    <div
-                      key={unit}
-                      className="flex items-center justify-between rounded-md p-2 hover:bg-muted/50"
-                    >
-                      <span>{unit}</span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                        onClick={() => handleRemoveUnit(unit)}
-                        aria-label={`Eliminar Unidad ${unit}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="p-4 text-center text-sm text-muted-foreground">No hay unidades.</p>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Seccion de Areas de Trabajo (Workspaces) */}
         <Card className="max-w-4xl mx-auto shadow-lg">
@@ -740,6 +566,7 @@ export default function SettingsPage() {
 
         <GlobalTagsManager />
 
+
         <Card className="max-w-4xl mx-auto shadow-lg border-destructive">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
@@ -751,117 +578,228 @@ export default function SettingsPage() {
               precaución.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {Object.entries(resetOptions).map(([key, option]) => (
-              <div
-                key={key}
-                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 rounded-md border border-dashed border-destructive/50"
-              >
-                <div className="space-y-1">
-                  <h4 className="font-semibold text-destructive">{option.buttonLabel}</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {option.description.split('.')[0]}.
-                  </p>
-                </div>
-                <Button
-                  variant="destructive"
-                  onClick={() => setActionToConfirm(key)}
-                  className="w-full sm:w-auto shrink-0 shadow-sm"
+          <CardContent className="p-0">
+            <div className="divide-y divide-destructive/10">
+              {Object.entries(resetOptions).map(([key, option]) => (
+                <div
+                  key={key}
+                  className="flex flex-row items-center justify-between p-4 sm:p-6 gap-4 hover:bg-destructive/[0.02] transition-colors"
                 >
-                  {option.buttonLabel}
-                </Button>
-              </div>
-            ))}
+                  <div className="space-y-1">
+                    <h4 className="font-semibold text-destructive">{option.buttonLabel}</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
+                      {option.description.split('.')[0]}.
+                    </p>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setActionToConfirm(key)}
+                    className="h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-3 sm:py-2 shrink-0 shadow-sm"
+                    title={option.buttonLabel}
+                  >
+                    <Trash2 className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">{option.buttonLabel}</span>
+                  </Button>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div >
 
-      <AlertDialog
-        open={!!actionToConfirm}
-        onOpenChange={(open) => !open && setActionToConfirm(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {actionToConfirm && resetOptions[actionToConfirm]?.title}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {actionToConfirm && resetOptions[actionToConfirm]?.description}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setActionToConfirm(null)}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmReset}>Sí, continuar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {isMobile ? (
+        <Sheet
+          open={!!actionToConfirm}
+          onOpenChange={(open) => !open && setActionToConfirm(null)}
+        >
+          <SheetContent side="bottom" className="rounded-t-xl p-6">
+            <SheetHeader className="text-left">
+              <SheetTitle>
+                {actionToConfirm && resetOptions[actionToConfirm]?.title}
+              </SheetTitle>
+              <SheetDescription>
+                {actionToConfirm && resetOptions[actionToConfirm]?.description}
+              </SheetDescription>
+            </SheetHeader>
+            <div className="py-6 space-y-3">
+              <Button
+                variant="destructive"
+                className="w-full h-12 text-base font-semibold"
+                onClick={handleConfirmReset}
+              >
+                Sí, continuar
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full h-12 text-base"
+                onClick={() => setActionToConfirm(null)}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <AlertDialog
+          open={!!actionToConfirm}
+          onOpenChange={(open) => !open && setActionToConfirm(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {actionToConfirm && resetOptions[actionToConfirm]?.title}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {actionToConfirm && resetOptions[actionToConfirm]?.description}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setActionToConfirm(null)}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmReset}>
+                Sí, continuar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
-      {/* Modal de Estrategia de Sincronización */}
-      <Dialog open={isStrategyOpen} onOpenChange={setIsStrategyOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Layers className="h-5 w-5 text-yellow-500" />
-              Estrategia de Sincronización
-            </DialogTitle>
-            <DialogDescription>
-              ¿Cómo quieres manejar tus datos locales al unirte a la sala <strong>{targetRoomId}</strong>?
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <button
-              onClick={() => handleStartSync('merge')}
-              className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group"
-            >
-              <div className="h-10 w-10 shrink-0 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Plus className="h-5 w-5" />
-              </div>
-              <div className="space-y-1">
-                <p className="font-semibold text-sm">Escenario 1: Conservar y Combinar</p>
-                <p className="text-xs text-muted-foreground">
-                  Mezcla el trabajo de ambas áreas. No se elimina ningún reporte; los datos se complementan.
-                </p>
-              </div>
-            </button>
+      {/* Modal de Estrategia de Sincronización - Responsive */}
+      {isMobile ? (
+        <Sheet open={isStrategyOpen} onOpenChange={setIsStrategyOpen}>
+          <SheetContent side="bottom" className="rounded-t-xl p-6">
+            <SheetHeader className="text-left">
+              <SheetTitle className="flex items-center gap-2">
+                <Layers className="h-5 w-5 text-yellow-500" />
+                Estrategia de Sincronización
+              </SheetTitle>
+              <SheetDescription>
+                ¿Cómo quieres manejar tus datos locales al unirte a la sala <strong>{targetRoomId}</strong>?
+              </SheetDescription>
+            </SheetHeader>
+            
+            <div className="grid gap-4 py-6">
+              <button
+                onClick={() => handleStartSync('merge')}
+                className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group active:scale-[0.98]"
+              >
+                <div className="h-10 w-10 shrink-0 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Plus className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold text-sm">Escenario 1: Conservar y Combinar</p>
+                  <p className="text-xs text-muted-foreground">
+                    Mezcla el trabajo de ambas áreas. No se elimina ningún reporte; los datos se complementan.
+                  </p>
+                </div>
+              </button>
 
-            <button
-              onClick={() => handleStartSync('host-only')}
-              className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group border-amber-500/20"
-            >
-              <div className="h-10 w-10 shrink-0 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Monitor className="h-5 w-5" />
-              </div>
-              <div className="space-y-1">
-                <p className="font-semibold text-sm">Escenario 2: Información del Anfitrión</p>
-                <p className="text-xs text-muted-foreground text-amber-600/80">
-                  <Info className="inline h-3 w-3 mr-1" />
-                  <strong>Limpia tu área actual</strong> para trabajar exclusivamente con los datos del anfitrión.
-                </p>
-              </div>
-            </button>
+              <button
+                onClick={() => handleStartSync('host-only')}
+                className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group border-amber-500/20 active:scale-[0.98]"
+              >
+                <div className="h-10 w-10 shrink-0 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Monitor className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold text-sm">Escenario 2: Información del Anfitrión</p>
+                  <p className="text-xs text-muted-foreground text-amber-600/80">
+                    <Info className="inline h-3 w-3 mr-1" />
+                    <strong>Limpia tu área actual</strong> para trabajar exclusivamente con los datos del anfitrión.
+                  </p>
+                </div>
+              </button>
 
-            <button
-              onClick={() => handleStartSync('new-workspace')}
-              className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group"
-            >
-              <div className="h-10 w-10 shrink-0 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Layers className="h-5 w-5" />
-              </div>
-              <div className="space-y-1">
-                <p className="font-semibold text-sm">Escenario 3: Área Nueva Independiente</p>
-                <p className="text-xs text-muted-foreground">
-                  Crea un área limpia y separada para esta sesión. Tu información actual se conserva intacta en el área anterior.
-                </p>
-              </div>
-            </button>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsStrategyOpen(false)}>Cancelar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              <button
+                onClick={() => handleStartSync('new-workspace')}
+                className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group active:scale-[0.98]"
+              >
+                <div className="h-10 w-10 shrink-0 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Layers className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold text-sm">Escenario 3: Área Nueva Independiente</p>
+                  <p className="text-xs text-muted-foreground">
+                    Crea un área limpia y separada para esta sesión. Tu información actual se conserva intacta en el área anterior.
+                  </p>
+                </div>
+              </button>
+            </div>
+            
+            <DialogFooter className="sm:hidden">
+              <Button variant="outline" className="w-full h-12" onClick={() => setIsStrategyOpen(false)}>Cancelar</Button>
+            </DialogFooter>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Dialog open={isStrategyOpen} onOpenChange={setIsStrategyOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Layers className="h-5 w-5 text-yellow-500" />
+                Estrategia de Sincronización
+              </DialogTitle>
+              <DialogDescription>
+                ¿Cómo quieres manejar tus datos locales al unirte a la sala <strong>{targetRoomId}</strong>?
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <button
+                onClick={() => handleStartSync('merge')}
+                className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group"
+              >
+                <div className="h-10 w-10 shrink-0 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Plus className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold text-sm">Escenario 1: Conservar y Combinar</p>
+                  <p className="text-xs text-muted-foreground">
+                    Mezcla el trabajo de ambas áreas. No se elimina ningún reporte; los datos se complementan.
+                  </p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleStartSync('host-only')}
+                className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group border-amber-500/20"
+              >
+                <div className="h-10 w-10 shrink-0 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Monitor className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold text-sm">Escenario 2: Información del Anfitrión</p>
+                  <p className="text-xs text-muted-foreground text-amber-600/80">
+                    <Info className="inline h-3 w-3 mr-1" />
+                    <strong>Limpia tu área actual</strong> para trabajar exclusivamente con los datos del anfitrión.
+                  </p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleStartSync('new-workspace')}
+                className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group"
+              >
+                <div className="h-10 w-10 shrink-0 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Layers className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold text-sm">Escenario 3: Área Nueva Independiente</p>
+                  <p className="text-xs text-muted-foreground">
+                    Crea un área limpia y separada para esta sesión. Tu información actual se conserva intacta en el área anterior.
+                  </p>
+                </div>
+              </button>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setIsStrategyOpen(false)}>Cancelar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }

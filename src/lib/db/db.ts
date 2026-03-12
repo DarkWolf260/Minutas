@@ -33,6 +33,7 @@ import {
   lookupsSchema,
   configsSchema,
   historySchema,
+  notificationsSchema,
 } from './schemas';
 
 import { logger } from '../logger';
@@ -76,6 +77,19 @@ export type LookupsCollection = RxCollection<LookupItem>;
 export type ConfigsCollection = RxCollection<ConfigItem>;
 export type HistoryCollection = RxCollection<HistoryItem>;
 
+export type NotificationItem = {
+  id: string;
+  workspaceId: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read: boolean;
+  timestamp: string;
+  metadata?: any;
+};
+
+export type NotificationsCollection = RxCollection<NotificationItem>;
+
 // Database Type
 export type MinutasDatabaseCollections = {
   personnel: PersonnelCollection;
@@ -84,6 +98,7 @@ export type MinutasDatabaseCollections = {
   lookups: LookupsCollection;
   configs: ConfigsCollection;
   history: HistoryCollection;
+  notifications: NotificationsCollection;
 };
 
 export type MinutasDatabase = RxDatabase<MinutasDatabaseCollections>;
@@ -232,6 +247,12 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
             if (!doc.date) doc.date = new Date().toISOString().split('T')[0];
             return doc;
           }
+        }
+      },
+      notifications: {
+        schema: notificationsSchema,
+        migrationStrategies: {
+          1: (doc: any) => doc
         }
       },
     };

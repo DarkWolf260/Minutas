@@ -6,6 +6,8 @@ import { MinutasDatabase, getDatabase } from './db';
 import { logger } from '../logger';
 import { DatabaseContext } from './db-context';
 
+import { LoadingScreen } from '@/components/loading-screen';
+
 interface DatabaseProviderProps {
   children: React.ReactNode;
 }
@@ -19,6 +21,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
   const [currentWorkspace, setCurrentWorkspace] = useState<string>(DEFAULT_WORKSPACE);
   const [workspaces, setWorkspaces] = useState<string[]>([DEFAULT_WORKSPACE]);
   const [error, setError] = useState<Error | null>(null);
+  const [isSwitching, setIsSwitching] = useState(false);
 
   // Load initial workspace list and active choice
   useEffect(() => {
@@ -56,6 +59,8 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
         
         if (mounted) {
           await migrateData(database);
+          // Small delay for initial splash feel
+          await new Promise(resolve => setTimeout(resolve, 800));
           setDb(database);
           logger.info(`RxDB Central instance initialized successfully`);
         }
@@ -76,6 +81,12 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
 
   const switchWorkspace = async (name: string) => {
     if (name === currentWorkspace) return;
+    
+    setIsSwitching(true);
+    
+    // Aesthetic delay for the transition
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
     setCurrentWorkspace(name);
     localStorage.setItem(STORAGE_KEY_ACTIVE, name);
     
@@ -85,6 +96,10 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       setWorkspaces(newList);
       localStorage.setItem(STORAGE_KEY_LIST, JSON.stringify(newList));
     }
+    
+    // Keep overlay a bit longer to hide re-rendering
+    await new Promise(resolve => setTimeout(resolve, 400));
+    setIsSwitching(false);
   };
 
   const createWorkspace = async (name: string) => {
@@ -126,14 +141,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
   }
 
   if (!db) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Cargando área de trabajo: {currentWorkspace}...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message={`Iniciando área de trabajo: ${currentWorkspace}...`} />;
   }
 
   return (
@@ -145,6 +153,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       deleteWorkspace,
       createWorkspace 
     }}>
+      {isSwitching && <LoadingScreen isOverlay message="Cambiando área de trabajo..." />}
       {children}
     </DatabaseContext.Provider>
   );

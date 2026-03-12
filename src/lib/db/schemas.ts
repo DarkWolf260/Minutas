@@ -133,3 +133,25 @@ export const historySchema = {
     required: ['id', 'workspaceId', 'type', 'date', 'personnelId', 'data'],
     indexes: ['workspaceId', 'type', 'date', 'personnelId']
 };
+
+/**
+ * Notifications collection for local-only persistent alerts.
+ */
+export const notificationsSchema = {
+    title: 'notifications schema',
+    version: 1,
+    primaryKey: 'id',
+    type: 'object',
+    properties: {
+        id: { type: 'string', maxLength: 100 },
+        workspaceId: { type: 'string', maxLength: 50 },
+        title: { type: 'string' },
+        message: { type: 'string' },
+        type: { type: 'string', enum: ['info', 'success', 'warning', 'error'] },
+        read: { type: 'boolean' },
+        timestamp: { type: 'string', maxLength: 50 },
+        metadata: { type: 'object' },
+    },
+    required: ['id', 'workspaceId', 'title', 'message', 'timestamp', 'read'],
+    indexes: ['workspaceId', 'read', 'timestamp']
+};

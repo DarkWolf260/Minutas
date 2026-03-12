@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescri
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { OnlineStatus } from '@/components/online-status';
+import { NotificationBell } from '@/components/notification-bell';
 import {
   Newspaper,
   Settings,
@@ -82,6 +83,7 @@ export function MobileNav() {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        <NotificationBell />
         <OnlineStatus />
       </div>
     </header>
