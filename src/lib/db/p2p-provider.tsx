@@ -16,8 +16,11 @@ interface P2PContextType {
   peerCount: number;
   roomId: string;
   peers: PeerInfo[];
-  startSync: (id: string) => Promise<void>;
+  localAlias: string;
+  peerAliases: Record<string, string>;
+  startSync: (id: string, username?: string, password?: string) => Promise<void>;
   stopSync: () => Promise<void>;
+  updateLocalAlias: (alias: string) => void;
   wipeLocalData: () => Promise<void>;
 }
 
@@ -36,48 +39,111 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
   const [peerCount, setPeerCount] = useState(0);
   const [roomId, setRoomId] = useState('');
   const [peers, setPeers] = useState<PeerInfo[]>([]);
+  const [peerAliases, setPeerAliases] = useState<Record<string, string>>({});
+  const [localAlias, setLocalAlias] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('p2p_local_alias') || '';
+    }
+    return '';
+  });
   const replicationsRef = useRef<any[]>([]);
+  const peerStatesSubRef = useRef<any>(null);
+  const messageSubRef = useRef<any>(null);
   const isSyncingRef = useRef(false);
+  const isConnectingRef = useRef(false);
   const roomIdRef = useRef('');
+  const usernameRef = useRef('');
+  const passwordRef = useRef('');
 
   const stopSync = useCallback(async () => {
     logger.info('Stopping P2P synchronization...');
-    replicationsRef.current.forEach((rep) => rep.cancel());
+    replicationsRef.current.forEach((rep) => {
+      try { rep.cancel(); } catch(e) { logger.warn('Error cancelling replication:', e); }
+    });
     replicationsRef.current = [];
+    if (peerStatesSubRef.current) peerStatesSubRef.current.unsubscribe();
+    if (messageSubRef.current) messageSubRef.current.unsubscribe();
+    peerStatesSubRef.current = null;
+    messageSubRef.current = null;
+    
     setIsSyncing(false);
     isSyncingRef.current = false;
     setPeerCount(0);
     setPeers([]);
+    setPeerAliases({});
     setRoomId('');
     roomIdRef.current = '';
+    usernameRef.current = '';
+    passwordRef.current = '';
+    logger.info('P2P synchronization stopped and cleaned up.');
   }, []);
 
   const startSync = useCallback(
-    async (targetRoomId: string) => {
-      if (!db || !targetRoomId || !currentWorkspace) return;
-      
-      // If already syncing with the same ID, do nothing
-      if (isSyncingRef.current && roomIdRef.current === targetRoomId) {
+    async (targetRoomId: string, username?: string, password?: string) => {
+      if (!db || !targetRoomId || !currentWorkspace) {
+        logger.warn('startSync called with missing dependencies (db, targetRoomId, or currentWorkspace). Aborting.');
         return;
       }
       
-      if (isSyncingRef.current) await stopSync();
+      // Normalize parameters to avoid 'undefined' vs '' mismatches
+      const normUsername = username || '';
+      const normPassword = password || '';
+      
+      // Lock to prevent concurrent execution
+      if (isConnectingRef.current) {
+        logger.info('P2P startSync already in progress, skipping...');
+        return;
+      }
+
+      // If already syncing with the same ID, username, AND password, do nothing
+      if (
+        isSyncingRef.current && 
+        roomIdRef.current === targetRoomId && 
+        usernameRef.current === normUsername && 
+        passwordRef.current === normPassword
+      ) {
+        return;
+      }
+      
+      isConnectingRef.current = true;
+
+      if (isSyncingRef.current) {
+        logger.info('P2P sync active or parameters changed, stopping before restart...');
+        await stopSync();
+      }
 
       try {
+        logger.info(`Starting P2P sync: Room=${targetRoomId}, Alias=${normUsername}, HasPass=${!!normPassword}`);
         setIsSyncing(true);
         isSyncingRef.current = true;
         setRoomId(targetRoomId);
         roomIdRef.current = targetRoomId;
-        logger.info(`Starting P2P synchronization for room: ${targetRoomId} (Scoped to workspace: ${currentWorkspace})`);
+        usernameRef.current = normUsername;
+        passwordRef.current = normPassword;
+        
+        // Simple stable transformation for the topic if password exists
+        // We avoid btoa() because it crashes with non-Latin1 characters
+        const roomSuffix = normPassword 
+          ? `-${normPassword.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0).toString(16)}` 
+          : '';
+        const secureRoomId = `${targetRoomId}${roomSuffix}`;
+
+        logger.info(`Starting P2P synchronization for room: ${targetRoomId} (Scoped to workspace: ${currentWorkspace}) with user: ${normUsername || 'Anonymous'}`);
 
         const collections = Object.values(db.collections) as any[];
         const newReplications: any[] = [];
         
+        // Generate a stable peerId for this sync session
+        // We use the username + a short hash to ensure uniqueness
+        const sessionPeerId = normUsername 
+          ? `${normUsername}#${Math.random().toString(36).slice(-4)}`
+          : undefined;
+
         let peerSubscribed = false;
 
         for (const collection of collections) {
           const collectionName = (collection as any).name;
-          const topic = `${targetRoomId}-${collectionName}`;
+          const topic = `${secureRoomId}-${collectionName}`;
           
           logger.info(`Initializing P2P replication for collection: ${collectionName} on topic: ${topic}`);
 
@@ -91,10 +157,18 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
             push: {
               // Ensure we ONLY push data from the current workspace
               queryBuilder: (coll: any) => {
+                const selector: any = {
+                  workspaceId: currentWorkspace
+                };
+                
+                // Special case: do NOT sync the main app settings via P2P 
+                // to avoid overwriting each other's P2P/Local config
+                if (collectionName === 'configs') {
+                  selector.id = { $ne: `${currentWorkspace}:settings:app` };
+                }
+
                 return coll.find({
-                  selector: {
-                    workspaceId: currentWorkspace
-                  }
+                  selector
                 });
               }
             } as any,
@@ -111,15 +185,39 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
           // Track peer count and roles
           if (!peerSubscribed && (collectionName === 'reports' || collection === collections[collections.length - 1])) {
             peerSubscribed = true;
-            replicationState.peerStates$.subscribe((peerMap: Map<any, any>) => {
+            
+            // Listen for identity messages to resolve friendly names
+            messageSubRef.current = replicationState.connectionHandler.message$.subscribe((data: any) => {
+              if (data.message && data.message.method === 'identity') {
+                const alias = data.message.params?.[0];
+                if (alias && data.peer?.id) {
+                  logger.info(`P2P Identity received: ${data.peer.id} -> ${alias}`);
+                  setPeerAliases(prev => ({ ...prev, [data.peer.id]: alias }));
+                }
+              }
+            });
+
+            peerStatesSubRef.current = replicationState.peerStates$.subscribe((peerMap: Map<any, any>) => {
               const peerList: PeerInfo[] = [];
               if (peerMap.size > peerCount) {
                 toast.success('¡Nuevo par sincronizado conectado!');
               }
+
               peerMap.forEach((state, peer) => {
-                logger.info(`P2P Peer detected: ${peer.id}`, state);
+                // Broadcast our identity to the new peer
+                try {
+                   replicationState.connectionHandler.send(peer, {
+                      id: 'identity-' + Date.now(),
+                      method: 'identity' as any,
+                      params: [localAlias]
+                   } as any);
+                } catch(e) {
+                   logger.warn('Failed to send identity to peer', e);
+                }
+
+                // Use the technical ID by default, will be replaced by alias once identity message arrives
                 peerList.push({
-                   id: peer.id || 'unknown',
+                   id: peer.id,
                    isMaster: !state.replicationState
                 });
               });
@@ -133,13 +231,22 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
 
         replicationsRef.current = newReplications;
       } catch (error) {
-        logger.error('Failed to start P2P synchronization', error);
-        setIsSyncing(false);
-        isSyncingRef.current = false;
+        logger.error('P2P Sync start failed:', error);
+        toast.error('Error al iniciar sincronización P2P');
+        await stopSync();
+      } finally {
+        isConnectingRef.current = false;
       }
     },
-    [db, currentWorkspace, stopSync]
+    [db, currentWorkspace, stopSync, localAlias]
   );
+
+  const updateLocalAlias = useCallback((alias: string) => {
+    setLocalAlias(alias);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('p2p_local_alias', alias);
+    }
+  }, []);
 
   const wipeLocalData = useCallback(async () => {
     if (!db || !currentWorkspace) return;
@@ -181,7 +288,8 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
         const docData = doc.toJSON();
         const settings = docData.data;
         if (settings?.p2pRoomId) {
-          await startSync(settings.p2pRoomId);
+          // Pass the localAlias along with database settings
+          await startSync(settings.p2pRoomId, localAlias, settings.p2pPassword);
         } else if (isSyncingRef.current) {
           await stopSync();
         }
@@ -195,9 +303,10 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       sub.unsubscribe();
+      // Ensure we clean up when dependencies change
       replicationsRef.current.forEach((rep) => rep.cancel());
     };
-  }, [db, currentWorkspace, startSync, stopSync]);
+  }, [db, currentWorkspace, startSync, stopSync, localAlias]);
 
   return (
     <P2PContext.Provider value={{ 
@@ -205,8 +314,11 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
       peerCount, 
       roomId, 
       peers, 
+      localAlias,
+      peerAliases,
       startSync, 
       stopSync, 
+      updateLocalAlias,
       wipeLocalData 
     }}>
       {children}

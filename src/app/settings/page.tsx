@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -68,6 +68,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useDepartments } from '@/hooks/use-departments';
+import { logger } from '@/lib/logger';
 
 export default function SettingsPage() {
   const { units, saveUnits, isLoaded: unitsLoaded, clearAllUnits } = useUnits();
@@ -82,50 +83,125 @@ export default function SettingsPage() {
 
   const db = useDatabase();
   const { currentWorkspace, workspaces, switchWorkspace, deleteWorkspace, createWorkspace } = useWorkspaceManager();
-  const { isSyncing, peerCount, roomId: activeRoomId, peers, startSync, stopSync, wipeLocalData } = useP2P();
+  const { 
+    isSyncing, 
+    peerCount, 
+    roomId: activeRoomId, 
+    peers, 
+    localAlias,
+    peerAliases,
+    startSync, 
+    stopSync, 
+    updateLocalAlias,
+    wipeLocalData 
+  } = useP2P();
   
   const [targetRoomId, setTargetRoomId] = useState('');
+  const [targetPassword, setTargetPassword] = useState('');
   const [isCopied, setIsCopied] = useState(false);
   const [isStrategyOpen, setIsStrategyOpen] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [actionToConfirm, setActionToConfirm] = useState<string | null>(null);
   const [newUnit, setNewUnit] = useState('');
+  const hasInitialized = useRef(false);
 
-  // Update targetRoomId when settings load
+  // Reset initialization flag when workspace changes
   useEffect(() => {
+    hasInitialized.current = false;
+  }, [currentWorkspace]);
+
+  // Update targetRoomId when settings load - ONLY ONCE
+  useEffect(() => {
+    if (!settingsLoaded || hasInitialized.current) return;
+    
     if (settings?.p2pRoomId) {
       setTargetRoomId(settings.p2pRoomId);
     }
-  }, [settings]);
+    if (settings?.p2pPassword) {
+      setTargetPassword(settings.p2pPassword);
+    }
+    
+    // Migration: If we find p2pUsername in synced settings (old version), 
+    // move it to localAlias if localAlias is empty, then remove it from DB.
+    const syncedUsername = (settings as any).p2pUsername;
+    if (syncedUsername) {
+      if (!localAlias) {
+        updateLocalAlias(syncedUsername);
+      }
+      // Remove it from the synchronized database to ensure it's unique per device from now on
+      const { p2pUsername, ...cleanSettings } = settings as any;
+      saveSettings(cleanSettings);
+    }
+
+    hasInitialized.current = true;
+  }, [settings, settingsLoaded, localAlias, updateLocalAlias, saveSettings]);
 
   const handleStartSync = async (strategy: 'merge' | 'host-only' | 'new-workspace') => {
-    if (!targetRoomId) return;
+    if (!targetRoomId || !db) return;
     
     setIsStrategyOpen(false);
     
     try {
+      const activeWorkspace = strategy === 'new-workspace' 
+        ? `sync-${targetRoomId.slice(0, 4)}-${Date.now().toString().slice(-4)}`
+        : currentWorkspace;
+
       if (strategy === 'new-workspace') {
-        const workspaceName = `sync-${targetRoomId.slice(0, 4)}-${Date.now().toString().slice(-4)}`;
-        await createWorkspace(workspaceName);
+        await createWorkspace(activeWorkspace);
       } else if (strategy === 'host-only') {
         await wipeLocalData();
       }
       
-      await saveSettings({ p2pRoomId: targetRoomId });
+      // Wait a bit for the DB to be ready for the new workspace if needed
+      if (strategy === 'new-workspace') {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      // Fetch existing settings for the target workspace to avoid wiping them
+      let currentSettings = {};
+      try {
+        if (db) {
+          const doc = await db.configs.findOne(`${activeWorkspace}:settings:app`).exec();
+          if (doc) {
+            currentSettings = doc.toJSON().data || {};
+          }
+        }
+      } catch (e) {
+        logger.error('Error fetching existing settings for sync', e);
+      }
+
+      // We use db directly to save to ensure it goes to the right workspace
+      if (db) {
+        await db.configs.upsert({
+          id: `${activeWorkspace}:settings:app`,
+          workspaceId: activeWorkspace,
+          type: 'settings',
+          data: { 
+            ...currentSettings,
+            p2pRoomId: targetRoomId,
+            p2pPassword: targetPassword,
+            workspaceId: activeWorkspace
+          }
+        });
+      }
       
       toast.success(
         strategy === 'new-workspace' 
-          ? 'Nueva área creada. Iniciando sincronización...' 
-          : 'Iniciando sincronización...'
+          ? `Nueva zona de trabajo "${targetRoomId}" creada y conectada.` 
+          : `Conectado a la sala "${targetRoomId}" con éxito.`
       );
     } catch (error) {
-      toast.error('Error al iniciar sincronización');
+      logger.error('Error starting P2P Sync', error);
+      toast.error('Ocurrió un error al configurar la sala');
     }
   };
 
   const handleStopSync = async () => {
-    await saveSettings({ p2pRoomId: '' });
+    await saveSettings({ 
+      p2pRoomId: '',
+      p2pPassword: targetPassword
+    });
     await stopSync();
     toast.info('Sincronización detenida');
   };
@@ -591,6 +667,35 @@ export default function SettingsPage() {
                     placeholder="Ej: equipo-alfa-2026"
                     disabled={isSyncing}
                   />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="p2p-username">Tu Nombre / Alias (Local)</Label>
+                    <Input
+                      id="p2p-username"
+                      name="p2p-username"
+                      value={localAlias}
+                      onChange={(e) => updateLocalAlias(e.target.value)}
+                      placeholder="Ej: Supervisor Juan"
+                      disabled={isSyncing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="p2p-password">Contraseña de Sala</Label>
+                    <Input
+                      id="p2p-password"
+                      name="p2p-password"
+                      type="password"
+                      value={targetPassword}
+                      onChange={(e) => setTargetPassword(e.target.value)}
+                      placeholder="Opcional para mayor seguridad"
+                      disabled={isSyncing}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
                   {isSyncing ? (
                     <Button variant="destructive" onClick={handleStopSync} className="w-full sm:w-auto">
                       Detener
@@ -609,14 +714,19 @@ export default function SettingsPage() {
                   <div className="mt-4 space-y-2">
                     <p className="text-xs font-semibold">Peers Conectados:</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                       {peers.map((peer, idx) => (
-                         <div key={idx} className="flex items-center justify-between p-2 text-[11px] rounded bg-muted">
-                           <span className="truncate max-w-[120px]">{peer.id}</span>
-                           <Badge variant={peer.isMaster ? "default" : "outline"} className="h-4 text-[9px]">
-                             {peer.isMaster ? 'Anfitrión' : 'Seguidor'}
-                           </Badge>
-                         </div>
-                       ))}
+                       {peers.map((peer, idx) => {
+                         const displayName = peerAliases[peer.id] || peer.id;
+                         return (
+                           <div key={idx} className="flex items-center justify-between p-2 text-[11px] rounded bg-muted">
+                             <span className="truncate max-w-[120px]" title={peer.id}>
+                               {displayName}
+                             </span>
+                             <Badge variant={peer.isMaster ? "default" : "outline"} className="h-4 text-[9px]">
+                               {peer.isMaster ? 'Anfitrión' : 'Seguidor'}
+                             </Badge>
+                           </div>
+                         );
+                       })}
                     </div>
                   </div>
                 )}

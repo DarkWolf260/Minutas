@@ -76,6 +76,7 @@ export interface AppSettings {
   finalReportEndDate?: string;
   reportaRoleIds?: string[];
   p2pRoomId?: string;
+  p2pPassword?: string;
 }
 
 export interface Report {
