@@ -24,7 +24,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Guard } from '@/types';
-import { useDatabase } from '@/lib/db/db-provider';
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
 
 const defaultGuards: Guard[] = [
@@ -36,23 +36,41 @@ const defaultGuards: Guard[] = [
 
 export function useGuards() {
   const db = useDatabase();
+  const { currentWorkspace } = useWorkspaceManager();
   const [guards, setGuards] = useState<Guard[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
     let initialized = false;
 
-    const sub = db.guards.find().$.subscribe((data) => {
+    const sub = db.configs.find({
+      selector: { 
+        type: 'guard',
+        workspaceId: currentWorkspace
+      }
+    }).$.subscribe((data) => {
       if (data.length > 0) {
-        setGuards(data.map((d) => d.toJSON()) as Guard[]);
+        setGuards(data.map((d) => {
+          const json = d.toJSON();
+          const guardData = json.data as Guard;
+          // Ensure the returned guard object reflects its associated workspace in the UI if needed
+          return { ...guardData, workspaceId: currentWorkspace };
+        }) as Guard[]);
         initialized = true;
       } else if (!initialized) {
-        // Only insert defaults on the very first load (never been set up before)
+        // Only insert defaults on the very first load for this workspace
         initialized = true;
-        db.guards
-          .bulkInsert(defaultGuards)
-          .catch((err) => logger.error('Failed to insert default guards', err, { feature: 'Guards' }));
+        const docs = defaultGuards.map(g => ({
+          id: `${currentWorkspace}:guard:${g.id}`,
+          workspaceId: currentWorkspace,
+          type: 'guard' as const,
+          name: g.id,
+          data: { ...g, workspaceId: currentWorkspace }
+        }));
+        db.configs
+          .bulkInsert(docs)
+          .catch((err) => logger.error('Failed to insert default guards', err, { feature: 'Guards', workspaceId: currentWorkspace }));
       } else {
         // User deleted all guards — keep the list empty
         setGuards([]);
@@ -61,38 +79,64 @@ export function useGuards() {
     });
 
     return () => sub.unsubscribe();
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   const saveGuards = useCallback(
     async (newGuards: Guard[]) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
-        // Delete guards that are no longer in the list
-        const existingDocs = await db.guards.find().exec();
-        const newIds = new Set(newGuards.map((g) => g.id));
+        // Delete guards that are no longer in the list for this workspace
+        const existingDocs = await db.configs.find({
+          selector: { 
+            type: 'guard',
+            workspaceId: currentWorkspace
+          }
+        }).exec();
+        const newIds = new Set(newGuards.map((g) => `${currentWorkspace}:guard:${g.id}`));
         const toDelete = existingDocs.filter((doc) => !newIds.has(doc.id));
         await Promise.all(toDelete.map((doc) => doc.remove()));
+        
         // Upsert the remaining/updated guards
         if (newGuards.length > 0) {
-          await db.guards.bulkUpsert(newGuards);
+          const docs = newGuards.map(g => ({
+            id: `${currentWorkspace}:guard:${g.id}`,
+            workspaceId: currentWorkspace,
+            type: 'guard' as const,
+            name: g.id,
+            data: { ...g, workspaceId: currentWorkspace }
+          }));
+          await db.configs.bulkUpsert(docs);
         }
       } catch (error) {
-        logger.error('Failed to save guards', error, { feature: 'Guards' });
+        logger.error('Failed to save guards', error, { feature: 'Guards', workspaceId: currentWorkspace });
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const clearAllGuards = useCallback(async () => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
     try {
-      const allDocs = await db.guards.find().exec();
+      const allDocs = await db.configs.find({
+        selector: { 
+          type: 'guard',
+          workspaceId: currentWorkspace
+        }
+      }).exec();
       await Promise.all(allDocs.map((d) => d.remove()));
-      await db.guards.bulkInsert(defaultGuards);
+      
+      const docs = defaultGuards.map(g => ({
+        id: `${currentWorkspace}:guard:${g.id}`,
+        workspaceId: currentWorkspace,
+        type: 'guard' as const,
+        name: g.id,
+        data: { ...g, workspaceId: currentWorkspace }
+      }));
+      await db.configs.bulkInsert(docs);
     } catch (error) {
-      logger.error('Failed to clear guards', error, { feature: 'Guards' });
+      logger.error('Failed to clear guards', error, { feature: 'Guards', workspaceId: currentWorkspace });
     }
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   return { guards, saveGuards, isLoaded, clearAllGuards };
 }

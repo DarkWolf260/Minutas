@@ -12,6 +12,7 @@ import { PWARegistration } from '@/components/pwa-registration';
 import { PWAStatus } from '@/components/pwa-status';
 
 import { DatabaseProvider } from '@/lib/db/db-provider';
+import { P2PProvider } from '@/lib/db/p2p-provider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -51,21 +52,23 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <DatabaseProvider>
-            <TooltipProvider>
-              <div className="flex min-h-screen w-full flex-col sm:flex-row" suppressHydrationWarning>
-                <SideNav />
-                <div className="flex flex-1 flex-col sm:pl-14">
-                  <MobileNav />
-                  <main className="flex-1 bg-muted/30 p-0 sm:p-0">
-                    <ErrorBoundary name="MainContent">{children}</ErrorBoundary>
-                  </main>
+            <P2PProvider>
+              <TooltipProvider>
+                <div className="flex min-h-screen w-full flex-col sm:flex-row" suppressHydrationWarning>
+                  <SideNav />
+                  <div className="flex flex-1 flex-col sm:pl-14">
+                    <MobileNav />
+                    <main className="flex-1 bg-muted/30 p-0 sm:p-0">
+                      <ErrorBoundary name="MainContent">{children}</ErrorBoundary>
+                    </main>
+                  </div>
                 </div>
-              </div>
-              <WelcomeDialog />
-              <PWARegistration />
-              <PWAStatus />
-              <Toaster />
-            </TooltipProvider>
+                <WelcomeDialog />
+                <PWARegistration />
+                <PWAStatus />
+                <Toaster />
+              </TooltipProvider>
+            </P2PProvider>
           </DatabaseProvider>
         </ThemeProvider>
       </body>

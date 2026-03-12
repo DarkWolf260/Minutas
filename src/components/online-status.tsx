@@ -10,8 +10,12 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 
+import { useP2P } from '@/lib/db/p2p-provider';
+import { Zap } from 'lucide-react';
+
 export function OnlineStatus() {
     const { isOnline, isServerUp } = useConnectionStatus();
+    const { isSyncing, peerCount } = useP2P();
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
@@ -21,6 +25,15 @@ export function OnlineStatus() {
     if (!isMounted) return null;
 
     const getStatusConfig = () => {
+        if (isSyncing) {
+            return {
+                icon: <Zap className="h-3 w-3 fill-current" />,
+                text: "P2P Activo",
+                colorClass: "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border border-yellow-500/30 animate-pulse",
+                dotClass: "bg-yellow-500",
+                tooltip: `Sincronización P2P activa con ${peerCount} pares`
+            };
+        }
         if (!isOnline) {
             return {
                 icon: <WifiOff className="h-3 w-3" />,

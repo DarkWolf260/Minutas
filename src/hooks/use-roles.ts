@@ -26,7 +26,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { StaffRole } from '@/types';
-import { useDatabase } from '@/lib/db/db-provider';
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
 import { LEADER_ROLES } from '@/constants/roles';
 import { PERSONNEL_STATUS } from '@/constants/personnel';
@@ -68,76 +68,101 @@ const defaultRoles: StaffRole[] = [
 
 export function useRoles() {
   const db = useDatabase();
+  const { currentWorkspace } = useWorkspaceManager();
   const [roles, setRoles] = useState<StaffRole[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
 
-    const sub = db.roles
+    const sub = db.lookups
       .find({
-        sort: [{ order: 'asc' }],
+        selector: { 
+          type: 'role',
+          workspaceId: currentWorkspace
+        },
+        sort: [{ 'data.order': 'asc' }],
       })
       .$.subscribe((data) => {
         if (data.length > 0) {
-          setRoles(data.map((d) => d.toJSON()) as StaffRole[]);
+          setRoles(data.map((d) => {
+            const json = d.toJSON();
+            return { ...(json.data as StaffRole), workspaceId: currentWorkspace };
+          }) as StaffRole[]);
         } else {
-          // Initial roles if DB is empty
-          db.roles
-            .bulkInsert(defaultRoles)
-            .catch((err) => {
-              const isConflict =
-                err.code === 'CONFLICT' ||
-                err.status === 409 ||
-                err.message?.includes('conflict') ||
-                err.parameters?.writeError?.status === 409;
+          // Initial roles if DB is empty for this workspace
+          const toInsert = defaultRoles.map((role) => ({
+            id: `${currentWorkspace}:role:${role.name}`,
+            workspaceId: currentWorkspace,
+            type: 'role' as const,
+            name: role.name,
+            data: { ...role, workspaceId: currentWorkspace },
+          }));
 
-              if (!isConflict) {
-                logger.error('Failed to insert default roles', err, { feature: 'Roles' });
-              }
-            });
+          db.lookups.bulkInsert(toInsert as any).catch((err) => {
+            const isConflict = err.code === 'CONFLICT' || err.status === 409;
+            if (!isConflict) {
+              logger.error('Failed to insert default roles', err, { feature: 'Roles', workspaceId: currentWorkspace });
+            }
+          });
         }
         setIsLoaded(true);
       });
 
     return () => sub.unsubscribe();
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   const saveRoles = useCallback(
     async (newRoles: StaffRole[]) => {
       if (!db) return;
 
-      // Optimistic update for immediate UI response
+      // Optimistic update
       setRoles(newRoles);
 
       try {
-        const allDocs = await db.roles.find().exec();
-        const newNames = new Set(newRoles.map((r) => r.name));
-        const toDelete = allDocs.filter((d) => !newNames.has(d.name));
+        const allDocs = await db.lookups.find({ selector: { type: 'role', workspaceId: currentWorkspace } }).exec();
+        const newIds = new Set(newRoles.map((r) => `${currentWorkspace}:role:${r.name}`));
+        const toDelete = allDocs.filter((d) => !newIds.has(d.primary));
 
         if (toDelete.length > 0) {
-          await Promise.all(toDelete.map((d) => d.remove()));
+          await db.lookups.bulkRemove(toDelete.map((d) => d.primary));
         }
 
-        await db.roles.bulkUpsert(newRoles);
+        const toUpsert = newRoles.map((role) => ({
+          id: `${currentWorkspace}:role:${role.name}`,
+          workspaceId: currentWorkspace,
+          type: 'role' as const,
+          name: role.name,
+          data: { ...role, workspaceId: currentWorkspace },
+        }));
+
+        await db.lookups.bulkUpsert(toUpsert as any);
       } catch (error) {
-        logger.error('Failed to save roles', error, { feature: 'Roles' });
-        // The subscription will eventually revert the state to the DB version if it fails
+        logger.error('Failed to save roles', error, { feature: 'Roles', workspaceId: currentWorkspace });
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const clearAllRoles = useCallback(async () => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
     try {
-      const allDocs = await db.roles.find().exec();
-      await Promise.all(allDocs.map((d) => d.remove()));
-      await db.roles.bulkInsert(defaultRoles);
+      const allDocs = await db.lookups.find({ selector: { type: 'role', workspaceId: currentWorkspace } }).exec();
+      await db.lookups.bulkRemove(allDocs.map((d) => d.primary));
+      
+      const toInsert = defaultRoles.map((role) => ({
+        id: `${currentWorkspace}:role:${role.name}`,
+        workspaceId: currentWorkspace,
+        type: 'role' as const,
+        name: role.name,
+        data: { ...role, workspaceId: currentWorkspace },
+      }));
+      
+      await db.lookups.bulkInsert(toInsert as any);
     } catch (error) {
-      logger.error('Failed to clear roles', error, { feature: 'Roles' });
+      logger.error('Failed to clear roles', error, { feature: 'Roles', workspaceId: currentWorkspace });
     }
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   return { roles, saveRoles, isLoaded, clearAllRoles };
 }

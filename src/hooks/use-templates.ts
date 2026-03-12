@@ -36,13 +36,14 @@ import type { Template, TemplateConfig, FieldConfig, SectionConfig } from '@/typ
 import { parseTemplate } from '@/lib/template-parser';
 import { useFieldDefinitions } from './use-field-definitions';
 import { useSettings } from './use-settings';
-import { useDatabase } from '@/lib/db/db-provider';
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { TemplateSchema } from '@/lib/validations/schemas';
 import { logger } from '@/lib/logger';
 import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
 
 export function useTemplates() {
   const db = useDatabase();
+  const { currentWorkspace } = useWorkspaceManager();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [configs, setConfigs] = useState<Record<string, TemplateConfig>>({});
   const [isTemplatesLoaded, setIsTemplatesLoaded] = useState(false);
@@ -52,28 +53,37 @@ export function useTemplates() {
   const { isLoaded: settingsLoaded } = useSettings();
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
 
-    const subTemplates = db.templates.find().$.subscribe(data => {
+    const subTemplates = db.templates.find({
+      selector: { workspaceId: currentWorkspace }
+    }).$.subscribe(data => {
       setTemplates(data.map(d => d.toJSON()) as Template[]);
       setIsTemplatesLoaded(true);
     });
 
-    const subConfigs = db.template_configs.find().$.subscribe(data => {
-      const configMap: Record<string, TemplateConfig> = {};
-      data.forEach(d => {
-        const item = d.toJSON();
-        configMap[item.id] = item.config as TemplateConfig;
+    const subConfigs = db.configs
+      .find({
+        selector: { 
+          type: 'template_config',
+          workspaceId: currentWorkspace
+        },
+      })
+      .$.subscribe((data) => {
+        const configMap: Record<string, TemplateConfig> = {};
+        data.forEach((d) => {
+          const item = d.toJSON();
+          configMap[item.name || ''] = item.data as TemplateConfig;
+        });
+        setConfigs(configMap);
+        setIsConfigsLoaded(true);
       });
-      setConfigs(configMap);
-      setIsConfigsLoaded(true);
-    });
 
     return () => {
       subTemplates.unsubscribe();
       subConfigs.unsubscribe();
     };
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   // Caché de parse para evitar re-parsing innecesario
   const parsedTemplates = useMemo(() => {
@@ -87,7 +97,7 @@ export function useTemplates() {
 
   // Optimize config synchronization to avoid unnecessary writes and re-renders
   useEffect(() => {
-    if (isTemplatesLoaded && definitionsLoaded && templates.length > 0 && db) {
+    if (isTemplatesLoaded && definitionsLoaded && templates.length > 0 && db && currentWorkspace) {
       const newConfigs: Record<string, TemplateConfig> = {};
       let hasSignificantChanges = false;
 
@@ -145,21 +155,30 @@ export function useTemplates() {
       if (hasSignificantChanges) {
         // Use a small timeout to debounce bulkUpsert if multiple renders happen quickly
         const timeoutId = setTimeout(() => {
-          const entries = Object.entries(newConfigs).map(([id, config]) => ({ id, config }));
-          db.template_configs.bulkUpsert(entries).catch(err =>
+          const entries = Object.entries(newConfigs).map(([id, config]) => ({
+            id: `template_config:${id}`,
+            workspaceId: currentWorkspace,
+            type: 'template_config' as const,
+            name: id,
+            data: config,
+          }));
+          db.configs.bulkUpsert(entries as any).catch((err: any) =>
             logger.error('Failed to sync template configs', err, { feature: 'Templates' })
           );
         }, 100);
         return () => clearTimeout(timeoutId);
       }
     }
-  }, [isTemplatesLoaded, isConfigsLoaded, definitionsLoaded, templates, db, parsedTemplates, configs, globalDefinitions]);
+  }, [isTemplatesLoaded, isConfigsLoaded, definitionsLoaded, templates, db, currentWorkspace, parsedTemplates, configs, globalDefinitions]);
 
   const addTemplate = async (newTemplate: Template) => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
     try {
       // Validate with Zod first
-      const validatedTemplate = TemplateSchema.parse(newTemplate);
+      const validatedTemplate = TemplateSchema.parse({
+        ...newTemplate,
+        workspaceId: currentWorkspace
+      });
 
       const { sections, layout, fieldNames, fieldTypes, templateOptions, errors } = parseTemplate(validatedTemplate.content);
 
@@ -168,7 +187,7 @@ export function useTemplates() {
         logger.warn('Template has parsing errors', { id: validatedTemplate.id, errors });
       } else {
         toast.success(`Plantilla "${validatedTemplate.name}" agregada correctamente.`);
-        logger.info('Template added', { id: validatedTemplate.id, name: validatedTemplate.name });
+        logger.info('Template added', { id: validatedTemplate.id, name: validatedTemplate.name, workspaceId: currentWorkspace });
       }
 
       await db.templates.insert({ ...validatedTemplate, isActive: errors.length === 0 });
@@ -184,7 +203,13 @@ export function useTemplates() {
         if (optionsFromTemplate) newConfig.fields[fieldName].snippetOptions = optionsFromTemplate;
       });
 
-      await db.template_configs.upsert({ id: validatedTemplate.id, config: newConfig });
+      await db.configs.upsert({
+        id: `template_config:${validatedTemplate.id}`,
+        workspaceId: currentWorkspace,
+        type: 'template_config',
+        name: validatedTemplate.id,
+        data: newConfig,
+      } as any);
 
     } catch (error) {
       logger.error('Error adding template', error);
@@ -198,7 +223,7 @@ export function useTemplates() {
       const templateDoc = await db.templates.findOne(templateId).exec();
       if (templateDoc) await templateDoc.remove();
 
-      const configDoc = await db.template_configs.findOne(templateId).exec();
+      const configDoc = await db.configs.findOne(`template_config:${templateId}`).exec();
       if (configDoc) await configDoc.remove();
 
       logger.info('Template removed', { id: templateId });
@@ -210,9 +235,15 @@ export function useTemplates() {
   };
 
   const updateTemplateConfig = async (templateId: string, config: TemplateConfig) => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
     try {
-      await db.template_configs.upsert({ id: templateId, config });
+      await db.configs.upsert({
+        id: `template_config:${templateId}`,
+        workspaceId: currentWorkspace,
+        type: 'template_config',
+        name: templateId,
+        data: config,
+      } as any);
       toast.success('Configuración de campos actualizada.');
     } catch (error) {
       logger.error('Failed to update template config', error, { feature: 'Templates', metadata: { templateId } });
@@ -220,15 +251,18 @@ export function useTemplates() {
   };
 
   const updateTemplate = async (updatedTemplate: Template) => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
     try {
       // Validate with Zod
-      const validatedTemplate = TemplateSchema.parse(updatedTemplate);
+      const validatedTemplate = TemplateSchema.parse({
+        ...updatedTemplate,
+        workspaceId: currentWorkspace
+      });
 
       const doc = await db.templates.findOne(validatedTemplate.id).exec();
       if (doc) {
         await doc.patch(validatedTemplate);
-        logger.info('Template updated', { id: validatedTemplate.id });
+        logger.info('Template updated', { id: validatedTemplate.id, workspaceId: currentWorkspace });
         toast.success('Plantilla actualizada.');
       } else {
         toast.error('Plantilla no encontrada.');
@@ -248,12 +282,19 @@ export function useTemplates() {
   }, [db]);
 
   const clearAllTemplates = useCallback(async () => {
-    if (!db) return;
-    const allTemplates = await db.templates.find().exec();
+    if (!db || !currentWorkspace) return;
+    const allTemplates = await db.templates.find({
+      selector: { workspaceId: currentWorkspace }
+    }).exec();
     await Promise.all(allTemplates.map(d => d.remove()));
-    const allConfigs = await db.template_configs.find().exec();
-    await Promise.all(allConfigs.map(d => d.remove()));
-  }, [db]);
+    const allConfigs = await db.configs.find({ 
+      selector: { 
+        type: 'template_config',
+        workspaceId: currentWorkspace
+      } 
+    }).exec();
+    await Promise.all(allConfigs.map((d: any) => d.remove()));
+  }, [db, currentWorkspace]);
 
   return {
     templates,

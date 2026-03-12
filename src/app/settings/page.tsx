@@ -1,26 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-
-import { PlusCircle, Trash2, AlertTriangle, FileText, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
-import { useDepartments } from '@/hooks/use-departments';
-
-import { useUnits } from '@/hooks/use-units';
-import { useRoles } from '@/hooks/use-roles';
-import { useReports } from '@/hooks/use-reports';
-import { useTemplates } from '@/hooks/use-templates';
-import { useGuards } from '@/hooks/use-guards';
-import { useDrafts } from '@/hooks/use-drafts';
-import { useFieldDefinitions } from '@/hooks/use-field-definitions';
-import { useSettings } from '@/hooks/use-settings';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -39,16 +26,53 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
+import { useP2P } from '@/lib/db/p2p-provider';
+import { useSettings } from '@/hooks/use-settings';
+import { useUnits } from '@/hooks/use-units';
+import { useRoles } from '@/hooks/use-roles';
+import { useReports } from '@/hooks/use-reports';
+import { useTemplates } from '@/hooks/use-templates';
+import { useGuards } from '@/hooks/use-guards';
+import { useDrafts } from '@/hooks/use-drafts';
+import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+import { AppSettings, StaffMember, Address } from '@/types';
+import { 
+  Zap, 
+  Wifi, 
+  WifiOff, 
+  Copy, 
+  Check, 
+  Database, 
+  Plus, 
+  Trash2, 
+  ExternalLink,
+  Info,
+  Layers,
+  Monitor,
+  PlusCircle, 
+  AlertTriangle, 
+  FileText, 
+  ChevronRight
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
+import { useDepartments } from '@/hooks/use-departments';
 
 export default function SettingsPage() {
   const { units, saveUnits, isLoaded: unitsLoaded, clearAllUnits } = useUnits();
   const { roles: initialRoles, isLoaded: rolesLoaded, clearAllRoles } = useRoles();
-  const {
-    isLoaded: deptsLoaded,
-    clearAllDepartments,
-  } = useDepartments();
+  const { isLoaded: deptsLoaded, clearAllDepartments } = useDepartments();
   const { settings, saveSettings, isLoaded: settingsLoaded, clearAllSettings } = useSettings();
   const { clearAllReports } = useReports();
   const { clearAllTemplates } = useTemplates();
@@ -56,8 +80,55 @@ export default function SettingsPage() {
   const { clearAllDefinitions } = useFieldDefinitions();
   const { clearDraft } = useDrafts();
 
-  const [newUnit, setNewUnit] = useState('');
+  const db = useDatabase();
+  const { currentWorkspace, workspaces, switchWorkspace, deleteWorkspace, createWorkspace } = useWorkspaceManager();
+  const { isSyncing, peerCount, roomId: activeRoomId, peers, startSync, stopSync, wipeLocalData } = useP2P();
+  
+  const [targetRoomId, setTargetRoomId] = useState('');
+  const [isCopied, setIsCopied] = useState(false);
+  const [isStrategyOpen, setIsStrategyOpen] = useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState('');
+  const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const [actionToConfirm, setActionToConfirm] = useState<string | null>(null);
+  const [newUnit, setNewUnit] = useState('');
+
+  // Update targetRoomId when settings load
+  useEffect(() => {
+    if (settings?.p2pRoomId) {
+      setTargetRoomId(settings.p2pRoomId);
+    }
+  }, [settings]);
+
+  const handleStartSync = async (strategy: 'merge' | 'host-only' | 'new-workspace') => {
+    if (!targetRoomId) return;
+    
+    setIsStrategyOpen(false);
+    
+    try {
+      if (strategy === 'new-workspace') {
+        const workspaceName = `sync-${targetRoomId.slice(0, 4)}-${Date.now().toString().slice(-4)}`;
+        await createWorkspace(workspaceName);
+      } else if (strategy === 'host-only') {
+        await wipeLocalData();
+      }
+      
+      await saveSettings({ p2pRoomId: targetRoomId });
+      
+      toast.success(
+        strategy === 'new-workspace' 
+          ? 'Nueva área creada. Iniciando sincronización...' 
+          : 'Iniciando sincronización...'
+      );
+    } catch (error) {
+      toast.error('Error al iniciar sincronización');
+    }
+  };
+
+  const handleStopSync = async () => {
+    await saveSettings({ p2pRoomId: '' });
+    await stopSync();
+    toast.info('Sincronización detenida');
+  };
 
   const isLoaded = unitsLoaded && rolesLoaded && deptsLoaded && settingsLoaded;
 
@@ -355,6 +426,203 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Seccion de Areas de Trabajo (Workspaces) */}
+        <Card className="max-w-4xl mx-auto shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Layers className="h-5 w-5 text-primary" />
+              Áreas de Trabajo
+            </CardTitle>
+            <CardDescription>
+              Gestiona entornos independientes para tus reportes. Cada área tiene su propia base de datos local.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4">
+              {workspaces.map((workspace: string) => (
+                <div
+                  key={workspace}
+                  className={cn(
+                    "flex items-center justify-between p-3 rounded-lg border transition-all",
+                    currentWorkspace === workspace 
+                      ? "bg-primary/5 border-primary ring-1 ring-primary/20" 
+                      : "bg-muted/10 hover:bg-muted/20"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "h-8 w-8 rounded-full flex items-center justify-center",
+                      currentWorkspace === workspace ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                    )}>
+                      <Database className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium capitalize">
+                        {workspace.replace(/-/g, ' ')}
+                        {workspace === 'minutasdb' && <span className="ml-2 text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground uppercase tracking-wider">Default</span>}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {currentWorkspace === workspace ? 'Área activa' : 'Área local offline'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {currentWorkspace !== workspace && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => switchWorkspace(workspace)}
+                      >
+                        Cambiar
+                      </Button>
+                    )}
+                    {workspace !== 'minutasdb' && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => {
+                          if (confirm('¿Estás seguro de eliminar esta área? Se perderán todos sus datos locales.')) {
+                            deleteWorkspace(workspace);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-2">
+              {isCreatingWorkspace ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Nombre de la nueva área..."
+                    value={newWorkspaceName}
+                    onChange={(e) => setNewWorkspaceName(e.target.value)}
+                    className="h-9"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        createWorkspace(newWorkspaceName);
+                        setNewWorkspaceName('');
+                        setIsCreatingWorkspace(false);
+                      } else if (e.key === 'Escape') {
+                        setIsCreatingWorkspace(false);
+                      }
+                    }}
+                  />
+                  <Button 
+                    size="sm" 
+                    onClick={() => {
+                      createWorkspace(newWorkspaceName);
+                      setNewWorkspaceName('');
+                      setIsCreatingWorkspace(false);
+                    }}
+                  >
+                    Crear
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => setIsCreatingWorkspace(false)}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  className="w-full border-dashed" 
+                  onClick={() => setIsCreatingWorkspace(true)}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nueva Área de Trabajo
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* P2P Synchronization */}
+        <Card className="max-w-4xl mx-auto shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-yellow-500" />
+              Sincronización en Tiempo Real (P2P)
+            </CardTitle>
+            <CardDescription>
+              Conecta varios dispositivos para sincronizar reportes y personal de forma directa sin servidores.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6 pt-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 p-4 rounded-lg border bg-muted/30">
+                <div className={cn(
+                  "flex h-10 w-10 items-center justify-center rounded-full shrink-0",
+                  isSyncing ? "bg-green-500/10 text-green-500" : "bg-muted text-muted-foreground"
+                )}>
+                  {isSyncing ? <Wifi className="h-5 w-5 animate-pulse" /> : <WifiOff className="h-5 w-5" />}
+                </div>
+                <div>
+                  <p className="font-semibold">{isSyncing ? 'Sincronización Activa' : 'Sincronización Desconectada'}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {isSyncing 
+                      ? `Conectado a la sala "${activeRoomId}". ${peerCount} pares encontrados.` 
+                      : 'Ingresa un ID de sala para empezar a compartir datos.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="room-id">ID de Sala / Token Compartido</Label>
+                <div className="flex flex-col sm:flex-row gap-2 sm:max-w-md">
+                  <Input
+                    id="room-id"
+                    value={targetRoomId}
+                    onChange={(e) => setTargetRoomId(e.target.value)}
+                    placeholder="Ej: equipo-alfa-2026"
+                    disabled={isSyncing}
+                  />
+                  {isSyncing ? (
+                    <Button variant="destructive" onClick={handleStopSync} className="w-full sm:w-auto">
+                      Detener
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={() => setIsStrategyOpen(true)} 
+                      disabled={!targetRoomId}
+                      className="w-full sm:w-auto"
+                    >
+                      Iniciar Sincronización
+                    </Button>
+                  )}
+                </div>
+                {peers.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <p className="text-xs font-semibold">Peers Conectados:</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                       {peers.map((peer, idx) => (
+                         <div key={idx} className="flex items-center justify-between p-2 text-[11px] rounded bg-muted">
+                           <span className="truncate max-w-[120px]">{peer.id}</span>
+                           <Badge variant={peer.isMaster ? "default" : "outline"} className="h-4 text-[9px]">
+                             {peer.isMaster ? 'Anfitrión' : 'Seguidor'}
+                           </Badge>
+                         </div>
+                       ))}
+                    </div>
+                  </div>
+                )}
+                <p className="text-[10px] text-muted-foreground italic">
+                  * Todos los dispositivos con el mismo ID de sala compartirán datos de la área actual (<strong>{currentWorkspace}</strong>).
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <GlobalTagsManager />
 
         <Card className="max-w-4xl mx-auto shadow-lg border-destructive">
@@ -412,6 +680,73 @@ export default function SettingsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal de Estrategia de Sincronización */}
+      <Dialog open={isStrategyOpen} onOpenChange={setIsStrategyOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Layers className="h-5 w-5 text-yellow-500" />
+              Estrategia de Sincronización
+            </DialogTitle>
+            <DialogDescription>
+              ¿Cómo quieres manejar tus datos locales al unirte a la sala <strong>{targetRoomId}</strong>?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <button
+              onClick={() => handleStartSync('merge')}
+              className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group"
+            >
+              <div className="h-10 w-10 shrink-0 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Plus className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-semibold text-sm">Escenario 1: Conservar y Combinar</p>
+                <p className="text-xs text-muted-foreground">
+                  Mezcla el trabajo de ambas áreas. No se elimina ningún reporte; los datos se complementan.
+                </p>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleStartSync('host-only')}
+              className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group border-amber-500/20"
+            >
+              <div className="h-10 w-10 shrink-0 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Monitor className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-semibold text-sm">Escenario 2: Información del Anfitrión</p>
+                <p className="text-xs text-muted-foreground text-amber-600/80">
+                  <Info className="inline h-3 w-3 mr-1" />
+                  <strong>Limpia tu área actual</strong> para trabajar exclusivamente con los datos del anfitrión.
+                </p>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleStartSync('new-workspace')}
+              className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group"
+            >
+              <div className="h-10 w-10 shrink-0 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Layers className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-semibold text-sm">Escenario 3: Área Nueva Independiente</p>
+                <p className="text-xs text-muted-foreground">
+                  Crea un área limpia y separada para esta sesión. Tu información actual se conserva intacta en el área anterior.
+                </p>
+              </div>
+            </button>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsStrategyOpen(false)}>Cancelar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

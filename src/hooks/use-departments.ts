@@ -24,7 +24,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Department } from '@/types';
-import { useDatabase } from '@/lib/db/db-provider';
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
 
 const defaultDepartments: Department[] = [
@@ -38,101 +38,142 @@ const defaultDepartments: Department[] = [
 
 export function useDepartments() {
   const db = useDatabase();
+  const { currentWorkspace } = useWorkspaceManager();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
 
-    const sub = db.departments.find().$.subscribe((data) => {
-      if (data.length > 0) {
-        setDepartments(data.map((d) => d.toJSON()) as Department[]);
-      } else {
-        // Initial departments if DB is empty
-        db.departments
-          .bulkInsert(defaultDepartments)
-          .catch((err) => {
-            const isConflict =
-              err.code === 'CONFLICT' ||
-              err.status === 409 ||
-              err.message?.includes('conflict') ||
-              err.parameters?.writeError?.status === 409;
+    const sub = db.lookups
+      .find({
+        selector: { 
+          type: 'department',
+          workspaceId: currentWorkspace 
+        },
+      })
+      .$.subscribe((data) => {
+        if (data.length > 0) {
+          setDepartments(data.map((d) => {
+            const json = d.toJSON();
+            return { ...(json.data as Department), workspaceId: currentWorkspace };
+          }) as Department[]);
+        } else {
+          // Initial departments if DB is empty for this workspace
+          const toInsert = defaultDepartments.map((dept) => ({
+            id: `${currentWorkspace}:dept:${dept.id}`,
+            workspaceId: currentWorkspace,
+            type: 'department' as const,
+            name: dept.name,
+            data: { ...dept, workspaceId: currentWorkspace },
+          }));
 
+          db.lookups.bulkInsert(toInsert as any).catch((err) => {
+            const isConflict = err.code === 'CONFLICT' || err.status === 409;
             if (!isConflict) {
-              logger.error('Failed to insert default departments', err, { feature: 'Departments' });
+              logger.error('Failed to insert default departments', err, { feature: 'Departments', workspaceId: currentWorkspace });
             }
           });
-      }
-      setIsLoaded(true);
-    });
+        }
+        setIsLoaded(true);
+      });
 
     return () => sub.unsubscribe();
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   const saveDepartments = useCallback(
     async (newDepartments: Department[]) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
-        const allDocs = await db.departments.find().exec();
-        const newIds = new Set(newDepartments.map((d) => d.id));
-        const toDelete = allDocs.filter((d) => !newIds.has(d.id));
-        if (toDelete.length > 0) await Promise.all(toDelete.map((d) => d.remove()));
-        await db.departments.bulkUpsert(newDepartments);
+        const allDocs = await db.lookups.find({ selector: { type: 'department', workspaceId: currentWorkspace } }).exec();
+        const newIds = new Set(newDepartments.map((d) => `${currentWorkspace}:dept:${d.id}`));
+        const toDelete = allDocs.filter((d) => !newIds.has(d.primary));
+        if (toDelete.length > 0) {
+          await db.lookups.bulkRemove(toDelete.map((d) => d.primary));
+        }
+
+        const toUpsert = newDepartments.map((dept) => ({
+          id: `${currentWorkspace}:dept:${dept.id}`,
+          workspaceId: currentWorkspace,
+          type: 'department' as const,
+          name: dept.name,
+          data: { ...dept, workspaceId: currentWorkspace },
+        }));
+        await db.lookups.bulkUpsert(toUpsert as any);
       } catch (error) {
-        logger.error('Failed to save departments', error, { feature: 'Departments' });
+        logger.error('Failed to save departments', error, { feature: 'Departments', workspaceId: currentWorkspace });
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const addDepartment = useCallback(
     async (newDepartment: Department) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
-        await db.departments.insert(newDepartment);
+        await db.lookups.insert({
+          id: `${currentWorkspace}:dept:${newDepartment.id}`,
+          workspaceId: currentWorkspace,
+          type: 'department',
+          name: newDepartment.name,
+          data: { ...newDepartment, workspaceId: currentWorkspace },
+        });
       } catch (error) {
-        logger.error('Failed to add department', error, { feature: 'Departments', metadata: { departmentId: newDepartment.id } });
+        logger.error('Failed to add department', error, { feature: 'Departments', workspaceId: currentWorkspace, metadata: { departmentId: newDepartment.id } });
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const removeDepartment = useCallback(
     async (departmentId: string) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
-        const doc = await db.departments.findOne(departmentId).exec();
+        const doc = await db.lookups.findOne(`${currentWorkspace}:dept:${departmentId}`).exec();
         if (doc) await doc.remove();
       } catch (error) {
-        logger.error('Failed to remove department', error, { feature: 'Departments', metadata: { departmentId } });
+        logger.error('Failed to remove department', error, { feature: 'Departments', workspaceId: currentWorkspace, metadata: { departmentId } });
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const updateDepartment = useCallback(
     async (updatedDepartment: Department) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
-        const doc = await db.departments.findOne(updatedDepartment.id).exec();
-        if (doc) await doc.patch(updatedDepartment);
+        const doc = await db.lookups.findOne(`${currentWorkspace}:dept:${updatedDepartment.id}`).exec();
+        if (doc) {
+          await doc.patch({
+            name: updatedDepartment.name,
+            data: { ...updatedDepartment, workspaceId: currentWorkspace },
+          });
+        }
       } catch (error) {
-        logger.error('Failed to update department', error, { feature: 'Departments', metadata: { departmentId: updatedDepartment.id } });
+        logger.error('Failed to update department', error, { feature: 'Departments', workspaceId: currentWorkspace, metadata: { departmentId: updatedDepartment.id } });
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const clearAllDepartments = useCallback(async () => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
     try {
-      const allDocs = await db.departments.find().exec();
-      await Promise.all(allDocs.map((d) => d.remove()));
-      await db.departments.bulkInsert(defaultDepartments);
+      const allDocs = await db.lookups.find({ selector: { type: 'department', workspaceId: currentWorkspace } }).exec();
+      await db.lookups.bulkRemove(allDocs.map((d) => d.primary));
+      
+      const toInsert = defaultDepartments.map((dept) => ({
+        id: `${currentWorkspace}:dept:${dept.id}`,
+        workspaceId: currentWorkspace,
+        type: 'department' as const,
+        name: dept.name,
+        data: { ...dept, workspaceId: currentWorkspace },
+      }));
+      await db.lookups.bulkInsert(toInsert as any);
     } catch (error) {
-      logger.error('Failed to clear departments', error, { feature: 'Departments' });
+      logger.error('Failed to clear departments', error, { feature: 'Departments', workspaceId: currentWorkspace });
     }
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   return {
     departments,

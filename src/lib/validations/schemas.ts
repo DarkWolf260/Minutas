@@ -20,6 +20,7 @@ import { ATTENDANCE_STATUS } from '@/constants/attendance';
  */
 export const StaffMemberSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
+    workspaceId: z.string().min(1, 'Workspace ID es requerido'),
     personnelId: z.string().optional(),
     name: z.string().min(1, 'Nombre es requerido').max(200, 'Nombre muy largo'),
     cedula: z.string().optional(),
@@ -47,6 +48,7 @@ export type ValidatedStaffMember = z.infer<typeof StaffMemberSchema>;
  */
 export const TemplateSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
+    workspaceId: z.string().min(1, 'Workspace ID es requerido'),
     name: z.string().min(1, 'Nombre de plantilla es requerido').max(200, 'Nombre muy largo'),
     content: z.string().min(1, 'Contenido de plantilla es requerido'),
     type: z.enum(['normal', 'relevante'], {
@@ -72,6 +74,7 @@ export type ValidatedTemplate = z.infer<typeof TemplateSchema>;
  */
 export const ReportSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
+    workspaceId: z.string().min(1, 'Workspace ID es requerido'),
     templateId: z.string().min(1, 'ID de plantilla es requerido'),
     title: z.string().min(1, 'Título es requerido').max(500, 'Título muy largo'),
     timestamp: z.string().datetime('Formato de fecha/hora inválido'),
@@ -98,6 +101,7 @@ export type ValidatedReport = z.infer<typeof ReportSchema>;
  */
 export const DepartmentSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
+    workspaceId: z.string().min(1, 'Workspace ID es requerido'),
     name: z.string().min(1, 'Nombre es requerido').max(100, 'Nombre muy largo'),
     staff: z.record(z.array(StaffMemberSchema)).default({}),
 });
@@ -110,6 +114,7 @@ export type ValidatedDepartment = z.infer<typeof DepartmentSchema>;
  */
 export const GuardSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
+    workspaceId: z.string().min(1, 'Workspace ID es requerido'),
     staff: z.record(z.array(StaffMemberSchema)).default({}),
 });
 
@@ -121,6 +126,7 @@ export type ValidatedGuard = z.infer<typeof GuardSchema>;
  */
 export const AddressSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
+    workspaceId: z.string().min(1, 'Workspace ID es requerido'),
     name: z.string().min(1, 'Nombre de dirección es requerido').max(200, 'Nombre muy largo'),
     street: z.string().optional(),
     houseNumber: z.string().optional(),
@@ -141,6 +147,7 @@ export type ValidatedAddress = z.infer<typeof AddressSchema>;
  */
 export const AttendanceRecordSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
+    workspaceId: z.string().min(1, 'Workspace ID es requerido'),
     memberId: z.string().min(1, 'ID de miembro es requerido'),
     date: z.string().min(1, 'Fecha es requerida'),
     status: z.enum(
@@ -165,6 +172,7 @@ export type ValidatedAttendanceRecord = z.infer<typeof AttendanceRecordSchema>;
  */
 export const AppSettingsSchema = z.object({
     id: z.string().optional(),
+    workspaceId: z.string().optional(),
     activeGuardId: z.string().optional(),
     guardShiftDuration: z.number().optional(),
     finalReportStaffSnapshot: z.record(z.array(StaffMemberSchema)).optional(),

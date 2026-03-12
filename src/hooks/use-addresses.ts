@@ -2,80 +2,113 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { Address } from '@/types';
-import { useDatabase } from '@/lib/db/db-provider';
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { DEFAULT_ADDRESSES } from '@/constants/addresses';
 import { logger } from '@/lib/logger';
 
 export function useAddresses() {
   const db = useDatabase();
+  const { currentWorkspace } = useWorkspaceManager();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
 
-    const sub = db.addresses.find().$.subscribe((data) => {
-      if (data.length > 0) {
-        setAddresses(data.map((d) => d.toJSON()) as Address[]);
-      } else {
-        // Initial addresses if DB is empty
-        db.addresses
-          .bulkInsert(DEFAULT_ADDRESSES)
-          .catch((err) => logger.error('Failed to insert default addresses', err, { feature: 'Addresses' }));
-      }
-      setIsLoaded(true);
-    });
+    const sub = db.lookups
+      .find({
+        selector: { 
+          type: 'address',
+          workspaceId: currentWorkspace
+        },
+      })
+      .$.subscribe((data) => {
+        if (data.length > 0) {
+          setAddresses(data.map((d) => {
+            const json = d.toJSON();
+            return { ...(json.data as Address), workspaceId: currentWorkspace };
+          }) as Address[]);
+        } else {
+          // Initial addresses if DB is empty for this workspace
+          const toInsert = DEFAULT_ADDRESSES.map((addr) => ({
+            id: `${currentWorkspace}:addr:${addr.id}`,
+            workspaceId: currentWorkspace,
+            type: 'address' as const,
+            name: addr.name,
+            data: { ...addr, workspaceId: currentWorkspace },
+          }));
+
+          db.lookups.bulkInsert(toInsert as any).catch((err) => {
+            const isConflict = err.code === 'CONFLICT' || err.status === 409;
+            if (!isConflict) {
+              logger.error('Failed to insert default addresses', err, { feature: 'Addresses', workspaceId: currentWorkspace });
+            }
+          });
+        }
+        setIsLoaded(true);
+      });
 
     return () => sub.unsubscribe();
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   const addAddress = useCallback(
     async (newAddress: Address) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
-        await db.addresses.insert(newAddress);
+        await db.lookups.insert({
+          id: `${currentWorkspace}:addr:${newAddress.id}`,
+          workspaceId: currentWorkspace,
+          type: 'address',
+          name: newAddress.name,
+          data: { ...newAddress, workspaceId: currentWorkspace },
+        });
       } catch (error) {
-        logger.error('Failed to add address', error, { feature: 'Addresses', metadata: { addressId: newAddress.id } });
+        logger.error('Failed to add address', error, { feature: 'Addresses', workspaceId: currentWorkspace, metadata: { addressId: newAddress.id } });
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const updateAddress = useCallback(
     async (updatedAddress: Address) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
-        const doc = await db.addresses.findOne(updatedAddress.id).exec();
-        if (doc) await doc.patch(updatedAddress);
+        const doc = await db.lookups.findOne(`${currentWorkspace}:addr:${updatedAddress.id}`).exec();
+        if (doc) {
+          await doc.patch({
+            name: updatedAddress.name,
+            data: { ...updatedAddress, workspaceId: currentWorkspace },
+          });
+        }
       } catch (error) {
-        logger.error('Failed to update address', error, { feature: 'Addresses', metadata: { addressId: updatedAddress.id } });
+        logger.error('Failed to update address', error, { feature: 'Addresses', workspaceId: currentWorkspace, metadata: { addressId: updatedAddress.id } });
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const removeAddress = useCallback(
     async (addressId: string) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
-        const doc = await db.addresses.findOne(addressId).exec();
+        const doc = await db.lookups.findOne(`${currentWorkspace}:addr:${addressId}`).exec();
         if (doc) await doc.remove();
       } catch (error) {
-        logger.error('Failed to remove address', error, { feature: 'Addresses', metadata: { addressId } });
+        logger.error('Failed to remove address', error, { feature: 'Addresses', workspaceId: currentWorkspace, metadata: { addressId } });
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const clearAllAddresses = useCallback(async () => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
     try {
-      const allDocs = await db.addresses.find().exec();
-      await Promise.all(allDocs.map((d) => d.remove()));
+      const allDocs = await db.lookups.find({ selector: { type: 'address', workspaceId: currentWorkspace } }).exec();
+      await db.lookups.bulkRemove(allDocs.map((d) => d.primary));
     } catch (error) {
-      logger.error('Failed to clear addresses', error, { feature: 'Addresses' });
+      logger.error('Failed to clear addresses', error, { feature: 'Addresses', workspaceId: currentWorkspace });
     }
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   return { addresses, addAddress, updateAddress, removeAddress, clearAllAddresses, isLoaded };
 }

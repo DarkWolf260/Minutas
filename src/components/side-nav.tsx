@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { useP2P } from '@/lib/db/p2p-provider';
+import { Zap } from 'lucide-react';
 
 const navItems = [
   { href: '/', label: 'Novedades', icon: Newspaper },
@@ -27,6 +29,7 @@ const navItems = [
 
 export function SideNav() {
   const pathname = usePathname();
+  const { isSyncing, peerCount } = useP2P();
 
   return (
     <TooltipProvider>
@@ -39,6 +42,20 @@ export function SideNav() {
             <Mountain className="h-4 w-4 transition-all group-hover:scale-110" />
             <span className="sr-only">PC Reportes</span>
           </Link>
+          
+          {isSyncing && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-yellow-500/10 text-yellow-500 animate-pulse">
+                  <Zap className="h-5 w-5 fill-current" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                Sincronización P2P Activa ({peerCount} pares)
+              </TooltipContent>
+            </Tooltip>
+          )}
+
           {navItems.map((item) => (
             <Tooltip key={item.href}>
               <TooltipTrigger asChild>

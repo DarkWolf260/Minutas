@@ -31,7 +31,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { StaffMember } from '@/types';
-import { useDatabase } from '@/lib/db/db-provider';
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { StaffMemberSchema } from '@/lib/validations/schemas';
 import { logger } from '@/lib/logger';
 import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
@@ -39,46 +39,52 @@ import { generateId } from '@/lib/utils/id';
 
 export function usePersonnel() {
   const db = useDatabase();
+  const { currentWorkspace } = useWorkspaceManager();
   const [personnel, setPersonnel] = useState<StaffMember[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
 
-    const sub = db.personnel.find().$.subscribe((data) => {
+    const sub = db.personnel.find({
+      selector: {
+        workspaceId: currentWorkspace
+      }
+    }).$.subscribe((data) => {
       setPersonnel(data.map((d) => d.toJSON()) as StaffMember[]);
       setIsLoaded(true);
     });
 
     return () => sub.unsubscribe();
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   const addMember = useCallback(
     async (newMember: Omit<StaffMember, 'id'>) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
         // Generate ID and create complete member object
         const memberWithId: StaffMember = {
           ...newMember,
           id: generateId('personnel'),
-        };
+          workspaceId: currentWorkspace,
+        } as any;
 
         // Validate with Zod
         const validatedMember = StaffMemberSchema.parse(memberWithId);
         await db.personnel.insert(validatedMember);
-        logger.info('Personnel added', { id: validatedMember.id, name: validatedMember.name });
+        logger.info('Personnel added', { id: validatedMember.id, name: validatedMember.name, workspaceId: currentWorkspace });
       } catch (error) {
         logger.error('Failed to add personnel', error);
         toast.error(getUserFriendlyErrorMessage(error));
-        throw error; // Re-throw so caller knows it failed
+        throw error;
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const addMembers = useCallback(
     async (members: Omit<StaffMember, 'id'>[]) => {
-      if (!db) return { added: [], skipped: 0 };
+      if (!db || !currentWorkspace) return { added: [], skipped: 0 };
 
       const existingCedulas = new Set(personnel.filter((p) => p.cedula).map((p) => p.cedula));
       const newMembers: StaffMember[] = [];
@@ -91,7 +97,7 @@ export function usePersonnel() {
         }
 
         const id = generateId('personnel');
-        newMembers.push({ ...m, id });
+        newMembers.push({ ...m, id, workspaceId: currentWorkspace } as any);
 
         if (m.cedula) existingCedulas.add(m.cedula);
       });
@@ -102,19 +108,17 @@ export function usePersonnel() {
 
       return { added: newMembers, skipped: skippedCount };
     },
-    [db, personnel]
+    [db, currentWorkspace, personnel]
   );
 
   const updateMember = useCallback(
     async (id: string, updates: Partial<StaffMember>) => {
       if (!db) return;
       try {
-        // Validate with Zod
-        const validatedUpdates = StaffMemberSchema.partial().parse(updates);
         const doc = await db.personnel.findOne(id).exec();
         if (doc) {
-          await doc.patch(validatedUpdates);
-          logger.info('Personnel updated', { id, updates: validatedUpdates });
+          await doc.patch(updates);
+          logger.info('Personnel updated', { id, updates, workspaceId: currentWorkspace });
         } else {
           logger.warn('Personnel not found for update', { id });
           toast.error('Miembro del personal no encontrado.');
@@ -126,7 +130,7 @@ export function usePersonnel() {
         throw error;
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const removeMember = useCallback(
@@ -155,22 +159,26 @@ export function usePersonnel() {
 
   const savePersonnel = useCallback(
     async (newPersonnel: StaffMember[]) => {
-      if (!db) return;
-      // Diff-based approach: compute adds, updates, and removes
-      // instead of destructive delete-all + re-insert
-      const existingDocs = await db.personnel.find().exec();
+      if (!db || !currentWorkspace) return;
+      
+      const existingDocs = await db.personnel.find({
+        selector: { workspaceId: currentWorkspace }
+      }).exec();
       const existingMap = new Map(existingDocs.map((d) => [d.id, d]));
-      const newMap = new Map(newPersonnel.map((p) => [p.id, p]));
+      
+      // Ensure all incoming personnel have the workspaceId
+      const preparedPersonnel = newPersonnel.map(p => ({ ...p, workspaceId: currentWorkspace }));
+      const newMap = new Map(preparedPersonnel.map((p) => [p.id, p]));
 
-      // Documents to remove (exist in DB but not in new list)
+      // Documents to remove
       const toRemove = existingDocs.filter((d) => !newMap.has(d.id));
 
-      // Documents to insert (exist in new list but not in DB)
-      const toInsert = newPersonnel.filter((p) => !existingMap.has(p.id));
+      // Documents to insert
+      const toInsert = preparedPersonnel.filter((p) => !existingMap.has(p.id));
 
-      // Documents to update (exist in both, check for changes)
-      const toUpdate: { doc: typeof existingDocs[0]; data: StaffMember }[] = [];
-      for (const p of newPersonnel) {
+      // Documents to update
+      const toUpdate: { doc: any; data: any }[] = [];
+      for (const p of preparedPersonnel) {
         const existing = existingMap.get(p.id);
         if (existing) {
           const existingData = existing.toMutableJSON();
@@ -181,7 +189,6 @@ export function usePersonnel() {
         }
       }
 
-      // Execute all operations
       if (toRemove.length > 0) {
         await Promise.all(toRemove.map((d) => d.remove()));
       }
@@ -194,7 +201,7 @@ export function usePersonnel() {
         await db.personnel.bulkInsert(toInsert);
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const isCedulaDuplicate = useCallback(

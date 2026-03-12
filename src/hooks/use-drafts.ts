@@ -2,20 +2,21 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { ReportDraft } from '@/types';
-import { useDatabase } from '@/lib/db/db-provider';
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
 
 export function useDrafts() {
   const db = useDatabase();
+  const { currentWorkspace } = useWorkspaceManager();
   const [draft, setDraft] = useState<ReportDraft | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
 
-    const sub = db.drafts.findOne('active-draft').$.subscribe((doc) => {
+    const sub = db.configs.findOne(`${currentWorkspace}:draft:active-draft`).$.subscribe((doc) => {
       if (doc) {
-        setDraft(doc.toJSON() as ReportDraft);
+        setDraft(doc.toJSON().data as ReportDraft);
       } else {
         setDraft(null);
       }
@@ -23,33 +24,39 @@ export function useDrafts() {
     });
 
     return () => sub.unsubscribe();
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   const saveDraft = useCallback(
     async (newDraft: ReportDraft) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
-        await db.drafts.upsert({
-          ...newDraft,
-          id: 'active-draft',
-          lastSaved: new Date().toISOString(),
+        await db.configs.upsert({
+          id: `${currentWorkspace}:draft:active-draft`,
+          workspaceId: currentWorkspace,
+          type: 'draft' as const,
+          name: 'active-draft',
+          data: {
+            ...newDraft,
+            workspaceId: currentWorkspace,
+            lastSaved: new Date().toISOString(),
+          },
         });
       } catch (error) {
-        logger.error('Failed to save draft', error, { feature: 'Drafts' });
+        logger.error('Failed to save draft', error, { feature: 'Drafts', workspaceId: currentWorkspace });
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const clearDraft = useCallback(async () => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
     try {
-      const doc = await db.drafts.findOne('active-draft').exec();
+      const doc = await db.configs.findOne(`${currentWorkspace}:draft:active-draft`).exec();
       if (doc) await doc.remove();
     } catch (error) {
-      logger.error('Failed to clear draft', error, { feature: 'Drafts' });
+      logger.error('Failed to clear draft', error, { feature: 'Drafts', workspaceId: currentWorkspace });
     }
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   return { draft, saveDraft, clearDraft, isLoaded };
 }
