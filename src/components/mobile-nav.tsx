@@ -4,7 +4,7 @@ import { Menu, Mountain } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { OnlineStatus } from '@/components/online-status';
@@ -48,6 +48,9 @@ export function MobileNav() {
               </div>
               <span>PC Reportes</span>
             </SheetTitle>
+            <SheetDescription className="sr-only">
+              Menú de navegación principal para acceder a todas las secciones de la aplicación.
+            </SheetDescription>
           </SheetHeader>
           <nav className="grid gap-2 text-lg font-medium">
             {navItems.map((item) => (

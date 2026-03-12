@@ -58,7 +58,7 @@ export default function RootLayout({
                   <SideNav />
                   <div className="flex flex-1 flex-col sm:pl-14">
                     <MobileNav />
-                    <main className="flex-1 bg-muted/30 p-0 sm:p-0">
+                    <main className="flex-1 bg-muted/30 p-0 sm:p-0" suppressHydrationWarning>
                       <ErrorBoundary name="MainContent">{children}</ErrorBoundary>
                     </main>
                   </div>
