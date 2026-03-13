@@ -164,7 +164,7 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
         storage: getRxStorageDexie(),
       }),
       closeDuplicates: true,
-      ignoreDuplicate: true,
+      ignoreDuplicate: process.env.NODE_ENV === 'development',
     });
     // Register IMMEDIATELY in the global tracking
     state.allDatabases.set(name, database);
