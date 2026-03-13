@@ -12,6 +12,7 @@ import type { Report } from '@/types';
 function createMockReport(overrides: Partial<Report> = {}): Report {
     return {
         id: `report-${Date.now()}`,
+        workspaceId: 'workspace-1',
         templateId: 'template-1',
         title: 'Test Report',
         content: 'Test content',

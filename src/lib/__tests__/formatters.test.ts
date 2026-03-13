@@ -16,9 +16,10 @@ import type { StaffMember } from '@/types';
 function createMockStaffMember(overrides: Partial<StaffMember> = {}): StaffMember {
     return {
         id: 'staff-1',
+        workspaceId: 'workspace-1',
         name: 'Juan Pérez',
         cedula: '12345678',
-        rank: 'Teniente',
+        rank: undefined, // Default to no rank to keep existing name-only tests working
         roleId: 'officer',
         status: 'activo',
         department: 'operations',
@@ -90,10 +91,11 @@ describe('formatters', () => {
         it('should handle name with special characters', () => {
             const member = createMockStaffMember({
                 name: 'José María Ñ-Úñez',
-                cedula: '22222222'
+                cedula: '22222222',
+                rank: 'Teniente'
             });
             const result = formatStaffMemberForAutocomplete(member, true);
-            expect(result).toBe('José María Ñ-Úñez 22222222');
+            expect(result).toBe('Teniente José María Ñ-Úñez 22222222');
         });
 
         it('should handle very long names', () => {
@@ -158,7 +160,7 @@ describe('formatters', () => {
 
         it('should handle all fields populated correctly', () => {
             const member = createMockStaffMember({
-                name: 'Capitán Fernando Ruiz',
+                name: 'Fernando Ruiz',
                 cedula: '77777777',
                 rank: 'Capitán',
                 roleId: 'commander',

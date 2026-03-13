@@ -116,16 +116,24 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
 
   const handleSave = async () => {
     if (!formRef.current) return;
-    const formData = formRef.current.getValues();
+    const formData = await formRef.current.validate();
+    if (!formData) return;
+    
     debouncedSave.cancel();
     await saveLogic(formData);
   };
 
   const handleStatusChange = async (newStatus: 'En proceso' | 'Finalizado') => {
-    setStatus(newStatus);
-
     if (!formRef.current) return;
-    const formData = formRef.current.getValues();
+    
+    // We should validate even when changing status, especially to Finalizado
+    const formData = await formRef.current.validate();
+    if (!formData) {
+      // If invalid, we don't change status and show toast (Toast is already shown by validate())
+      return;
+    }
+
+    setStatus(newStatus);
     debouncedSave.cancel();
 
     if (!report || !template) return;

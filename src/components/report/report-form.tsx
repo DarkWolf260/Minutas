@@ -29,6 +29,7 @@ import { SectionRenderer } from './section-renderer';
 
 export interface ReportFormRef {
   submit: () => void;
+  validate: () => Promise<FormDataRecord | null>;
   getValues: () => FormDataRecord;
   getRenderedContent: () => string;
 }
@@ -343,7 +344,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
     const methods = useForm<Record<string, any>>({
       defaultValues: getInitialValues(initialData) as Record<string, unknown>,
     });
-    const { handleSubmit, control, watch, reset, getValues, setValue } = methods;
+    const { handleSubmit, control, watch, reset, getValues, setValue, trigger } = methods;
 
     // forceRender is used to trigger re-renders when the form values change.
     // We cannot rely on useWatch({ control }) without a name because it may not
@@ -385,6 +386,13 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
           logger.error('Form validation errors', new Error('Validation failed'), { feature: 'ReportForm', metadata: { errors } });
           toast.error('Por favor, corrige los errores en el formulario antes de guardar.');
         })();
+      },
+      validate: async () => {
+        const isValid = await trigger();
+        if (isValid) {
+          return getValues() as FormDataRecord;
+        }
+        return null;
       },
       getValues: getValues,
       getRenderedContent: () => {
@@ -506,7 +514,6 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
                         <Controller
                           name={fieldId}
                           control={control}
-                          shouldUnregister={true}
                           render={({ field }) => (
                             <FieldRenderer
                               fieldId={fieldId}

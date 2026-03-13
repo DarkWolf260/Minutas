@@ -193,7 +193,6 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                                 <Controller
                                     name={`${fieldNamePrefix}.${index}.${fieldId}`}
                                     control={control}
-                                    shouldUnregister={true}
                                     rules={{
                                         required: fieldConfig.required
                                             ? 'Este campo es obligatorio'
@@ -359,7 +358,6 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                                             <Controller
                                                 name={path}
                                                 control={control}
-                                                shouldUnregister={true}
                                                 rules={{
                                                     required: fieldConfig.required
                                                         ? 'Este campo es obligatorio'
@@ -517,7 +515,6 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                                 <Controller
                                     name={path}
                                     control={control}
-                                    shouldUnregister={true}
                                     rules={{
                                         required: fieldConfig.required
                                             ? 'Este campo es obligatorio'

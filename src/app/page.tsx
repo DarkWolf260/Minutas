@@ -298,6 +298,7 @@ function NovedadesPageContent() {
         handleSelectTemplate={handleSelectTemplate}
         handleClearAll={handleClearAll}
         handleDeleteReport={handleDeleteReport}
+        router={router}
       />
     </>
   );
@@ -315,6 +316,7 @@ const NovedadesDialogs = memo(function NovedadesDialogs({
   handleSelectTemplate,
   handleClearAll,
   handleDeleteReport,
+  router,
 }: {
   isMounted: boolean;
   isMobile: boolean;
@@ -326,6 +328,7 @@ const NovedadesDialogs = memo(function NovedadesDialogs({
   handleSelectTemplate: (id: string) => void;
   handleClearAll: () => void;
   handleDeleteReport: (id: string) => void;
+  router: any;
 }) {
   if (!isMounted) return null;
 
@@ -436,7 +439,7 @@ const NovedadesDialogs = memo(function NovedadesDialogs({
                     variant="link"
                     onClick={() => {
                       setIsCreateDialogOpen(false);
-                      // Handled by parent router.push
+                      router.push('/plantillas');
                     }}
                   >
                     Ir a Plantillas
@@ -476,7 +479,7 @@ const NovedadesDialogs = memo(function NovedadesDialogs({
                     variant="link"
                     onClick={() => {
                       setIsCreateDialogOpen(false);
-                      // Handled by parent router.push
+                      router.push('/plantillas');
                     }}
                   >
                     Ir a Plantillas

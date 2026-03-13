@@ -12,6 +12,7 @@ import type { Report, Template, TemplateConfig } from '@/types';
 function createMockReport(overrides: Partial<Report> = {}): Report {
     return {
         id: 'report-1',
+        workspaceId: 'workspace-1',
         templateId: 'template-1',
         title: 'Test Report',
         content: 'Test content',
@@ -26,6 +27,7 @@ function createMockReport(overrides: Partial<Report> = {}): Report {
 function createMockTemplate(overrides: Partial<Template> = {}): Template {
     return {
         id: 'template-1',
+        workspaceId: 'workspace-1',
         name: 'Test Template',
         content: '{Field1}',
         type: 'normal',
