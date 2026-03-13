@@ -73,11 +73,20 @@ export interface AppSettings {
   activeGuardId?: string;
   guardShiftDuration?: number;
   finalReportStaffSnapshot?: Staff;
+  finalReportGuardId?: string;
   finalReportStartDate?: string;
   finalReportEndDate?: string;
   reportaRoleIds?: string[];
   p2pRoomId?: string;
   p2pPassword?: string;
+  p2pSignalingUrl?: string;
+  ordenDelDiaDraft?: {
+    staff: Staff;
+    activities: { id: string; content: string }[];
+    notes: { id: string; content: string }[];
+    guardId: string;
+    updatedAt: string;
+  };
 }
 
 export interface Report {

@@ -27,7 +27,7 @@ export const personnelSchema = {
 
 export const reportsSchema = {
     title: 'reports schema',
-    version: 1,
+    version: 2,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -41,13 +41,13 @@ export const reportsSchema = {
         status: { type: 'string' },
         formData: { type: 'object' },
     },
-    required: ['id', 'workspaceId', 'templateId', 'title', 'timestamp', 'content'],
+    required: ['id', 'workspaceId', 'templateId', 'title', 'timestamp', 'content', 'isRelevant'],
     indexes: ['workspaceId']
 };
 
 export const templatesSchema = {
     title: 'templates schema',
-    version: 1,
+    version: 2,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -71,7 +71,7 @@ export const templatesSchema = {
             },
         },
     },
-    required: ['id', 'workspaceId', 'name', 'content'],
+    required: ['id', 'workspaceId', 'name', 'content', 'isActive'],
     indexes: ['workspaceId']
 };
 
@@ -139,7 +139,7 @@ export const historySchema = {
  */
 export const notificationsSchema = {
     title: 'notifications schema',
-    version: 1,
+    version: 2,
     primaryKey: 'id',
     type: 'object',
     properties: {

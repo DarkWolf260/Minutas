@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Database } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LoadingScreenProps {
@@ -19,25 +19,18 @@ export function LoadingScreen({ message, isOverlay = false }: LoadingScreenProps
           : "min-h-screen bg-background"
       )}
     >
-      <div className="relative">
-        {/* Glowing Background Effect */}
-        <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse scale-150" />
+      <div className="relative flex items-center justify-center">
+        {/* Glowing Background Effect - stays fixed or pulses */}
+        <div className="absolute inset-0 bg-primary/30 blur-3xl rounded-full animate-pulse scale-150" />
         
-        {/* Rotating Rings */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="h-24 w-24 rounded-full border-t-2 border-primary/40 border-r-2 border-transparent animate-[spin_3s_linear_infinite]" />
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="h-20 w-20 rounded-full border-b-2 border-primary/60 border-l-2 border-transparent animate-[spin_2s_linear_infinite_reverse]" />
-        </div>
-
-        {/* Core Icon */}
-        <div className="relative bg-background p-5 rounded-full border border-primary/20 shadow-2xl flex items-center justify-center overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-primary/10 opacity-50 group-hover:opacity-100 transition-opacity" />
-          <Database className="h-10 w-10 text-primary animate-bounce shadow-inner" style={{ animationDuration: '2s' }} />
+        {/* Bouncing Icon context */}
+        <div className="relative animate-bounce" style={{ animationDuration: '2s' }}>
+          <div className="bg-background/90 backdrop-blur-sm p-6 rounded-full border border-primary/30 shadow-[0_0_50px_-12px_rgba(var(--primary),0.5)] flex items-center justify-center overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-primary/10 opacity-50" />
+            <FileText className="h-10 w-10 text-primary" />
+          </div>
         </div>
       </div>
-
       <div className="mt-12 flex flex-col items-center gap-3">
         <h2 className="text-xl font-semibold tracking-tight animate-in fade-in slide-in-from-bottom-2 duration-700">
           {message || 'Iniciando Sistema'}

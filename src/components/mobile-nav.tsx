@@ -1,6 +1,5 @@
 'use client';
 
-import { Menu, Mountain } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,8 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { OnlineStatus } from '@/components/online-status';
 import { NotificationBell } from '@/components/notification-bell';
 import {
+  Menu,
+  Mountain,
   Newspaper,
   Settings,
   FileText,
@@ -24,6 +25,7 @@ import {
 const navItems = [
   { href: '/', label: 'Novedades', icon: Newspaper },
   { href: '/orden-del-dia', label: 'Orden del Día', icon: ClipboardList },
+  { href: '/reporte-final', label: 'Reporte Final', icon: History },
   { href: '/direcciones', label: 'Direcciones', icon: NotebookPen },
   { href: '/personal', label: 'Personal', icon: Users },
   { href: '/settings', label: 'Configuración', icon: Settings },

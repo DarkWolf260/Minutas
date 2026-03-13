@@ -36,33 +36,34 @@ const defaultRoles: StaffRole[] = [
   { name: LEADER_ROLES.JEFE_OPERACIONES, isSingle: true, departmentScope: ['ops'], order: 1 },
   { name: 'Jefe de los Servicios', isSingle: true, departmentScope: ['ops'], order: 2 },
   { name: 'Analista de CEMUPRAD', isSingle: false, departmentScope: ['cemuprad'], order: 3 },
-  { name: 'Operador de radio', isSingle: false, departmentScope: ['ops'], order: 4 },
-  { name: 'Técnico', isSingle: false, departmentScope: ['ops'], order: 5 },
-  { name: 'Auxiliar', isSingle: false, departmentScope: ['ops'], order: 6 },
-  { name: 'Conductor', isSingle: false, departmentScope: ['ops'], order: 7 },
+  { name: 'Auxiliar de CEMUPRAD', isSingle: false, departmentScope: ['cemuprad'], order: 4 },
+  { name: 'Operador de radio', isSingle: false, departmentScope: ['ops'], order: 5 },
+  { name: 'Técnico', isSingle: false, departmentScope: ['ops'], order: 6 },
+  { name: 'Auxiliar', isSingle: false, departmentScope: ['ops'], order: 7 },
+  { name: 'Conductor', isSingle: false, departmentScope: ['ops'], order: 8 },
   {
     name: PERSONNEL_STATUS.REPOSO.charAt(0).toUpperCase() + PERSONNEL_STATUS.REPOSO.slice(1),
-    isSingle: false,
-    departmentScope: [],
-    order: 8,
-  },
-  {
-    name: PERSONNEL_STATUS.PERMISO.charAt(0).toUpperCase() + PERSONNEL_STATUS.PERMISO.slice(1),
     isSingle: false,
     departmentScope: [],
     order: 9,
   },
   {
-    name: PERSONNEL_STATUS.APOYO.charAt(0).toUpperCase() + PERSONNEL_STATUS.APOYO.slice(1),
+    name: PERSONNEL_STATUS.PERMISO.charAt(0).toUpperCase() + PERSONNEL_STATUS.PERMISO.slice(1),
     isSingle: false,
     departmentScope: [],
     order: 10,
   },
   {
-    name: PERSONNEL_STATUS.VACACIONES.charAt(0).toUpperCase() + PERSONNEL_STATUS.VACACIONES.slice(1),
+    name: PERSONNEL_STATUS.APOYO.charAt(0).toUpperCase() + PERSONNEL_STATUS.APOYO.slice(1),
     isSingle: false,
     departmentScope: [],
     order: 11,
+  },
+  {
+    name: PERSONNEL_STATUS.VACACIONES.charAt(0).toUpperCase() + PERSONNEL_STATUS.VACACIONES.slice(1),
+    isSingle: false,
+    departmentScope: [],
+    order: 12,
   },
 ];
 
@@ -85,10 +86,51 @@ export function useRoles() {
       })
       .$.subscribe((data) => {
         if (data.length > 0) {
-          setRoles(data.map((d) => {
+          const loadedRoles = data.map((d) => {
             const json = d.toJSON();
             return { ...(json.data as StaffRole), workspaceId: currentWorkspace };
-          }) as StaffRole[]);
+          }) as StaffRole[];
+          setRoles(loadedRoles);
+
+          // Check for missing default roles and insert them
+          const existingRoleNames = new Map(loadedRoles.map(r => [r.name.toLowerCase(), r]));
+          const missingDefaults = defaultRoles.filter(
+            dr => !existingRoleNames.has(dr.name.toLowerCase())
+          );
+
+          const rolesWithIncorrectOrder = defaultRoles.filter(dr => {
+            const existing = existingRoleNames.get(dr.name.toLowerCase());
+            return existing && existing.order !== dr.order;
+          });
+
+          if (missingDefaults.length > 0 || rolesWithIncorrectOrder.length > 0) {
+            const toUpsert = [
+              ...missingDefaults.map((role) => ({
+                id: `${currentWorkspace}:role:${role.name}`,
+                workspaceId: currentWorkspace,
+                type: 'role' as const,
+                name: role.name,
+                data: { ...role, workspaceId: currentWorkspace },
+              })),
+              ...rolesWithIncorrectOrder.map((role) => {
+                const existing = existingRoleNames.get(role.name.toLowerCase())!;
+                return {
+                  id: `${currentWorkspace}:role:${existing.name}`, // Use existing name casing
+                  workspaceId: currentWorkspace,
+                  type: 'role' as const,
+                  name: existing.name,
+                  data: { ...existing, order: role.order },
+                };
+              })
+            ];
+
+            db.lookups.bulkUpsert(toUpsert as any).catch((err) => {
+              const isConflict = err.code === 'CONFLICT' || err.status === 409;
+              if (!isConflict) {
+                logger.error('Failed to sync default roles and orders', err, { feature: 'Roles', workspaceId: currentWorkspace });
+              }
+            });
+          }
         } else {
           // Initial roles if DB is empty for this workspace
           const toInsert = defaultRoles.map((role) => ({

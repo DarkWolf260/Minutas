@@ -76,7 +76,8 @@ interface P2PContextType {
   peers: PeerInfo[];
   localAlias: string;
   peerAliases: Record<string, string>;
-  startSync: (id: string, username?: string, password?: string) => Promise<void>;
+  connectionStatus: 'idle' | 'connecting' | 'connected' | 'error';
+  startSync: (id: string, username?: string, password?: string, signalingUrl?: string) => Promise<void>;
   stopSync: () => Promise<void>;
   updateLocalAlias: (alias: string) => void;
   wipeLocalData: () => Promise<void>;
@@ -99,6 +100,7 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
   const [roomId, setRoomId] = useState('');
   const [peers, setPeers] = useState<PeerInfo[]>([]);
   const [peerAliases, setPeerAliases] = useState<Record<string, string>>({});
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
   const [localAlias, setLocalAlias] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('p2p_local_alias') || '';
@@ -110,7 +112,9 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
   const peerStatesSubsRef = useRef<any[]>([]);
   const isSyncingRef = useRef(false);
   const isConnectingRef = useRef(false);
+  const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const roomIdRef = useRef('');
+  const signalingUrlRef = useRef<string | undefined>(undefined);
   const msgQueueRef = useRef(new P2PMessageQueue());
   const usernameRef = useRef('');
   const passwordRef = useRef('');
@@ -148,11 +152,17 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
     roomIdRef.current = '';
     usernameRef.current = '';
     passwordRef.current = '';
+    signalingUrlRef.current = undefined;
+    setConnectionStatus('idle');
+    if (connectionTimeoutRef.current) {
+      clearTimeout(connectionTimeoutRef.current);
+      connectionTimeoutRef.current = null;
+    }
     logger.info('P2P synchronization stopped and cleaned up.');
   }, []);
 
   const startSync = useCallback(
-    async (targetRoomId: string, username?: string, password?: string) => {
+    async (targetRoomId: string, username?: string, password?: string, signalingUrl?: string) => {
       if (!db || !targetRoomId || !currentWorkspace) {
         logger.warn('startSync called with missing dependencies (db, targetRoomId, or currentWorkspace). Aborting.');
         return;
@@ -161,6 +171,7 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
       // Normalize parameters to avoid 'undefined' vs '' mismatches
       const normUsername = username || '';
       const normPassword = password || '';
+      const normSignalingUrl = signalingUrl || 'wss://signaling.rxdb.info/';
       
       // Lock to prevent concurrent execution
       if (isConnectingRef.current) {
@@ -168,12 +179,13 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // If already syncing with the same ID, username, AND password, do nothing
+      // If already syncing with the same ID, username, password, AND signalingUrl, do nothing
       if (
         isSyncingRef.current && 
         roomIdRef.current === targetRoomId && 
         usernameRef.current === normUsername && 
-        passwordRef.current === normPassword
+        passwordRef.current === normPassword &&
+        signalingUrlRef.current === normSignalingUrl
       ) {
         return;
       }
@@ -186,13 +198,26 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        logger.info(`Starting P2P sync: Room=${targetRoomId}, Alias=${normUsername}, HasPass=${!!normPassword}`);
+        logger.info(`Starting P2P sync: Room=${targetRoomId}, Alias=${normUsername}, HasPass=${!!normPassword}, Signaling=${normSignalingUrl}`);
         setIsSyncing(true);
         isSyncingRef.current = true;
         setRoomId(targetRoomId);
         roomIdRef.current = targetRoomId;
         usernameRef.current = normUsername;
         passwordRef.current = normPassword;
+        signalingUrlRef.current = normSignalingUrl;
+        setConnectionStatus('connecting');
+
+        // Set a timeout to check if we actually connect to any peers
+        if (connectionTimeoutRef.current) clearTimeout(connectionTimeoutRef.current);
+        connectionTimeoutRef.current = setTimeout(() => {
+          if (isSyncingRef.current && peerCount === 0) {
+            logger.warn('P2P connection timeout: No peers found within 20s');
+            // We don't set to 'error' immediately because a peer might join later,
+            // but we could set a semi-error or just log it.
+            // For now, let's keep it connecting but maybe the UI handles the 'connecting' long-duration.
+          }
+        }, 20000);
         
         // Simple stable transformation for the topic if password exists
         // We avoid btoa() because it crashes with non-Latin1 characters
@@ -229,7 +254,17 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
             collection: collection as any,
             topic: topic,
             connectionHandlerCreator: getConnectionHandlerSimplePeer({
-              signalingServerUrl: 'wss://signaling.rxdb.info/',
+              signalingServerUrl: normSignalingUrl,
+              // Add Google STUN servers to improve NAT traversal (hole punching)
+              config: {
+                iceServers: [
+                  { urls: 'stun:stun.l.google.com:19302' },
+                  { urls: 'stun:stun1.l.google.com:19302' },
+                  { urls: 'stun:stun2.l.google.com:19302' },
+                  { urls: 'stun:stun3.l.google.com:19302' },
+                  { urls: 'stun:stun4.l.google.com:19302' },
+                ]
+              }
             } as any),
             pull: {},
             push: {
@@ -267,9 +302,18 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
             if (isTransient) {
               // Log as debug so it doesn't clutter the terminal/console as ERROR
               logger.debug(`P2P Transient handled for ${collectionName}:`, err);
+              
+              // If it's a persistent connection failure, notify the status
+              if (err?.parameters?.error?.code === 'ERR_CONNECTION_FAILURE' || 
+                  err?.message?.includes('ERR_CONNECTION_FAILURE')) {
+                // If it happens on the primary collection and we are still in 'connecting' phase
+                if (collectionName === 'reports' && connectionStatus === 'connecting') {
+                   setConnectionStatus('error');
+                   logger.error('P2P signaling or peer connection failed persistently.');
+                }
+              }
               return;
             }
-
             // Real error - log it and maybe show toast
             logger.error(`P2P Replication error in ${collectionName}:`, err);
 
@@ -390,6 +434,15 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
                   previousPeerIdsRef.current = currentPeerIds;
                   setPeers(peerList);
                   setPeerCount(peerMap.size);
+                  if (peerMap.size > 0) {
+                    setConnectionStatus('connected');
+                    if (connectionTimeoutRef.current) {
+                      clearTimeout(connectionTimeoutRef.current);
+                      connectionTimeoutRef.current = null;
+                    }
+                  } else if (isSyncingRef.current) {
+                    setConnectionStatus('connecting');
+                  }
                 }
               } catch (e) {
                 logger.error(`Error in peerStates subscription for ${collectionName}`, e);
@@ -461,8 +514,10 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
         const docData = doc.toJSON();
         const settings = docData.data;
         if (settings?.p2pRoomId) {
-          // Pass the localAlias along with database settings
-          await startSync(settings.p2pRoomId, localAlias, settings.p2pPassword);
+          const p2pRoomId = settings.p2pRoomId;
+          const p2pPassword = settings.p2pPassword;
+          const p2pSignalingUrl = settings.p2pSignalingUrl;
+          await startSync(p2pRoomId, localAlias, p2pPassword, p2pSignalingUrl);
         } else if (isSyncingRef.current) {
           await stopSync();
         }
@@ -489,6 +544,7 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
       peers, 
       localAlias,
       peerAliases,
+      connectionStatus,
       startSync, 
       stopSync, 
       updateLocalAlias,

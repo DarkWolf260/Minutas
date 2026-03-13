@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
+  History,
   Newspaper,
   Settings,
   Mountain,
@@ -13,17 +14,17 @@ import {
   NotebookPen,
   TrendingUp,
   Users,
-  History,
+  Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useP2P } from '@/lib/db/p2p-provider';
-import { Zap } from 'lucide-react';
 import { NotificationBell } from '@/components/notification-bell';
 
 const navItems = [
   { href: '/', label: 'Novedades', icon: Newspaper },
   { href: '/orden-del-dia', label: 'Orden del Día', icon: ClipboardList },
+  { href: '/reporte-final', label: 'Reporte Final', icon: History },
   { href: '/direcciones', label: 'Direcciones', icon: NotebookPen },
   { href: '/personal', label: 'Personal', icon: Users },
 ];
@@ -63,9 +64,10 @@ export function SideNav() {
                 <Link
                   href={item.href}
                   className={cn(
-                    'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
-                    pathname === item.href &&
-                    'bg-accent text-accent-foreground'
+                    'flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:h-8 md:w-8',
+                    pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   )}
                 >
                   <item.icon className="h-5 w-5" />
@@ -78,14 +80,13 @@ export function SideNav() {
         </nav>
         <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">
           <NotificationBell />
-          <ThemeToggle />
           <Tooltip>
             <TooltipTrigger asChild>
               <Link
                 href="/settings"
                 className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8',
-                  pathname === '/settings' && 'bg-accent text-accent-foreground'
+                  'flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:h-8 md:w-8',
+                  pathname === '/settings' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 <Settings className="h-5 w-5" />
@@ -94,6 +95,7 @@ export function SideNav() {
             </TooltipTrigger>
             <TooltipContent side="right">Configuración</TooltipContent>
           </Tooltip>
+          <ThemeToggle />
         </nav>
       </aside>
     </TooltipProvider>

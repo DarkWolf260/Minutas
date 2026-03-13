@@ -198,6 +198,10 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
           1: (doc: any) => {
             if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
             return doc;
+          },
+          2: (doc: any) => {
+            if (doc.isRelevant === undefined) doc.isRelevant = false;
+            return doc;
           }
         }
       },
@@ -206,6 +210,10 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
         migrationStrategies: {
           1: (doc: any) => {
             if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
+            return doc;
+          },
+          2: (doc: any) => {
+            if (doc.isActive === undefined) doc.isActive = true;
             return doc;
           }
         }
@@ -252,7 +260,11 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
       notifications: {
         schema: notificationsSchema,
         migrationStrategies: {
-          1: (doc: any) => doc
+          1: (doc: any) => doc,
+          2: (doc: any) => {
+            if (doc.read === undefined) doc.read = false;
+            return doc;
+          }
         }
       },
     };

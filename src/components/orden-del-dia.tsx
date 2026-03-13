@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Trash2, Plus, Clock, StickyNote, Copy, CheckIcon, Eye, Save, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -61,20 +62,20 @@ interface Note {
 }
 
 const DEFAULT_ACTIVITIES: Activity[] = [
-  { id: 'def-1', content: '08:00 HLV Se realiza cambio y recepción de Guardia' },
-  { id: 'def-2', content: '08:00 HLV El jefe de los Servicios reporta novedades al jefe de Operaciones dando inicio a la guardia de 24 Horas.' },
-  { id: 'def-3', content: '08:30 HLV Se envía reporte meteorológico a la central de Protección Civil Anzoátegui.' },
-  { id: 'def-4', content: '12:00 HLV a 13:00 HLV Se realiza reporte Meteorológico' },
-  { id: 'def-5', content: '14:30 HLV Se envía reporte meteorológico a la central de Protección Civil Anzoátegui.' },
-  { id: 'def-6', content: '17:30 HLV Se envía reporte meteorológico a la central de Protección Civil Anzoátegui.' },
-  { id: 'def-7', content: '18:00 - 19:00 HLV Se realiza reporte Meteorológico.' },
-  { id: 'def-8', content: '20:00 HLV Se realiza mantenimiento limpieza de las unidades e instalaciones de la sede.' },
-  { id: 'def-9', content: '20:30 HLV Se envía reporte meteorológico a la central de Protección Civil Anzoátegui.' },
-  { id: 'def-10', content: '21:00 HLV Se inicia el periodo de descanso del personal.' },
-  { id: 'def-11', content: '06:00 HLV - 07:00 HLV Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.' },
-  { id: 'def-12', content: '06:00 HLV Culmina el periodo de descanso del personal.' },
-  { id: 'def-13', content: '08:00 HLV Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.' },
-  { id: 'def-14', content: '08:00 HLV Se envía reporte final de novedades correspondiente a la guardia de 24 Horas del día a la dirección estadal y ZOEDAN / Se da culminación a la guardia de 24 Horas.' },
+  { id: 'def-1', content: '*08:00 HLV* Se realiza cambio y recepción de Guardia' },
+  { id: 'def-2', content: '*08:00 HLV* El jefe de los Servicios reporta novedades al jefe de Operaciones dando inicio a la guardia de 24 Horas.' },
+  { id: 'def-3', content: '*08:30 HLV* Se envía reporte meteorológico a la central de Protección Civil Anzoátegui.' },
+  { id: 'def-4', content: '*12:00 HLV a 13:00 HLV* Se realiza reporte Meteorológico' },
+  { id: 'def-5', content: '*14:30 HLV* Se envía reporte meteorológico a la central de Protección Civil Anzoátegui.' },
+  { id: 'def-6', content: '*17:30 HLV* Se envía reporte meteorológico a la central de Protección Civil Anzoátegui.' },
+  { id: 'def-7', content: '*18:00 - 19:00 HLV* Se realiza reporte Meteorológico.' },
+  { id: 'def-8', content: '*20:00 HLV* Se realiza mantenimiento limpieza de las unidades e instalaciones de la sede.' },
+  { id: 'def-9', content: '*20:30 HLV* Se envía reporte meteorológico a la central de Protección Civil Anzoátegui.' },
+  { id: 'def-10', content: '*21:00 HLV* Se inicia el periodo de descanso del personal.' },
+  { id: 'def-11', content: '*06:00 HLV - 07:00 HLV* Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.' },
+  { id: 'def-12', content: '*06:00 HLV* Culmina el periodo de descanso del personal.' },
+  { id: 'def-13', content: '*08:00 HLV* Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.' },
+  { id: 'def-14', content: '*08:00 HLV* Se envía reporte final de novedades correspondiente a la guardia de 24 Horas del día a la dirección estadal y ZOEDAN / Se da culminación a la guardia de 24 Horas.' },
 ];
 
 const DEFAULT_NOTES: Note[] = [
@@ -93,7 +94,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   const { definitions } = useFieldDefinitions();
   const { roles, isLoaded: rolesLoaded } = useRoles();
   const isMobile = useIsMobile();
-  const { settings, saveSettings } = useSettings();
+  const { settings, saveSettings, isLoaded: isSettingsLoaded } = useSettings();
   const { personnel, isLoaded: personnelLoaded } = usePersonnel();
   const [periodo, setPeriodo] = useState('');
   const [staff, setStaff] = useState<Staff>({});
@@ -157,20 +158,27 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   useEffect(() => {
     if (lastInitializedGuard.current === selectedGuard) return;
 
-    if (rolesLoaded && personnelLoaded) {
+    if (rolesLoaded && personnelLoaded && isSettingsLoaded) {
+      // Priority 1: Check for existing draft for this guard
+      if (settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === selectedGuard) {
+        setStaff(settings.ordenDelDiaDraft.staff);
+        setActivities(settings.ordenDelDiaDraft.activities);
+        setNotes(settings.ordenDelDiaDraft.notes);
+        lastInitializedGuard.current = selectedGuard;
+        return;
+      }
+
+      // Priority 2: Use Initial Data or default generation
       const newStaffState: Staff = {};
       roles.forEach((role: StaffRole) => {
         const roleNameLower = role.name.toLowerCase();
         let assignedMembers = (initialData && initialData[role.name]) || [];
 
-        // Rehydrate ALL assigned members with latest metadata from personnel database
-        // This ensures they get the latest Rank and Title even if the guard snapshot is old.
         assignedMembers = assignedMembers.map((member: StaffMember) => {
           const latestData = personnel.find((p: StaffMember) => p.id === member.id);
           return latestData || member;
         });
 
-        // Override/Priority for Leader Roles from Global Personnel (Role based lookup)
         if (
           roleNameLower === 'director' ||
           roleNameLower === 'jefe de operaciones' ||
@@ -185,16 +193,39 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
           }
         }
 
-        // Apply Hierarchical Sorting as DEFAULT
         newStaffState[role.name] = [...assignedMembers].sort((a, b) =>
           compareRanks(a.rank, b.rank)
         );
       });
 
       setStaff(newStaffState);
+      setActivities(DEFAULT_ACTIVITIES);
+      setNotes(DEFAULT_NOTES);
       lastInitializedGuard.current = selectedGuard;
     }
-  }, [initialData, roles, rolesLoaded, personnel, personnelLoaded, selectedGuard]);
+  }, [initialData, roles, rolesLoaded, personnel, personnelLoaded, selectedGuard, isSettingsLoaded, settings.ordenDelDiaDraft]);
+
+  // Debounced Auto-Save for Draft
+  useEffect(() => {
+    if (!rolesLoaded || !personnelLoaded || !isSettingsLoaded || !selectedGuard) return;
+    
+    // Avoid saving if state is still essentially the default/initial and matches existing draft
+    if (lastInitializedGuard.current !== selectedGuard) return;
+
+    const timer = setTimeout(() => {
+      saveSettings({
+        ordenDelDiaDraft: {
+          staff,
+          activities,
+          notes,
+          guardId: selectedGuard,
+          updatedAt: new Date().toISOString()
+        }
+      });
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [staff, activities, notes, selectedGuard, isSettingsLoaded, rolesLoaded, personnelLoaded, saveSettings]);
 
   const handleRoleStaffUpdate = (roleName: string, members: StaffMember[]) => {
     setStaff((prev: Staff) => ({
@@ -230,6 +261,10 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   const handleRestoreDefaults = () => {
     setActivities(DEFAULT_ACTIVITIES);
     setNotes(DEFAULT_NOTES);
+    // Clearing draft part is handled by the auto-save effect picking up these changes,
+    // but we can also just reset the staff if needed. 
+    // Usually user wants to reset everything.
+    lastInitializedGuard.current = null; // Trigger re-init
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -335,6 +370,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
     saveSettings({
       ...settings,
       finalReportStaffSnapshot: staff,
+      finalReportGuardId: selectedGuard,
       finalReportStartDate: startDate && !isNaN(startDate.getTime()) ? startDate.toISOString() : '',
       finalReportEndDate: endDate && !isNaN(endDate.getTime()) ? endDate.toISOString() : '',
     });
@@ -694,6 +730,16 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
               >
                 {isSnapshotSaved ? 'Guardado para Reporte Final' : 'Usar para Reporte Final'}
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                asChild
+                className="w-full"
+              >
+                <Link href="/reporte-final">
+                  Ir a Reporte Final
+                </Link>
+              </Button>
               <div className="flex gap-2">
                 <Button className="flex-1" type="button" onClick={handleCopyToClipboard}>
                   {copyButtonText === 'Copiar' ? (
@@ -729,15 +775,28 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
               />
             </div>
             <DialogFooter className="mt-auto pt-4 flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleUseForFinalReport}
-                disabled={isSnapshotSaved}
-              >
-                {isSnapshotSaved ? 'Guardado para Reporte Final' : 'Usar para Reporte Final'}
-              </Button>
-              <Button type="button" onClick={handleCopyToClipboard}>
+              <div className="flex-1 flex gap-2 flex-wrap sm:flex-nowrap">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleUseForFinalReport}
+                  disabled={isSnapshotSaved}
+                  className="flex-1 sm:flex-none"
+                >
+                  {isSnapshotSaved ? 'Guardado' : 'Guardar Personal'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  asChild
+                  className="flex-1 sm:flex-none"
+                >
+                  <Link href="/reporte-final">
+                    Ir a Reporte Final
+                  </Link>
+                </Button>
+              </div>
+              <Button type="button" onClick={handleCopyToClipboard} className="w-full sm:w-auto">
                 {copyButtonText === 'Copiar' ? (
                   <Copy className="mr-2 h-4 w-4" />
                 ) : (
@@ -746,7 +805,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
                 {copyButtonText}
               </Button>
               <DialogClose asChild>
-                <Button type="button" variant="secondary">
+                <Button type="button" variant="secondary" className="w-full sm:w-auto">
                   Cerrar
                 </Button>
               </DialogClose>

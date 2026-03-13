@@ -97,6 +97,7 @@ export default function SettingsPage() {
     peers, 
     localAlias,
     peerAliases,
+    connectionStatus,
     startSync, 
     stopSync, 
     updateLocalAlias,
@@ -105,6 +106,7 @@ export default function SettingsPage() {
   
   const [targetRoomId, setTargetRoomId] = useState('');
   const [targetPassword, setTargetPassword] = useState('');
+  const [targetSignalingUrl, setTargetSignalingUrl] = useState('');
   const [isCopied, setIsCopied] = useState(false);
   const [isStrategyOpen, setIsStrategyOpen] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
@@ -126,6 +128,9 @@ export default function SettingsPage() {
     }
     if (settings?.p2pPassword) {
       setTargetPassword(settings.p2pPassword);
+    }
+    if (settings?.p2pSignalingUrl) {
+      setTargetSignalingUrl(settings.p2pSignalingUrl);
     }
     
     // Migration: If we find p2pUsername in synced settings (old version), 
@@ -187,6 +192,7 @@ export default function SettingsPage() {
             ...currentSettings,
             p2pRoomId: targetRoomId,
             p2pPassword: targetPassword,
+            p2pSignalingUrl: targetSignalingUrl,
             workspaceId: activeWorkspace
           }
         });
@@ -206,7 +212,8 @@ export default function SettingsPage() {
   const handleStopSync = async () => {
     await saveSettings({ 
       p2pRoomId: '',
-      p2pPassword: targetPassword
+      p2pPassword: targetPassword,
+      p2pSignalingUrl: targetSignalingUrl
     });
     await stopSync();
     toast.info('Sincronización detenida');
@@ -467,20 +474,48 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-4 p-4 rounded-lg border bg-muted/30">
                 <div className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-full shrink-0",
-                  isSyncing ? "bg-green-500/10 text-green-500" : "bg-muted text-muted-foreground"
+                  "flex h-10 w-10 items-center justify-center rounded-full shrink-0 transition-colors",
+                  connectionStatus === 'connected' ? "bg-green-500/10 text-green-500" : 
+                  connectionStatus === 'connecting' ? "bg-yellow-500/10 text-yellow-500" :
+                  connectionStatus === 'error' ? "bg-destructive/10 text-destructive shadow-[0_0_15px_-3px_rgba(239,68,68,0.3)]" :
+                  "bg-muted text-muted-foreground"
                 )}>
-                  {isSyncing ? <Wifi className="h-5 w-5 animate-pulse" /> : <WifiOff className="h-5 w-5" />}
+                  {connectionStatus === 'connected' && <Wifi className="h-5 w-5" />}
+                  {connectionStatus === 'connecting' && <Zap className="h-5 w-5 animate-pulse" />}
+                  {connectionStatus === 'error' && <AlertTriangle className="h-5 w-5 animate-bounce" />}
+                  {connectionStatus === 'idle' && <WifiOff className="h-5 w-5" />}
                 </div>
                 <div>
-                  <p className="font-semibold">{isSyncing ? 'Sincronización Activa' : 'Sincronización Desconectada'}</p>
+                  <p className="font-semibold">
+                    {connectionStatus === 'connected' && 'Sincronización Activa'}
+                    {connectionStatus === 'connecting' && 'Buscando pares...'}
+                    {connectionStatus === 'error' && 'Error de Conexión'}
+                    {connectionStatus === 'idle' && 'Sincronización Desconectada'}
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    {isSyncing 
-                      ? `Conectado a la sala "${activeRoomId}". ${peerCount} pares encontrados.` 
-                      : 'Ingresa un ID de sala para empezar a compartir datos.'}
+                    {connectionStatus === 'connected' && `Conectado a "${activeRoomId}". ${peerCount} pares.`}
+                    {connectionStatus === 'connecting' && 'Intentando establecer conexión P2P...'}
+                    {connectionStatus === 'error' && 'No se pudo establecer la conexión P2P.'}
+                    {connectionStatus === 'idle' && 'Ingresa un ID de sala para empezar a compartir datos.'}
                   </p>
                 </div>
               </div>
+
+              {connectionStatus === 'error' && (
+                <div className="p-4 rounded-lg bg-destructive/5 border border-destructive/20 space-y-3 animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-center gap-2 text-destructive">
+                    <Info className="h-4 w-4" />
+                    <p className="text-xs font-bold uppercase tracking-wider">Guía de Solución de Problemas</p>
+                  </div>
+                  <ul className="text-xs space-y-2 text-muted-foreground list-disc pl-4">
+                    <li>Verifica que <strong>ambos dispositivos</strong> usen el mismo <strong>ID de Sala</strong> y <strong>Contraseña</strong>.</li>
+                    <li>Asegúrate de que el ID de Sala sea <strong>único</strong> (ej: <code>minutas-p2p-7281</code>) para evitar colisiones.</li>
+                    <li>Prueba a conectar ambos dispositivos a la <strong>misma red WiFi</strong> si están en redes diferentes.</li>
+                    <li>Si usas un Firewall o Antivirus, asegúrate de que no bloqueen las conexiones WebRTC.</li>
+                    <li>Reinicia la sincronización en ambos dispositivos simultáneamente.</li>
+                  </ul>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="room-id">ID de Sala / Token Compartido</Label>
@@ -521,10 +556,34 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-end">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="p2p-signaling">Servidor de Señalización (Avanzado)</Label>
+                    <Badge variant="outline" className="text-[10px] h-4">Avanzado</Badge>
+                  </div>
+                  <Input
+                    id="p2p-signaling"
+                    name="p2p-signaling"
+                    value={targetSignalingUrl}
+                    onChange={(e) => setTargetSignalingUrl(e.target.value)}
+                    placeholder="Predeterminado: wss://signaling.rxdb.info/"
+                    disabled={isSyncing}
+                  />
+                  {!targetSignalingUrl && (
+                    <p className="text-[10px] text-muted-foreground">
+                      * Usando el servidor público de RxDB (puede ser inestable en producción).
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-2">
                   {isSyncing ? (
-                    <Button variant="destructive" onClick={handleStopSync} className="w-full sm:w-auto">
-                      Detener
+                    <Button 
+                      variant={connectionStatus === 'error' ? "default" : "destructive"} 
+                      onClick={connectionStatus === 'error' ? () => handleStartSync('merge') : handleStopSync} 
+                      className="w-full sm:w-auto"
+                    >
+                      {connectionStatus === 'error' ? 'Reintentar' : 'Detener'}
                     </Button>
                   ) : (
                     <Button 
