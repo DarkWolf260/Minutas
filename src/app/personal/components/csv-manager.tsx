@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import type { StaffMember, StaffRole, Department } from '@/types';
 import { validatePersonnel } from '@/lib/validations/personnel';
 import { generateId } from '@/lib/utils/id';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 
 interface CSVManagerProps {
   personnel: StaffMember[];
@@ -29,6 +30,7 @@ interface CSVManagerProps {
  * CSV Manager for importing and exporting personnel data
  */
 export function CSVManager({ personnel, roles, departments, onImport }: CSVManagerProps) {
+  const { currentWorkspace } = useWorkspaceManager();
   const [isImporting, setIsImporting] = useState(false);
 
   const downloadTemplate = () => {
@@ -99,9 +101,10 @@ export function CSVManager({ personnel, roles, departments, onImport }: CSVManag
 
           newMembers.push({
             id: generateId('personnel'),
+            workspaceId: currentWorkspace || '',
             ...validation.data,
             status: 'activo',
-          });
+          } as StaffMember);
         }
 
         if (errors.length > 0) {
