@@ -43,6 +43,7 @@ export interface StaffMember {
   status?: PersonnelStatus;
   department?: string;
   specialties?: string[];
+  observation?: string; // For Orden del Día notations
 }
 
 export interface StaffRole {

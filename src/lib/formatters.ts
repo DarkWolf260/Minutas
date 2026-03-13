@@ -52,16 +52,26 @@ export function formatStaffMemberForAutocomplete(member: StaffMember, withCedula
  * @param showCedula - Whether to show cédula in parentheses (default: false)
  * @returns Formatted string for template display
  */
-export function formatStaffMember(member: StaffMember, showCedula: boolean = false): string {
+export function formatStaffMember(
+  member: StaffMember, 
+  showCedula: boolean = false,
+  showObservation: boolean = false
+): string {
   if (!member) return '';
 
   const fullName = buildFullStaffName(member);
 
+  let result = fullName;
+
   if (showCedula && member.cedula) {
-    return `${fullName} (${member.cedula})`;
+    result += ` (${member.cedula})`;
   }
 
-  return fullName;
+  if (showObservation && member.observation) {
+    result += ` (${member.observation})`;
+  }
+
+  return result;
 }
 
 /**

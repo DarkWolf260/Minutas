@@ -1,16 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { Trash2, Plus, Clock, StickyNote, Copy, CheckIcon, Eye, Save, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,10 +25,64 @@ import {
   defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { GripVertical } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from 'sonner';
 import type { Staff, StaffMember, StaffRole, FieldConfig } from '@/types';
+import { generateId } from '@/lib/utils/id';
 
 import { formatStaffMember } from '@/lib/formatters';
+
+interface Activity {
+  id: string;
+  content: string;
+}
+
+interface Note {
+  id: string;
+  content: string;
+}
+
+const DEFAULT_ACTIVITIES: Activity[] = [
+  { id: 'def-1', content: '08:00 HLV Se realiza cambio y recepción de Guardia' },
+  { id: 'def-2', content: '08:00 HLV El jefe de los Servicios reporta novedades al jefe de Operaciones dando inicio a la guardia de 24 Horas.' },
+  { id: 'def-3', content: '08:30 HLV Se envía reporte meteorológico a la central de Protección Civil Anzoátegui.' },
+  { id: 'def-4', content: '12:00 HLV a 13:00 HLV Se realiza reporte Meteorológico' },
+  { id: 'def-5', content: '14:30 HLV Se envía reporte meteorológico a la central de Protección Civil Anzoátegui.' },
+  { id: 'def-6', content: '17:30 HLV Se envía reporte meteorológico a la central de Protección Civil Anzoátegui.' },
+  { id: 'def-7', content: '18:00 - 19:00 HLV Se realiza reporte Meteorológico.' },
+  { id: 'def-8', content: '20:00 HLV Se realiza mantenimiento limpieza de las unidades e instalaciones de la sede.' },
+  { id: 'def-9', content: '20:30 HLV Se envía reporte meteorológico a la central de Protección Civil Anzoátegui.' },
+  { id: 'def-10', content: '21:00 HLV Se inicia el periodo de descanso del personal.' },
+  { id: 'def-11', content: '06:00 HLV - 07:00 HLV Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.' },
+  { id: 'def-12', content: '06:00 HLV Culmina el periodo de descanso del personal.' },
+  { id: 'def-13', content: '08:00 HLV Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.' },
+  { id: 'def-14', content: '08:00 HLV Se envía reporte final de novedades correspondiente a la guardia de 24 Horas del día a la dirección estadal y ZOEDAN / Se da culminación a la guardia de 24 Horas.' },
+];
+
+const DEFAULT_NOTES: Note[] = [
+  { id: 'note-1', content: 'ESTA ORDEN DE OPERACIONES DEBE SER CUMPLIDA A CABALIDAD, EL INCUMPLIMIENTO DE LAS MISMAS ACARREARÁ COMO CONSECUENCIA SANCIONES ADMINISTRATIVAS.' },
+  { id: 'note-2', content: 'LA ORDEN DE OPERACIONES DEBE SER REALIZADA Y DIFUNDIDA TODOS LOS DÍAS POR EL JEFE DE LOS SERVICIOS DE GUARDIA.' },
+  { id: 'note-3', content: 'LA UNIDAD AMBULANCIA DEL AMBULATORIO TITO GONZÁLEZ HEREDIA EN APOYO A LAS OPERACIONES DEL INSTITUTO.' },
+  { id: 'note-4', content: 'EL ASEO DE LAS UNIDADES E INSTALACIONES (OFICINAS, CUADRA, BAÑOS Y COCINA) DEBE SER REALIZADA DIARIAMENTE.' },
+];
 
 interface OrdenDelDiaFormProps {
   selectedGuard: string;
@@ -46,10 +92,14 @@ interface OrdenDelDiaFormProps {
 export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormProps) {
   const { definitions } = useFieldDefinitions();
   const { roles, isLoaded: rolesLoaded } = useRoles();
+  const isMobile = useIsMobile();
   const { settings, saveSettings } = useSettings();
   const { personnel, isLoaded: personnelLoaded } = usePersonnel();
   const [periodo, setPeriodo] = useState('');
   const [staff, setStaff] = useState<Staff>({});
+
+  const [activities, setActivities] = useState<Activity[]>(DEFAULT_ACTIVITIES);
+  const [notes, setNotes] = useState<Note[]>(DEFAULT_NOTES);
 
   const [generatedOrder, setGeneratedOrder] = useState('');
   const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
@@ -115,9 +165,9 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
 
         // Rehydrate ALL assigned members with latest metadata from personnel database
         // This ensures they get the latest Rank and Title even if the guard snapshot is old.
-        assignedMembers = assignedMembers.map(member => {
-            const latestData = personnel.find(p => p.id === member.id);
-            return latestData || member;
+        assignedMembers = assignedMembers.map((member: StaffMember) => {
+          const latestData = personnel.find((p: StaffMember) => p.id === member.id);
+          return latestData || member;
         });
 
         // Override/Priority for Leader Roles from Global Personnel (Role based lookup)
@@ -151,6 +201,35 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
       ...prev,
       [roleName]: members,
     }));
+  };
+
+  const handleAddActivity = () => {
+    setActivities([...activities, { id: generateId('act'), content: '' }]);
+  };
+
+  const handleUpdateActivity = (id: string, value: string) => {
+    setActivities(activities.map(a => a.id === id ? { ...a, content: value } : a));
+  };
+
+  const handleRemoveActivity = (id: string) => {
+    setActivities(activities.filter(a => a.id !== id));
+  };
+
+  const handleAddNote = () => {
+    setNotes([...notes, { id: generateId('note'), content: '' }]);
+  };
+
+  const handleUpdateNote = (id: string, value: string) => {
+    setNotes(notes.map(n => n.id === id ? { ...n, content: value } : n));
+  };
+
+  const handleRemoveNote = (id: string) => {
+    setNotes(notes.filter(n => n.id !== id));
+  };
+
+  const handleRestoreDefaults = () => {
+    setActivities(DEFAULT_ACTIVITIES);
+    setNotes(DEFAULT_NOTES);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -209,7 +288,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
       const destMembers = staff[overContainer] || [];
       const overIndex = destMembers.findIndex((m) => m.id === overId);
 
-      const targetRole = roles.find((r) => r.name === overContainer);
+      const targetRole = roles.find((r: StaffRole) => r.name === overContainer);
 
       setStaff((prev) => {
         const newStaff = { ...prev };
@@ -315,6 +394,8 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
       `*PERIODO:* ${periodo}`,
     ];
 
+    // Removed ACTIVIDADES / OBSERVACIONES header and textoExtra as requested
+
     Object.entries(staff).forEach(([role, personnelList]) => {
       // Skip Director and Jefe de Operaciones as they are in the header
       if (role.toLowerCase() === 'director' || role.toLowerCase() === 'jefe de operaciones') return;
@@ -327,14 +408,43 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
         reportParts.push(
           ``,
           `*${role.toUpperCase()}*`,
-          personnelList.map(m => formatStaffMember(m)).join('\n')
+          personnelList.map(m => formatStaffMember(m, false, true)).join('\n')
         );
       }
     });
 
     const order = reportParts.join('\n').trim();
 
-    setGeneratedOrder(order);
+    // Secondary parts: Activities and Notes
+    const secondaryParts: string[] = [];
+
+    if (activities.length > 0) {
+      secondaryParts.push(``, `*ACTIVIDADES DEL DÍA*`);
+      activities.forEach(act => {
+        if (act.content.trim()) {
+          secondaryParts.push(``, `- ${act.content.trim()}`);
+        }
+      });
+    }
+
+    if (notes.length > 0) {
+      secondaryParts.push(``, `*NOTA:*`);
+      notes.forEach(note => {
+        if (note.content.trim()) {
+          secondaryParts.push(``, `*${note.content.trim()}*`);
+        }
+      });
+    }
+
+    // Combine all
+    const finalReport = [
+      order,
+      ...secondaryParts,
+      ``,
+      `*PROTECCIÓN CIVIL GUANTA*`
+    ].join('\n').trim();
+
+    setGeneratedOrder(finalReport);
     setIsResultDialogOpen(true);
     setCopyButtonText('Copiar');
     setIsSnapshotSaved(false);
@@ -343,6 +453,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(generatedOrder);
     setCopyButtonText('¡Copiado!');
+    toast.success('Copiado al portapapeles');
     setTimeout(() => setCopyButtonText('Copiar'), 2000);
   };
 
@@ -388,6 +499,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
                   staffMembers={staff[role.name] || []}
                   isSingle={role.isSingle}
                   onUpdate={(members) => handleRoleStaffUpdate(role.name, members)}
+                  showObservations={true}
                 />
               ))}
           </div>
@@ -421,46 +533,227 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
             ) : null}
           </DragOverlay>
         </DndContext>
+
+        {/* ACTIVIDADES DEL DÍA */}
+        <div className="space-y-4 pt-4 border-t">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" />
+              <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
+                Actividades del Día
+              </Label>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 text-[10px] uppercase font-bold text-primary hover:text-primary hover:bg-primary/10"
+                onClick={handleRestoreDefaults}
+              >
+                Restaurar Defaults
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-[10px] uppercase font-bold"
+                onClick={handleAddActivity}
+              >
+                <Plus className="h-3 w-3 mr-1" /> Añadir Actividad
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {activities.length === 0 && (
+              <p className="text-xs text-center text-muted-foreground py-4 border-2 border-dashed rounded-lg bg-muted/5">
+                No hay actividades registradas.
+              </p>
+            )}
+            {activities.map((activity) => (
+              <div key={activity.id} className="flex gap-2 items-start animate-in fade-in slide-in-from-top-1 duration-200">
+                <Textarea
+                  className="flex-1 min-h-[40px] text-xs font-mono py-2 bg-background resize-none scrollbar-none"
+                  placeholder="Descripción de la actividad..."
+                  value={activity.content}
+                  rows={1}
+                  onChange={(e) => {
+                    handleUpdateActivity(activity.id, e.target.value);
+                    // Auto-resize
+                    e.target.style.height = 'auto';
+                    e.target.style.height = `${e.target.scrollHeight}px`;
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.height = 'auto';
+                    e.target.style.height = `${e.target.scrollHeight}px`;
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 text-muted-foreground hover:text-destructive shrink-0"
+                  onClick={() => handleRemoveActivity(activity.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* NOTAS ADICIONALES */}
+        <div className="space-y-4 pt-4 border-t">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <StickyNote className="h-4 w-4 text-primary" />
+              <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
+                Notas Administrativas
+              </Label>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-[10px] uppercase font-bold"
+                onClick={handleAddNote}
+              >
+                <Plus className="h-3 w-3 mr-1" /> Añadir Nota
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {notes.length === 0 && (
+              <p className="text-xs text-center text-muted-foreground py-4 border-2 border-dashed rounded-lg bg-muted/5">
+                No hay notas registradas.
+              </p>
+            )}
+            {notes.map((note) => (
+              <div key={note.id} className="flex gap-2 items-start animate-in fade-in slide-in-from-top-1 duration-200">
+                <Textarea
+                  className="flex-1 min-h-[40px] text-xs font-mono py-2 bg-background resize-none scrollbar-none"
+                  placeholder="Contenido de la nota..."
+                  value={note.content}
+                  rows={1}
+                  onChange={(e) => {
+                    handleUpdateNote(note.id, e.target.value);
+                    e.target.style.height = 'auto';
+                    e.target.style.height = `${e.target.scrollHeight}px`;
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.height = 'auto';
+                    e.target.style.height = `${e.target.scrollHeight}px`;
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 text-muted-foreground hover:text-destructive shrink-0"
+                  onClick={() => handleRemoveNote(note.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
       <div className="flex justify-end pt-6">
-        <Button onClick={handleGenerateOrder}>Generar Orden del Día</Button>
+        <Button onClick={handleGenerateOrder} className="gap-2">
+          <Eye className="h-4 w-4" />
+          Generar Orden del Día
+        </Button>
       </div>
 
-      <Dialog open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
-        <DialogContent className="max-h-[90vh] max-w-[90vw] sm:max-w-2xl flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Orden del Día Generada</DialogTitle>
-            <DialogDescription>
-              Puedes copiar el texto generado o guardar el personal para el reporte final.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex-1 overflow-y-auto -mx-6 px-6">
-            <Textarea
-              readOnly
-              value={generatedOrder}
-              className="w-full h-full min-h-[50vh] text-sm whitespace-pre-wrap font-mono"
-            />
-          </div>
-          <DialogFooter className="mt-auto pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleUseForFinalReport}
-              disabled={isSnapshotSaved}
-            >
-              {isSnapshotSaved ? 'Guardado para Reporte Final' : 'Usar para Reporte Final'}
-            </Button>
-            <Button type="button" onClick={handleCopyToClipboard}>
-              {copyButtonText}
-            </Button>
-            <DialogClose asChild>
-              <Button type="button" variant="secondary">
-                Cerrar
+      {/* Resultado - Responsive */}
+      {isMobile ? (
+        <Sheet open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
+          <SheetContent side="bottom" className="h-[95vh] rounded-t-xl flex flex-col p-6">
+            <SheetHeader className="text-left">
+              <SheetTitle>Orden del Día Generada</SheetTitle>
+              <SheetDescription>
+                Revisa la orden generada. Puedes copiar el texto para usarlo donde necesites.
+              </SheetDescription>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto mt-4 px-1">
+              <Textarea
+                readOnly
+                value={generatedOrder}
+                className="w-full h-full min-h-[60vh] bg-muted/50 font-mono text-xs whitespace-pre-wrap rounded-lg p-3"
+              />
+            </div>
+            <SheetFooter className="mt-4 flex flex-col gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleUseForFinalReport}
+                disabled={isSnapshotSaved}
+              >
+                {isSnapshotSaved ? 'Guardado para Reporte Final' : 'Usar para Reporte Final'}
               </Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              <div className="flex gap-2">
+                <Button className="flex-1" type="button" onClick={handleCopyToClipboard}>
+                  {copyButtonText === 'Copiar' ? (
+                    <Copy className="mr-2 h-4 w-4" />
+                  ) : (
+                    <CheckIcon className="mr-2 h-4 w-4" />
+                  )}
+                  {copyButtonText}
+                </Button>
+                <SheetClose asChild>
+                  <Button type="button" variant="secondary">
+                    Cerrar
+                  </Button>
+                </SheetClose>
+              </div>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Dialog open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
+          <DialogContent className="max-h-[90vh] max-w-[90vw] sm:max-w-3xl flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Orden del Día Generada</DialogTitle>
+              <DialogDescription>
+                Revisa la orden generada. Puedes copiar el texto para usarlo donde necesites o guardarlo para el reporte final.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto -mx-6 px-6">
+              <Textarea
+                readOnly
+                value={generatedOrder}
+                className="w-full h-full min-h-[50vh] bg-muted/50 font-mono text-xs whitespace-pre-wrap rounded-lg p-4"
+              />
+            </div>
+            <DialogFooter className="mt-auto pt-4 flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleUseForFinalReport}
+                disabled={isSnapshotSaved}
+              >
+                {isSnapshotSaved ? 'Guardado para Reporte Final' : 'Usar para Reporte Final'}
+              </Button>
+              <Button type="button" onClick={handleCopyToClipboard}>
+                {copyButtonText === 'Copiar' ? (
+                  <Copy className="mr-2 h-4 w-4" />
+                ) : (
+                  <CheckIcon className="mr-2 h-4 w-4" />
+                )}
+                {copyButtonText}
+              </Button>
+              <DialogClose asChild>
+                <Button type="button" variant="secondary">
+                  Cerrar
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
