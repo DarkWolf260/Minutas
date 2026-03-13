@@ -15,4 +15,10 @@ export const DEFAULT_ROLES = [
     departmentScope: ['OPERATIONS'],
     isHidden: false,
   },
+  {
+    name: 'Auxiliar de CEMUPRAD',
+    isSingle: false,
+    departmentScope: ['CEMUPRAD'],
+    isHidden: false,
+  },
 ];

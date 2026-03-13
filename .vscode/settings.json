@@ -1,0 +1,16 @@
+{
+  "css.lint.unknownAtRules": "ignore",
+  "css.lint.validProperties": [
+    "scrollbar-width"
+  ],
+  "css.lint.propertyIgnoredByDisplay": "ignore",
+  "css.lint.compatibleVendorPrefixes": "ignore",
+  "css.lint.vendorPrefix": "ignore",
+  "vscode-edge-devtools.webhint.ignore": [
+    "css-no-inline-styles",
+    "css-no-empty-rulesets",
+    "common-css-compatibility"
+  ],
+  "html.validate.styles": false,
+  "html.validate.scripts": false
+}

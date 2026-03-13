@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import type { StaffMember } from '@/types';
 
 interface CsvImportButtonProps {
@@ -32,6 +33,7 @@ function parseStatus(raw: string): StaffMember['status'] {
  */
 export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { currentWorkspace } = useWorkspaceManager();
     const [importing, setImporting] = useState(false);
 
     // --- Normalize header key (remove accents, lowercase, spaces to underscore) ---
@@ -105,6 +107,7 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                     const rawTitulo = getCol('titulo' as keyof Omit<StaffMember, 'id'>);
 
                     members.push({
+                        workspaceId: currentWorkspace || '',
                         name,
                         cedula: getCol('cedula') || undefined,
                         rank: getCol('rank') || undefined,
@@ -112,7 +115,7 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                         titulo: rawTitulo || undefined,
                         department: getCol('department') || undefined,
                         status: rawStatus ? parseStatus(rawStatus) : 'activo',
-                    });
+                    } as Omit<StaffMember, 'id'>);
                 }
 
                 if (members.length === 0) {
@@ -182,7 +185,7 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={importing}
             >
-                <Upload className="mr-1.5 h-3.5 w-3.5" />
+                <Download className="mr-1.5 h-3.5 w-3.5" />
                 {importing ? 'Importando…' : 'Importar CSV'}
             </Button>
             <Button
@@ -191,7 +194,7 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                 className="h-8 text-xs"
                 onClick={handleExport}
             >
-                <Download className="mr-1.5 h-3.5 w-3.5" />
+                <Upload className="mr-1.5 h-3.5 w-3.5" />
                 Exportar
             </Button>
         </div>

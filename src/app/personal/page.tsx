@@ -15,7 +15,7 @@ import { usePersonnel } from '@/hooks/use-personnel';
 import { useRoles } from '@/hooks/use-roles';
 import { useDepartments } from '@/hooks/use-departments';
 import { useGuards } from '@/hooks/use-guards';
-
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import { useReports } from '@/hooks/use-reports';
 import type { StaffMember } from '@/types';
 import { StructureManager } from '@/components/structure-manager';
@@ -46,6 +46,7 @@ function PersonnelPageContent() {
     isCedulaDuplicate,
   } = usePersonnel();
   const { roles, saveRoles, isLoaded: rolesLoaded } = useRoles();
+  const { currentWorkspace } = useWorkspaceManager();
   const { departments, saveDepartments, isLoaded: deptsLoaded } = useDepartments();
   const { guards, saveGuards, isLoaded: guardsLoaded } = useGuards();
 
@@ -103,6 +104,7 @@ function PersonnelPageContent() {
       // Add new - ensure name is provided
       if (data.name) {
         const newMemberData: Omit<StaffMember, 'id'> = {
+          workspaceId: currentWorkspace,
           name: data.name,
           cedula: data.cedula || '',
           rank: data.rank || '',

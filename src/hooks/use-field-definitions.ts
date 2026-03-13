@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { FieldConfig } from '@/types';
 import { format } from 'date-fns';
 import { useSettings } from './use-settings';
 import { useGuards } from './use-guards';
-import { useDatabase } from '@/lib/db/db-provider';
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
 
 const defaultDefinitions: Record<string, FieldConfig> = {
@@ -33,6 +33,7 @@ const defaultDefinitions: Record<string, FieldConfig> = {
 
 export function useFieldDefinitions() {
   const db = useDatabase();
+  const { currentWorkspace } = useWorkspaceManager();
   const { isLoaded: settingsLoaded } = useSettings();
   const { isLoaded: guardsLoaded } = useGuards();
 
@@ -40,98 +41,135 @@ export function useFieldDefinitions() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
 
-    const sub = db.field_definitions.find().$.subscribe((data) => {
-      if (data.length > 0) {
-        const defMap: Record<string, FieldConfig> = {};
-        data.forEach((d) => {
-          const item = d.toJSON();
-          defMap[item.id] = item.config as FieldConfig;
-        });
+    const sub = db.configs
+      .find({
+        selector: { 
+          type: 'field_definition',
+          workspaceId: currentWorkspace
+        },
+      })
+      .$.subscribe((data) => {
+        if (data.length > 0) {
+          const defMap: Record<string, FieldConfig> = {};
+          data.forEach((d) => {
+            const item = d.toJSON();
+            defMap[item.name || ''] = { ...(item.data as FieldConfig), workspaceId: currentWorkspace };
+          });
 
-        // Dynamic date update for 'Fecha' if it exists
-        if (defMap['Fecha']) {
-          defMap['Fecha'] = {
-            ...defMap['Fecha'],
-            value: format(new Date(), 'yyyy-MM-dd'),
-          };
+          // Dynamic date update for 'Fecha' if it exists
+          if (defMap['Fecha']) {
+            defMap['Fecha'] = {
+              ...defMap['Fecha'],
+              value: format(new Date(), 'yyyy-MM-dd'),
+            };
+          }
+
+          setDefinitions(defMap);
+        } else {
+          // Initial insert for this workspace
+          const entries = Object.entries(defaultDefinitions).map(([name, config]) => ({
+            id: `${currentWorkspace}:field_definition:${name}`,
+            workspaceId: currentWorkspace,
+            type: 'field_definition' as const,
+            name,
+            data: { ...config, workspaceId: currentWorkspace },
+          }));
+          db.configs
+            .bulkInsert(entries as any)
+            .catch((err) =>
+              logger.error('Failed to insert default field definitions', err, { feature: 'FieldDefinitions', workspaceId: currentWorkspace })
+            );
         }
-
-        setDefinitions(defMap);
-      } else {
-        // Initial insert
-        const entries = Object.entries(defaultDefinitions).map(([id, config]) => ({ id, config }));
-        db.field_definitions
-          .bulkInsert(entries)
-          .catch((err) => logger.error('Failed to insert default field definitions', err, { feature: 'FieldDefinitions' }));
-      }
-      setIsLoaded(true);
-    });
+        setIsLoaded(true);
+      });
 
     return () => sub.unsubscribe();
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   const saveDefinitions = useCallback(
     async (newDefinitions: Record<string, FieldConfig>) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
-        const entries = Object.entries(newDefinitions).map(([id, config]) => ({ id, config }));
-        const allDocs = await db.field_definitions.find().exec();
+        const allDocs = await db.configs.find({ selector: { type: 'field_definition', workspaceId: currentWorkspace } }).exec();
         const newIds = new Set(Object.keys(newDefinitions));
-        const toDelete = allDocs.filter((d) => !newIds.has(d.id));
-        if (toDelete.length > 0) await Promise.all(toDelete.map((d) => d.remove()));
-        await db.field_definitions.bulkUpsert(entries);
+        const toDelete = allDocs.filter((d) => !newIds.has(d.toJSON().name || ''));
+        if (toDelete.length > 0) {
+          await db.configs.bulkRemove(toDelete.map((d) => d.primary));
+        }
+
+        const entries = Object.entries(newDefinitions).map(([name, config]) => ({
+          id: `${currentWorkspace}:field_definition:${name}`,
+          workspaceId: currentWorkspace,
+          type: 'field_definition' as const,
+          name,
+          data: { ...config, workspaceId: currentWorkspace },
+        }));
+        await db.configs.bulkUpsert(entries as any);
       } catch (error) {
-        logger.error('Failed to save field definitions', error, { feature: 'FieldDefinitions' });
+        logger.error('Failed to save field definitions', error, { feature: 'FieldDefinitions', workspaceId: currentWorkspace });
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const updateDefinition = useCallback(
     async (fieldName: string, newConfig: FieldConfig) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
-        await db.field_definitions.upsert({ id: fieldName, config: newConfig });
+        await db.configs.upsert({
+          id: `${currentWorkspace}:field_definition:${fieldName}`,
+          workspaceId: currentWorkspace,
+          type: 'field_definition',
+          name: fieldName,
+          data: { ...newConfig, workspaceId: currentWorkspace },
+        } as any);
       } catch (error) {
-        logger.error('Failed to update field definition', error, { feature: 'FieldDefinitions', metadata: { fieldName } });
+        logger.error('Failed to update field definition', error, { feature: 'FieldDefinitions', workspaceId: currentWorkspace, metadata: { fieldName } });
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const removeDefinition = useCallback(
     async (fieldName: string) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
-        const doc = await db.field_definitions.findOne(fieldName).exec();
+        const doc = await db.configs.findOne(`${currentWorkspace}:field_definition:${fieldName}`).exec();
         if (doc) await doc.remove();
       } catch (error) {
-        logger.error('Failed to remove field definition', error, { feature: 'FieldDefinitions', metadata: { fieldName } });
+        logger.error('Failed to remove field definition', error, { feature: 'FieldDefinitions', workspaceId: currentWorkspace, metadata: { fieldName } });
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const clearAllDefinitions = useCallback(async () => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
     try {
-      const allDocs = await db.field_definitions.find().exec();
-      await Promise.all(allDocs.map((d) => d.remove()));
-      const entries = Object.entries(defaultDefinitions).map(([id, config]) => ({ id, config }));
-      await db.field_definitions.bulkInsert(entries);
+      const allDocs = await db.configs.find({ selector: { type: 'field_definition', workspaceId: currentWorkspace } }).exec();
+      await db.configs.bulkRemove(allDocs.map((d) => d.primary));
+      
+      const entries = Object.entries(defaultDefinitions).map(([name, config]) => ({
+        id: `${currentWorkspace}:field_definition:${name}`,
+        workspaceId: currentWorkspace,
+        type: 'field_definition' as const,
+        name,
+        data: { ...config, workspaceId: currentWorkspace },
+      }));
+      await db.configs.bulkInsert(entries as any);
     } catch (error) {
-      logger.error('Failed to clear field definitions', error, { feature: 'FieldDefinitions' });
+      logger.error('Failed to clear field definitions', error, { feature: 'FieldDefinitions', workspaceId: currentWorkspace });
     }
-  }, [db]);
+  }, [db, currentWorkspace]);
 
-  return {
+  return useMemo(() => ({
     definitions,
     updateDefinition,
     removeDefinition,
     saveDefinitions,
     isLoaded: isLoaded && settingsLoaded && guardsLoaded,
     clearAllDefinitions,
-  };
+  }), [definitions, updateDefinition, removeDefinition, saveDefinitions, isLoaded, settingsLoaded, guardsLoaded, clearAllDefinitions]);
 }

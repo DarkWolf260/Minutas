@@ -19,6 +19,8 @@ interface AddressInputProps {
   className?: string;
   onBlur?: () => void;
   isTextarea?: boolean;
+  name?: string;
+  id?: string;
 }
 
 const formatAddressToString = (address: Address): string => {
@@ -40,7 +42,7 @@ const formatAddressToString = (address: Address): string => {
 };
 
 export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, AddressInputProps>(
-  ({ value, onChange, placeholder, disabled, className, onBlur, isTextarea }, ref) => {
+  ({ value, onChange, placeholder, disabled, className, onBlur, isTextarea, name, id }, ref) => {
     const { addresses, isLoaded } = useAddresses();
     const [open, setOpen] = useState(false);
     const internalInputRef = useRef<HTMLInputElement>(null);
@@ -89,6 +91,8 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
                 disabled={disabled}
                 className={cn("pr-8 min-h-[80px]", className)}
                 onBlur={onBlur}
+                name={name}
+                id={id}
               />
             ) : (
               <Input
@@ -103,6 +107,8 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
                 disabled={disabled}
                 className={cn("pr-8", className)}
                 onBlur={onBlur}
+                name={name}
+                id={id}
               />
             )}
             <ChevronsUpDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 shrink-0 opacity-50" />

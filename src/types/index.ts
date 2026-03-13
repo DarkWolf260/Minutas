@@ -21,6 +21,7 @@ export type FormDataRecord = Record<string, FormDataValue>;
 
 export interface AttendanceRecord {
   id: string;
+  workspaceId: string;
   memberId: string;
   date: string; // ISO format: YYYY-MM-DD
   status: AttendanceStatus;
@@ -31,6 +32,7 @@ export interface AttendanceRecord {
 
 export interface StaffMember {
   id: string;
+  workspaceId: string;
   personnelId?: string; // Link to global personnel list
   name: string;
   cedula?: string;
@@ -41,9 +43,11 @@ export interface StaffMember {
   status?: PersonnelStatus;
   department?: string;
   specialties?: string[];
+  observation?: string; // For Orden del Día notations
 }
 
 export interface StaffRole {
+  workspaceId?: string;
   name: string;
   isSingle: boolean; // True for roles that can only have one person
   departmentScope: string[]; // Array of department IDs, 'OPERATIONS' for guards. Empty array means global.
@@ -58,22 +62,36 @@ export interface Staff {
 
 export interface Guard {
   id: string;
+  workspaceId?: string;
   staff: Staff;
 }
 
 export interface AppSettings {
   id?: string;
+  workspaceId?: string;
   // This is now managed via global field definitions
   activeGuardId?: string;
   guardShiftDuration?: number;
   finalReportStaffSnapshot?: Staff;
+  finalReportGuardId?: string;
   finalReportStartDate?: string;
   finalReportEndDate?: string;
   reportaRoleIds?: string[];
+  p2pRoomId?: string;
+  p2pPassword?: string;
+  p2pSignalingUrl?: string;
+  ordenDelDiaDraft?: {
+    staff: Staff;
+    activities: { id: string; content: string }[];
+    notes: { id: string; content: string }[];
+    guardId: string;
+    updatedAt: string;
+  };
 }
 
 export interface Report {
   id: string;
+  workspaceId: string;
   templateId: string;
   title: string;
   timestamp: string;
@@ -85,6 +103,7 @@ export interface Report {
 
 export interface GuardReport {
   id: string;
+  workspaceId: string;
   date: string; // Date of the report/guard (ISO string)
   generatedAt: string; // Timestamp of saving (ISO string)
   guardGroup?: string; // e.g. "Guardia A" or "Guardia B" based on active guard
@@ -111,6 +130,7 @@ export interface SnippetOption {
 }
 
 export interface FieldConfig {
+  workspaceId?: string;
   type: FieldType;
   label: string;
   required?: boolean;
@@ -158,6 +178,7 @@ export interface StatisticRule {
 
 export interface Template {
   id: string;
+  workspaceId: string;
   name: string;
   content: string;
   type: 'normal' | 'relevante';
@@ -168,6 +189,7 @@ export interface Template {
 
 export interface ReportDraft {
   id?: string;
+  workspaceId: string;
   templateId: string;
   formData: FormDataRecord;
   lastSaved?: string;
@@ -175,12 +197,14 @@ export interface ReportDraft {
 
 export interface Department {
   id: string;
+  workspaceId?: string;
   name: string;
   staff: Staff;
 }
 
 export interface Address {
   id: string;
+  workspaceId?: string;
   name: string;
   street?: string;
   houseNumber?: string;
@@ -212,6 +236,7 @@ export interface TemplateParserResult {
 }
 export interface PersonnelAssignment {
   id: string; // personnelId_date
+  workspaceId: string;
   personnelId: string;
   date: string; // YYYY-MM-DD
   guardId: string; // e.g. "A", "B", "C", "D" or departmentId

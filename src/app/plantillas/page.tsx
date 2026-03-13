@@ -45,6 +45,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { TemplateBuilder } from '@/components/template/template-builder';
 import { Badge } from '@/components/ui/badge';
 import { generateId } from '@/lib/utils/id';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 
 export default function PlantillasPage() {
   const {
@@ -57,6 +58,7 @@ export default function PlantillasPage() {
     toggleTemplateActive,
     clearAllTemplates,
   } = useTemplates();
+  const { currentWorkspace } = useWorkspaceManager();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
@@ -72,6 +74,7 @@ export default function PlantillasPage() {
         const content = e.target?.result as string;
         const newTemplate: Template = {
           id: generateId('template'),
+          workspaceId: currentWorkspace,
           name: file.name.replace(/\.txt$/, ''),
           content,
           type: 'normal',

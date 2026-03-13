@@ -67,11 +67,11 @@ export const findValueInFormData = (
 };
 
 /**
- * Extracts the date and time from a report's formData and returns a Date object.
+ * Exports the date and time from a report's formData and returns a Date object.
  * @param report The report object.
  * @returns A Date object representing the report's timestamp, or null if not found/invalid.
  */
-const getReportDateTime = (report: Report): Date | null => {
+export const getReportDateTime = (report: Report): Date | null => {
   const fechaString = findValueInFormData(report.formData, 'Fecha') as string | undefined;
   const horaString = findValueInFormData(report.formData, 'Hora') as string | undefined;
 

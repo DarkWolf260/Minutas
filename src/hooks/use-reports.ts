@@ -25,11 +25,11 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import type { Report } from '@/types';
-import { useDatabase } from '@/lib/db/db-provider';
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
 import { ReportSchema, generateFormDataSchema } from '@/lib/validations/schemas';
 import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
@@ -37,15 +37,17 @@ import { useTemplates } from './use-templates';
 
 export function useReports() {
   const db = useDatabase();
+  const { currentWorkspace } = useWorkspaceManager();
   const { configs } = useTemplates();
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
 
     const sub = db.reports
       .find({
+        selector: { workspaceId: currentWorkspace },
         sort: [{ timestamp: 'desc' }],
       })
       .$.subscribe((data) => {
@@ -54,21 +56,25 @@ export function useReports() {
       });
 
     return () => sub.unsubscribe();
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   const getLatestReports = useCallback(async (): Promise<Report[]> => {
-    if (!db) return [];
+    if (!db || !currentWorkspace) return [];
     const docs = await db.reports
       .find({
+        selector: { workspaceId: currentWorkspace },
         sort: [{ timestamp: 'desc' }],
       })
       .exec();
     return docs.map((d) => d.toJSON()) as Report[];
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   const validateReportContent = useCallback((report: Report) => {
+    // Inject workspaceId before validation/parsing if missing
+    const reportToValidate = { ...report, workspaceId: currentWorkspace };
+    
     // 1. Base validation
-    const validatedReport = ReportSchema.parse(report);
+    const validatedReport = ReportSchema.parse(reportToValidate);
 
     // 2. Dynamic validation for formData if config exists
     const config = configs[report.templateId];
@@ -91,15 +97,15 @@ export function useReports() {
     }
 
     return validatedReport;
-  }, [configs]);
+  }, [configs, currentWorkspace]);
 
   const addReport = useCallback(
     async (newReport: Report) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
         const validatedReport = validateReportContent(newReport);
         await db.reports.insert(validatedReport as Report);
-        logger.info('Report added', { id: validatedReport.id, title: validatedReport.title });
+        logger.info('Report added', { id: validatedReport.id, title: validatedReport.title, workspaceId: currentWorkspace });
         toast.success('Reporte guardado correctamente.');
       } catch (error) {
         logger.error('Failed to add report', error, {
@@ -110,18 +116,18 @@ export function useReports() {
         toast.error(getUserFriendlyErrorMessage(error));
       }
     },
-    [db, validateReportContent]
+    [db, validateReportContent, currentWorkspace]
   );
 
   const updateReport = useCallback(
     async (updatedReport: Report) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
         const validatedReport = validateReportContent(updatedReport);
         const doc = await db.reports.findOne(validatedReport.id).exec();
         if (doc) {
           await doc.patch(validatedReport as Partial<Report>);
-          logger.info('Report updated', { id: validatedReport.id });
+          logger.info('Report updated', { id: validatedReport.id, workspaceId: currentWorkspace });
           toast.success('Reporte actualizado correctamente.');
         } else {
           toast.error('Reporte no encontrado.');
@@ -131,7 +137,7 @@ export function useReports() {
         toast.error(getUserFriendlyErrorMessage(error));
       }
     },
-    [db, validateReportContent]
+    [db, validateReportContent, currentWorkspace]
   );
 
   const removeReport = useCallback(
@@ -153,18 +159,20 @@ export function useReports() {
   );
 
   const clearAllReports = useCallback(async () => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
     try {
-      const allDocs = await db.reports.find().exec();
+      const allDocs = await db.reports.find({
+        selector: { workspaceId: currentWorkspace }
+      }).exec();
       await Promise.all(allDocs.map((d) => d.remove()));
       toast.success('Todos los reportes han sido eliminados.');
     } catch (error) {
       logger.error('Failed to clear reports', error, { feature: 'Reports' });
       toast.error('Error al eliminar los reportes.');
     }
-  }, [db]);
+  }, [db, currentWorkspace]);
 
-  return {
+  return useMemo(() => ({
     reports,
     addReport,
     updateReport,
@@ -172,5 +180,5 @@ export function useReports() {
     clearAllReports,
     isLoaded,
     getLatestReports,
-  };
+  }), [reports, addReport, updateReport, removeReport, clearAllReports, isLoaded, getLatestReports]);
 }

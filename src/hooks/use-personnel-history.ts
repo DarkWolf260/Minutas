@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useDatabase } from '@/lib/db/db-provider';
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
+import { type HistoryItem } from '@/lib/db/db';
 import type { PersonnelAssignment, Staff } from '@/types';
 import { logger } from '@/lib/logger';
 
@@ -11,6 +12,7 @@ import { logger } from '@/lib/logger';
  */
 export function usePersonnelHistory() {
     const db = useDatabase();
+    const { currentWorkspace } = useWorkspaceManager();
 
     /**
      * Records assignments for a given guard/department on a specific date.
@@ -18,44 +20,56 @@ export function usePersonnelHistory() {
      */
     const recordAssignments = useCallback(
         async (guardId: string, staff: Staff, date: string) => {
-            if (!db) return;
+            if (!db || !currentWorkspace) return;
 
             try {
                 const timestamp = new Date().toISOString();
-                const assignments: PersonnelAssignment[] = [];
+                const historyItems: HistoryItem[] = [];
 
                 Object.entries(staff).forEach(([roleName, staffList]) => {
                     staffList.forEach((member) => {
                         if (!member.personnelId && !member.id) return;
 
                         const pId = member.personnelId || member.id;
-                        assignments.push({
+                        const assignment: PersonnelAssignment = {
                             id: `${pId}_${date}`,
+                            workspaceId: currentWorkspace,
                             personnelId: pId,
                             date,
                             guardId,
                             roleName,
                             timestamp,
+                        };
+
+                        historyItems.push({
+                            id: `${currentWorkspace}:assignment:${pId}:${date}`,
+                            workspaceId: currentWorkspace,
+                            type: 'assignment_history' as const,
+                            date,
+                            personnelId: pId,
+                            data: assignment
                         });
                     });
                 });
 
-                if (assignments.length > 0) {
-                    await db.personnel_assignment_history.bulkUpsert(assignments);
+                if (historyItems.length > 0) {
+                    await db.history.bulkUpsert(historyItems);
                     logger.info('Recorded personnel assignments', {
                         guardId,
                         date,
-                        count: assignments.length,
+                        count: historyItems.length,
+                        workspaceId: currentWorkspace
                     });
                 }
             } catch (error) {
                 logger.error('Failed to record personnel assignments', error, {
                     feature: 'PersonnelHistory',
+                    workspaceId: currentWorkspace,
                     metadata: { guardId, date },
                 });
             }
         },
-        [db]
+        [db, currentWorkspace]
     );
 
     /**
@@ -63,26 +77,34 @@ export function usePersonnelHistory() {
      */
     const getHistory = useCallback(
         async (personnelId: string) => {
-            if (!db) return [];
+            if (!db || !currentWorkspace) return [];
 
             try {
-                const docs = await db.personnel_assignment_history
+                const docs = await db.history
                     .find({
-                        selector: { personnelId },
+                        selector: { 
+                            type: 'assignment_history',
+                            workspaceId: currentWorkspace,
+                            personnelId 
+                        },
                         sort: [{ date: 'desc' }],
                     })
                     .exec();
 
-                return docs.map((d) => d.toJSON()) as PersonnelAssignment[];
+                return docs.map((d: any) => {
+                    const json = d.toJSON();
+                    return { ...(json.data as PersonnelAssignment), workspaceId: currentWorkspace };
+                }) as PersonnelAssignment[];
             } catch (error) {
                 logger.error('Failed to fetch personnel history', error, {
                     feature: 'PersonnelHistory',
+                    workspaceId: currentWorkspace,
                     metadata: { personnelId },
                 });
                 return [];
             }
         },
-        [db]
+        [db, currentWorkspace]
     );
 
     /**
@@ -90,20 +112,25 @@ export function usePersonnelHistory() {
      */
     const getAssignmentForDate = useCallback(
         async (personnelId: string, date: string) => {
-            if (!db) return null;
+            if (!db || !currentWorkspace) return null;
 
             try {
-                const doc = await db.personnel_assignment_history.findOne(`${personnelId}_${date}`).exec();
-                return doc ? (doc.toJSON() as PersonnelAssignment) : null;
+                const doc = await db.history.findOne(`${currentWorkspace}:assignment:${personnelId}:${date}`).exec();
+                if (doc) {
+                    const json = doc.toJSON();
+                    return { ...(json.data as PersonnelAssignment), workspaceId: currentWorkspace };
+                }
+                return null;
             } catch (error) {
                 logger.error('Failed to fetch assignment for date', error, {
                     feature: 'PersonnelHistory',
+                    workspaceId: currentWorkspace,
                     metadata: { personnelId, date },
                 });
                 return null;
             }
         },
-        [db]
+        [db, currentWorkspace]
     );
 
     return {

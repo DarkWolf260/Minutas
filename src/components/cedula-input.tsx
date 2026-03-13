@@ -36,10 +36,12 @@ interface CedulaInputProps {
   onBlur?: () => void;
   placeholder?: string;
   maxLength?: number;
+  name?: string;
+  id?: string;
 }
 
 export const CedulaInput = forwardRef<HTMLInputElement, CedulaInputProps>(
-  ({ value: propValue, onChange: onFormChange, disabled = false, className, onBlur, ...props }, ref) => {
+  ({ value: propValue, onChange: onFormChange, disabled = false, className, onBlur, name, id, ...props }, ref) => {
     const internalInputRef = useRef<HTMLInputElement>(null);
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -70,6 +72,9 @@ export const CedulaInput = forwardRef<HTMLInputElement, CedulaInputProps>(
         className={cn("font-mono", className)}
         disabled={disabled}
         maxLength={12}
+        autoComplete="off"
+        name={name}
+        id={id}
         {...props}
       />
     );

@@ -1,14 +1,16 @@
 'use client';
 
-import { Menu, Mountain } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { OnlineStatus } from '@/components/online-status';
+import { NotificationBell } from '@/components/notification-bell';
 import {
+  Menu,
+  Mountain,
   Newspaper,
   Settings,
   FileText,
@@ -23,6 +25,7 @@ import {
 const navItems = [
   { href: '/', label: 'Novedades', icon: Newspaper },
   { href: '/orden-del-dia', label: 'Orden del Día', icon: ClipboardList },
+  { href: '/reporte-final', label: 'Reporte Final', icon: History },
   { href: '/direcciones', label: 'Direcciones', icon: NotebookPen },
   { href: '/personal', label: 'Personal', icon: Users },
   { href: '/settings', label: 'Configuración', icon: Settings },
@@ -48,6 +51,9 @@ export function MobileNav() {
               </div>
               <span>PC Reportes</span>
             </SheetTitle>
+            <SheetDescription className="sr-only">
+              Menú de navegación principal para acceder a todas las secciones de la aplicación.
+            </SheetDescription>
           </SheetHeader>
           <nav className="grid gap-2 text-lg font-medium">
             {navItems.map((item) => (
@@ -79,6 +85,7 @@ export function MobileNav() {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        <NotificationBell />
         <OnlineStatus />
       </div>
     </header>

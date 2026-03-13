@@ -250,6 +250,7 @@ export default function DireccionesPage() {
                       </Label>
                       <Input
                         id="search"
+                        name="address-search"
                         placeholder="Por nombre, parroquia..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}

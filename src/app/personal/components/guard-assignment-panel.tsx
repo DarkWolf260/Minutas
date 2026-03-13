@@ -106,6 +106,7 @@ export function GuardAssignmentPanel({
               <div className="flex gap-2">
                 <Input
                   id="new-guard"
+                  name="new-guard"
                   value={newGuardName}
                   onChange={(e) => setNewGuardName(e.target.value)}
                   placeholder="Ej. A, B, C..."

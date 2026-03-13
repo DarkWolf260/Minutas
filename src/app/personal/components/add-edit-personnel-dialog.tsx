@@ -140,7 +140,7 @@ export function AddEditPersonnelDialog({
             <div className="space-y-2">
               <Label htmlFor="rank">Jerarquía *</Label>
               <Select value={rank} onValueChange={setRank}>
-                <SelectTrigger id="rank">
+                <SelectTrigger id="rank" name="rank">
                   <SelectValue placeholder="Seleccionar jerarquía..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -158,24 +158,25 @@ export function AddEditPersonnelDialog({
               <Label htmlFor="name">Nombre y Apellido *</Label>
               <Input
                 id="name"
+                name="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ej. Juan Pérez"
-                autoComplete="off"
+                autoComplete="name"
               />
             </div>
 
             {/* Cédula */}
             <div className="space-y-2">
               <Label htmlFor="cedula">Cédula</Label>
-              <CedulaInput value={cedula} onChange={setCedula} />
+              <CedulaInput id="cedula" name="cedula" value={cedula} onChange={setCedula} />
             </div>
 
             {/* Cargo */}
             <div className="space-y-2">
               <Label htmlFor="role">Cargo Predeterminado</Label>
               <Select value={roleId} onValueChange={setRoleId}>
-                <SelectTrigger id="role">
+                <SelectTrigger id="role" name="role">
                   <SelectValue placeholder="Seleccionar cargo..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -193,7 +194,7 @@ export function AddEditPersonnelDialog({
             <div className="space-y-2">
               <Label htmlFor="department">Departamento</Label>
               <Select value={department} onValueChange={setDepartment}>
-                <SelectTrigger id="department">
+                <SelectTrigger id="department" name="department">
                   <SelectValue placeholder="Seleccionar departamento..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -211,7 +212,7 @@ export function AddEditPersonnelDialog({
             <div className="space-y-2">
               <Label htmlFor="status">Estado</Label>
               <Select value={status} onValueChange={(v) => setStatus(v as PersonnelStatus)}>
-                <SelectTrigger id="status">
+                <SelectTrigger id="status" name="status">
                   <SelectValue placeholder="Seleccionar estado..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -229,6 +230,8 @@ export function AddEditPersonnelDialog({
           <div className="space-y-2">
             <Label>Especialidades</Label>
             <MultiInput
+              id="specialties"
+              name="specialties"
               value={specialties}
               onChange={(vals) => setSpecialties(Array.isArray(vals) ? vals : [vals])}
               placeholder="Ej. Primeros Auxilios, Rescate..."
@@ -240,6 +243,7 @@ export function AddEditPersonnelDialog({
             <Label htmlFor="titulo">Título Académico <span className="text-muted-foreground text-xs">(opcional)</span></Label>
             <Input
               id="titulo"
+              name="titulo"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
               placeholder="Ej. Licenciado en Criminalística"

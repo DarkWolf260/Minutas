@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { generateId } from '@/lib/utils/id';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 
 interface TemplateBuilderProps {
   onOpenInfoDialog: () => void;
@@ -51,6 +52,7 @@ export function TemplateBuilder({
   const [templateName, setTemplateName] = useState('');
   const [statisticsCategory, setStatisticsCategory] = useState('');
   const [statisticsRules, setStatisticsRules] = useState<StatisticRule[]>([]);
+  const { currentWorkspace } = useWorkspaceManager();
 
   // New state for report preview
   const formRef = useRef<ReportFormRef>(null);
@@ -85,6 +87,7 @@ export function TemplateBuilder({
   const previewTemplate = useMemo<Template>(
     () => ({
       id: 'preview',
+      workspaceId: currentWorkspace,
       name: templateName || 'Vista Previa',
       content: templateContent,
       type: 'normal',
@@ -159,6 +162,7 @@ export function TemplateBuilder({
     } else if (onAdd) {
       const newTemplate: Template = {
         id: generateId('template'),
+        workspaceId: currentWorkspace,
         name: templateName,
         content: templateContent,
         type: 'normal',

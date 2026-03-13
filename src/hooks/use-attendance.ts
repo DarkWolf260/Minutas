@@ -32,24 +32,33 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { AttendanceRecord, AttendanceStatus } from '@/types';
-import { useDatabase } from '@/lib/db/db-provider';
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { generateId } from '@/lib/utils/id';
 
 export function useAttendance() {
   const db = useDatabase();
+  const { currentWorkspace } = useWorkspaceManager();
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || !currentWorkspace) return;
 
-    const sub = db.attendance.find().$.subscribe((data) => {
-      setRecords(data.map((d) => d.toJSON()) as AttendanceRecord[]);
+    const sub = db.history.find({
+      selector: { 
+        type: 'attendance',
+        workspaceId: currentWorkspace
+      }
+    }).$.subscribe((data) => {
+      setRecords(data.map((d) => {
+        const json = d.toJSON();
+        return { ...(json.data as AttendanceRecord), workspaceId: currentWorkspace };
+      }) as AttendanceRecord[]);
       setIsLoaded(true);
     });
 
     return () => sub.unsubscribe();
-  }, [db]);
+  }, [db, currentWorkspace]);
 
   const markAttendance = useCallback(
     async (
@@ -61,31 +70,41 @@ export function useAttendance() {
     ) => {
       if (!db) return;
 
-      const existingDoc = await db.attendance
-        .findOne({
-          selector: { memberId, date },
-        })
-        .exec();
+      const id = `${currentWorkspace}:attendance:${memberId}:${date}`;
+      const existingDoc = await db.history.findOne(id).exec();
 
       if (existingDoc) {
+        const currentData = existingDoc.toJSON().data;
         await existingDoc.patch({
-          status,
-          checkInTime: checkInTime || existingDoc.toJSON().checkInTime,
-          note: note || existingDoc.toJSON().note,
+          data: {
+            ...currentData,
+            status,
+            checkInTime: checkInTime || currentData.checkInTime,
+            note: note || currentData.note,
+            workspaceId: currentWorkspace,
+          }
         });
       } else {
-        await db.attendance.insert({
-          id: generateId('attendance'),
-          memberId,
+        await db.history.insert({
+          id,
+          workspaceId: currentWorkspace,
+          type: 'attendance' as const,
           date,
-          status,
-          checkInTime,
-          note,
-          createdAt: new Date().toISOString(),
+          personnelId: memberId,
+          data: {
+            id: generateId('attendance'),
+            workspaceId: currentWorkspace,
+            memberId,
+            date,
+            status,
+            checkInTime,
+            note,
+            createdAt: new Date().toISOString(),
+          }
         });
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const getRecordsByDate = useCallback(
@@ -97,14 +116,28 @@ export function useAttendance() {
 
   const saveRecords = useCallback(
     async (newRecords: AttendanceRecord[]) => {
-      if (!db) return;
-      const allDocs = await db.attendance.find().exec();
+      if (!db || !currentWorkspace) return;
+      const allDocs = await db.history.find({
+        selector: { 
+          type: 'attendance',
+          workspaceId: currentWorkspace
+        }
+      }).exec();
       await Promise.all(allDocs.map((d) => d.remove()));
+      
       if (newRecords.length > 0) {
-        await db.attendance.bulkInsert(newRecords);
+        const docs = newRecords.map(r => ({
+          id: `${currentWorkspace}:attendance:${r.memberId}:${r.date}`,
+          workspaceId: currentWorkspace,
+          type: 'attendance' as const,
+          date: r.date,
+          personnelId: r.memberId,
+          data: { ...r, workspaceId: currentWorkspace }
+        }));
+        await db.history.bulkInsert(docs);
       }
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   return {

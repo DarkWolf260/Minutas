@@ -40,14 +40,17 @@ interface StaffListEditorProps {
   staffMembers: StaffMember[];
   isSingle: boolean;
   onUpdate: (newMembers: StaffMember[]) => void;
+  showObservations?: boolean;
 }
 
 function SortableStaffItem({
   member,
   onRemove,
+  onUpdateMember, // New prop
 }: {
   member: StaffMember;
   onRemove: (id: string) => void;
+  onUpdateMember?: (updated: StaffMember) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: member.id,
@@ -56,48 +59,73 @@ function SortableStaffItem({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 100 : 'auto',
-    opacity: isDragging ? 0.5 : 1,
   };
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        'flex items-center justify-between p-3 pl-4 hover:bg-muted/20 transition-colors group bg-card border-b last:border-0',
-        isDragging && 'opacity-30 border-primary/50 bg-muted/30'
-      )}
+      {...{
+        ref: setNodeRef,
+        style,
+        className: cn(
+          'flex flex-col p-3 pl-4 hover:bg-muted/20 transition-colors group bg-card border-b last:border-0',
+          isDragging && 'opacity-50 border-primary/50 bg-muted/30 z-[100]'
+        ),
+      }}
     >
-      <div className="flex items-center gap-3 min-w-0 flex-1">
-        <div
-          {...attributes}
-          {...listeners}
-          className="cursor-grab p-1.5 text-muted-foreground hover:text-foreground shrink-0 touch-none active:cursor-grabbing rounded hover:bg-muted transition-colors"
+      <div className="flex items-center justify-between gap-4">
+        {/* Left Side: Drag, Name/Cedula and Observation (on desktop) */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 min-w-0 flex-1">
+          <div className="flex items-center gap-3 min-w-[200px] shrink-0">
+            <div
+              {...attributes}
+              {...listeners}
+              className="cursor-grab p-1.5 text-muted-foreground hover:text-foreground shrink-0 touch-none active:cursor-grabbing rounded hover:bg-muted transition-colors"
+            >
+              <GripVertical className="h-4 w-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-sm text-foreground/90 truncate">{member.name}</p>
+              <p className="text-[10px] font-mono text-muted-foreground/70 tracking-tighter uppercase">
+                {member.cedula || 'SIN CÉDULA'}
+              </p>
+            </div>
+          </div>
+
+          {/* Observation Input - Inline on desktop, below on mobile */}
+          {onUpdateMember && (
+            <div className="flex-1 w-full sm:max-w-md pl-8 sm:pl-0">
+              <Input
+                placeholder="Observación (ej. Incumplimiento, Comisión...)"
+                value={member.observation || ''}
+                onChange={(e) => onUpdateMember({ ...member, observation: e.target.value })}
+                className="h-7 text-[11px] bg-background/50 border-dashed focus-visible:ring-1 focus-visible:ring-primary/30 w-full"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Right Side: Delete Button */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 opacity-0 group-hover:opacity-100 transition-all rounded-lg"
+          onClick={() => onRemove(member.id)}
         >
-          <GripVertical className="h-4 w-4" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-bold text-sm text-foreground/90 truncate">{member.name}</p>
-          <p className="text-[10px] font-mono text-muted-foreground/70 tracking-tighter uppercase">
-            {member.cedula || 'SIN CÉDULA'}
-          </p>
-        </div>
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </div>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 opacity-0 group-hover:opacity-100 transition-all rounded-lg"
-        onClick={() => onRemove(member.id)}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
     </div>
   );
 }
 
-export function StaffListEditor({ label, staffMembers, isSingle, onUpdate }: StaffListEditorProps) {
+export function StaffListEditor({ 
+  label, 
+  staffMembers, 
+  isSingle, 
+  onUpdate,
+  showObservations 
+}: StaffListEditorProps) {
   const { setNodeRef } = useDroppable({
     id: label,
   });
@@ -127,6 +155,10 @@ export function StaffListEditor({ label, staffMembers, isSingle, onUpdate }: Sta
 
   const handleRemove = (memberId: string) => {
     onUpdate(staffMembers.filter((m) => m.id !== memberId));
+  };
+
+  const handleUpdateMember = (updated: StaffMember) => {
+    onUpdate(staffMembers.map((m) => (m.id === updated.id ? updated : m)));
   };
 
   // Filter logic
@@ -193,12 +225,35 @@ export function StaffListEditor({ label, staffMembers, isSingle, onUpdate }: Sta
                   {/* Scrollable content */}
                   <div
                     className="max-h-[380px] overflow-y-auto p-1"
-                    style={{ scrollbarWidth: 'thin' }}
                     onWheel={(e) => {
                       // Prevent popover from blocking wheel events
                       e.stopPropagation();
                     }}
                   >
+                    {/* Custom Text Option when searching */}
+                    {searchQuery.trim() && (
+                      <div className="p-1 border-b bg-primary/5">
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start text-xs h-auto py-2 px-3 rounded-md hover:bg-primary/10 text-primary font-bold"
+                          onClick={() => {
+                            const customName = searchQuery.trim();
+                            const pseudoMember: StaffMember = {
+                              id: `custom-${Date.now()}-${customName.replace(/\s+/g, '-').toLowerCase()}`,
+                              workspaceId: '',
+                              name: customName,
+                            };
+                            handleAdd(pseudoMember);
+                          }}
+                        >
+                          <div className="flex flex-col items-start min-w-0 flex-1">
+                            <span>Usar "{searchQuery}" como texto libre</span>
+                            <span className="text-[10px] opacity-60 font-medium">Añadir sin registro en base de datos</span>
+                          </div>
+                        </Button>
+                      </div>
+                    )}
+
                     {filteredPersonnel.length > 0 ? (
                       <div className="space-y-0.5">
                         {filteredPersonnel.map((p) => {
@@ -256,7 +311,12 @@ export function StaffListEditor({ label, staffMembers, isSingle, onUpdate }: Sta
             >
               <div className="divide-y divide-muted/50">
                 {staffMembers.map((member) => (
-                  <SortableStaffItem key={member.id} member={member} onRemove={handleRemove} />
+                  <SortableStaffItem 
+                    key={member.id} 
+                    member={member} 
+                    onRemove={handleRemove} 
+                    onUpdateMember={showObservations ? handleUpdateMember : undefined}
+                  />
                 ))}
               </div>
             </SortableContext>
