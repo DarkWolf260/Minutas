@@ -550,6 +550,36 @@ function renderSection(
                 }
             });
 
+            if (section.isSelfContained) {
+                // For self-contained sections, omit lines that contained a field tag but ended up empty/contentless
+                const lines = itemContent.split(/\r?\n/);
+                const originalLines = (section.originalContent || '').split(/\r?\n/);
+                
+                const filteredLines = lines.filter((line, idx) => {
+                    // Use the index from filter to align with original lines
+                    const originalLine = originalLines[idx] || '';
+                    
+                    // Check if this line had any field tags originally
+                    const fieldTagPattern = /\{([^:{}]+?)(:[^|}{]+)*(?:\|[^{}]+?)?\}/g;
+                    if (fieldTagPattern.test(originalLine)) {
+                        // If it had fields, check if the resulting line after substitution
+                        // effectively has no meaningful content (only labels, asterisks, dashes, etc.)
+                        const contentOnly = line
+                            .replace(/- \*\*.*?\:\*\*/g, '') // Remove labels like - **LABEL:**
+                            .replace(/- \*.*?\:\*/g, '')   // Remove labels like - *LABEL:*
+                            .replace(/\*\*.*?\:\*\*/g, '')  // Remove labels like **LABEL:**
+                            .replace(/\*.*?\:\*/g, '')     // Remove labels like *LABEL:*
+                            .replace(/^[ ]*-[ ]*/g, '')     // Remove leading dash/bullet
+                            .replace(/[*\-:\s]/g, '')       // Remove remaining decorative chars and whitespace
+                            .trim();
+                        
+                        return contentOnly.length > 0;
+                    }
+                    return true;
+                });
+                itemContent = filteredLines.join('\n');
+            }
+
             if (section.repeatableItemLabel) {
                 const isVirtual = section.originalContent?.trim().startsWith('{') && section.originalContent?.trim().endsWith('}');
                 
