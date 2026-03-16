@@ -101,7 +101,12 @@ export default function SettingsPage() {
     startSync, 
     stopSync, 
     updateLocalAlias,
-    wipeLocalData 
+    localRole,
+    setLocalRole,
+    wipeLocalData,
+    roomId,
+    targetPassword: contextPassword,
+    targetSignalingUrl: contextSignalingUrl
   } = useP2P();
   
   const [targetRoomId, setTargetRoomId] = useState('');
@@ -111,6 +116,7 @@ export default function SettingsPage() {
   const [isStrategyOpen, setIsStrategyOpen] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  const [selectedLocalRole, setSelectedLocalRole] = useState<'host' | 'follower' | 'undetermined'>('undetermined');
   const [actionToConfirm, setActionToConfirm] = useState<string | null>(null);
   const hasInitialized = useRef(false);
 
@@ -123,14 +129,18 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!settingsLoaded || hasInitialized.current) return;
     
-    if (settings?.p2pRoomId) {
-      setTargetRoomId(settings.p2pRoomId);
+    // Load P2P settings from Context (which come from localStorage)
+    if (roomId) {
+      setTargetRoomId(roomId);
     }
-    if (settings?.p2pPassword) {
-      setTargetPassword(settings.p2pPassword);
+    if (contextPassword) {
+      setTargetPassword(contextPassword);
     }
-    if (settings?.p2pSignalingUrl) {
-      setTargetSignalingUrl(settings.p2pSignalingUrl);
+    if (contextSignalingUrl) {
+      setTargetSignalingUrl(contextSignalingUrl);
+    }
+    if (localRole !== 'undetermined') {
+      setSelectedLocalRole(localRole);
     }
     
     // Migration: If we find p2pUsername in synced settings (old version), 
@@ -148,8 +158,14 @@ export default function SettingsPage() {
     hasInitialized.current = true;
   }, [settings, settingsLoaded, localAlias, updateLocalAlias, saveSettings]);
 
-  const handleStartSync = async (strategy: 'merge' | 'host-only' | 'new-workspace') => {
+  const handleStartSync = async (
+    strategy: 'merge' | 'host-only' | 'new-workspace',
+    roleArg?: 'host' | 'follower' | 'undetermined'
+  ) => {
     if (!targetRoomId || !db) return;
+    
+    // Use arguments if provided, otherwise fallback to current selection
+    const finalRole = roleArg || selectedLocalRole;
     
     setIsStrategyOpen(false);
     
@@ -169,34 +185,8 @@ export default function SettingsPage() {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
 
-      // Fetch existing settings for the target workspace to avoid wiping them
-      let currentSettings = {};
-      try {
-        if (db) {
-          const doc = await db.configs.findOne(`${activeWorkspace}:settings:app`).exec();
-          if (doc) {
-            currentSettings = doc.toJSON().data || {};
-          }
-        }
-      } catch (e) {
-        logger.error('Error fetching existing settings for sync', e);
-      }
-
-      // We use db directly to save to ensure it goes to the right workspace
-      if (db) {
-        await db.configs.upsert({
-          id: `${activeWorkspace}:settings:app`,
-          workspaceId: activeWorkspace,
-          type: 'settings',
-          data: { 
-            ...currentSettings,
-            p2pRoomId: targetRoomId,
-            p2pPassword: targetPassword,
-            p2pSignalingUrl: targetSignalingUrl,
-            workspaceId: activeWorkspace
-          }
-        });
-      }
+      // Start the sync process immediately with the updated parameters
+      await startSync(targetRoomId, localAlias, targetPassword, targetSignalingUrl, finalRole);
       
       toast.success(
         strategy === 'new-workspace' 
@@ -210,11 +200,6 @@ export default function SettingsPage() {
   };
 
   const handleStopSync = async () => {
-    await saveSettings({ 
-      p2pRoomId: '',
-      p2pPassword: targetPassword,
-      p2pSignalingUrl: targetSignalingUrl
-    });
     await stopSync();
     toast.info('Sincronización detenida');
   };
@@ -739,52 +724,95 @@ export default function SettingsPage() {
               </SheetDescription>
             </SheetHeader>
             
-            <div className="grid gap-4 py-6">
-              <button
-                onClick={() => handleStartSync('merge')}
-                className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group active:scale-[0.98]"
-              >
-                <div className="h-10 w-10 shrink-0 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Plus className="h-5 w-5" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-sm">Escenario 1: Conservar y Combinar</p>
-                  <p className="text-xs text-muted-foreground">
-                    Mezcla el trabajo de ambas áreas. No se elimina ningún reporte; los datos se complementan.
-                  </p>
-                </div>
-              </button>
+            <div className="space-y-6 py-6">
+              <div className="space-y-4">
+                <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">1. Rol de este Dispositivo</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedLocalRole('host');
+                    }}
+                    className={cn(
+                      "flex flex-col items-center gap-2 p-4 rounded-lg border text-center transition-all",
+                      selectedLocalRole === 'host' ? "bg-primary/5 border-primary ring-1 ring-primary" : "hover:bg-muted"
+                    )}
+                  >
+                    <Monitor className={cn("h-6 w-6", selectedLocalRole === 'host' ? "text-primary" : "text-muted-foreground")} />
+                    <div className="space-y-1">
+                      <span className="font-bold text-xs uppercase">Anfitrión (Host)</span>
+                      <p className="text-[10px] text-muted-foreground leading-tight">Es la fuente de la verdad.</p>
+                    </div>
+                  </button>
 
-              <button
-                onClick={() => handleStartSync('host-only')}
-                className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group border-amber-500/20 active:scale-[0.98]"
-              >
-                <div className="h-10 w-10 shrink-0 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Monitor className="h-5 w-5" />
+                  <button
+                    onClick={() => {
+                      setSelectedLocalRole('follower');
+                    }}
+                    className={cn(
+                      "flex flex-col items-center gap-2 p-4 rounded-lg border text-center transition-all",
+                      selectedLocalRole === 'follower' ? "bg-primary/5 border-primary ring-1 ring-primary" : "hover:bg-muted"
+                    )}
+                  >
+                    <Zap className={cn("h-6 w-6", selectedLocalRole === 'follower' ? "text-primary" : "text-muted-foreground")} />
+                    <div className="space-y-1">
+                      <span className="font-bold text-xs uppercase">Seguidor (Follower)</span>
+                      <p className="text-[10px] text-muted-foreground leading-tight">Recibe datos del anfitrión.</p>
+                    </div>
+                  </button>
                 </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-sm">Escenario 2: Información del Anfitrión</p>
-                  <p className="text-xs text-muted-foreground text-amber-600/80">
-                    <Info className="inline h-3 w-3 mr-1" />
-                    <strong>Limpia tu área actual</strong> para trabajar exclusivamente con los datos del anfitrión.
-                  </p>
-                </div>
-              </button>
+              </div>
 
-              <button
-                onClick={() => handleStartSync('new-workspace')}
-                className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group active:scale-[0.98]"
-              >
-                <div className="h-10 w-10 shrink-0 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Layers className="h-5 w-5" />
+
+              <div className="space-y-4">
+                <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">2. Escenario de Datos</Label>
+                <div className="grid gap-3">
+                  <button
+                    onClick={() => handleStartSync('merge', selectedLocalRole)}
+                    className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group active:scale-[0.98]"
+                  >
+                    <div className="h-10 w-10 shrink-0 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Plus className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-semibold text-sm">Escenario 1: Conservar y Combinar</p>
+                      <p className="text-xs text-muted-foreground">
+                        Mezcla el trabajo de ambas áreas. No se elimina ningún reporte; los datos se complementan.
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handleStartSync('host-only', selectedLocalRole)}
+                    className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group border-amber-500/20 active:scale-[0.98]"
+                  >
+                    <div className="h-10 w-10 shrink-0 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Monitor className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-semibold text-sm">Escenario 2: Información del Anfitrión</p>
+                      <p className="text-xs text-muted-foreground text-amber-600/80">
+                        <Info className="inline h-3 w-3 mr-1" />
+                        <strong>Limpia tu área actual</strong> para trabajar exclusivamente con los datos del anfitrión.
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handleStartSync('new-workspace', selectedLocalRole)}
+                    className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group active:scale-[0.98]"
+                  >
+                    <div className="h-10 w-10 shrink-0 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Layers className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-semibold text-sm">Escenario 3: Área Nueva Independiente</p>
+                      <p className="text-xs text-muted-foreground">
+                        Crea un área limpia y separada para esta sesión. Tu información actual se conserva intacta en el área anterior.
+                      </p>
+                    </div>
+                  </button>
                 </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-sm">Escenario 3: Área Nueva Independiente</p>
-                  <p className="text-xs text-muted-foreground">
-                    Crea un área limpia y separada para esta sesión. Tu información actual se conserva intacta en el área anterior.
-                  </p>
-                </div>
-              </button>
+              </div>
             </div>
             
             <DialogFooter className="sm:hidden">
@@ -805,52 +833,94 @@ export default function SettingsPage() {
               </DialogDescription>
             </DialogHeader>
             
-            <div className="grid gap-4 py-4">
-              <button
-                onClick={() => handleStartSync('merge')}
-                className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group"
-              >
-                <div className="h-10 w-10 shrink-0 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Plus className="h-5 w-5" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-sm">Escenario 1: Conservar y Combinar</p>
-                  <p className="text-xs text-muted-foreground">
-                    Mezcla el trabajo de ambas áreas. No se elimina ningún reporte; los datos se complementan.
-                  </p>
-                </div>
-              </button>
+            <div className="space-y-6 py-4">
+              <div className="space-y-3">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">1. Rol de este Dispositivo</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => {
+                      setSelectedLocalRole('host');
+                    }}
+                    className={cn(
+                      "flex flex-col items-center gap-2 p-4 rounded-xl border text-center transition-all group",
+                      selectedLocalRole === 'host' ? "bg-primary/5 border-primary ring-1 ring-primary" : "hover:bg-muted"
+                    )}
+                  >
+                    <Monitor className={cn("h-6 w-6", selectedLocalRole === 'host' ? "text-primary" : "text-muted-foreground group-hover:scale-110 transition-transform")} />
+                    <div className="space-y-1">
+                      <span className="font-bold text-xs uppercase">Anfitrión (Host)</span>
+                      <p className="text-[10px] text-muted-foreground">Este dispositivo manda.</p>
+                    </div>
+                  </button>
 
-              <button
-                onClick={() => handleStartSync('host-only')}
-                className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group border-amber-500/20"
-              >
-                <div className="h-10 w-10 shrink-0 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Monitor className="h-5 w-5" />
+                  <button
+                    onClick={() => {
+                      setSelectedLocalRole('follower');
+                    }}
+                    className={cn(
+                      "flex flex-col items-center gap-2 p-4 rounded-xl border text-center transition-all group",
+                      selectedLocalRole === 'follower' ? "bg-primary/5 border-primary ring-1 ring-primary" : "hover:bg-muted"
+                    )}
+                  >
+                    <Zap className={cn("h-6 w-6", selectedLocalRole === 'follower' ? "text-primary" : "text-muted-foreground group-hover:scale-110 transition-transform")} />
+                    <div className="space-y-1">
+                      <span className="font-bold text-xs uppercase">Seguidor (Follower)</span>
+                      <p className="text-[10px] text-muted-foreground">Acepta datos externos.</p>
+                    </div>
+                  </button>
                 </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-sm">Escenario 2: Información del Anfitrión</p>
-                  <p className="text-xs text-muted-foreground text-amber-600/80">
-                    <Info className="inline h-3 w-3 mr-1" />
-                    <strong>Limpia tu área actual</strong> para trabajar exclusivamente con los datos del anfitrión.
-                  </p>
-                </div>
-              </button>
+              </div>
 
-              <button
-                onClick={() => handleStartSync('new-workspace')}
-                className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group"
-              >
-                <div className="h-10 w-10 shrink-0 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Layers className="h-5 w-5" />
+              <div className="space-y-3">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">2. Escenario de Importación</Label>
+                <div className="grid gap-3">
+                  <button
+                    onClick={() => handleStartSync('merge', selectedLocalRole)}
+                    className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group"
+                  >
+                    <div className="h-10 w-10 shrink-0 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Plus className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-semibold text-sm">Escenario 1: Conservar y Combinar</p>
+                      <p className="text-xs text-muted-foreground">
+                        Mezcla el trabajo de ambas áreas. No se elimina ningún reporte; los datos se complementan.
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handleStartSync('host-only', selectedLocalRole)}
+                    className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group border-amber-500/20"
+                  >
+                    <div className="h-10 w-10 shrink-0 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Monitor className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-semibold text-sm">Escenario 2: Información del Anfitrión</p>
+                      <p className="text-xs text-muted-foreground text-amber-600/80">
+                        <Info className="inline h-3 w-3 mr-1" />
+                        <strong>Limpia tu área actual</strong> para trabajar exclusivamente con los datos del anfitrión.
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handleStartSync('new-workspace', selectedLocalRole)}
+                    className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group"
+                  >
+                    <div className="h-10 w-10 shrink-0 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Layers className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-semibold text-sm">Escenario 3: Área Nueva Independiente</p>
+                      <p className="text-xs text-muted-foreground">
+                        Crea un área limpia y separada para esta sesión. Tu información actual se conserva intacta en el área anterior.
+                      </p>
+                    </div>
+                  </button>
                 </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-sm">Escenario 3: Área Nueva Independiente</p>
-                  <p className="text-xs text-muted-foreground">
-                    Crea un área limpia y separada para esta sesión. Tu información actual se conserva intacta en el área anterior.
-                  </p>
-                </div>
-              </button>
+              </div>
             </div>
             
             <DialogFooter>

@@ -6,6 +6,7 @@ import { useDatabase, useWorkspaceManager } from './db-context';
 import { logger } from '../logger';
 import { toast } from 'sonner';
 import { useNotifications } from '../notifications-provider';
+import { setCurrentLocalRole } from './role-conflict-handler';
 
 /**
  * A queue to manage outgoing P2P messages to avoid saturating the data channel.
@@ -73,13 +74,17 @@ interface P2PContextType {
   isSyncing: boolean;
   peerCount: number;
   roomId: string;
+  targetPassword?: string;
+  targetSignalingUrl?: string;
   peers: PeerInfo[];
   localAlias: string;
   peerAliases: Record<string, string>;
   connectionStatus: 'idle' | 'connecting' | 'connected' | 'error';
-  startSync: (id: string, username?: string, password?: string, signalingUrl?: string) => Promise<void>;
+  startSync: (id: string, username?: string, password?: string, signalingUrl?: string, role?: 'host' | 'follower' | 'undetermined') => Promise<void>;
   stopSync: () => Promise<void>;
   updateLocalAlias: (alias: string) => void;
+  localRole: 'host' | 'follower' | 'undetermined';
+  setLocalRole: (role: 'host' | 'follower' | 'undetermined') => void;
   wipeLocalData: () => Promise<void>;
 }
 
@@ -97,7 +102,24 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
   const { addNotification } = useNotifications();
   const [isSyncing, setIsSyncing] = useState(false);
   const [peerCount, setPeerCount] = useState(0);
-  const [roomId, setRoomId] = useState('');
+  const [roomId, setRoomId] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('p2p_room_id') || '';
+    }
+    return '';
+  });
+  const [targetPassword, setTargetPassword] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('p2p_password') || '';
+    }
+    return '';
+  });
+  const [targetSignalingUrl, setTargetSignalingUrl] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('p2p_signaling_url') || '';
+    }
+    return '';
+  });
   const [peers, setPeers] = useState<PeerInfo[]>([]);
   const [peerAliases, setPeerAliases] = useState<Record<string, string>>({});
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
@@ -107,17 +129,24 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
     }
     return '';
   });
+  const [localRole, setLocalRoleState] = useState<'host' | 'follower' | 'undetermined'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('p2p_local_role') as any) || 'undetermined';
+    }
+    return 'undetermined';
+  });
+  const [settingsLoaded, setSettingsLoaded] = useState(false); // New state to track if settings have been loaded
   const replicationsRef = useRef<any[]>([]);
   const messageSubsRef = useRef<any[]>([]);
   const peerStatesSubsRef = useRef<any[]>([]);
   const isSyncingRef = useRef(false);
   const isConnectingRef = useRef(false);
   const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const roomIdRef = useRef('');
-  const signalingUrlRef = useRef<string | undefined>(undefined);
+  const roomIdRef = useRef(roomId);
+  const signalingUrlRef = useRef<string | undefined>(targetSignalingUrl || undefined);
   const msgQueueRef = useRef(new P2PMessageQueue());
-  const usernameRef = useRef('');
-  const passwordRef = useRef('');
+  const usernameRef = useRef(localAlias);
+  const passwordRef = useRef(targetPassword);
   const peerAliasesRef = useRef<Record<string, string>>({}); // Ref to hold current peerAliases for subscriptions
   const previousPeerIdsRef = useRef<Set<string>>(new Set()); // To track connects/disconnects
   const sentIdentityToRef = useRef<Set<string>>(new Set()); // To avoid flooding identity messages
@@ -149,10 +178,18 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
     sentIdentityToRef.current.clear();
     notifiedPeersRef.current.clear();
     setRoomId('');
+    setTargetPassword('');
+    setTargetSignalingUrl('');
     roomIdRef.current = '';
     usernameRef.current = '';
     passwordRef.current = '';
     signalingUrlRef.current = undefined;
+
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('p2p_room_id');
+      localStorage.removeItem('p2p_password');
+      localStorage.removeItem('p2p_signaling_url');
+    }
     setConnectionStatus('idle');
     if (connectionTimeoutRef.current) {
       clearTimeout(connectionTimeoutRef.current);
@@ -161,8 +198,16 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
     logger.info('P2P synchronization stopped and cleaned up.');
   }, []);
 
+  const setLocalRole = useCallback((role: 'host' | 'follower' | 'undetermined') => {
+    setLocalRoleState(role);
+    setCurrentLocalRole(role);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('p2p_local_role', role);
+    }
+  }, []);
+
   const startSync = useCallback(
-    async (targetRoomId: string, username?: string, password?: string, signalingUrl?: string) => {
+    async (targetRoomId: string, username?: string, password?: string, signalingUrl?: string, role?: 'host' | 'follower' | 'undetermined') => {
       if (!db || !targetRoomId || !currentWorkspace) {
         logger.warn('startSync called with missing dependencies (db, targetRoomId, or currentWorkspace). Aborting.');
         return;
@@ -185,7 +230,8 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
         roomIdRef.current === targetRoomId && 
         usernameRef.current === normUsername && 
         passwordRef.current === normPassword &&
-        signalingUrlRef.current === normSignalingUrl
+        signalingUrlRef.current === normSignalingUrl &&
+        (role === undefined || localRole === role)
       ) {
         return;
       }
@@ -203,9 +249,28 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
         isSyncingRef.current = true;
         setRoomId(targetRoomId);
         roomIdRef.current = targetRoomId;
+        
+        const finalPassword = password || '';
+        const finalSignalingUrl = signalingUrl || 'wss://signaling.rxdb.info/';
+        
+        setTargetPassword(finalPassword);
+        passwordRef.current = finalPassword;
+        
+        setTargetSignalingUrl(finalSignalingUrl);
+        signalingUrlRef.current = finalSignalingUrl;
+        
         usernameRef.current = normUsername;
-        passwordRef.current = normPassword;
-        signalingUrlRef.current = normSignalingUrl;
+        
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('p2p_room_id', targetRoomId);
+          localStorage.setItem('p2p_password', finalPassword);
+          localStorage.setItem('p2p_signaling_url', finalSignalingUrl);
+        }
+
+        if (role) {
+          setLocalRole(role);
+        }
+        
         setConnectionStatus('connecting');
 
         // Set a timeout to check if we actually connect to any peers
@@ -232,10 +297,12 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
         const newReplications: any[] = [];
         
         // Generate a stable peerId for this sync session
-        // We use the username + a short hash to ensure uniqueness
+        // We prefix it based on role to influence RxDB master election:
+        // Host gets 'z_' (high priority), Follower gets 'a_' (low priority)
+        const rolePrefix = localRole === 'host' ? 'z_' : 'a_';
         const sessionPeerId = normUsername 
-          ? `${normUsername}#${Math.random().toString(36).slice(-4)}`
-          : undefined;
+          ? `${rolePrefix}${normUsername}#${Math.random().toString(36).slice(-4)}`
+          : `${rolePrefix}anon#${Math.random().toString(36).slice(-4)}`;
 
         let peerSubscribed = false;
 
@@ -255,6 +322,9 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
             topic: topic,
             connectionHandlerCreator: getConnectionHandlerSimplePeer({
               signalingServerUrl: normSignalingUrl,
+              // Lexicographical peerId comparison in RxDB determines Master status
+              // We pass our role-prefixed ID here
+              peerId: sessionPeerId,
               // Add Google STUN servers to improve NAT traversal (hole punching)
               config: {
                 iceServers: [
@@ -464,7 +534,7 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
         isConnectingRef.current = false;
       }
     },
-    [db, currentWorkspace, stopSync, localAlias]
+    [db, currentWorkspace, stopSync, localAlias, localRole]
   );
 
   const updateLocalAlias = useCallback((alias: string) => {
@@ -508,25 +578,16 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!db || !currentWorkspace) return;
 
-    // Listen to settings changes for the CURRENT workspace to auto-start/stop
+    // Auto-start on load if settings exist in localStorage
+    if (roomId && !isSyncingRef.current) {
+      startSync(roomId, localAlias, targetPassword, targetSignalingUrl, localRole);
+    }
+
+    // Listen to settings changes for THE CURRENT workspace (only the non-P2P parts now)
     const sub = db.configs.findOne(`${currentWorkspace}:settings:app`).$.subscribe(async (doc: any) => {
-      if (doc) {
-        const docData = doc.toJSON();
-        const settings = docData.data;
-        if (settings?.p2pRoomId) {
-          const p2pRoomId = settings.p2pRoomId;
-          const p2pPassword = settings.p2pPassword;
-          const p2pSignalingUrl = settings.p2pSignalingUrl;
-          await startSync(p2pRoomId, localAlias, p2pPassword, p2pSignalingUrl);
-        } else if (isSyncingRef.current) {
-          await stopSync();
-        }
-      } else {
-        // No settings found for this workspace, stop sync if active
-        if (isSyncingRef.current) {
-          await stopSync();
-        }
-      }
+      setSettingsLoaded(true);
+      // We no longer auto-start/stop based on RxDB configs for P2P settings
+      // as they are intentionally isolated.
     });
 
     return () => {
@@ -541,6 +602,8 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
       isSyncing, 
       peerCount, 
       roomId, 
+      targetPassword,
+      targetSignalingUrl,
       peers, 
       localAlias,
       peerAliases,
@@ -548,6 +611,8 @@ export function P2PProvider({ children }: { children: React.ReactNode }) {
       startSync, 
       stopSync, 
       updateLocalAlias,
+      localRole,
+      setLocalRole,
       wipeLocalData 
     }}>
       {children}

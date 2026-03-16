@@ -37,6 +37,7 @@ import {
 } from './schemas';
 
 import { logger } from '../logger';
+import { roleBasedConflictHandler } from './role-conflict-handler';
 
 // Add necessary plugins
 addRxPlugin(RxDBMigrationPlugin);
@@ -183,6 +184,7 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
     const collectionsConfig: Record<string, any> = {
       personnel: { 
         schema: personnelSchema,
+        conflictHandler: roleBasedConflictHandler,
         migrationStrategies: {
           1: (doc: any) => doc,
           2: (doc: any) => doc,
@@ -194,6 +196,7 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
       },
       reports: { 
         schema: reportsSchema,
+        conflictHandler: roleBasedConflictHandler,
         migrationStrategies: {
           1: (doc: any) => {
             if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
@@ -207,6 +210,7 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
       },
       templates: { 
         schema: templatesSchema,
+        conflictHandler: roleBasedConflictHandler,
         migrationStrategies: {
           1: (doc: any) => {
             if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
@@ -220,6 +224,7 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
       },
       lookups: { 
         schema: lookupsSchema,
+        conflictHandler: roleBasedConflictHandler,
         migrationStrategies: {
           1: (doc: any) => {
             if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
@@ -229,6 +234,7 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
       },
       configs: { 
         schema: configsSchema,
+        conflictHandler: roleBasedConflictHandler,
         migrationStrategies: {
           1: (doc: any) => {
             if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
@@ -238,6 +244,7 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
       },
       history: { 
         schema: historySchema,
+        conflictHandler: roleBasedConflictHandler,
         migrationStrategies: {
           1: (doc: any) => {
             if (!doc.personnelId) doc.personnelId = 'none';
@@ -259,6 +266,7 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
       },
       notifications: {
         schema: notificationsSchema,
+        conflictHandler: roleBasedConflictHandler,
         migrationStrategies: {
           1: (doc: any) => doc,
           2: (doc: any) => {

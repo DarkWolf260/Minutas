@@ -80,6 +80,7 @@ export interface AppSettings {
   p2pRoomId?: string;
   p2pPassword?: string;
   p2pSignalingUrl?: string;
+  p2pLocalRole?: string;
   ordenDelDiaDraft?: {
     staff: Staff;
     activities: { id: string; content: string }[];
