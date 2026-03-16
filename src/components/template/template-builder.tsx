@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+
 
 import { parseTemplate } from '@/lib/template-parser';
 import { Save, HelpCircle, X, FileText, Plus, Trash2 } from 'lucide-react';
@@ -80,7 +80,7 @@ export function TemplateBuilder({
   // State for UI toggles
   const [showRules, setShowRules] = useState(false);
 
-  const { definitions } = useFieldDefinitions();
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Creates a temporary template object for the preview
@@ -117,22 +117,6 @@ export function TemplateBuilder({
     };
   }, [templateContent]);
 
-  const insertText = (text: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const currentText = textarea.value;
-
-    const newText = `${currentText.substring(0, start)}${text}${currentText.substring(end)}`;
-    setTemplateContent(newText);
-
-    setTimeout(() => {
-      textarea.focus();
-      textarea.selectionStart = textarea.selectionEnd = start + text.length;
-    }, 0);
-  };
 
   const handleSave = () => {
     if (!templateName.trim()) {
@@ -187,16 +171,6 @@ export function TemplateBuilder({
     }
   };
 
-  const globalTags = Object.keys(definitions).map((key) => definitions[key]);
-
-  const commonSnippets = [
-    { name: 'Sección', value: '["Título" {Campo}]' },
-    { name: 'S. Repet', value: '["Título"]* {Campo}' },
-    { name: 'S. Cond', value: '[?Campo=Val]\n["Título"]\n{Campo}\n[/]\n' },
-    { name: 'Fecha', value: '{Fecha}' },
-    { name: 'Hora', value: '{Hora}' },
-    { name: 'Lista', value: '{Campo:dropdown(A=1|B=2)}' },
-  ];
 
   const parseFieldNames = (content: string) => {
     const matches = content.match(/\{([a-zA-Z0-9_\u00C0-\u00FF\s]+)(:[^}]+)?\}/g);
@@ -419,43 +393,6 @@ export function TemplateBuilder({
               </div>
             </div>
 
-            {/* Unified Toolbar - Sticky above editor */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-1.5 bg-muted/30 rounded-md border text-xs shrink-0">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="hidden sm:inline font-semibold text-muted-foreground ml-1 shrink-0">Insertar:</span>
-                <Select onValueChange={(val) => insertText(`{${val}}`)}>
-                  <SelectTrigger className="h-8 sm:h-7 text-xs flex-1 sm:w-[130px] bg-background border-dashed">
-                    <SelectValue placeholder="Etiqueta Global" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {globalTags.map((tag, i) => (
-                      <SelectItem key={tag?.label || i} value={tag?.label || ''}>
-                        {tag?.label || ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="hidden sm:block w-px h-4 bg-border mx-1" />
-
-              <div className="flex-1 overflow-x-auto no-scrollbar scroll-smooth">
-                <div className="flex items-center gap-1 pb-0.5">
-                  {commonSnippets.map((snippet) => (
-                    <Button
-                      key={snippet.name}
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 sm:h-7 px-2.5 text-xs bg-background/50 sm:bg-transparent hover:bg-background border border-transparent hover:border-border whitespace-nowrap shrink-0"
-                      onClick={() => insertText(snippet.value)}
-                      title={`Insertar: ${snippet.value}`}
-                    >
-                      {snippet.name}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
 
             {/* Editor Area - This fills the rest of the vertical space */}
             <div className="flex-1 flex flex-col min-h-0 rounded-md border shadow-sm bg-background">

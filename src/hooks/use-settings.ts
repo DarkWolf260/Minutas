@@ -11,6 +11,8 @@ const defaultSettings: AppSettings = {
   finalReportStaffSnapshot: {},
   finalReportStartDate: '',
   finalReportEndDate: '',
+  finalReportManualNovedades: [],
+  finalReportStatistics: '',
   reportaRoleIds: [],
 };
 

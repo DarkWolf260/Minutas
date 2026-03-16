@@ -1,286 +1,41 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { GlobalTagsManager } from '@/components/global-tags-manager';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@/components/ui/sheet';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
-import { useP2P } from '@/lib/db/p2p-provider';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import { useSettings } from '@/hooks/use-settings';
 import { useUnits } from '@/hooks/use-units';
 import { useRoles } from '@/hooks/use-roles';
-import { useReports } from '@/hooks/use-reports';
-import { useTemplates } from '@/hooks/use-templates';
-import { useGuards } from '@/hooks/use-guards';
-import { useDrafts } from '@/hooks/use-drafts';
-import { useFieldDefinitions } from '@/hooks/use-field-definitions';
-import { AppSettings, StaffMember, Address } from '@/types';
+import { useDepartments } from '@/hooks/use-departments';
 import { 
   Zap, 
-  Wifi, 
-  WifiOff, 
-  Copy, 
-  Check, 
   Database, 
   Plus, 
   Trash2, 
-  ExternalLink,
-  Info,
   Layers,
-  Monitor,
-  AlertTriangle, 
   FileText, 
-  ChevronRight
+  ChevronRight,
+  AlertTriangle,
+  Settings2
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { useDepartments } from '@/hooks/use-departments';
-import { logger } from '@/lib/logger';
 
 export default function SettingsPage() {
-  const { units, saveUnits, isLoaded: unitsLoaded, clearAllUnits } = useUnits();
-  const { roles: initialRoles, isLoaded: rolesLoaded, clearAllRoles } = useRoles();
-  const { isLoaded: deptsLoaded, clearAllDepartments } = useDepartments();
-  const { settings, saveSettings, isLoaded: settingsLoaded, clearAllSettings } = useSettings();
-  const { clearAllReports } = useReports();
-  const { clearAllTemplates } = useTemplates();
-  const { clearAllGuards } = useGuards();
-  const { clearAllDefinitions } = useFieldDefinitions();
-  const { clearDraft } = useDrafts();
-  const isMobile = useIsMobile();
-
-  const db = useDatabase();
+  const { isLoaded: unitsLoaded } = useUnits();
+  const { isLoaded: rolesLoaded } = useRoles();
+  const { isLoaded: deptsLoaded } = useDepartments();
+  const { isLoaded: settingsLoaded } = useSettings();
   const { currentWorkspace, workspaces, switchWorkspace, deleteWorkspace, createWorkspace } = useWorkspaceManager();
-  const { 
-    isSyncing, 
-    peerCount, 
-    roomId: activeRoomId, 
-    peers, 
-    localAlias,
-    peerAliases,
-    connectionStatus,
-    startSync, 
-    stopSync, 
-    updateLocalAlias,
-    localRole,
-    setLocalRole,
-    wipeLocalData,
-    roomId,
-    targetPassword: contextPassword,
-    targetSignalingUrl: contextSignalingUrl
-  } = useP2P();
   
-  const [targetRoomId, setTargetRoomId] = useState('');
-  const [targetPassword, setTargetPassword] = useState('');
-  const [targetSignalingUrl, setTargetSignalingUrl] = useState('');
-  const [isCopied, setIsCopied] = useState(false);
-  const [isStrategyOpen, setIsStrategyOpen] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
-  const [selectedLocalRole, setSelectedLocalRole] = useState<'host' | 'follower' | 'undetermined'>('undetermined');
-  const [actionToConfirm, setActionToConfirm] = useState<string | null>(null);
-  const hasInitialized = useRef(false);
-
-  // Reset initialization flag when workspace changes
-  useEffect(() => {
-    hasInitialized.current = false;
-  }, [currentWorkspace]);
-
-  // Update targetRoomId when settings load - ONLY ONCE
-  useEffect(() => {
-    if (!settingsLoaded || hasInitialized.current) return;
-    
-    // Load P2P settings from Context (which come from localStorage)
-    if (roomId) {
-      setTargetRoomId(roomId);
-    }
-    if (contextPassword) {
-      setTargetPassword(contextPassword);
-    }
-    if (contextSignalingUrl) {
-      setTargetSignalingUrl(contextSignalingUrl);
-    }
-    if (localRole !== 'undetermined') {
-      setSelectedLocalRole(localRole);
-    }
-    
-    // Migration: If we find p2pUsername in synced settings (old version), 
-    // move it to localAlias if localAlias is empty, then remove it from DB.
-    const syncedUsername = (settings as any).p2pUsername;
-    if (syncedUsername) {
-      if (!localAlias) {
-        updateLocalAlias(syncedUsername);
-      }
-      // Remove it from the synchronized database to ensure it's unique per device from now on
-      const { p2pUsername, ...cleanSettings } = settings as any;
-      saveSettings(cleanSettings);
-    }
-
-    hasInitialized.current = true;
-  }, [settings, settingsLoaded, localAlias, updateLocalAlias, saveSettings]);
-
-  const handleStartSync = async (
-    strategy: 'merge' | 'host-only' | 'new-workspace',
-    roleArg?: 'host' | 'follower' | 'undetermined'
-  ) => {
-    if (!targetRoomId || !db) return;
-    
-    // Use arguments if provided, otherwise fallback to current selection
-    const finalRole = roleArg || selectedLocalRole;
-    
-    setIsStrategyOpen(false);
-    
-    try {
-      const activeWorkspace = strategy === 'new-workspace' 
-        ? `sync-${targetRoomId.slice(0, 4)}-${Date.now().toString().slice(-4)}`
-        : currentWorkspace;
-
-      if (strategy === 'new-workspace') {
-        await createWorkspace(activeWorkspace);
-      } else if (strategy === 'host-only') {
-        await wipeLocalData();
-      }
-      
-      // Wait a bit for the DB to be ready for the new workspace if needed
-      if (strategy === 'new-workspace') {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-
-      // Start the sync process immediately with the updated parameters
-      await startSync(targetRoomId, localAlias, targetPassword, targetSignalingUrl, finalRole);
-      
-      toast.success(
-        strategy === 'new-workspace' 
-          ? `Nueva zona de trabajo "${targetRoomId}" creada y conectada.` 
-          : `Conectado a la sala "${targetRoomId}" con éxito.`
-      );
-    } catch (error) {
-      logger.error('Error starting P2P Sync', error);
-      toast.error('Ocurrió un error al configurar la sala');
-    }
-  };
-
-  const handleStopSync = async () => {
-    await stopSync();
-    toast.info('Sincronización detenida');
-  };
 
   const isLoaded = unitsLoaded && rolesLoaded && deptsLoaded && settingsLoaded;
-
-
-  const handleConfirmReset = async () => {
-    if (!actionToConfirm) return;
-
-    switch (actionToConfirm) {
-      case 'reports':
-        await clearAllReports();
-        break;
-      case 'templates':
-        await clearAllTemplates();
-        break;
-      case 'staff':
-        await clearAllRoles();
-        await clearAllDepartments();
-        await clearAllGuards();
-        await clearAllUnits();
-        break;
-      case 'definitions':
-        await clearAllDefinitions();
-        break;
-      case 'all':
-        await Promise.all([
-          clearAllReports(),
-          clearAllTemplates(),
-          clearAllRoles(),
-          clearAllDepartments(),
-          clearAllGuards(),
-          clearAllUnits(),
-          clearAllDefinitions(),
-          clearAllSettings(),
-          clearDraft(),
-        ]);
-        localStorage.removeItem('report-app-welcome-seen');
-        window.location.reload();
-        break;
-    }
-
-    setActionToConfirm(null);
-  };
-
-
-  const resetOptions: {
-    [key: string]: { title: string; description: string; buttonLabel: string };
-  } = {
-    reports: {
-      title: '¿Limpiar todos los reportes?',
-      description:
-        'Esta acción es irreversible. Se eliminarán permanentemente todos los reportes de novedades que has guardado.',
-      buttonLabel: 'Limpiar Reportes',
-    },
-    templates: {
-      title: '¿Limpiar todas las plantillas?',
-      description:
-        'Esta acción es irreversible. Se eliminarán permanentemente todas las plantillas y sus configuraciones asociadas.',
-      buttonLabel: 'Limpiar Plantillas',
-    },
-    staff: {
-      title: '¿Restablecer personal, guardias y unidades?',
-      description:
-        'Se eliminarán todas las guardias, departamentos, cargos personalizados y unidades, volviendo a la configuración por defecto. El personal y las unidades asignadas se perderán.',
-      buttonLabel: 'Restablecer Personal y Unidades',
-    },
-    definitions: {
-      title: '¿Restablecer etiquetas globales?',
-      description:
-        'Se eliminarán todas las etiquetas globales personalizadas, volviendo a la configuración por defecto.',
-      buttonLabel: 'Restablecer Etiquetas',
-    },
-    all: {
-      title: '¿Restablecer toda la aplicación?',
-      description:
-        '¡ADVERTENCIA! Esta acción es irreversible. Se eliminará TODA la información guardada (reportes, plantillas, configuraciones, personal) y se restaurará la aplicación a su estado inicial. Es como abrirla por primera vez.',
-      buttonLabel: 'Restablecer Toda la Aplicación',
-    },
-  };
 
   if (!isLoaded) {
     return (
@@ -293,642 +48,192 @@ export default function SettingsPage() {
   }
 
   return (
-    <>
-      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-        {/* Quick access to Templates */}
-        <Card className="max-w-4xl mx-auto shadow-lg">
-          <CardHeader>
-            <CardTitle>Plantillas</CardTitle>
-            <CardDescription>
-              Gestiona las plantillas usadas para generar los reportes de novedades.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link
-              href="/plantillas"
-              className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-                <div>
-                  <p className="font-medium">Ir a Plantillas</p>
-                  <p className="text-xs text-muted-foreground">Crear, editar y gestionar plantillas de reportes</p>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+      {/* Seccion Áreas de Trabajo (ex Otros ajustes) */}
+      <Card className="max-w-4xl mx-auto shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Layers className="h-5 w-5 text-primary" />
+            Áreas de Trabajo
+          </CardTitle>
+          <CardDescription>
+            Gestiona entornos independientes para tus reportes. Cada área tiene su propia base de datos local.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4">
+            {workspaces.map((workspace: string) => (
+              <div
+                key={workspace}
+                className={cn(
+                  "flex items-center justify-between p-3 rounded-lg border transition-all",
+                  currentWorkspace === workspace 
+                    ? "bg-primary/5 border-primary ring-1 ring-primary/20" 
+                    : "bg-muted/10 hover:bg-muted/20"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "h-8 w-8 rounded-full flex items-center justify-center",
+                    currentWorkspace === workspace ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  )}>
+                    <Database className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium capitalize">
+                      {workspace.replace(/-/g, ' ')}
+                      {workspace === 'minutasdb' && <span className="ml-2 text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground uppercase tracking-wider">Default</span>}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {currentWorkspace === workspace ? 'Área activa' : 'Área local offline'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {currentWorkspace !== workspace && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => switchWorkspace(workspace)}
+                    >
+                      Cambiar
+                    </Button>
+                  )}
+                  {workspace !== 'minutasdb' && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => {
+                        if (confirm('¿Estás seguro de eliminar esta área? Se perderán todos sus datos locales.')) {
+                          deleteWorkspace(workspace);
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-            </Link>
-          </CardContent>
-        </Card>
+            ))}
+          </div>
 
-
-
-        {/* Seccion de Areas de Trabajo (Workspaces) */}
-        <Card className="max-w-4xl mx-auto shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Layers className="h-5 w-5 text-primary" />
-              Áreas de Trabajo
-            </CardTitle>
-            <CardDescription>
-              Gestiona entornos independientes para tus reportes. Cada área tiene su propia base de datos local.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4">
-              {workspaces.map((workspace: string) => (
-                <div
-                  key={workspace}
-                  className={cn(
-                    "flex items-center justify-between p-3 rounded-lg border transition-all",
-                    currentWorkspace === workspace 
-                      ? "bg-primary/5 border-primary ring-1 ring-primary/20" 
-                      : "bg-muted/10 hover:bg-muted/20"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={cn(
-                      "h-8 w-8 rounded-full flex items-center justify-center",
-                      currentWorkspace === workspace ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                    )}>
-                      <Database className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium capitalize">
-                        {workspace.replace(/-/g, ' ')}
-                        {workspace === 'minutasdb' && <span className="ml-2 text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground uppercase tracking-wider">Default</span>}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {currentWorkspace === workspace ? 'Área activa' : 'Área local offline'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {currentWorkspace !== workspace && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => switchWorkspace(workspace)}
-                      >
-                        Cambiar
-                      </Button>
-                    )}
-                    {workspace !== 'minutasdb' && (
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => {
-                          if (confirm('¿Estás seguro de eliminar esta área? Se perderán todos sus datos locales.')) {
-                            deleteWorkspace(workspace);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="pt-2">
-              {isCreatingWorkspace ? (
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="new-workspace-name"
-                    name="new-workspace-name"
-                    placeholder="Nombre de la nueva área..."
-                    value={newWorkspaceName}
-                    onChange={(e) => setNewWorkspaceName(e.target.value)}
-                    className="h-9"
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        createWorkspace(newWorkspaceName);
-                        setNewWorkspaceName('');
-                        setIsCreatingWorkspace(false);
-                      } else if (e.key === 'Escape') {
-                        setIsCreatingWorkspace(false);
-                      }
-                    }}
-                  />
-                  <Button 
-                    size="sm" 
-                    onClick={() => {
+          <div className="pt-2">
+            {isCreatingWorkspace ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  id="new-workspace-name"
+                  name="new-workspace-name"
+                  placeholder="Nombre de la nueva área..."
+                  value={newWorkspaceName}
+                  onChange={(e) => setNewWorkspaceName(e.target.value)}
+                  className="h-9"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
                       createWorkspace(newWorkspaceName);
                       setNewWorkspaceName('');
                       setIsCreatingWorkspace(false);
-                    }}
-                  >
-                    Crear
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    onClick={() => setIsCreatingWorkspace(false)}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              ) : (
+                    } else if (e.key === 'Escape') {
+                      setIsCreatingWorkspace(false);
+                    }
+                  }}
+                />
                 <Button 
-                  variant="outline" 
-                  className="w-full border-dashed" 
-                  onClick={() => setIsCreatingWorkspace(true)}
+                  size="sm" 
+                  onClick={() => {
+                    createWorkspace(newWorkspaceName);
+                    setNewWorkspaceName('');
+                    setIsCreatingWorkspace(false);
+                  }}
                 >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Nueva Área de Trabajo
+                  Crear
                 </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* P2P Synchronization */}
-        <Card className="max-w-4xl mx-auto shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-yellow-500" />
-              Sincronización en Tiempo Real (P2P)
-            </CardTitle>
-            <CardDescription>
-              Conecta varios dispositivos para sincronizar reportes y personal de forma directa sin servidores.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 p-4 rounded-lg border bg-muted/30">
-                <div className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-full shrink-0 transition-colors",
-                  connectionStatus === 'connected' ? "bg-green-500/10 text-green-500" : 
-                  connectionStatus === 'connecting' ? "bg-yellow-500/10 text-yellow-500" :
-                  connectionStatus === 'error' ? "bg-destructive/10 text-destructive shadow-[0_0_15px_-3px_rgba(239,68,68,0.3)]" :
-                  "bg-muted text-muted-foreground"
-                )}>
-                  {connectionStatus === 'connected' && <Wifi className="h-5 w-5" />}
-                  {connectionStatus === 'connecting' && <Zap className="h-5 w-5 animate-pulse" />}
-                  {connectionStatus === 'error' && <AlertTriangle className="h-5 w-5 animate-bounce" />}
-                  {connectionStatus === 'idle' && <WifiOff className="h-5 w-5" />}
-                </div>
-                <div>
-                  <p className="font-semibold">
-                    {connectionStatus === 'connected' && 'Sincronización Activa'}
-                    {connectionStatus === 'connecting' && 'Buscando pares...'}
-                    {connectionStatus === 'error' && 'Error de Conexión'}
-                    {connectionStatus === 'idle' && 'Sincronización Desconectada'}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {connectionStatus === 'connected' && `Conectado a "${activeRoomId}". ${peerCount} pares.`}
-                    {connectionStatus === 'connecting' && 'Intentando establecer conexión P2P...'}
-                    {connectionStatus === 'error' && 'No se pudo establecer la conexión P2P.'}
-                    {connectionStatus === 'idle' && 'Ingresa un ID de sala para empezar a compartir datos.'}
-                  </p>
-                </div>
-              </div>
-
-              {connectionStatus === 'error' && (
-                <div className="p-4 rounded-lg bg-destructive/5 border border-destructive/20 space-y-3 animate-in fade-in slide-in-from-top-2">
-                  <div className="flex items-center gap-2 text-destructive">
-                    <Info className="h-4 w-4" />
-                    <p className="text-xs font-bold uppercase tracking-wider">Guía de Solución de Problemas</p>
-                  </div>
-                  <ul className="text-xs space-y-2 text-muted-foreground list-disc pl-4">
-                    <li>Verifica que <strong>ambos dispositivos</strong> usen el mismo <strong>ID de Sala</strong> y <strong>Contraseña</strong>.</li>
-                    <li>Asegúrate de que el ID de Sala sea <strong>único</strong> (ej: <code>minutas-p2p-7281</code>) para evitar colisiones.</li>
-                    <li>Prueba a conectar ambos dispositivos a la <strong>misma red WiFi</strong> si están en redes diferentes.</li>
-                    <li>Si usas un Firewall o Antivirus, asegúrate de que no bloqueen las conexiones WebRTC.</li>
-                    <li>Reinicia la sincronización en ambos dispositivos simultáneamente.</li>
-                  </ul>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="room-id">ID de Sala / Token Compartido</Label>
-                <div className="flex flex-col sm:flex-row gap-2 sm:max-w-md">
-                  <Input
-                    id="room-id"
-                    name="room-id"
-                    value={targetRoomId}
-                    onChange={(e) => setTargetRoomId(e.target.value)}
-                    placeholder="Ej: equipo-alfa-2026"
-                    disabled={isSyncing}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="p2p-username">Tu Nombre / Alias (Local)</Label>
-                    <Input
-                      id="p2p-username"
-                      name="p2p-username"
-                      value={localAlias}
-                      onChange={(e) => updateLocalAlias(e.target.value)}
-                      placeholder="Ej: Supervisor Juan"
-                      disabled={isSyncing}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="p2p-password">Contraseña de Sala</Label>
-                    <Input
-                      id="p2p-password"
-                      name="p2p-password"
-                      type="password"
-                      value={targetPassword}
-                      onChange={(e) => setTargetPassword(e.target.value)}
-                      placeholder="Opcional para mayor seguridad"
-                      disabled={isSyncing}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="p2p-signaling">Servidor de Señalización (Avanzado)</Label>
-                    <Badge variant="outline" className="text-[10px] h-4">Avanzado</Badge>
-                  </div>
-                  <Input
-                    id="p2p-signaling"
-                    name="p2p-signaling"
-                    value={targetSignalingUrl}
-                    onChange={(e) => setTargetSignalingUrl(e.target.value)}
-                    placeholder="Predeterminado: wss://signaling.rxdb.info/"
-                    disabled={isSyncing}
-                  />
-                  {!targetSignalingUrl && (
-                    <p className="text-[10px] text-muted-foreground">
-                      * Usando el servidor público de RxDB (puede ser inestable en producción).
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  {isSyncing ? (
-                    <Button 
-                      variant={connectionStatus === 'error' ? "default" : "destructive"} 
-                      onClick={connectionStatus === 'error' ? () => handleStartSync('merge') : handleStopSync} 
-                      className="w-full sm:w-auto"
-                    >
-                      {connectionStatus === 'error' ? 'Reintentar' : 'Detener'}
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={() => setIsStrategyOpen(true)} 
-                      disabled={!targetRoomId}
-                      className="w-full sm:w-auto"
-                    >
-                      Iniciar Sincronización
-                    </Button>
-                  )}
-                </div>
-                {peers.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    <p className="text-xs font-semibold">Peers Conectados:</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                       {peers.map((peer, idx) => {
-                         const displayName = peerAliases[peer.id] || peer.id;
-                         return (
-                           <div key={idx} className="flex items-center justify-between p-2 text-[11px] rounded bg-muted">
-                             <span className="truncate max-w-[120px]" title={peer.id}>
-                               {displayName}
-                             </span>
-                             <Badge variant={peer.isMaster ? "default" : "outline"} className="h-4 text-[9px]">
-                               {peer.isMaster ? 'Anfitrión' : 'Seguidor'}
-                             </Badge>
-                           </div>
-                         );
-                       })}
-                    </div>
-                  </div>
-                )}
-                <p className="text-[10px] text-muted-foreground italic">
-                  * Todos los dispositivos con el mismo ID de sala compartirán datos de la área actual (<strong>{currentWorkspace}</strong>).
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <GlobalTagsManager />
-
-
-        <Card className="max-w-4xl mx-auto shadow-lg border-destructive">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle />
-              Zona de Peligro
-            </CardTitle>
-            <CardDescription>
-              Las siguientes acciones son destructivas y no se pueden deshacer. Úsalas con
-              precaución.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-destructive/10">
-              {Object.entries(resetOptions).map(([key, option]) => (
-                <div
-                  key={key}
-                  className="flex flex-row items-center justify-between p-4 sm:p-6 gap-4 hover:bg-destructive/[0.02] transition-colors"
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={() => setIsCreatingWorkspace(false)}
                 >
-                  <div className="space-y-1">
-                    <h4 className="font-semibold text-destructive">{option.buttonLabel}</h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
-                      {option.description.split('.')[0]}.
-                    </p>
-                  </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setActionToConfirm(key)}
-                    className="h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-3 sm:py-2 shrink-0 shadow-sm"
-                    title={option.buttonLabel}
-                  >
-                    <Trash2 className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">{option.buttonLabel}</span>
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div >
-
-      {isMobile ? (
-        <Sheet
-          open={!!actionToConfirm}
-          onOpenChange={(open) => !open && setActionToConfirm(null)}
-        >
-          <SheetContent side="bottom" className="rounded-t-xl p-6">
-            <SheetHeader className="text-left">
-              <SheetTitle>
-                {actionToConfirm && resetOptions[actionToConfirm]?.title}
-              </SheetTitle>
-              <SheetDescription>
-                {actionToConfirm && resetOptions[actionToConfirm]?.description}
-              </SheetDescription>
-            </SheetHeader>
-            <div className="py-6 space-y-3">
-              <Button
-                variant="destructive"
-                className="w-full h-12 text-base font-semibold"
-                onClick={handleConfirmReset}
+                  Cancelar
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                variant="outline" 
+                className="w-full border-dashed" 
+                onClick={() => setIsCreatingWorkspace(true)}
               >
-                Sí, continuar
+                <Plus className="mr-2 h-4 w-4" />
+                Nueva Área de Trabajo
               </Button>
-              <Button
-                variant="outline"
-                className="w-full h-12 text-base"
-                onClick={() => setActionToConfirm(null)}
-              >
-                Cancelar
-              </Button>
-            </div>
-          </SheetContent>
-        </Sheet>
-      ) : (
-        <AlertDialog
-          open={!!actionToConfirm}
-          onOpenChange={(open) => !open && setActionToConfirm(null)}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {actionToConfirm && resetOptions[actionToConfirm]?.title}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {actionToConfirm && resetOptions[actionToConfirm]?.description}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setActionToConfirm(null)}>
-                Cancelar
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirmReset}>
-                Sí, continuar
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Modal de Estrategia de Sincronización - Responsive */}
-      {isMobile ? (
-        <Sheet open={isStrategyOpen} onOpenChange={setIsStrategyOpen}>
-          <SheetContent side="bottom" className="rounded-t-xl p-6">
-            <SheetHeader className="text-left">
-              <SheetTitle className="flex items-center gap-2">
-                <Layers className="h-5 w-5 text-yellow-500" />
-                Estrategia de Sincronización
-              </SheetTitle>
-              <SheetDescription>
-                ¿Cómo quieres manejar tus datos locales al unirte a la sala <strong>{targetRoomId}</strong>?
-              </SheetDescription>
-            </SheetHeader>
-            
-            <div className="space-y-6 py-6">
-              <div className="space-y-4">
-                <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">1. Rol de este Dispositivo</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => {
-                      setSelectedLocalRole('host');
-                    }}
-                    className={cn(
-                      "flex flex-col items-center gap-2 p-4 rounded-lg border text-center transition-all",
-                      selectedLocalRole === 'host' ? "bg-primary/5 border-primary ring-1 ring-primary" : "hover:bg-muted"
-                    )}
-                  >
-                    <Monitor className={cn("h-6 w-6", selectedLocalRole === 'host' ? "text-primary" : "text-muted-foreground")} />
-                    <div className="space-y-1">
-                      <span className="font-bold text-xs uppercase">Anfitrión (Host)</span>
-                      <p className="text-[10px] text-muted-foreground leading-tight">Es la fuente de la verdad.</p>
-                    </div>
-                  </button>
+      <GlobalTagsManager />
 
-                  <button
-                    onClick={() => {
-                      setSelectedLocalRole('follower');
-                    }}
-                    className={cn(
-                      "flex flex-col items-center gap-2 p-4 rounded-lg border text-center transition-all",
-                      selectedLocalRole === 'follower' ? "bg-primary/5 border-primary ring-1 ring-primary" : "hover:bg-muted"
-                    )}
-                  >
-                    <Zap className={cn("h-6 w-6", selectedLocalRole === 'follower' ? "text-primary" : "text-muted-foreground")} />
-                    <div className="space-y-1">
-                      <span className="font-bold text-xs uppercase">Seguidor (Follower)</span>
-                      <p className="text-[10px] text-muted-foreground leading-tight">Recibe datos del anfitrión.</p>
-                    </div>
-                  </button>
-                </div>
+      {/* Tarjeta Consolidad: Otros Ajustes */}
+      <Card className="max-w-4xl mx-auto shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings2 className="h-5 w-5 text-primary" />
+            Otros ajustes
+          </CardTitle>
+          <CardDescription>
+            Configuración de plantillas, sincronización y mantenimiento de datos.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Link
+            href="/plantillas"
+            className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <FileText className="h-5 w-5" />
               </div>
-
-
-              <div className="space-y-4">
-                <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">2. Escenario de Datos</Label>
-                <div className="grid gap-3">
-                  <button
-                    onClick={() => handleStartSync('merge', selectedLocalRole)}
-                    className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group active:scale-[0.98]"
-                  >
-                    <div className="h-10 w-10 shrink-0 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Plus className="h-5 w-5" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-semibold text-sm">Escenario 1: Conservar y Combinar</p>
-                      <p className="text-xs text-muted-foreground">
-                        Mezcla el trabajo de ambas áreas. No se elimina ningún reporte; los datos se complementan.
-                      </p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handleStartSync('host-only', selectedLocalRole)}
-                    className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group border-amber-500/20 active:scale-[0.98]"
-                  >
-                    <div className="h-10 w-10 shrink-0 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Monitor className="h-5 w-5" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-semibold text-sm">Escenario 2: Información del Anfitrión</p>
-                      <p className="text-xs text-muted-foreground text-amber-600/80">
-                        <Info className="inline h-3 w-3 mr-1" />
-                        <strong>Limpia tu área actual</strong> para trabajar exclusivamente con los datos del anfitrión.
-                      </p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handleStartSync('new-workspace', selectedLocalRole)}
-                    className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group active:scale-[0.98]"
-                  >
-                    <div className="h-10 w-10 shrink-0 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Layers className="h-5 w-5" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-semibold text-sm">Escenario 3: Área Nueva Independiente</p>
-                      <p className="text-xs text-muted-foreground">
-                        Crea un área limpia y separada para esta sesión. Tu información actual se conserva intacta en el área anterior.
-                      </p>
-                    </div>
-                  </button>
-                </div>
+              <div>
+                <p className="font-medium">Plantillas de Reporte</p>
+                <p className="text-xs text-muted-foreground">Crear, editar y gestionar plantillas</p>
               </div>
             </div>
-            
-            <DialogFooter className="sm:hidden">
-              <Button variant="outline" className="w-full h-12" onClick={() => setIsStrategyOpen(false)}>Cancelar</Button>
-            </DialogFooter>
-          </SheetContent>
-        </Sheet>
-      ) : (
-        <Dialog open={isStrategyOpen} onOpenChange={setIsStrategyOpen}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Layers className="h-5 w-5 text-yellow-500" />
-                Estrategia de Sincronización
-              </DialogTitle>
-              <DialogDescription>
-                ¿Cómo quieres manejar tus datos locales al unirte a la sala <strong>{targetRoomId}</strong>?
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-6 py-4">
-              <div className="space-y-3">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">1. Rol de este Dispositivo</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => {
-                      setSelectedLocalRole('host');
-                    }}
-                    className={cn(
-                      "flex flex-col items-center gap-2 p-4 rounded-xl border text-center transition-all group",
-                      selectedLocalRole === 'host' ? "bg-primary/5 border-primary ring-1 ring-primary" : "hover:bg-muted"
-                    )}
-                  >
-                    <Monitor className={cn("h-6 w-6", selectedLocalRole === 'host' ? "text-primary" : "text-muted-foreground group-hover:scale-110 transition-transform")} />
-                    <div className="space-y-1">
-                      <span className="font-bold text-xs uppercase">Anfitrión (Host)</span>
-                      <p className="text-[10px] text-muted-foreground">Este dispositivo manda.</p>
-                    </div>
-                  </button>
+            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          </Link>
 
-                  <button
-                    onClick={() => {
-                      setSelectedLocalRole('follower');
-                    }}
-                    className={cn(
-                      "flex flex-col items-center gap-2 p-4 rounded-xl border text-center transition-all group",
-                      selectedLocalRole === 'follower' ? "bg-primary/5 border-primary ring-1 ring-primary" : "hover:bg-muted"
-                    )}
-                  >
-                    <Zap className={cn("h-6 w-6", selectedLocalRole === 'follower' ? "text-primary" : "text-muted-foreground group-hover:scale-110 transition-transform")} />
-                    <div className="space-y-1">
-                      <span className="font-bold text-xs uppercase">Seguidor (Follower)</span>
-                      <p className="text-[10px] text-muted-foreground">Acepta datos externos.</p>
-                    </div>
-                  </button>
-                </div>
+          <Link
+            href="/settings/p2p"
+            className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-600 group-hover:scale-110 transition-transform">
+                <Zap className="h-5 w-5" />
               </div>
-
-              <div className="space-y-3">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">2. Escenario de Importación</Label>
-                <div className="grid gap-3">
-                  <button
-                    onClick={() => handleStartSync('merge', selectedLocalRole)}
-                    className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group"
-                  >
-                    <div className="h-10 w-10 shrink-0 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Plus className="h-5 w-5" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-semibold text-sm">Escenario 1: Conservar y Combinar</p>
-                      <p className="text-xs text-muted-foreground">
-                        Mezcla el trabajo de ambas áreas. No se elimina ningún reporte; los datos se complementan.
-                      </p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handleStartSync('host-only', selectedLocalRole)}
-                    className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group border-amber-500/20"
-                  >
-                    <div className="h-10 w-10 shrink-0 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Monitor className="h-5 w-5" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-semibold text-sm">Escenario 2: Información del Anfitrión</p>
-                      <p className="text-xs text-muted-foreground text-amber-600/80">
-                        <Info className="inline h-3 w-3 mr-1" />
-                        <strong>Limpia tu área actual</strong> para trabajar exclusivamente con los datos del anfitrión.
-                      </p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handleStartSync('new-workspace', selectedLocalRole)}
-                    className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group"
-                  >
-                    <div className="h-10 w-10 shrink-0 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Layers className="h-5 w-5" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="font-semibold text-sm">Escenario 3: Área Nueva Independiente</p>
-                      <p className="text-xs text-muted-foreground">
-                        Crea un área limpia y separada para esta sesión. Tu información actual se conserva intacta en el área anterior.
-                      </p>
-                    </div>
-                  </button>
-                </div>
+              <div>
+                <p className="font-medium">Sincronización P2P</p>
+                <p className="text-xs text-muted-foreground">Conectar varios dispositivos en tiempo real</p>
               </div>
             </div>
-            
-            <DialogFooter>
-              <Button variant="ghost" onClick={() => setIsStrategyOpen(false)}>Cancelar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-    </>
+            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          </Link>
+
+          <Link
+            href="/settings/borrar-datos"
+            className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center text-destructive group-hover:scale-110 transition-transform">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-medium text-destructive">Borrar datos de la app</p>
+                <p className="text-xs text-muted-foreground">Acciones irreversibles y limpieza</p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-destructive transition-colors" />
+          </Link>
+        </CardContent>
+      </Card>
+    </div >
   );
 }

@@ -46,6 +46,13 @@ export interface StaffMember {
   observation?: string; // For Orden del Día notations
 }
 
+export interface ManualNovedad {
+  id: string;
+  date: string; // ISO format for serializability
+  time: string;
+  text: string;
+}
+
 export interface StaffRole {
   workspaceId?: string;
   name: string;
@@ -76,6 +83,8 @@ export interface AppSettings {
   finalReportGuardId?: string;
   finalReportStartDate?: string;
   finalReportEndDate?: string;
+  finalReportManualNovedades?: ManualNovedad[];
+  finalReportStatistics?: string;
   reportaRoleIds?: string[];
   p2pRoomId?: string;
   p2pPassword?: string;

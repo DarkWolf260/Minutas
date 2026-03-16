@@ -279,9 +279,19 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
         });
         applyDefaults(initialFormValues, topLevelFieldIds);
 
-        const initializeSection = (sectionId: string, target: FormDataRecord) => {
+        const initializeSection = (sectionId: string, target: FormDataRecord, seenIds = new Set<string>()) => {
+          if (seenIds.has(sectionId)) {
+            logger.error('Circular dependency detected in template sections', new Error('Infinite recursion in initializeSection'), { 
+              feature: 'ReportForm', 
+              metadata: { sectionId, seenIds: Array.from(seenIds) } 
+            });
+            return;
+          }
+          
           const section = finalConfig.sections.find((s) => s.id === sectionId);
           if (!section) return;
+
+          seenIds.add(sectionId);
 
           if (section.isRepeatable) {
             if (!target[section.id] || !Array.isArray(target[section.id])) {
@@ -295,7 +305,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
               applyDefaults(defaultItem, section.fieldIds);
               (section.layout || section.fieldIds).forEach((id) => {
                 if (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) {
-                  initializeSection(id, defaultItem);
+                  initializeSection(id, defaultItem, new Set(seenIds));
                 }
               });
               sectionData.push(defaultItem);
@@ -309,7 +319,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
                     id.startsWith('sec_') ||
                     id.startsWith('cond_')
                   ) {
-                    initializeSection(id, item);
+                    initializeSection(id, item, new Set(seenIds));
                   }
                 });
               });
@@ -322,7 +332,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
             applyDefaults(target, section.fieldIds);
             (section.layout || section.fieldIds).forEach((id) => {
               if (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) {
-                initializeSection(id, target);
+                initializeSection(id, target, seenIds);
               }
             });
           }

@@ -34,6 +34,7 @@ import { useSettings } from '@/hooks/use-settings';
 import { useRoles } from '@/hooks/use-roles';
 import { usePersonnel } from '@/hooks/use-personnel';
 import { useTemplates } from '@/hooks/use-templates';
+import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { renderFinalReport } from '@/lib/template-parser';
 import { format } from 'date-fns';
@@ -47,7 +48,7 @@ import { generateId } from '@/lib/utils/id';
 
 interface ManualNovedad {
   id: string;
-  date: Date;
+  date: string; // ISO format
   time: string;
   text: string;
 }
@@ -74,20 +75,25 @@ export default function ReporteFinalPage() {
   const { roles, isLoaded: rolesLoadedHook } = useRoles();
   const { templates, configs, isLoaded: templatesLoaded } = useTemplates();
   const { personnel } = usePersonnel();
+  const { definitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
   const router = useRouter();
 
-  const [statisticsText, setStatisticsText] = useState('');
+  const manualNovedades = useMemo(() => settings.finalReportManualNovedades || [], [settings.finalReportManualNovedades]);
+  const statisticsText = settings.finalReportStatistics || '';
+  
   const [generatedReport, setGeneratedReport] = useState('');
   const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
   const [copyButtonText, setCopyButtonText] = useState('Copiar');
 
-  const [manualNovedades, setManualNovedades] = useState<ManualNovedad[]>([]);
   const [newNovedadDate, setNewNovedadDate] = useState(new Date());
   const [newNovedadTime, setNewNovedadTime] = useState('');
   const [newNovedadText, setNewNovedadText] = useState('');
 
   useEffect(() => {
     if (!settingsLoaded) return;
+
+    // Only set defaults if manual novedades are empty
+    if (settings.finalReportManualNovedades && settings.finalReportManualNovedades.length > 0) return;
 
     const hasCustomDates = settings.finalReportStartDate && settings.finalReportEndDate;
 
@@ -101,25 +107,33 @@ export default function ReporteFinalPage() {
 
     const defaultStartNovedad: ManualNovedad = {
       id: `${generateId('manual')}_start`,
-      date: startDate,
+      date: startDate.toISOString(),
       time: '08:00 HLV',
       text: 'Se inicia la guardia preventiva de 24 horas',
     };
 
     const defaultEndNovedad: ManualNovedad = {
       id: `${generateId('manual')}_end`,
-      date: endDate,
+      date: endDate.toISOString(),
       time: '08:00 HLV',
       text: 'Se da culminación a la guardia preventiva de 24 horas',
     };
 
-    setManualNovedades((prev) => {
-      const otherNovedades = prev.filter((n) => !n.id.includes('_start') && !n.id.includes('_end'));
-      return [...otherNovedades, defaultStartNovedad, defaultEndNovedad];
+    saveSettings({
+      finalReportManualNovedades: [defaultStartNovedad, defaultEndNovedad]
     });
-  }, [settings.finalReportStartDate, settings.finalReportEndDate, settingsLoaded]);
+  }, [settings.finalReportStartDate, settings.finalReportEndDate, settingsLoaded, settings.finalReportManualNovedades?.length, saveSettings]);
 
   const globalSettings = useMemo(() => {
+    // 1. Start with global definitions
+    const settingsMap: Record<string, string> = {};
+    Object.keys(definitions).forEach((key) => {
+      if (definitions[key]?.value) {
+        settingsMap[key] = definitions[key]!.value!;
+      }
+    });
+
+    // 2. Merge/Override with template-specific configurations
     return Object.values(configs).reduce(
       (acc, config) => {
         Object.keys(config.fields).forEach((fieldName) => {
@@ -130,9 +144,9 @@ export default function ReporteFinalPage() {
         });
         return acc;
       },
-      {} as Record<string, string>
+      settingsMap
     );
-  }, [configs]);
+  }, [configs, definitions]);
 
   const activeGuard = useMemo(() => {
     if (!settings.activeGuardId || !guards.length) return null;
@@ -161,17 +175,21 @@ export default function ReporteFinalPage() {
 
     const newNovedad: ManualNovedad = {
       id: generateId('manual'),
-      date: newNovedadDate,
+      date: newNovedadDate.toISOString(),
       time: newNovedadTime,
       text: newNovedadText,
     };
-    setManualNovedades((prev) => [...prev, newNovedad]);
+    saveSettings({
+      finalReportManualNovedades: [...manualNovedades, newNovedad]
+    });
     setNewNovedadTime('');
     setNewNovedadText('');
   };
 
   const handleRemoveManualNovedad = (idToRemove: string) => {
-    setManualNovedades((prev) => prev.filter((n) => n.id !== idToRemove));
+    saveSettings({
+      finalReportManualNovedades: manualNovedades.filter((n) => n.id !== idToRemove)
+    });
   };
 
   const getSortDate = (novedad: Report | ManualNovedad): Date | null => {
@@ -197,18 +215,16 @@ export default function ReporteFinalPage() {
       }
       return new Date(novedad.timestamp);
     } else {
-      // It's a ManualNovedad
-      const horaStr = novedad.time;
-      const timeMatch = horaStr.match(/(\d{2}):(\d{2})/);
-      if (!timeMatch) return novedad.date;
-      const mappedValues = timeMatch.slice(1).map(Number);
-      const hours = mappedValues[0];
-      const minutes = mappedValues[1];
-      if (hours === undefined || minutes === undefined || isNaN(hours) || isNaN(minutes))
-        return novedad.date;
-
       const sortDate = new Date(novedad.date);
-      sortDate.setHours(hours, minutes, 0, 0);
+      const timeMatch = novedad.time.match(/(\d{2}):(\d{2})/);
+      
+      if (timeMatch && timeMatch[1] && timeMatch[2]) {
+        const hours = parseInt(timeMatch[1], 10);
+        const minutes = parseInt(timeMatch[2], 10);
+        if (!isNaN(hours) && !isNaN(minutes)) {
+          sortDate.setHours(hours, minutes, 0, 0);
+        }
+      }
       return sortDate;
     }
   };
@@ -463,7 +479,7 @@ export default function ReporteFinalPage() {
   };
 
   const isLoaded =
-    reportsLoaded && guardsLoaded && settingsLoaded && rolesLoadedHook && templatesLoaded;
+    reportsLoaded && guardsLoaded && settingsLoaded && rolesLoadedHook && templatesLoaded && definitionsLoaded;
 
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">
@@ -566,7 +582,7 @@ export default function ReporteFinalPage() {
                   <Textarea
                     placeholder="Ej: - TRASLADOS URBANOS 5"
                     value={statisticsText}
-                    onChange={(e) => setStatisticsText(e.target.value)}
+                    onChange={(e) => saveSettings({ finalReportStatistics: e.target.value })}
                     className="min-h-[200px] font-mono text-sm leading-relaxed"
                   />
                 </CardContent>
@@ -635,7 +651,7 @@ export default function ReporteFinalPage() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="text-[10px] font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded uppercase">
-                                    {format(n.date, 'dd/MM')} {n.time}
+                                    {format(new Date(n.date), 'dd/MM')} {n.time}
                                   </span>
                                 </div>
                                 <p className="text-sm leading-tight text-foreground/80">{n.text}</p>

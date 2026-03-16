@@ -63,7 +63,7 @@ export default function PlantillasPage() {
   const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
-  const [activeTab, setActiveTab] = useState('builder');
+  const [activeTab, setActiveTab] = useState('editor');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,29 +160,14 @@ export default function PlantillasPage() {
               </p>
             </div>
             <TabsList className="w-full sm:w-auto">
-              <TabsTrigger value="builder" className="flex-1 sm:flex-initial">
-                Constructor
-              </TabsTrigger>
               <TabsTrigger value="editor" className="flex-1 sm:flex-initial">
                 Gestionar
               </TabsTrigger>
+              <TabsTrigger value="builder" className="flex-1 sm:flex-initial">
+                Constructor
+              </TabsTrigger>
             </TabsList>
           </div>
-
-          <TabsContent
-            value="builder"
-            className="flex-1 h-full min-h-0 m-0 p-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
-          >
-            <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-4 sm:p-6 lg:p-8">
-              <TemplateBuilder
-                onOpenInfoDialog={() => setIsInfoDialogOpen(true)}
-                initialTemplate={editingTemplate}
-                onUpdate={handleUpdateTemplateContent}
-                onAdd={addTemplate}
-                onCancel={handleCancelEdit}
-              />
-            </div>
-          </TabsContent>
 
           <TabsContent
             value="editor"
@@ -380,6 +365,21 @@ export default function PlantillasPage() {
                   </Card>
                 )}
               </main>
+            </div>
+          </TabsContent>
+
+          <TabsContent
+            value="builder"
+            className="flex-1 h-full min-h-0 m-0 p-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
+          >
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-4 sm:p-6 lg:p-8">
+              <TemplateBuilder
+                onOpenInfoDialog={() => setIsInfoDialogOpen(true)}
+                initialTemplate={editingTemplate}
+                onUpdate={handleUpdateTemplateContent}
+                onAdd={addTemplate}
+                onCancel={handleCancelEdit}
+              />
             </div>
           </TabsContent>
         </Tabs>
