@@ -146,7 +146,7 @@ function PersonnelPageContent() {
 
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 w-full overflow-hidden bg-background">
+    <div className="flex-1 flex flex-col min-h-0 w-full overflow-hidden">
       <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-6 flex-1 flex flex-col min-h-0">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 shrink-0">
           <div>
@@ -210,25 +210,27 @@ function PersonnelPageContent() {
               </ScrollArea>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-hidden pr-2 -mr-2 flex flex-col">
-              <TabsContent value="personnel" className="mt-0 focus-visible:outline-none ring-offset-background data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col min-h-0 h-full">
+            <div className="flex-1 min-h-0 overflow-hidden pr-2 -mr-2 flex flex-col bg-transparent">
+              <TabsContent value="personnel" className="mt-0 focus-visible:outline-none ring-offset-background data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col min-h-0 h-full bg-transparent">
                 <Card className="border-none shadow-xl shadow-foreground/5 bg-card overflow-hidden flex-1 flex flex-col min-h-0 h-full">
-                  <CardContent className="p-0 sm:p-6 flex-1 min-h-0 overflow-auto">
-                    <PersonnelTable
-                      personnel={personnel}
-                      departments={departments}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onViewHistory={handleViewHistory}
-                      selectedIds={selectedIds}
-                      onSelectionChange={setSelectedIds}
-                    />
+                  <CardContent className="p-0 sm:p-6 flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <ScrollArea className="flex-1 pr-4 -mr-4" type="always">
+                      <PersonnelTable
+                        personnel={personnel}
+                        departments={departments}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onViewHistory={handleViewHistory}
+                        selectedIds={selectedIds}
+                        onSelectionChange={setSelectedIds}
+                      />
+                    </ScrollArea>
                   </CardContent>
                 </Card>
               </TabsContent>
 
-              <TabsContent value="structure" className="mt-0 focus-visible:outline-none data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col min-h-0 h-full">
-                <div className="flex-1 flex flex-col h-full min-h-0">
+              <TabsContent value="structure" className="mt-0 focus-visible:outline-none data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col min-h-0 h-full bg-transparent">
+                <div className="flex-1 flex flex-col h-full min-h-0 bg-transparent">
                   <StructureManager
                     roles={roles}
                     departments={departments}
@@ -241,7 +243,7 @@ function PersonnelPageContent() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="guards" className="mt-0 focus-visible:outline-none data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col min-h-0 h-full">
+              <TabsContent value="guards" className="mt-0 focus-visible:outline-none data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col min-h-0 h-full bg-transparent">
                 <div className="flex-1 flex flex-col h-full min-h-0">
                   <GuardAssignmentPanel
                     guards={guards}
@@ -252,7 +254,7 @@ function PersonnelPageContent() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="units" className="mt-0 focus-visible:outline-none data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col min-h-0 h-full">
+              <TabsContent value="units" className="mt-0 focus-visible:outline-none data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col min-h-0 h-full bg-transparent">
                 <div className="flex-1 flex flex-col h-full min-h-0">
                   <UnitsManager />
                 </div>

@@ -2,11 +2,13 @@
  * RxDB Database initialization and schema definitions
  */
 
-import { createRxDatabase, RxDatabase, RxCollection, addRxPlugin } from 'rxdb';
+import { createRxDatabase, removeRxDatabase, RxDatabase, RxCollection, addRxPlugin } from 'rxdb';
 import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration-schema';
 import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
 import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
+
+const DB_NAME = 'central_minutas_v1';
 
 // Types from our application
 import {
@@ -150,7 +152,7 @@ const ensureDevMode = async () => {
 };
 
 const createDatabase = async (): Promise<MinutasDatabase> => {
-  const name = 'central_minutas';
+  const name = DB_NAME;
   const state = getInternalState();
   
   // 1. Immediate check
@@ -186,6 +188,21 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
     state.allDatabases.set(name, database);
   } catch (err: any) {
     const rxErr = err as any;
+    
+    // Handle DB9: Settings mismatch (Common in Vercel Previews)
+    if (rxErr.code === 'DB9') {
+      logger.warn(`Settings mismatch [DB9] for [${name}]. Attempting automatic recovery...`);
+      try {
+        await removeRxDatabase(name, getRxStorageDexie());
+        logger.info(`Conflicting database [${name}] removed. Retrying initialization...`);
+        // Recursive retry
+        return createDatabase();
+      } catch (removeErr) {
+        logger.error(`Automatic recovery failed for [${name}]`, removeErr);
+        throw err;
+      }
+    }
+
     logger.error(`Failed to create RxDatabase [${name}]`, {
       message: err.message,
       code: rxErr.code,
@@ -382,7 +399,7 @@ const safeDestroy = async (db: any, name: string) => {
  */
 export const getDatabase = async (workspaceName: string = 'minutasdb'): Promise<MinutasDatabase> => {
   const state = getInternalState();
-  const dbName = 'central_minutas';
+  const dbName = DB_NAME;
 
   // Use a promise chain that catches errors to prevent the entire chain from breaking
   state.dbPromiseChain = state.dbPromiseChain.catch(() => {}).then(async () => {

@@ -142,7 +142,7 @@ export function StructureTree({
             <div className="rounded-xl border border-muted/30 bg-card overflow-hidden shadow-sm">
               <div className="flex items-center justify-between p-4 bg-muted/20 border-b">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-slate-100 text-slate-600">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
                     <Briefcase className="h-4 w-4" />
                   </div>
                   <div>
@@ -150,7 +150,7 @@ export function StructureTree({
                       <span className="font-bold text-sm">Cargos Globales</span>
                       <Badge variant="outline" className="text-[10px] uppercase font-bold py-0 h-4 border-muted-foreground/30">BASE</Badge>
                     </div>
-                    <p className="text-[10px] text-muted-foreground italic">Visibles institucionalmente</p>
+                    <p className="text-[10px] text-muted-foreground">Visibles institucionalmente</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 ml-auto">
@@ -176,7 +176,7 @@ export function StructureTree({
                   />
                 ))}
                 {globalRoles.length === 0 && (
-                  <div className="p-8 text-center text-xs text-muted-foreground italic">
+                  <div className="p-8 text-center text-xs text-muted-foreground">
                     Sin cargos globales definidos.
                   </div>
                 )}
@@ -247,7 +247,7 @@ export function StructureTree({
                         />
                       ))}
                       {dept.roles.length === 0 && (
-                        <div className="p-8 text-center text-xs text-muted-foreground italic bg-muted/5">
+                        <div className="p-8 text-center text-xs text-muted-foreground bg-muted/5">
                           Sin cargos asignados.
                         </div>
                       )}
@@ -348,7 +348,7 @@ function RoleRow({
   return (
     <div className="flex items-center justify-between p-3.5 px-5 hover:bg-muted/10 transition-colors group">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="p-1.5 rounded-full bg-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+        <div className="p-1.5 rounded-full bg-primary/5 text-primary group-hover:bg-primary/10 transition-colors">
           <User className="h-3.5 w-3.5" />
         </div>
         <span className="text-sm font-medium truncate" title={role.name}>

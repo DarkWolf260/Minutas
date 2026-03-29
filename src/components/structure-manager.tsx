@@ -139,15 +139,6 @@ export function StructureManager({
 
   return (
     <div className="flex-1 flex flex-col min-h-0 h-full">
-      <TabsContent value="personnel" className="mt-0 focus-visible:outline-none ring-offset-background data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col min-h-0 h-full">
-        <Card className="border-none shadow-xl shadow-foreground/5 bg-card overflow-hidden flex-1 flex flex-col min-h-0 h-full">
-          <CardContent className="p-0 sm:p-6 flex-1 min-h-0 flex flex-col overflow-hidden">
-            <ScrollArea className="flex-1 pr-4 -mr-4" type="always">
-              {/* PersonnelTable component would go here */}
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      </TabsContent>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch flex-1 min-h-0">
         {/* Left Column: Hierarchical Tree View (Dynamic Management) */}
         <div className="lg:col-span-8 flex flex-col min-h-0">

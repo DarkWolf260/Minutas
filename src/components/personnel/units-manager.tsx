@@ -58,121 +58,126 @@ export function UnitsManager() {
   }
 
   return (
-    <Card className="border-none shadow-xl shadow-foreground/5 bg-card overflow-hidden">
-      <CardHeader className="pb-4">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 rounded-lg bg-primary/10 text-primary">
-            <Car className="h-5 w-5" />
-          </div>
-          <div>
-            <CardTitle className="text-xl">Gestión de Unidades</CardTitle>
-            <CardDescription>
-              Administra la flota de vehículos operativos disponibles para las guardias.
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-          {/* Form Side */}
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">
-                Añadir Nueva Unidad
-              </Label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Ej: Alpha 3, Moto 12..."
-                  value={newUnitName}
-                  onChange={(e) => setNewUnitName(e.target.value)}
-                  className="h-10 bg-muted/5 focus:bg-background transition-all"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddUnit();
-                    }
-                  }}
-                />
-                <Button 
-                  type="button" 
-                  onClick={handleAddUnit}
-                  className="h-10 px-4 gap-2"
-                >
-                  <PlusCircle className="h-4 w-4" />
-                  <span>Añadir</span>
-                </Button>
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-2 px-1 italic">
-                Presiona Enter o el botón para registrar la unidad en el borrador.
-              </p>
+    <div className="flex-1 flex flex-col min-h-0 h-full">
+      <Card className="border-muted/50 bg-background shadow-sm overflow-hidden flex-1 flex flex-col min-h-0 h-full">
+        <CardHeader className="pb-4 bg-muted/5 border-b">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              <Car className="h-5 w-5" />
+            </div>
+            <div>
+              <CardTitle className="text-xl font-bold text-primary">Gestión de Unidades</CardTitle>
+              <CardDescription className="text-xs">
+                Administra la flota de vehículos operativos para las guardias.
+              </CardDescription>
             </div>
           </div>
-
-          {/* List Side */}
-          <div className="space-y-4">
-            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1 flex justify-between items-center">
-              <span>Unidades Registradas</span>
-              <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                {localUnits.length} total
-              </span>
-            </Label>
-            
-            <div className="h-[400px] border rounded-xl overflow-hidden bg-muted/5">
-              <ScrollArea className="h-full w-full" type="always">
-                <div className="p-3 space-y-2">
-                  {localUnits.length > 0 ? (
-                    localUnits.map((unit) => (
-                      <div
-                        key={unit}
-                        className="flex items-center justify-between rounded-lg px-4 py-3 bg-card border border-transparent hover:border-primary/20 hover:bg-muted/10 transition-all group shadow-sm"
+        </CardHeader>
+        <CardContent className="p-0 flex-1 min-h-0 flex flex-col overflow-hidden">
+          <ScrollArea className="flex-1" type="always">
+            <div className="p-8 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+                {/* Form Side */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1">
+                      Añadir Nueva Unidad
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Ej: Alpha 3, Moto 12..."
+                        value={newUnitName}
+                        onChange={(e) => setNewUnitName(e.target.value)}
+                        className="h-10 bg-muted/5 focus:bg-background transition-all"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddUnit();
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleAddUnit}
+                        className="h-10 px-4 gap-2"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="h-2 w-2 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                          <span className="text-sm font-medium">{unit}</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                          onClick={() => handleRemoveUnit(unit)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))
-                  ) : (
+                        <PlusCircle className="h-4 w-4" />
+                        <span>Añadir</span>
+                      </Button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-2 px-1">
+                      Presiona Enter para registrar la unidad en el borrador.
+                    </p>
+                  </div>
+                </div>
+
+                {/* List Side */}
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1 flex justify-between items-center">
+                    <span>Unidades Registradas</span>
+                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                      {localUnits.length} total
+                    </span>
+                  </Label>
+
+                  <div className="h-[400px] border rounded-xl overflow-hidden bg-muted/5 shadow-inner">
+                    <ScrollArea className="h-full w-full" type="always">
+                      <div className="p-3 space-y-2">
+                        {localUnits.length > 0 ? (
+                          localUnits.map((unit) => (
+                            <div
+                              key={unit}
+                              className="flex items-center justify-between rounded-lg px-4 py-3 bg-card border border-transparent hover:border-primary/20 hover:bg-muted/10 transition-all group"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="h-2 w-2 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+                                <span className="text-sm font-medium">{unit}</span>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                                onClick={() => handleRemoveUnit(unit)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))
+                        ) : (
                     <div className="py-12 flex flex-col items-center justify-center text-muted-foreground">
                       <Car className="h-8 w-8 mb-4 opacity-20" />
                       <p className="text-xs font-medium">No hay unidades configuradas</p>
-                      <p className="text-[10px] mt-1">Empieza añadiendo una unidad a la izquierda</p>
                     </div>
-                  )}
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </div>
                 </div>
-              </ScrollArea>
+              </div>
             </div>
-          </div>
-        </div>
+          </ScrollArea>
 
-        <div className="flex justify-end pt-4 border-t">
-          <Button 
-            onClick={handleSave} 
-            disabled={isSaving || units.join(',') === localUnits.join(',')}
-            className="gap-2 shadow-lg shadow-primary/20"
-          >
-            {isSaving ? (
-              <span className="flex items-center gap-2">
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Guardando...
-              </span>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                <span>Guardar Cambios</span>
-              </>
-            )}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="flex justify-end p-6 border-t bg-muted/5">
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || units.join(',') === localUnits.join(',')}
+              className="gap-2 shadow-lg shadow-primary/20 h-11 px-6 font-bold"
+            >
+              {isSaving ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Guardando...
+                </span>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  <span>Guardar Cambios</span>
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
