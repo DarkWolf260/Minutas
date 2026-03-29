@@ -210,7 +210,10 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
         throw new Error(`Error fatal de base de datos (DB9): No se pudo sincronizar la configuración. Por favor, reinicie la aplicación.`);
       }
 
-      logger.warn(`Settings mismatch [DB9] for [${name}]. Recovery attempt ${state.retryCount}/3...`);
+      logger.warn(`Settings mismatch [DB9] for [${name}]. Recovery attempt ${state.retryCount}/3...`, {
+        parameters: rxErr.parameters,
+        message: rxErr.message
+      });
       try {
         await removeRxDatabase(name, getRxStorageDexie());
         logger.info(`Conflicting database [${name}] removed. Waiting to retry...`);
