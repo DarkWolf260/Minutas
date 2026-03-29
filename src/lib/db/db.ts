@@ -8,7 +8,11 @@ import { RxDBMigrationPlugin } from 'rxdb/plugins/migration-schema';
 import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
 import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
 
-const DB_NAME = 'central_minutas_v1';
+const DB_NAME = 'central_minutas_v2_resync';
+
+/**
+ * Internal state tracking to prevent multiple initialization attempts.
+ */
 
 // Types from our application
 import {
@@ -398,6 +402,7 @@ const safeDestroy = async (db: any, name: string) => {
  * Serialized getter for the database.
  */
 export const getDatabase = async (workspaceName: string = 'minutasdb'): Promise<MinutasDatabase> => {
+  console.log('--- DB v2_resync Initializing ---');
   const state = getInternalState();
   const dbName = DB_NAME;
 

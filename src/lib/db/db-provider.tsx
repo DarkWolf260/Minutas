@@ -55,7 +55,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
         if (!mounted) return;
 
         // Initialize central database once
-        const database = await getDatabase('central_minutas');
+        const database = await getDatabase();
         
         if (mounted) {
           await migrateData(database);
