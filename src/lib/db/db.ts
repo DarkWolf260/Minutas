@@ -3,7 +3,9 @@
  */
 
 import { createRxDatabase, removeRxDatabase, RxDatabase, RxCollection, addRxPlugin } from 'rxdb';
+export { removeRxDatabase };
 import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
+export { getRxStorageDexie };
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration-schema';
 import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
 import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
@@ -125,6 +127,7 @@ interface RxDBInternalState {
   dbPromiseChain: Promise<any>;
   isDevModePluginAdded: boolean;
   allDatabases: Map<string, any>;
+  retryCount: number;
 }
 
 const getInternalState = (): RxDBInternalState => {
@@ -134,7 +137,8 @@ const getInternalState = (): RxDBInternalState => {
       activeDatabaseName: null,
       dbPromiseChain: Promise.resolve(),
       isDevModePluginAdded: false,
-      allDatabases: new Map<string, any>() // name -> instance
+      allDatabases: new Map<string, any>(), // name -> instance
+      retryCount: 0
     } as RxDBInternalState;
   }
   return _global.__rxdb_singleton;
@@ -175,15 +179,18 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
     return existingAfterDev;
   }
   
-  logger.info(`Creating central database instance: [${name}]`);
+  logger.info(`Creating central database instance: [${name}] (Attempt: ${state.retryCount + 1})`);
   let database: MinutasDatabase;
+  
+  // Potential fallback: Skip validation if we've already failed once
+  const useValidation = state.retryCount < 2;
   
   try {
     database = await createRxDatabase<MinutasDatabaseCollections>({
       name: name,
-      storage: wrappedValidateAjvStorage({
-        storage: getRxStorageDexie(),
-      }),
+      storage: useValidation 
+        ? wrappedValidateAjvStorage({ storage: getRxStorageDexie() })
+        : getRxStorageDexie(),
       closeDuplicates: true,
       ignoreDuplicate: true, // Crucial for development / HMR
     });
@@ -195,18 +202,31 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
     
     // Handle DB9: Settings mismatch (Common in Vercel Previews)
     if (rxErr.code === 'DB9') {
-      logger.warn(`Settings mismatch [DB9] for [${name}]. Attempting automatic recovery...`);
+      state.retryCount++;
+      
+      if (state.retryCount > 3) {
+        logger.error(`FATAL: Database [${name}] failed to recover after ${state.retryCount} attempts. Stop.`);
+        state.retryCount = 0; // Reset for next global mount if needed
+        throw new Error(`Error fatal de base de datos (DB9): No se pudo sincronizar la configuración. Por favor, reinicie la aplicación.`);
+      }
+
+      logger.warn(`Settings mismatch [DB9] for [${name}]. Recovery attempt ${state.retryCount}/3...`);
       try {
         await removeRxDatabase(name, getRxStorageDexie());
-        logger.info(`Conflicting database [${name}] removed. Retrying initialization...`);
-        // Recursive retry
+        logger.info(`Conflicting database [${name}] removed. Waiting to retry...`);
+        
+        // Safety delay to let IndexedDB settle
+        await new Promise(resolve => setTimeout(resolve, 250));
+        
         return createDatabase();
       } catch (removeErr) {
-        logger.error(`Automatic recovery failed for [${name}]`, removeErr);
+        logger.error(`Automatic recovery failed for [${name}] during removal`, removeErr);
+        state.retryCount = 0;
         throw err;
       }
     }
 
+    state.retryCount = 0; // Success or non-DB9 error, reset count
     logger.error(`Failed to create RxDatabase [${name}]`, {
       message: err.message,
       code: rxErr.code,
