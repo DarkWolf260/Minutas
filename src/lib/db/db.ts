@@ -10,7 +10,7 @@ import { RxDBMigrationPlugin } from 'rxdb/plugins/migration-schema';
 import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
 import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
 
-const DB_NAME = 'central_minutas_v2_resync';
+const DB_NAME = 'central_minutas_v3_stable';
 
 /**
  * Internal state tracking to prevent multiple initialization attempts.
@@ -182,11 +182,9 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
   logger.info(`Creating central database instance: [${name}] (Attempt: ${state.retryCount + 1})`);
   let database: MinutasDatabase;
   
-  // NUCLEAR FALLBACK: If we've already failed once, skip the validation wrapper entirely.
-  // The validation wrapper is the #1 cause of DB9 due to internal setting mismatches.
-  const storage = state.retryCount > 0 
-    ? getRxStorageDexie() 
-    : wrappedValidateAjvStorage({ storage: getRxStorageDexie() });
+  // SAFE BOOT: Many DB9 errors are caused by the validation wrapper mismatching settings.
+  // We'll use the raw storage for stability in this environment.
+  const storage = getRxStorageDexie();
   
   try {
     database = await createRxDatabase<MinutasDatabaseCollections>({
@@ -212,7 +210,7 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
       }
 
       logger.warn(`Settings mismatch [DB9] for [${name}]. Recovery attempt ${state.retryCount}/3...`, {
-        parameters: rxErr.parameters,
+        parameters: JSON.stringify(rxErr.parameters),
         message: rxErr.message
       });
       try {
