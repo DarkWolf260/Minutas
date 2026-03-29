@@ -39,26 +39,11 @@ import { useSettings } from './use-settings';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { TemplateSchema } from '@/lib/validations/schemas';
 import { logger } from '@/lib/logger';
+import { stableStringify } from '@/lib/utils';
 const getUserFriendlyErrorMessage = (error: any) => {
   if (error?.message) return error.message;
   return 'Error desconocido';
 };
-
-/**
- * Stable stringify that sorts object keys recursively
- */
-function stableStringify(obj: any): string {
-  if (obj === null || typeof obj !== 'object') {
-    return JSON.stringify(obj);
-  }
-
-  if (Array.isArray(obj)) {
-    return '[' + obj.map(stableStringify).join(',') + ']';
-  }
-
-  const keys = Object.keys(obj).sort();
-  return '{' + keys.map(k => `${JSON.stringify(k)}:${stableStringify(obj[k])}`).join(',') + '}';
-}
 
 export function useTemplates() {
   const db = useDatabase();

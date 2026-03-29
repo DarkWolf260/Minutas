@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 import { parseTemplate } from '@/lib/template-parser';
@@ -317,77 +318,79 @@ export function TemplateBuilder({
                         <Plus className="h-3 w-3 mr-1" /> Nueva Regla
                       </Button>
                     </div>
-                    <div className="space-y-1 max-h-40 overflow-y-auto">
-                      {statisticsRules.length === 0 && (
-                        <p className="text-xs text-center text-muted-foreground py-2">Sin reglas.</p>
-                      )}
-                      {statisticsRules.map((rule, idx) => (
-                        <div
-                          key={idx}
-                          className="flex gap-1 items-center bg-background p-1.5 rounded border"
-                        >
-                          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-1 items-center flex-1 min-w-0">
-                            <Select
-                              value={rule.fieldId}
-                              onValueChange={(val) => {
-                                setStatisticsRules(prev => prev.map((r, i) =>
-                                  i === idx ? { ...r, fieldId: val } : r
-                                ));
-                              }}
-                            >
-                              <SelectTrigger className="h-7 text-[10px] sm:text-xs">
-                                <SelectValue placeholder="Campo" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {availableFields.map((f) => (
-                                  <SelectItem key={f} value={f}>
-                                    {f}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <div className="flex items-center gap-1">
-                              <span className="text-[10px] font-bold">=</span>
-                              <Input
-                                className="h-7 text-[10px] sm:text-xs min-w-0 flex-1"
-                                placeholder="Valor"
-                                value={rule.condition}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setStatisticsRules(prev => prev.map((r, i) =>
-                                    i === idx ? { ...r, condition: val } : r
-                                  ));
-                                }}
-                              />
-                            </div>
-                            <div className="flex items-center gap-1 col-span-2 sm:flex-1">
-                              <span className="text-[10px]">→</span>
-                              <Input
-                                className="h-7 text-[10px] sm:text-xs min-w-0 flex-1"
-                                placeholder="Categoría"
-                                value={rule.category}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setStatisticsRules(prev => prev.map((r, i) =>
-                                    i === idx ? { ...r, category: val } : r
-                                  ));
-                                }}
-                              />
-                            </div>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0"
-                            onClick={() =>
-                              setStatisticsRules(statisticsRules.filter((_, i) => i !== idx))
-                            }
+                    <ScrollArea className="max-h-40 w-full" type="always">
+                      <div className="space-y-1 p-1">
+                        {statisticsRules.length === 0 && (
+                          <p className="text-xs text-center text-muted-foreground py-2">Sin reglas.</p>
+                        )}
+                        {statisticsRules.map((rule, idx) => (
+                          <div
+                            key={idx}
+                            className="flex gap-1 items-center bg-background p-1.5 rounded border"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
+                            <div className="grid grid-cols-2 sm:flex sm:flex-row gap-1 items-center flex-1 min-w-0">
+                              <Select
+                                value={rule.fieldId}
+                                onValueChange={(val) => {
+                                  setStatisticsRules(prev => prev.map((r, i) =>
+                                    i === idx ? { ...r, fieldId: val } : r
+                                  ));
+                                }}
+                              >
+                                <SelectTrigger className="h-7 text-[10px] sm:text-xs">
+                                  <SelectValue placeholder="Campo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {availableFields.map((f) => (
+                                    <SelectItem key={f} value={f}>
+                                      {f}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[10px] font-bold">=</span>
+                                <Input
+                                  className="h-7 text-[10px] sm:text-xs min-w-0 flex-1"
+                                  placeholder="Valor"
+                                  value={rule.condition}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setStatisticsRules(prev => prev.map((r, i) =>
+                                      i === idx ? { ...r, condition: val } : r
+                                    ));
+                                  }}
+                                />
+                              </div>
+                              <div className="flex items-center gap-1 col-span-2 sm:flex-1">
+                                <span className="text-[10px]">→</span>
+                                <Input
+                                  className="h-7 text-[10px] sm:text-xs min-w-0 flex-1"
+                                  placeholder="Categoría"
+                                  value={rule.category}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setStatisticsRules(prev => prev.map((r, i) =>
+                                      i === idx ? { ...r, category: val } : r
+                                    ));
+                                  }}
+                                />
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0"
+                              onClick={() =>
+                                setStatisticsRules(statisticsRules.filter((_, i) => i !== idx))
+                              }
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
                   </div>
                 )}
               </div>
@@ -429,17 +432,19 @@ export function TemplateBuilder({
             </div>
           </CardHeader>
           <CardContent className="flex-1 p-0 overflow-hidden relative">
-            <div className="absolute inset-0 overflow-auto p-4">
-              <div className="max-w-3xl mx-auto">
-                <ReportForm
-                  ref={formRef}
-                  template={previewTemplate}
-                  config={previewConfig}
-                  onSubmit={() => { }}
-                  disabled={false}
-                />
+            <ScrollArea className="absolute inset-0" type="always">
+              <div className="p-4">
+                <div className="max-w-3xl mx-auto">
+                  <ReportForm
+                    ref={formRef}
+                    template={previewTemplate}
+                    config={previewConfig}
+                    onSubmit={() => { }}
+                    disabled={false}
+                  />
+                </div>
               </div>
-            </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       </div>
@@ -465,17 +470,21 @@ export function TemplateBuilder({
       </div>
 
       <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
-          <DialogHeader>
+        <DialogContent className="max-w-3xl max-h-[80vh] p-0 flex flex-col overflow-hidden">
+          <DialogHeader className="p-6 pb-2">
             <DialogTitle>Vista Previa del Reporte</DialogTitle>
             <DialogDescription>
               Esta es una representación de cómo se verá el reporte final con el contenido actual.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-1 overflow-auto bg-muted/20 p-4 rounded-md border mt-2">
-            <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed">
-              {previewReportContent}
-            </pre>
+          <div className="flex-1 min-h-0 bg-muted/20 border-t">
+            <ScrollArea className="h-full w-full" type="always">
+              <div className="p-6">
+                <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed">
+                  {previewReportContent}
+                </pre>
+              </div>
+            </ScrollArea>
           </div>
         </DialogContent>
       </Dialog>

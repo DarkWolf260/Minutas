@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { useState, useEffect, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Trash2, Plus, Clock, StickyNote, Copy, CheckIcon, Eye, Save, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,9 @@ import { usePersonnel } from '@/hooks/use-personnel';
 import { useRoles } from '@/hooks/use-roles';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useSettings } from '@/hooks/use-settings';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { compareRanks } from '@/lib/utils';
 import { StaffListEditor } from './guard-staff-editor';
 import {
@@ -88,15 +91,16 @@ const DEFAULT_NOTES: Note[] = [
 interface OrdenDelDiaFormProps {
   selectedGuard: string;
   initialData: Staff | undefined;
+  periodo: string;
 }
 
-export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormProps) {
-  const { definitions } = useFieldDefinitions();
+export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDelDiaFormProps>(
+  ({ selectedGuard, initialData, periodo }, ref) => {
+    const { definitions } = useFieldDefinitions();
   const { roles, isLoaded: rolesLoaded } = useRoles();
   const isMobile = useIsMobile();
   const { settings, saveSettings, isLoaded: isSettingsLoaded } = useSettings();
   const { personnel, isLoaded: personnelLoaded } = usePersonnel();
-  const [periodo, setPeriodo] = useState('');
   const [staff, setStaff] = useState<Staff>({});
 
   const [activities, setActivities] = useState<Activity[]>(DEFAULT_ACTIVITIES);
@@ -139,21 +143,6 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
     });
     return settings;
   }, [definitions]);
-
-  useEffect(() => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const formatDate = (date: Date) => {
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
-    };
-
-    setPeriodo(`${formatDate(today)} AL ${formatDate(tomorrow)}`);
-  }, []);
 
   useEffect(() => {
     if (lastInitializedGuard.current === selectedGuard) return;
@@ -259,12 +248,16 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
   };
 
   const handleRestoreDefaults = () => {
+    // Explicitly clear the draft so it's not re-loaded by the initialization effect
+    saveSettings({
+      ...settings,
+      ordenDelDiaDraft: undefined
+    });
+    
     setActivities(DEFAULT_ACTIVITIES);
     setNotes(DEFAULT_NOTES);
-    // Clearing draft part is handled by the auto-save effect picking up these changes,
-    // but we can also just reset the staff if needed. 
-    // Usually user wants to reset everything.
-    lastInitializedGuard.current = null; // Trigger re-init
+    lastInitializedGuard.current = null; // Trigger re-init for staff if needed
+    toast.success('Valores restaurados por defecto');
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -486,6 +479,10 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
     setIsSnapshotSaved(false);
   };
 
+  useImperativeHandle(ref, () => ({
+    generateOrder: handleGenerateOrder,
+  }));
+
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(generatedOrder);
     setCopyButtonText('¡Copiado!');
@@ -495,214 +492,204 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
 
   return (
     <div>
-      <div className="space-y-6 pt-4 max-h-[70vh] overflow-y-auto pr-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
-              Grupo de Guardia
-            </Label>
-            <Input readOnly value={`“${selectedGuard}”`} className="bg-muted/50" />
-          </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="periodo"
-              className="text-xs uppercase font-bold text-muted-foreground tracking-wider"
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 pb-2">
+          <Card className="shadow-sm flex flex-col h-[650px] 2xl:h-[750px] transition-all overflow-hidden">
+            <CardHeader className="pb-3 shrink-0">
+              <CardTitle className="text-base uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                Distribución de Personal
+              </CardTitle>
+            </CardHeader>
+            <ScrollArea className="flex-1 p-4 pt-0" type="always">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
             >
-              Periodo
-            </Label>
-            <Input
-              id="periodo"
-              value={periodo}
-              onChange={(e) => setPeriodo(e.target.value)}
-              className="bg-background"
-            />
-          </div>
-        </div>
-
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="space-y-4">
-            {roles
-              .filter((r: StaffRole) => !r.isHidden)
-              .map((role: StaffRole) => (
-                <StaffListEditor
-                  key={role.name}
-                  label={role.name}
-                  staffMembers={staff[role.name] || []}
-                  isSingle={role.isSingle}
-                  onUpdate={(members) => handleRoleStaffUpdate(role.name, members)}
-                  showObservations={true}
-                />
-              ))}
-          </div>
-          <DragOverlay
-            dropAnimation={{
-              sideEffects: defaultDropAnimationSideEffects({
-                styles: {
-                  active: {
-                    opacity: '0.4',
-                  },
-                },
-              }),
-            }}
-          >
-            {activeId && activeMember ? (
-              <div className="flex items-center justify-between p-3 pl-4 bg-background border rounded-lg shadow-xl ring-2 ring-primary/20">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="text-muted-foreground shrink-0 cursor-grabbing p-1.5">
-                    <GripVertical className="h-4 w-4" />
+              <div className="grid grid-cols-1 gap-4">
+                {roles
+                  .filter((r: StaffRole) => !r.isHidden)
+                  .map((role: StaffRole) => (
+                    <StaffListEditor
+                      key={role.name}
+                      label={role.name}
+                      staffMembers={staff[role.name] || []}
+                      isSingle={role.isSingle}
+                      onUpdate={(members) => handleRoleStaffUpdate(role.name, members)}
+                      showObservations={true}
+                    />
+                  ))}
+              </div>
+              <DragOverlay
+                dropAnimation={{
+                  sideEffects: defaultDropAnimationSideEffects({
+                    styles: {
+                      active: {
+                        opacity: '0.4',
+                      },
+                    },
+                  }),
+                }}
+              >
+                {activeId && activeMember ? (
+                  <div className="flex items-center justify-between p-3 pl-4 bg-background border rounded-lg shadow-xl ring-2 ring-primary/20">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="text-muted-foreground shrink-0 cursor-grabbing p-1.5">
+                        <GripVertical className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-sm text-foreground/90 truncate">
+                          {activeMember.name}
+                        </p>
+                        <p className="text-[10px] font-mono text-muted-foreground/70 tracking-tighter uppercase">
+                          {activeMember.cedula || 'SIN CÉDULA'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-sm text-foreground/90 truncate">
-                      {activeMember.name}
-                    </p>
-                    <p className="text-[10px] font-mono text-muted-foreground/70 tracking-tighter uppercase">
-                      {activeMember.cedula || 'SIN CÉDULA'}
-                    </p>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+            </ScrollArea>
+          </Card>
+
+          {/* ACTIVIDADES DEL DÍA */}
+          <Card className="shadow-sm flex flex-col h-[650px] 2xl:h-[750px] transition-all overflow-hidden">
+            <CardHeader className="pb-3 border-b shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-primary" />
+                    <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
+                      Actividades del Día
+                    </CardTitle>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-[10px] uppercase font-bold text-primary hover:text-primary hover:bg-primary/10"
+                      onClick={handleRestoreDefaults}
+                    >
+                      Restaurar
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-[10px] uppercase font-bold"
+                      onClick={handleAddActivity}
+                    >
+                      <Plus className="h-3 w-3 mr-1" /> Añadir
+                    </Button>
                   </div>
                 </div>
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+              </CardHeader>
+              <ScrollArea className="pt-4 flex-1" type="always">
+                <div className="space-y-3 px-4">
+                  {activities.length === 0 && (
+                    <p className="text-xs text-center text-muted-foreground py-4 border-2 border-dashed rounded-lg bg-muted/5">
+                      No hay actividades registradas.
+                    </p>
+                  )}
+                  {activities.map((activity) => (
+                    <div key={activity.id} className="flex gap-2 items-start animate-in fade-in slide-in-from-top-1 duration-200">
+                      <Textarea
+                        className="flex-1 min-h-[40px] text-xs font-mono py-2 bg-background resize-none scrollbar-none"
+                        placeholder="Descripción de la actividad..."
+                        value={activity.content}
+                        rows={1}
+                        onChange={(e) => {
+                          handleUpdateActivity(activity.id, e.target.value);
+                          // Auto-resize
+                          e.target.style.height = 'auto';
+                          e.target.style.height = `${e.target.scrollHeight}px`;
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.height = 'auto';
+                          e.target.style.height = `${e.target.scrollHeight}px`;
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-muted-foreground hover:text-destructive shrink-0"
+                        onClick={() => handleRemoveActivity(activity.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+          </Card>
 
-        {/* ACTIVIDADES DEL DÍA */}
-        <div className="space-y-4 pt-4 border-t">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
-              <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
-                Actividades del Día
-              </Label>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 text-[10px] uppercase font-bold text-primary hover:text-primary hover:bg-primary/10"
-                onClick={handleRestoreDefaults}
-              >
-                Restaurar Defaults
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 text-[10px] uppercase font-bold"
-                onClick={handleAddActivity}
-              >
-                <Plus className="h-3 w-3 mr-1" /> Añadir Actividad
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-3">
-            {activities.length === 0 && (
-              <p className="text-xs text-center text-muted-foreground py-4 border-2 border-dashed rounded-lg bg-muted/5">
-                No hay actividades registradas.
-              </p>
-            )}
-            {activities.map((activity) => (
-              <div key={activity.id} className="flex gap-2 items-start animate-in fade-in slide-in-from-top-1 duration-200">
-                <Textarea
-                  className="flex-1 min-h-[40px] text-xs font-mono py-2 bg-background resize-none scrollbar-none"
-                  placeholder="Descripción de la actividad..."
-                  value={activity.content}
-                  rows={1}
-                  onChange={(e) => {
-                    handleUpdateActivity(activity.id, e.target.value);
-                    // Auto-resize
-                    e.target.style.height = 'auto';
-                    e.target.style.height = `${e.target.scrollHeight}px`;
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.height = 'auto';
-                    e.target.style.height = `${e.target.scrollHeight}px`;
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 text-muted-foreground hover:text-destructive shrink-0"
-                  onClick={() => handleRemoveActivity(activity.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* NOTAS ADICIONALES */}
-        <div className="space-y-4 pt-4 border-t">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <StickyNote className="h-4 w-4 text-primary" />
-              <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
-                Notas Administrativas
-              </Label>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 text-[10px] uppercase font-bold"
-                onClick={handleAddNote}
-              >
-                <Plus className="h-3 w-3 mr-1" /> Añadir Nota
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-3">
-            {notes.length === 0 && (
-              <p className="text-xs text-center text-muted-foreground py-4 border-2 border-dashed rounded-lg bg-muted/5">
-                No hay notas registradas.
-              </p>
-            )}
-            {notes.map((note) => (
-              <div key={note.id} className="flex gap-2 items-start animate-in fade-in slide-in-from-top-1 duration-200">
-                <Textarea
-                  className="flex-1 min-h-[40px] text-xs font-mono py-2 bg-background resize-none scrollbar-none"
-                  placeholder="Contenido de la nota..."
-                  value={note.content}
-                  rows={1}
-                  onChange={(e) => {
-                    handleUpdateNote(note.id, e.target.value);
-                    e.target.style.height = 'auto';
-                    e.target.style.height = `${e.target.scrollHeight}px`;
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.height = 'auto';
-                    e.target.style.height = `${e.target.scrollHeight}px`;
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 text-muted-foreground hover:text-destructive shrink-0"
-                  onClick={() => handleRemoveNote(note.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
+          {/* NOTAS ADICIONALES */}
+          <Card className="shadow-sm flex flex-col h-[650px] 2xl:h-[750px] transition-all overflow-hidden">
+            <CardHeader className="pb-3 border-b shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <StickyNote className="h-4 w-4 text-primary" />
+                    <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
+                      Notas Adm.
+                    </CardTitle>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-[10px] uppercase font-bold"
+                      onClick={handleAddNote}
+                    >
+                      <Plus className="h-3 w-3 mr-1" /> Añadir
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <ScrollArea className="pt-4 flex-1" type="always">
+                <div className="space-y-3 px-4">
+                  {notes.length === 0 && (
+                    <p className="text-xs text-center text-muted-foreground py-4 border-2 border-dashed rounded-lg bg-muted/5">
+                      No hay notas registradas.
+                    </p>
+                  )}
+                  {notes.map((note) => (
+                    <div key={note.id} className="flex gap-2 items-start animate-in fade-in slide-in-from-top-1 duration-200">
+                      <Textarea
+                        className="flex-1 min-h-[40px] text-xs font-mono py-2 bg-background resize-none scrollbar-none"
+                        placeholder="Contenido de la nota..."
+                        value={note.content}
+                        rows={1}
+                        onChange={(e) => {
+                          handleUpdateNote(note.id, e.target.value);
+                          e.target.style.height = 'auto';
+                          e.target.style.height = `${e.target.scrollHeight}px`;
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.height = 'auto';
+                          e.target.style.height = `${e.target.scrollHeight}px`;
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-muted-foreground hover:text-destructive shrink-0"
+                        onClick={() => handleRemoveNote(note.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+          </Card>
         </div>
       </div>
-      <div className="flex justify-end pt-6">
-        <Button onClick={handleGenerateOrder} className="gap-2">
-          <Eye className="h-4 w-4" />
-          Generar Orden del Día
-        </Button>
-      </div>
-
+      
       {/* Resultado - Responsive */}
       {isMobile ? (
         <Sheet open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
@@ -713,12 +700,12 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
                 Revisa la orden generada. Puedes copiar el texto para usarlo donde necesites.
               </SheetDescription>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto mt-4 px-1">
-              <Textarea
-                readOnly
-                value={generatedOrder}
-                className="w-full h-full min-h-[60vh] bg-muted/50 font-mono text-xs whitespace-pre-wrap rounded-lg p-3"
-              />
+            <div className="flex-1 min-h-0 mt-4 border rounded-md bg-muted/50 overflow-hidden">
+              <ScrollArea className="h-full w-full" type="always">
+                <div className="p-4 font-mono text-xs whitespace-pre-wrap leading-relaxed">
+                  {generatedOrder}
+                </div>
+              </ScrollArea>
             </div>
             <SheetFooter className="mt-4 flex flex-col gap-2">
               <Button
@@ -736,7 +723,7 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
                 asChild
                 className="w-full"
               >
-                <Link href="/reporte-final">
+                <Link to="/reporte-final">
                   Ir a Reporte Final
                 </Link>
               </Button>
@@ -760,21 +747,21 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
         </Sheet>
       ) : (
         <Dialog open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
-          <DialogContent className="max-h-[90vh] max-w-[90vw] sm:max-w-3xl flex flex-col">
-            <DialogHeader>
+          <DialogContent className="max-h-[90vh] max-w-[90vw] sm:max-w-3xl flex flex-col p-6">
+            <DialogHeader className="pb-4">
               <DialogTitle>Orden del Día Generada</DialogTitle>
               <DialogDescription>
                 Revisa la orden generada. Puedes copiar el texto para usarlo donde necesites o guardarlo para el reporte final.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex-1 overflow-y-auto -mx-6 px-6">
-              <Textarea
-                readOnly
-                value={generatedOrder}
-                className="w-full h-full min-h-[50vh] bg-muted/50 font-mono text-xs whitespace-pre-wrap rounded-lg p-4"
-              />
+            <div className="flex-1 min-h-0 border rounded-md bg-muted/50 overflow-hidden">
+              <ScrollArea className="h-full w-full" type="always">
+                <div className="p-6 font-mono text-xs whitespace-pre-wrap leading-relaxed">
+                  {generatedOrder}
+                </div>
+              </ScrollArea>
             </div>
-            <DialogFooter className="mt-auto pt-4 flex-wrap gap-2">
+            <DialogFooter className="mt-auto pt-6 flex-wrap gap-2">
               <div className="flex-1 flex gap-2 flex-wrap sm:flex-nowrap">
                 <Button
                   type="button"
@@ -791,16 +778,16 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
                   asChild
                   className="flex-1 sm:flex-none"
                 >
-                  <Link href="/reporte-final">
+                  <Link to="/reporte-final">
                     Ir a Reporte Final
                   </Link>
                 </Button>
               </div>
-              <Button type="button" onClick={handleCopyToClipboard} className="w-full sm:w-auto">
+              <Button type="button" onClick={handleCopyToClipboard} className="w-full sm:w-auto gap-2">
                 {copyButtonText === 'Copiar' ? (
-                  <Copy className="mr-2 h-4 w-4" />
+                  <Copy className="h-4 w-4" />
                 ) : (
-                  <CheckIcon className="mr-2 h-4 w-4" />
+                  <CheckIcon className="h-4 w-4" />
                 )}
                 {copyButtonText}
               </Button>
@@ -815,4 +802,4 @@ export function OrdenDelDiaForm({ selectedGuard, initialData }: OrdenDelDiaFormP
       )}
     </div>
   );
-}
+});

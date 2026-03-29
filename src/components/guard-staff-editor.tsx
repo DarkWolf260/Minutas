@@ -12,6 +12,7 @@ import { usePersonnelHistory } from '@/hooks/use-personnel-history';
 
 import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   DndContext,
   KeyboardSensor,
@@ -223,12 +224,9 @@ export function StaffListEditor({
                     Personal Disponible
                   </div>
                   {/* Scrollable content */}
-                  <div
-                    className="max-h-[380px] overflow-y-auto p-1"
-                    onWheel={(e) => {
-                      // Prevent popover from blocking wheel events
-                      e.stopPropagation();
-                    }}
+                  <ScrollArea
+                    className="max-h-[380px] p-1"
+                    type="always"
                   >
                     {/* Custom Text Option when searching */}
                     {searchQuery.trim() && (
@@ -289,7 +287,7 @@ export function StaffListEditor({
                         </p>
                       </div>
                     )}
-                  </div>
+                  </ScrollArea>
                 </div>
               </PopoverContent>
             </Popover>

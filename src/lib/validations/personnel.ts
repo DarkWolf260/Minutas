@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { PERSONNEL_STATUS } from '@/constants/personnel';
-import { ATTENDANCE_STATUS } from '@/constants/attendance';
 import { GuardSchema } from '@/lib/validations/schemas';
 
 export const PERSONNEL_VALIDATION = {
@@ -48,31 +47,6 @@ export const PersonnelSchema = z.object({
 export type PersonnelFormData = z.infer<typeof PersonnelSchema>;
 
 export type GuardFormData = z.infer<typeof GuardSchema>;
-
-/**
- * Attendance record validation schema
- */
-export const AttendanceSchema = z.object({
-  memberId: z.string().min(1, 'ID de miembro requerido'),
-  status: z.enum(
-    [
-      ATTENDANCE_STATUS.PRESENTE,
-      ATTENDANCE_STATUS.TARDE,
-      ATTENDANCE_STATUS.PERMISO,
-      ATTENDANCE_STATUS.AUSENTE,
-    ],
-    {
-      errorMap: () => ({ message: 'Estado de asistencia inválido' }),
-    }
-  ),
-  checkInTime: z.string().optional(),
-  note: z
-    .string()
-    .max(PERSONNEL_VALIDATION.MAX_NOTE_LENGTH, 'La nota es demasiado larga')
-    .optional(),
-});
-
-export type AttendanceFormData = z.infer<typeof AttendanceSchema>;
 
 /**
  * CSV Import Row validation (for bulk personnel import)

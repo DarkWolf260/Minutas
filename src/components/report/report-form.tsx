@@ -15,7 +15,7 @@ import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { Label } from '@/components/ui/label';
 import { parseTemplate, renderFinalReport } from '@/lib/template-parser';
 import { logger } from '@/lib/logger';
-import { cn } from '@/lib/utils';
+import { cn, areEqual } from '@/lib/utils';
 import { useRoles } from '@/hooks/use-roles';
 import { useGuards } from '@/hooks/use-guards';
 import { useUnits } from '@/hooks/use-units';
@@ -381,8 +381,11 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
 
     useEffect(() => {
       const formValues = getInitialValues(initialData);
-      reset(formValues);
-    }, [initialData, finalConfig, getInitialValues, reset]);
+      const currentValues = getValues();
+      if (!areEqual(formValues, currentValues)) {
+        reset(formValues);
+      }
+    }, [initialData, finalConfig, getInitialValues, reset, getValues]);
 
     const handleFormSubmit = (data: FormDataRecord) => {
       const finalContent = renderFinalReport(template.content, data, finalConfig, predefinedValues);

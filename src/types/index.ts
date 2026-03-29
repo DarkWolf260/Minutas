@@ -1,8 +1,6 @@
 import { PERSONNEL_STATUS } from '@/constants/personnel';
-import { ATTENDANCE_STATUS } from '@/constants/attendance';
 
 export type PersonnelStatus = (typeof PERSONNEL_STATUS)[keyof typeof PERSONNEL_STATUS];
-export type AttendanceStatus = (typeof ATTENDANCE_STATUS)[keyof typeof ATTENDANCE_STATUS];
 
 /** Represents any value that can appear in a form data field */
 export type FormDataValue =
@@ -18,17 +16,6 @@ export type FormDataValue =
 
 /** Typed record for template form data (replaces Record<string, any>) */
 export type FormDataRecord = Record<string, FormDataValue>;
-
-export interface AttendanceRecord {
-  id: string;
-  workspaceId: string;
-  memberId: string;
-  date: string; // ISO format: YYYY-MM-DD
-  status: AttendanceStatus;
-  checkInTime?: string;
-  note?: string;
-  createdAt: string;
-}
 
 export interface StaffMember {
   id: string;
@@ -78,13 +65,12 @@ export interface AppSettings {
   workspaceId?: string;
   // This is now managed via global field definitions
   activeGuardId?: string;
+  isGuardOpen?: boolean;
+  guardPeriod?: string;
   guardShiftDuration?: number;
-  finalReportStaffSnapshot?: Staff;
-  finalReportGuardId?: string;
-  finalReportStartDate?: string;
-  finalReportEndDate?: string;
   finalReportManualNovedades?: ManualNovedad[];
   finalReportStatistics?: string;
+  finalReportNotes?: string;
   reportaRoleIds?: string[];
   p2pRoomId?: string;
   p2pPassword?: string;
@@ -97,6 +83,10 @@ export interface AppSettings {
     guardId: string;
     updatedAt: string;
   };
+  finalReportStaffSnapshot?: Staff;
+  finalReportGuardId?: string;
+  finalReportStartDate?: string;
+  finalReportEndDate?: string;
 }
 
 export interface Report {

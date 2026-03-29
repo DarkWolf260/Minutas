@@ -56,33 +56,6 @@ export function logError(
     }
   );
 
-  // ✅ Send to Sentry error tracking service
-  if (typeof window !== 'undefined') {
-    // Client-side: dynamically import Sentry to avoid SSR issues
-    import('@sentry/nextjs').then((Sentry) => {
-      // Only send errors and critical issues, not warnings or info
-      if (severity === 'info' || severity === 'warning') {
-        return;
-      }
-
-      Sentry.captureException(error, {
-        level: severity === 'critical' ? 'fatal' : 'error',
-        tags: {
-          feature: context?.feature,
-          action: context?.action,
-        },
-        extra: context?.metadata,
-        contexts: context
-          ? {
-            errorContext: {
-              feature: context.feature,
-              action: context.action,
-            },
-          }
-          : undefined,
-      });
-    });
-  }
 }
 
 /**
@@ -152,7 +125,7 @@ export function getUserFriendlyErrorMessage(error: unknown): string {
     }
 
     // Generic fallback with the actual error for debugging context
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       return `Error: ${error.message}`;
     }
   }

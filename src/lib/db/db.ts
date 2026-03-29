@@ -6,7 +6,7 @@ import { createRxDatabase, RxDatabase, RxCollection, addRxPlugin } from 'rxdb';
 import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
 import { RxDBMigrationPlugin } from 'rxdb/plugins/migration-schema';
 import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
-import { wrappedValidateIsMyJsonValidStorage } from 'rxdb/plugins/validate-is-my-json-valid';
+import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
 
 // Types from our application
 import {
@@ -15,7 +15,6 @@ import {
   Template,
   TemplateConfig,
   GuardReport,
-  AttendanceRecord,
   Department,
   AppSettings,
   StaffRole,
@@ -60,7 +59,7 @@ export type LookupItem = {
 export type ConfigItem = {
   id: string; // type:originalId or just 'settings'
   workspaceId: string;
-  type: 'settings' | 'unit' | 'field_definition' | 'template_config' | 'guard' | 'draft';
+  type: 'settings' | 'unit' | 'field_definition' | 'template_config' | 'guard' | 'draft' | 'profile';
   name?: string;
   data: any;
 };
@@ -139,7 +138,7 @@ const ensureDevMode = async () => {
   const state = getInternalState();
   if (state.isDevModePluginAdded) return;
   
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     try {
       const { RxDBDevModePlugin } = await import('rxdb/plugins/dev-mode');
       addRxPlugin(RxDBDevModePlugin);
@@ -153,7 +152,22 @@ const ensureDevMode = async () => {
 const createDatabase = async (): Promise<MinutasDatabase> => {
   const name = 'central_minutas';
   const state = getInternalState();
+  
+  // 1. Immediate check
+  const existing = state.allDatabases.get(name);
+  if (existing && !existing.destroyed) {
+    logger.info(`Returning existing database instance (Pre-init check): [${name}]`);
+    return existing;
+  }
+  
   await ensureDevMode();
+  
+  // 2. Double-check after any potential async/await context switch
+  const existingAfterDev = state.allDatabases.get(name);
+  if (existingAfterDev && !existingAfterDev.destroyed) {
+    logger.info(`Returning existing database instance (Post-dev check): [${name}]`);
+    return existingAfterDev;
+  }
   
   logger.info(`Creating central database instance: [${name}]`);
   let database: MinutasDatabase;
@@ -161,13 +175,14 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
   try {
     database = await createRxDatabase<MinutasDatabaseCollections>({
       name: name,
-      storage: wrappedValidateIsMyJsonValidStorage({
+      storage: wrappedValidateAjvStorage({
         storage: getRxStorageDexie(),
       }),
       closeDuplicates: true,
-      ignoreDuplicate: process.env.NODE_ENV === 'development',
+      ignoreDuplicate: true, // Crucial for development / HMR
     });
-    // Register IMMEDIATELY in the global tracking
+    
+    // 3. Register IMMEDIATELY in the global tracking
     state.allDatabases.set(name, database);
   } catch (err: any) {
     const rxErr = err as any;

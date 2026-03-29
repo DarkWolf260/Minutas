@@ -3,6 +3,7 @@ import React from 'react';
 import { Building2, PlusCircle, ShieldCheck, Trash2 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -85,7 +86,7 @@ export function DepartmentCard({
                             Acción
                         </span>
                     </div>
-                    <div className="max-h-[300px] overflow-y-auto">
+                    <ScrollArea className="max-h-[300px] w-full" type="always">
                         <div
                             className={cn(
                                 'flex items-center justify-between p-3 px-4 hover:bg-muted/30 transition-colors cursor-pointer',
@@ -180,7 +181,7 @@ export function DepartmentCard({
                                 No hay departamentos personalizados.
                             </div>
                         )}
-                    </div>
+                    </ScrollArea>
                 </div>
             </CardContent>
         </Card>
