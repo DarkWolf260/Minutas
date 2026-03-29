@@ -182,17 +182,18 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
   logger.info(`Creating central database instance: [${name}] (Attempt: ${state.retryCount + 1})`);
   let database: MinutasDatabase;
   
-  // Potential fallback: Skip validation if we've already failed once
-  const useValidation = state.retryCount < 2;
+  // NUCLEAR FALLBACK: If we've already failed once, skip the validation wrapper entirely.
+  // The validation wrapper is the #1 cause of DB9 due to internal setting mismatches.
+  const storage = state.retryCount > 0 
+    ? getRxStorageDexie() 
+    : wrappedValidateAjvStorage({ storage: getRxStorageDexie() });
   
   try {
     database = await createRxDatabase<MinutasDatabaseCollections>({
       name: name,
-      storage: useValidation 
-        ? wrappedValidateAjvStorage({ storage: getRxStorageDexie() })
-        : getRxStorageDexie(),
+      storage: storage,
       closeDuplicates: true,
-      ignoreDuplicate: true, // Crucial for development / HMR
+      ignoreDuplicate: true, 
     });
     
     // 3. Register IMMEDIATELY in the global tracking
@@ -216,10 +217,23 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
       });
       try {
         await removeRxDatabase(name, getRxStorageDexie());
+        
+        // MANUALLY wipe the Lexie store if the helper failed
+        try {
+          if (typeof window !== 'undefined' && window.indexedDB) {
+            logger.info(`Manually clearing IndexedDB for [${name}]...`);
+            window.indexedDB.deleteDatabase(name);
+            window.indexedDB.deleteDatabase('rxdb-dexie-' + name);
+            window.indexedDB.deleteDatabase('rxdb-dexie-' + name + '-internal');
+          }
+        } catch (e) {
+          // ignore
+        }
+
         logger.info(`Conflicting database [${name}] removed. Waiting to retry...`);
         
         // Safety delay to let IndexedDB settle
-        await new Promise(resolve => setTimeout(resolve, 250));
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         return createDatabase();
       } catch (removeErr) {
