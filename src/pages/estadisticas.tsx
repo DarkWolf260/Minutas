@@ -21,6 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ChevronLeft, ChevronRight, FileDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { calculateMonthlyStats } from '@/lib/statistics-utils';
 import { STATISTICS_SECTIONS } from '@/constants/statistics';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -66,11 +67,20 @@ export default function EstadisticasPage() {
 
   return (
     <ScrollArea className="h-full w-full" type="always">
-      <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-32 sm:pb-12 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Cuadro General de Estadísticas</h1>
-            <p className="text-muted-foreground">Control mensual de incidencias y novedades</p>
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-32 sm:pb-16 space-y-8 h-full flex flex-col">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
+          <div className="flex items-center gap-4">
+            <Link to="/" className="shrink-0">
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div className="flex flex-col">
+              <h1 className="text-3xl font-bold tracking-tight">Estadísticas</h1>
+              <p className="text-muted-foreground mt-1">
+                Visualización de datos operacionales por mes y año.
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button

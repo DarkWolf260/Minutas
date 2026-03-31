@@ -232,9 +232,11 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
                     const staffList = activeStaff[role.name];
                     if (staffList && staffList.length > 0) {
                       const isReporta = keyLower === 'reporta';
-                      initialStaff = isReporta 
-                        ? staffList.map((s) => rehydrate(s))
-                        : staffList.map((s) => formatStaffMember(rehydrate(s)));
+                      if (isReporta) {
+                        initialStaff = staffList.length > 0 ? [rehydrate(staffList[0])] : [];
+                      } else {
+                        initialStaff = staffList.map((s) => formatStaffMember(rehydrate(s)));
+                      }
                     }
                   }
 
@@ -247,9 +249,11 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
                       );
                       if (globalMatches.length > 0) {
                         const isReporta = keyLower === 'reporta';
-                        initialStaff = isReporta
-                          ? globalMatches
-                          : globalMatches.map((p) => formatStaffMember(p));
+                        if (isReporta) {
+                          initialStaff = globalMatches.length > 0 ? [globalMatches[0]] : [];
+                        } else {
+                          initialStaff = globalMatches.map((p) => formatStaffMember(p));
+                        }
                       }
                     }
                   }

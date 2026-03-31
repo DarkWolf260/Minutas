@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useWorkspaceManager } from '@/lib/db/db-context';
-import { Database, Plus, Trash2, Layers, ArrowLeft } from 'lucide-react';
+import { Database, Plus, Trash2, Layers, ChevronLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -20,9 +21,11 @@ export default function WorkspacesPage() {
       
       {/* Header section with back button */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/settings')} className="shrink-0 h-10 w-10">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+        <Link to="/settings" className="shrink-0">
+          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+        </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Áreas de Trabajo</h1>
           <p className="text-muted-foreground mt-1">

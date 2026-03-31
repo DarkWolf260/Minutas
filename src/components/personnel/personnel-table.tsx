@@ -340,7 +340,13 @@ export function PersonnelTable({
                   <div className="flex flex-col">
                     <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-0.5">Cargo</span>
                     <span className="text-sm font-semibold truncate">
-                      {member.roleId && member.roleId !== 'none' ? member.roleId : <span className="text-muted-foreground/50 font-normal">Sin cargo</span>}
+                      {member.roleId && member.roleId !== 'none' ? (
+                        member.roleId
+                      ) : member.cargo ? (
+                        member.cargo
+                      ) : (
+                        <span className="text-muted-foreground/50 font-normal">Sin cargo</span>
+                      )}
                     </span>
                   </div>
                 </div>

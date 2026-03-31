@@ -186,7 +186,7 @@ function NovedadesPageContent() {
           </div>
           <div className="flex-1 relative min-h-0">
             <ScrollArea className="absolute inset-0" type="always">
-              <div className="space-y-1 p-3 pt-3 pb-24 sm:pb-3">
+              <div className="space-y-1 p-3 pt-3 pb-32 sm:pb-3">
                 {filteredReports.map((report) => {
                   const horaValue = findValueInFormData(report.formData, 'Hora');
                   return (
@@ -268,38 +268,27 @@ function NovedadesPageContent() {
           {/* Content area — takes remaining height and allows inner scroll */}
           <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
             {!isGuardOpen && !selectedReportId && !creatingReport ? (
-              <ScrollArea className="flex-1" type="always">
-                <div className="flex flex-col items-center justify-center p-8 bg-muted/5 min-h-full">
-                  <div className="max-w-md w-full bg-card rounded-2xl border shadow-xl p-8 text-center space-y-6 animate-in fade-in zoom-in duration-300">
-                    <div className="h-20 w-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto">
-                      <AlertTriangle className="h-10 w-10 text-amber-500" />
-                    </div>
-                    <div className="flex flex-col">
-                      <h1 className="text-3xl font-bold tracking-tight">Novedades</h1>
-                      <p className="text-muted-foreground">
-                        Registro cronológico de eventos e incidencias durante la guardia.
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-2xl font-bold tracking-tight">Guardia no Iniciada</h3>
-                      <p className="text-muted-foreground leading-relaxed">
-                        Para registrar nuevas novedades o gestionar reportes, primero debes abrir oficialmente una nueva guardia en la sección de personal.
-                      </p>
-                    </div>
-                    <Button
-                      onClick={() => navigate('/orden-del-dia')}
-                      size="lg"
-                      className="w-full h-12 text-base font-semibold gap-2"
-                    >
-                      <Newspaper className="h-5 w-5" />
-                      Ir a Orden del Día
-                    </Button>
-                    <p className="text-[11px] text-muted-foreground/60 uppercase font-bold tracking-widest pt-2">
-                      Gestión Operativa de Minutas
+              <div className="flex-1 flex flex-col items-center justify-center p-8 bg-muted/5 h-full">
+                <div className="max-w-md w-full bg-card rounded-2xl border shadow-xl p-8 text-center space-y-6 animate-in fade-in zoom-in duration-300">
+                  <div className="h-20 w-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto">
+                    <AlertTriangle className="h-10 w-10 text-amber-500" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-bold tracking-tight">Guardia no Iniciada</h3>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Para registrar nuevas novedades o gestionar reportes, primero debes abrir una nueva guardia en la sección de orden del día.
                     </p>
                   </div>
+                  <Button
+                    onClick={() => navigate('/orden-del-dia')}
+                    size="lg"
+                    className="w-full h-12 text-base font-semibold gap-2"
+                  >
+                    <Newspaper className="h-5 w-5" />
+                    Ir a Orden del Día
+                  </Button>
                 </div>
-              </ScrollArea>
+              </div>
             ) : creatingReport || selectedReportId ? (
               <Suspense
                 fallback={
@@ -484,8 +473,9 @@ const NovedadesDialogs = memo(function NovedadesDialogs({
                 Selecciona una plantilla para empezar a generar un nuevo reporte.
               </SheetDescription>
             </SheetHeader>
-            <ScrollArea className="max-h-[60vh] w-full" type="always">
-              <div className="py-4 px-1 space-y-2">
+            <ScrollArea className="flex-1 w-full" type="always">
+              <div className="p-4 pb-24 sm:pb-4">
+                <div className="max-w-3xl mx-auto">
                 {templates.filter((t) => t.isActive).length > 0 ? (
                   templates
                     .filter((t) => t.isActive)
@@ -515,6 +505,7 @@ const NovedadesDialogs = memo(function NovedadesDialogs({
                     </Button>
                   </div>
                 )}
+                </div>
               </div>
             </ScrollArea>
           </SheetContent>

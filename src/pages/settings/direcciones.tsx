@@ -187,7 +187,7 @@ export default function DireccionesPage() {
 
   if (!isLoaded) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 sm:pb-8 space-y-8">
+      <div className="w-full max-w-[1000px] mx-auto p-4 sm:p-8 pb-32 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <Skeleton className="h-12 w-1/3 mb-4" />
@@ -207,20 +207,37 @@ export default function DireccionesPage() {
 
   return (
     <>
-      <div className="p-4 sm:p-6 lg:p-8 flex flex-col h-screen max-h-screen overflow-hidden">
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="flex flex-col h-full space-y-4"
-        >
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+      <div className="flex flex-col h-full w-full bg-background overflow-hidden flex-1 pb-32 sm:pb-0">
+        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-6 flex flex-col flex-1 min-h-0">
+          <div className="flex flex-col gap-4 mb-6 shrink-0 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-4">
+               <Link to="/settings">
+                 <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+                    <ChevronLeft className="h-5 w-5" />
+                 </Button>
+               </Link>
+               <div className="flex flex-col">
+                 <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">Gestor de Direcciones</h1>
+                 <p className="text-muted-foreground mt-1 text-sm sm:text-base">Administración central de puntos de interés y ubicaciones.</p>
+               </div>
+            </div>
+            <Button onClick={() => handleOpenForm()} className="w-full sm:w-auto shadow-md hover:shadow-lg transition-all active:scale-95 gap-2 h-10">
+              <PlusCircle className="h-4 w-4" />
+              Nueva Dirección
+            </Button>
+          </div>
+
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="flex flex-col h-full space-y-4 min-h-0"
+          >
             <div className="md:hidden w-full">
               <TabsList className="grid w-full grid-cols-2 bg-muted/20 backdrop-blur-sm">
                 <TabsTrigger value="list" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Lista de Direcciones</TabsTrigger>
                 <TabsTrigger value="map" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Ver en Mapa</TabsTrigger>
               </TabsList>
             </div>
-          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1 min-h-0">
             {/* Left Column - List */}
@@ -231,23 +248,10 @@ export default function DireccionesPage() {
               )}
             >
               <Card className="shadow-lg flex flex-col h-full overflow-hidden bg-background/60 backdrop-blur-md border-muted/50">
-                <CardHeader className="pb-4 border-b bg-muted/5 space-y-4">
-                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                    <div className="flex items-start gap-2">
-                       <Link to="/settings" className="mt-1">
-                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                            <ChevronLeft className="h-5 w-5" />
-                         </Button>
-                       </Link>
-                       <div>
-                         <CardTitle className="text-2xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">Gestor de Direcciones</CardTitle>
-                         <CardDescription className="text-sm text-muted-foreground mt-1">Administración central de puntos de interés y ubicaciones.</CardDescription>
-                       </div>
-                    </div>
-                    <Button onClick={() => handleOpenForm()} className="w-full sm:w-auto shadow-md hover:shadow-lg transition-all active:scale-95 gap-2">
-                      <PlusCircle className="h-4 w-4" />
-                      Nueva Dirección
-                    </Button>
+                <CardHeader className="pb-4 border-b bg-muted/5 shrink-0 hidden md:block">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-xl font-bold">Base de Datos de Direcciones</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="flex flex-col flex-1 min-h-0 pt-0">
@@ -476,6 +480,7 @@ export default function DireccionesPage() {
           </div>
         </Tabs>
       </div>
+    </div>
 
       <AddressFormDialog
         isOpen={isFormOpen}

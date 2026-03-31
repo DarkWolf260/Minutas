@@ -31,12 +31,7 @@ const SettingsWorkspacesPage = lazy(() => import('@/pages/settings/workspaces'))
 const SettingsProfilePage = lazy(() => import('@/pages/settings/profile'));
 const SettingsBorrarDatosPage = lazy(() => import('@/pages/settings/borrar-datos'));
 const SettingsP2PPage = lazy(() => import('@/pages/settings/p2p'));
-const DocumentationPage = lazy(() => import('@/pages/documentation'));
-const DocumentationAboutPage = lazy(() => import('@/pages/documentation/about'));
-const DocumentationChangelogPage = lazy(() => import('@/pages/documentation/changelog'));
-const DocumentationRoadmapPage = lazy(() => import('@/pages/documentation/roadmap'));
-const DocumentationTemplateEnginePage = lazy(() => import('@/pages/documentation/template-engine'));
-const DocumentationUserGuidePage = lazy(() => import('@/pages/documentation/user-guide'));
+const SettingsAboutPage = lazy(() => import('@/pages/settings/about'));
 const OfflinePage = lazy(() => import('@/pages/offline'));
 
 const PageLoader = () => (
@@ -77,12 +72,7 @@ function AppLayout() {
                             <Route path="/settings/profile" element={<SettingsProfilePage />} />
                             <Route path="/settings/borrar-datos" element={<SettingsBorrarDatosPage />} />
                             <Route path="/settings/p2p" element={<SettingsP2PPage />} />
-                            <Route path="/documentation" element={<DocumentationPage />} />
-                            <Route path="/documentation/about" element={<DocumentationAboutPage />} />
-                            <Route path="/documentation/changelog" element={<DocumentationChangelogPage />} />
-                            <Route path="/documentation/roadmap" element={<DocumentationRoadmapPage />} />
-                            <Route path="/documentation/template-engine" element={<DocumentationTemplateEnginePage />} />
-                            <Route path="/documentation/user-guide" element={<DocumentationUserGuidePage />} />
+                            <Route path="/settings/about" element={<SettingsAboutPage />} />
                             <Route path="/offline" element={<OfflinePage />} />
                           </Routes>
                         </div>

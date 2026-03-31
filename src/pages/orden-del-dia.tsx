@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Eye, Play, Lock, CheckCircle2 } from 'lucide-react';
+import { Eye, Play, Lock, CheckCircle2, ChevronLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -92,13 +92,20 @@ export default function OrdenDelDiaPage() {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden relative">
       <div className="flex-1 flex flex-col md:h-full md:overflow-hidden">
-        <div className="p-4 sm:p-6 lg:p-10 w-full max-w-[1700px] mx-auto h-full flex flex-col gap-6 min-h-0">
+        <div className="p-4 sm:p-6 lg:p-10 w-full max-w-[1700px] mx-auto h-full flex flex-col gap-6 min-h-0 pb-32 sm:pb-0">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 shrink-0">
-            <div className="flex flex-col">
-              <h1 className="text-3xl font-bold tracking-tight">Orden del Día</h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Genera el reporte diario de operaciones para la guardia activa.
-              </p>
+            <div className="flex items-center gap-4">
+              <Link to="/" className="shrink-0">
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+              </Link>
+              <div className="flex flex-col">
+                <h1 className="text-3xl font-bold tracking-tight">Orden del Día</h1>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Genera el reporte diario de operaciones para la guardia activa.
+                </p>
+              </div>
             </div>
             
             <div className="flex items-center gap-3 shrink-0">

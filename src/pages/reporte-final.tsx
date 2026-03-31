@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -39,7 +39,7 @@ import { format } from 'date-fns';
 import type { Report, StaffMember } from '@/types';
 import { DatePicker } from '@/components/date-picker';
 import { TimeHlvInput } from '@/components/time-hlv-input';
-import { PlusCircle, Trash2, FileText, Save, TrendingUp, Users, X } from 'lucide-react';
+import { PlusCircle, Trash2, FileText, Save, TrendingUp, Users, X, ChevronLeft } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { LEADER_ROLES } from '@/constants/roles';
 import { generateId } from '@/lib/utils/id';
@@ -470,11 +470,18 @@ export default function ReporteFinalPage() {
       <div className="flex-1 flex flex-col md:h-full md:overflow-hidden">
         <div className="p-4 sm:p-6 lg:p-8 w-full max-w-[1700px] mx-auto h-full flex flex-col gap-6 min-h-0">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 shrink-0">
-            <div className="flex flex-col">
-              <h1 className="text-3xl font-bold tracking-tight">Reporte de Cierre de Guardia</h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Genera el resumen final consolidado de todas las novedades y estadísticas de la guardia.
-              </p>
+            <div className="flex items-center gap-4">
+              <Link to="/" className="shrink-0">
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+              </Link>
+              <div className="flex flex-col">
+                <h1 className="text-3xl font-bold tracking-tight">Reporte de Cierre de Guardia</h1>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Genera el resumen final consolidado de todas las novedades y estadísticas de la guardia.
+                </p>
+              </div>
             </div>
             {!isMobile && isLoaded && (
               <Button 
@@ -496,7 +503,7 @@ export default function ReporteFinalPage() {
               </div>
             </div>
           ) : (
-            <div className="space-y-8 flex-1 flex flex-col min-h-0 pb-10">
+            <div className="space-y-8 flex-1 flex flex-col min-h-0 pb-32">
               {/* Bloque Informativo Superior */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 shrink-0">
                 <Alert className="bg-primary/5 border-primary/20 shadow-sm leading-relaxed flex items-center h-full py-4">

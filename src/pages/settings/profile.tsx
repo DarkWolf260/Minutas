@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useProfile } from '@/hooks/use-profile';
-import { Save, User, ArrowLeft, Image as ImageIcon } from 'lucide-react';
+import { Save, User, ChevronLeft, Image as ImageIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -73,9 +73,11 @@ export default function ProfilePage() {
       
       {/* Header section with back button */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0 h-10 w-10">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+        <Link to="/settings" className="shrink-0">
+          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+        </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Perfil de Usuario</h1>
           <p className="text-muted-foreground mt-1">

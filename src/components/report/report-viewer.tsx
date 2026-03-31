@@ -39,6 +39,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { debounce, stableStringify } from '@/lib/utils';
 import { renderFinalReport } from '@/lib/template-parser';
 import { toast } from 'sonner';
+import { ReportPreview } from './report-preview';
 
 export interface ReportViewerProps {
   report: Report | null;
@@ -265,7 +266,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
         id="report-scroll-area"
         type="always"
       >
-        <div className="w-full max-w-[1000px] mx-auto p-4 sm:p-8 pb-60">
+        <div className="w-full max-w-[1000px] mx-auto p-4 sm:p-8 pb-32">
           <Card className="shadow-xl border-none ring-1 ring-border/50">
             <CardHeader className="bg-card/50 border-b">
               <CardTitle className="text-xl font-bold">{report.title}</CardTitle>
@@ -286,51 +287,16 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
         </div>
       </ScrollArea>
 
-      {/* Preview overlays */}
-      {isMobile ? (
-        <Sheet open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-          <SheetContent side="bottom" className="h-[95vh] rounded-t-xl flex flex-col p-6">
-            <SheetHeader className="text-left">
-              <SheetTitle>Vista Previa</SheetTitle>
-              <SheetDescription>Revisa el reporte generado.</SheetDescription>
-            </SheetHeader>
-            <div className="flex-1 min-h-0 mt-4 border rounded-md bg-muted/50 overflow-hidden">
-              <ScrollArea className="h-full w-full" type="always">
-                <div className="p-4 font-mono text-sm whitespace-pre-wrap leading-relaxed">
-                  {previewContent}
-                </div>
-              </ScrollArea>
-            </div>
-            <SheetFooter className="mt-4 flex-row gap-2">
-              <Button className="flex-1" onClick={handleCopyToClipboard}>{copyButtonText}</Button>
-              <SheetClose asChild><Button variant="secondary">Cerrar</Button></SheetClose>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
-      ) : (
-        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-          <DialogContent className="max-h-[90vh] max-w-3xl flex flex-col p-6">
-            <DialogHeader className="pb-4">
-              <DialogTitle>Vista Previa</DialogTitle>
-              <DialogDescription>Revisa el reporte generado.</DialogDescription>
-            </DialogHeader>
-            <div className="flex-1 min-h-0 border rounded-md bg-muted/50 overflow-hidden">
-              <ScrollArea className="h-full w-full" type="always">
-                <div className="p-6 font-mono text-sm whitespace-pre-wrap leading-relaxed">
-                  {previewContent}
-                </div>
-              </ScrollArea>
-            </div>
-            <DialogFooter className="mt-auto pt-6">
-              <Button onClick={handleCopyToClipboard} className="gap-2">
-                <Copy className="h-4 w-4" />
-                {copyButtonText}
-              </Button>
-              <DialogClose asChild><Button variant="secondary">Cerrar</Button></DialogClose>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+      {/* Shared Preview Component */}
+      <ReportPreview
+        isOpen={isPreviewOpen}
+        onOpenChange={setIsPreviewOpen}
+        content={previewContent}
+        copyButtonText={copyButtonText}
+        onCopy={handleCopyToClipboard}
+        isMobile={isMobile}
+        title="Vista Previa"
+      />
     </div>
   );
 }

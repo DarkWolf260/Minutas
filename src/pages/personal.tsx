@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,6 +10,12 @@ import {
   LayoutGrid,
   ShieldCheck,
   PlusCircle,
+  Trash2,
+  AlertTriangle,
+  Download,
+  Pencil,
+  ChevronLeft,
+  Car,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePersonnel } from '@/hooks/use-personnel';
@@ -32,9 +38,8 @@ import { GuardAssignmentPanel } from '@/components/personnel/guard-assignment-pa
 import { PersonnelHistoryDialog } from '@/components/personnel/personnel-history-dialog';
 import { CsvImportButton } from '@/components/personnel/csv-import-button';
 
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { Trash2, Car } from 'lucide-react';
 import { UnitsManager } from '@/components/personnel/units-manager';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 function PersonnelPageContent() {
@@ -156,11 +161,18 @@ function PersonnelPageContent() {
     <div className="flex-col w-full md:flex-1 md:flex md:min-h-0 md:overflow-hidden">
       <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-6 flex flex-col md:flex-1 md:min-h-0">
         <div className="flex flex-col gap-4 mb-6 shrink-0 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col">
-            <h1 className="text-3xl font-bold tracking-tight">Gestión de Personal</h1>
-            <p className="text-muted-foreground mt-1">
-              Administración de funcionarios, cargos y jerarquías de la institución.
-            </p>
+          <div className="flex items-center gap-4">
+            <Link to="/settings" className="shrink-0">
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div className="flex flex-col">
+              <h1 className="text-3xl font-bold tracking-tight">Gestión de Personal</h1>
+              <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+                Administración de funcionarios, cargos y jerarquías de la institución.
+              </p>
+            </div>
           </div>
           {activeTab === 'personnel' && (
             <div className="flex flex-row flex-wrap items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-300">

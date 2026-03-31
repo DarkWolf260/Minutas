@@ -307,7 +307,11 @@ export function AddressMap({
           scrollWheelZoom={true}
           doubleClickZoom={false}
           zoomControl={false} // Disable default zoom to match premium look
-          style={{ height: '100%', width: '100%', minHeight: '400px' }}
+          style={{ 
+            height: '100%', 
+            width: '100%', 
+            minHeight: window.innerWidth < 640 ? '280px' : '400px' 
+          }}
         >
           <MapResizer mapType={mapType} />
           <ChangeView key={`${latitude}-${longitude}`} center={center} zoom={zoom} />

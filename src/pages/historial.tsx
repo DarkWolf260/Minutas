@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Trash2, Eye, Calendar, Clock } from 'lucide-react';
+import { Trash2, Eye, Calendar, Clock, ChevronLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGuardHistory } from '@/hooks/use-guard-history';
 import { Button } from '@/components/ui/button';
@@ -50,11 +51,24 @@ export default function HistorialPage() {
   return (
     <ScrollArea className="h-full w-full" type="always">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-32 sm:pb-16 space-y-8">
+        <div className="flex items-center gap-4 mb-2">
+          <Link to="/" className="shrink-0">
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div className="flex flex-col">
+            <h1 className="text-3xl font-bold tracking-tight">Historial de Guardias</h1>
+            <p className="text-muted-foreground mt-1">Reportes de cierre generados y guardados anteriormente.</p>
+          </div>
+        </div>
         <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle>Historial de Guardias</CardTitle>
-            <CardDescription>Reportes de cierre generados y guardados anteriormente.</CardDescription>
-          </CardHeader>
+          <div className="hidden">
+            <CardHeader>
+              <CardTitle>Historial de Guardias</CardTitle>
+              <CardDescription>Reportes de cierre generados y guardados anteriormente.</CardDescription>
+            </CardHeader>
+          </div>
           <CardContent>
             {!isLoaded ? (
               <div className="space-y-4">

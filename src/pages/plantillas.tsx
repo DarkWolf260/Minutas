@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -151,11 +152,18 @@ export default function PlantillasPage() {
       >
         <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-10 py-6 space-y-4 w-full border-b bg-card sm:bg-transparent sm:border-0 shrink-0">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex flex-col">
-              <h1 className="text-xl font-bold">Plantillas</h1>
-              <p className="text-sm text-muted-foreground">
-                Gestiona y construye plantillas para reportes internos.
-              </p>
+            <div className="flex items-center gap-4">
+              <Link to="/settings" className="shrink-0">
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+              </Link>
+              <div className="flex flex-col">
+                <h1 className="text-xl font-bold">Plantillas</h1>
+                <p className="text-sm text-muted-foreground">
+                  Gestiona y construye plantillas para reportes internos.
+                </p>
+              </div>
             </div>
             <TabsList className="w-full sm:w-auto">
               <TabsTrigger value="editor" className="flex-1 sm:flex-initial">
@@ -371,7 +379,7 @@ export default function PlantillasPage() {
           className="flex-1 min-h-0 m-0 p-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
         >
           <div className="flex-1 relative overflow-hidden">
-            <div className="absolute inset-0 px-4 sm:px-6 lg:px-10 pb-6">
+            <div className="absolute inset-0 px-4 sm:px-6 lg:px-10 pb-32">
               <TemplateBuilder
                 onOpenInfoDialog={() => setIsInfoDialogOpen(true)}
                 initialTemplate={editingTemplate}

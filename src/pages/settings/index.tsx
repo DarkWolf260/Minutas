@@ -19,7 +19,8 @@ import {
   ChevronRight,
   AlertTriangle,
   Settings2,
-  MapPin
+  MapPin,
+  Info
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -167,6 +168,22 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-destructive transition-colors" />
+                </Link>
+
+                <Link
+                  to="/settings/about"
+                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-slate-500/10 flex items-center justify-center text-slate-600 group-hover:scale-110 transition-transform">
+                      <Info className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Acerca de</p>
+                      <p className="text-xs text-muted-foreground">Información, versión y créditos</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </Link>
               </CardContent>
             </Card>

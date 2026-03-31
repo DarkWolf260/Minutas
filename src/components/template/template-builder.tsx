@@ -18,11 +18,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 import { parseTemplate } from '@/lib/template-parser';
-import { Save, HelpCircle, X, FileText, Plus, Trash2 } from 'lucide-react';
+import { Save, HelpCircle, X, FileText, Plus, Trash2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { validateTemplateSyntax } from '@/lib/validators';
 import { ReportForm, ReportFormRef } from '@/components/report/report-form';
 import type { Template, TemplateConfig, StatisticRule } from '@/types';
+import { ReportPreview } from '@/components/report/report-preview';
 import {
   Dialog,
   DialogContent,
@@ -170,6 +171,11 @@ export function TemplateBuilder({
       setPreviewReportContent(content);
       setIsPreviewDialogOpen(true);
     }
+  };
+
+  const handleCopyToClipboard = () => {
+    navigator.clipboard.writeText(previewReportContent);
+    toast.success('Copiado al portapapeles');
   };
 
 
@@ -413,7 +419,7 @@ export function TemplateBuilder({
         {/* Preview Panel (Card 2) */}
         <Card
           className={cn(
-            'flex flex-col h-full border-muted-foreground/20 shadow-md bg-muted/10',
+            'flex flex-col h-full border-muted-foreground/20 shadow-md bg-muted/10 overflow-hidden min-h-0',
             mobileView !== 'preview' && 'hidden lg:flex'
           )}
         >
@@ -431,8 +437,8 @@ export function TemplateBuilder({
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 p-0 overflow-hidden relative">
-            <ScrollArea className="absolute inset-0" type="always">
+          <CardContent className="flex-1 p-0 overflow-hidden relative min-h-0 flex flex-col">
+            <ScrollArea className="flex-1 w-full" type="always">
               <div className="p-4">
                 <div className="max-w-3xl mx-auto">
                   <ReportForm
@@ -450,7 +456,7 @@ export function TemplateBuilder({
       </div>
 
       {/* Mobile Preview & Actions Button (Floating) */}
-      <div className="lg:hidden fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+      <div className="lg:hidden fixed bottom-24 right-6 z-50 flex flex-col gap-3">
         <Button
           onClick={handlePreviewReport}
           className="shadow-xl rounded-full h-12 w-12 bg-primary text-primary-foreground hover:scale-105 transition-transform"
@@ -469,25 +475,16 @@ export function TemplateBuilder({
         </Button>
       </div>
 
-      <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] p-0 flex flex-col overflow-hidden">
-          <DialogHeader className="p-6 pb-2">
-            <DialogTitle>Vista Previa del Reporte</DialogTitle>
-            <DialogDescription>
-              Esta es una representación de cómo se verá el reporte final con el contenido actual.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex-1 min-h-0 bg-muted/20 border-t">
-            <ScrollArea className="h-full w-full" type="always">
-              <div className="p-6">
-                <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed">
-                  {previewReportContent}
-                </pre>
-              </div>
-            </ScrollArea>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Shared Preview Component for Report Content */}
+      <ReportPreview
+        isOpen={isPreviewDialogOpen}
+        onOpenChange={setIsPreviewDialogOpen}
+        content={previewReportContent}
+        copyButtonText="Copiar"
+        onCopy={handleCopyToClipboard}
+        isMobile={false} // Builder preview is usually a dialog on desktop
+        title="Vista Previa del Reporte"
+      />
     </div>
   );
 }

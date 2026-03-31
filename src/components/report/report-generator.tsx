@@ -8,22 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, Copy, CheckIcon, Save, FileText } from 'lucide-react';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-} from '@/components/ui/dialog';
-import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetClose,
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { useDrafts } from '@/hooks/use-drafts';
@@ -36,6 +22,7 @@ import { formatStaffMember } from '@/lib/formatters';
 import { parseTemplate } from '@/lib/template-parser';
 import { toast } from 'sonner';
 import { generateId } from '@/lib/utils/id';
+import { ReportPreview } from './report-preview';
 
 export interface ReportGeneratorRef {
   submit: () => void;
@@ -112,19 +99,32 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
         (k) => k.toLowerCase() === 'jefe de los servicios'
       );
       if (jefeDeServiciosKey) {
-        const jefeStaff = activeStaff[jefeDeServiciosKey] || [];
-        if (jefeStaff.length > 0) {
-          dataToInject['Jefe de los Servicios'] = jefeStaff.map((member) => formatStaffMember(rehydrate(member)));
+        const staffList = activeStaff[jefeDeServiciosKey] || [];
+        if (staffList.length > 0 && staffList[0]) {
+          const firstMember = rehydrate(staffList[0] as StaffMember);
+          if (firstMember) {
+            dataToInject[jefeDeServiciosKey] = [formatStaffMember(firstMember)];
+          }
         }
       }
 
       if (settings.reportaRoleIds && settings.reportaRoleIds.length > 0) {
         const reportingPersonnel: StaffMember[] = [];
+        // Follow the order of reportaRoleIds (priority)
         settings.reportaRoleIds.forEach((roleId) => {
           const roleStaff = activeStaff[roleId] || [];
           reportingPersonnel.push(...roleStaff);
         });
-        dataToInject['Reporta'] = reportingPersonnel.map(p => rehydrate(p));
+
+        // Deduplicate and take ONLY the first one (single-choice field)
+        const uniqueReportingIds = Array.from(new Set(reportingPersonnel.map(p => p.id)));
+        if (uniqueReportingIds.length > 0) {
+          const firstPersonId = uniqueReportingIds[0];
+          const firstPerson = reportingPersonnel.find(p => p.id === firstPersonId);
+          if (firstPerson) {
+            dataToInject['Reporta'] = [rehydrate(firstPerson as StaffMember)];
+          }
+        }
       }
 
       dataToInject['Guardia'] = settings.activeGuardId;
@@ -260,7 +260,7 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
 
         {/* Scrollable Area */}
         <ScrollArea className="flex-1 min-h-0 w-full bg-muted/20 pointer-events-auto" id="generator-scroll-area" type="always">
-          <div className="w-full max-w-[1000px] mx-auto p-4 sm:p-8 pb-40">
+          <div className="w-full max-w-[1000px] mx-auto p-4 sm:p-8 pb-32">
             <Card className="shadow-xl border-none ring-1 ring-border/50 font-inherit">
               <CardHeader className="bg-card/50 border-b">
                 <CardTitle className="text-xl font-bold">{template.name}</CardTitle>
@@ -279,53 +279,16 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
           </div>
         </ScrollArea>
 
-        {/* Dialogs */}
-        {isMobile ? (
-          <Sheet open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-            <SheetContent side="bottom" className="h-[95vh] rounded-t-xl flex flex-col p-6">
-              <SheetHeader className="text-left">
-                <SheetTitle>Vista Previa del Reporte</SheetTitle>
-                <SheetDescription>Revisa el reporte generado.</SheetDescription>
-              </SheetHeader>
-              <div className="flex-1 min-h-0 mt-4 border rounded-md bg-muted/50 overflow-hidden">
-                <ScrollArea className="h-full w-full" type="always">
-                  <div className="p-4 font-mono text-sm whitespace-pre-wrap leading-relaxed">
-                    {previewContent}
-                  </div>
-                </ScrollArea>
-              </div>
-              <SheetFooter className="mt-4 flex-row gap-2">
-                <Button className="flex-1" onClick={handleCopyToClipboard}>
-                  {copyButtonText}
-                </Button>
-                <SheetClose asChild><Button variant="secondary">Cerrar</Button></SheetClose>
-              </SheetFooter>
-            </SheetContent>
-          </Sheet>
-        ) : (
-          <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-            <DialogContent className="max-h-[90vh] max-w-3xl flex flex-col p-6">
-              <DialogHeader className="pb-4">
-                <DialogTitle>Vista Previa del Reporte</DialogTitle>
-                <DialogDescription>Revisa el reporte generado.</DialogDescription>
-              </DialogHeader>
-              <div className="flex-1 min-h-0 border rounded-md bg-muted/50 overflow-hidden">
-                <ScrollArea className="h-full w-full" type="always">
-                  <div className="p-6 font-mono text-sm whitespace-pre-wrap leading-relaxed">
-                    {previewContent}
-                  </div>
-                </ScrollArea>
-              </div>
-              <DialogFooter className="mt-auto pt-6">
-                <Button onClick={handleCopyToClipboard} className="gap-2">
-                  <Copy className="h-4 w-4" />
-                  {copyButtonText}
-                </Button>
-                <DialogClose asChild><Button variant="secondary">Cerrar</Button></DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
+        {/* Shared Preview Component */}
+        <ReportPreview
+          isOpen={isPreviewOpen}
+          onOpenChange={setIsPreviewOpen}
+          content={previewContent}
+          copyButtonText={copyButtonText}
+          onCopy={handleCopyToClipboard}
+          isMobile={isMobile}
+          title="Vista Previa del Reporte"
+        />
       </div>
     );
   }

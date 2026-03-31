@@ -165,8 +165,8 @@ export default function P2PPage() {
     <ScrollArea className="h-full w-full" type="always">
       <div className="p-4 sm:p-6 lg:p-8 pb-32 sm:pb-16 space-y-6">
       <div className="max-w-4xl mx-auto flex items-center gap-4 mb-2">
-         <Link to="/settings">
-           <Button variant="ghost" size="icon" className="h-9 w-9">
+         <Link to="/settings" className="shrink-0">
+           <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
               <ChevronLeft className="h-5 w-5" />
            </Button>
          </Link>
