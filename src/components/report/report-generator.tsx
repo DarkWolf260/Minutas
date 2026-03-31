@@ -92,7 +92,12 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
 
       const rehydrate = (member: StaffMember) => {
         const latest = personnel.find(p => p.id === member.id);
-        return latest || member;
+        const val = latest || member;
+        try {
+          return JSON.parse(JSON.stringify(val));
+        } catch (e) {
+          return val;
+        }
       };
 
       const jefeDeServiciosKey = Object.keys(activeStaff).find(
@@ -157,10 +162,18 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
         }
       });
 
+      // Ensure the final data is a clean, mutable clone
+      let finalData = newInitialData;
+      try {
+        finalData = JSON.parse(JSON.stringify(newInitialData));
+      } catch (e) {
+        console.error('[ReportGenerator] Failed to clone finalInitialData', e);
+      }
+
       return {
         sections: initialSections,
         allTemplateFields: initialFieldNames,
-        finalInitialData: newInitialData
+        finalInitialData: finalData
       };
     }, [template.content, initialData, settings, guards, personnel]);
 
@@ -213,7 +226,7 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
         content: content,
         isRelevant: template.type === 'relevante',
         status: 'En proceso',
-        formData: formData,
+        formData: JSON.parse(JSON.stringify(formData)),
       };
 
       onSave(newReport);
@@ -268,6 +281,7 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
               <CardContent className="pt-8">
                 <ReportForm
                   ref={formRef}
+                  reportId={`new-${template.id}`}
                   template={template}
                   config={config}
                   initialData={finalInitialData}

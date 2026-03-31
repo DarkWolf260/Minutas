@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
+import { useMemo, useEffect, useState, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { useForm, FormProvider, Controller } from 'react-hook-form';
 import type {
   Template,
@@ -15,7 +15,7 @@ import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { Label } from '@/components/ui/label';
 import { parseTemplate, renderFinalReport } from '@/lib/template-parser';
 import { logger } from '@/lib/logger';
-import { cn, areEqual } from '@/lib/utils';
+import { cn, areEqual, stableStringify } from '@/lib/utils';
 import { useRoles } from '@/hooks/use-roles';
 import { useGuards } from '@/hooks/use-guards';
 import { useUnits } from '@/hooks/use-units';
@@ -35,6 +35,7 @@ export interface ReportFormRef {
 }
 
 export interface ReportFormProps {
+  reportId?: string; // Unique ID of the report to track document changes
   template: Template;
   config: TemplateConfig;
   initialData?: FormDataRecord;
@@ -44,7 +45,7 @@ export interface ReportFormProps {
 }
 
 export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
-  ({ template, config, initialData, onSubmit, disabled = false, onDataChange }, ref) => {
+  ({ reportId, template, config, initialData, onSubmit, disabled = false, onDataChange }, ref) => {
     const { definitions } = useFieldDefinitions();
     const { roles, isLoaded: rolesLoaded } = useRoles();
     const { guards, isLoaded: guardsLoaded } = useGuards();
@@ -204,9 +205,18 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
           ? settings.ordenDelDiaDraft.staff
           : (settings?.activeGuardId ? guards.find((g) => g.id === settings.activeGuardId)?.staff : null);
 
+        const safeClone = <T extends unknown>(v: T): T => {
+          if (v === undefined || v === null) return v;
+          try {
+            return JSON.parse(JSON.stringify(v));
+          } catch (e) {
+            return v;
+          }
+        };
+
         const rehydrate = (member: any) => {
           const latest = personnel.find(p => p.id === member.id);
-          return latest || member;
+          return safeClone(latest || member);
         };
 
         const applyDefaults = (target: FormDataRecord, fieldIds: string[]) => {
@@ -219,9 +229,9 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
               );
 
               if (foundKey && predefinedValues[foundKey]) {
-                target[fieldId] = predefinedValues[foundKey];
+                target[fieldId] = safeClone(predefinedValues[foundKey]);
               } else if (finalConfig.fields[fieldId]?.defaultValue !== undefined) {
-                target[fieldId] = finalConfig.fields[fieldId].defaultValue;
+                target[fieldId] = safeClone(finalConfig.fields[fieldId].defaultValue);
               } else {
                 const MANUAL_FIELDS = ['técnico', 'auxiliar', 'conductor'];
                 const role = roles.find((r: any) => r.name.toLowerCase() === keyLower);
@@ -250,9 +260,9 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
                       if (globalMatches.length > 0) {
                         const isReporta = keyLower === 'reporta';
                         if (isReporta) {
-                          initialStaff = globalMatches.length > 0 ? [globalMatches[0]] : [];
+                          initialStaff = globalMatches.length > 0 ? [safeClone(globalMatches[0])] : [];
                         } else {
-                          initialStaff = globalMatches.map((p) => formatStaffMember(p));
+                          initialStaff = globalMatches.map((p) => safeClone(formatStaffMember(p)));
                         }
                       }
                     }
@@ -371,6 +381,10 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
     // Instead, we use RHF's watch() subscription (more reliable for dynamic fields)
     // combined with getValues() to always read the latest store state.
     const [, forceRender] = useState(0);
+    const lastDataHash = useRef<string>('');
+    const processedInitialDataHash = useRef<string>('');
+    const lastPropReportId = useRef<string | undefined>(reportId);
+    const isFocused = useRef<boolean>(false);
 
     useEffect(() => {
       // eslint-disable-next-line react-hooks/incompatible-library
@@ -378,8 +392,20 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
         // Force parent re-render so conditionValue props get recalculated
         forceRender((n) => n + 1);
         if (type !== 'change' || !name) return;
+        
         if (onDataChange) {
-          onDataChange(getValues());
+          // Debounce the call to onDataChange to avoid excessive parent re-renders 
+          // that can interfere with input focus and cursor positioning
+          const currentValues = getValues();
+          const dataHash = JSON.stringify(currentValues);
+          if (dataHash !== lastDataHash.current) {
+            lastDataHash.current = dataHash;
+            
+            const timer = setTimeout(() => {
+              onDataChange(currentValues);
+            }, 1000); // 1s debounce for sync
+            return () => clearTimeout(timer);
+          }
         }
       });
       return () => subscription.unsubscribe();
@@ -388,13 +414,37 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
     // Always read current values — getValues() is always up-to-date
     const allFormValues = getValues() as Record<string, any>;
 
+    // Track the last report ID to only reset when switching documents, 
+    // avoiding resets caused by prop updates (like auto-saves).
+    const [lastReportId, setLastReportId] = useState<string | undefined>(reportId);
+
     useEffect(() => {
-      const formValues = getInitialValues(initialData);
-      const currentValues = getValues();
-      if (!areEqual(formValues, currentValues)) {
-        reset(formValues);
+      // 1. Identify if the report ID physically changed (different document)
+      const didIdChange = reportId !== lastPropReportId.current;
+      
+      // 2. If it's the SAME report, but the initial data prop updated (e.g. after save)
+      const currentInitialDataHash = stableStringify(initialData || {});
+      const initialDataChanged = currentInitialDataHash !== processedInitialDataHash.current;
+
+      // CRITICAL: NEVER reset if the user has a field focused, 
+      // unless we definitely switched to a completely different report.
+      if (didIdChange) {
+          lastPropReportId.current = reportId;
+          processedInitialDataHash.current = currentInitialDataHash;
+          const formValues = getInitialValues(initialData);
+          reset(formValues);
+          return;
       }
-    }, [initialData, finalConfig, getInitialValues, reset, getValues]);
+
+      // If ID is same, but data changed (e.g. background sync)
+      // Only reset if NOT dirty and NOT focused.
+      if (initialDataChanged && !methods.formState.isDirty && !isFocused.current) {
+          processedInitialDataHash.current = currentInitialDataHash;
+          const formValues = getInitialValues(initialData);
+          reset(formValues, { keepDefaultValues: true });
+          return;
+      }
+    }, [reportId, lastReportId, initialData, finalConfig, getInitialValues, reset, methods.formState.isDirty]);
 
     const handleFormSubmit = (data: FormDataRecord) => {
       const finalContent = renderFinalReport(template.content, data, finalConfig, predefinedValues);
@@ -489,7 +539,20 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
 
     return (
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6" autoComplete="off">
+        <form 
+          onSubmit={handleSubmit(handleFormSubmit)} 
+          className="space-y-6" 
+          autoComplete="off"
+          onFocusCapture={() => { 
+            isFocused.current = true; 
+          }}
+          onBlurCapture={(e) => { 
+            // Use relatedTarget to check if focus is still within the form
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+              isFocused.current = false; 
+            }
+          }}
+        >
           {layoutChunks.map((chunk, index) => {
             if (typeof chunk === 'string') {
               if (chunk === 'section_separator') {

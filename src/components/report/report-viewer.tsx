@@ -71,6 +71,14 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     [report, configs]
   );
   const isFinalizado = useMemo(() => status === 'Finalizado', [status]);
+  const clonedInitialData = useMemo(() => {
+    if (!report?.formData) return undefined;
+    try {
+      return JSON.parse(JSON.stringify(report.formData));
+    } catch (e) {
+      return report.formData;
+    }
+  }, [report?.id, report?.formData]);
 
   const saveLogic = useCallback(async (formData: Record<string, any>) => {
     if (!report || !template) return;
@@ -92,7 +100,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
       ...report,
       title: newTitle,
       content: content,
-      formData: formData,
+      formData: JSON.parse(JSON.stringify(formData)),
       status: status,
       timestamp: new Date().toISOString(),
     };
@@ -149,7 +157,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
       ...report,
       title: newTitle,
       content: content,
-      formData: formData,
+      formData: JSON.parse(JSON.stringify(formData)),
       status: newStatus,
       timestamp: new Date().toISOString(),
     };
@@ -275,9 +283,10 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
               <ReportForm
                 ref={formRef}
                 key={report.id}
+                reportId={report.id}
                 template={template}
                 config={config}
-                initialData={report.formData}
+                initialData={clonedInitialData}
                 onSubmit={() => { }} 
                 disabled={isFinalizado}
                 onDataChange={handleDataChange}
