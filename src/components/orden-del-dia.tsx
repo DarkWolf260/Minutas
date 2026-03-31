@@ -66,7 +66,6 @@ interface Note {
 
 const DEFAULT_ACTIVITIES: Activity[] = [
   { id: 'def-1', content: '*08:00 HLV* Se realiza cambio y recepción de Guardia' },
-  { id: 'def-2', content: '*08:00 HLV* El jefe de los Servicios reporta novedades al jefe de Operaciones dando inicio a la guardia de 24 Horas.' },
   { id: 'def-3', content: '*08:30 HLV* Se envía reporte meteorológico a la central de Protección Civil Anzoátegui.' },
   { id: 'def-4', content: '*12:00 HLV a 13:00 HLV* Se realiza reporte Meteorológico' },
   { id: 'def-5', content: '*14:30 HLV* Se envía reporte meteorológico a la central de Protección Civil Anzoátegui.' },
@@ -247,17 +246,14 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
     setNotes(notes.filter(n => n.id !== id));
   };
 
-  const handleRestoreDefaults = () => {
-    // Explicitly clear the draft so it's not re-loaded by the initialization effect
-    saveSettings({
-      ...settings,
-      ordenDelDiaDraft: undefined
-    });
-    
+  const handleRestoreActivities = () => {
     setActivities(DEFAULT_ACTIVITIES);
+    toast.success('Actividades restauradas por defecto');
+  };
+
+  const handleRestoreNotes = () => {
     setNotes(DEFAULT_NOTES);
-    lastInitializedGuard.current = null; // Trigger re-init for staff if needed
-    toast.success('Valores restaurados por defecto');
+    toast.success('Notas restauradas por defecto');
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -491,12 +487,13 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
   };
 
   return (
-    <div>
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 pb-2">
-          <Card className="shadow-sm flex flex-col h-[650px] 2xl:h-[750px] transition-all overflow-hidden">
-            <CardHeader className="pb-3 shrink-0">
-              <CardTitle className="text-base uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+    <div className="h-full flex flex-col min-h-0">
+      <div className="space-y-6 flex-1 flex flex-col min-h-0">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 pb-2 flex-1 min-h-0">
+          <Card className="shadow-sm flex flex-col flex-1 h-full transition-all overflow-hidden border-muted/60 min-h-[400px]">
+            <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
+              <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <GripVertical className="h-3.5 w-3.5 text-primary" />
                 Distribución de Personal
               </CardTitle>
             </CardHeader>
@@ -555,12 +552,12 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
           </Card>
 
           {/* ACTIVIDADES DEL DÍA */}
-          <Card className="shadow-sm flex flex-col h-[650px] 2xl:h-[750px] transition-all overflow-hidden">
-            <CardHeader className="pb-3 border-b shrink-0">
+          <Card className="shadow-sm flex flex-col flex-1 h-full transition-all overflow-hidden border-muted/60 min-h-[400px]">
+            <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-primary" />
-                    <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5 text-primary" />
+                    <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       Actividades del Día
                     </CardTitle>
                   </div>
@@ -570,7 +567,7 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
                       variant="ghost"
                       size="sm"
                       className="h-7 text-[10px] uppercase font-bold text-primary hover:text-primary hover:bg-primary/10"
-                      onClick={handleRestoreDefaults}
+                      onClick={handleRestoreActivities}
                     >
                       Restaurar
                     </Button>
@@ -596,7 +593,7 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
                   {activities.map((activity) => (
                     <div key={activity.id} className="flex gap-2 items-start animate-in fade-in slide-in-from-top-1 duration-200">
                       <Textarea
-                        className="flex-1 min-h-[40px] text-xs font-mono py-2 bg-background resize-none scrollbar-none"
+                        className="flex-1 min-h-[40px] text-xs font-mono py-2 px-3 bg-muted/20 border-muted/30 focus-visible:ring-primary/20 resize-none scrollbar-none rounded-md"
                         placeholder="Descripción de la actividad..."
                         value={activity.content}
                         rows={1}
@@ -627,16 +624,25 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
           </Card>
 
           {/* NOTAS ADICIONALES */}
-          <Card className="shadow-sm flex flex-col h-[650px] 2xl:h-[750px] transition-all overflow-hidden">
-            <CardHeader className="pb-3 border-b shrink-0">
+          <Card className="shadow-sm flex flex-col flex-1 h-full transition-all overflow-hidden border-muted/60 min-h-[400px]">
+            <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <StickyNote className="h-4 w-4 text-primary" />
-                    <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
+                    <StickyNote className="h-3.5 w-3.5 text-primary" />
+                    <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       Notas Adm.
                     </CardTitle>
                   </div>
                   <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-[10px] uppercase font-bold text-primary hover:text-primary hover:bg-primary/10"
+                      onClick={handleRestoreNotes}
+                    >
+                      Restaurar
+                    </Button>
                     <Button
                       type="button"
                       variant="outline"
@@ -659,7 +665,7 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
                   {notes.map((note) => (
                     <div key={note.id} className="flex gap-2 items-start animate-in fade-in slide-in-from-top-1 duration-200">
                       <Textarea
-                        className="flex-1 min-h-[40px] text-xs font-mono py-2 bg-background resize-none scrollbar-none"
+                        className="flex-1 min-h-[40px] text-xs font-mono py-2 px-3 bg-muted/20 border-muted/30 focus-visible:ring-primary/20 resize-none scrollbar-none rounded-md"
                         placeholder="Contenido de la nota..."
                         value={note.content}
                         rows={1}

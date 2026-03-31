@@ -21,7 +21,7 @@ function parseStatus(raw: string): StaffMember['status'] {
     if (s === 'vacaciones' || s === 'vacation') return 'vacaciones';
     if (s === 'permiso' || s === 'leave') return 'permiso';
     if (s === 'reposo' || s === 'rest') return 'reposo';
-    if (s === 'apoyo' || s === 'support') return 'apoyo';
+    if (s === 'apoyo' || s === 'support') return 'activo';
     return 'activo'; // default
 }
 
@@ -36,14 +36,15 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
     const { currentWorkspace } = useWorkspaceManager();
     const [importing, setImporting] = useState(false);
 
-    // --- Normalize header key (remove accents, lowercase, spaces to underscore) ---
+    // --- Normalize header key (remove quotes, accents, lowercase, spaces to underscore) ---
     const normalize = (s: string) =>
-        s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, '_');
+        s.replace(/^["']|["']$/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, '_');
 
     const COLUMN_MAP: Record<string, keyof Omit<StaffMember, 'id'>> = {
         jerarquia: 'rank',
         nombre_y_apellido: 'name',
         nombre: 'name',
+        apellido: 'name',
         cedula: 'cedula',
         cargo: 'cargo' as keyof Omit<StaffMember, 'id'>,
         departamento: 'department',
@@ -72,8 +73,12 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                     return;
                 }
 
-                // Parse header
-                const headers = lines[0]!.split(',').map((h) => normalize(h));
+                // Detect delimiter (, or ;)
+                const firstLine = lines[0]!;
+                const delimiter = firstLine.includes(';') ? ';' : ',';
+
+                // Parse header - strip quotes from each header
+                const headers = firstLine.split(delimiter).map((h) => normalize(h));
                 const colIdx = (key: string) => headers.indexOf(normalize(key));
 
                 // Build column indices from COLUMN_MAP
@@ -93,7 +98,9 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                 // Parse rows
                 const members: Omit<StaffMember, 'id'>[] = [];
                 for (let i = 1; i < lines.length; i++) {
-                    const cols = lines[i]!.split(',').map((c) => c.trim());
+                    // Split and strip quotes from values
+                    const cols = lines[i]!.split(delimiter).map((c) => c.replace(/^["']|["']$/g, '').trim());
+                    
                     const getCol = (field: keyof Omit<StaffMember, 'id'>) => {
                         const idx = fieldIndices.get(field);
                         return idx !== undefined ? (cols[idx] ?? '') : '';
@@ -169,7 +176,7 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
     };
 
     return (
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
             <input
                 ref={fileInputRef}
                 type="file"
@@ -181,20 +188,20 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
             <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs"
+                className="h-9 text-xs shadow-sm gap-1.5 rounded-xl"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={importing}
             >
-                <Download className="mr-1.5 h-3.5 w-3.5" />
+                <Download className="mr-1.5 h-4 w-4" />
                 {importing ? 'Importando…' : 'Importar CSV'}
             </Button>
             <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs"
+                className="h-9 text-xs shadow-sm gap-1.5 rounded-xl"
                 onClick={handleExport}
             >
-                <Upload className="mr-1.5 h-3.5 w-3.5" />
+                <Upload className="mr-1.5 h-4 w-4" />
                 Exportar
             </Button>
         </div>

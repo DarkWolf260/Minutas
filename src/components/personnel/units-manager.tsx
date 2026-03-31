@@ -58,25 +58,25 @@ export function UnitsManager() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 h-full">
-      <Card className="border-muted/50 bg-background shadow-sm overflow-hidden flex-1 flex flex-col min-h-0 h-full">
+    <div className="md:flex-1 md:flex md:flex-col md:min-h-0 md:h-full">
+      <Card className="border-muted/50 bg-background shadow-sm md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0 md:h-full">
         <CardHeader className="pb-4 bg-muted/5 border-b">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-primary/10 text-primary">
               <Car className="h-5 w-5" />
             </div>
-            <div>
-              <CardTitle className="text-xl font-bold text-primary">Gestión de Unidades</CardTitle>
-              <CardDescription className="text-xs">
-                Administra la flota de vehículos operativos para las guardias.
+            <div className="min-w-0">
+              <CardTitle className="text-lg sm:text-xl font-bold text-primary truncate">Gestión de Unidades</CardTitle>
+              <CardDescription className="text-[10px] sm:text-xs">
+                Administra la flota de vehículos operativos.
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0 flex-1 min-h-0 flex flex-col overflow-hidden">
-          <ScrollArea className="flex-1" type="always">
-            <div className="p-8 space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+        <CardContent className="p-0 md:flex-1 md:min-h-0 md:flex md:flex-col md:overflow-hidden">
+          <ScrollArea className="md:flex-1" type="always">
+            <div className="p-4 sm:p-8 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-start">
                 {/* Form Side */}
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -120,7 +120,7 @@ export function UnitsManager() {
                     </span>
                   </Label>
 
-                  <div className="h-[400px] border rounded-xl overflow-hidden bg-muted/5 shadow-inner">
+                  <div className="h-[300px] sm:h-[400px] border rounded-xl overflow-hidden bg-muted/5 shadow-inner">
                     <ScrollArea className="h-full w-full" type="always">
                       <div className="p-3 space-y-2">
                         {localUnits.length > 0 ? (

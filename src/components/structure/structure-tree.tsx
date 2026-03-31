@@ -41,7 +41,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Department, StaffRole } from '@/types';
+import { Department, StaffRole, StaffMember } from '@/types';
 
 interface StructureTreeProps {
   departments: Department[];
@@ -52,6 +52,8 @@ interface StructureTreeProps {
   onRemoveRole: (name: string) => void;
   onUpdateRole: (name: string, updates: Partial<StaffRole>) => void;
   onLoadInstitutional: () => void;
+  personnel?: StaffMember[];
+  showPersonnel?: boolean;
 }
 
 export function StructureTree({
@@ -63,19 +65,38 @@ export function StructureTree({
   onRemoveRole,
   onUpdateRole,
   onLoadInstitutional,
+  personnel = [],
+  showPersonnel = false,
 }: StructureTreeProps) {
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isAddDeptOpen, setIsAddDeptOpen] = useState(false);
   const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
   const [newDeptName, setNewDeptName] = useState('');
   const [newRoleName, setNewRoleName] = useState('');
   const [targetDeptId, setTargetDeptId] = useState<string | undefined>(undefined);
 
-  // Group roles by department
-  const globalRoles = roles.filter(r => (r.departmentScope ?? []).length === 0);
+  // Group roles by department, filtering out personnel statuses (Vacations, etc.) from the tree
+  const globalRoles = roles.filter(r => (r.departmentScope ?? []).length === 0 && !r.isStatus);
   const deptMap = departments.map(d => ({
     ...d,
-    roles: roles.filter(r => (r.departmentScope ?? []).includes(d.id))
+    roles: roles.filter(r => (r.departmentScope ?? []).includes(d.id) && !r.isStatus).map(r => ({
+      ...r,
+      members: personnel.filter(p => p.department === d.id && p.roleId === r.name)
+    }))
   }));
+
+  const globalRolesWithMembers = globalRoles.map(r => ({
+    ...r,
+    members: personnel.filter(p => (p.department === 'none' || !p.department) && p.roleId === r.name)
+  }));
+
+  const handleExpandAll = () => {
+    setExpandedItems(departments.map(d => d.id));
+  };
+
+  const handleCollapseAll = () => {
+    setExpandedItems([]);
+  };
 
   const handleAddDept = () => {
     if (newDeptName.trim()) {
@@ -99,38 +120,59 @@ export function StructureTree({
   };
 
   return (
-    <Card className="border-muted/50 bg-muted/5 shadow-inner overflow-hidden flex flex-col h-full">
+    <Card className="border-muted/50 bg-muted/5 shadow-inner overflow-hidden flex flex-col flex-1 min-h-0">
       <CardHeader className="pb-3 border-b bg-background/50 backdrop-blur-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary">
-              <Building2 className="h-4 w-4" />
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
+              <Building2 className="h-5 w-5" />
             </div>
-            <div>
-              <CardTitle className="text-sm font-bold">Organigrama Institucional</CardTitle>
-              <CardDescription className="text-[11px] leading-tight mt-0.5">
-                Gestiona la estructura jerárquica de departamentos y cargos operativos.
+            <div className="min-w-0">
+              <CardTitle className="text-sm sm:text-base font-bold truncate">Organigrama Institucional</CardTitle>
+              <CardDescription className="text-[10px] sm:text-[11px] leading-tight mt-0.5 max-w-[200px] sm:max-w-none truncate">
+                Estructura de departamentos y cargos.
               </CardDescription>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={onLoadInstitutional}
-              className="h-8 text-[11px] hover:bg-primary/5 border-primary/20"
-            >
-              <ShieldCheck className="mr-1.5 h-3.5 w-3.5 text-primary" />
-              Cargar IPP
-            </Button>
-            <Button 
-              size="sm" 
-              onClick={() => setIsAddDeptOpen(true)}
-              className="h-8 text-[11px] shadow-sm bg-primary hover:bg-primary/90"
-            >
-              <Plus className="mr-1 h-3.5 w-3.5" />
-              Departamento
-            </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center bg-muted/30 p-1 rounded-lg border sm:mr-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleExpandAll}
+                className="h-7 px-2 text-[10px] font-bold uppercase tracking-tight hover:bg-background/50"
+              >
+                Expandir Todo
+              </Button>
+              <div className="w-px h-3 bg-muted-foreground/20 mx-1" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleCollapseAll}
+                className="h-7 px-2 text-[10px] font-bold uppercase tracking-tight hover:bg-background/50"
+              >
+                Contraer
+              </Button>
+            </div>
+            <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onLoadInstitutional}
+                className="flex-1 sm:flex-initial h-9 sm:h-8 text-[11px] hover:bg-primary/5 border-primary/20"
+              >
+                <ShieldCheck className="mr-1.5 h-3.5 w-3.5 text-primary" />
+                Cargar IPP
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={() => setIsAddDeptOpen(true)}
+                className="flex-1 sm:flex-initial h-9 sm:h-8 text-[11px] shadow-sm bg-primary hover:bg-primary/90"
+              >
+                <PlusCircle className="mr-1 h-3.5 w-3.5" />
+                Departamento
+              </Button>
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -167,10 +209,12 @@ export function StructureTree({
               </div>
               
               <div className="divide-y divide-muted/30">
-                {globalRoles.map(role => (
+                {globalRolesWithMembers.map(role => (
                   <RoleRow 
                     key={role.name} 
                     role={role} 
+                    members={role.members}
+                    showPersonnel={showPersonnel}
                     onRemove={onRemoveRole} 
                     onUpdate={onUpdateRole} 
                   />
@@ -184,7 +228,12 @@ export function StructureTree({
             </div>
 
             {/* Departments Accordion */}
-            <Accordion type="multiple" className="space-y-3">
+            <Accordion 
+              type="multiple" 
+              className="space-y-3"
+              value={expandedItems}
+              onValueChange={setExpandedItems}
+            >
               {deptMap.map(dept => (
                 <AccordionItem 
                   key={dept.id} 
@@ -207,7 +256,7 @@ export function StructureTree({
                       </div>
                     </AccordionTrigger>
                     
-                    <div className="flex items-center gap-1 pr-2 bg-muted/5 group-data-[state=open]:bg-muted/10 h-14 transition-colors ml-auto">
+                    <div className="flex items-center gap-1.5 pr-3 bg-muted/5 group-data-[state=open]:bg-muted/10 h-14 transition-colors ml-auto">
                       <Button 
                         variant="ghost" 
                         size="sm" 
@@ -215,10 +264,11 @@ export function StructureTree({
                           e.stopPropagation();
                           openAddRole(dept.id);
                         }}
-                        className="h-8 text-xs hover:bg-primary/10 text-primary font-bold bg-primary/5 border border-primary/10 px-3"
+                        className="h-9 p-0 w-9 sm:w-auto sm:px-3 text-xs hover:bg-primary/10 text-primary font-bold bg-primary/5 border border-primary/10"
+                        title="Añadir Cargo"
                       >
-                        <Plus className="h-3.5 w-3.5 mr-1" />
-                        Añadir Cargo
+                        <Plus className="h-4 w-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Cargo</span>
                       </Button>
                       <Button 
                         variant="ghost" 
@@ -229,7 +279,7 @@ export function StructureTree({
                             onRemoveDept(dept.id);
                           }
                         }}
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive transition-all hover:bg-destructive/10"
+                        className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -239,9 +289,11 @@ export function StructureTree({
                   <AccordionContent className="p-0 border-t border-muted/20">
                     <div className="divide-y divide-muted/20">
                       {dept.roles.map(role => (
-                        <RoleRow 
+                        <RoleRow
                           key={role.name} 
                           role={role} 
+                          members={role.members}
+                          showPersonnel={showPersonnel}
                           onRemove={onRemoveRole} 
                           onUpdate={onUpdateRole} 
                         />
@@ -338,10 +390,14 @@ export function StructureTree({
 
 function RoleRow({ 
   role, 
+  members = [],
+  showPersonnel = false,
   onRemove, 
   onUpdate 
 }: { 
   role: StaffRole; 
+  members?: StaffMember[];
+  showPersonnel?: boolean;
   onRemove: (name: string) => void; 
   onUpdate: (name: string, updates: Partial<StaffRole>) => void;
 }) {
@@ -351,9 +407,23 @@ function RoleRow({
         <div className="p-1.5 rounded-full bg-primary/5 text-primary group-hover:bg-primary/10 transition-colors">
           <User className="h-3.5 w-3.5" />
         </div>
-        <span className="text-sm font-medium truncate" title={role.name}>
-          {role.name}
-        </span>
+        <div className="flex flex-col min-w-0">
+          <span className="text-sm font-medium truncate" title={role.name}>
+            {role.name}
+          </span>
+          {showPersonnel && members.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {members.map(m => (
+                <Badge key={m.id} variant="secondary" className="text-[9px] py-0 h-4 bg-primary/5 text-primary border-primary/10">
+                  {m.name}
+                </Badge>
+              ))}
+            </div>
+          )}
+          {showPersonnel && members.length === 0 && (
+            <span className="text-[10px] text-muted-foreground italic mt-0.5">Vacante</span>
+          )}
+        </div>
       </div>
       
       <div className="flex items-center gap-6 shrink-0 ml-auto">
@@ -375,7 +445,7 @@ function RoleRow({
               onRemove(role.name);
             }
           }}
-          className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive/10"
+          className="h-9 w-9 text-muted-foreground hover:text-destructive opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive/10"
         >
           <Trash2 className="h-4 w-4" />
         </Button>

@@ -75,7 +75,7 @@ function NovedadesPageContent() {
 
   const filteredReports = useMemo(() => {
     let result = sortedReports;
-    
+
     // Apply search
     if (searchQuery) {
       result = result.filter(
@@ -84,7 +84,7 @@ function NovedadesPageContent() {
           report.content.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
+
     return result;
   }, [sortedReports, searchQuery]);
 
@@ -160,17 +160,17 @@ function NovedadesPageContent() {
         >
           <div className="flex items-center justify-between border-b p-4 min-h-[73px]">
             <h2 className="text-xl font-bold tracking-tight">Novedades</h2>
-            <Button 
-              size="sm" 
-              onClick={() => setIsCreateDialogOpen(true)} 
+            <Button
+              size="sm"
+              onClick={() => setIsCreateDialogOpen(true)}
               disabled={!isGuardOpen}
-              className="shadow-sm gap-2 hidden sm:flex"
+              className="shadow-sm gap-2"
             >
               <PlusCircle className="h-4 w-4" />
               Nuevo
             </Button>
           </div>
-          
+
           <div className="p-4 space-y-4 border-b bg-muted/5">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -178,7 +178,7 @@ function NovedadesPageContent() {
                 id="report-search"
                 name="report-search"
                 placeholder="Buscar reportes..."
-                className="pl-9 bg-background border-none shadow-sm focus-visible:ring-primary/20"
+                className="pl-9 bg-background border-none shadow-sm focus-visible:ring-primary/20 rounded-lg"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -186,7 +186,7 @@ function NovedadesPageContent() {
           </div>
           <div className="flex-1 relative min-h-0">
             <ScrollArea className="absolute inset-0" type="always">
-              <div className="space-y-1 p-3 pt-0 pb-24 sm:pb-3">
+              <div className="space-y-1 p-3 pt-3 pb-24 sm:pb-3">
                 {filteredReports.map((report) => {
                   const horaValue = findValueInFormData(report.formData, 'Hora');
                   return (
@@ -199,9 +199,9 @@ function NovedadesPageContent() {
                         navigate(`/?selected=${report.id}`);
                       }}
                       className={cn(
-                        'w-full rounded-xl p-3.5 text-left transition-all duration-200 group',
-                        selectedReportId === report.id && !creatingReport 
-                          ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/20 shadow-sm' 
+                        'w-full rounded-2xl p-3.5 text-left transition-all duration-200 group',
+                        selectedReportId === report.id && !creatingReport
+                          ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/20 shadow-sm'
                           : 'hover:bg-muted/50 border-transparent'
                       )}
                     >
@@ -222,7 +222,7 @@ function NovedadesPageContent() {
                                     report.status === 'Finalizado' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.4)]'
                                   )}
                                 />
-                                 <span className="font-bold text-[10px] uppercase tracking-tighter">{report.status}</span>
+                                <span className="font-bold text-[10px] uppercase tracking-tighter">{report.status}</span>
                               </div>
                             )}
                             {horaValue && (
@@ -267,12 +267,18 @@ function NovedadesPageContent() {
 
           {/* Content area — takes remaining height and allows inner scroll */}
           <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-          {!isGuardOpen && !selectedReportId && !creatingReport ? (
-             <ScrollArea className="flex-1" type="always">
-               <div className="flex flex-col items-center justify-center p-8 bg-muted/5 min-h-full">
+            {!isGuardOpen && !selectedReportId && !creatingReport ? (
+              <ScrollArea className="flex-1" type="always">
+                <div className="flex flex-col items-center justify-center p-8 bg-muted/5 min-h-full">
                   <div className="max-w-md w-full bg-card rounded-2xl border shadow-xl p-8 text-center space-y-6 animate-in fade-in zoom-in duration-300">
                     <div className="h-20 w-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto">
                       <AlertTriangle className="h-10 w-10 text-amber-500" />
+                    </div>
+                    <div className="flex flex-col">
+                      <h1 className="text-3xl font-bold tracking-tight">Novedades</h1>
+                      <p className="text-muted-foreground">
+                        Registro cronológico de eventos e incidencias durante la guardia.
+                      </p>
                     </div>
                     <div className="space-y-2">
                       <h3 className="text-2xl font-bold tracking-tight">Guardia no Iniciada</h3>
@@ -280,9 +286,9 @@ function NovedadesPageContent() {
                         Para registrar nuevas novedades o gestionar reportes, primero debes abrir oficialmente una nueva guardia en la sección de personal.
                       </p>
                     </div>
-                    <Button 
-                      onClick={() => navigate('/orden-del-dia')} 
-                      size="lg" 
+                    <Button
+                      onClick={() => navigate('/orden-del-dia')}
+                      size="lg"
                       className="w-full h-12 text-base font-semibold gap-2"
                     >
                       <Newspaper className="h-5 w-5" />
@@ -294,52 +300,52 @@ function NovedadesPageContent() {
                   </div>
                 </div>
               </ScrollArea>
-          ) : creatingReport || selectedReportId ? (
-            <Suspense
-              fallback={
-                <div className="flex-1 p-6">
-                  <div className="h-full w-full bg-muted/20 rounded-lg animate-pulse"></div>
-                </div>
-              }
-            >
-              <ReportContentHandler
-                reports={reports}
-                templates={templates}
-                configs={configs}
-                draft={draft}
-                draftIsLoaded={draftIsLoaded}
-                isMounted={isMounted}
-                isMobile={isMobile}
-                selectedReportId={selectedReportId}
-                setSelectedReportId={setSelectedReportId}
-                creatingReport={creatingReport}
-                setCreatingReport={setCreatingReport}
-                initialDraftData={initialDraftData}
-                setInitialDraftData={setInitialDraftData}
-                isNavigatingBack={isNavigatingBack}
-                setIsNavigatingBack={setIsNavigatingBack}
-                generatorRef={generatorRef}
-                handleCancelCreation={handleCancelCreation}
-                handleSaveNewReport={handleSaveNewReport}
-                updateReport={updateReport}
-                setReportToDelete={setReportToDelete}
-              />
-            </Suspense>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-6 text-center animate-in fade-in duration-500 bg-muted/5 h-full">
-              <div className="max-w-md space-y-4">
-                <div className="h-20 w-20 rounded-full bg-muted/20 flex items-center justify-center mx-auto mb-2 border-2 border-dashed border-muted-foreground/10 opacity-60">
-                  <FileText className="h-9 w-9 opacity-20" />
-                </div>
-                <div className="space-y-1.5">
-                  <h3 className="text-lg font-bold text-foreground/80 tracking-tight">Sin reporte seleccionado</h3>
-                  <p className="text-sm max-w-[280px] mx-auto text-muted-foreground/60 leading-relaxed">
-                    Selecciona un reporte de la lista lateral para visualizar sus detalles o realizar ediciones administrativas.
-                  </p>
+            ) : creatingReport || selectedReportId ? (
+              <Suspense
+                fallback={
+                  <div className="flex-1 p-6">
+                    <div className="h-full w-full bg-muted/20 rounded-lg animate-pulse"></div>
+                  </div>
+                }
+              >
+                <ReportContentHandler
+                  reports={reports}
+                  templates={templates}
+                  configs={configs}
+                  draft={draft}
+                  draftIsLoaded={draftIsLoaded}
+                  isMounted={isMounted}
+                  isMobile={isMobile}
+                  selectedReportId={selectedReportId}
+                  setSelectedReportId={setSelectedReportId}
+                  creatingReport={creatingReport}
+                  setCreatingReport={setCreatingReport}
+                  initialDraftData={initialDraftData}
+                  setInitialDraftData={setInitialDraftData}
+                  isNavigatingBack={isNavigatingBack}
+                  setIsNavigatingBack={setIsNavigatingBack}
+                  generatorRef={generatorRef}
+                  handleCancelCreation={handleCancelCreation}
+                  handleSaveNewReport={handleSaveNewReport}
+                  updateReport={updateReport}
+                  setReportToDelete={setReportToDelete}
+                />
+              </Suspense>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-6 text-center animate-in fade-in duration-500 bg-muted/5 h-full">
+                <div className="max-w-md space-y-4">
+                  <div className="h-20 w-20 rounded-full bg-muted/20 flex items-center justify-center mx-auto mb-2 border-2 border-dashed border-muted-foreground/10 opacity-60">
+                    <FileText className="h-9 w-9 opacity-20" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <h3 className="text-lg font-bold text-foreground/80 tracking-tight">Sin reporte seleccionado</h3>
+                    <p className="text-sm max-w-[280px] mx-auto text-muted-foreground/60 leading-relaxed">
+                      Selecciona un reporte de la lista lateral para visualizar sus detalles o realizar ediciones administrativas.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
           </div>
         </main>
       </div>
@@ -353,7 +359,7 @@ function NovedadesPageContent() {
           <PlusCircle className="h-6 w-6" />
         </Button>
       )}
-      
+
       <NovedadesDialogs
         isMounted={isMounted}
         isMobile={isMobile}
@@ -631,7 +637,7 @@ function ReportContentHandler({
 
   useEffect(() => {
     if (!isMounted) return;
-    
+
     // Handle ?new=true to open creation dialog from BottomNav or elsewhere
     if (searchParams.get('new') === 'true' && !creatingReport) {
       const sp = new URLSearchParams(searchParams);

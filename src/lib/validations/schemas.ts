@@ -313,9 +313,9 @@ export function generateFormDataSchema(config: { fields: Record<string, FieldCon
                 }
             });
         }
-        
+
         const sectionSchema = z.object(sectionShape).passthrough().nullable().optional();
-        
+
         if (section.isRepeatable) {
             shape[section.id] = z.array(sectionSchema.unwrap ? sectionSchema.unwrap().unwrap() : sectionSchema as any).nullable().optional();
             // Simplified for RxDB compatibility:

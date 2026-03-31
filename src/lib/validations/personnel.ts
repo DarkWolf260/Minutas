@@ -26,7 +26,7 @@ export const PersonnelSchema = z.object({
     .optional()
     .or(z.literal('')),
   rank: z.string().optional(),
-  role: z.string().optional(),
+  cargo: z.string().optional(),
   department: z.string().optional(),
   status: z
     .enum(
@@ -35,7 +35,6 @@ export const PersonnelSchema = z.object({
         PERSONNEL_STATUS.VACACIONES,
         PERSONNEL_STATUS.PERMISO,
         PERSONNEL_STATUS.REPOSO,
-        PERSONNEL_STATUS.APOYO,
       ],
       {
         errorMap: () => ({ message: 'Estado inválido' }),
@@ -55,7 +54,7 @@ export const CSVPersonnelRowSchema = z.object({
   rank: z.string().optional(),
   name: z.string().min(1, 'Nombre requerido'),
   cedula: z.string().optional(),
-  role: z.string().optional(),
+  cargo: z.string().optional(),
   department: z.string().optional(),
 });
 

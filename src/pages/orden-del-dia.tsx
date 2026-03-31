@@ -90,111 +90,131 @@ export default function OrdenDelDiaPage() {
   }
 
   return (
-    <ScrollArea className="h-full w-full" type="always">
-      <div className="p-4 sm:p-6 lg:p-8 w-full max-w-[1700px] mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Orden del Día</h1>
-          <p className="text-muted-foreground">
-            Genera el reporte diario de operaciones para la guardia activa.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-6">
-          <div className="bg-card rounded-xl border p-4 shadow-sm flex flex-wrap items-end gap-4">
-            <div className="space-y-2 max-w-xs flex-1 min-w-[200px]">
-              <Label
-                htmlFor="guard-select"
-                className="text-xs uppercase font-bold text-muted-foreground"
-              >
-                Guardia Activa Actual
-              </Label>
-              <Select 
-                value={selectedGuardId} 
-                onValueChange={handleActiveGuardChange}
-                disabled={isGuardOpen}
-              >
-                <SelectTrigger id="guard-select" className={`h-10 ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}>
-                  <SelectValue placeholder="Selecciona una guardia..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {guards.map((guard) => (
-                    <SelectItem key={guard.id} value={guard.id}>
-                      Guardia "{guard.id}"
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+    <div className="flex flex-col h-full bg-background overflow-hidden relative">
+      <div className="flex-1 flex flex-col md:h-full md:overflow-hidden">
+        <div className="p-4 sm:p-6 lg:p-10 w-full max-w-[1700px] mx-auto h-full flex flex-col gap-6 min-h-0">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 shrink-0">
+            <div className="flex flex-col">
+              <h1 className="text-3xl font-bold tracking-tight">Orden del Día</h1>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Genera el reporte diario de operaciones para la guardia activa.
+              </p>
             </div>
-            <div className="space-y-2 max-w-xs flex-1 min-w-[200px]">
-              <Label
-                htmlFor="periodo"
-                className="text-xs uppercase font-bold text-muted-foreground"
-              >
-                Periodo
-              </Label>
-              <Input
-                id="periodo"
-                value={periodo}
-                onChange={(e) => setPeriodo(e.target.value)}
-                disabled={isGuardOpen}
-                className={`h-10 ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}
-                placeholder="Ej: 28/03/2026 AL 29/03/2026"
-              />
-            </div>
-            <div className="flex items-center gap-3 pb-0.5 ml-auto">
-              {isGuardOpen ? (
-                <Badge variant="outline" className="h-10 px-4 gap-2 bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold uppercase tracking-wider animate-pulse">
+            
+            <div className="flex items-center gap-3 shrink-0">
+              {isGuardOpen && (
+                <Badge variant="outline" className="hidden md:flex h-9 px-4 gap-2 bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold uppercase tracking-wider animate-pulse rounded-xl">
                   <CheckCircle2 className="h-4 w-4" />
                   Guardia Activa
                 </Badge>
-              ) : (
-                <Button 
-                  onClick={handleOpenGuard}
-                  disabled={!selectedGuardId}
-                  className="gap-2 h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all"
-                >
-                  <Play className="h-4 w-4 fill-current" />
-                  Abrir Guardia
-                </Button>
               )}
-              
               <Button 
                 onClick={() => formRef.current?.generateOrder()} 
                 disabled={!selectedGuardId}
-                variant="outline"
-                className="gap-2 h-10 px-6 shadow-sm hover:shadow-md transition-all active:scale-95 border-primary/20 hover:bg-primary/5"
+                className="gap-2 h-11 px-8 shadow-lg hover:shadow-primary/20 transition-all font-bold rounded-xl"
               >
-                <Eye className="h-4 w-4" />
+                <Eye className="h-5 w-5" />
                 Generar Orden
               </Button>
             </div>
           </div>
 
-          {selectedGuardId ? (
-            <OrdenDelDiaForm
-              ref={formRef}
-              selectedGuard={selectedGuardId}
-              initialData={selectedGuardForForm?.staff}
-              periodo={periodo}
-            />
-          ) : (
-            <div className="text-center py-12 border-2 border-dashed rounded-lg bg-muted/30">
-              <p className="text-muted-foreground">
-                Por favor, selecciona una guardia para empezar.
-              </p>
-              {guards.length === 0 && (
-                <p className="text-xs mt-2">
-                  No hay guardias definidas. Ve a{' '}
-                  <Link to="/personal" className="text-primary font-bold hover:underline">
-                    Gestión de Personal
-                  </Link>{' '}
-                  para crearlas.
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 shrink-0">
+            <Card className="md:col-span-12 shadow-sm border-muted/60 overflow-hidden">
+              <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
+                <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <Lock className="h-3.5 w-3.5 text-primary" />
+                  Configuración de la Guardia
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 flex flex-wrap items-end gap-6">
+                <div className="space-y-2 max-w-xs flex-1 min-w-[200px]">
+                  <Label
+                    htmlFor="guard-select"
+                    className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
+                  >
+                    Guardia de Turno
+                  </Label>
+                  <Select 
+                    value={selectedGuardId} 
+                    onValueChange={handleActiveGuardChange}
+                    disabled={isGuardOpen}
+                  >
+                    <SelectTrigger id="guard-select" className={`h-11 rounded-xl shadow-sm ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}>
+                      <SelectValue placeholder="Selecciona una guardia..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {guards.map((guard) => (
+                        <SelectItem key={guard.id} value={guard.id}>
+                          Guardia "{guard.id}"
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2 max-w-xs flex-1 min-w-[200px]">
+                  <Label
+                    htmlFor="periodo"
+                    className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
+                  >
+                    Periodo de Operaciones
+                  </Label>
+                  <Input
+                    id="periodo"
+                    value={periodo}
+                    onChange={(e) => setPeriodo(e.target.value)}
+                    disabled={isGuardOpen}
+                    className={`h-11 rounded-xl shadow-sm ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}
+                    placeholder="Ej: 28/03/2026 AL 29/03/2026"
+                  />
+                </div>
+                {!isGuardOpen && (
+                  <Button 
+                    onClick={handleOpenGuard}
+                    disabled={!selectedGuardId}
+                    className="gap-2 h-11 px-8 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-emerald-600/20 transition-all font-bold rounded-xl ml-auto"
+                  >
+                    <Play className="h-4 w-4 fill-current" />
+                    Abrir Nueva Guardia
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex-1 min-h-0">
+            {selectedGuardId ? (
+              <div className="h-full">
+                <OrdenDelDiaForm
+                  ref={formRef}
+                  selectedGuard={selectedGuardId}
+                  initialData={selectedGuardForForm?.staff}
+                  periodo={periodo}
+                />
+              </div>
+            ) : (
+              <div className="text-center py-24 border-2 border-dashed rounded-3xl bg-muted/20 border-muted/50 transition-all hover:bg-muted/30 h-full flex flex-col items-center justify-center">
+                <div className="bg-muted p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <Lock className="h-8 w-8 text-muted-foreground opacity-50" />
+                </div>
+                <h3 className="text-lg font-bold mb-1">Esperando Selección</h3>
+                <p className="text-muted-foreground text-sm max-w-xs mx-auto text-center px-4">
+                  Por favor, selecciona una guardia en el panel superior para cargar el formulario de operaciones.
                 </p>
-              )}
-            </div>
-          )}
+                {guards.length === 0 && (
+                  <div className="mt-6">
+                    <Button asChild variant="outline" className="rounded-xl">
+                      <Link to="/personal">
+                        Configurar Guardias en Personal
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </ScrollArea>
+    </div>
   );
 }

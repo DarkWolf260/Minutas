@@ -4,12 +4,13 @@ import React from 'react';
 import { Building2, Save, CheckCircle2, ArrowUpDown } from 'lucide-react';
 import { RoleSorter } from './structure/role-sorter';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { generateId } from '@/lib/utils/id';
-import { Department, StaffRole } from '@/types';
+import { Department, StaffRole, StaffMember } from '@/types';
 import { StructureTree } from '@/components/structure/structure-tree';
 import { getInstitutionalData } from './structure/institutional-data';
 
@@ -21,6 +22,7 @@ interface StructureManagerProps {
   onSave: () => void;
   rolesLoaded?: boolean;
   deptsLoaded?: boolean;
+  personnel?: StaffMember[];
 }
 
 export function StructureManager({
@@ -31,6 +33,7 @@ export function StructureManager({
   onSave,
   rolesLoaded = true,
   deptsLoaded = true,
+  personnel = [],
 }: StructureManagerProps) {
 
 
@@ -41,16 +44,28 @@ export function StructureManager({
   // Sync with props when they load initially (only once)
   const isInitialized = React.useRef(false);
 
+  const STATUS_ROLE_NAMES = ['vacaciones', 'reposo', 'permiso', 'apoyo'];
+
   React.useEffect(() => {
+    const patchRoles = (rs: StaffRole[]) => {
+      return rs.map(r => {
+        const nameLower = (r.name || '').toLowerCase().trim();
+        if (STATUS_ROLE_NAMES.includes(nameLower) && !r.isStatus) {
+          return { ...r, isStatus: true };
+        }
+        return r;
+      });
+    };
+
     if (!isInitialized.current && roles.length > 0) {
-      setLocalRoles(roles);
+      setLocalRoles(patchRoles(roles));
       if (departments.length > 0) {
         setLocalDepts(departments);
         isInitialized.current = true;
       }
     } else if (!isInitialized.current && deptsLoaded && rolesLoaded) {
       // If loaded but empty, still mark as initialized
-      setLocalRoles(roles);
+      setLocalRoles(patchRoles(roles));
       setLocalDepts(departments);
       isInitialized.current = true;
     }
@@ -138,8 +153,48 @@ export function StructureManager({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 h-full">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch flex-1 min-h-0">
+    <div className="md:flex-1 md:flex md:flex-col md:min-h-0 bg-transparent">
+      {/* Mobile view: Tabbed interface to expand space */}
+      <div className="flex flex-col md:hidden">
+        <Tabs defaultValue="tree" className="w-full bg-transparent">
+          <TabsList className="grid w-full grid-cols-2 mb-2 shrink-0">
+            <TabsTrigger value="tree" className="text-xs font-bold uppercase transition-all">Organigrama</TabsTrigger>
+            <TabsTrigger value="sorter" className="text-xs font-bold uppercase transition-all">Jerarquía</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent 
+            value="tree" 
+            className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col"
+          >
+            <StructureTree 
+              departments={localDepts}
+              roles={localRoles}
+              onAddDept={handleAddDept}
+              onRemoveDept={handleRemoveDepartment}
+              onAddRole={handleAddRole}
+              onRemoveRole={handleRemoveRole}
+              onUpdateRole={handleUpdateRole}
+              onLoadInstitutional={handleLoadInstitutional}
+              personnel={personnel}
+              showPersonnel={true}
+            />
+          </TabsContent>
+          
+          <TabsContent 
+            value="sorter" 
+            className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col"
+          >
+            <RoleSorter 
+              roles={localRoles}
+              onReorder={setLocalRoles}
+              onSave={handleSaveAll}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Desktop view: Classic side-by-side grid */}
+      <div className="hidden lg:grid grid-cols-12 gap-8 items-stretch md:flex-1 md:min-h-0">
         {/* Left Column: Hierarchical Tree View (Dynamic Management) */}
         <div className="lg:col-span-8 flex flex-col min-h-0">
           <StructureTree 
@@ -151,6 +206,8 @@ export function StructureManager({
             onRemoveRole={handleRemoveRole}
             onUpdateRole={handleUpdateRole}
             onLoadInstitutional={handleLoadInstitutional}
+            personnel={personnel}
+            showPersonnel={false}
           />
         </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -56,7 +57,13 @@ function PersonnelPageContent() {
 
   useReports();
 
-  // Dialog state
+  // Hooks
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'personnel';
+  
+  const setActiveTab = (tab: string) => {
+    setSearchParams({ tab });
+  };
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<StaffMember | null>(null);
   const [viewHistoryMember, setViewHistoryMember] = useState<StaffMember | null>(null);
@@ -146,30 +153,32 @@ function PersonnelPageContent() {
 
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 w-full overflow-hidden">
-      <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-6 flex-1 flex flex-col min-h-0">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 shrink-0">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Personal</h1>
-            <p className="text-muted-foreground text-sm">
-              Gestión centralizada de funcionarios, departamentos y asignación de guardias.
+    <div className="flex-col w-full md:flex-1 md:flex md:min-h-0 md:overflow-hidden">
+      <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-6 flex flex-col md:flex-1 md:min-h-0">
+        <div className="flex flex-col gap-4 mb-6 shrink-0 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col">
+            <h1 className="text-3xl font-bold tracking-tight">Gestión de Personal</h1>
+            <p className="text-muted-foreground mt-1">
+              Administración de funcionarios, cargos y jerarquías de la institución.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <CsvImportButton onImport={addMembers} personnel={personnel} />
-            <Button onClick={handleAddNew} className="gap-2 shadow-sm">
-              <PlusCircle className="h-4 w-4" />
-              Añadir Personal
-            </Button>
-          </div>
+          {activeTab === 'personnel' && (
+            <div className="flex flex-row flex-wrap items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-300">
+              <CsvImportButton onImport={addMembers} personnel={personnel} />
+              <Button onClick={handleAddNew} className="gap-1.5 shadow-sm h-9 text-xs px-3 rounded-xl">
+                <PlusCircle className="h-4 w-4" />
+                Añadir Personal
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Main Content Area */}
-        <div className="w-full flex-1 flex flex-col min-h-0 gap-6">
+        <div className="w-full flex flex-col gap-6 md:flex-1 md:min-h-0">
 
           {/* Bulk Actions Bar */}
           {selectedIds.length > 0 && (
-            <div className="flex items-center justify-between p-4 bg-destructive/10 border border-destructive/20 rounded-xl animate-in fade-in slide-in-from-top-4 duration-300 shrink-0">
+            <div className="flex items-center justify-between p-4 bg-destructive/10 border border-destructive/20 rounded-lg animate-in fade-in slide-in-from-top-4 duration-300 shrink-0">
               <span className="text-sm font-medium text-destructive-foreground">
                 {selectedIds.length} funcionarios seleccionados
               </span>
@@ -186,35 +195,41 @@ function PersonnelPageContent() {
           )}
 
           {/* Tabbed Interface */}
-          <Tabs defaultValue="personnel" className="flex-1 flex flex-col min-h-0 gap-6">
+          <Tabs 
+            value={activeTab} 
+            onValueChange={setActiveTab} 
+            className="flex flex-col sm:gap-6 md:flex-1 md:min-h-0"
+          >
             <div className="shrink-0">
-              <ScrollArea className="w-full pb-1 border-b" type="always">
-                <TabsList className="flex w-max sm:grid sm:w-full sm:grid-cols-4 sm:max-w-xl bg-transparent p-0 gap-8 h-10">
-                  <TabsTrigger value="personnel" className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 transition-all">
-                    <User className="h-4 w-4" />
-                    <span className="font-semibold">Funcionarios</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="structure" className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 transition-all">
-                    <LayoutGrid className="h-4 w-4" />
-                    <span className="font-semibold">Estructura</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="guards" className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 transition-all">
-                    <ShieldCheck className="h-4 w-4" />
-                    <span className="font-semibold">Guardias</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="units" className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 transition-all">
-                    <Car className="h-4 w-4" />
-                    <span className="font-semibold">Unidades</span>
-                  </TabsTrigger>
-                </TabsList>
-              </ScrollArea>
+              <div className="shrink-0 -mx-4 sm:mx-0">
+                <ScrollArea className="w-full pb-1 border-b px-4 sm:px-0" type="always">
+                  <TabsList className="flex w-max sm:grid sm:w-full sm:grid-cols-4 sm:max-w-xl bg-transparent p-0 gap-6 sm:gap-8 h-10">
+                    <TabsTrigger value="personnel" className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-1 sm:px-2 transition-all whitespace-nowrap">
+                      <User className="h-4 w-4" />
+                      <span className="font-semibold text-xs sm:text-sm">Funcionarios</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="structure" className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-1 sm:px-2 transition-all whitespace-nowrap">
+                      <LayoutGrid className="h-4 w-4" />
+                      <span className="font-semibold text-xs sm:text-sm">Estructura</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="guards" className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-1 sm:px-2 transition-all whitespace-nowrap">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span className="font-semibold text-xs sm:text-sm">Guardias</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="units" className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-1 sm:px-2 transition-all whitespace-nowrap">
+                      <Car className="h-4 w-4" />
+                      <span className="font-semibold text-xs sm:text-sm">Unidades</span>
+                    </TabsTrigger>
+                  </TabsList>
+                </ScrollArea>
+              </div>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-hidden pr-2 -mr-2 flex flex-col bg-transparent">
-              <TabsContent value="personnel" className="mt-0 focus-visible:outline-none ring-offset-background data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col min-h-0 h-full bg-transparent">
-                <Card className="border-none shadow-xl shadow-foreground/5 bg-card overflow-hidden flex-1 flex flex-col min-h-0 h-full">
-                  <CardContent className="p-0 sm:p-6 flex-1 min-h-0 flex flex-col overflow-hidden">
-                    <ScrollArea className="flex-1 pr-4 -mr-4" type="always">
+            <div className="md:flex-1 md:min-h-0 md:overflow-hidden pr-2 -mr-2 flex flex-col bg-transparent">
+              <TabsContent value="personnel" className="mt-0 focus-visible:outline-none ring-offset-background data-[state=active]:flex data-[state=active]:flex-col md:data-[state=active]:flex-1 md:min-h-0 bg-transparent animate-in fade-in duration-300">
+                <Card className="border-none shadow-xl shadow-foreground/5 bg-card md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0">
+                  <CardContent className="p-4 sm:p-6 flex flex-col md:flex-1 md:min-h-0 md:overflow-hidden">
+                    <ScrollArea className="md:flex-1 pr-4 -mr-4" type="always">
                       <PersonnelTable
                         personnel={personnel}
                         departments={departments}
@@ -229,11 +244,15 @@ function PersonnelPageContent() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="structure" className="mt-0 focus-visible:outline-none data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col min-h-0 h-full bg-transparent">
-                <div className="flex-1 flex flex-col h-full min-h-0 bg-transparent">
+              <TabsContent 
+                value="structure" 
+                className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col md:data-[state=active]:flex-1 md:min-h-0 bg-transparent animate-in fade-in duration-300"
+              >
+                <div className="flex flex-col bg-transparent md:flex-1 md:min-h-0 md:overflow-hidden">
                   <StructureManager
                     roles={roles}
                     departments={departments}
+                    personnel={personnel}
                     onRolesChange={saveRoles}
                     onDepartmentsChange={saveDepartments}
                     onSave={() => { }}
@@ -243,8 +262,8 @@ function PersonnelPageContent() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="guards" className="mt-0 focus-visible:outline-none data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col min-h-0 h-full bg-transparent">
-                <div className="flex-1 flex flex-col h-full min-h-0">
+              <TabsContent value="guards" className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col md:data-[state=active]:flex-1 md:min-h-0 bg-transparent animate-in fade-in duration-300">
+                <div className="flex flex-col md:flex-1 md:min-h-0 md:overflow-hidden">
                   <GuardAssignmentPanel
                     guards={guards}
                     personnel={personnel}
@@ -254,8 +273,8 @@ function PersonnelPageContent() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="units" className="mt-0 focus-visible:outline-none data-[state=active]:flex-1 data-[state=active]:flex data-[state=active]:flex-col min-h-0 h-full bg-transparent">
-                <div className="flex-1 flex flex-col h-full min-h-0">
+              <TabsContent value="units" className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col md:data-[state=active]:flex-1 md:min-h-0 bg-transparent animate-in fade-in duration-300">
+                <div className="flex flex-col md:flex-1 md:h-full md:min-h-0">
                   <UnitsManager />
                 </div>
               </TabsContent>

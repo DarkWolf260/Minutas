@@ -18,6 +18,7 @@ import type { StaffMember, StaffRole, Department } from '@/types';
 import { validatePersonnel } from '@/lib/validations/personnel';
 import { generateId } from '@/lib/utils/id';
 import { useWorkspaceManager } from '@/lib/db/db-context';
+import { RANK_OPTIONS, STATUS_OPTIONS } from '@/constants/personnel';
 
 interface CSVManagerProps {
   personnel: StaffMember[];
@@ -34,7 +35,7 @@ export function CSVManager({ personnel, roles, departments, onImport }: CSVManag
   const [isImporting, setIsImporting] = useState(false);
 
   const downloadTemplate = () => {
-    const headers = ['Jerarquía', 'Nombre', 'Cédula', 'Cargo', 'Departamento'];
+    const headers = ['Jerarquía', 'Nombre y Apellido', 'Cédula', 'Cargo', 'Departamento', 'Estatus'];
     const csvContent = headers.join(',') + '\n';
     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -68,15 +69,21 @@ export function CSVManager({ personnel, roles, departments, onImport }: CSVManag
           const line = rawLine.trim();
           if (!line) continue;
 
-          const [rank, name, cedula, role, department] = line.split(',').map((s) => s.trim());
+          const [rank, name, cedula, cargo, departmentName, statusLabel] = line.split(',').map((s) => s.trim());
+
+          // Find department ID by name
+          const dept = departments.find(d => d.name.toLowerCase() === (departmentName || '').toLowerCase());
+          
+          // Find status value by label
+          const statusValue = STATUS_OPTIONS.find(s => s.label.toLowerCase() === (statusLabel || '').toLowerCase())?.value || 'activo';
 
           // Validate using Zod
           const validation = validatePersonnel({
             name,
             cedula,
             rank,
-            role,
-            department,
+            roleId: cargo, // Map CSV "Cargo" to roleId
+            department: dept?.id || departmentName,
           });
 
           if (!validation.success) {
@@ -84,26 +91,11 @@ export function CSVManager({ personnel, roles, departments, onImport }: CSVManag
             continue;
           }
 
-          // Check role exists
-          if (role && !roles.find((r) => r.name.toLowerCase() === role.toLowerCase())) {
-            errors.push(`Fila ${i + 1}: Cargo "${role}" no existe.`);
-            continue;
-          }
-
-          // Check department exists
-          if (
-            department &&
-            !departments.find((d) => d.name.toLowerCase() === department.toLowerCase())
-          ) {
-            errors.push(`Fila ${i + 1}: Departamento "${department}" no existe.`);
-            continue;
-          }
-
           newMembers.push({
             id: generateId('personnel'),
             workspaceId: currentWorkspace || '',
             ...validation.data,
-            status: 'activo',
+            status: statusValue as any,
           } as StaffMember);
         }
 
@@ -125,13 +117,18 @@ export function CSVManager({ personnel, roles, departments, onImport }: CSVManag
   };
 
   const handleExport = () => {
-    const headers = ['Jerarquía', 'Nombre', 'Cédula', 'Cargo', 'Departamento'];
+    const headers = ['Jerarquía', 'Nombre y Apellido', 'Cédula', 'Cargo', 'Departamento', 'Estatus'];
+    
+    const deptMap = new Map(departments.map(d => [d.id, d.name]));
+    const statusMap = new Map(STATUS_OPTIONS.map(s => [s.value, s.label]));
+
     const rows = personnel.map((p) => [
       p.rank || '',
       p.name,
       p.cedula || '',
-      '', // Role would need to be looked up
-      p.department || '',
+      p.roleId || p.cargo || '', // Mapping institutional role to Cargo column
+      deptMap.get(p.department || '') || p.department || '',
+      statusMap.get(p.status || 'activo') || 'Activo',
     ]);
 
     const csvContent = [headers, ...rows].map((row) => row.join(',')).join('\n');

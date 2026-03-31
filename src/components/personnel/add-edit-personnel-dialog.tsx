@@ -57,7 +57,6 @@ export function AddEditPersonnelDialog({
   const [roleId, setRoleId] = useState('none');
   const [department, setDepartment] = useState('none');
   const [status, setStatus] = useState<PersonnelStatus>('activo');
-  const [specialties, setSpecialties] = useState<string[]>([]);
   const [titulo, setTitulo] = useState('');
 
   // Initialize form with member data when editing
@@ -78,7 +77,6 @@ export function AddEditPersonnelDialog({
       setDepartment(matchById?.id || matchByName?.id || 'none');
 
       setStatus(member.status || 'activo');
-      setSpecialties(member.specialties || []);
       setTitulo((member as StaffMember & { titulo?: string }).titulo || '');
     } else {
       setName('');
@@ -87,7 +85,6 @@ export function AddEditPersonnelDialog({
       setRoleId('none');
       setDepartment('none');
       setStatus('activo');
-      setSpecialties([]);
       setTitulo('');
     }
   }, [member, open, departments]);
@@ -107,7 +104,6 @@ export function AddEditPersonnelDialog({
       roleId: roleId === 'none' ? undefined : roleId,
       department: department === 'none' ? undefined : department,
       status,
-      specialties: specialties.length > 0 ? specialties : undefined,
       titulo: titulo.trim() || undefined,
     };
 
@@ -174,9 +170,9 @@ export function AddEditPersonnelDialog({
                 <CedulaInput id="cedula" name="cedula" value={cedula} onChange={setCedula} />
               </div>
 
-              {/* Cargo */}
+              {/* Cargo Formal */}
               <div className="space-y-2">
-                <Label htmlFor="role">Cargo Predeterminado</Label>
+                <Label htmlFor="role">Cargo Institucional</Label>
                 <Select value={roleId} onValueChange={setRoleId}>
                   <SelectTrigger id="role" name="role">
                     <SelectValue placeholder="Seleccionar cargo..." />
@@ -226,18 +222,6 @@ export function AddEditPersonnelDialog({
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            {/* Especialidades */}
-            <div className="space-y-2">
-              <Label>Especialidades</Label>
-              <MultiInput
-                id="specialties"
-                name="specialties"
-                value={specialties}
-                onChange={(vals) => setSpecialties(Array.isArray(vals) ? vals : [vals])}
-                placeholder="Ej. Primeros Auxilios, Rescate..."
-              />
             </div>
 
             {/* Título (opcional, no visible en tabla) */}

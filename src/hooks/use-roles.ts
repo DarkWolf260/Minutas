@@ -54,7 +54,7 @@ const defaultRoles: StaffRole[] = [
     order: 10,
   },
   {
-    name: PERSONNEL_STATUS.APOYO.charAt(0).toUpperCase() + PERSONNEL_STATUS.APOYO.slice(1),
+    name: 'Apoyo',
     isSingle: false,
     departmentScope: [],
     order: 11,

@@ -1,6 +1,6 @@
 'use client';
 
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { OnlineStatus } from '@/components/online-status';
 import { NotificationBell } from '@/components/notification-bell';
@@ -25,14 +25,17 @@ import { useTheme } from '@/components/theme-provider';
 export function MobileNav() {
   const { profile } = useProfile();
   const { theme, setTheme } = useTheme();
+  const { pathname } = useLocation();
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-md px-4 sm:hidden shadow-sm shadow-black/5">
       <div className="flex items-center gap-2 font-semibold flex-1">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-background/50 border overflow-hidden shadow-sm">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-background/50 border overflow-hidden shadow-sm shrink-0">
           <img src="/icons/icon-192x192.png" alt="App Icon" className="h-4 w-4 object-contain" />
         </div>
-        <span className="text-sm">PC Reportes</span>
+        <span className="text-xl font-bold tracking-tight text-foreground truncate">
+          PC Reportes
+        </span>
       </div>
 
       <div className="flex items-center gap-2">

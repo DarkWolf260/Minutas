@@ -175,7 +175,7 @@ export default function PlantillasPage() {
           <div className="flex flex-1 min-h-0 overflow-hidden h-full sm:p-4 sm:pt-0 gap-6">
             <aside
               className={cn(
-                'h-full w-full sm:w-96 flex-col bg-card flex sm:rounded-lg border sm:shadow-sm shrink-0 min-h-0 relative',
+                'h-full w-full sm:w-96 flex-col bg-card flex sm:rounded-lg border sm:shadow-sm shrink-0 min-h-0 relative overflow-hidden',
                 selectedTemplateId ? 'hidden sm:flex' : 'flex'
               )}
             >
@@ -196,10 +196,10 @@ export default function PlantillasPage() {
                   accept=".txt"
                 />
               </div>
-              <div className="flex-1 relative min-h-0">
-                <ScrollArea className="absolute inset-0" type="always">
+              <div className="flex-1 relative min-h-0 w-full overflow-hidden">
+                <div className="absolute inset-0 overflow-y-auto overflow-x-hidden custom-scrollbar">
                   <TooltipProvider>
-                    <div className="space-y-1 p-4 pt-0 pb-20 sm:pb-4">
+                    <div className="space-y-1 p-4 pt-0 pb-20 sm:pb-4 min-w-0 w-full">
                       {templates.map((template, index) => {
                         const { layout, fieldNames, errors } = parseTemplate(template.content);
                         const isValid =
@@ -209,12 +209,12 @@ export default function PlantillasPage() {
                           <div
                             key={`${template.id}-${index}`}
                             className={cn(
-                              'group w-full flex items-center justify-between rounded-md p-3 text-left transition-colors hover:bg-muted',
+                              'group w-full flex items-center justify-between rounded-md p-2.5 text-left transition-colors hover:bg-muted min-w-0 overflow-hidden flex-shrink-0',
                               selectedTemplateId === template.id && 'bg-muted shadow-sm'
                             )}
                           >
                             <div
-                              className="flex items-center gap-3 flex-grow cursor-pointer overflow-hidden"
+                              className="flex items-center gap-2 flex-1 cursor-pointer min-w-0 overflow-hidden mr-2"
                               onClick={() => setSelectedTemplateId(template.id)}
                             >
                               <FileText
@@ -223,9 +223,9 @@ export default function PlantillasPage() {
                                   !isValid && 'text-destructive'
                                 )}
                               />
-                              <span className="flex-1 font-medium truncate">{template.name}</span>
+                              <span className="flex-1 font-medium truncate text-xs sm:text-sm">{template.name}</span>
                               {!isValid && (
-                                <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+                                <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />
                               )}
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
@@ -308,7 +308,7 @@ export default function PlantillasPage() {
                       )}
                     </div>
                   </TooltipProvider>
-                </ScrollArea>
+                </div>
               </div>
             </aside>
 
@@ -368,19 +368,17 @@ export default function PlantillasPage() {
 
         <TabsContent
           value="builder"
-          className="flex-1 h-full min-h-0 m-0 p-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
+          className="flex-1 min-h-0 m-0 p-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
         >
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden sm:p-4 sm:pt-0">
-             <div className="flex-1 sm:rounded-lg border sm:bg-card overflow-hidden">
-              <ScrollArea className="h-full w-full" type="always">
-                <TemplateBuilder
-                  onOpenInfoDialog={() => setIsInfoDialogOpen(true)}
-                  initialTemplate={editingTemplate}
-                  onUpdate={handleUpdateTemplateContent}
-                  onAdd={addTemplate}
-                  onCancel={handleCancelEdit}
-                />
-              </ScrollArea>
+          <div className="flex-1 relative overflow-hidden">
+            <div className="absolute inset-0 px-4 sm:px-6 lg:px-10 pb-6">
+              <TemplateBuilder
+                onOpenInfoDialog={() => setIsInfoDialogOpen(true)}
+                initialTemplate={editingTemplate}
+                onUpdate={handleUpdateTemplateContent}
+                onAdd={addTemplate}
+                onCancel={handleCancelEdit}
+              />
             </div>
           </div>
         </TabsContent>

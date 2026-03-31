@@ -151,7 +151,7 @@ export function GuardAssignmentPanel({
                           variant="ghost"
                           size="sm"
                           onClick={() => handleRemoveGuard(guard.id)}
-                          className="text-muted-foreground hover:text-destructive h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="text-muted-foreground hover:text-destructive h-8 w-8 p-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>

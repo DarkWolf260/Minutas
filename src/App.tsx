@@ -15,6 +15,7 @@ import { NotificationsProvider } from '@/lib/notifications-provider';
 import { lazy, Suspense } from 'react';
 import { LoadingScreen } from '@/components/loading-screen';
 import { Loader2 } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 // Lazy-load all pages
 const NovedadesPage = lazy(() => import('@/pages/novedades'));
@@ -46,41 +47,45 @@ const PageLoader = () => (
 );
 
 function AppLayout() {
+  const location = useLocation();
+
   return (
     <ThemeProvider defaultTheme="system" storageKey="minutas-theme">
       <DatabaseProvider>
         <NotificationsProvider>
           <P2PProvider>
             <TooltipProvider>
-              <div className="flex h-full w-full flex-col sm:flex-row overflow-hidden bg-background" suppressHydrationWarning>
+              <div className="flex min-h-full w-full flex-col sm:flex-row md:overflow-hidden bg-background" suppressHydrationWarning>
                 <SideNav />
-                <div className="flex flex-1 flex-col sm:pl-14 overflow-hidden relative">
+                <div className="flex flex-1 flex-col sm:pl-14 md:overflow-hidden relative">
                   <MobileNav />
-                  <main className="flex-1 overflow-hidden flex flex-col min-h-0 relative bg-muted/30">
+                  <main className="flex-1 md:overflow-hidden flex flex-col min-h-0 relative bg-muted/30">
                     <ErrorBoundary name="MainContent">
                       <Suspense fallback={<PageLoader />}>
-                        <Routes>
-                          <Route path="/" element={<NovedadesPage />} />
-                          <Route path="/settings/direcciones" element={<DireccionesPage />} />
-                          <Route path="/estadisticas" element={<EstadisticasPage />} />
-                          <Route path="/historial" element={<HistorialPage />} />
-                          <Route path="/orden-del-dia" element={<OrdenDelDiaPage />} />
-                          <Route path="/personal" element={<PersonalPage />} />
-                          <Route path="/plantillas" element={<PlantillasPage />} />
-                          <Route path="/reporte-final" element={<ReporteFinalPage />} />
-                          <Route path="/settings" element={<SettingsPage />} />
-                          <Route path="/settings/workspaces" element={<SettingsWorkspacesPage />} />
-                          <Route path="/settings/profile" element={<SettingsProfilePage />} />
-                          <Route path="/settings/borrar-datos" element={<SettingsBorrarDatosPage />} />
-                          <Route path="/settings/p2p" element={<SettingsP2PPage />} />
-                          <Route path="/documentation" element={<DocumentationPage />} />
-                          <Route path="/documentation/about" element={<DocumentationAboutPage />} />
-                          <Route path="/documentation/changelog" element={<DocumentationChangelogPage />} />
-                          <Route path="/documentation/roadmap" element={<DocumentationRoadmapPage />} />
-                          <Route path="/documentation/template-engine" element={<DocumentationTemplateEnginePage />} />
-                          <Route path="/documentation/user-guide" element={<DocumentationUserGuidePage />} />
-                          <Route path="/offline" element={<OfflinePage />} />
-                        </Routes>
+                        <div key={location.pathname} className="flex-1 flex flex-col min-h-0 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">
+                          <Routes>
+                            <Route path="/" element={<NovedadesPage />} />
+                            <Route path="/settings/direcciones" element={<DireccionesPage />} />
+                            <Route path="/estadisticas" element={<EstadisticasPage />} />
+                            <Route path="/historial" element={<HistorialPage />} />
+                            <Route path="/orden-del-dia" element={<OrdenDelDiaPage />} />
+                            <Route path="/personal" element={<PersonalPage />} />
+                            <Route path="/plantillas" element={<PlantillasPage />} />
+                            <Route path="/reporte-final" element={<ReporteFinalPage />} />
+                            <Route path="/settings" element={<SettingsPage />} />
+                            <Route path="/settings/workspaces" element={<SettingsWorkspacesPage />} />
+                            <Route path="/settings/profile" element={<SettingsProfilePage />} />
+                            <Route path="/settings/borrar-datos" element={<SettingsBorrarDatosPage />} />
+                            <Route path="/settings/p2p" element={<SettingsP2PPage />} />
+                            <Route path="/documentation" element={<DocumentationPage />} />
+                            <Route path="/documentation/about" element={<DocumentationAboutPage />} />
+                            <Route path="/documentation/changelog" element={<DocumentationChangelogPage />} />
+                            <Route path="/documentation/roadmap" element={<DocumentationRoadmapPage />} />
+                            <Route path="/documentation/template-engine" element={<DocumentationTemplateEnginePage />} />
+                            <Route path="/documentation/user-guide" element={<DocumentationUserGuidePage />} />
+                            <Route path="/offline" element={<OfflinePage />} />
+                          </Routes>
+                        </div>
                       </Suspense>
                     </ErrorBoundary>
                   </main>

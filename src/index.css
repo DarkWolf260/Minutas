@@ -4,10 +4,22 @@
 
 @layer base {
   html, body {
-    @apply h-full w-full overflow-hidden;
+    @apply h-full w-full bg-background text-foreground;
     font-size: 14px;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior: none;
+    overflow-x: hidden;
+  }
+
+  /* Only lock scrolling on desktop to maintain app-like feel */
+  @media (min-width: 640px) {
+    html, body {
+      @apply overflow-hidden;
+    }
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-foreground;
   }
 
   @media (min-width: 640px) {
@@ -17,7 +29,13 @@
   }
 
   #root {
-    @apply h-full w-full overflow-hidden flex flex-col;
+    @apply h-full w-full flex flex-col;
+  }
+
+  @media (min-width: 640px) {
+    #root {
+      @apply overflow-hidden;
+    }
   }
 
   :root {
@@ -46,7 +64,7 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.75rem; /* rounded-xl consistency */
+    --radius: 1rem; /* rounded-2xl look for premium cards */
   }
 
   .dark {
@@ -69,7 +87,7 @@
     --border: 240 3.7% 14%;
     --input: 240 3.7% 10%; /* Slightly darker inputs for depth */
     --ring: 240 4.9% 83.9%;
-    --radius: 0.75rem; /* rounded-xl feel */
+    --radius: 1rem; /* rounded-2xl feel */
     --success: 142 70.6% 45.3%;
     --success-foreground: 144 61.2% 91.2%;
 

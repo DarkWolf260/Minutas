@@ -15,7 +15,7 @@ export function useUnits() {
 
     const sub = db.configs
       .find({
-        selector: { 
+        selector: {
           type: 'unit',
           workspaceId: currentWorkspace
         },
@@ -40,12 +40,13 @@ export function useUnits() {
             workspaceId: currentWorkspace,
             type: 'unit' as const,
             name,
-            data: name,
+            data: { name }, // Must be object for configsSchema
           }));
           await db.configs.bulkInsert(toInsert as any);
         }
       } catch (error) {
         logger.error('Failed to save units', error, { feature: 'Units', workspaceId: currentWorkspace });
+        throw error; // Re-throw to allow UI to catch it
       }
     },
     [db, currentWorkspace]

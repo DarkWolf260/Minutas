@@ -279,7 +279,7 @@ export function TemplateEditor({
 
 
   return (
-    <Card className="h-full flex flex-col shadow-lg">
+    <Card className="shadow-lg border-none">
       <CardHeader className="flex flex-row items-start justify-between">
         <div>
           <CardTitle>Editor de Plantilla: {localTemplate.name}</CardTitle>
@@ -291,152 +291,150 @@ export function TemplateEditor({
           {hasChanges ? 'Guardar Cambios' : 'Guardado'}
         </Button>
       </CardHeader>
-      <ScrollArea className="flex-1 w-full">
-        <CardContent className="pt-2">
-          <div className="space-y-2 mb-6">
-            <Label htmlFor="template-name">Nombre de la Plantilla</Label>
-            <Input
-              id="template-name"
-              value={localTemplate.name}
-              onChange={(e) => {
-                setLocalTemplate((p) => ({ ...p, name: e.target.value }));
-                setHasChanges(true);
-              }}
-            />
-          </div>
+      <CardContent className="pt-2 pb-10">
+        <div className="space-y-2 mb-6">
+          <Label htmlFor="template-name">Nombre de la Plantilla</Label>
+          <Input
+            id="template-name"
+            value={localTemplate.name}
+            onChange={(e) => {
+              setLocalTemplate((p) => ({ ...p, name: e.target.value }));
+              setHasChanges(true);
+            }}
+          />
+        </div>
 
-          <div className="border-t pt-6">
-            <h3 className="font-semibold text-lg mb-4">Estructura del Formulario</h3>
+        <div className="border-t pt-6">
+          <h3 className="font-semibold text-lg mb-4">Estructura del Formulario</h3>
 
-            <div className="space-y-4 p-1 rounded-md bg-muted/30">
-              {(() => {
-                const addedTopLevelFields = new Set<string>();
-                return (localConfig.layout || []).map((itemId, index) => {
-                  if (
-                    itemId.startsWith('section_') ||
-                    itemId.startsWith('sec_') ||
-                    itemId.startsWith('cond_')
-                  ) {
-                    const section = sectionsById[itemId];
-                    if (!section) return null;
-                    return (
-                      <Card
-                        key={`${section.id}-${index}`}
-                        className="bg-background overflow-hidden shadow-sm border-l-4 border-l-primary/30"
-                      >
-                        <CardHeader className="p-3 bg-muted/40 border-b">
-                          <div className="flex flex-col gap-2">
-                            <div className="flex items-center justify-between">
-                              <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-tight">
-                                {section.label}
-                                {section.isRepeatable && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-[10px] h-5 bg-primary/10 text-primary border-primary/20"
-                                  >
-                                    Repetible
-                                  </Badge>
-                                )}
-                              </CardTitle>
-                            </div>
-
-                            <div className="flex items-center gap-2 mt-1">
-                              <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
-                              <Select
-                                value={section.statisticsCategory || 'none'}
-                                onValueChange={(val) =>
-                                  handleSectionChange(section.id, {
-                                    statisticsCategory: val === 'none' ? undefined : val,
-                                  })
-                                }
-                              >
-                                <SelectTrigger className="h-7 text-[10px] w-full bg-background/50 border-dashed">
-                                  <SelectValue placeholder="Anexar Estadística..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="none" className="text-xs italic">
-                                    Niguna estadística
-                                  </SelectItem>
-                                  {statisticsOptions.map((opt) => (
-                                    <SelectItem
-                                      key={opt.value}
-                                      value={opt.value}
-                                      className="text-[10px]"
-                                    >
-                                      {opt.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
+          <div className="space-y-4 p-1 rounded-md bg-muted/30">
+            {(() => {
+              const addedTopLevelFields = new Set<string>();
+              return (localConfig.layout || []).map((itemId, index) => {
+                if (
+                  itemId.startsWith('section_') ||
+                  itemId.startsWith('sec_') ||
+                  itemId.startsWith('cond_')
+                ) {
+                  const section = sectionsById[itemId];
+                  if (!section) return null;
+                  return (
+                    <Card
+                      key={`${section.id}-${index}`}
+                      className="bg-background overflow-hidden shadow-sm border-l-4 border-l-primary/30"
+                    >
+                      <CardHeader className="p-3 bg-muted/40 border-b">
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-tight">
+                              {section.label}
+                              {section.isRepeatable && (
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[10px] h-5 bg-primary/10 text-primary border-primary/20"
+                                >
+                                  Repetible
+                                </Badge>
+                              )}
+                            </CardTitle>
                           </div>
-                        </CardHeader>
-                        <CardContent className="p-2 space-y-0.5 bg-muted/5">
-                          {section.layout?.map((fieldId, fieldIdx) => {
-                            const fieldConfig = localConfig.fields[fieldId];
-                            if (!fieldConfig) return null;
 
-                            return (
-                              <FieldEditor
-                                key={`${section.id}-${fieldId}-${fieldIdx}`}
-                                fieldId={fieldId}
-                                fieldConfig={fieldConfig}
-                                allFields={localConfig.fields}
-                                onConfigChange={handleFieldChange}
-                                siblingFieldIds={section.fieldIds}
-                                optionsDefinedInTemplate={
-                                  optionsDefinedInTemplate.get(fieldId) || false
-                                }
-                              />
-                            );
-                          })}
-                          {section.fieldIds.length === 0 && (
-                            <p className="text-[11px] text-muted-foreground text-center p-2 italic">
-                              Sin campos definidos.
-                            </p>
-                          )}
-                        </CardContent>
-                      </Card>
-                    );
-                  } else if (itemId === 'section_separator' || itemId === 'sec_separator') {
-                    return <div key={`${itemId}-${index}`} className="h-px bg-foreground/20 my-4" />;
-                  } else {
-                    const fieldId = itemId;
-                    const fieldConfig = localConfig.fields[fieldId];
-                    if (!fieldConfig || fieldConfig.type === 'predefined') return null;
+                          <div className="flex items-center gap-2 mt-1">
+                            <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+                            <Select
+                              value={section.statisticsCategory || 'none'}
+                              onValueChange={(val) =>
+                                handleSectionChange(section.id, {
+                                  statisticsCategory: val === 'none' ? undefined : val,
+                                })
+                              }
+                            >
+                              <SelectTrigger className="h-7 text-[10px] w-full bg-background/50 border-dashed">
+                                <SelectValue placeholder="Anexar Estadística..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none" className="text-xs italic">
+                                  Niguna estadística
+                                </SelectItem>
+                                {statisticsOptions.map((opt) => (
+                                  <SelectItem
+                                    key={opt.value}
+                                    value={opt.value}
+                                    className="text-[10px]"
+                                  >
+                                    {opt.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-2 space-y-0.5 bg-muted/5">
+                        {section.layout?.map((fieldId, fieldIdx) => {
+                          const fieldConfig = localConfig.fields[fieldId];
+                          if (!fieldConfig) return null;
 
-                    addedTopLevelFields.add(fieldId);
+                          return (
+                            <FieldEditor
+                              key={`${section.id}-${fieldId}-${fieldIdx}`}
+                              fieldId={fieldId}
+                              fieldConfig={fieldConfig}
+                              allFields={localConfig.fields}
+                              onConfigChange={handleFieldChange}
+                              siblingFieldIds={section.fieldIds}
+                              optionsDefinedInTemplate={
+                                optionsDefinedInTemplate.get(fieldId) || false
+                              }
+                            />
+                          );
+                        })}
+                        {section.fieldIds.length === 0 && (
+                          <p className="text-[11px] text-muted-foreground text-center p-2 italic">
+                            Sin campos definidos.
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                } else if (itemId === 'section_separator' || itemId === 'sec_separator') {
+                  return <div key={`${itemId}-${index}`} className="h-px bg-foreground/20 my-4" />;
+                } else {
+                  const fieldId = itemId;
+                  const fieldConfig = localConfig.fields[fieldId];
+                  if (!fieldConfig || fieldConfig.type === 'predefined') return null;
 
-                    return (
-                      <FieldEditor
-                        key={`top-${fieldId}-${index}`}
-                        fieldId={fieldId}
-                        fieldConfig={fieldConfig}
-                        allFields={localConfig.fields}
-                        onConfigChange={handleFieldChange}
-                        siblingFieldIds={Array.from(addedTopLevelFields)}
-                        optionsDefinedInTemplate={optionsDefinedInTemplate.get(fieldId) || false}
-                      />
-                    );
-                  }
-                });
-              })()}
+                  addedTopLevelFields.add(fieldId);
 
-              {(localConfig.layout || []).length === 0 && (
-                <div className="text-center p-6 border-2 border-dashed rounded-md">
-                  <p className="text-muted-foreground">
-                    No se detectaron campos o secciones en la plantilla.
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Verifica la sintaxis <code>{`{campo}`}</code> o <code>["Sección"...]</code> en
-                    tu archivo.
-                  </p>
-                </div>
-              )}
-            </div>
+                  return (
+                    <FieldEditor
+                      key={`top-${fieldId}-${index}`}
+                      fieldId={fieldId}
+                      fieldConfig={fieldConfig}
+                      allFields={localConfig.fields}
+                      onConfigChange={handleFieldChange}
+                      siblingFieldIds={Array.from(addedTopLevelFields)}
+                      optionsDefinedInTemplate={optionsDefinedInTemplate.get(fieldId) || false}
+                    />
+                  );
+                }
+              });
+            })()}
+
+            {(localConfig.layout || []).length === 0 && (
+              <div className="text-center p-6 border-2 border-dashed rounded-md">
+                <p className="text-muted-foreground">
+                  No se detectaron campos o secciones en la plantilla.
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Verifica la sintaxis <code>{`{campo}`}</code> o <code>["Sección"...]</code> en
+                  tu archivo.
+                </p>
+              </div>
+            )}
           </div>
-        </CardContent>
-      </ScrollArea>
+        </div>
+      </CardContent>
     </Card>
   );
 }

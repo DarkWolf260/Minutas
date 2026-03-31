@@ -10,7 +10,7 @@ import { RxDBMigrationPlugin } from 'rxdb/plugins/migration-schema';
 import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
 import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
 
-const DB_NAME = 'central_minutas_v3_stable';
+const DB_NAME = 'central_minutas_main';
 
 /**
  * Internal state tracking to prevent multiple initialization attempts.
@@ -137,8 +137,7 @@ const getInternalState = (): RxDBInternalState => {
       activeDatabaseName: null,
       dbPromiseChain: Promise.resolve(),
       isDevModePluginAdded: false,
-      allDatabases: new Map<string, any>(), // name -> instance
-      retryCount: 0
+      allDatabases: new Map<string, any>() // name -> instance
     } as RxDBInternalState;
   }
   return _global.__rxdb_singleton;
@@ -179,77 +178,26 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
     return existingAfterDev;
   }
   
-  logger.info(`Creating central database instance: [${name}] (Attempt: ${state.retryCount + 1})`);
+  logger.info(`Creating central database instance: [${name}]`);
   let database: MinutasDatabase;
-  
-  // SAFE BOOT: Many DB9 errors are caused by the validation wrapper mismatching settings.
-  // We'll use the raw storage for stability in this environment.
-  const storage = getRxStorageDexie();
   
   try {
     database = await createRxDatabase<MinutasDatabaseCollections>({
       name: name,
-      storage: storage,
-      closeDuplicates: true,
-      ignoreDuplicate: true, 
+      storage: wrappedValidateAjvStorage({ storage: getRxStorageDexie() }),
     });
     
     // 3. Register IMMEDIATELY in the global tracking
     state.allDatabases.set(name, database);
   } catch (err: any) {
-    const rxErr = err as any;
-    
-    // Handle DB9: Settings mismatch (Common in Vercel Previews)
-    if (rxErr.code === 'DB9') {
-      state.retryCount++;
-      
-      if (state.retryCount > 3) {
-        logger.error(`FATAL: Database [${name}] failed to recover after ${state.retryCount} attempts. Stop.`);
-        state.retryCount = 0; // Reset for next global mount if needed
-        throw new Error(`Error fatal de base de datos (DB9): No se pudo sincronizar la configuración. Por favor, reinicie la aplicación.`);
-      }
-
-      logger.warn(`Settings mismatch [DB9] for [${name}]. Recovery attempt ${state.retryCount}/3...`, {
-        parameters: JSON.stringify(rxErr.parameters),
-        message: rxErr.message
-      });
-      try {
-        await removeRxDatabase(name, getRxStorageDexie());
-        
-        // MANUALLY wipe the Lexie store if the helper failed
-        try {
-          if (typeof window !== 'undefined' && window.indexedDB) {
-            logger.info(`Manually clearing IndexedDB for [${name}]...`);
-            window.indexedDB.deleteDatabase(name);
-            window.indexedDB.deleteDatabase('rxdb-dexie-' + name);
-            window.indexedDB.deleteDatabase('rxdb-dexie-' + name + '-internal');
-          }
-        } catch (e) {
-          // ignore
-        }
-
-        logger.info(`Conflicting database [${name}] removed. Waiting to retry...`);
-        
-        // Safety delay to let IndexedDB settle
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        return createDatabase();
-      } catch (removeErr) {
-        logger.error(`Automatic recovery failed for [${name}] during removal`, removeErr);
-        state.retryCount = 0;
-        throw err;
-      }
-    }
-
-    state.retryCount = 0; // Success or non-DB9 error, reset count
     logger.error(`Failed to create RxDatabase [${name}]`, {
       message: err.message,
-      code: rxErr.code,
-      parameters: rxErr.parameters,
       stack: err.stack
     });
     throw err;
   }
+  
+  logger.info(`Central database [${name}] initialized successfully.`);
 
   try {
     const collectionsConfig: Record<string, any> = {

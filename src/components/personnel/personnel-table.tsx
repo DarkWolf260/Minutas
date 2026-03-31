@@ -109,8 +109,6 @@ export function PersonnelTable({
       case 'reposo':
       case 'permiso':
         return 'outline';
-      case 'apoyo':
-        return 'secondary';
       default:
         return 'default';
     }
@@ -223,6 +221,8 @@ export function PersonnelTable({
                   <TableCell className="hidden lg:table-cell">
                     {member.roleId && member.roleId !== 'none' ? (
                       member.roleId
+                    ) : member.cargo ? (
+                      member.cargo
                     ) : (
                       <span className="text-muted-foreground">Sin cargo</span>
                     )}
@@ -282,10 +282,9 @@ export function PersonnelTable({
         </Table>
       </ScrollArea>
 
-      {/* Personnel Cards - Mobile */}
-      <div className="grid grid-cols-1 gap-4 md:hidden">
+      <div className="flex flex-col gap-3 md:hidden">
         {filteredPersonnel.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8 border rounded-lg border-dashed">
+          <div className="text-center text-muted-foreground py-10 border rounded-xl border-dashed bg-muted/20">
             {searchQuery ? 'No se encontraron resultados' : 'No hay personal registrado'}
           </div>
         ) : (
@@ -293,62 +292,69 @@ export function PersonnelTable({
             <div
               key={member.id}
               className={cn(
-                'flex flex-col border rounded-lg p-4 space-y-3 transition-colors',
-                selectedIds.includes(member.id) ? 'bg-muted/50 border-primary/50' : 'bg-card'
+                'flex flex-col border rounded-xl overflow-hidden transition-all duration-200 shadow-sm',
+                selectedIds.includes(member.id) 
+                  ? 'bg-primary/5 border-primary/30 ring-1 ring-primary/20' 
+                  : 'bg-card border-border/60 hover:border-border'
               )}
             >
-              <div className="flex justify-between items-start">
-                <div className="flex gap-3">
-                  <Checkbox
-                    checked={selectedIds.includes(member.id)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        onSelectionChange([...selectedIds, member.id]);
-                      } else {
-                        onSelectionChange(selectedIds.filter((id) => id !== member.id));
-                      }
-                    }}
-                    aria-label={`Seleccionar ${member.name}`}
-                  />
+              <div className="p-4 space-y-3">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex gap-3">
+                    <Checkbox
+                      checked={selectedIds.includes(member.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          onSelectionChange([...selectedIds, member.id]);
+                        } else {
+                          onSelectionChange(selectedIds.filter((id) => id !== member.id));
+                        }
+                      }}
+                      className="mt-0.5"
+                      aria-label={`Seleccionar ${member.name}`}
+                    />
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-bold text-base text-card-foreground leading-tight truncate">
+                        {member.name}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground font-medium mt-0.5 opacity-80 uppercase tracking-tight">
+                        C.I. {member.cedula || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                  <Badge
+                    variant={getStatusVariant(member.status)}
+                    className="text-[10px] font-bold uppercase px-2 h-5 shrink-0"
+                  >
+                    {getStatusLabel(member.status)}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 rounded-lg bg-muted/30 p-2.5">
                   <div className="flex flex-col">
-                    <span className="font-bold text-card-foreground leading-tight">
-                      {member.name}
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-0.5">Jerarquía</span>
+                    <span className="text-sm font-semibold truncate">
+                      {member.rank || <span className="text-muted-foreground/50 font-normal">-</span>}
                     </span>
-                    <span className="text-xs text-muted-foreground font-mono">
-                      C.I. {member.cedula || 'N/A'}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-0.5">Cargo</span>
+                    <span className="text-sm font-semibold truncate">
+                      {member.roleId && member.roleId !== 'none' ? member.roleId : <span className="text-muted-foreground/50 font-normal">Sin cargo</span>}
                     </span>
                   </div>
                 </div>
-                <Badge
-                  variant={getStatusVariant(member.status)}
-                  className="text-[10px] uppercase px-1.5 h-5"
-                >
-                  {getStatusLabel(member.status)}
-                </Badge>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-xs border-t pt-3">
-                <div>
-                  <span className="text-muted-foreground block mb-0.5">Jerarquía</span>
-                  <span className="font-medium">{member.rank || '-'}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block mb-0.5">Cargo</span>
-                  <span className="font-medium truncate block">
-                    {member.roleId && member.roleId !== 'none' ? member.roleId : 'Sin cargo'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center bg-muted/30 -mx-4 -mb-4 p-2 px-4 border-t rounded-b-lg">
-                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+              <div className="flex justify-between items-center bg-card border-t px-4 py-2">
+                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest opacity-60">
                   Acciones
                 </span>
-                <div className="flex gap-1">
+                <div className="flex gap-0.5">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-9 w-9 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
                     onClick={() => onViewHistory(member)}
                   >
                     <Activity className="h-4 w-4" />
@@ -356,7 +362,7 @@ export function PersonnelTable({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-9 w-9 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
                     onClick={() => onEdit(member)}
                   >
                     <FileEdit className="h-4 w-4" />
@@ -364,7 +370,7 @@ export function PersonnelTable({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                    className="h-9 w-9 rounded-full text-destructive hover:bg-destructive/10 transition-colors"
                     onClick={() => {
                       if (window.confirm(`¿Eliminar a ${member.name}?`)) {
                         onDelete(member.id);

@@ -88,8 +88,12 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
         };
       }
 
-      const activeGuard = guards.find((g) => g.id === settings.activeGuardId);
-      if (!activeGuard) {
+      // Determine the active staff to use (Draft from Orden del Día or Static Config)
+      const activeStaff = (settings?.activeGuardId && settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === settings.activeGuardId)
+        ? settings.ordenDelDiaDraft.staff
+        : guards.find((g) => g.id === settings.activeGuardId)?.staff;
+
+      if (!activeStaff) {
         return {
           sections: initialSections,
           allTemplateFields: initialFieldNames,
@@ -104,11 +108,11 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
         return latest || member;
       };
 
-      const jefeDeServiciosKey = Object.keys(activeGuard.staff || {}).find(
+      const jefeDeServiciosKey = Object.keys(activeStaff).find(
         (k) => k.toLowerCase() === 'jefe de los servicios'
       );
       if (jefeDeServiciosKey) {
-        const jefeStaff = activeGuard.staff[jefeDeServiciosKey] || [];
+        const jefeStaff = activeStaff[jefeDeServiciosKey] || [];
         if (jefeStaff.length > 0) {
           dataToInject['Jefe de los Servicios'] = jefeStaff.map((member) => formatStaffMember(rehydrate(member)));
         }
@@ -117,13 +121,13 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
       if (settings.reportaRoleIds && settings.reportaRoleIds.length > 0) {
         const reportingPersonnel: StaffMember[] = [];
         settings.reportaRoleIds.forEach((roleId) => {
-          const roleStaff = activeGuard.staff[roleId] || [];
+          const roleStaff = activeStaff[roleId] || [];
           reportingPersonnel.push(...roleStaff);
         });
         dataToInject['Reporta'] = reportingPersonnel.map(p => rehydrate(p));
       }
 
-      dataToInject['Guardia'] = activeGuard.id;
+      dataToInject['Guardia'] = settings.activeGuardId;
 
       initialFieldNames.forEach((templateFieldKey) => {
         const lowerTemplateFieldKey = templateFieldKey.toLowerCase();

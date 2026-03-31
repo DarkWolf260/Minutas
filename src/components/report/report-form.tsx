@@ -54,11 +54,16 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
 
     const activeGuardStaff = useMemo(() => {
       if (!settingsLoaded || !guardsLoaded || !settings?.activeGuardId) return [];
-      const activeGuard = guards.find((g) => g.id === settings.activeGuardId);
-      if (!activeGuard || !activeGuard.staff) return [];
+      
+      // Use Orden del Día draft if it matches the current active guard, otherwise static config
+      const activeStaff = (settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === settings.activeGuardId)
+        ? settings.ordenDelDiaDraft.staff
+        : guards.find((g) => g.id === settings.activeGuardId)?.staff;
+
+      if (!activeStaff) return [];
 
       const staffSetWithRoles = new Set<StaffMember & { roleId?: string }>();
-      Object.entries(activeGuard.staff).forEach(([roleName, staffList]) => {
+      Object.entries(activeStaff).forEach(([roleName, staffList]) => {
         const roleId = roles.find((r: any) => r.name === roleName)?.name; // Using name as ID for now
         staffList.forEach((person) => {
           staffSetWithRoles.add({ ...person, roleId: roleId });
@@ -66,7 +71,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       });
 
       return Array.from(staffSetWithRoles).sort((a, b) => a.name.localeCompare(b.name));
-    }, [settings?.activeGuardId, guards, settingsLoaded, guardsLoaded, roles]);
+    }, [settings?.activeGuardId, settings?.ordenDelDiaDraft, guards, settingsLoaded, guardsLoaded, roles]);
 
     const finalConfig = useMemo(() => {
       if (!config || !template) return { fields: {}, sections: [], layout: [] };
@@ -195,9 +200,9 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       (data?: FormDataRecord) => {
         const initialFormValues: FormDataRecord = data ? JSON.parse(JSON.stringify(data)) : {};
 
-        const activeGuard = settings?.activeGuardId 
-          ? guards.find((g) => g.id === settings.activeGuardId) 
-          : null;
+        const activeStaff = (settings?.activeGuardId && settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === settings.activeGuardId)
+          ? settings.ordenDelDiaDraft.staff
+          : (settings?.activeGuardId ? guards.find((g) => g.id === settings.activeGuardId)?.staff : null);
 
         const rehydrate = (member: any) => {
           const latest = personnel.find(p => p.id === member.id);
@@ -223,8 +228,8 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
                 
                 if (role && !MANUAL_FIELDS.includes(keyLower)) {
                   let initialStaff: any[] = [];
-                  if (activeGuard && activeGuard.staff) {
-                    const staffList = activeGuard.staff[role.name];
+                  if (activeStaff) {
+                    const staffList = activeStaff[role.name];
                     if (staffList && staffList.length > 0) {
                       const isReporta = keyLower === 'reporta';
                       initialStaff = isReporta 

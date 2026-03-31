@@ -94,12 +94,12 @@ function SortableStaffItem({
 
           {/* Observation Input - Inline on desktop, below on mobile */}
           {onUpdateMember && (
-            <div className="flex-1 w-full sm:max-w-md pl-8 sm:pl-0">
+            <div className="flex-1 w-full sm:max-w-md pl-7 sm:pl-0">
               <Input
-                placeholder="Observación (ej. Incumplimiento, Comisión...)"
+                placeholder="Observación (ej. Comisión...)"
                 value={member.observation || ''}
                 onChange={(e) => onUpdateMember({ ...member, observation: e.target.value })}
-                className="h-7 text-[11px] bg-background/50 border-dashed focus-visible:ring-1 focus-visible:ring-primary/30 w-full"
+                className="h-8 sm:h-7 text-[11px] bg-background/50 border-dashed focus-visible:ring-1 focus-visible:ring-primary/30 w-full"
               />
             </div>
           )}
@@ -110,7 +110,7 @@ function SortableStaffItem({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 opacity-0 group-hover:opacity-100 transition-all rounded-lg"
+          className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all rounded-lg"
           onClick={() => onRemove(member.id)}
         >
           <Trash2 className="h-4 w-4" />
@@ -141,17 +141,14 @@ export function StaffListEditor({
   const handleAdd = (p: StaffMember) => {
     if (isSingle) {
       onUpdate([p]);
-      setOpen(false);
-      setSearchQuery('');
     } else {
       // Multi-select logic
       if (!staffMembers.some((m) => m.id === p.id || m.personnelId === p.id)) {
         onUpdate([...staffMembers, { ...p, personnelId: p.id }]);
       }
-      // Keep open and focused
-      inputRef.current?.focus();
-      setSearchQuery('');
     }
+    setOpen(false);
+    setSearchQuery('');
   };
 
   const handleRemove = (memberId: string) => {
@@ -185,8 +182,7 @@ export function StaffListEditor({
           <div className="p-1 border-b bg-muted/30">
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverAnchor asChild>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-50 pointer-events-none" />
+                <div className="relative group/input">
                   <Input
                     ref={inputRef}
                     value={searchQuery}
@@ -195,19 +191,17 @@ export function StaffListEditor({
                       if (!open) setOpen(true);
                     }}
                     onFocus={() => setOpen(true)}
-                    // Using onPointerDown/onClick to ensure open state but preventing
-                    // the popover's outside-click logic from conflicting
                     onClick={(e) => {
                       e.stopPropagation();
                       if (!open) setOpen(true);
                     }}
-                    placeholder={`Seleccionar para ${label}...`}
-                    className="h-9 pl-9 bg-background border-none shadow-none focus-visible:ring-0 rounded-lg"
+                    placeholder={`Añadir ${label}...`}
+                    className="h-9 px-3 bg-muted/20 border-none shadow-none focus-visible:ring-1 focus-visible:ring-primary/20 rounded-none transition-all placeholder:text-muted-foreground/40 placeholder:font-medium"
                   />
                 </div>
               </PopoverAnchor>
               <PopoverContent
-                className="p-0 border-none shadow-xl rounded-md w-80"
+                className="p-0 border-none shadow-xl rounded-md w-[calc(100vw-2rem)] sm:w-80"
                 align="start"
                 sideOffset={5}
                 onOpenAutoFocus={(e) => e.preventDefault()}

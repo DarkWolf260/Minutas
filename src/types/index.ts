@@ -46,6 +46,7 @@ export interface StaffRole {
   isSingle: boolean; // True for roles that can only have one person
   departmentScope: string[]; // Array of department IDs, 'OPERATIONS' for guards. Empty array means global.
   isHidden?: boolean; // If true, this role won't appear in the default Orden del Día / Reports
+  isStatus?: boolean; // If true, this is a personnel status (Reposo, Vacaciones) rather than a fixed position
   order?: number; // Sorting order for reports
 }
 
@@ -70,7 +71,6 @@ export interface AppSettings {
   guardShiftDuration?: number;
   finalReportManualNovedades?: ManualNovedad[];
   finalReportStatistics?: string;
-  finalReportNotes?: string;
   reportaRoleIds?: string[];
   p2pRoomId?: string;
   p2pPassword?: string;

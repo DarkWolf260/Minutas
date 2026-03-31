@@ -73,6 +73,17 @@ function SortableRoleItem({ role }: { role: StaffRole }) {
         </p>
       </div>
 
+      {role.isStatus && (
+        <Badge variant="outline" className={cn(
+          "text-[9px] h-4 font-bold uppercase tracking-widest",
+          role.name.toLowerCase() === 'apoyo' 
+            ? "bg-indigo-500/10 text-indigo-600 border-indigo-500/20" 
+            : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+        )}>
+          {role.name.toLowerCase() === 'apoyo' ? 'Item Especial' : 'Estatus'}
+        </Badge>
+      )}
+
       {role.isSingle && (
         <Badge variant="outline" className="text-[9px] h-4 bg-primary/5 text-primary border-primary/20">
           Único
@@ -125,7 +136,7 @@ export function RoleSorter({ roles, onReorder, onSave }: RoleSorterProps) {
   }
 
   return (
-    <Card className="h-full border-muted/50 bg-muted/5 shadow-inner overflow-hidden flex flex-col">
+    <Card className="md:flex-1 border-muted/50 bg-muted/5 shadow-inner md:overflow-hidden md:flex md:flex-col md:min-h-0">
       <CardHeader className="pb-3 border-b bg-background/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -151,8 +162,8 @@ export function RoleSorter({ roles, onReorder, onSave }: RoleSorterProps) {
         </div>
       </CardHeader>
       
-      <CardContent className="p-4 flex-1 min-h-0 overflow-hidden">
-        <ScrollArea className="h-full pr-4 -mr-4" type="always">
+      <CardContent className="p-4 md:flex-1 md:min-h-0 md:overflow-hidden">
+        <ScrollArea className="md:h-full pr-4 -mr-4" type="always">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}

@@ -39,7 +39,7 @@ import { format } from 'date-fns';
 import type { Report, StaffMember } from '@/types';
 import { DatePicker } from '@/components/date-picker';
 import { TimeHlvInput } from '@/components/time-hlv-input';
-import { PlusCircle, Trash2, FileText, Save, TrendingUp, Users, X, ClipboardList } from 'lucide-react';
+import { PlusCircle, Trash2, FileText, Save, TrendingUp, Users, X } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { LEADER_ROLES } from '@/constants/roles';
 import { generateId } from '@/lib/utils/id';
@@ -78,7 +78,7 @@ export default function ReporteFinalPage() {
 
   const manualNovedades = useMemo(() => settings.finalReportManualNovedades || [], [settings.finalReportManualNovedades]);
   const statisticsText = settings.finalReportStatistics || '';
-  const notesText = settings.finalReportNotes || '';
+  
   
   const [generatedReport, setGeneratedReport] = useState('');
   const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
@@ -91,7 +91,6 @@ export default function ReporteFinalPage() {
       guardPeriod: '', // Clear period for next guard
       finalReportManualNovedades: [], // Clear manual novedades for next guard
       finalReportStatistics: '', // Clear stats for next guard
-      finalReportNotes: '' // Clear notes for next guard
     });
     setIsResultDialogOpen(false);
     navigate('/orden-del-dia');
@@ -268,8 +267,13 @@ export default function ReporteFinalPage() {
       return;
     }
 
-    const staffForReport = activeGuard?.staff;
-    const guardIdForReport = activeGuard?.id || settings.activeGuardId || '';
+    const staffForReport = (settings.finalReportStaffSnapshot && settings.finalReportGuardId === settings.activeGuardId)
+      ? settings.finalReportStaffSnapshot
+      : activeGuard?.staff;
+
+    const guardIdForReport = (settings.finalReportStaffSnapshot && settings.finalReportGuardId === settings.activeGuardId)
+      ? settings.finalReportGuardId || ''
+      : (activeGuard?.id || settings.activeGuardId || '');
 
     const getLeaderName = (roleName: string) => {
       if (staffForReport) {
@@ -443,8 +447,7 @@ export default function ReporteFinalPage() {
     const finalReportParts = [...headerParts];
     if (statisticsText.trim())
       finalReportParts.push(``, `*ESTADÍSTICAS DE LA GUARDIA*`, ``, statisticsText.trim());
-    if (notesText.trim())
-      finalReportParts.push(``, `*NOTAS ADICIONALES*`, ``, notesText.trim());
+  
     if (reportContent.trim()) finalReportParts.push(``, `*NOVEDADES DE LA GUARDIA*`, ``, reportContent);
     finalReportParts.push(``, `*PROTECCIÓN CIVIL ${(municipio || '').toUpperCase()}*`);
 
@@ -464,173 +467,210 @@ export default function ReporteFinalPage() {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden relative">
-      <ScrollArea className="flex-1 w-full" type="always">
-        <div className="p-4 sm:p-6 lg:p-8 w-full max-w-[1700px] mx-auto space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Reporte de Cierre de Guardia</h1>
-            <p className="text-muted-foreground mt-1">
-              Genera el resumen final consolidado de todas las novedades y estadísticas de la guardia.
-            </p>
+      <div className="flex-1 flex flex-col md:h-full md:overflow-hidden">
+        <div className="p-4 sm:p-6 lg:p-8 w-full max-w-[1700px] mx-auto h-full flex flex-col gap-6 min-h-0">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 shrink-0">
+            <div className="flex flex-col">
+              <h1 className="text-3xl font-bold tracking-tight">Reporte de Cierre de Guardia</h1>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Genera el resumen final consolidado de todas las novedades y estadísticas de la guardia.
+              </p>
+            </div>
+            {!isMobile && isLoaded && (
+              <Button 
+                onClick={handleGenerateReport} 
+                className="gap-2 px-8 h-12 text-sm font-bold shadow-lg hover:shadow-primary/20 transition-all rounded-xl shrink-0"
+              >
+                <FileText className="h-5 w-5" />
+                Generar Reporte Final
+              </Button>
+            )}
           </div>
 
           {!isLoaded ? (
-            <div className="space-y-8">
-              <Skeleton className="h-[200px] w-full rounded-xl" />
-              <Skeleton className="h-[400px] w-full rounded-xl" />
+            <div className="space-y-8 flex-1">
+              <Skeleton className="h-[100px] w-full rounded-xl" />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1">
+                <Skeleton className="h-[400px] w-full rounded-xl" />
+                <Skeleton className="h-[400px] w-full rounded-xl" />
+              </div>
             </div>
           ) : (
-            <div className="space-y-10">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                {/* Columna 1: Estadísticas y Notas */}
-                <div className="space-y-8">
-                  {/* Sección de Estadísticas */}
-                  <Card className="shadow-md border-muted/60">
-                    <CardHeader className="bg-muted/30 pb-4">
-                      <div className="flex items-center gap-2 text-primary">
-                        <TrendingUp className="h-5 w-5" />
-                        <CardTitle className="text-xl">Estadísticas del Día</CardTitle>
+            <div className="space-y-8 flex-1 flex flex-col min-h-0 pb-10">
+              {/* Bloque Informativo Superior */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 shrink-0">
+                <Alert className="bg-primary/5 border-primary/20 shadow-sm leading-relaxed flex items-center h-full py-4">
+                  <div className="flex items-center gap-4 w-full">
+                    <div className="bg-primary/10 p-2.5 rounded-xl">
+                      <FileText className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <AlertTitle className="font-bold text-sm tracking-tight uppercase">Información de Generación</AlertTitle>
+                      <AlertDescription className="text-xs opacity-80 mt-0.5">
+                        Consolidará <span className="font-bold text-primary">{finishedReports.length}</span> novedades y <span className="font-bold text-primary">{manualNovedades.length}</span> eventos manuales.
+                      </AlertDescription>
+                    </div>
+                  </div>
+                </Alert>
+
+                {activeGuard ? (
+                  <Alert className="bg-emerald-500/5 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-sm flex items-center h-full py-4">
+                    <div className="flex items-center gap-4 w-full">
+                      <div className="bg-emerald-500/10 p-2.5 rounded-xl">
+                        <Users className="h-5 w-5" />
                       </div>
-                      <CardDescription>
-                        Ingresa las métricas correspondientes a la guardia.
-                      </CardDescription>
+                      <div>
+                        <AlertTitle className="font-bold text-sm tracking-tight uppercase">Estado de Guardia</AlertTitle>
+                        <AlertDescription className="text-xs opacity-80 mt-0.5">
+                          Guardia <strong className="uppercase">"{activeGuard.id}"</strong> activa y sincronizada.
+                        </AlertDescription>
+                      </div>
+                    </div>
+                  </Alert>
+                ) : (
+                  <Alert variant="destructive" className="shadow-sm flex items-center h-full py-4 bg-destructive/5 border-destructive/20">
+                    <div className="flex items-center gap-4 w-full">
+                      <div className="bg-destructive/10 p-2.5 rounded-xl">
+                        <Users className="h-5 w-5 text-destructive" />
+                      </div>
+                      <div>
+                        <AlertTitle className="font-bold text-sm tracking-tight uppercase tracking-widest text-destructive">Atención: Sin Personal</AlertTitle>
+                        <AlertDescription className="text-xs opacity-90 mt-0.5">
+                          No hay una guardia activa detectada para el personal.
+                        </AlertDescription>
+                      </div>
+                    </div>
+                  </Alert>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch flex-1 min-h-0">
+                {/* Columna Izquierda: Estadísticas y Automáticas */}
+                <div className="flex flex-col gap-8 flex-1 min-h-0 h-full">
+                  {/* Sección de Estadísticas */}
+                  <Card className="shadow-md border-muted/60 flex flex-col flex-1 shrink-0 lg:shrink min-h-[300px]">
+                    <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
+                      <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                        <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                        Estadísticas del Día
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent className="pt-6">
+                    <CardContent className="p-4 flex-1 flex flex-col min-h-0">
                       <Textarea
                         placeholder="Ej: - TRASLADOS URBANOS 5"
                         value={statisticsText}
                         onChange={(e) => saveSettings({ finalReportStatistics: e.target.value })}
-                        className="min-h-[300px] font-mono text-sm leading-relaxed"
+                        className="font-mono text-xs leading-relaxed flex-1 w-full resize-none bg-muted/20 border-muted/30 focus-visible:ring-primary/20 p-3 rounded-md"
                       />
                     </CardContent>
                   </Card>
 
-                  {/* Sección de Notas del Reporte */}
-                  <Card className="shadow-md border-muted/60">
-                    <CardHeader className="bg-muted/30 pb-4">
-                      <div className="flex items-center gap-2 text-primary">
-                        <ClipboardList className="h-5 w-5" />
-                        <CardTitle className="text-xl">Notas de la Guardia</CardTitle>
-                      </div>
-                      <CardDescription>
-                        Cualquier observación adicional que deba aparecer en el reporte.
-                      </CardDescription>
+                  {/* NOVEDADES AUTOMÁTICAS CONSOLIDADAS */}
+                  <Card className="shadow-md border-muted/60 flex flex-col flex-1 min-h-0 overflow-hidden">
+                    <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
+                      <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                        <FileText className="h-3.5 w-3.5 text-primary" />
+                        Novedades Automáticas a Consolidar ({finishedReports.length})
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent className="pt-6">
-                      <Textarea
-                        placeholder="Ej: - Sin novedad en el parque automotor..."
-                        value={notesText}
-                        onChange={(e) => saveSettings({ finalReportNotes: e.target.value })}
-                        className="min-h-[200px] font-mono text-sm leading-relaxed"
-                      />
+                    <CardContent className="p-0 flex-1 min-h-0 overflow-hidden">
+                      <ScrollArea className="h-full" type="always">
+                        {finishedReports.length === 0 ? (
+                          <div className="py-12 flex flex-col items-center justify-center text-muted-foreground opacity-50">
+                            <FileText className="h-8 w-8 mb-2 stroke-1" />
+                            <p className="text-[11px] font-medium uppercase tracking-widest text-center px-4">
+                              No hay novedades automáticas<br/>finalizadas para este turno
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="divide-y divide-muted/40">
+                            {finishedReports.map((report) => {
+                              const sortDate = getSortDate(report);
+                              const horaStr = findValueInFormData(report.formData, 'Hora') as string | undefined;
+                              return (
+                                <div key={report.id} className="p-4 hover:bg-muted/5 transition-colors group">
+                                  <div className="flex items-center justify-between gap-4 mb-1">
+                                    <h4 className="text-sm font-bold truncate text-foreground/90">{report.title}</h4>
+                                    <span className="text-[9px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full whitespace-nowrap">
+                                      {horaStr || (sortDate ? format(sortDate, 'HH:mm') : '--:--')} HLV
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground line-clamp-1 italic">
+                                    ID: {report.id} — Plantilla: {templates.find(t => t.id === report.templateId)?.name || 'Desconocida'}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </ScrollArea>
                     </CardContent>
                   </Card>
                 </div>
 
-                {/* Columna 2: Novedades Manuales y Registro */}
-                <div className="space-y-8">
-                  {/* Resumen Informativo */}
-                  <div className="space-y-4">
-                    <Alert className="bg-primary/5 border-primary/20 shadow-sm leading-relaxed">
-                      <FileText className="h-4 w-4 text-primary" />
-                      <div>
-                        <AlertTitle className="font-semibold text-sm">Información de Generación</AlertTitle>
-                        <AlertDescription className="text-xs opacity-80 mt-1">
-                          Consolidará {finishedReports.length} novedades finalizadas y {manualNovedades.length} eventos manuales.
-                        </AlertDescription>
-                      </div>
-                    </Alert>
-
-                    {/* Estado de la Guardia para el reporte */}
-                    {activeGuard ? (
-                      <Alert className="bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-sm">
-                        <div className="flex items-center gap-3">
-                          <div className="bg-emerald-500/20 p-1.5 rounded-full">
-                            <Users className="h-3.5 w-3.5" />
-                          </div>
-                          <div>
-                            <AlertTitle className="font-bold text-xs uppercase tracking-tight">Guardia activa</AlertTitle>
-                            <AlertDescription className="text-[11px] opacity-80 mt-0.5">
-                              Usando <strong>Guardia "{activeGuard.id}"</strong> seleccionada oficialmente.
-                            </AlertDescription>
-                          </div>
-                        </div>
-                      </Alert>
-                    ) : (
-                      <Alert variant="destructive" className="shadow-sm py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="bg-destructive/20 p-1.5 rounded-full">
-                            <Users className="h-3.5 w-3.5 text-destructive" />
-                          </div>
-                          <div>
-                            <AlertTitle className="font-bold text-xs uppercase tracking-tight">Atención: Sin Personal</AlertTitle>
-                            <AlertDescription className="text-[11px] opacity-90 mt-0.5">
-                              No hay una guardia activa para extraer el personal.
-                            </AlertDescription>
-                          </div>
-                        </div>
-                      </Alert>
-                    )}
-                  </div>
-
+                {/* Columna Derecha: Gestión de Eventos Manuales */}
+                <div className="flex flex-col gap-8 flex-1 min-h-0 h-full">
                   {/* Sección de Novedades Manuales Form */}
-                  <Card className="shadow-md border-muted/60">
-                    <CardHeader className="bg-muted/30 pb-4">
-                      <div className="flex items-center gap-2 text-primary">
-                        <PlusCircle className="h-5 w-5" />
-                        <CardTitle className="text-xl">Añadir Novedad</CardTitle>
-                      </div>
-                      <CardDescription>
-                        Añade eventos especiales a la cronología del reporte.
-                      </CardDescription>
+                  <Card className="shadow-md border-muted/60 shrink-0">
+                    <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
+                      <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                        <PlusCircle className="h-3.5 w-3.5 text-primary" />
+                        Nuevo Evento Manual
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent className="pt-6 space-y-4">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Fecha</Label>
+                    <CardContent className="p-4 space-y-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
                           <DatePicker
                             value={format(newNovedadDate, 'yyyy-MM-dd')}
                             onChange={(val) => setNewNovedadDate(new Date(val + 'T00:00:00'))}
                           />
                         </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Hora</Label>
-                          <TimeHlvInput value={newNovedadTime} onChange={setNewNovedadTime} />
+                        <div className="space-y-1">
+                          <TimeHlvInput
+                            value={newNovedadTime}
+                            onChange={setNewNovedadTime}
+                            className="h-9 text-xs"
+                          />
                         </div>
                       </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Descripción del Evento</Label>
+                      <div className="space-y-1">
                         <Textarea
-                          placeholder="Escribe aquí la novedad..."
+                          placeholder="Descripción breve del evento..."
                           value={newNovedadText}
                           onChange={(e) => setNewNovedadText(e.target.value)}
-                          className="resize-none"
-                          rows={3}
+                          className="min-h-[50px] max-h-[80px] text-xs resize-none"
                         />
                       </div>
-                      <Button onClick={handleAddManualNovedad} className="w-full gap-2 h-10 shadow-sm">
-                        <PlusCircle className="h-4 w-4" />
+                      <Button
+                        variant="secondary"
+                        className="w-full font-bold gap-1.5 shadow-sm uppercase text-[10px] h-9"
+                        onClick={handleAddManualNovedad}
+                        disabled={!newNovedadTime || !newNovedadText}
+                      >
+                        <PlusCircle className="h-3 w-3" />
                         Añadir a la Cronología
                       </Button>
                     </CardContent>
                   </Card>
 
                   {/* Cronología de Novedades Manuales Display */}
-                  <Card className="shadow-md border-muted/60 overflow-hidden">
-                    <CardHeader className="py-4 border-b bg-muted/10">
-                      <CardTitle className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                        <TrendingUp className="h-3 w-3" />
-                        Eventos Manuales Registrados ({manualNovedades.length})
+                  <Card className="shadow-md border-muted/60 overflow-hidden flex flex-1 flex-col min-h-0">
+                    <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
+                      <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                        <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                        Cronología de Eventos Manuales ({manualNovedades.length})
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-0 font-inherit">
-                      <ScrollArea className="h-[280px]" type="always">
+                    <CardContent className="p-0 flex-1 overflow-hidden min-h-0">
+                      <ScrollArea className="h-full" type="always">
                         {manualNovedades.length === 0 ? (
                           <div className="py-12 flex flex-col items-center justify-center text-muted-foreground opacity-50">
                             <PlusCircle className="h-8 w-8 mb-2 stroke-1" />
-                            <p className="text-[11px] font-medium uppercase tracking-widest">Sin eventos manuales</p>
+                            <p className="text-[11px] font-medium uppercase tracking-widest text-center px-4">Sin eventos manuales<br/>registrados para esta guardia</p>
                           </div>
                         ) : (
-                          <div className="divide-y divide-muted/40">
+                          <div className="divide-y divide-muted/40 font-inherit">
                             {sortedManualNovedades.map((n) => (
                               <div key={n.id} className="p-4 flex items-start gap-4 hover:bg-muted/10 transition-colors group relative">
                                 <div className="flex-1 min-w-0">
@@ -659,20 +699,22 @@ export default function ReporteFinalPage() {
                 </div>
               </div>
               
-              <div className="pt-6 pb-12 flex justify-center border-t border-muted/20">
-                <Button 
-                  size="lg" 
-                  onClick={handleGenerateReport} 
-                  className="w-full sm:w-auto px-16 h-14 text-lg font-bold gap-3 shadow-xl hover:shadow-primary/20 transition-all rounded-full"
-                >
-                  <FileText className="h-6 w-6" />
-                  Generar Reporte Final
-                </Button>
-              </div>
+              {isMobile && (
+                <div className="pt-6 pb-12 flex justify-center border-t border-muted/20">
+                  <Button 
+                    size="lg" 
+                    onClick={handleGenerateReport} 
+                    className="w-full h-14 text-lg font-bold gap-3 shadow-xl hover:shadow-primary/20 transition-all rounded-full"
+                  >
+                    <FileText className="h-6 w-6" />
+                    Generar Reporte Final
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Resultado - Responsive */}
       {isMobile ? (
