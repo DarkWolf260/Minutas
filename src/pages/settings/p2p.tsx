@@ -38,7 +38,16 @@ import {
   Layers,
   Monitor,
   AlertTriangle,
-  ChevronLeft
+  ChevronLeft,
+  Users,
+  Layout,
+  Search,
+  Settings,
+  History,
+  CheckCircle2,
+  RefreshCcw,
+  XCircle,
+  FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -50,7 +59,6 @@ export default function P2PPage() {
   const isMobile = useIsMobile();
   const db = useDatabase();
   const { currentWorkspace, createWorkspace } = useWorkspaceManager();
-  
   const { 
     isSyncing, 
     peerCount, 
@@ -66,7 +74,10 @@ export default function P2PPage() {
     wipeLocalData,
     roomId,
     targetPassword: contextPassword,
-    targetSignalingUrl: contextSignalingUrl
+    targetSignalingUrl: contextSignalingUrl,
+    collectionStatuses,
+    peerRoles,
+    syncProgress
   } = useP2P();
   
   const [targetRoomId, setTargetRoomId] = useState('');
@@ -211,6 +222,26 @@ export default function P2PPage() {
                   {connectionStatus === 'error' && 'No se pudo establecer la conexión P2P.'}
                   {connectionStatus === 'idle' && 'Ingresa un ID de sala para empezar a compartir datos.'}
                 </p>
+                {syncProgress.active && (syncProgress.sent > 0 || syncProgress.received > 0) && (
+                  <div className="mt-3 space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                    <div className="flex justify-between items-end mb-1">
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-primary/70">
+                        Procesando: {syncProgress.collectionLabel}
+                      </span>
+                      <span className="text-xs font-mono font-bold">
+                        {syncProgress.received + syncProgress.sent} registros
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full bg-primary/10 rounded-full overflow-hidden">
+                       <div 
+                         className="h-full bg-primary transition-all duration-500 ease-out"
+                         style={{ 
+                           width: `${syncProgress.total > 0 ? Math.min(100, Math.round(((syncProgress.sent + syncProgress.received) / syncProgress.total) * 100)) : 10}%` 
+                         }}
+                       />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -312,25 +343,105 @@ export default function P2PPage() {
                 <div className="mt-4 space-y-2">
                   <p className="text-xs font-semibold">Peers Conectados:</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                     {peers.map((peer, idx) => {
-                       const displayName = peerAliases[peer.id] || peer.id;
-                       return (
-                         <div key={idx} className="flex items-center justify-between p-2 text-[11px] rounded bg-muted">
-                           <span className="truncate max-w-[120px]" title={peer.id}>
-                             {displayName}
-                           </span>
-                           <Badge variant={peer.isMaster ? "default" : "outline"} className="h-4 text-[9px]">
-                             {peer.isMaster ? 'Anfitrión' : 'Seguidor'}
-                           </Badge>
-                         </div>
-                       );
-                     })}
+                      {peers.map((peer, idx) => {
+                        const displayName = peerAliases[peer.id] || peer.id;
+                        const reportedRole = peerRoles[peer.id] || (peer.isMaster ? 'host' : 'follower');
+                        const isHost = reportedRole === 'host';
+                        
+                        return (
+                          <div key={idx} className="flex items-center justify-between p-2 text-[11px] rounded bg-muted">
+                            <span className="truncate max-w-[120px]" title={peer.id}>
+                              {displayName}
+                            </span>
+                            <Badge variant={isHost ? "default" : "outline"} className="h-4 text-[9px]">
+                              {isHost ? 'Anfitrión' : 'Seguidor'}
+                            </Badge>
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
               )}
               <p className="text-[10px] text-muted-foreground italic">
                 * Todos los dispositivos con el mismo ID de sala compartirán datos de la área actual (<strong>{currentWorkspace}</strong>).
               </p>
+
+              {connectionStatus === 'connected' && Object.keys(collectionStatuses).length > 0 && (
+                <div className="mt-8 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                       <Layers className="h-4 w-4" />
+                       Sincronización por Colección
+                    </h3>
+                    <Badge variant="outline" className="text-[10px] bg-green-500/5 text-green-600 border-green-200">
+                      Cifrado P2P
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {Object.entries(collectionStatuses).map(([name, status]) => {
+                      const icons: Record<string, any> = {
+                        reports: FileText,
+                        personnel: Users,
+                        templates: Layout,
+                        configs: Settings,
+                        history: History
+                      };
+                      const labels: Record<string, string> = {
+                        reports: 'Reportes',
+                        personnel: 'Personal',
+                        templates: 'Plantillas',
+                        configs: 'Configs',
+                        history: 'Historial'
+                      };
+                      const Icon = icons[name] || FileText;
+                      
+                      return (
+                        <div key={name} className={cn(
+                          "flex flex-col gap-3 p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden group",
+                          status === 'synced' ? "bg-card border-border/50 hover:border-green-500/30" : 
+                          status === 'syncing' ? "bg-primary/5 border-primary/20 shadow-inner" :
+                          "bg-destructive/5 border-destructive/20"
+                        )}>
+                          {/* Animated background for syncing */}
+                          {status === 'syncing' && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
+                          )}
+                          
+                          <div className="flex items-start justify-between relative z-10">
+                            <div className={cn(
+                              "p-2 rounded-xl transition-colors",
+                              status === 'synced' ? "bg-green-500/10 text-green-600" :
+                              status === 'syncing' ? "bg-primary/20 text-primary animate-pulse" :
+                              "bg-destructive/10 text-destructive"
+                            )}>
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            
+                            {status === 'synced' && <CheckCircle2 className="h-4 w-4 text-green-500 animate-in zoom-in duration-500" />}
+                            {status === 'syncing' && <RefreshCcw className="h-4 w-4 text-primary animate-spin" />}
+                            {status === 'error' && <XCircle className="h-4 w-4 text-destructive animate-bounce" />}
+                          </div>
+
+                          <div className="space-y-1 relative z-10">
+                            <p className="text-xs font-bold leading-none">{labels[name] || name}</p>
+                            <p className={cn(
+                              "text-[10px] font-medium uppercase tracking-tighter opacity-70",
+                              status === 'synced' ? "text-green-600" :
+                              status === 'syncing' ? "text-primary italic" :
+                              "text-destructive"
+                            )}>
+                              {status === 'synced' ? 'Sincronizado' :
+                               status === 'syncing' ? 'Sincronizando...' :
+                               'Error'}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
@@ -360,12 +471,12 @@ export default function P2PPage() {
                     }}
                     className={cn(
                       "flex flex-col items-center gap-2 p-4 rounded-lg border text-center transition-all",
-                      selectedLocalRole === 'host' ? "bg-primary/5 border-primary ring-1 ring-primary" : "hover:bg-muted"
+                      selectedLocalRole === 'host' ? "bg-primary/10 border-primary ring-2 ring-primary ring-offset-2" : "hover:bg-muted opacity-60"
                     )}
                   >
                     <Monitor className={cn("h-6 w-6", selectedLocalRole === 'host' ? "text-primary" : "text-muted-foreground")} />
                     <div className="space-y-1">
-                      <span className="font-bold text-xs uppercase">Anfitrión (Host)</span>
+                      <span className="font-bold text-xs uppercase underline-offset-4 decoration-primary/50">Anfitrión (Host)</span>
                       <p className="text-[10px] text-muted-foreground leading-tight">Es la fuente de la verdad.</p>
                     </div>
                   </button>
@@ -376,12 +487,12 @@ export default function P2PPage() {
                     }}
                     className={cn(
                       "flex flex-col items-center gap-2 p-4 rounded-lg border text-center transition-all",
-                      selectedLocalRole === 'follower' ? "bg-primary/5 border-primary ring-1 ring-primary" : "hover:bg-muted"
+                      selectedLocalRole === 'follower' ? "bg-primary/10 border-primary ring-2 ring-primary ring-offset-2" : "hover:bg-muted opacity-60"
                     )}
                   >
                     <Zap className={cn("h-6 w-6", selectedLocalRole === 'follower' ? "text-primary" : "text-muted-foreground")} />
                     <div className="space-y-1">
-                      <span className="font-bold text-xs uppercase">Seguidor (Follower)</span>
+                      <span className="font-bold text-xs uppercase underline-offset-4 decoration-primary/50">Seguidor (Follower)</span>
                       <p className="text-[10px] text-muted-foreground leading-tight">Recibe datos del anfitrión.</p>
                     </div>
                   </button>
@@ -394,7 +505,11 @@ export default function P2PPage() {
                 <div className="grid gap-3">
                   <button
                     onClick={() => handleStartSync('merge', selectedLocalRole)}
-                    className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group active:scale-[0.98]"
+                    disabled={selectedLocalRole === 'undetermined'}
+                    className={cn(
+                      "flex items-start gap-4 p-4 rounded-xl border text-left transition-all group active:scale-[0.98]",
+                      selectedLocalRole === 'undetermined' ? "opacity-30 grayscale cursor-not-allowed" : "hover:bg-muted/50 border-emerald-500/20"
+                    )}
                   >
                     <div className="h-10 w-10 shrink-0 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                       <Zap className="h-5 w-5" />
@@ -409,7 +524,11 @@ export default function P2PPage() {
 
                   <button
                     onClick={() => handleStartSync('host-only', selectedLocalRole)}
-                    className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group border-amber-500/20 active:scale-[0.98]"
+                    disabled={selectedLocalRole === 'host'}
+                    className={cn(
+                      "flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group border-amber-500/20 active:scale-[0.98]",
+                      selectedLocalRole === 'host' && "opacity-50 cursor-not-allowed grayscale"
+                    )}
                   >
                     <div className="h-10 w-10 shrink-0 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                       <Monitor className="h-5 w-5" />
@@ -418,7 +537,9 @@ export default function P2PPage() {
                       <p className="font-semibold text-sm">Escenario 2: Información del Anfitrión</p>
                       <p className="text-xs text-muted-foreground text-amber-600/80">
                         <Info className="inline h-3 w-3 mr-1" />
-                        <strong>Limpia tu área actual</strong> para trabajar exclusivamente con los datos del anfitrión.
+                        {selectedLocalRole === 'host' 
+                          ? "Opción no disponible: Como anfitrión no puedes borrar tus propios datos."
+                          : "Limpia tu área actual para trabajar exclusivamente con los datos del anfitrión."}
                       </p>
                     </div>
                   </button>
@@ -485,7 +606,10 @@ export default function P2PPage() {
                     <button
                       disabled={selectedLocalRole === 'undetermined'}
                       onClick={() => handleStartSync('merge', selectedLocalRole)}
-                      className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group disabled:opacity-50"
+                      className={cn(
+                        "flex items-start gap-4 p-4 rounded-xl border text-left transition-all group active:scale-[0.95]",
+                        selectedLocalRole === 'undetermined' ? "opacity-30 grayscale cursor-not-allowed" : "hover:bg-muted/50 border-emerald-500/20"
+                      )}
                     >
                       <div className="h-10 w-10 shrink-0 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Zap className="h-5 w-5" />
@@ -499,9 +623,12 @@ export default function P2PPage() {
                     </button>
 
                     <button
-                      disabled={selectedLocalRole === 'undetermined'}
+                      disabled={selectedLocalRole === 'undetermined' || selectedLocalRole === 'host'}
                       onClick={() => handleStartSync('host-only', selectedLocalRole)}
-                      className="flex items-start gap-4 p-4 rounded-xl border text-left hover:bg-muted/50 transition-all group border-amber-200"
+                      className={cn(
+                        "flex items-start gap-4 p-4 rounded-xl border text-left transition-all group active:scale-[0.95]", 
+                        (selectedLocalRole === 'undetermined' || selectedLocalRole === 'host') ? "opacity-30 grayscale cursor-not-allowed" : "hover:bg-muted/50 border-amber-200"
+                      )}
                     >
                       <div className="h-10 w-10 shrink-0 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Monitor className="h-5 w-5" />
@@ -509,7 +636,9 @@ export default function P2PPage() {
                       <div className="space-y-1">
                         <p className="font-semibold text-sm text-amber-700">Usar solo datos del Anfitrión</p>
                         <p className="text-xs text-muted-foreground">
-                          <strong>Limpia tu área actual</strong> para usar los datos del equipo.
+                          {selectedLocalRole === 'host' 
+                            ? "No puedes borrar tus propios datos como anfitrión." 
+                            : "Limpia tu área actual para usar los datos del equipo."}
                         </p>
                       </div>
                     </button>
@@ -523,3 +652,4 @@ export default function P2PPage() {
     </ScrollArea>
   );
 }
+

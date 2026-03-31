@@ -397,7 +397,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
           // Debounce the call to onDataChange to avoid excessive parent re-renders 
           // that can interfere with input focus and cursor positioning
           const currentValues = getValues();
-          const dataHash = JSON.stringify(currentValues);
+          const dataHash = stableStringify(currentValues);
           if (dataHash !== lastDataHash.current) {
             lastDataHash.current = dataHash;
             
