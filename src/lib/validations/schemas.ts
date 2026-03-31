@@ -31,13 +31,14 @@ export const StaffMemberSchema = z.object({
             PERSONNEL_STATUS.VACACIONES,
             PERSONNEL_STATUS.PERMISO,
             PERSONNEL_STATUS.REPOSO,
-            PERSONNEL_STATUS.APOYO,
         ],
         { errorMap: () => ({ message: 'Estado de personal inválido' }) }
     ).optional(),
     department: z.string().optional(),
     specialties: z.array(z.string()).optional(),
+    observation: z.string().optional(),
     titulo: z.string().optional(),
+    cargo: z.string().optional(),
 });
 
 export type ValidatedStaffMember = z.infer<typeof StaffMemberSchema>;

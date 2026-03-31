@@ -28,6 +28,11 @@ import { useGuards } from '@/hooks/use-guards';
 import { useDrafts } from '@/hooks/use-drafts';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useDepartments } from '@/hooks/use-departments';
+import { usePersonnel } from '@/hooks/use-personnel';
+import { useAddresses } from '@/hooks/use-addresses';
+import { useGuardHistory } from '@/hooks/use-guard-history';
+import { usePersonnelHistory } from '@/hooks/use-personnel-history';
+import { useProfile } from '@/hooks/use-profile';
 import { 
   Trash2, 
   AlertTriangle,
@@ -46,6 +51,11 @@ export default function BorrarDatosPage() {
   const { clearAllGuards } = useGuards();
   const { clearAllDefinitions } = useFieldDefinitions();
   const { clearDraft } = useDrafts();
+  const { clearAllPersonnel } = usePersonnel();
+  const { clearAllAddresses } = useAddresses();
+  const { clearAllGuardHistory } = useGuardHistory();
+  const { clearAllPersonnelHistory } = usePersonnelHistory();
+  const { clearProfile } = useProfile();
   const isMobile = useIsMobile();
 
   const [actionToConfirm, setActionToConfirm] = useState<string | null>(null);
@@ -65,6 +75,7 @@ export default function BorrarDatosPage() {
         await clearAllDepartments();
         await clearAllGuards();
         await clearAllUnits();
+        await clearAllPersonnel();
         break;
       case 'definitions':
         await clearAllDefinitions();
@@ -77,8 +88,13 @@ export default function BorrarDatosPage() {
           clearAllDepartments(),
           clearAllGuards(),
           clearAllUnits(),
+          clearAllPersonnel(),
+          clearAllAddresses(),
+          clearAllGuardHistory(),
+          clearAllPersonnelHistory(),
           clearAllDefinitions(),
           clearAllSettings(),
+          clearProfile(),
           clearDraft(),
         ]);
         localStorage.removeItem('report-app-welcome-seen');

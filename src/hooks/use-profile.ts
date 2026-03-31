@@ -77,5 +77,16 @@ export function useProfile() {
     [db, currentWorkspace]
   );
 
-  return { profile, saveProfile, isLoaded };
+  const clearProfile = useCallback(async () => {
+    if (!db || !currentWorkspace) return;
+    try {
+      const doc = await db.configs.findOne(`${currentWorkspace}:profile:user`).exec();
+      if (doc) await doc.remove();
+      logger.info('User profile cleared', { workspaceId: currentWorkspace });
+    } catch (error) {
+      logger.error('Failed to clear profile', error, { feature: 'Profile', workspaceId: currentWorkspace });
+    }
+  }, [db, currentWorkspace]);
+
+  return { profile, saveProfile, clearProfile, isLoaded };
 }

@@ -6,7 +6,6 @@ import { createRxDatabase, removeRxDatabase, RxDatabase, RxCollection, addRxPlug
 export { removeRxDatabase };
 import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
 export { getRxStorageDexie };
-import { RxDBMigrationPlugin } from 'rxdb/plugins/migration-schema';
 import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
 import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
 
@@ -46,7 +45,6 @@ import {
 import { logger } from '../logger';
 
 // Add necessary plugins
-addRxPlugin(RxDBMigrationPlugin);
 addRxPlugin(RxDBQueryBuilderPlugin);
 
 // Collection Types
@@ -201,90 +199,25 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
   try {
     const collectionsConfig: Record<string, any> = {
       personnel: { 
-        schema: personnelSchema,
-        migrationStrategies: {
-          1: (doc: any) => doc,
-          2: (doc: any) => doc,
-          3: (doc: any) => {
-            if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
-            return doc;
-          }
-        }
+        schema: personnelSchema
       },
       reports: { 
-        schema: reportsSchema,
-        migrationStrategies: {
-          1: (doc: any) => {
-            if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
-            return doc;
-          },
-          2: (doc: any) => {
-            if (doc.isRelevant === undefined) doc.isRelevant = false;
-            return doc;
-          }
-        }
+        schema: reportsSchema
       },
       templates: { 
-        schema: templatesSchema,
-        migrationStrategies: {
-          1: (doc: any) => {
-            if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
-            return doc;
-          },
-          2: (doc: any) => {
-            if (doc.isActive === undefined) doc.isActive = true;
-            return doc;
-          }
-        }
+        schema: templatesSchema
       },
       lookups: { 
-        schema: lookupsSchema,
-        migrationStrategies: {
-          1: (doc: any) => {
-            if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
-            return doc;
-          }
-        }
+        schema: lookupsSchema
       },
       configs: { 
-        schema: configsSchema,
-        migrationStrategies: {
-          1: (doc: any) => {
-            if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
-            return doc;
-          }
-        }
+        schema: configsSchema
       },
       history: { 
-        schema: historySchema,
-        migrationStrategies: {
-          1: (doc: any) => {
-            if (!doc.personnelId) doc.personnelId = 'none';
-            if (!doc.date) doc.date = new Date().toISOString().split('T')[0];
-            return doc;
-          },
-          2: (doc: any) => {
-            if (!doc.personnelId) doc.personnelId = 'none';
-            if (!doc.date) doc.date = new Date().toISOString().split('T')[0];
-            return doc;
-          },
-          3: (doc: any) => {
-            if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
-            if (!doc.personnelId) doc.personnelId = 'none';
-            if (!doc.date) doc.date = new Date().toISOString().split('T')[0];
-            return doc;
-          }
-        }
+        schema: historySchema
       },
       notifications: {
-        schema: notificationsSchema,
-        migrationStrategies: {
-          1: (doc: any) => doc,
-          2: (doc: any) => {
-            if (doc.read === undefined) doc.read = false;
-            return doc;
-          }
-        }
+        schema: notificationsSchema
       },
     };
 
@@ -302,9 +235,6 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
       }
     }
     
-    // Perform manual migration if necessary
-    await migrateToConsolidated(database);
-    
   } catch (err: any) {
     const rxErr = err as any;
     logger.error(`Failed to initialize collections for database [${name}]. Cleaning up...`, {
@@ -319,36 +249,6 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
   return database;
 };
 
-/**
- * Migration helper to move data from old separate collections (Ghost collections in storage) 
- * to the new consolidated configs/lookups.
- */
-async function migrateToConsolidated(db: MinutasDatabase) {
-  const migrationFlagId = 'migration:consolidated:v2'; // Bumped for 6-collection merge
-  const flag = await db.configs.findOne(migrationFlagId).exec();
-  if (flag) return; // Already migrated
-
-  logger.info('Performing collection consolidation migration...');
-
-  // Note: Since the schemas are removed from code, we can't easily use db.old_collection.
-  // However, RxDB storage still has the data if it was there. 
-  // We can't easily recover "ghost" collections without their schemas in RxDB 
-  // unless we use the lower level storage. 
-  // GIVEN the complexity and that this is a development phase, we'll focus 
-  // on establishing the new structure. If production migration was needed, 
-  // we would use a more complex raw storage scan.
-  
-  // For now, mark as migrated.
-  await db.configs.upsert({
-    id: migrationFlagId,
-    workspaceId: 'minutasdb',
-    type: 'settings',
-    data: { 
-      timestamp: new Date().toISOString(),
-      workspaceId: 'minutasdb'
-    } as any
-  });
-}
 
 /**
  * Helper to safely destroy a database instance and remove from tracking
