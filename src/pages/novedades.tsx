@@ -735,7 +735,7 @@ function MobileHeader({
   if (!creatingReport && !selectedReport) return null;
 
   return (
-    <div className="sm:hidden border-b p-3 bg-card flex items-center justify-between sticky top-0 z-10 h-14 shrink-0">
+    <div className="sm:hidden border-b p-3 bg-card flex items-center justify-between sticky top-0 z-10 h-16 shrink-0">
       <Button
         variant="ghost"
         size="sm"

@@ -86,6 +86,7 @@
     "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5",
     "vite": "^5.4.19",
+    "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.0.18"
   }
 }

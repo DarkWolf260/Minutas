@@ -7,15 +7,16 @@ import { WelcomeDialog } from '@/components/welcome-dialog';
 import { Toaster } from '@/components/toaster';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { PWARegistration } from '@/components/pwa-registration';
 import { PWAStatus } from '@/components/pwa-status';
 import { DatabaseProvider } from '@/lib/db/db-provider';
 import { P2PProvider } from '@/lib/db/p2p-provider';
 import { NotificationsProvider } from '@/lib/notifications-provider';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { LoadingScreen } from '@/components/loading-screen';
 
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { WifiOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // Lazy-load all pages
 const NovedadesPage = lazy(() => import('@/pages/novedades'));
@@ -32,6 +33,7 @@ const SettingsBorrarDatosPage = lazy(() => import('@/pages/settings/borrar-datos
 
 const SettingsAboutPage = lazy(() => import('@/pages/settings/about'));
 const OfflinePage = lazy(() => import('@/pages/offline'));
+const NotFoundPage = lazy(() => import('@/pages/not-found'));
 
 const PageLoader = () => (
   <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh] gap-4 px-6 text-center">
@@ -46,6 +48,25 @@ const PageLoader = () => (
 
 function AppLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Use the offline page as a full-screen fallback ONLY if we're on the /offline route
+  // or if the dynamic loading fails (handled by Suspense/ErrorBoundary)
+  // For general use, we'll show a non-intrusive banner.
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="minutas-theme">
@@ -57,6 +78,22 @@ function AppLayout() {
                 <SideNav />
                 <div className="flex flex-1 flex-col sm:pl-14 md:overflow-hidden relative">
                   <MobileNav />
+                  
+                  {isOffline && location.pathname !== '/offline' && (
+                    <div className="bg-amber-500 text-white text-[10px] font-bold uppercase tracking-widest py-1.5 px-4 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 sticky top-0 z-20 shadow-sm">
+                      <WifiOff className="h-3 w-3" />
+                      <span>Modo Sin Conexión - Los cambios se sincronizarán al volver</span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-5 px-2 text-[9px] text-white hover:bg-white/20 ml-2 border border-white/30"
+                        onClick={() => navigate('/offline')}
+                      >
+                        Más info
+                      </Button>
+                    </div>
+                  )}
+
                   <main className="flex-1 md:overflow-hidden flex flex-col min-h-0 relative bg-muted/30">
                     <ErrorBoundary name="MainContent">
                       <Suspense fallback={<PageLoader />}>
@@ -76,6 +113,7 @@ function AppLayout() {
 
                             <Route path="/settings/about" element={<SettingsAboutPage />} />
                             <Route path="/offline" element={<OfflinePage />} />
+                            <Route path="*" element={<NotFoundPage />} />
                           </Routes>
                         </div>
                       </Suspense>
@@ -85,7 +123,6 @@ function AppLayout() {
                 </div>
               </div>
               <WelcomeDialog />
-              <PWARegistration />
               <PWAStatus />
               <Toaster />
             </TooltipProvider>

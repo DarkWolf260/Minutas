@@ -8,47 +8,47 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuPortal
 } from '@/components/ui/dropdown-menu';
 import {
   History,
   Newspaper,
   Settings,
-  Mountain,
-  FileText,
   ClipboardList,
-  ClipboardCheck,
-  NotebookPen,
-  TrendingUp,
   Users,
-  Zap,
-  User,
   Moon,
   Sun,
-  Monitor
+  Monitor,
+  User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
 import { NotificationBell } from '@/components/notification-bell';
-import { useProfile } from '@/hooks/use-profile';
-import { getInitials } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
+import { useProfile } from '@/hooks/use-profile';
+import { useSettings } from '@/hooks/use-settings';
+import { getInitials } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Novedades', icon: Newspaper },
-  { href: '/orden-del-dia', label: 'Orden del Día', icon: ClipboardList },
-  { href: '/reporte-final', label: 'Reporte Final', icon: ClipboardCheck },
+  { href: '/orden-del-dia', label: 'Lista', icon: ClipboardList },
+  { href: '/reporte-final', label: 'Reporte', icon: History },
   { href: '/personal', label: 'Personal', icon: Users },
 ];
 
 export function SideNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { profile } = useProfile();
   const { theme, setTheme } = useTheme();
+  const { profile } = useProfile();
+  const { settings } = useSettings();
+
+  // Dynamic name logic: Use Analista de CEMUPRAD if a guard is active
+  const analyst = settings.isGuardOpen 
+    ? settings.ordenDelDiaDraft?.staff?.['Analista de CEMUPRAD']?.[0]
+    : null;
+    
+  const displayName = analyst?.name || profile.name || 'Usuario';
+  const displayDepartment = analyst ? 'Analista CEMUPRAD' : (profile.department || 'Área no asignada');
+  const initials = getInitials(displayName);
 
   return (
     <TooltipProvider>
@@ -61,8 +61,6 @@ export function SideNav() {
             <img src="/icons/icon-192x192.png" alt="App Icon" className="h-6 w-6 object-contain transition-all group-hover:scale-110" />
             <span className="sr-only">PC Reportes</span>
           </Link>
-          
-
 
           {navItems.map((item) => (
             <Tooltip key={item.href}>
@@ -93,34 +91,37 @@ export function SideNav() {
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger className={cn(
                   'flex h-9 w-9 items-center justify-center rounded-full transition-all overflow-hidden md:h-8 md:w-8 ring-2 ring-transparent focus:outline-none',
-                  pathname.startsWith('/settings') ? 'ring-primary/50 ring-offset-2 ring-offset-background' : 'hover:ring-primary/30'
+                  pathname.startsWith('/settings') ? 'ring-primary/40 ring-offset-1 ring-offset-background' : 'hover:ring-primary/30'
                 )}>
-                  {profile.avatarUrl ? (
+                  {profile.avatarUrl && !analyst ? (
                     <img src={profile.avatarUrl} alt="Perfil" className="h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-primary/10 text-xs font-semibold text-primary">
-                      {getInitials(profile.name)}
+                    <div className={cn(
+                      "flex h-full w-full items-center justify-center text-xs font-semibold",
+                      analyst ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
+                    )}>
+                      {initials}
                     </div>
                   )}
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent side="right">Opciones</TooltipContent>
+              <TooltipContent side="right">Configuración</TooltipContent>
             </Tooltip>
             
             <DropdownMenuContent side="right" align="end" className="w-56 mb-2 ml-2">
               <div className="flex flex-col space-y-1 p-2">
-                <p className="text-sm font-medium leading-none truncate">{profile.name || 'Usuario'}</p>
-                <p className="text-xs leading-none text-muted-foreground truncate">{profile.department || 'Área no asignada'}</p>
+                <p className="text-sm font-medium leading-none truncate">{displayName}</p>
+                <p className="text-xs leading-none text-muted-foreground truncate">{displayDepartment}</p>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem disabled title="Función futura..." className="cursor-not-allowed opacity-50 justify-between">
+              <DropdownMenuItem disabled className="cursor-not-allowed opacity-50 justify-between">
                 <div className="flex items-center">
                   <User className="mr-2 h-4 w-4" />
                   <span>Perfil</span>
                 </div>
                 <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground ml-2">Próximamente</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
+              <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer font-medium">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Configuración</span>
               </DropdownMenuItem>

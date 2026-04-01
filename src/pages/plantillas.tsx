@@ -327,7 +327,7 @@ export default function PlantillasPage() {
               )}
             >
               {selectedTemplateId && (
-                <div className="sm:hidden border-b p-4 bg-card flex items-center justify-between">
+                <div className="sm:hidden border-b p-4 bg-card flex items-center justify-between h-16 shrink-0">
                   <Button variant="ghost" size="sm" onClick={() => setSelectedTemplateId(null)}>
                     <ChevronLeft className="mr-2 h-4 w-4" />
                     Volver
