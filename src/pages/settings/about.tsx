@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { Separator } from '@/components/ui/separator';
 
 export default function SettingsAboutPage() {
-  const appVersion = '1.6.0';
+  const appVersion = '1.0.0';
 
   return (
     <ScrollArea className="h-full w-full" type="always">

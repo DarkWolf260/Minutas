@@ -175,7 +175,7 @@ function PersonnelPageContent() {
             </div>
           </div>
           {activeTab === 'personnel' && (
-            <div className="flex flex-row flex-wrap items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3 w-full sm:w-auto shrink-0 animate-in fade-in slide-in-from-right-4 duration-300">
               <CsvImportButton onImport={addMembers} personnel={personnel} />
                <Button onClick={handleAddNew} size="sm" className="gap-1.5 shadow-sm font-bold">
                 <PlusCircle className="h-4 w-4" />

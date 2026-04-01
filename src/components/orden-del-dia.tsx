@@ -384,16 +384,21 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
     const reportParts = [
       `*ORDEN DEL DÍA DEL INSTITUTO AUTONOMO DE PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES DEL MUNICIPIO ${(municipio || '').toUpperCase()} ESTADO ${(estado || '').toUpperCase()}*`,
       ``,
-      `*DIRECTOR*`,
-      director,
-      ``,
-      `*JEFE DE OPERACIONES*`,
-      jefeDeOperaciones,
-      ``,
+    ];
+
+    if (director) {
+      reportParts.push(`*DIRECTOR*`, director, ``);
+    }
+
+    if (jefeDeOperaciones) {
+      reportParts.push(`*JEFE DE OPERACIONES*`, jefeDeOperaciones, ``);
+    }
+
+    reportParts.push(
       `*GRUPO DE GUARDIA:* “${selectedGuard}”`,
       ``,
-      `*PERIODO:* ${periodo}`,
-    ];
+      `*PERIODO:* ${periodo}`
+    );
 
     Object.entries(staff).forEach(([role, personnelList]) => {
       if (role.toLowerCase() === 'director' || role.toLowerCase() === 'jefe de operaciones') return;

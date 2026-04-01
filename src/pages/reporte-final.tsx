@@ -13,7 +13,7 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
-import { Badge as UIBadge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
 import {
   Sheet,
   SheetContent,
@@ -52,7 +52,7 @@ import { es } from 'date-fns/locale';
 import type { Report, StaffMember } from '@/types';
 import { DatePicker } from '@/components/date-picker';
 import { TimeHlvInput } from '@/components/time-hlv-input';
-import { PlusCircle, Trash2, FileText, Save, TrendingUp, Users, X, ChevronLeft, Eye, RotateCcw, History, ClipboardCheck, Calendar, Clock } from 'lucide-react';
+import { PlusCircle, Trash2, FileText, Save, TrendingUp, Users, X, ChevronLeft, Eye, RotateCcw, History, ClipboardCheck, Calendar, Clock, Pencil } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { LEADER_ROLES } from '@/constants/roles';
 import { generateId } from '@/lib/utils/id';
@@ -85,6 +85,7 @@ export default function ReporteFinalPage() {
   const { reports, clearAllReports, isLoaded: reportsLoaded } = useReports();
   const { reports: savedReports, isLoaded: historyLoaded, saveGuardReport, deleteGuardReport } = useGuardHistory();
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+  const [editingManualId, setEditingManualId] = useState<string | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [isConfirmSaveOpen, setIsConfirmSaveOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('generate');
@@ -219,15 +220,42 @@ export default function ReporteFinalPage() {
   const handleAddManualNovedad = () => {
     if (!newNovedadTime || !newNovedadText) return;
 
-    const newNovedad: ManualNovedad = {
-      id: generateId('manual'),
-      date: newNovedadDate.toISOString(),
-      time: newNovedadTime,
-      text: newNovedadText,
-    };
-    saveSettings({
-      finalReportManualNovedades: [...manualNovedades, newNovedad]
-    });
+    if (editingManualId) {
+      // Update existing
+      saveSettings({
+        finalReportManualNovedades: manualNovedades.map(n => 
+          n.id === editingManualId 
+            ? { ...n, date: newNovedadDate.toISOString(), time: newNovedadTime, text: newNovedadText }
+            : n
+        )
+      });
+      setEditingManualId(null);
+      toast.success('Novedad actualizada.');
+    } else {
+      // Add new
+      const newNovedad: ManualNovedad = {
+        id: generateId('manual'),
+        date: newNovedadDate.toISOString(),
+        time: newNovedadTime,
+        text: newNovedadText,
+      };
+      saveSettings({
+        finalReportManualNovedades: [...manualNovedades, newNovedad]
+      });
+    }
+    setNewNovedadTime('');
+    setNewNovedadText('');
+  };
+
+  const handleEditManualNovedad = (novedad: ManualNovedad) => {
+    setEditingManualId(novedad.id);
+    setNewNovedadDate(new Date(novedad.date));
+    setNewNovedadTime(novedad.time);
+    setNewNovedadText(novedad.text);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingManualId(null);
     setNewNovedadTime('');
     setNewNovedadText('');
   };
@@ -367,6 +395,17 @@ export default function ReporteFinalPage() {
     const municipio = findInsensitive(globalSettings, 'Municipio');
 
     const dateRangeString = (() => {
+      // Prioritize manually entered period from Orden del Día
+      if (settings.guardPeriod) {
+        const periodStr = settings.guardPeriod.toUpperCase().trim();
+        if (periodStr.includes(' AL ')) {
+          const parts = periodStr.split(' AL ');
+          return `DESDE EL ${parts[0]} HASTA EL ${parts[1]}`;
+        }
+        return periodStr;
+      }
+
+      // Auto-calculate fallback based on shift rotation (08:00 to 08:00)
       const now = new Date();
       const shiftStart = new Date(now);
       if (now.getHours() < 8) {
@@ -390,15 +429,17 @@ export default function ReporteFinalPage() {
     const headerParts = [
       `*INSTITUTO AUTÓNOMO DE PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO ${(municipio || '').toUpperCase()}*`,
       ``,
-      `*DIRECTOR-PRESIDENTE*`,
-      director,
-      ``,
-      `*JEFE DE OPERACIONES*`,
-      jefeDeOperaciones,
-      ``,
-      `*REPORTE DE NOVEDADES ${dateRangeString}*`,
-      ``,
     ];
+
+    if (director) {
+      headerParts.push(`*DIRECTOR-PRESIDENTE*`, director, ``);
+    }
+
+    if (jefeDeOperaciones) {
+      headerParts.push(`*JEFE DE OPERACIONES*`, jefeDeOperaciones, ``);
+    }
+
+    headerParts.push(`*REPORTE DE NOVEDADES ${dateRangeString}*`, ``);
 
     if (staffForReport) {
       if (guardIdForReport && guardIdForReport !== '“”') {
@@ -564,22 +605,19 @@ export default function ReporteFinalPage() {
                     <ChevronLeft className="h-5 w-5" />
                   </Button>
                 </Link>
-                <div className="bg-primary/10 p-3 rounded-2xl shrink-0">
-                  <ClipboardCheck className="h-6 w-6 text-primary" />
-                </div>
                 <div className="flex flex-col">
-                  <h1 className="text-xl md:text-3xl font-bold tracking-tight truncate max-w-[200px] sm:max-w-none">Reporte de Cierre</h1>
-                  <p className="hidden sm:block text-muted-foreground mt-1 text-sm">
+                  <h1 className="text-3xl font-bold tracking-tight">Reporte de Cierre</h1>
+                  <p className="text-muted-foreground mt-1 text-sm">
                     Gestiona y consulta los reportes de cierre de guardia.
                   </p>
                 </div>
               </div>
               
-              <div className="flex items-center gap-2">
-                <TabsList className="grid w-[240px] grid-cols-2">
-                  <TabsTrigger value="generate">Generar</TabsTrigger>
-                  <TabsTrigger value="history">Historial</TabsTrigger>
-                </TabsList>
+                <div className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto">
+                  <TabsList className="grid w-[240px] grid-cols-2 shadow-sm">
+                    <TabsTrigger value="generate">Generar</TabsTrigger>
+                    <TabsTrigger value="history">Historial</TabsTrigger>
+                  </TabsList>
                 
                 {activeTab === 'generate' && !isMobile && isLoaded && (
                   <Button 
@@ -690,24 +728,40 @@ export default function ReporteFinalPage() {
                                 </p>
                               </div>
                             ) : (
-                              <div className="divide-y divide-muted/40">
-                                {finishedReports.map((report) => {
-                                  const sortDate = getSortDate(report);
-                                  const horaStr = findValueInFormData(report.formData, 'Hora') as string | undefined;
-                                  return (
-                                    <div key={report.id} className="p-4 hover:bg-muted/5 transition-colors group">
-                                      <div className="flex items-center justify-between gap-4 mb-1">
-                                        <h4 className="text-sm font-bold truncate text-foreground/90">{report.title}</h4>
-                                        <span className="text-[9px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full whitespace-nowrap">
-                                          {horaStr || (sortDate ? format(sortDate, 'HH:mm') : '--:--')} HLV
+                              <div className="divide-y divide-muted/40 p-4 space-y-3">
+                                {finishedReports.map((report) => (
+                                  <div key={report.id} className="flex items-center justify-between p-4 bg-background border rounded-xl hover:bg-muted/5 transition-colors group">
+                                    <div className="flex flex-col gap-1 min-w-0 flex-1">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-mono text-xs font-bold px-2 py-0.5 bg-muted rounded text-muted-foreground whitespace-nowrap">
+                                          {findValueInFormData(report.formData, "Hora") as string}
+                                        </span>
+                                        <span className="text-xs font-bold truncate opacity-70">
+                                          {report.title}
                                         </span>
                                       </div>
-                                      <p className="text-xs text-muted-foreground line-clamp-1 italic">
-                                        ID: {report.id} — Plantilla: {templates.find(t => t.id === report.templateId)?.name || 'Desconocida'}
-                                      </p>
+                                      <p className="text-sm leading-relaxed text-foreground truncate opacity-80">{report.content.substring(0, 100)}...</p>
                                     </div>
-                                  );
-                                })}
+                                    <div className="flex items-center gap-1 shrink-0 ml-4">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors"
+                                        onClick={() => navigate(`/?selected=${report.id}`)}
+                                      >
+                                        <Pencil className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                                        onClick={() => {/* Reports are managed in novedades page, but we could add delete here too */}}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
                             )}
                           </ScrollArea>
@@ -720,23 +774,56 @@ export default function ReporteFinalPage() {
                         <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
                           <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                             <PlusCircle className="h-3.5 w-3.5 text-primary" />
-                            Nuevo Evento Manual
+                            {editingManualId ? 'Editar Evento Manual' : 'Nuevo Evento Manual'}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="p-4 space-y-3">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-1">
+                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                            <div className="sm:col-span-4 space-y-1">
+                              <Label className="text-[10px] font-bold uppercase opacity-50 ml-1">Fecha</Label>
                               <DatePicker
                                 value={format(newNovedadDate, 'yyyy-MM-dd')}
                                 onChange={(val) => setNewNovedadDate(new Date(val + 'T00:00:00'))}
                               />
                             </div>
-                            <div className="space-y-1">
+                            <div className="sm:col-span-3 space-y-1">
+                              <Label className="text-[10px] font-bold uppercase opacity-50 ml-1">Hora</Label>
                               <TimeHlvInput
                                 value={newNovedadTime}
                                 onChange={setNewNovedadTime}
                                 className="h-9 text-xs"
                               />
+                            </div>
+                            <div className="sm:col-span-5 flex gap-2 items-end">
+                              {editingManualId ? (
+                                <>
+                                  <Button 
+                                    onClick={handleAddManualNovedad}
+                                    disabled={!newNovedadText || !newNovedadTime}
+                                    className="h-9 px-4 rounded-xl font-bold gap-2 text-xs"
+                                  >
+                                    <Save className="h-3.5 w-3.5" />
+                                    Guardar
+                                  </Button>
+                                  <Button 
+                                    variant="outline"
+                                    onClick={handleCancelEdit}
+                                    className="h-9 px-4 rounded-xl font-bold gap-2 text-xs"
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                    Cancelar
+                                  </Button>
+                                </>
+                              ) : (
+                                <Button 
+                                  onClick={handleAddManualNovedad}
+                                  disabled={!newNovedadText || !newNovedadTime}
+                                  className="w-fit h-9 px-6 rounded-xl font-bold gap-2 text-xs group"
+                                >
+                                  <PlusCircle className="h-3.5 w-3.5 transition-transform group-hover:rotate-90" />
+                                  Agregar
+                                </Button>
+                              )}
                             </div>
                           </div>
                           <div className="space-y-1">
@@ -744,18 +831,9 @@ export default function ReporteFinalPage() {
                               placeholder="Descripción breve del evento..."
                               value={newNovedadText}
                               onChange={(e) => setNewNovedadText(e.target.value)}
-                              className="min-h-[50px] max-h-[80px] text-xs resize-none"
+                              className="min-h-[80px] bg-background border-muted-foreground/20 focus-visible:ring-primary/20 rounded-xl resize-none text-sm"
                             />
                           </div>
-                          <Button
-                            variant="secondary"
-                            className="w-full font-bold gap-1.5 shadow-sm uppercase text-[10px] h-9"
-                            onClick={handleAddManualNovedad}
-                            disabled={!newNovedadTime || !newNovedadText}
-                          >
-                            <PlusCircle className="h-3 w-3" />
-                            Añadir a la Cronología
-                          </Button>
                         </CardContent>
                       </Card>
 
@@ -774,25 +852,46 @@ export default function ReporteFinalPage() {
                                 <p className="text-[11px] font-medium uppercase tracking-widest text-center px-4">Sin eventos manuales<br/>registrados para esta guardia</p>
                               </div>
                             ) : (
-                              <div className="divide-y divide-muted/40 font-inherit">
-                                {sortedManualNovedades.map((n) => (
-                                  <div key={n.id} className="p-4 flex items-start gap-4 hover:bg-muted/10 transition-colors group relative">
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 mb-1.5">
-                                        <span className="text-[9px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-tighter">
-                                          {format(new Date(n.date), 'dd/MM')} — {n.time}
-                                        </span>
+                              <div className="p-4 space-y-2">
+                                  {sortedManualNovedades.map((novedad) => (
+                                    <div key={novedad.id} className="flex items-center justify-between p-3 sm:p-4 bg-background border rounded-xl hover:bg-muted/5 transition-colors group gap-3">
+                                      <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                                        <div className="flex items-center gap-2">
+                                          <div className="flex items-center gap-1 shrink-0">
+                                            <div className="text-[9px] font-extrabold px-1.5 py-0.5 bg-primary/5 rounded text-primary/70 whitespace-nowrap uppercase tracking-wider">
+                                              {format(new Date(novedad.date), 'dd/MM')}
+                                            </div>
+                                            <div className="text-[9px] font-extrabold px-1.5 py-0.5 bg-primary/10 rounded text-primary whitespace-nowrap uppercase tracking-wider">
+                                              {novedad.time}
+                                            </div>
+                                          </div>
+                                          {editingManualId === novedad.id && (
+                                            <Badge variant="outline" className="text-[8px] h-3.5 px-1 animate-pulse bg-primary/5 text-primary border-primary/20 shrink-0">
+                                              Editando
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        <p className="text-xs sm:text-sm leading-relaxed text-foreground truncate font-medium">{novedad.text}</p>
                                       </div>
-                                      <p className="text-[13px] leading-snug text-foreground/90 font-medium">{n.text}</p>
+                                    <div className="flex items-center gap-0.5 shrink-0">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors"
+                                        onClick={() => handleEditManualNovedad(novedad)}
+                                        disabled={!!editingManualId}
+                                      >
+                                        <Pencil className="h-3.5 w-3.5" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                                        onClick={() => handleRemoveManualNovedad(novedad.id)}
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
                                     </div>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-7 w-7 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive hover:bg-destructive/10"
-                                      onClick={() => handleRemoveManualNovedad(n.id)}
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </Button>
                                   </div>
                                 ))}
                               </div>
@@ -843,9 +942,9 @@ export default function ReporteFinalPage() {
                                 {format(new Date(report.generatedAt), "HH:mm 'hs'", { locale: es })}
                               </span>
                               {report.guardGroup && (
-                                <UIBadge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] h-5 px-1.5 font-bold">
+                                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] h-5 px-1.5 font-bold">
                                   {report.guardGroup}
-                                </UIBadge>
+                                </Badge>
                               )}
                             </div>
                           </div>

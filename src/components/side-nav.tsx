@@ -113,9 +113,12 @@ export function SideNav() {
                 <p className="text-xs leading-none text-muted-foreground truncate">{profile.department || 'Área no asignada'}</p>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/settings/profile')} className="cursor-pointer">
-                <User className="mr-2 h-4 w-4" />
-                <span>Perfil</span>
+              <DropdownMenuItem disabled title="Función futura..." className="cursor-not-allowed opacity-50 justify-between">
+                <div className="flex items-center">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Perfil</span>
+                </div>
+                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground ml-2">Próximamente</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
                 <Settings className="mr-2 h-4 w-4" />

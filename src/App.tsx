@@ -14,7 +14,7 @@ import { P2PProvider } from '@/lib/db/p2p-provider';
 import { NotificationsProvider } from '@/lib/notifications-provider';
 import { lazy, Suspense } from 'react';
 import { LoadingScreen } from '@/components/loading-screen';
-import { Loader2 } from 'lucide-react';
+
 import { useLocation } from 'react-router-dom';
 
 // Lazy-load all pages
@@ -34,9 +34,13 @@ const SettingsAboutPage = lazy(() => import('@/pages/settings/about'));
 const OfflinePage = lazy(() => import('@/pages/offline'));
 
 const PageLoader = () => (
-  <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh] gap-4">
-    <Loader2 className="h-8 w-8 animate-spin text-primary/30" />
-    <p className="text-[10px] font-bold tracking-[0.3em] text-muted-foreground/50 uppercase">Sincronizando Secciones</p>
+  <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh] gap-4 px-6 text-center">
+    <div className="w-24 h-1 bg-muted/50 rounded-full overflow-hidden">
+      <div className="h-full bg-primary/30 animate-pulse w-full" />
+    </div>
+    <p className="text-[11px] font-bold tracking-[0.2em] text-muted-foreground/50 uppercase">
+      Sincronizando Secciones
+    </p>
   </div>
 );
 

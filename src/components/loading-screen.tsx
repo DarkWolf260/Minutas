@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
+
 
 interface LoadingScreenProps {
   message?: string;
@@ -24,12 +24,9 @@ export function LoadingScreen({ message, isOverlay = false }: LoadingScreenProps
       </div>
 
       <div className="flex flex-col items-center gap-3">
-        <div className="flex items-center gap-2.5">
-          <Loader2 className="w-4 h-4 animate-spin text-primary" />
-          <p className="text-[10px] font-black tracking-[0.4em] text-muted-foreground uppercase opacity-80 animate-pulse">
-            {message || 'Sincronizando Sistema'}
-          </p>
-        </div>
+        <p className="text-xs font-black tracking-[0.1em] sm:tracking-[0.3em] text-muted-foreground uppercase opacity-90 animate-pulse text-center px-4">
+          {message || 'Sincronizando Sistema'}
+        </p>
         <div className="w-32 h-1 bg-muted rounded-full overflow-hidden">
           <div className="h-full bg-primary animate-shimmer w-full" />
         </div>

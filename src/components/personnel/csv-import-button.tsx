@@ -36,19 +36,19 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
     const { currentWorkspace } = useWorkspaceManager();
     const [importing, setImporting] = useState(false);
 
-    const normalizeValue = (s: string) => 
+    const normalizeValue = (s: string) =>
         s.trim().replace(/^["']|["']$/g, '').trim();
 
     // --- Normalize header key (remove quotes, accents, lowercase, spaces to underscore) ---
     const normalize = (s: string) =>
         s.trim()
-         .replace(/^\ufeff/, '') // Remove BOM
-         .replace(/^["']|["']$/g, '') // Remove quotes
-         .trim()
-         .normalize('NFD')
-         .replace(/[\u0300-\u036f]/g, '')
-         .toLowerCase()
-         .replace(/\s+/g, '_');
+            .replace(/^\ufeff/, '') // Remove BOM
+            .replace(/^["']|["']$/g, '') // Remove quotes
+            .trim()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/\s+/g, '_');
 
     const COLUMN_MAP: Record<string, keyof Omit<StaffMember, 'id'>> = {
         jerarquia: 'rank',
@@ -127,7 +127,7 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                     } else {
                         cols = line.split(';').map(c => normalizeValue(c));
                     }
-                    
+
                     const getCol = (field: keyof Omit<StaffMember, 'id'>) => {
                         const idx = fieldIndices.get(field);
                         return idx !== undefined ? (cols[idx] ?? '') : '';
@@ -229,7 +229,7 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                 onClick={handleExport}
             >
                 <Upload className="h-4 w-4" />
-                Exportar
+                Exportar CSV
             </Button>
         </div>
     );

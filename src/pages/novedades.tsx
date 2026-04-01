@@ -238,8 +238,16 @@ function NovedadesPageContent() {
                   );
                 })}
                 {filteredReports.length === 0 && (
-                  <div className="p-4 text-center text-sm text-muted-foreground">
-                    No se encontraron reportes.
+                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center animate-in fade-in duration-500">
+                    <div className="h-16 w-16 rounded-full bg-muted/20 flex items-center justify-center mx-auto mb-4 border-2 border-dashed border-muted-foreground/10 opacity-60">
+                      <Search className="h-7 w-7 opacity-20" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-bold text-foreground/70 tracking-tight">Sin resultados</h3>
+                      <p className="text-xs text-muted-foreground/60 max-w-[200px] mx-auto leading-relaxed">
+                        No se encontraron reportes registrados.
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -268,23 +276,24 @@ function NovedadesPageContent() {
           {/* Content area — takes remaining height and allows inner scroll */}
           <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
             {!isGuardOpen && !selectedReportId && !creatingReport ? (
-              <div className="flex-1 flex flex-col items-center justify-center p-8 bg-muted/5 h-full">
-                <div className="max-w-md w-full bg-card rounded-2xl border shadow-xl p-8 text-center space-y-6 animate-in fade-in zoom-in duration-300">
-                  <div className="h-20 w-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto">
-                    <AlertTriangle className="h-10 w-10 text-amber-500" />
+              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-6 text-center animate-in fade-in duration-500 bg-muted/5 h-full">
+                <div className="max-w-md space-y-6">
+                  <div className="h-20 w-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-2 border-2 border-dashed border-amber-500/20">
+                    <AlertTriangle className="h-9 w-9 text-amber-500/40" />
                   </div>
-                  <div className="space-y-2">
-                    <h3 className="text-2xl font-bold tracking-tight">Guardia no Iniciada</h3>
-                    <p className="text-muted-foreground leading-relaxed">
+                  <div className="space-y-1.5">
+                    <h3 className="text-lg font-bold text-foreground/80 tracking-tight">Guardia no Iniciada</h3>
+                    <p className="text-sm max-w-[280px] mx-auto text-muted-foreground/60 leading-relaxed">
                       Para registrar nuevas novedades o gestionar reportes, primero debes abrir una nueva guardia en la sección de orden del día.
                     </p>
                   </div>
                   <Button
                     onClick={() => navigate('/orden-del-dia')}
+                    variant="outline"
                     size="sm"
-                    className="w-full h-12 text-base font-semibold gap-2"
+                    className="h-10 px-8 text-xs font-bold gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all duration-300 shadow-sm"
                   >
-                    <Newspaper className="h-5 w-5" />
+                    <Newspaper className="h-4 w-4" />
                     Ir a Orden del Día
                   </Button>
                 </div>

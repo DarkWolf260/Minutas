@@ -90,21 +90,24 @@ export default function SettingsPage() {
                   <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </Link>
 
-                <Link
-                  to="/settings/profile"
-                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
+                <div
+                  title="Función futura..."
+                  className="flex items-center justify-between p-4 rounded-lg border opacity-50 cursor-not-allowed group bg-muted/20"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+                    <div className="h-10 w-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600">
                       <User className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="font-medium">Perfil de Usuario</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">Perfil de Usuario</p>
+                        <span className="text-[10px] bg-background border px-1.5 py-0.5 rounded text-muted-foreground font-bold">PRÓXIMAMENTE</span>
+                      </div>
                       <p className="text-xs text-muted-foreground">Administra tu identidad local y firma</p>
                     </div>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </Link>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
 
                 <Link
                   to="/plantillas"
