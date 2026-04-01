@@ -113,6 +113,29 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return '@vendor';
+            }
+            if (id.includes('rxdb') || id.includes('rxjs')) {
+              return '@db';
+            }
+            if (id.includes('leaflet') || id.includes('react-leaflet')) {
+              return '@map';
+            }
+            if (id.includes('lucide-react')) {
+              return '@icons';
+            }
+            if (id.includes('@radix-ui')) {
+              return '@ui';
+            }
+          }
+        },
+      },
+    },
   },
   optimizeDeps: {
     // Force re-bundle on next start to clear stale Sentry cache
