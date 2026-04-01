@@ -281,7 +281,7 @@ function NovedadesPageContent() {
                   </div>
                   <Button
                     onClick={() => navigate('/orden-del-dia')}
-                    size="lg"
+                    size="sm"
                     className="w-full h-12 text-base font-semibold gap-2"
                   >
                     <Newspaper className="h-5 w-5" />
@@ -340,14 +340,6 @@ function NovedadesPageContent() {
       </div>
 
       {/* FAB - Mobile Only */}
-      {!(selectedReportId || creatingReport) && isGuardOpen && (
-        <Button
-          className="sm:hidden fixed bottom-20 right-6 h-14 w-14 rounded-2xl shadow-2xl z-50 p-0 animate-in fade-in zoom-in duration-300"
-          onClick={() => setIsCreateDialogOpen(true)}
-        >
-          <PlusCircle className="h-6 w-6" />
-        </Button>
-      )}
 
       <NovedadesDialogs
         isMounted={isMounted}

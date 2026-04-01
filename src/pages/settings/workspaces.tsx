@@ -3,14 +3,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useWorkspaceManager } from '@/lib/db/db-context';
-import { Database, Plus, Trash2, Layers, ChevronLeft } from 'lucide-react';
+import { Database, Plus, Trash2, Layers, ChevronLeft, Download, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function WorkspacesPage() {
-  const { currentWorkspace, workspaces, switchWorkspace, deleteWorkspace, createWorkspace } = useWorkspaceManager();
+  const { 
+    currentWorkspace, 
+    workspaces, 
+    switchWorkspace, 
+    deleteWorkspace, 
+    createWorkspace,
+    exportWorkspace,
+    importWorkspace
+  } = useWorkspaceManager();
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const navigate = useNavigate();
@@ -83,6 +91,15 @@ export default function WorkspacesPage() {
                       Cambiar
                     </Button>
                   )}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      onClick={() => exportWorkspace(workspace)}
+                      title="Descargar respaldo"
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
                   {workspace !== 'minutasdb' && (
                     <Button 
                       variant="ghost" 
@@ -142,14 +159,37 @@ export default function WorkspacesPage() {
                 </Button>
               </div>
             ) : (
-              <Button 
-                variant="outline" 
-                className="w-full border-dashed" 
-                onClick={() => setIsCreatingWorkspace(true)}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Nueva Área de Trabajo
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 border-dashed h-12" 
+                  onClick={() => setIsCreatingWorkspace(true)}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nueva Área
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="flex-1 border-dashed h-12" 
+                  onClick={() => document.getElementById('import-workspace-input')?.click()}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Importar Área
+                </Button>
+                
+                <input
+                  id="import-workspace-input"
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) importWorkspace(file);
+                    e.target.value = ''; // Reset input
+                  }}
+                />
+              </div>
             )}
           </div>
         </CardContent>

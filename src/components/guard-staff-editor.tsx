@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { Guard, Staff, StaffRole, Department, StaffMember } from '@/types';
-import { Trash2, Search, Check } from 'lucide-react';
+import { Trash2, Search, Check, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePersonnel } from '@/hooks/use-personnel';
 import { usePersonnelHistory } from '@/hooks/use-personnel-history';
@@ -332,12 +332,12 @@ interface GuardStaffEditorProps {
   onSave: () => void;
 }
 
-export function GuardStaffEditor({
+export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
   guard,
   roles,
   onUpdate,
   onSave,
-}: GuardStaffEditorProps) {
+}, ref) => {
   const [staff, setStaff] = useState<Staff>(guard.staff || {});
   const { recordAssignments } = usePersonnelHistory();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -468,8 +468,31 @@ export function GuardStaffEditor({
     return roles.filter((role) => !role.isHidden);
   }, [roles]);
 
+  useImperativeHandle(ref, () => ({
+    save: handleSave
+  }));
+
   return (
-    <div className="space-y-4 p-1">
+    <div className="space-y-4 p-1 relative">
+      {/* Save Button - Mobile FAB ONLY (Desktop uses Header button) */}
+      <div className={cn(
+        "z-50 transition-all duration-300 md:hidden",
+        // Mobile: Floating Action Button (Raised to avoid BottomNav)
+        "fixed bottom-24 right-6 flex items-center justify-center translate-y-0"
+      )}>
+        <Button 
+          onClick={handleSave} 
+          className={cn(
+            "shadow-lg gap-2 font-bold",
+            // Mobile Square with rounded edges
+            "rounded-xl w-14 h-14 p-0 shadow-lg shadow-primary/20",
+            "active:scale-95 bg-primary text-primary-foreground"
+          )}
+        >
+          <Save className="h-6 w-6" />
+        </Button>
+      </div>
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -512,10 +535,10 @@ export function GuardStaffEditor({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-sm text-foreground/90 truncate">
-                    {activeMember.name}
+                    {activeMember?.name}
                   </p>
                   <p className="text-[10px] font-mono text-muted-foreground/70 tracking-tighter uppercase">
-                    {activeMember.cedula || 'SIN CÉDULA'}
+                    {activeMember?.cedula || 'SIN CÉDULA'}
                   </p>
                 </div>
               </div>
@@ -523,10 +546,8 @@ export function GuardStaffEditor({
           ) : null}
         </DragOverlay>
       </DndContext>
-
-      <div className="flex justify-end pt-2">
-        <Button onClick={handleSave}>Guardar Personal</Button>
-      </div>
     </div>
   );
-}
+});
+
+GuardStaffEditor.displayName = 'GuardStaffEditor';

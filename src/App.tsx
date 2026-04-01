@@ -21,7 +21,6 @@ import { useLocation } from 'react-router-dom';
 const NovedadesPage = lazy(() => import('@/pages/novedades'));
 const DireccionesPage = lazy(() => import('@/pages/settings/direcciones'));
 const EstadisticasPage = lazy(() => import('@/pages/estadisticas'));
-const HistorialPage = lazy(() => import('@/pages/historial'));
 const OrdenDelDiaPage = lazy(() => import('@/pages/orden-del-dia'));
 const PersonalPage = lazy(() => import('@/pages/personal'));
 const PlantillasPage = lazy(() => import('@/pages/plantillas'));
@@ -30,7 +29,7 @@ const SettingsPage = lazy(() => import('@/pages/settings'));
 const SettingsWorkspacesPage = lazy(() => import('@/pages/settings/workspaces'));
 const SettingsProfilePage = lazy(() => import('@/pages/settings/profile'));
 const SettingsBorrarDatosPage = lazy(() => import('@/pages/settings/borrar-datos'));
-const SettingsP2PPage = lazy(() => import('@/pages/settings/p2p'));
+
 const SettingsAboutPage = lazy(() => import('@/pages/settings/about'));
 const OfflinePage = lazy(() => import('@/pages/offline'));
 
@@ -62,7 +61,6 @@ function AppLayout() {
                             <Route path="/" element={<NovedadesPage />} />
                             <Route path="/settings/direcciones" element={<DireccionesPage />} />
                             <Route path="/estadisticas" element={<EstadisticasPage />} />
-                            <Route path="/historial" element={<HistorialPage />} />
                             <Route path="/orden-del-dia" element={<OrdenDelDiaPage />} />
                             <Route path="/personal" element={<PersonalPage />} />
                             <Route path="/plantillas" element={<PlantillasPage />} />
@@ -71,7 +69,7 @@ function AppLayout() {
                             <Route path="/settings/workspaces" element={<SettingsWorkspacesPage />} />
                             <Route path="/settings/profile" element={<SettingsProfilePage />} />
                             <Route path="/settings/borrar-datos" element={<SettingsBorrarDatosPage />} />
-                            <Route path="/settings/p2p" element={<SettingsP2PPage />} />
+
                             <Route path="/settings/about" element={<SettingsAboutPage />} />
                             <Route path="/offline" element={<OfflinePage />} />
                           </Routes>

@@ -128,6 +128,89 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
     // but removing from list "hides" it and frees it for re-creation.
   };
 
+  const exportWorkspace = async (name: string) => {
+    if (!db) return;
+    try {
+      const exportData: any = {
+        metadata: {
+          workspaceId: name,
+          exportDate: new Date().toISOString(),
+          app: 'PC Reportes',
+          version: '1.0'
+        },
+        collections: {}
+      };
+
+      const collectionNames = Object.keys(db.collections);
+      for (const colName of collectionNames) {
+        const docs = await (db.collections as any)[colName].find({
+          selector: { workspaceId: name }
+        }).exec();
+        exportData.collections[colName] = docs.map((d: any) => d.toJSON());
+      }
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `minutas-backup-${name}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      logger.info(`Workspace [${name}] exported successfully`);
+    } catch (err) {
+      logger.error(`Failed to export workspace [${name}]`, err);
+      alert('Error al exportar el área de trabajo: ' + (err as Error).message);
+    }
+  };
+
+  const importWorkspace = async (file: File) => {
+    if (!db) return;
+    setIsSwitching(true);
+    try {
+      const text = await file.text();
+      const importData = JSON.parse(text);
+      
+      if (!importData.metadata || !importData.collections) {
+        throw new Error('Formato de archivo de respaldo inválido.');
+      }
+
+      const workspaceId = importData.metadata.workspaceId;
+      
+      // 1. Ensure workspace is in the list
+      if (!workspaces.includes(workspaceId)) {
+        const newList = [...workspaces, workspaceId];
+        setWorkspaces(newList);
+        localStorage.setItem(STORAGE_KEY_LIST, JSON.stringify(newList));
+      }
+
+      // 2. Import data to collections
+      for (const [colName, docs] of Object.entries(importData.collections)) {
+        const collection = (db.collections as any)[colName];
+        if (!collection) {
+          logger.warn(`Collection ${colName} not found in database during import. Skipping.`);
+          continue;
+        }
+
+        for (const doc of (docs as any[])) {
+          // Use upsert to handle existing documents
+          await collection.upsert(doc);
+        }
+      }
+
+      logger.info(`Workspace [${workspaceId}] imported successfully`);
+      // Use switchWorkspace to activate it immediately
+      await switchWorkspace(workspaceId);
+    } catch (err) {
+      logger.error('Failed to import workspace', err);
+      alert('Error al importar el área de trabajo: ' + (err as Error).message);
+    } finally {
+      setIsSwitching(false);
+    }
+  };
+
   const handleHardReset = async () => {
     if (!confirm('¿Estás seguro? Esto borrará todos los datos locales de la aplicación.')) return;
     
@@ -213,7 +296,9 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       workspaces, 
       switchWorkspace, 
       deleteWorkspace,
-      createWorkspace 
+      createWorkspace,
+      exportWorkspace,
+      importWorkspace
     }}>
       {isSwitching && <LoadingScreen isOverlay message="Cambiando área de trabajo..." />}
       {children}

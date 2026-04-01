@@ -178,7 +178,7 @@ export default function PlantillasPage() {
 
         <TabsContent
           value="editor"
-          className="flex-1 h-full min-h-0 m-0 p-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
+          className="flex-1 h-full min-h-0 m-0 p-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
         >
           <div className="flex flex-1 min-h-0 overflow-hidden h-full sm:p-4 sm:pt-0 gap-6">
             <aside
@@ -192,7 +192,7 @@ export default function PlantillasPage() {
                 <CardDescription>Sube y gestiona tus plantillas de reportes.</CardDescription>
               </CardHeader>
               <div className="p-4 pt-0 space-y-2 shrink-0">
-                <Button className="w-full" onClick={handleUploadClick}>
+                <Button className="w-full" size="sm" onClick={handleUploadClick}>
                   <Upload className="mr-2 h-4 w-4" />
                   Subir Plantilla (.txt)
                 </Button>
@@ -376,7 +376,7 @@ export default function PlantillasPage() {
 
         <TabsContent
           value="builder"
-          className="flex-1 min-h-0 m-0 p-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
+          className="flex-1 min-h-0 m-0 p-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
         >
           <div className="flex-1 relative overflow-hidden">
             <div className="absolute inset-0 px-4 sm:px-6 lg:px-10 pb-32">

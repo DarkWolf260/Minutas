@@ -118,9 +118,10 @@ export default function OrdenDelDiaPage() {
               <Button 
                 onClick={() => formRef.current?.generateOrder()} 
                 disabled={!selectedGuardId}
-                className="gap-2 h-11 px-8 shadow-lg hover:shadow-primary/20 transition-all font-bold rounded-xl"
+                size="sm"
+                className="hidden sm:flex gap-2 shadow-sm font-bold"
               >
-                <Eye className="h-5 w-5" />
+                <Eye className="h-4 w-4" />
                 Generar Orden
               </Button>
             </div>
@@ -147,7 +148,7 @@ export default function OrdenDelDiaPage() {
                     onValueChange={handleActiveGuardChange}
                     disabled={isGuardOpen}
                   >
-                    <SelectTrigger id="guard-select" className={`h-11 rounded-xl shadow-sm ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}>
+                    <SelectTrigger id="guard-select" className={`h-10 rounded-lg shadow-sm ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}>
                       <SelectValue placeholder="Selecciona una guardia..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -171,7 +172,7 @@ export default function OrdenDelDiaPage() {
                     value={periodo}
                     onChange={(e) => setPeriodo(e.target.value)}
                     disabled={isGuardOpen}
-                    className={`h-11 rounded-xl shadow-sm ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}
+                    className={`h-10 rounded-lg shadow-sm ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}
                     placeholder="Ej: 28/03/2026 AL 29/03/2026"
                   />
                 </div>
@@ -179,9 +180,10 @@ export default function OrdenDelDiaPage() {
                   <Button 
                     onClick={handleOpenGuard}
                     disabled={!selectedGuardId}
-                    className="gap-2 h-11 px-8 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-emerald-600/20 transition-all font-bold rounded-xl ml-auto"
+                    size="sm"
+                    className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm font-bold ml-auto"
                   >
-                    <Play className="h-4 w-4 fill-current" />
+                    <Play className="h-3 w-3 fill-current" />
                     Abrir Nueva Guardia
                   </Button>
                 )}
@@ -221,6 +223,19 @@ export default function OrdenDelDiaPage() {
             )}
           </div>
         </div>
+      </div>
+      
+      {/* Mobile Floating Action Button for Generating Order */}
+      <div className="sm:hidden fixed bottom-24 right-6 z-50">
+        <Button
+          onClick={() => formRef.current?.generateOrder()}
+          disabled={!selectedGuardId}
+          size="icon"
+          className="h-12 w-12 rounded-xl bg-primary text-primary-foreground shadow-2xl hover:scale-105 active:scale-95 transition-all"
+          title="Generar Orden del Día"
+        >
+          <Eye className="h-6 w-6" />
+        </Button>
       </div>
     </div>
   );

@@ -120,7 +120,7 @@ export function StructureTree({
   };
 
   return (
-    <Card className="border-muted/50 bg-muted/5 shadow-inner overflow-hidden flex flex-col flex-1 min-h-0">
+    <Card className="border-muted/50 bg-muted/5 shadow-inner overflow-hidden flex flex-col flex-1 min-h-0 w-full max-w-full overflow-x-hidden">
       <CardHeader className="pb-3 border-b bg-background/50 backdrop-blur-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
@@ -134,13 +134,13 @@ export function StructureTree({
               </CardDescription>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center bg-muted/30 p-1 rounded-lg border sm:mr-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center bg-muted/30 p-1 rounded-lg border w-full sm:w-auto justify-center sm:justify-start">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={handleExpandAll}
-                className="h-7 px-2 text-[10px] font-bold uppercase tracking-tight hover:bg-background/50"
+                className="flex-1 sm:flex-initial h-7 px-2 text-[10px] font-bold uppercase tracking-tight hover:bg-background/50"
               >
                 Expandir Todo
               </Button>
@@ -149,17 +149,17 @@ export function StructureTree({
                 variant="ghost" 
                 size="sm" 
                 onClick={handleCollapseAll}
-                className="h-7 px-2 text-[10px] font-bold uppercase tracking-tight hover:bg-background/50"
+                className="flex-1 sm:flex-initial h-7 px-2 text-[10px] font-bold uppercase tracking-tight hover:bg-background/50"
               >
                 Contraer
               </Button>
             </div>
-            <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+            <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:items-center sm:gap-2">
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={onLoadInstitutional}
-                className="flex-1 sm:flex-initial h-9 sm:h-8 text-[11px] hover:bg-primary/5 border-primary/20"
+                className="h-9 sm:h-8 text-[11px] hover:bg-primary/5 border-primary/20 w-full"
               >
                 <ShieldCheck className="mr-1.5 h-3.5 w-3.5 text-primary" />
                 Cargar IPP
@@ -167,7 +167,7 @@ export function StructureTree({
               <Button 
                 size="sm" 
                 onClick={() => setIsAddDeptOpen(true)}
-                className="flex-1 sm:flex-initial h-9 sm:h-8 text-[11px] shadow-sm bg-primary hover:bg-primary/90"
+                className="h-9 sm:h-8 text-[11px] shadow-sm bg-primary hover:bg-primary/90 w-full"
               >
                 <PlusCircle className="mr-1 h-3.5 w-3.5" />
                 Departamento
@@ -177,22 +177,22 @@ export function StructureTree({
         </div>
       </CardHeader>
 
-      <CardContent className="p-4 flex-1 min-h-0 overflow-hidden">
-        <ScrollArea className="h-full pr-4 -mr-4" type="always">
-          <div className="space-y-4 pb-4">
+      <CardContent className="p-4 flex-1 min-h-0 overflow-hidden w-full max-w-full overflow-x-hidden">
+        <ScrollArea className="h-full w-full" type="auto">
+          <div className="space-y-4 pb-4 px-1 overflow-x-hidden">
             {/* Cargos Globales Section */}
             <div className="rounded-xl border border-muted/30 bg-card overflow-hidden shadow-sm">
-              <div className="flex items-center justify-between p-4 bg-muted/20 border-b">
+              <div className="flex items-center justify-between p-3 bg-muted/20 border-b">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                    <Briefcase className="h-4 w-4" />
+                  <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                    <Briefcase className="h-3.5 w-3.5" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm">Cargos Globales</span>
-                      <Badge variant="outline" className="text-[10px] uppercase font-bold py-0 h-4 border-muted-foreground/30">BASE</Badge>
+                      <span className="font-bold text-xs sm:text-sm">Cargos Globales</span>
+                      <Badge variant="outline" className="text-[9px] uppercase font-bold py-0 h-3.5 border-muted-foreground/30">BASE</Badge>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">Visibles institucionalmente</p>
+                    <p className="text-[9px] text-muted-foreground">Visibles institucionalmente</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 ml-auto">
@@ -200,10 +200,10 @@ export function StructureTree({
                     variant="ghost" 
                     size="sm" 
                     onClick={() => openAddRole()}
-                    className="h-8 text-xs hover:bg-primary/10 text-primary font-bold bg-primary/5 border border-primary/10 px-3"
+                    className="h-7 text-[10px] hover:bg-primary/10 text-primary font-bold bg-primary/5 border border-primary/10 px-2"
                   >
-                    <Plus className="h-3.5 w-3.5 mr-1" />
-                    Añadir Cargo
+                    <Plus className="h-3 w-3 mr-1" />
+                    Cargo
                   </Button>
                 </div>
               </div>
@@ -230,7 +230,7 @@ export function StructureTree({
             {/* Departments Accordion */}
             <Accordion 
               type="multiple" 
-              className="space-y-3"
+              className="space-y-2 w-full max-w-full overflow-x-hidden"
               value={expandedItems}
               onValueChange={setExpandedItems}
             >
@@ -238,53 +238,53 @@ export function StructureTree({
                 <AccordionItem 
                   key={dept.id} 
                   value={dept.id}
-                  className="rounded-xl border border-muted/30 bg-card shadow-sm overflow-hidden border-b-0"
+                  className="rounded-lg border border-muted/30 bg-card shadow-sm overflow-hidden border-b-0 group"
                 >
-                  <div className="flex items-center group">
-                    <AccordionTrigger className="flex-1 hover:no-underline p-4 py-3 bg-muted/5 group-data-[state=open]:bg-muted/10 [&>svg]:hidden">
-                      <div className="flex items-center gap-3 w-full">
-                        <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90 shrink-0" />
-                        <div className="p-2 rounded-lg bg-primary/5 text-primary group-data-[state=open]:bg-primary/10 transition-colors">
-                          <Building2 className="h-4 w-4" />
+                  <div className="flex items-center w-full min-w-0">
+                    <AccordionTrigger className="flex-1 hover:no-underline p-3 py-2 bg-muted/5 data-[state=open]:bg-muted/10 [&>svg]:hidden group min-w-0 overflow-hidden">
+                      <div className="flex items-center gap-3 w-full min-w-0">
+                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90 shrink-0" />
+                        <div className="p-1.5 rounded-lg bg-primary/5 text-primary group-data-[state=open]:bg-primary/10 transition-colors">
+                          <Building2 className="h-3.5 w-3.5" />
                         </div>
                         <div className="flex flex-col items-start text-left min-w-0">
-                          <span className="font-bold text-sm truncate w-full">{dept.name}</span>
-                          <span className="text-[10px] text-muted-foreground uppercase font-semibold">
+                          <span className="font-bold text-xs sm:text-sm truncate w-full">{dept.name}</span>
+                          <span className="text-[9px] text-muted-foreground uppercase font-semibold">
                             {dept.roles.length} {dept.roles.length === 1 ? 'Cargo' : 'Cargos'}
                           </span>
                         </div>
                       </div>
                     </AccordionTrigger>
                     
-                    <div className="flex items-center gap-1.5 pr-3 bg-muted/5 group-data-[state=open]:bg-muted/10 h-14 transition-colors ml-auto">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openAddRole(dept.id);
-                        }}
-                        className="h-9 p-0 w-9 sm:w-auto sm:px-3 text-xs hover:bg-primary/10 text-primary font-bold bg-primary/5 border border-primary/10"
-                        title="Añadir Cargo"
-                      >
-                        <Plus className="h-4 w-4 sm:mr-1" />
-                        <span className="hidden sm:inline">Cargo</span>
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`¿Eliminar departamento ${dept.name}?`)) {
-                            onRemoveDept(dept.id);
-                          }
-                        }}
-                        className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div className="flex items-center gap-1.5 pr-3 bg-muted/5 group-data-[state=open]:bg-muted/10 h-12 transition-colors ml-auto">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openAddRole(dept.id);
+                          }}
+                          className="h-8 p-0 w-8 sm:w-auto sm:px-2.5 text-[10px] hover:bg-primary/10 text-primary font-bold bg-primary/5 border border-primary/10"
+                          title="Añadir Cargo"
+                        >
+                          <Plus className="h-3.5 w-3.5 sm:mr-1" />
+                          <span className="hidden sm:inline">Cargo</span>
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`¿Eliminar departamento ${dept.name}?`)) {
+                              onRemoveDept(dept.id);
+                            }
+                          }}
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
 
                   <AccordionContent className="p-0 border-t border-muted/20">
                     <div className="divide-y divide-muted/20">
@@ -402,7 +402,7 @@ function RoleRow({
   onUpdate: (name: string, updates: Partial<StaffRole>) => void;
 }) {
   return (
-    <div className="flex items-center justify-between p-3.5 px-5 hover:bg-muted/10 transition-colors group">
+    <div className="flex items-center justify-between p-2 px-4 hover:bg-muted/10 transition-colors group">
       <div className="flex items-center gap-3 min-w-0">
         <div className="p-1.5 rounded-full bg-primary/5 text-primary group-hover:bg-primary/10 transition-colors">
           <User className="h-3.5 w-3.5" />

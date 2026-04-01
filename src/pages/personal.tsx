@@ -159,10 +159,10 @@ function PersonnelPageContent() {
 
   return (
     <div className="flex-col w-full md:flex-1 md:flex md:min-h-0 md:overflow-hidden">
-      <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-6 flex flex-col md:flex-1 md:min-h-0">
+      <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-28 sm:pb-6 flex flex-col md:flex-1 md:min-h-0">
         <div className="flex flex-col gap-4 mb-6 shrink-0 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <Link to="/settings" className="shrink-0">
+            <Link to="/" className="shrink-0">
               <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
                 <ChevronLeft className="h-5 w-5" />
               </Button>
@@ -177,7 +177,7 @@ function PersonnelPageContent() {
           {activeTab === 'personnel' && (
             <div className="flex flex-row flex-wrap items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-300">
               <CsvImportButton onImport={addMembers} personnel={personnel} />
-              <Button onClick={handleAddNew} className="gap-1.5 shadow-sm h-9 text-xs px-3 rounded-xl">
+               <Button onClick={handleAddNew} size="sm" className="gap-1.5 shadow-sm font-bold">
                 <PlusCircle className="h-4 w-4" />
                 Añadir Personal
               </Button>
@@ -237,7 +237,7 @@ function PersonnelPageContent() {
               </div>
             </div>
 
-            <div className="md:flex-1 md:min-h-0 md:overflow-hidden pr-2 -mr-2 flex flex-col bg-transparent">
+            <div className="md:flex-1 md:min-h-0 md:overflow-hidden flex flex-col bg-transparent">
               <TabsContent value="personnel" className="mt-0 focus-visible:outline-none ring-offset-background data-[state=active]:flex data-[state=active]:flex-col md:data-[state=active]:flex-1 md:min-h-0 bg-transparent animate-in fade-in duration-300">
                 <Card className="border-none shadow-xl shadow-foreground/5 bg-card md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0">
                   <CardContent className="p-4 sm:p-6 flex flex-col md:flex-1 md:min-h-0 md:overflow-hidden">

@@ -79,8 +79,8 @@ export default function SettingsAboutPage() {
                 <p className="italic text-sm text-muted-foreground leading-relaxed">
                   "Esta aplicación fue hecha con la flojera que me daba seguir editando en Word las
                   minutas, un esclavo de IA y bastante paciencia para explicarle al esclavo toda la
-                  lógica que me saqué del forro para que funcione esta aplicación en un lenguaje en
-                  el que ni me molesté en revisar su sintaxis."
+                  lógica que me saqué del forro para que funcione esta aplicación en un lenguaje y framework
+                  de los cuales ni me molesté en aprender su sintaxis."
                 </p>
                 <div className="mt-4 flex items-center justify-center gap-4">
                   <div className="h-px flex-1 bg-muted-foreground/10" />

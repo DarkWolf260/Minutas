@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { GuardStaffEditor } from '@/components/guard-staff-editor';
-import { PlusCircle, Trash2, ShieldCheck } from 'lucide-react';
+import { PlusCircle, Trash2, ShieldCheck, Save } from 'lucide-react';
+import { useRef } from 'react';
 import type { Guard, StaffMember, StaffRole, Department } from '@/types';
 import { LEADER_ROLES } from '@/constants/roles';
 import { toast } from 'sonner';
@@ -34,6 +35,7 @@ export function GuardAssignmentPanel({
 }: GuardAssignmentPanelProps) {
   const [selectedGuardId, setSelectedGuardId] = useState<string>(guards[0]?.id || '');
   const [newGuardName, setNewGuardName] = useState('');
+  const editorRef = useRef<any>(null);
 
   const selectedGuard = guards.find((g) => g.id === selectedGuardId);
 
@@ -172,8 +174,8 @@ export function GuardAssignmentPanel({
 
         {/* Main Content - Guard Staff Editor */}
         {selectedGuard ? (
-          <Card className="flex flex-col min-h-0 border-muted/50 bg-background shadow-xl shadow-foreground/5 overflow-hidden">
-            <CardHeader className="pb-3 border-b bg-muted/5">
+          <Card className="flex flex-col min-h-0 border-muted/50 bg-background shadow-xl shadow-foreground/5 overflow-visible">
+            <CardHeader className="pb-3 border-b bg-muted/5 flex flex-row items-center justify-between space-y-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10 text-primary">
                   <ShieldCheck className="h-4 w-4" />
@@ -186,11 +188,21 @@ export function GuardAssignmentPanel({
                   <CardDescription className="text-[11px]">Asigna personal y define la jerarquía operativa para esta guardia.</CardDescription>
                 </div>
               </div>
+              <Button
+                size="sm"
+                variant="default"
+                className="hidden md:flex gap-2 h-8 px-3 shadow-md"
+                onClick={() => editorRef.current?.save?.()}
+              >
+                <Save className="h-4 w-4" />
+                <span className="font-bold">Guardar Personal</span>
+              </Button>
             </CardHeader>
             <CardContent className="p-0 flex-1 min-h-0 flex flex-col overflow-hidden">
               <ScrollArea className="flex-1" type="always">
                 <div className="p-6">
                   <GuardStaffEditor
+                    ref={editorRef}
                     guard={selectedGuard}
                     onUpdate={handleStaffUpdate}
                     roles={roles}

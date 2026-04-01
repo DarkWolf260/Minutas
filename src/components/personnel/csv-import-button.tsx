@@ -36,18 +36,33 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
     const { currentWorkspace } = useWorkspaceManager();
     const [importing, setImporting] = useState(false);
 
+    const normalizeValue = (s: string) => 
+        s.trim().replace(/^["']|["']$/g, '').trim();
+
     // --- Normalize header key (remove quotes, accents, lowercase, spaces to underscore) ---
     const normalize = (s: string) =>
-        s.replace(/^["']|["']$/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, '_');
+        s.trim()
+         .replace(/^\ufeff/, '') // Remove BOM
+         .replace(/^["']|["']$/g, '') // Remove quotes
+         .trim()
+         .normalize('NFD')
+         .replace(/[\u0300-\u036f]/g, '')
+         .toLowerCase()
+         .replace(/\s+/g, '_');
 
     const COLUMN_MAP: Record<string, keyof Omit<StaffMember, 'id'>> = {
         jerarquia: 'rank',
+        rank: 'rank',
         nombre_y_apellido: 'name',
+        nombre_completo: 'name',
         nombre: 'name',
         apellido: 'name',
         cedula: 'cedula',
+        id: 'cedula',
         cargo: 'cargo' as keyof Omit<StaffMember, 'id'>,
+        rol: 'cargo' as keyof Omit<StaffMember, 'id'>,
         departamento: 'department',
+        unidad: 'department',
         estatus: 'status',
         estado: 'status',
         titulo: 'titulo' as keyof Omit<StaffMember, 'id'>,
@@ -73,12 +88,14 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                     return;
                 }
 
-                // Detect delimiter (, or ;)
+                // Detect delimiter (, or ;) based on frequency in header
                 const firstLine = lines[0]!;
-                const delimiter = firstLine.includes(';') ? ';' : ',';
+                const countCommas = (firstLine.match(/,/g) || []).length;
+                const countSemicolons = (firstLine.match(/;/g) || []).length;
+                const delimiter = countSemicolons > countCommas ? ';' : ',';
 
                 // Parse header - strip quotes from each header
-                const headers = firstLine.split(delimiter).map((h) => normalize(h));
+                const headers = firstLine.split(delimiter).map(h => normalize(h));
                 const colIdx = (key: string) => headers.indexOf(normalize(key));
 
                 // Build column indices from COLUMN_MAP
@@ -98,8 +115,18 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                 // Parse rows
                 const members: Omit<StaffMember, 'id'>[] = [];
                 for (let i = 1; i < lines.length; i++) {
-                    // Split and strip quotes from values
-                    const cols = lines[i]!.split(delimiter).map((c) => c.replace(/^["']|["']$/g, '').trim());
+                    const line = lines[i]!.trim();
+                    if (!line) continue;
+
+                    // Improved split considering quotes, but simple enough for our needs
+                    // If delimiter is a comma, we use a slightly more advanced split
+                    let cols: string[] = [];
+                    if (delimiter === ',') {
+                        // Regex to split by comma NOT inside quotes
+                        cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => normalizeValue(c));
+                    } else {
+                        cols = line.split(';').map(c => normalizeValue(c));
+                    }
                     
                     const getCol = (field: keyof Omit<StaffMember, 'id'>) => {
                         const idx = fieldIndices.get(field);
@@ -188,20 +215,20 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
             <Button
                 variant="outline"
                 size="sm"
-                className="h-9 text-xs shadow-sm gap-1.5 rounded-xl"
+                className="shadow-sm gap-1.5"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={importing}
             >
-                <Download className="mr-1.5 h-4 w-4" />
+                <Download className="h-4 w-4" />
                 {importing ? 'Importando…' : 'Importar CSV'}
             </Button>
             <Button
                 variant="outline"
                 size="sm"
-                className="h-9 text-xs shadow-sm gap-1.5 rounded-xl"
+                className="shadow-sm gap-1.5"
                 onClick={handleExport}
             >
-                <Upload className="mr-1.5 h-4 w-4" />
+                <Upload className="h-4 w-4" />
                 Exportar
             </Button>
         </div>

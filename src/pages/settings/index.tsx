@@ -10,12 +10,12 @@ import { useRoles } from '@/hooks/use-roles';
 import { useDepartments } from '@/hooks/use-departments';
 import {
   User,
-  Zap, 
-  Database, 
-  Plus, 
-  Trash2, 
+  Zap,
+  Database,
+  Plus,
+  Trash2,
   Layers,
-  FileText, 
+  FileText,
   ChevronRight,
   AlertTriangle,
   Settings2,
@@ -53,9 +53,9 @@ export default function SettingsPage() {
             Gestiona las preferencias de la aplicación y el área de trabajo activa.
           </p>
         </div>
-      
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Lado Izquierdo: Configuración General */}
+          {/* Lado Izquierdo: Ajustes Generales */}
           <div className="lg:col-span-7">
             <GlobalTagsManager />
           </div>
@@ -89,7 +89,7 @@ export default function SettingsPage() {
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </Link>
-                
+
                 <Link
                   to="/settings/profile"
                   className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
@@ -138,21 +138,7 @@ export default function SettingsPage() {
                   <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </Link>
 
-                <Link
-                  to="/settings/p2p"
-                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-600 group-hover:scale-110 transition-transform">
-                      <Zap className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Sincronización P2P</p>
-                      <p className="text-xs text-muted-foreground">Conectar varios dispositivos en tiempo real</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </Link>
+
 
                 <Link
                   to="/settings/borrar-datos"

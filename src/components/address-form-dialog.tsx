@@ -355,11 +355,11 @@ export function AddressFormDialog({
           ) : (
             <>
               <DialogClose asChild>
-                <Button type="button" variant="ghost" className="text-muted-foreground hover:text-foreground">
+                <Button type="button" variant="ghost" className="h-10 text-muted-foreground hover:text-foreground">
                   Cancelar
                 </Button>
               </DialogClose>
-              <Button type="submit" className="shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 px-10 h-11 rounded-xl font-bold gap-2">
+              <Button type="submit" size="sm" className="shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 px-8 font-bold gap-2">
                 <Save className="h-4 w-4" />
                 {address ? 'Guardar Cambios' : 'Registrar'}
               </Button>

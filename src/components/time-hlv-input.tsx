@@ -35,21 +35,20 @@ const getCursorPosition = (digitCount: number): number => {
   if (digitCount <= 2) return digitCount; // e.g., "12|"
   if (digitCount <= 4) return digitCount + 1; // e.g., "12:34|"
 
-  // After 4 digits, we are in range mode. "12:34 HLV - " is 13 chars.
-  const baseForRange = 13;
+  // After 4 digits, we are in range mode. "12:34 HLV - " is 12 chars.
+  const baseForRange = 12;
   const rangeDigits = digitCount - 4;
 
   if (rangeDigits <= 2) return baseForRange + rangeDigits;
   if (rangeDigits <= 4) return baseForRange + rangeDigits + 1;
 
-  return 24; // Default to the end
+  return 21; // Max length: "12:34 HLV - 12:34 HLV" is 21 chars
 };
 
 interface TimeHlvInputProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
-  showHelperText?: boolean;
   className?: string; // Added className
   onBlur?: () => void; // Added onBlur
   name?: string;
@@ -57,8 +56,8 @@ interface TimeHlvInputProps {
 }
 
 export const TimeHlvInput = forwardRef<HTMLInputElement, TimeHlvInputProps>(
-  ({ value: propValue, onChange: onFormChange, disabled = false, showHelperText = true, className, onBlur, name, id }, ref) => {
-    const internalInputRef = useRef<HTMLInputElement>(null);
+  ({ value: propValue, onChange: onFormChange, disabled = false, className, onBlur, name, id }, ref) => {
+    const internalInputRef = useRef<HTMLInputElement | null>(null);
 
     // Extract only digits from the prop value
     const digits = useMemo(() => (propValue || '').replace(/\D/g, ''), [propValue]);
@@ -71,12 +70,12 @@ export const TimeHlvInput = forwardRef<HTMLInputElement, TimeHlvInputProps>(
       onFormChange(formatted);
 
       // After the state updates and re-renders, set the cursor position correctly.
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         if (internalInputRef.current) {
           const cursorPosition = getCursorPosition(newDigits.length);
           internalInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
         }
-      });
+      }, 0);
     };
 
     // On blur, validate and correct the time if needed (e.g., 25:00 -> 23:59)
@@ -134,7 +133,7 @@ export const TimeHlvInput = forwardRef<HTMLInputElement, TimeHlvInputProps>(
           ref={(node) => {
             internalInputRef.current = node;
             if (typeof ref === 'function') ref(node);
-            else if (ref) ref.current = node;
+            else if (ref) (ref as any).current = node;
           }}
           type="text"
           value={formattedValue}
@@ -147,11 +146,6 @@ export const TimeHlvInput = forwardRef<HTMLInputElement, TimeHlvInputProps>(
           name={name}
           id={id}
         />
-        {showHelperText && (
-          <p className="text-xs text-muted-foreground mt-1">
-            Este campo no solo es para la hora de inicio, sigue escribiendo
-          </p>
-        )}
       </>
     );
   }

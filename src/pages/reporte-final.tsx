@@ -13,6 +13,7 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import { Badge as UIBadge } from '@/components/ui/badge';
 import {
   Sheet,
   SheetContent,
@@ -22,6 +23,17 @@ import {
   SheetFooter,
   SheetClose,
 } from '@/components/ui/sheet';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useReports } from '@/hooks/use-reports';
 import { useGuardHistory } from '@/hooks/use-guard-history';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -36,13 +48,16 @@ import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { renderFinalReport } from '@/lib/template-parser';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import type { Report, StaffMember } from '@/types';
 import { DatePicker } from '@/components/date-picker';
 import { TimeHlvInput } from '@/components/time-hlv-input';
-import { PlusCircle, Trash2, FileText, Save, TrendingUp, Users, X, ChevronLeft } from 'lucide-react';
+import { PlusCircle, Trash2, FileText, Save, TrendingUp, Users, X, ChevronLeft, Eye, RotateCcw, History, ClipboardCheck, Calendar, Clock } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { LEADER_ROLES } from '@/constants/roles';
 import { generateId } from '@/lib/utils/id';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
 
 interface ManualNovedad {
   id: string;
@@ -66,7 +81,13 @@ const findInsensitive = (obj: Record<string, string>, key: string): string => {
 };
 
 export default function ReporteFinalPage() {
-  const { reports, isLoaded: reportsLoaded } = useReports();
+  // const { toast } = useToast(); -- Removed as we use sonner directly
+  const { reports, clearAllReports, isLoaded: reportsLoaded } = useReports();
+  const { reports: savedReports, isLoaded: historyLoaded, saveGuardReport, deleteGuardReport } = useGuardHistory();
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [isConfirmSaveOpen, setIsConfirmSaveOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('generate');
   const { guards, isLoaded: guardsLoaded } = useGuards();
   const isMobile = useIsMobile();
   const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
@@ -85,15 +106,49 @@ export default function ReporteFinalPage() {
   const [copyButtonText, setCopyButtonText] = useState('Copiar');
   const isGuardOpen = settings.isGuardOpen || false;
 
-  const handleCloseGuard = async () => {
-    await saveSettings({ 
-      isGuardOpen: false,
-      guardPeriod: '', // Clear period for next guard
-      finalReportManualNovedades: [], // Clear manual novedades for next guard
-      finalReportStatistics: '', // Clear stats for next guard
-    });
-    setIsResultDialogOpen(false);
-    navigate('/orden-del-dia');
+  const handleFinalizeAndSave = async () => {
+    if (!generatedReport || !activeGuard) {
+      toast.error('No hay contenido de reporte o guardia activa para finalizar.');
+      return;
+    }
+
+    try {
+      const reportId = generateId();
+      const now = new Date();
+      // Ensure date is exactly 20 characters (no milliseconds) to stay within DB's maxLength: 20 limit
+      const isoDate20 = now.toISOString().split('.')[0] + 'Z';
+      const fullIsoDate = now.toISOString();
+      
+      await saveGuardReport({
+        id: reportId,
+        date: isoDate20,
+        generatedAt: fullIsoDate,
+        summary: settings.guardPeriod || `Reporte de Guardia ${activeGuard.id}`,
+        content: generatedReport,
+        guardGroup: activeGuard.id.split(' ')[0] || '',
+        workspaceId: '', 
+      });
+
+      // After saving to history, close the actual guard data
+      await saveSettings({ 
+        isGuardOpen: false,
+        guardPeriod: '', 
+        activeGuardId: '', // Clear active guard
+        finalReportManualNovedades: [], 
+        finalReportStatistics: '', 
+      });
+
+      // Clear all individual reports (novedades) from the current guard session
+      await clearAllReports();
+
+      setIsConfirmSaveOpen(false);
+      setIsResultDialogOpen(false);
+      setActiveTab('history'); 
+      toast.success('Guardia finalizada y reporte archivado con éxito.');
+    } catch (error) {
+      console.error('Failed to finalize and save', error);
+      toast.error('Error al finalizar la guardia.');
+    }
   };
 
   const [newNovedadDate, setNewNovedadDate] = useState(new Date());
@@ -267,12 +322,13 @@ export default function ReporteFinalPage() {
       return;
     }
 
-    const staffForReport = (settings.finalReportStaffSnapshot && settings.finalReportGuardId === settings.activeGuardId)
-      ? settings.finalReportStaffSnapshot
+    const draft = settings.ordenDelDiaDraft;
+    const staffForReport = (draft && draft.guardId === settings.activeGuardId)
+      ? draft.staff
       : activeGuard?.staff;
 
-    const guardIdForReport = (settings.finalReportStaffSnapshot && settings.finalReportGuardId === settings.activeGuardId)
-      ? settings.finalReportGuardId || ''
+    const guardIdForReport = (draft && draft.guardId === settings.activeGuardId)
+      ? draft.guardId || ''
       : (activeGuard?.id || settings.activeGuardId || '');
 
     const getLeaderName = (roleName: string) => {
@@ -404,8 +460,7 @@ export default function ReporteFinalPage() {
           }).format(sortDate);
           
           const horaStr = findValueInFormData(report.formData, 'Hora') as string | undefined;
-          const timestampText = `${formattedDate} ${horaStr || format(sortDate, 'HH:mm')} HLV`.trim();
-
+          const timestampText = `${formattedDate} ${horaStr || format(sortDate, 'HH:mm')}`.trim();
           const template = templates.find((t) => t.id === report.templateId);
           const config = configs[report.templateId];
 
@@ -462,266 +517,382 @@ export default function ReporteFinalPage() {
     setTimeout(() => setCopyButtonText('Copiar'), 2000);
   };
 
+  const handleCopyReport = () => {
+    if (selectedSavedReport) {
+      navigator.clipboard.writeText(selectedSavedReport.content);
+      setCopyButtonText('¡Copiado!');
+      setTimeout(() => setCopyButtonText('Copiar'), 2000);
+    }
+  };
+
+  const handleViewSavedReport = (id: string) => {
+    setSelectedReportId(id);
+    setViewDialogOpen(true);
+  };
+
+  const handleDeleteSavedReport = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteGuardReport(id);
+    if (selectedReportId === id) {
+      setViewDialogOpen(false);
+      setSelectedReportId(null);
+    }
+  };
+
+  const sortedSavedReports = useMemo(() => {
+    return [...savedReports].sort(
+      (a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime()
+    );
+  }, [savedReports]);
+
+  const selectedSavedReport = useMemo(() => 
+    savedReports.find((r) => r.id === selectedReportId),
+  [savedReports, selectedReportId]);
+
   const isLoaded =
     reportsLoaded && guardsLoaded && settingsLoaded && rolesLoadedHook && templatesLoaded && definitionsLoaded;
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden relative">
-      <div className="flex-1 flex flex-col md:h-full md:overflow-hidden">
-        <div className="p-4 sm:p-6 lg:p-8 w-full max-w-[1700px] mx-auto h-full flex flex-col gap-6 min-h-0">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 shrink-0">
-            <div className="flex items-center gap-4">
-              <Link to="/" className="shrink-0">
-                <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-              </Link>
-              <div className="flex flex-col">
-                <h1 className="text-3xl font-bold tracking-tight">Reporte de Cierre de Guardia</h1>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  Genera el resumen final consolidado de todas las novedades y estadísticas de la guardia.
-                </p>
-              </div>
-            </div>
-            {!isMobile && isLoaded && (
-              <Button 
-                onClick={handleGenerateReport} 
-                className="gap-2 px-8 h-12 text-sm font-bold shadow-lg hover:shadow-primary/20 transition-all rounded-xl shrink-0"
-              >
-                <FileText className="h-5 w-5" />
-                Generar Reporte Final
-              </Button>
-            )}
-          </div>
-
-          {!isLoaded ? (
-            <div className="space-y-8 flex-1">
-              <Skeleton className="h-[100px] w-full rounded-xl" />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1">
-                <Skeleton className="h-[400px] w-full rounded-xl" />
-                <Skeleton className="h-[400px] w-full rounded-xl" />
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-8 flex-1 flex flex-col min-h-0 pb-32">
-              {/* Bloque Informativo Superior */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 shrink-0">
-                <Alert className="bg-primary/5 border-primary/20 shadow-sm leading-relaxed flex items-center h-full py-4">
-                  <div className="flex items-center gap-4 w-full">
-                    <div className="bg-primary/10 p-2.5 rounded-xl">
-                      <FileText className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <AlertTitle className="font-bold text-sm tracking-tight uppercase">Información de Generación</AlertTitle>
-                      <AlertDescription className="text-xs opacity-80 mt-0.5">
-                        Consolidará <span className="font-bold text-primary">{finishedReports.length}</span> novedades y <span className="font-bold text-primary">{manualNovedades.length}</span> eventos manuales.
-                      </AlertDescription>
-                    </div>
-                  </div>
-                </Alert>
-
-                {activeGuard ? (
-                  <Alert className="bg-emerald-500/5 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-sm flex items-center h-full py-4">
-                    <div className="flex items-center gap-4 w-full">
-                      <div className="bg-emerald-500/10 p-2.5 rounded-xl">
-                        <Users className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <AlertTitle className="font-bold text-sm tracking-tight uppercase">Estado de Guardia</AlertTitle>
-                        <AlertDescription className="text-xs opacity-80 mt-0.5">
-                          Guardia <strong className="uppercase">"{activeGuard.id}"</strong> activa y sincronizada.
-                        </AlertDescription>
-                      </div>
-                    </div>
-                  </Alert>
-                ) : (
-                  <Alert variant="destructive" className="shadow-sm flex items-center h-full py-4 bg-destructive/5 border-destructive/20">
-                    <div className="flex items-center gap-4 w-full">
-                      <div className="bg-destructive/10 p-2.5 rounded-xl">
-                        <Users className="h-5 w-5 text-destructive" />
-                      </div>
-                      <div>
-                        <AlertTitle className="font-bold text-sm tracking-tight uppercase tracking-widest text-destructive">Atención: Sin Personal</AlertTitle>
-                        <AlertDescription className="text-xs opacity-90 mt-0.5">
-                          No hay una guardia activa detectada para el personal.
-                        </AlertDescription>
-                      </div>
-                    </div>
-                  </Alert>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch flex-1 min-h-0">
-                {/* Columna Izquierda: Estadísticas y Automáticas */}
-                <div className="flex flex-col gap-8 flex-1 min-h-0 h-full">
-                  {/* Sección de Estadísticas */}
-                  <Card className="shadow-md border-muted/60 flex flex-col flex-1 shrink-0 lg:shrink min-h-[300px]">
-                    <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
-                      <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                        <TrendingUp className="h-3.5 w-3.5 text-primary" />
-                        Estadísticas del Día
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 flex-1 flex flex-col min-h-0">
-                      <Textarea
-                        placeholder="Ej: - TRASLADOS URBANOS 5"
-                        value={statisticsText}
-                        onChange={(e) => saveSettings({ finalReportStatistics: e.target.value })}
-                        className="font-mono text-xs leading-relaxed flex-1 w-full resize-none bg-muted/20 border-muted/30 focus-visible:ring-primary/20 p-3 rounded-md"
-                      />
-                    </CardContent>
-                  </Card>
-
-                  {/* NOVEDADES AUTOMÁTICAS CONSOLIDADAS */}
-                  <Card className="shadow-md border-muted/60 flex flex-col flex-1 min-h-0 overflow-hidden">
-                    <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
-                      <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                        <FileText className="h-3.5 w-3.5 text-primary" />
-                        Novedades Automáticas a Consolidar ({finishedReports.length})
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0 flex-1 min-h-0 overflow-hidden">
-                      <ScrollArea className="h-full" type="always">
-                        {finishedReports.length === 0 ? (
-                          <div className="py-12 flex flex-col items-center justify-center text-muted-foreground opacity-50">
-                            <FileText className="h-8 w-8 mb-2 stroke-1" />
-                            <p className="text-[11px] font-medium uppercase tracking-widest text-center px-4">
-                              No hay novedades automáticas<br/>finalizadas para este turno
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="divide-y divide-muted/40">
-                            {finishedReports.map((report) => {
-                              const sortDate = getSortDate(report);
-                              const horaStr = findValueInFormData(report.formData, 'Hora') as string | undefined;
-                              return (
-                                <div key={report.id} className="p-4 hover:bg-muted/5 transition-colors group">
-                                  <div className="flex items-center justify-between gap-4 mb-1">
-                                    <h4 className="text-sm font-bold truncate text-foreground/90">{report.title}</h4>
-                                    <span className="text-[9px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full whitespace-nowrap">
-                                      {horaStr || (sortDate ? format(sortDate, 'HH:mm') : '--:--')} HLV
-                                    </span>
-                                  </div>
-                                  <p className="text-xs text-muted-foreground line-clamp-1 italic">
-                                    ID: {report.id} — Plantilla: {templates.find(t => t.id === report.templateId)?.name || 'Desconocida'}
-                                  </p>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col md:h-full md:overflow-hidden">
+          <div className="p-4 sm:p-6 lg:p-8 w-full max-w-[1700px] mx-auto h-full flex flex-col gap-6 min-h-0">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <Link to="/" className="shrink-0">
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                </Link>
+                <div className="bg-primary/10 p-3 rounded-2xl shrink-0">
+                  <ClipboardCheck className="h-6 w-6 text-primary" />
                 </div>
-
-                {/* Columna Derecha: Gestión de Eventos Manuales */}
-                <div className="flex flex-col gap-8 flex-1 min-h-0 h-full">
-                  {/* Sección de Novedades Manuales Form */}
-                  <Card className="shadow-md border-muted/60 shrink-0">
-                    <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
-                      <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                        <PlusCircle className="h-3.5 w-3.5 text-primary" />
-                        Nuevo Evento Manual
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 space-y-3">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-1">
-                          <DatePicker
-                            value={format(newNovedadDate, 'yyyy-MM-dd')}
-                            onChange={(val) => setNewNovedadDate(new Date(val + 'T00:00:00'))}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <TimeHlvInput
-                            value={newNovedadTime}
-                            onChange={setNewNovedadTime}
-                            className="h-9 text-xs"
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <Textarea
-                          placeholder="Descripción breve del evento..."
-                          value={newNovedadText}
-                          onChange={(e) => setNewNovedadText(e.target.value)}
-                          className="min-h-[50px] max-h-[80px] text-xs resize-none"
-                        />
-                      </div>
-                      <Button
-                        variant="secondary"
-                        className="w-full font-bold gap-1.5 shadow-sm uppercase text-[10px] h-9"
-                        onClick={handleAddManualNovedad}
-                        disabled={!newNovedadTime || !newNovedadText}
-                      >
-                        <PlusCircle className="h-3 w-3" />
-                        Añadir a la Cronología
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  {/* Cronología de Novedades Manuales Display */}
-                  <Card className="shadow-md border-muted/60 overflow-hidden flex flex-1 flex-col min-h-0">
-                    <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
-                      <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                        <TrendingUp className="h-3.5 w-3.5 text-primary" />
-                        Cronología de Eventos Manuales ({manualNovedades.length})
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0 flex-1 overflow-hidden min-h-0">
-                      <ScrollArea className="h-full" type="always">
-                        {manualNovedades.length === 0 ? (
-                          <div className="py-12 flex flex-col items-center justify-center text-muted-foreground opacity-50">
-                            <PlusCircle className="h-8 w-8 mb-2 stroke-1" />
-                            <p className="text-[11px] font-medium uppercase tracking-widest text-center px-4">Sin eventos manuales<br/>registrados para esta guardia</p>
-                          </div>
-                        ) : (
-                          <div className="divide-y divide-muted/40 font-inherit">
-                            {sortedManualNovedades.map((n) => (
-                              <div key={n.id} className="p-4 flex items-start gap-4 hover:bg-muted/10 transition-colors group relative">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1.5">
-                                    <span className="text-[9px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-tighter">
-                                      {format(new Date(n.date), 'dd/MM')} — {n.time}
-                                    </span>
-                                  </div>
-                                  <p className="text-[13px] leading-snug text-foreground/90 font-medium">{n.text}</p>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive hover:bg-destructive/10"
-                                  onClick={() => handleRemoveManualNovedad(n.id)}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
+                <div className="flex flex-col">
+                  <h1 className="text-xl md:text-3xl font-bold tracking-tight truncate max-w-[200px] sm:max-w-none">Reporte de Cierre</h1>
+                  <p className="hidden sm:block text-muted-foreground mt-1 text-sm">
+                    Gestiona y consulta los reportes de cierre de guardia.
+                  </p>
                 </div>
               </div>
               
-              {isMobile && (
-                <div className="pt-6 pb-12 flex justify-center border-t border-muted/20">
+              <div className="flex items-center gap-2">
+                <TabsList className="grid w-[240px] grid-cols-2">
+                  <TabsTrigger value="generate">Generar</TabsTrigger>
+                  <TabsTrigger value="history">Historial</TabsTrigger>
+                </TabsList>
+                
+                {activeTab === 'generate' && !isMobile && isLoaded && (
                   <Button 
-                    size="lg" 
                     onClick={handleGenerateReport} 
-                    className="w-full h-14 text-lg font-bold gap-3 shadow-xl hover:shadow-primary/20 transition-all rounded-full"
+                    size="sm"
+                    className="hidden sm:flex gap-2 shadow-sm font-bold ml-2"
                   >
-                    <FileText className="h-6 w-6" />
+                    <FileText className="h-4 w-4" />
                     Generar Reporte Final
                   </Button>
+                )}
+              </div>
+            </div>
+
+            <TabsContent 
+              value="generate" 
+              className="m-0 border-none p-0 outline-none flex-1 min-h-0 animate-in fade-in slide-in-from-left-4 duration-500 ease-in-out"
+            >
+              {!isLoaded ? (
+                <div className="space-y-8 flex-1">
+                  <Skeleton className="h-[100px] w-full rounded-xl" />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1">
+                    <Skeleton className="h-[400px] w-full rounded-xl" />
+                    <Skeleton className="h-[400px] w-full rounded-xl" />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-8 flex-1 flex flex-col min-h-0 pb-32">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 shrink-0">
+                    <Alert className="bg-primary/5 border-primary/20 shadow-sm leading-relaxed flex items-center h-full py-4">
+                      <div className="flex items-center gap-4 w-full">
+                        <div className="bg-primary/10 p-2.5 rounded-xl">
+                          <FileText className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <AlertTitle className="font-bold text-sm tracking-tight uppercase">Información de Generación</AlertTitle>
+                          <AlertDescription className="text-xs opacity-80 mt-0.5">
+                            Consolidará <span className="font-bold text-primary">{finishedReports.length}</span> novedades y <span className="font-bold text-primary">{manualNovedades.length}</span> eventos manuales.
+                          </AlertDescription>
+                        </div>
+                      </div>
+                    </Alert>
+
+                    {activeGuard ? (
+                      <Alert className="bg-emerald-500/5 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-sm flex items-center h-full py-4">
+                        <div className="flex items-center gap-4 w-full">
+                          <div className="bg-emerald-500/10 p-2.5 rounded-xl">
+                            <Users className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <AlertTitle className="font-bold text-sm tracking-tight uppercase">Estado de Guardia</AlertTitle>
+                            <AlertDescription className="text-xs opacity-80 mt-0.5">
+                              Guardia <strong className="uppercase">"{activeGuard.id}"</strong> activa y sincronizada.
+                            </AlertDescription>
+                          </div>
+                        </div>
+                      </Alert>
+                    ) : (
+                      <Alert variant="destructive" className="shadow-sm flex items-center h-full py-4 bg-destructive/5 border-destructive/20">
+                        <div className="flex items-center gap-4 w-full">
+                          <div className="bg-destructive/10 p-2.5 rounded-xl">
+                            <Users className="h-5 w-5 text-destructive" />
+                          </div>
+                          <div>
+                            <AlertTitle className="font-bold text-sm tracking-tight uppercase tracking-widest text-destructive">Atención: Sin Personal</AlertTitle>
+                            <AlertDescription className="text-xs opacity-90 mt-0.5">
+                              No hay una guardia activa detectada para el personal.
+                            </AlertDescription>
+                          </div>
+                        </div>
+                      </Alert>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch flex-1 min-h-0">
+                    <div className="flex flex-col gap-8 flex-1 min-h-0 h-full">
+                      <Card className="shadow-md border-muted/60 flex flex-col flex-1 shrink-0 lg:shrink min-h-[300px]">
+                        <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
+                          <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                            <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                            Estadísticas del Día
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 flex-1 flex flex-col min-h-0">
+                          <Textarea
+                            placeholder="Ej: - TRASLADOS URBANOS 5"
+                            value={statisticsText}
+                            onChange={(e) => saveSettings({ finalReportStatistics: e.target.value })}
+                            className="font-mono text-xs leading-relaxed flex-1 w-full resize-none bg-muted/20 border-muted/30 focus-visible:ring-primary/20 p-3 rounded-md"
+                          />
+                        </CardContent>
+                      </Card>
+
+                      <Card className="shadow-md border-muted/60 flex flex-col flex-1 min-h-0 overflow-hidden">
+                        <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
+                          <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                            <FileText className="h-3.5 w-3.5 text-primary" />
+                            Novedades Automáticas a Consolidar ({finishedReports.length})
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0 flex-1 min-h-0 overflow-hidden">
+                          <ScrollArea className="h-full" type="always">
+                            {finishedReports.length === 0 ? (
+                              <div className="py-12 flex flex-col items-center justify-center text-muted-foreground opacity-50">
+                                <FileText className="h-8 w-8 mb-2 stroke-1" />
+                                <p className="text-[11px] font-medium uppercase tracking-widest text-center px-4">
+                                  No hay novedades automáticas<br/>finalizadas para este turno
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="divide-y divide-muted/40">
+                                {finishedReports.map((report) => {
+                                  const sortDate = getSortDate(report);
+                                  const horaStr = findValueInFormData(report.formData, 'Hora') as string | undefined;
+                                  return (
+                                    <div key={report.id} className="p-4 hover:bg-muted/5 transition-colors group">
+                                      <div className="flex items-center justify-between gap-4 mb-1">
+                                        <h4 className="text-sm font-bold truncate text-foreground/90">{report.title}</h4>
+                                        <span className="text-[9px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full whitespace-nowrap">
+                                          {horaStr || (sortDate ? format(sortDate, 'HH:mm') : '--:--')} HLV
+                                        </span>
+                                      </div>
+                                      <p className="text-xs text-muted-foreground line-clamp-1 italic">
+                                        ID: {report.id} — Plantilla: {templates.find(t => t.id === report.templateId)?.name || 'Desconocida'}
+                                      </p>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </ScrollArea>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <div className="flex flex-col gap-8 flex-1 min-h-0 h-full">
+                      <Card className="shadow-md border-muted/60 shrink-0">
+                        <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
+                          <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                            <PlusCircle className="h-3.5 w-3.5 text-primary" />
+                            Nuevo Evento Manual
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 space-y-3">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <DatePicker
+                                value={format(newNovedadDate, 'yyyy-MM-dd')}
+                                onChange={(val) => setNewNovedadDate(new Date(val + 'T00:00:00'))}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <TimeHlvInput
+                                value={newNovedadTime}
+                                onChange={setNewNovedadTime}
+                                className="h-9 text-xs"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <Textarea
+                              placeholder="Descripción breve del evento..."
+                              value={newNovedadText}
+                              onChange={(e) => setNewNovedadText(e.target.value)}
+                              className="min-h-[50px] max-h-[80px] text-xs resize-none"
+                            />
+                          </div>
+                          <Button
+                            variant="secondary"
+                            className="w-full font-bold gap-1.5 shadow-sm uppercase text-[10px] h-9"
+                            onClick={handleAddManualNovedad}
+                            disabled={!newNovedadTime || !newNovedadText}
+                          >
+                            <PlusCircle className="h-3 w-3" />
+                            Añadir a la Cronología
+                          </Button>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="shadow-md border-muted/60 overflow-hidden flex flex-1 flex-col min-h-0">
+                        <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
+                          <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                            <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                            Cronología de Eventos Manuales ({manualNovedades.length})
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0 flex-1 overflow-hidden min-h-0">
+                          <ScrollArea className="h-full" type="always">
+                            {manualNovedades.length === 0 ? (
+                              <div className="py-12 flex flex-col items-center justify-center text-muted-foreground opacity-50">
+                                <PlusCircle className="h-8 w-8 mb-2 stroke-1" />
+                                <p className="text-[11px] font-medium uppercase tracking-widest text-center px-4">Sin eventos manuales<br/>registrados para esta guardia</p>
+                              </div>
+                            ) : (
+                              <div className="divide-y divide-muted/40 font-inherit">
+                                {sortedManualNovedades.map((n) => (
+                                  <div key={n.id} className="p-4 flex items-start gap-4 hover:bg-muted/10 transition-colors group relative">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1.5">
+                                        <span className="text-[9px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                                          {format(new Date(n.date), 'dd/MM')} — {n.time}
+                                        </span>
+                                      </div>
+                                      <p className="text-[13px] leading-snug text-foreground/90 font-medium">{n.text}</p>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive hover:bg-destructive/10"
+                                      onClick={() => handleRemoveManualNovedad(n.id)}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </ScrollArea>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
-          )}
+            </TabsContent>
+
+            <TabsContent 
+              value="history" 
+              className="m-0 border-none p-0 outline-none animate-in fade-in slide-in-from-right-4 duration-500 ease-in-out"
+            >
+              <Card className="shadow-lg border-muted/50 rounded-2xl overflow-hidden">
+                <CardContent className="p-0">
+                  {!historyLoaded ? (
+                    <div className="p-8 space-y-4">
+                      <Skeleton className="h-20 w-full" />
+                      <Skeleton className="h-20 w-full" />
+                      <Skeleton className="h-20 w-full" />
+                    </div>
+                  ) : savedReports.length === 0 ? (
+                    <div className="text-center py-24 text-muted-foreground">
+                      <div className="bg-muted/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <History className="h-8 w-8 opacity-20" />
+                      </div>
+                      <p className="text-lg font-medium">No hay reportes guardados</p>
+                      <p className="text-sm opacity-70">Los reportes que generes aparecerán aquí.</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-muted/50">
+                      {sortedSavedReports.map((report) => (
+                        <div
+                          key={report.id}
+                          className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 hover:bg-muted/30 transition-colors gap-4"
+                        >
+                          <div className="space-y-1.5 flex-1">
+                            <div className="font-bold text-lg leading-none">
+                              {report.summary || 'Reporte sin título'}
+                            </div>
+                            <div className="flex flex-wrap items-center text-sm text-muted-foreground gap-4">
+                              <span className="flex items-center bg-muted/30 px-2 py-0.5 rounded text-xs gap-1.5">
+                                <Clock className="h-3.5 w-3.5 opacity-70" />
+                                {format(new Date(report.generatedAt), "HH:mm 'hs'", { locale: es })}
+                              </span>
+                              {report.guardGroup && (
+                                <UIBadge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] h-5 px-1.5 font-bold">
+                                  {report.guardGroup}
+                                </UIBadge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2 w-full sm:w-auto shrink-0">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 sm:flex-none font-bold rounded-xl h-10 px-4"
+                              onClick={() => handleViewSavedReport(report.id)}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              Ver
+                            </Button>
+
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="flex-1 sm:flex-none font-bold rounded-xl h-10 px-4 text-destructive hover:bg-destructive/10 hover:text-destructive border-muted/50">
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Eliminar
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="rounded-2xl border-muted/50">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>¿Eliminar reporte?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta acción no se puede deshacer. El reporte se borrará permanentemente de tu historial.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="rounded-xl font-bold">Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={(e) => handleDeleteSavedReport(report.id, e as any)} className="bg-destructive hover:bg-destructive/90 rounded-xl font-bold">
+                                    Eliminar
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </div>
         </div>
-      </div>
+      </Tabs>
 
       {/* Resultado - Responsive */}
       {isMobile ? (
@@ -752,13 +923,31 @@ export default function ReporteFinalPage() {
                 {copyButtonText}
               </Button>
               {isGuardOpen && (
-                <Button variant="destructive" className="w-full h-12 font-bold uppercase tracking-tight" onClick={handleCloseGuard}>
-                  <X className="mr-2 h-4 w-4" />
-                  Finalizar y Cerrar Guardia
-                </Button>
+                <AlertDialog open={isConfirmSaveOpen} onOpenChange={setIsConfirmSaveOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full h-12 font-bold uppercase tracking-tight shadow-lg">
+                      <History className="mr-2 h-4 w-4" />
+                      Finalizar y Guardar en Historial
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="rounded-2xl border-muted/50 mx-4">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Confirmar Cierre de Guardia?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta acción archivará el reporte de la guardia "{activeGuard?.id}" y limpiará los datos actuales para la próxima jornada.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="flex flex-col gap-2">
+                       <AlertDialogAction onClick={handleFinalizeAndSave} className="bg-primary hover:bg-primary/90 rounded-xl font-bold h-11">
+                        Confirmar y Archivar
+                      </AlertDialogAction>
+                      <AlertDialogCancel className="rounded-xl font-bold h-11">Cancelar</AlertDialogCancel>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
               <SheetClose asChild>
-                <Button type="button" variant="secondary" className="w-full h-11">
+                <Button type="button" variant="secondary" className="w-full h-10">
                   Cerrar
                 </Button>
               </SheetClose>
@@ -792,10 +981,28 @@ export default function ReporteFinalPage() {
 
             <DialogFooter className="p-4 bg-background border-t gap-2 sm:gap-0">
               {isGuardOpen && (
-                <Button variant="destructive" size="lg" onClick={handleCloseGuard} className="font-bold gap-2 shadow-lg">
-                  <X className="h-4 w-4" />
-                  Finalizar y Cerrar Guardia
-                </Button>
+                <AlertDialog open={isConfirmSaveOpen} onOpenChange={setIsConfirmSaveOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="lg" className="font-bold gap-2 shadow-lg px-8">
+                      <History className="h-4 w-4" />
+                      Finalizar y Guardar Historial
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="rounded-2xl border-muted/50">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirmar Cierre y Archivado</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        ¿Estás seguro de finalizar la guardia "{activeGuard?.id}"? El reporte se guardará de forma permanente en el historial.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-3">
+                      <AlertDialogCancel className="rounded-xl font-bold">Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleFinalizeAndSave} className="bg-primary hover:bg-primary/90 rounded-xl font-bold px-6">
+                        Confirmar y Cerrar Guardia
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
               <div className="flex-1" />
               <DialogClose asChild>
@@ -810,6 +1017,92 @@ export default function ReporteFinalPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      )}
+
+      {viewDialogOpen && selectedSavedReport && (
+        isMobile ? (
+          <Sheet open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+            <SheetContent side="bottom" className="h-[95vh] rounded-t-xl flex flex-col p-6 overflow-hidden border-none">
+              <SheetHeader className="text-left shrink-0">
+                <SheetTitle className="text-xl font-bold">Detalle del Reporte</SheetTitle>
+                <SheetDescription className="flex items-center gap-2 font-semibold text-primary">
+                  <Calendar className="h-4 w-4" />
+                  {selectedSavedReport.summary}
+                </SheetDescription>
+              </SheetHeader>
+              <div className="flex-1 overflow-hidden mt-6 pb-24">
+                <ScrollArea className="h-full w-full rounded-xl border bg-muted/20">
+                  <div className="p-6 font-mono text-xs whitespace-pre-wrap leading-relaxed">
+                    {selectedSavedReport.content}
+                  </div>
+                </ScrollArea>
+              </div>
+              <SheetFooter className="mt-auto shrink-0 flex flex-col gap-2 pb-6 border-t pt-4 bg-background z-50">
+                <Button 
+                  onClick={handleCopyReport}
+                  className="w-full h-12 rounded-xl font-bold gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  Copiar Texto
+                </Button>
+                <SheetClose asChild>
+                  <Button type="button" variant="secondary" className="w-full h-10 rounded-xl">
+                    Cerrar Detalle
+                  </Button>
+                </SheetClose>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+        ) : (
+          <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+            <DialogContent className="max-h-[90vh] max-w-[90vw] sm:max-w-3xl flex flex-col p-0 overflow-hidden rounded-3xl border-muted/50 shadow-2xl">
+              <div className="p-6 border-b bg-muted/20 shrink-0">
+                <div className="space-y-1">
+                  <DialogTitle className="text-2xl font-bold">Detalle del Reporte</DialogTitle>
+                  <DialogDescription className="flex items-center gap-2 font-medium text-primary uppercase">
+                    <Calendar className="h-4 w-4" />
+                    {selectedSavedReport.summary || format(new Date(selectedSavedReport.date), 'PPP', { locale: es })}
+                  </DialogDescription>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto max-h-[60vh] bg-background border-y border-muted/50 scrollbar-thin scrollbar-thumb-muted-foreground/20">
+                <div className="p-8 pb-32 font-mono text-sm whitespace-pre-wrap leading-relaxed">
+                  {selectedSavedReport.content}
+                </div>
+              </div>
+              <DialogFooter className="p-6 pt-2 border-t bg-background shrink-0 z-10 gap-3">
+                <Button 
+                  onClick={handleCopyReport}
+                  variant="outline"
+                  className="flex-1 h-12 rounded-xl font-bold gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  Copiar Texto
+                </Button>
+                <DialogClose asChild>
+                  <Button type="button" variant="secondary" className="font-bold rounded-xl h-12 flex-1">
+                    Cerrar
+                  </Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )
+      )}
+
+      {/* Mobile Floating Action Button for Generating Report Final */}
+      {activeTab === 'generate' && (
+        <div className="sm:hidden fixed bottom-24 right-6 z-50">
+          <Button
+            onClick={handleGenerateReport}
+            disabled={!isLoaded}
+            size="icon"
+            className="h-12 w-12 rounded-xl bg-primary text-primary-foreground shadow-2xl hover:scale-105 active:scale-95 transition-all"
+            title="Generar Reporte Final"
+          >
+            <FileText className="h-6 w-6" />
+          </Button>
+        </div>
       )}
     </div>
   );

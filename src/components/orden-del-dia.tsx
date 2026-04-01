@@ -340,29 +340,8 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
   };
 
   const handleUseForFinalReport = () => {
-    let startDate, endDate;
-    const parts = periodo.split(' AL ');
-    if (parts.length === 2) {
-      const startStr = parts[0];
-      const endStr = parts[1];
-      if (startStr && endStr) {
-        const startParts = startStr.split('/');
-        const endParts = endStr.split('/');
-        if (startParts.length === 3 && endParts.length === 3) {
-          // DD/MM/YYYY -> YYYY-MM-DD for Date constructor
-          startDate = new Date(`${startParts[2]}-${startParts[1]}-${startParts[0]}T00:00:00`);
-          endDate = new Date(`${endParts[2]}-${endParts[1]}-${endParts[0]}T00:00:00`);
-        }
-      }
-    }
-
-    saveSettings({
-      ...settings,
-      finalReportStaffSnapshot: staff,
-      finalReportGuardId: selectedGuard,
-      finalReportStartDate: startDate && !isNaN(startDate.getTime()) ? startDate.toISOString() : '',
-      finalReportEndDate: endDate && !isNaN(endDate.getTime()) ? endDate.toISOString() : '',
-    });
+    // Now that the final report uses the draft directly, we only need to notify the user.
+    toast.success('Cambios sincronizados con el reporte final');
     setIsSnapshotSaved(true);
   };
 
@@ -399,9 +378,6 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
       return '';
     })();
 
-    // Fallback if not in staff list (though they should be if added as roles)
-    // We already removed them from globalSettings, so we rely on Staff.
-
     const municipio = findInsensitive(globalSettings, 'Municipio');
     const estado = findInsensitive(globalSettings, 'Estado');
 
@@ -419,10 +395,7 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
       `*PERIODO:* ${periodo}`,
     ];
 
-    // Removed ACTIVIDADES / OBSERVACIONES header and textoExtra as requested
-
     Object.entries(staff).forEach(([role, personnelList]) => {
-      // Skip Director and Jefe de Operaciones as they are in the header
       if (role.toLowerCase() === 'director' || role.toLowerCase() === 'jefe de operaciones') return;
 
       if (
@@ -439,8 +412,6 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
     });
 
     const order = reportParts.join('\n').trim();
-
-    // Secondary parts: Activities and Notes
     const secondaryParts: string[] = [];
 
     if (activities.length > 0) {
@@ -461,7 +432,6 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
       });
     }
 
-    // Combine all
     const finalReport = [
       order,
       ...secondaryParts,

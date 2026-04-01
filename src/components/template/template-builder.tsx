@@ -18,7 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 import { parseTemplate } from '@/lib/template-parser';
-import { Save, HelpCircle, X, FileText, Plus, Trash2, Copy } from 'lucide-react';
+import { Save, HelpCircle, X, FileText, Plus, Trash2, Copy, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { validateTemplateSyntax } from '@/lib/validators';
 import { ReportForm, ReportFormRef } from '@/components/report/report-form';
@@ -34,6 +34,7 @@ import {
 import { cn } from '@/lib/utils';
 import { generateId } from '@/lib/utils/id';
 import { useWorkspaceManager } from '@/lib/db/db-context';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TemplateBuilderProps {
   onOpenInfoDialog: () => void;
@@ -55,6 +56,7 @@ export function TemplateBuilder({
   const [statisticsCategory, setStatisticsCategory] = useState('');
   const [statisticsRules, setStatisticsRules] = useState<StatisticRule[]>([]);
   const { currentWorkspace } = useWorkspaceManager();
+  const isMobile = useIsMobile();
 
   // New state for report preview
   const formRef = useRef<ReportFormRef>(null);
@@ -459,15 +461,15 @@ export function TemplateBuilder({
       <div className="lg:hidden fixed bottom-24 right-6 z-50 flex flex-col gap-3">
         <Button
           onClick={handlePreviewReport}
-          className="shadow-xl rounded-full h-12 w-12 bg-primary text-primary-foreground hover:scale-105 transition-transform"
+          className="shadow-2xl rounded-xl h-12 w-12 bg-slate-500 hover:bg-slate-600 text-white hover:scale-105 active:scale-95 transition-all"
           size="icon"
           title="Ver Vista Previa del Reporte"
         >
-          <FileText className="h-6 w-6" />
+          <Eye className="h-6 w-6" />
         </Button>
         <Button
           onClick={handleSave}
-          className="shadow-xl rounded-full h-12 w-12 bg-green-600 hover:bg-green-700 text-white hover:scale-105 transition-transform"
+          className="shadow-2xl rounded-xl h-12 w-12 bg-blue-600 hover:bg-blue-700 text-white hover:scale-105 active:scale-95 transition-all"
           size="icon"
           title="Guardar Plantilla"
         >
@@ -482,7 +484,7 @@ export function TemplateBuilder({
         content={previewReportContent}
         copyButtonText="Copiar"
         onCopy={handleCopyToClipboard}
-        isMobile={false} // Builder preview is usually a dialog on desktop
+        isMobile={isMobile}
         title="Vista Previa del Reporte"
       />
     </div>

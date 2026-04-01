@@ -22,7 +22,14 @@ export const PersonnelSchema = z.object({
     .trim(),
   cedula: z
     .string()
-    .regex(cedulaRegex, 'Formato de cédula inválido (ej: V-12345678)')
+    .refine((val) => {
+      if (!val) return true;
+      const specialValues = ['No indicó', 'No posee'];
+      if (specialValues.includes(val)) return true;
+      return cedulaRegex.test(val);
+    }, {
+      message: 'Formato de cédula inválido (ej: V-12345678) o selecciona una opción válida',
+    })
     .optional()
     .or(z.literal('')),
   rank: z.string().optional(),

@@ -86,6 +86,7 @@ export default function EstadisticasPage() {
             <Button
               variant="outline"
               size="icon"
+              className="h-9 w-9 shadow-sm"
               onClick={() => {
                 if (month === 0) {
                   setMonth(11);
@@ -122,6 +123,7 @@ export default function EstadisticasPage() {
             <Button
               variant="outline"
               size="icon"
+              className="h-9 w-9 shadow-sm"
               onClick={() => {
                 if (month === 11) {
                   setMonth(0);
@@ -132,7 +134,7 @@ export default function EstadisticasPage() {
               <ChevronRight className="h-4 w-4" />
             </Button>
             {/* Placeholder for export */}
-            <Button variant="secondary" size="icon" title="Exportar (Próximamente)">
+            <Button variant="secondary" size="icon" className="h-9 w-9 shadow-sm" title="Exportar (Próximamente)">
               <FileDown className="h-4 w-4" />
             </Button>
           </div>

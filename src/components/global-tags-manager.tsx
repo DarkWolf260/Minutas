@@ -24,7 +24,7 @@ export function GlobalTagsManager() {
   const { definitions, saveDefinitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
   const { roles, isLoaded: rolesLoaded } = useRoles();
   const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
-  
+
   // Use local state to avoid saving on every keystroke
   const [localValues, setLocalValues] = useState<Record<string, string>>({});
   const [localReportaRoles, setLocalReportaRoles] = useState<string[]>([]);
@@ -57,13 +57,13 @@ export function GlobalTagsManager() {
           newDefinitions[key] = { ...newDefinitions[key]!, value: localValues[key] || '' };
         }
       });
-      
+
       // 2. Perform all saves
       await Promise.all([
         saveDefinitions(newDefinitions),
         saveSettings({ ...settings, reportaRoleIds: localReportaRoles })
       ]);
-      
+
       toast.success('Configuración guardada correctamente');
     } catch (error) {
       toast.error('Error al guardar la configuración');
@@ -120,7 +120,7 @@ export function GlobalTagsManager() {
   return (
     <Card className="shadow-lg h-full">
       <CardHeader>
-        <CardTitle>Configuración General</CardTitle>
+        <CardTitle>Ajustes Generales</CardTitle>
         <CardDescription>
           Define los valores globales que se utilizarán automáticamente en tus reportes.
         </CardDescription>
@@ -241,8 +241,8 @@ export function GlobalTagsManager() {
         </div>
 
         <div className="flex justify-end pt-2">
-          <Button 
-            onClick={handleSave} 
+          <Button
+            onClick={handleSave}
             disabled={isSaving}
             className="h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-3 sm:py-2 shrink-0 shadow-sm"
             title="Guardar Configuración"

@@ -31,7 +31,7 @@ import {
   Monitor
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useP2P } from '@/lib/db/p2p-provider';
+
 import { NotificationBell } from '@/components/notification-bell';
 import { useProfile } from '@/hooks/use-profile';
 import { getInitials } from '@/lib/utils';
@@ -40,14 +40,13 @@ import { useTheme } from '@/components/theme-provider';
 const navItems = [
   { href: '/', label: 'Novedades', icon: Newspaper },
   { href: '/orden-del-dia', label: 'Orden del Día', icon: ClipboardList },
-  { href: '/reporte-final', label: 'Reporte Final', icon: History },
+  { href: '/reporte-final', label: 'Reporte Final', icon: ClipboardCheck },
   { href: '/personal', label: 'Personal', icon: Users },
 ];
 
 export function SideNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { isSyncing, peerCount } = useP2P();
   const { profile } = useProfile();
   const { theme, setTheme } = useTheme();
 
@@ -63,18 +62,7 @@ export function SideNav() {
             <span className="sr-only">PC Reportes</span>
           </Link>
           
-          {isSyncing && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-yellow-500/10 text-yellow-500 animate-pulse">
-                  <Zap className="h-5 w-5 fill-current" />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                Sincronización P2P Activa ({peerCount} pares)
-              </TooltipContent>
-            </Tooltip>
-          )}
+
 
           {navItems.map((item) => (
             <Tooltip key={item.href}>

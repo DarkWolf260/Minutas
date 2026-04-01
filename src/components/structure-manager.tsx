@@ -164,7 +164,7 @@ export function StructureManager({
           
           <TabsContent 
             value="tree" 
-            className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col"
+            className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
           >
             <StructureTree 
               departments={localDepts}
@@ -182,7 +182,7 @@ export function StructureManager({
           
           <TabsContent 
             value="sorter" 
-            className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col"
+            className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
           >
             <RoleSorter 
               roles={localRoles}
