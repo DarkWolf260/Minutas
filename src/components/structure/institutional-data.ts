@@ -12,6 +12,12 @@ CARGOS GLOBALES
 
 GENERICO
 - Auxiliar
+
+ESTATUS Y ESPECIALES
+- Reposo
+- Permiso
+- Vacaciones
+- Apoyo
 `;
 
 export function getInstitutionalData() {
@@ -26,7 +32,7 @@ export function getInstitutionalData() {
     const newDepts: Department[] = [];
     const newRoles: StaffRole[] = [];
 
-    let currentDeptId: string | 'global' | null = null;
+    let currentDeptId: string | 'global' | 'status' | null = null;
 
     for (const line of lines) {
         const trimmed = line.trim();
@@ -36,6 +42,8 @@ export function getInstitutionalData() {
             // Es un departamento
             if (normalize(trimmed) === 'cargos globales') {
                 currentDeptId = 'global';
+            } else if (normalize(trimmed) === 'estatus y especiales') {
+                currentDeptId = 'status';
             } else if (normalize(trimmed) === 'generico') {
                 currentDeptId = null; // Para todos
             } else {
@@ -59,15 +67,16 @@ export function getInstitutionalData() {
             if (existingRoleIndex >= 0) {
                 // Update existing role scope
                 const role = newRoles[existingRoleIndex]!;
-                if (currentDeptId && currentDeptId !== 'global') {
-                    // Add dept to scope if not global
+                if (currentDeptId && currentDeptId !== 'global' && currentDeptId !== 'status') {
+                    // Add dept to scope if not global or special
                     if (!role.departmentScope) role.departmentScope = [];
                     if (!role.departmentScope.includes(currentDeptId)) {
                         role.departmentScope.push(currentDeptId);
                     }
                 }
-                // If currentDeptId is 'global', clearing scope effectively makes it global
-                // but we keep existing logic.
+                if (currentDeptId === 'status') {
+                    role.isStatus = true;
+                }
             } else {
                 // Create new role
                 const isLeader = Object.values(LEADER_ROLES).some((lr) => normalize(lr) === normalize(roleName));
@@ -75,8 +84,9 @@ export function getInstitutionalData() {
                     name: roleName,
                     isSingle: isLeader,
                     departmentScope:
-                        currentDeptId && currentDeptId !== 'global' ? [currentDeptId] : [], // Empty = Global
+                        currentDeptId && currentDeptId !== 'global' && currentDeptId !== 'status' ? [currentDeptId] : [], // Empty = Global
                     isHidden: false,
+                    isStatus: currentDeptId === 'status',
                     order: newRoles.length,
                 };
                 newRoles.push(role);

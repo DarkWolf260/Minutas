@@ -6,6 +6,7 @@ import { Textarea } from './textarea';
 import { ChevronsUpDown } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAddresses } from '@/hooks/use-addresses';
 import type { Address } from '@/types';
 import { Skeleton } from './skeleton';
@@ -45,7 +46,7 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
   ({ value, onChange, placeholder, disabled, className, onBlur, isTextarea, name, id }, ref) => {
     const { addresses, isLoaded } = useAddresses();
     const [open, setOpen] = useState(false);
-    const internalInputRef = useRef<HTMLInputElement>(null);
+    const internalInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
 
     const filteredAddresses = useMemo(() => {
       if (!value) return addresses;
@@ -118,32 +119,34 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
           className="w-[var(--radix-popover-trigger-width)] p-0"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <div className="p-1 max-h-60 overflow-y-auto">
-            {addresses.length > 0 ? (
-              filteredAddresses.map((address) => (
-                <Button
-                  key={address.id}
-                  variant="ghost"
-                  className="w-full justify-start h-auto py-2 px-2 font-normal flex flex-col items-start text-left"
-                  onClick={() => handleSelect(address)}
-                >
-                  <span className="font-semibold">{address.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {address.municipality}, {address.parish}
-                  </span>
-                </Button>
-              ))
-            ) : (
-              <p className="p-2 text-center text-xs text-muted-foreground">
-                No hay direcciones guardadas.
-              </p>
-            )}
-            {addresses.length > 0 && filteredAddresses.length === 0 && (
-              <p className="p-2 text-center text-xs text-muted-foreground">
-                No se encontraron coincidencias.
-              </p>
-            )}
-          </div>
+          <ScrollArea className="max-h-60 w-full" type="always">
+            <div className="p-1">
+              {addresses.length > 0 ? (
+                filteredAddresses.map((address) => (
+                  <Button
+                    key={address.id}
+                    variant="ghost"
+                    className="w-full justify-start h-auto py-2 px-2 font-normal flex flex-col items-start text-left"
+                    onClick={() => handleSelect(address)}
+                  >
+                    <span className="font-semibold">{address.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {address.municipality}, {address.parish}
+                    </span>
+                  </Button>
+                ))
+              ) : (
+                <p className="p-2 text-center text-xs text-muted-foreground">
+                  No hay direcciones guardadas.
+                </p>
+              )}
+              {addresses.length > 0 && filteredAddresses.length === 0 && (
+                <p className="p-2 text-center text-xs text-muted-foreground">
+                  No se encontraron coincidencias.
+                </p>
+              )}
+            </div>
+          </ScrollArea>
         </PopoverContent>
       </Popover>
     );

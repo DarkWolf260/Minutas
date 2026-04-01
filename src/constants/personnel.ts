@@ -20,7 +20,6 @@ export const PERSONNEL_STATUS = {
   VACACIONES: 'vacaciones',
   PERMISO: 'permiso',
   REPOSO: 'reposo',
-  APOYO: 'apoyo',
 } as const;
 
 export const STATUS_OPTIONS = [
@@ -43,10 +42,5 @@ export const STATUS_OPTIONS = [
     value: PERSONNEL_STATUS.REPOSO,
     label: 'Reposo',
     color: 'bg-red-500/10 text-red-500 border-red-500/20',
-  },
-  {
-    value: PERSONNEL_STATUS.APOYO,
-    label: 'Apoyo',
-    color: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
   },
 ];

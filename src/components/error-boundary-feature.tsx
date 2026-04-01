@@ -83,7 +83,7 @@ export class FeatureErrorBoundary extends Component<Props, State> {
             <p className="text-muted-foreground mb-4">
               Ocurrió un error inesperado. Por favor, intenta de nuevo.
             </p>
-            {this.state.error && process.env.NODE_ENV === 'development' && (
+            {this.state.error && import.meta.env.DEV && (
               <div className="mb-4 p-3 bg-muted rounded-md text-left">
                 <p className="text-xs font-mono text-destructive break-all">
                   {this.state.error.message}

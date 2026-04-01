@@ -1,16 +1,17 @@
-
 'use client';
 
 import React from 'react';
+import { Building2, Save, CheckCircle2, ArrowUpDown } from 'lucide-react';
+import { RoleSorter } from './structure/role-sorter';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { generateId } from '@/lib/utils/id';
-import { Department, StaffRole } from '@/types';
-import { arrayMove } from '@dnd-kit/sortable';
-import { DepartmentCard } from './structure/department-card';
-import { RoleCard } from './structure/role-card';
-import { RoleSortableList } from './structure/role-sortable-list';
+import { Department, StaffRole, StaffMember } from '@/types';
+import { StructureTree } from '@/components/structure/structure-tree';
 import { getInstitutionalData } from './structure/institutional-data';
 
 interface StructureManagerProps {
@@ -19,6 +20,9 @@ interface StructureManagerProps {
   onRolesChange: (roles: StaffRole[]) => void;
   onDepartmentsChange: (departments: Department[]) => void;
   onSave: () => void;
+  rolesLoaded?: boolean;
+  deptsLoaded?: boolean;
+  personnel?: StaffMember[];
 }
 
 export function StructureManager({
@@ -27,25 +31,45 @@ export function StructureManager({
   onRolesChange,
   onDepartmentsChange,
   onSave,
+  rolesLoaded = true,
+  deptsLoaded = true,
+  personnel = [],
 }: StructureManagerProps) {
-  const [selectedDeptId, setSelectedDeptId] = React.useState<string>('all');
+
 
   // Local state for roles and departments to allow manual saving
   const [localRoles, setLocalRoles] = React.useState<StaffRole[]>(roles);
   const [localDepts, setLocalDepts] = React.useState<Department[]>(departments);
 
-  // Sync with props when they load initially
-  React.useEffect(() => {
-    if (roles.length > 0 && localRoles.length === 0) {
-      setLocalRoles(roles);
-    }
-  }, [roles, localRoles.length]);
+  // Sync with props when they load initially (only once)
+  const isInitialized = React.useRef(false);
+
+  const STATUS_ROLE_NAMES = ['vacaciones', 'reposo', 'permiso', 'apoyo'];
 
   React.useEffect(() => {
-    if (departments.length > 0 && localDepts.length === 0) {
+    const patchRoles = (rs: StaffRole[]) => {
+      return rs.map(r => {
+        const nameLower = (r.name || '').toLowerCase().trim();
+        if (STATUS_ROLE_NAMES.includes(nameLower) && !r.isStatus) {
+          return { ...r, isStatus: true };
+        }
+        return r;
+      });
+    };
+
+    if (!isInitialized.current && roles.length > 0) {
+      setLocalRoles(patchRoles(roles));
+      if (departments.length > 0) {
+        setLocalDepts(departments);
+        isInitialized.current = true;
+      }
+    } else if (!isInitialized.current && deptsLoaded && rolesLoaded) {
+      // If loaded but empty, still mark as initialized
+      setLocalRoles(patchRoles(roles));
       setLocalDepts(departments);
+      isInitialized.current = true;
     }
-  }, [departments, localDepts.length]);
+  }, [roles, departments, deptsLoaded, rolesLoaded]);
 
   const handleAddDept = (name: string) => {
     if (localDepts.some((d) => d.name.toLowerCase() === name.toLowerCase())) {
@@ -58,7 +82,7 @@ export function StructureManager({
       staff: {},
     };
     setLocalDepts((prev) => [...prev, newDept]);
-    toast.success('Departamento añadido (localmente)');
+    toast.success('Departamento añadido');
   };
 
   const handleRemoveDepartment = (id: string) => {
@@ -73,10 +97,10 @@ export function StructureManager({
         };
       })
     );
-    toast.success('Departamento eliminado (localmente)');
+    toast.success('Departamento eliminado');
   };
 
-  const handleAddRole = (name: string) => {
+  const handleAddRole = (name: string, deptId?: string) => {
     if (localRoles.some((r) => r.name.toLowerCase() === name.toLowerCase())) {
       toast.error('Ya existe un cargo con ese nombre');
       return;
@@ -84,17 +108,17 @@ export function StructureManager({
     const newRole: StaffRole = {
       name: name,
       isSingle: false,
-      departmentScope: selectedDeptId !== 'all' && selectedDeptId !== 'global' ? [selectedDeptId] : [],
+      departmentScope: deptId ? [deptId] : [],
       isHidden: false,
       order: localRoles.length,
     };
     setLocalRoles((prev) => [...prev, newRole]);
-    toast.success('Cargo añadido (localmente)');
+    toast.success('Cargo añadido');
   };
 
   const handleRemoveRole = (name: string) => {
     setLocalRoles((prev) => prev.filter((r) => r.name !== name));
-    toast.success('Cargo eliminado (localmente)');
+    toast.success('Cargo eliminado');
   };
 
   const handleLoadInstitutional = () => {
@@ -111,30 +135,13 @@ export function StructureManager({
       return [...prev, ...filteredNew];
     });
 
-    toast.success('Estructura institucional cargada (localmente)');
+    toast.success('Estructura institucional cargada');
   };
 
   const handleUpdateRole = (roleName: string, updates: Partial<StaffRole>) => {
     setLocalRoles((prev) =>
       prev.map((r) => (r.name === roleName ? { ...r, ...updates } : r))
     );
-  };
-
-  const handleAssignDept = (roleName: string, deptId: string) => {
-    const updates =
-      deptId === 'global'
-        ? { departmentScope: [] }
-        : { departmentScope: [deptId] };
-    handleUpdateRole(roleName, updates);
-  };
-
-  const handleReorderRoles = (activeId: string, overId: string) => {
-    setLocalRoles((items) => {
-      const oldIndex = items.findIndex((i) => i.name === activeId);
-      const newIndex = items.findIndex((i) => i.name === overId);
-      const reordered = arrayMove(items, oldIndex, newIndex);
-      return reordered.map((role, idx) => ({ ...role, order: idx }));
-    });
   };
 
   const handleSaveAll = () => {
@@ -146,40 +153,72 @@ export function StructureManager({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <DepartmentCard
-          departments={localDepts}
-          selectedDeptId={selectedDeptId}
-          onSelectDept={setSelectedDeptId}
-          onAdd={handleAddDept}
-          onRemove={handleRemoveDepartment}
-          onLoadInstitutional={handleLoadInstitutional}
-        />
-
-        <RoleCard
-          roles={localRoles}
-          departments={localDepts}
-          selectedDeptId={selectedDeptId}
-          onSelectDept={setSelectedDeptId}
-          onAdd={handleAddRole}
-          onRemove={handleRemoveRole}
-          onUpdateRole={handleUpdateRole}
-          onAssignDept={handleAssignDept}
-        />
+    <div className="md:flex-1 md:flex md:flex-col md:min-h-0 bg-transparent">
+      {/* Mobile view: Tabbed interface to expand space */}
+      <div className="flex flex-col md:hidden">
+        <Tabs defaultValue="tree" className="w-full bg-transparent">
+          <TabsList className="grid w-full grid-cols-2 mb-2 shrink-0">
+            <TabsTrigger value="tree" className="text-xs font-bold uppercase transition-all">Organigrama</TabsTrigger>
+            <TabsTrigger value="sorter" className="text-xs font-bold uppercase transition-all">Jerarquía</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent 
+            value="tree" 
+            className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
+          >
+            <StructureTree 
+              departments={localDepts}
+              roles={localRoles}
+              onAddDept={handleAddDept}
+              onRemoveDept={handleRemoveDepartment}
+              onAddRole={handleAddRole}
+              onRemoveRole={handleRemoveRole}
+              onUpdateRole={handleUpdateRole}
+              onLoadInstitutional={handleLoadInstitutional}
+              personnel={personnel}
+              showPersonnel={true}
+            />
+          </TabsContent>
+          
+          <TabsContent 
+            value="sorter" 
+            className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
+          >
+            <RoleSorter 
+              roles={localRoles}
+              onReorder={setLocalRoles}
+              onSave={handleSaveAll}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
 
-      <RoleSortableList
-        roles={localRoles}
-        departments={localDepts}
-        onUpdateRole={handleUpdateRole}
-        onReorder={handleReorderRoles}
-      />
+      {/* Desktop view: Classic side-by-side grid */}
+      <div className="hidden lg:grid grid-cols-12 gap-8 items-stretch md:flex-1 md:min-h-0">
+        {/* Left Column: Hierarchical Tree View (Dynamic Management) */}
+        <div className="lg:col-span-8 flex flex-col min-h-0">
+          <StructureTree 
+            departments={localDepts}
+            roles={localRoles}
+            onAddDept={handleAddDept}
+            onRemoveDept={handleRemoveDepartment}
+            onAddRole={handleAddRole}
+            onRemoveRole={handleRemoveRole}
+            onUpdateRole={handleUpdateRole}
+            onLoadInstitutional={handleLoadInstitutional}
+            personnel={personnel}
+            showPersonnel={false}
+          />
+        </div>
 
-      <div className="flex justify-end pt-2">
-        <Button onClick={handleSaveAll} className="shadow-lg px-8">
-          Guardar Cambios de Estructura
-        </Button>
+        {/* Right Column: Organization for Reports (Sorting) */}
+        <div className="lg:col-span-4 flex flex-col min-h-0">
+          <RoleSorter 
+            roles={localRoles}
+            onReorder={setLocalRoles}
+            onSave={handleSaveAll}
+          />
+        </div>
       </div>
     </div>
   );

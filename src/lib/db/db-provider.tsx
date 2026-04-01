@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { MinutasDatabase, getDatabase } from './db';
+import { MinutasDatabase, getDatabase, removeRxDatabase, getRxStorageDexie } from './db';
 import { logger } from '../logger';
 import { DatabaseContext } from './db-context';
 
@@ -55,7 +55,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
         if (!mounted) return;
 
         // Initialize central database once
-        const database = await getDatabase('central_minutas');
+        const database = await getDatabase();
         
         if (mounted) {
           await migrateData(database);
@@ -128,13 +128,158 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
     // but removing from list "hides" it and frees it for re-creation.
   };
 
+  const exportWorkspace = async (name: string) => {
+    if (!db) return;
+    try {
+      const exportData: any = {
+        metadata: {
+          workspaceId: name,
+          exportDate: new Date().toISOString(),
+          app: 'PC Reportes',
+          version: '1.0'
+        },
+        collections: {}
+      };
+
+      const collectionNames = Object.keys(db.collections);
+      for (const colName of collectionNames) {
+        const docs = await (db.collections as any)[colName].find({
+          selector: { workspaceId: name }
+        }).exec();
+        exportData.collections[colName] = docs.map((d: any) => d.toJSON());
+      }
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `minutas-backup-${name}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      logger.info(`Workspace [${name}] exported successfully`);
+    } catch (err) {
+      logger.error(`Failed to export workspace [${name}]`, err);
+      alert('Error al exportar el área de trabajo: ' + (err as Error).message);
+    }
+  };
+
+  const importWorkspace = async (file: File) => {
+    if (!db) return;
+    setIsSwitching(true);
+    try {
+      const text = await file.text();
+      const importData = JSON.parse(text);
+      
+      if (!importData.metadata || !importData.collections) {
+        throw new Error('Formato de archivo de respaldo inválido.');
+      }
+
+      const workspaceId = importData.metadata.workspaceId;
+      
+      // 1. Ensure workspace is in the list
+      if (!workspaces.includes(workspaceId)) {
+        const newList = [...workspaces, workspaceId];
+        setWorkspaces(newList);
+        localStorage.setItem(STORAGE_KEY_LIST, JSON.stringify(newList));
+      }
+
+      // 2. Import data to collections
+      for (const [colName, docs] of Object.entries(importData.collections)) {
+        const collection = (db.collections as any)[colName];
+        if (!collection) {
+          logger.warn(`Collection ${colName} not found in database during import. Skipping.`);
+          continue;
+        }
+
+        for (const doc of (docs as any[])) {
+          // Use upsert to handle existing documents
+          await collection.upsert(doc);
+        }
+      }
+
+      logger.info(`Workspace [${workspaceId}] imported successfully`);
+      // Use switchWorkspace to activate it immediately
+      await switchWorkspace(workspaceId);
+    } catch (err) {
+      logger.error('Failed to import workspace', err);
+      alert('Error al importar el área de trabajo: ' + (err as Error).message);
+    } finally {
+      setIsSwitching(false);
+    }
+  };
+
+  const handleHardReset = async () => {
+    if (!confirm('¿Estás seguro? Esto borrará todos los datos locales de la aplicación.')) return;
+    
+    try {
+      // Use the version name we know is causing issues or just a general wipe if possible
+      // RxDB removeRxDatabase is very effective.
+      // We don't have the DB_NAME constant here but we can try to guess or use the one from db.ts if exported.
+      // For now, we'll use a more general approach or try to import it.
+      // Actually, I'll just reload and hope the v2_resync logic handles it, 
+      // but a "Hard Reset" should really wipe IndexedDB.
+      
+      // I'll export DB_NAME from db.ts too for this.
+      logger.info('Performing hard reset of all local databases...');
+      
+      // This is a bit of a hack but effective for IndexedDB
+      const dbs = await window.indexedDB.databases();
+      for (const dbInfo of dbs) {
+        if (dbInfo.name) window.indexedDB.deleteDatabase(dbInfo.name);
+      }
+      
+      localStorage.clear();
+      window.location.reload();
+    } catch (e) {
+      alert('Error al resetear: ' + (e as Error).message);
+    }
+  };
+
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="p-6 max-w-md bg-destructive/10 border border-destructive/20 rounded-lg text-center">
-          <h2 className="text-xl font-bold text-destructive mb-2">Error de Base de Datos</h2>
-          <p className="text-sm text-muted-foreground">{error.message}</p>
-          <Button onClick={() => window.location.reload()} className="mt-4">Reintentar</Button>
+      <div className="flex items-center justify-center min-h-screen bg-background p-4">
+        <div className="p-8 max-w-md bg-card border border-destructive/30 rounded-2xl text-center shadow-2xl overflow-hidden relative group">
+          <div className="absolute top-0 left-0 w-full h-1 bg-destructive/50" />
+          
+          <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500">
+            <svg className="w-8 h-8 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+
+          <h2 className="text-2xl font-bold text-foreground mb-3">Sincronización Fallida</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-8">
+            {error.message.includes('DB9') 
+              ? 'Se detectó un conflicto crítico de configuración en el almacenamiento local. Los intentos de recuperación automática han fallado.'
+              : error.message}
+          </p>
+
+          <div className="flex flex-col gap-3">
+            <Button 
+              variant="default"
+              size="lg"
+              onClick={() => window.location.reload()} 
+              className="w-full shadow-lg hover:shadow-primary/20 transition-all duration-300"
+            >
+              Reintentar Conexión
+            </Button>
+            
+            <Button 
+              variant="outline"
+              size="lg"
+              onClick={handleHardReset} 
+              className="w-full border-destructive/20 text-destructive hover:bg-destructive/10 hover:border-destructive/30 transition-all duration-300"
+            >
+              Limpiar Todo (Hard Reset)
+            </Button>
+            
+            <p className="text-[10px] text-muted-foreground mt-4 uppercase tracking-widest opacity-50">
+              Usa el "Hard Reset" solo si el reintento no funciona.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -151,7 +296,9 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       workspaces, 
       switchWorkspace, 
       deleteWorkspace,
-      createWorkspace 
+      createWorkspace,
+      exportWorkspace,
+      importWorkspace
     }}>
       {isSwitching && <LoadingScreen isOverlay message="Cambiando área de trabajo..." />}
       {children}

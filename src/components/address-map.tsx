@@ -156,73 +156,162 @@ export function AddressMap({
     }
   };
 
-  // Create icon instance memoized
-  const customIcon = useMemo(() => {
-    return L.icon({
-      iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-      iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      tooltipAnchor: [16, -28],
-      shadowSize: [41, 41],
+  // Create custom SVG markers
+  const customMarkerIcon = useMemo(() => {
+    return L.divIcon({
+      className: 'custom-div-icon',
+      html: `
+        <div style="
+          background-color: var(--primary);
+          width: 30px;
+          height: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          border: 2px solid white;
+          box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        ">
+          <div style="
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            transform: rotate(45deg);
+          "></div>
+        </div>
+      `,
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+      popupAnchor: [0, -30],
+    });
+  }, []);
+
+  const selectedMarkerIcon = useMemo(() => {
+    return L.divIcon({
+      className: 'selected-div-icon',
+      html: `
+        <div style="
+          background-color: #ef4444;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          border: 2px solid white;
+          box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+        ">
+          <div style="
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            transform: rotate(45deg);
+          "></div>
+        </div>
+      `,
+      iconSize: [36, 36],
+      iconAnchor: [18, 36],
+      popupAnchor: [0, -36],
+    });
+  }, []);
+
+  const tempMarkerIcon = useMemo(() => {
+    return L.divIcon({
+      className: 'temp-div-icon',
+      html: `
+        <div style="
+          background-color: #10b981;
+          width: 30px;
+          height: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50% 50% 50% 50%;
+          border: 2px dashed white;
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+          animation: pulse 2s infinite;
+        ">
+          <div style="width: 6px; height: 6px; background: white; border-radius: 50%;"></div>
+        </div>
+        <style>
+          @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+          }
+        </style>
+      `,
+      iconSize: [30, 30],
+      iconAnchor: [15, 15],
+      popupAnchor: [0, -15],
     });
   }, []);
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-          <div>
-            <CardTitle>Mapa Interactivo</CardTitle>
-            <CardDescription>
-              {tempMarkerPos
-                ? 'Confirma la creación del nuevo punto'
-                : name
-                  ? `Ubicación: ${name}`
-                  : 'Haz clic para añadir un punto'}
-            </CardDescription>
-          </div>
-          <div className="flex gap-1 bg-muted p-1 rounded-lg self-start sm:self-center">
-            <Button
-              size="sm"
-              variant={mapType === 'street' ? 'secondary' : 'ghost'}
-              onClick={() => setMapType('street')}
-              className={cn(
-                "h-7 px-3 text-xs transition-all",
-                mapType === 'street' 
-                  ? "bg-background shadow-sm text-foreground hover:bg-background" 
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <MapIcon className="mr-2 h-3.5 w-3.5" />
-              Calle
-            </Button>
-            <Button
-              size="sm"
-              variant={mapType === 'satellite' ? 'secondary' : 'ghost'}
-              onClick={() => setMapType('satellite')}
-              className={cn(
-                "h-7 px-3 text-xs transition-all",
-                mapType === 'satellite' 
-                  ? "bg-background shadow-sm text-foreground hover:bg-background" 
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Satellite className="mr-2 h-3.5 w-3.5" />
-              Satélite
-            </Button>
-          </div>
+    <div className="h-full flex flex-col relative group/map">
+      {/* Absolute Overlay Controls */}
+      <div className="absolute top-4 right-4 z-[40] transition-opacity group-hover/map:opacity-100 opacity-90">
+        <div className="flex flex-col gap-2 p-1.5 bg-background/80 backdrop-blur-md rounded-xl border shadow-xl">
+          <Button
+            size="sm"
+            variant={mapType === 'street' ? 'secondary' : 'ghost'}
+            onClick={() => setMapType('street')}
+            className={cn(
+              "h-8 w-8 p-0 transition-all rounded-lg",
+              mapType === 'street' 
+                ? "bg-primary text-primary-foreground shadow-md" 
+                : "text-muted-foreground hover:bg-muted"
+            )}
+            title="Vista de Calle"
+          >
+            <MapIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={mapType === 'satellite' ? 'secondary' : 'ghost'}
+            onClick={() => setMapType('satellite')}
+            className={cn(
+              "h-8 w-8 p-0 transition-all rounded-lg",
+              mapType === 'satellite' 
+                ? "bg-primary text-primary-foreground shadow-md" 
+                : "text-muted-foreground hover:bg-muted"
+            )}
+            title="Vista de Satélite"
+          >
+            <Satellite className="h-4 w-4" />
+          </Button>
         </div>
-      </CardHeader>
-      <CardContent className="flex-1 p-0 rounded-b-lg overflow-hidden relative">
+      </div>
+
+      {/* Title/Info Overlay */}
+      <div className="absolute top-4 left-4 z-[40] pointer-events-none">
+        <div className="bg-background/80 backdrop-blur-md px-3 py-1.5 rounded-lg border shadow-lg max-w-[240px]">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-foreground truncate">
+            {name || 'Mapa del Sector'}
+          </p>
+          {isValid && (
+            <p className="text-[9px] text-muted-foreground font-mono">
+              {lat.toFixed(5)}, {lon.toFixed(5)}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="flex-1 rounded-xl overflow-hidden relative">
         <MapContainer
           center={center}
           zoom={zoom}
           scrollWheelZoom={true}
           doubleClickZoom={false}
-          style={{ height: '100%', width: '100%', minHeight: '400px' }}
+          zoomControl={false} // Disable default zoom to match premium look
+          style={{ 
+            height: '100%', 
+            width: '100%', 
+            minHeight: window.innerWidth < 640 ? '280px' : '400px' 
+          }}
         >
           <MapResizer mapType={mapType} />
           <ChangeView key={`${latitude}-${longitude}`} center={center} zoom={zoom} />
@@ -249,20 +338,24 @@ export function AddressMap({
               <Marker
                 key={address.id}
                 position={[aLat, aLon]}
-                icon={customIcon}
-                opacity={isSelected ? 1 : 0.7}
+                icon={(isSelected ? selectedMarkerIcon : customMarkerIcon) as any}
+                zIndexOffset={isSelected ? 1000 : 0}
               >
                 <Popup autoPan={false}>
-                  <div className="text-sm">
-                    <p className="font-bold border-b border-muted pb-1 mb-1">{address.name}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {[address.municipality, address.parish, address.sector]
-                        .filter(Boolean)
-                        .join(', ')}
-                    </p>
-                    {address.details && (
-                      <p className="text-[10px] italic mt-1 font-mono">"{address.details}"</p>
-                    )}
+                  <div className="text-sm p-0.5">
+                    <p className="font-bold text-primary border-b border-primary/10 pb-1 mb-1.5">{address.name}</p>
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-muted-foreground font-medium leading-tight">
+                        {[address.municipality, address.parish, address.sector]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </p>
+                      {address.details && (
+                        <p className="text-[9px] text-foreground/70 bg-muted/30 p-1.5 rounded border-l-2 border-primary/40 italic">
+                          "{address.details}"
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </Popup>
               </Marker>
@@ -274,11 +367,11 @@ export function AddressMap({
             <TempMarkerWithPopup
               position={tempMarkerPos}
               onCreateClick={handleCreateClick}
-              icon={customIcon}
+              icon={tempMarkerIcon as any}
             />
           )}
         </MapContainer>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

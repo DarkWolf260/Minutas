@@ -75,3 +75,42 @@ export function compareRanks(a: string | undefined, b: string | undefined): numb
 
   return 0;
 }
+
+/**
+ * Stable stringify that sorts object keys recursively
+ */
+export function stableStringify(obj: any): string {
+  if (obj === null || typeof obj !== 'object') {
+    return JSON.stringify(obj);
+  }
+
+  if (Array.isArray(obj)) {
+    return '[' + obj.map(stableStringify).join(',') + ']';
+  }
+
+  const keys = Object.keys(obj).sort();
+  return '{' + keys.map(k => `${JSON.stringify(k)}:${stableStringify(obj[k])}`).join(',') + '}';
+}
+
+/**
+ * Deep equality check based on stable stringification
+ */
+export function areEqual(a: any, b: any) {
+  return stableStringify(a) === stableStringify(b);
+}
+
+/**
+ * Extracts the first two initials from a name string
+ */
+export function getInitials(name: string): string {
+  if (!name || typeof name !== 'string') return 'U';
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'U';
+  if (parts.length === 1) {
+    const p = parts[0];
+    return p ? p.substring(0, 2).toUpperCase() : 'U';
+  }
+  const p1 = parts[0]?.[0] || '';
+  const p2 = parts[1]?.[0] || '';
+  return (p1 + p2).toUpperCase() || 'U';
+}

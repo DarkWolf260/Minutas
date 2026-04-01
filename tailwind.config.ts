@@ -3,8 +3,8 @@ import type {Config} from 'tailwindcss';
 export default {
   darkMode: ['class'],
   content: [
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './index.html',
+    './src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
@@ -57,9 +57,11 @@ export default {
         },
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        '2xl': 'var(--radius)',
+        xl: 'calc(var(--radius) - 2px)',
+        lg: 'calc(var(--radius) - 4px)',
+        md: 'calc(var(--radius) - 6px)',
+        sm: 'calc(var(--radius) - 8px)',
       },
       keyframes: {
         'accordion-down': {

@@ -133,9 +133,21 @@ export function usePersonnelHistory() {
         [db, currentWorkspace]
     );
 
+    const clearAllPersonnelHistory = useCallback(async () => {
+        if (!db || !currentWorkspace) return;
+        try {
+            const allDocs = await db.history.find({ selector: { type: 'assignment_history', workspaceId: currentWorkspace } }).exec();
+            await db.history.bulkRemove(allDocs.map((d) => d.primary));
+            logger.info('Personnel history cleared', { workspaceId: currentWorkspace });
+        } catch (error) {
+            logger.error('Failed to clear personnel history', error, { feature: 'PersonnelHistory', workspaceId: currentWorkspace });
+        }
+    }, [db, currentWorkspace]);
+
     return {
         recordAssignments,
         getHistory,
         getAssignmentForDate,
+        clearAllPersonnelHistory,
     };
 }

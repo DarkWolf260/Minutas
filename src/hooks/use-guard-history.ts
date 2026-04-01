@@ -75,11 +75,23 @@ export function useGuardHistory() {
     [reports]
   );
 
+  const clearAllGuardHistory = useCallback(async () => {
+    if (!db || !currentWorkspace) return;
+    try {
+      const allDocs = await db.history.find({ selector: { type: 'guard_history', workspaceId: currentWorkspace } }).exec();
+      await db.history.bulkRemove(allDocs.map((d) => d.primary));
+      logger.info('Guard history cleared', { workspaceId: currentWorkspace });
+    } catch (error) {
+      logger.error('Failed to clear guard history', error, { feature: 'GuardHistory', workspaceId: currentWorkspace });
+    }
+  }, [db, currentWorkspace]);
+
   return {
     reports,
     isLoaded,
     saveGuardReport,
     deleteGuardReport,
     getGuardReportById,
+    clearAllGuardHistory,
   };
 }

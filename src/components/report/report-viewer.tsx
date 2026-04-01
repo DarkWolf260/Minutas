@@ -9,8 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Report, TemplateConfig } from '@/types';
 import { Trash2, Copy, CheckIcon, Eye, Save, FileText } from 'lucide-react';
 import { useTemplates } from '@/hooks/use-templates';
@@ -36,11 +36,12 @@ import {
   SheetClose,
 } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { debounce } from '@/lib/utils';
+import { debounce, stableStringify } from '@/lib/utils';
 import { renderFinalReport } from '@/lib/template-parser';
 import { toast } from 'sonner';
+import { ReportPreview } from './report-preview';
 
-interface ReportViewerProps {
+export interface ReportViewerProps {
   report: Report | null;
   onSave: (report: Report) => void;
   onDelete: (id: string) => void;
@@ -53,7 +54,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
   const [copyButtonText, setCopyButtonText] = useState('Copiar');
   const [saveButtonText, setSaveButtonText] = useState('Guardar Cambios');
 
-  const { templates, configs } = useTemplates();
+  const { templates, configs, isLoaded } = useTemplates();
 
   const [previewContent, setPreviewContent] = useState('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -70,6 +71,14 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     [report, configs]
   );
   const isFinalizado = useMemo(() => status === 'Finalizado', [status]);
+  const clonedInitialData = useMemo(() => {
+    if (!report?.formData) return undefined;
+    try {
+      return JSON.parse(JSON.stringify(report.formData));
+    } catch (e) {
+      return report.formData;
+    }
+  }, [report?.id, report?.formData]);
 
   const saveLogic = useCallback(async (formData: Record<string, any>) => {
     if (!report || !template) return;
@@ -77,11 +86,21 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     const content = renderFinalReport(template.content, formData, config, {});
     const newTitle = String(formData.titulo || formData.title || template.name);
 
+    if (
+      report.content === content &&
+      report.title === newTitle &&
+      report.status === status &&
+      stableStringify(report.formData) === stableStringify(formData)
+    ) {
+      setSaveButtonText('Guardado');
+      return;
+    }
+
     const finalReport: Report = {
       ...report,
       title: newTitle,
       content: content,
-      formData: formData,
+      formData: JSON.parse(JSON.stringify(formData)),
       status: status,
       timestamp: new Date().toISOString(),
     };
@@ -118,20 +137,15 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     if (!formRef.current) return;
     const formData = await formRef.current.validate();
     if (!formData) return;
-    
+
     debouncedSave.cancel();
     await saveLogic(formData);
   };
 
   const handleStatusChange = async (newStatus: 'En proceso' | 'Finalizado') => {
     if (!formRef.current) return;
-    
-    // We should validate even when changing status, especially to Finalizado
     const formData = await formRef.current.validate();
-    if (!formData) {
-      // If invalid, we don't change status and show toast (Toast is already shown by validate())
-      return;
-    }
+    if (!formData) return;
 
     setStatus(newStatus);
     debouncedSave.cancel();
@@ -143,7 +157,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
       ...report,
       title: newTitle,
       content: content,
-      formData: formData,
+      formData: JSON.parse(JSON.stringify(formData)),
       status: newStatus,
       timestamp: new Date().toISOString(),
     };
@@ -153,7 +167,6 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
 
   const handlePreviewClick = () => {
     if (!formRef.current) return;
-
     const content = formRef.current.getRenderedContent();
     setPreviewContent(content);
     setCopyButtonText('Copiar');
@@ -171,38 +184,38 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
   if (!report) {
     return (
       <div className="flex h-full flex-col items-center justify-center bg-card text-center">
-        <FileText className="h-12 w-12 text-muted-foreground" />
+        <FileText className="h-12 w-12 text-muted-foreground opacity-20" />
         <h3 className="mt-4 text-lg font-semibold">No hay reporte seleccionado</h3>
-        <p className="text-muted-foreground">
-          Selecciona un reporte de la lista para verlo o editarlo.
-        </p>
+        <p className="text-muted-foreground">Selecciona un reporte de la lista.</p>
+      </div>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center p-8 bg-muted/5">
+        <div className="h-full w-full max-w-[1000px] bg-muted/20 rounded-2xl animate-pulse aspect-video mb-4"></div>
+        <p className="text-muted-foreground animate-pulse">Cargando plantilla...</p>
       </div>
     );
   }
 
   if (!template) {
     return (
-      <div className="flex h-full flex-col min-h-0">
-        <ScrollArea className="flex-1 p-6">
-          <div className="flex flex-col items-center justify-center bg-card text-center">
-            <FileText className="h-12 w-12 text-muted-foreground" />
+      <div className="flex h-full flex-col overflow-hidden">
+        <ScrollArea className="flex-1 w-full" type="always">
+          <div className="p-6 text-center max-w-2xl mx-auto">
+            <FileText className="h-12 w-12 text-muted-foreground mx-auto opacity-20" />
             <h3 className="mt-4 text-lg font-semibold text-destructive">Error en la Plantilla</h3>
-            <p className="text-muted-foreground">
-              La plantilla de este reporte tiene un error o no se encuentra. No se puede editar,
-              pero puedes ver su contenido original o eliminarlo.
-            </p>
-            <div className="mt-4 w-full max-w-2xl text-left">
-              <Label>Contenido del Reporte Original</Label>
-              <Textarea
-                readOnly
-                value={report.content}
-                className="mt-2 font-mono text-sm flex-1 min-h-0"
-                autoSize
-              />
+            <p className="text-muted-foreground mb-6">La plantilla no se encuentra o tiene un error.</p>
+            <div className="text-left">
+              <Label>Contenido Original</Label>
+              <div className="mt-2 p-4 bg-muted/40 rounded-md border font-mono text-sm whitespace-pre-wrap leading-relaxed min-h-[200px]">
+                {report.content}
+              </div>
             </div>
             <Button variant="destructive" className="mt-6" onClick={() => onDelete(report.id)}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Eliminar Reporte
+              <Trash2 className="mr-2 h-4 w-4" /> Eliminar Reporte
             </Button>
           </div>
         </ScrollArea>
@@ -211,139 +224,88 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
   }
 
   return (
-    <>
-      <div className="flex h-full flex-col min-h-0">
-        <div className="flex items-center justify-between border-b p-3">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-destructive"
-              onClick={() => onDelete(report.id)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" onClick={handlePreviewClick}>
-              <Eye className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Vista Previa</span>
-            </Button>
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <Select value={status} onValueChange={handleStatusChange}>
-              <SelectTrigger id="report-status" className="w-[110px] sm:w-[150px] text-xs sm:text-sm">
-                <SelectValue placeholder="Estatus..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="En proceso">En proceso</SelectItem>
-                <SelectItem value="Finalizado">Finalizado</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button 
-              size="sm"
-              onClick={handleSave} 
-              disabled={isFinalizado || saveButtonText === 'Guardado'}
-              className="px-2 sm:px-4"
-            >
-              {saveButtonText === 'Guardado' ? (
-                <CheckIcon className="h-4 w-4 sm:mr-2" />
-              ) : (
-                <Save className="h-4 w-4 sm:mr-2" />
-              )}
-              <span className="hidden sm:inline">{saveButtonText}</span>
-            </Button>
-          </div>
+    <div className="flex flex-col h-full w-full overflow-hidden relative" id="report-viewer-root">
+      {/* Fixed Header */}
+      <header className="flex-none flex items-center justify-between border-b p-4 bg-background z-20 shadow-sm min-h-[73px]">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:bg-destructive/10"
+            onClick={() => onDelete(report.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="sm" onClick={handlePreviewClick} className="bg-background shadow-sm">
+            <Eye className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Vista Previa</span>
+          </Button>
         </div>
-        <ScrollArea className="flex-1">
-          <div className="p-4 pb-32 sm:p-6 lg:p-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>{report.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ReportForm
-                  ref={formRef}
-                  key={report.id}
-                  template={template}
-                  config={config}
-                  initialData={report.formData}
-                  onSubmit={() => { }} // Not used here, handled by manual save
-                  disabled={isFinalizado}
-                  onDataChange={handleDataChange}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </ScrollArea>
-      </div>
+        
+        <div className="flex items-center gap-2">
+          <Select value={status} onValueChange={handleStatusChange}>
+            <SelectTrigger id="report-status" className="h-9 w-[110px] sm:w-[150px] bg-background">
+              <SelectValue placeholder="Estatus..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="En proceso">En proceso</SelectItem>
+              <SelectItem value="Finalizado">Finalizado</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={isFinalizado || saveButtonText === 'Guardado'}
+            className="h-9 px-3 sm:px-4 shadow-sm"
+          >
+            {saveButtonText === 'Guardado' ? (
+              <CheckIcon className="h-4 w-4 sm:mr-2" />
+            ) : (
+              <Save className="h-4 w-4 sm:mr-2" />
+            )}
+            <span className="hidden sm:inline">{saveButtonText}</span>
+          </Button>
+        </div>
+      </header>
 
-      {/* Preview Dialog - Responsive */}
-      {isMobile ? (
-        <Sheet open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-          <SheetContent side="bottom" className="h-[95vh] rounded-t-xl flex flex-col p-6">
-            <SheetHeader className="text-left">
-              <SheetTitle>Vista Previa del Reporte</SheetTitle>
-              <SheetDescription>
-                Revisa el reporte generado. Puedes copiar el texto para usarlo donde necesites.
-              </SheetDescription>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto mt-4 px-1">
-              <Textarea
-                readOnly
-                value={previewContent}
-                className="w-full h-full min-h-[60vh] bg-muted/50 font-mono text-sm whitespace-pre-wrap rounded-lg p-3"
+      {/* Truly Scrollable Area */}
+      <ScrollArea 
+        className="flex-1 min-h-0 w-full bg-muted/10 pointer-events-auto relative" 
+        id="report-scroll-area"
+        type="always"
+      >
+        <div className="w-full max-w-[1000px] mx-auto p-4 sm:p-8 pb-32">
+          <Card className="shadow-xl border-none ring-1 ring-border/50">
+            <CardHeader className="bg-card/50 border-b">
+              <CardTitle className="text-xl font-bold">{report.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-8 px-4 sm:px-6">
+              <ReportForm
+                ref={formRef}
+                key={report.id}
+                reportId={report.id}
+                template={template}
+                config={config}
+                initialData={clonedInitialData}
+                onSubmit={() => { }} 
+                disabled={isFinalizado}
+                onDataChange={handleDataChange}
               />
-            </div>
-            <SheetFooter className="mt-4 flex-row gap-2">
-              <Button className="flex-1" type="button" onClick={handleCopyToClipboard}>
-                {copyButtonText === 'Copiar' ? (
-                  <Copy className="mr-2 h-4 w-4" />
-                ) : (
-                  <CheckIcon className="mr-2 h-4 w-4" />
-                )}
-                {copyButtonText}
-              </Button>
-              <SheetClose asChild>
-                <Button type="button" variant="secondary">
-                  Cerrar
-                </Button>
-              </SheetClose>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
-      ) : (
-        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-          <DialogContent className="max-h-[90vh] max-w-[90vw] sm:max-w-3xl flex flex-col">
-            <DialogHeader>
-              <DialogTitle>Vista Previa del Reporte</DialogTitle>
-              <DialogDescription>
-                Revisa el reporte generado. Puedes copiar el texto para usarlo donde necesites.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex-1 overflow-y-auto -mx-6 px-6">
-              <Textarea
-                readOnly
-                value={previewContent}
-                className="w-full h-full min-h-[50vh] bg-muted/50 font-mono text-sm whitespace-pre-wrap"
-              />
-            </div>
-            <DialogFooter className="mt-auto pt-4">
-              <Button type="button" onClick={handleCopyToClipboard}>
-                {copyButtonText === 'Copiar' ? (
-                  <Copy className="mr-2 h-4 w-4" />
-                ) : (
-                  <CheckIcon className="mr-2 h-4 w-4" />
-                )}
-                {copyButtonText}
-              </Button>
-              <DialogClose asChild>
-                <Button type="button" variant="secondary">
-                  Cerrar
-                </Button>
-              </DialogClose>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-    </>
+            </CardContent>
+          </Card>
+        </div>
+      </ScrollArea>
+
+      {/* Shared Preview Component */}
+      <ReportPreview
+        isOpen={isPreviewOpen}
+        onOpenChange={setIsPreviewOpen}
+        content={previewContent}
+        copyButtonText={copyButtonText}
+        onCopy={handleCopyToClipboard}
+        isMobile={isMobile}
+        title="Vista Previa"
+      />
+    </div>
   );
 }

@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
 
 interface LoadingScreenProps {
   message?: string;
@@ -19,33 +19,22 @@ export function LoadingScreen({ message, isOverlay = false }: LoadingScreenProps
           : "min-h-screen bg-background"
       )}
     >
-      <div className="relative flex items-center justify-center">
-        {/* Glowing Background Effect - stays fixed or pulses */}
-        <div className="absolute inset-0 bg-primary/30 blur-3xl rounded-full animate-pulse scale-150" />
-        
-        {/* Bouncing Icon context */}
-        <div className="relative animate-bounce" style={{ animationDuration: '2s' }}>
-          <div className="bg-background/90 backdrop-blur-sm p-6 rounded-full border border-primary/30 shadow-[0_0_50px_-12px_rgba(var(--primary),0.5)] flex items-center justify-center overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-primary/10 opacity-50" />
-            <FileText className="h-10 w-10 text-primary" />
-          </div>
-        </div>
+      <div className="bg-primary/10 text-primary-foreground w-20 h-20 rounded-3xl flex items-center justify-center shadow-2xl shadow-primary/20 animate-bounce overflow-hidden border-2 border-primary/20 p-4 mb-6">
+        <img src="/icons/icon-192x192.png" alt="Logo" className="w-full h-full object-contain" />
       </div>
-      <div className="mt-12 flex flex-col items-center gap-3">
-        <h2 className="text-xl font-semibold tracking-tight animate-in fade-in slide-in-from-bottom-2 duration-700">
-          {message || 'Iniciando Sistema'}
-        </h2>
-        <div className="flex items-center gap-1.5">
-          <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
-          <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
-          <div className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
+
+      <div className="flex flex-col items-center gap-3">
+        <p className="text-xs font-black tracking-[0.1em] sm:tracking-[0.3em] text-muted-foreground uppercase opacity-90 animate-pulse text-center px-4">
+          {message || 'Sincronizando Sistema'}
+        </p>
+        <div className="w-32 h-1 bg-muted rounded-full overflow-hidden">
+          <div className="h-full bg-primary animate-shimmer w-full" />
         </div>
       </div>
 
-      {/* Subtle bottom text */}
       {!isOverlay && (
-        <p className="absolute bottom-8 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/40 font-medium">
-          Minutas Admin • v0.1.0
+        <p className="absolute bottom-10 text-[10px] uppercase tracking-[0.3em] text-muted-foreground/40 font-bold">
+          PC Reportes • v0.1.0
         </p>
       )}
     </div>

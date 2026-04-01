@@ -4,7 +4,7 @@
 
 export const personnelSchema = {
     title: 'personnel schema',
-    version: 3,
+    version: 0,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -27,7 +27,7 @@ export const personnelSchema = {
 
 export const reportsSchema = {
     title: 'reports schema',
-    version: 2,
+    version: 0,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -47,7 +47,7 @@ export const reportsSchema = {
 
 export const templatesSchema = {
     title: 'templates schema',
-    version: 2,
+    version: 0,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -80,7 +80,7 @@ export const templatesSchema = {
  */
 export const lookupsSchema = {
     title: 'lookups schema',
-    version: 1,
+    version: 0,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -99,7 +99,7 @@ export const lookupsSchema = {
  */
 export const configsSchema = {
     title: 'configs schema',
-    version: 1,
+    version: 0,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -119,7 +119,7 @@ export const configsSchema = {
  */
 export const historySchema = {
     title: 'history schema',
-    version: 3,
+    version: 0,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -139,7 +139,7 @@ export const historySchema = {
  */
 export const notificationsSchema = {
     title: 'notifications schema',
-    version: 2,
+    version: 0,
     primaryKey: 'id',
     type: 'object',
     properties: {

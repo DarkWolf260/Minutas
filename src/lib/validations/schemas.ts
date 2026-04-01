@@ -8,7 +8,6 @@
 import { z } from 'zod';
 import type { FieldConfig, SectionConfig } from '@/types';
 import { PERSONNEL_STATUS } from '@/constants/personnel';
-import { ATTENDANCE_STATUS } from '@/constants/attendance';
 
 // ============================================================================
 // BASE SCHEMAS
@@ -32,13 +31,14 @@ export const StaffMemberSchema = z.object({
             PERSONNEL_STATUS.VACACIONES,
             PERSONNEL_STATUS.PERMISO,
             PERSONNEL_STATUS.REPOSO,
-            PERSONNEL_STATUS.APOYO,
         ],
         { errorMap: () => ({ message: 'Estado de personal inválido' }) }
     ).optional(),
     department: z.string().optional(),
     specialties: z.array(z.string()).optional(),
+    observation: z.string().optional(),
     titulo: z.string().optional(),
+    cargo: z.string().optional(),
 });
 
 export type ValidatedStaffMember = z.infer<typeof StaffMemberSchema>;
@@ -140,31 +140,6 @@ export const AddressSchema = z.object({
 });
 
 export type ValidatedAddress = z.infer<typeof AddressSchema>;
-
-/**
- * Schema for AttendanceRecord
- * Matches: types/index.ts → AttendanceRecord
- */
-export const AttendanceRecordSchema = z.object({
-    id: z.string().min(1, 'ID es requerido'),
-    workspaceId: z.string().min(1, 'Workspace ID es requerido'),
-    memberId: z.string().min(1, 'ID de miembro es requerido'),
-    date: z.string().min(1, 'Fecha es requerida'),
-    status: z.enum(
-        [
-            ATTENDANCE_STATUS.PRESENTE,
-            ATTENDANCE_STATUS.TARDE,
-            ATTENDANCE_STATUS.PERMISO,
-            ATTENDANCE_STATUS.AUSENTE,
-        ],
-        { errorMap: () => ({ message: 'Estado de asistencia inválido' }) }
-    ),
-    checkInTime: z.string().optional(),
-    note: z.string().max(500, 'Nota muy larga').optional(),
-    createdAt: z.string().min(1, 'Fecha de creación es requerida'),
-});
-
-export type ValidatedAttendanceRecord = z.infer<typeof AttendanceRecordSchema>;
 
 /**
  * Schema for AppSettings
@@ -339,9 +314,9 @@ export function generateFormDataSchema(config: { fields: Record<string, FieldCon
                 }
             });
         }
-        
+
         const sectionSchema = z.object(sectionShape).passthrough().nullable().optional();
-        
+
         if (section.isRepeatable) {
             shape[section.id] = z.array(sectionSchema.unwrap ? sectionSchema.unwrap().unwrap() : sectionSchema as any).nullable().optional();
             // Simplified for RxDB compatibility:

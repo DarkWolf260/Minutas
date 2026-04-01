@@ -16,27 +16,25 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "incremental": true,
     "noUncheckedIndexedAccess": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
     "paths": {
       "@/*": [
         "./src/*"
       ]
-    }
+    },
+    "types": [
+      "vite/client",
+      "node",
+      "vite-plugin-pwa/client",
+      "vite-plugin-pwa/react"
+    ]
   },
   "include": [
-    "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    "**/*.tsx"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist"
   ]
 }

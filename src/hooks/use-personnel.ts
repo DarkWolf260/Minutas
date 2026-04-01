@@ -70,7 +70,7 @@ export function usePersonnel() {
         } as any;
 
         // Validate with Zod
-        const validatedMember = StaffMemberSchema.parse(memberWithId);
+        const validatedMember = StaffMemberSchema.parse(memberWithId) as StaffMember;
         await db.personnel.insert(validatedMember);
         logger.info('Personnel added', { id: validatedMember.id, name: validatedMember.name, workspaceId: currentWorkspace });
       } catch (error) {
@@ -212,6 +212,20 @@ export function usePersonnel() {
     [personnel]
   );
 
+  const clearAllPersonnel = useCallback(async () => {
+    if (!db || !currentWorkspace) return;
+    try {
+      const allDocs = await db.personnel.find({
+        selector: { workspaceId: currentWorkspace }
+      }).exec();
+      await Promise.all(allDocs.map((d) => d.remove()));
+      logger.info('All personnel cleared', { workspaceId: currentWorkspace });
+    } catch (error) {
+      logger.error('Failed to clear personnel', error);
+      throw error;
+    }
+  }, [db, currentWorkspace]);
+
   return {
     personnel,
     isLoaded,
@@ -222,5 +236,6 @@ export function usePersonnel() {
     removeMembers,
     savePersonnel,
     isCedulaDuplicate,
+    clearAllPersonnel,
   };
 }

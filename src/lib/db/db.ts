@@ -2,11 +2,18 @@
  * RxDB Database initialization and schema definitions
  */
 
-import { createRxDatabase, RxDatabase, RxCollection, addRxPlugin } from 'rxdb';
+import { createRxDatabase, removeRxDatabase, RxDatabase, RxCollection, addRxPlugin } from 'rxdb';
+export { removeRxDatabase };
 import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
-import { RxDBMigrationPlugin } from 'rxdb/plugins/migration-schema';
+export { getRxStorageDexie };
 import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
-import { wrappedValidateIsMyJsonValidStorage } from 'rxdb/plugins/validate-is-my-json-valid';
+import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
+
+const DB_NAME = 'central_minutas_main';
+
+/**
+ * Internal state tracking to prevent multiple initialization attempts.
+ */
 
 // Types from our application
 import {
@@ -15,7 +22,6 @@ import {
   Template,
   TemplateConfig,
   GuardReport,
-  AttendanceRecord,
   Department,
   AppSettings,
   StaffRole,
@@ -37,10 +43,8 @@ import {
 } from './schemas';
 
 import { logger } from '../logger';
-import { roleBasedConflictHandler } from './role-conflict-handler';
 
 // Add necessary plugins
-addRxPlugin(RxDBMigrationPlugin);
 addRxPlugin(RxDBQueryBuilderPlugin);
 
 // Collection Types
@@ -60,7 +64,7 @@ export type LookupItem = {
 export type ConfigItem = {
   id: string; // type:originalId or just 'settings'
   workspaceId: string;
-  type: 'settings' | 'unit' | 'field_definition' | 'template_config' | 'guard' | 'draft';
+  type: 'settings' | 'unit' | 'field_definition' | 'template_config' | 'guard' | 'draft' | 'profile';
   name?: string;
   data: any;
 };
@@ -120,6 +124,7 @@ interface RxDBInternalState {
   dbPromiseChain: Promise<any>;
   isDevModePluginAdded: boolean;
   allDatabases: Map<string, any>;
+  retryCount: number;
 }
 
 const getInternalState = (): RxDBInternalState => {
@@ -139,7 +144,7 @@ const ensureDevMode = async () => {
   const state = getInternalState();
   if (state.isDevModePluginAdded) return;
   
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     try {
       const { RxDBDevModePlugin } = await import('rxdb/plugins/dev-mode');
       addRxPlugin(RxDBDevModePlugin);
@@ -151,9 +156,24 @@ const ensureDevMode = async () => {
 };
 
 const createDatabase = async (): Promise<MinutasDatabase> => {
-  const name = 'central_minutas';
+  const name = DB_NAME;
   const state = getInternalState();
+  
+  // 1. Immediate check
+  const existing = state.allDatabases.get(name);
+  if (existing && !existing.destroyed) {
+    logger.info(`Returning existing database instance (Pre-init check): [${name}]`);
+    return existing;
+  }
+  
   await ensureDevMode();
+  
+  // 2. Double-check after any potential async/await context switch
+  const existingAfterDev = state.allDatabases.get(name);
+  if (existingAfterDev && !existingAfterDev.destroyed) {
+    logger.info(`Returning existing database instance (Post-dev check): [${name}]`);
+    return existingAfterDev;
+  }
   
   logger.info(`Creating central database instance: [${name}]`);
   let database: MinutasDatabase;
@@ -161,119 +181,43 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
   try {
     database = await createRxDatabase<MinutasDatabaseCollections>({
       name: name,
-      storage: wrappedValidateIsMyJsonValidStorage({
-        storage: getRxStorageDexie(),
-      }),
-      closeDuplicates: true,
-      ignoreDuplicate: process.env.NODE_ENV === 'development',
+      storage: wrappedValidateAjvStorage({ storage: getRxStorageDexie() }),
     });
-    // Register IMMEDIATELY in the global tracking
+    
+    // 3. Register IMMEDIATELY in the global tracking
     state.allDatabases.set(name, database);
   } catch (err: any) {
-    const rxErr = err as any;
     logger.error(`Failed to create RxDatabase [${name}]`, {
       message: err.message,
-      code: rxErr.code,
-      parameters: rxErr.parameters,
       stack: err.stack
     });
     throw err;
   }
+  
+  logger.info(`Central database [${name}] initialized successfully.`);
 
   try {
     const collectionsConfig: Record<string, any> = {
       personnel: { 
-        schema: personnelSchema,
-        conflictHandler: roleBasedConflictHandler,
-        migrationStrategies: {
-          1: (doc: any) => doc,
-          2: (doc: any) => doc,
-          3: (doc: any) => {
-            if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
-            return doc;
-          }
-        }
+        schema: personnelSchema
       },
       reports: { 
-        schema: reportsSchema,
-        conflictHandler: roleBasedConflictHandler,
-        migrationStrategies: {
-          1: (doc: any) => {
-            if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
-            return doc;
-          },
-          2: (doc: any) => {
-            if (doc.isRelevant === undefined) doc.isRelevant = false;
-            return doc;
-          }
-        }
+        schema: reportsSchema
       },
       templates: { 
-        schema: templatesSchema,
-        conflictHandler: roleBasedConflictHandler,
-        migrationStrategies: {
-          1: (doc: any) => {
-            if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
-            return doc;
-          },
-          2: (doc: any) => {
-            if (doc.isActive === undefined) doc.isActive = true;
-            return doc;
-          }
-        }
+        schema: templatesSchema
       },
       lookups: { 
-        schema: lookupsSchema,
-        conflictHandler: roleBasedConflictHandler,
-        migrationStrategies: {
-          1: (doc: any) => {
-            if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
-            return doc;
-          }
-        }
+        schema: lookupsSchema
       },
       configs: { 
-        schema: configsSchema,
-        conflictHandler: roleBasedConflictHandler,
-        migrationStrategies: {
-          1: (doc: any) => {
-            if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
-            return doc;
-          }
-        }
+        schema: configsSchema
       },
       history: { 
-        schema: historySchema,
-        conflictHandler: roleBasedConflictHandler,
-        migrationStrategies: {
-          1: (doc: any) => {
-            if (!doc.personnelId) doc.personnelId = 'none';
-            if (!doc.date) doc.date = new Date().toISOString().split('T')[0];
-            return doc;
-          },
-          2: (doc: any) => {
-            if (!doc.personnelId) doc.personnelId = 'none';
-            if (!doc.date) doc.date = new Date().toISOString().split('T')[0];
-            return doc;
-          },
-          3: (doc: any) => {
-            if (!doc.workspaceId) doc.workspaceId = 'minutasdb';
-            if (!doc.personnelId) doc.personnelId = 'none';
-            if (!doc.date) doc.date = new Date().toISOString().split('T')[0];
-            return doc;
-          }
-        }
+        schema: historySchema
       },
       notifications: {
-        schema: notificationsSchema,
-        conflictHandler: roleBasedConflictHandler,
-        migrationStrategies: {
-          1: (doc: any) => doc,
-          2: (doc: any) => {
-            if (doc.read === undefined) doc.read = false;
-            return doc;
-          }
-        }
+        schema: notificationsSchema
       },
     };
 
@@ -291,9 +235,6 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
       }
     }
     
-    // Perform manual migration if necessary
-    await migrateToConsolidated(database);
-    
   } catch (err: any) {
     const rxErr = err as any;
     logger.error(`Failed to initialize collections for database [${name}]. Cleaning up...`, {
@@ -308,36 +249,6 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
   return database;
 };
 
-/**
- * Migration helper to move data from old separate collections (Ghost collections in storage) 
- * to the new consolidated configs/lookups.
- */
-async function migrateToConsolidated(db: MinutasDatabase) {
-  const migrationFlagId = 'migration:consolidated:v2'; // Bumped for 6-collection merge
-  const flag = await db.configs.findOne(migrationFlagId).exec();
-  if (flag) return; // Already migrated
-
-  logger.info('Performing collection consolidation migration...');
-
-  // Note: Since the schemas are removed from code, we can't easily use db.old_collection.
-  // However, RxDB storage still has the data if it was there. 
-  // We can't easily recover "ghost" collections without their schemas in RxDB 
-  // unless we use the lower level storage. 
-  // GIVEN the complexity and that this is a development phase, we'll focus 
-  // on establishing the new structure. If production migration was needed, 
-  // we would use a more complex raw storage scan.
-  
-  // For now, mark as migrated.
-  await db.configs.upsert({
-    id: migrationFlagId,
-    workspaceId: 'minutasdb',
-    type: 'settings',
-    data: { 
-      timestamp: new Date().toISOString(),
-      workspaceId: 'minutasdb'
-    } as any
-  });
-}
 
 /**
  * Helper to safely destroy a database instance and remove from tracking
@@ -366,8 +277,9 @@ const safeDestroy = async (db: any, name: string) => {
  * Serialized getter for the database.
  */
 export const getDatabase = async (workspaceName: string = 'minutasdb'): Promise<MinutasDatabase> => {
+  console.log('--- DB v2_resync Initializing ---');
   const state = getInternalState();
-  const dbName = 'central_minutas';
+  const dbName = DB_NAME;
 
   // Use a promise chain that catches errors to prevent the entire chain from breaking
   state.dbPromiseChain = state.dbPromiseChain.catch(() => {}).then(async () => {

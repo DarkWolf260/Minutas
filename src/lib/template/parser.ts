@@ -454,7 +454,14 @@ export function parse(tokens: Token[]): TemplateParserResult {
  */
 function generateSectionId(base: string, existingSections: SectionConfig[]): string {
     const prefix = base.startsWith('cond_') || base.startsWith('sec_') ? '' : 'sec_';
-    let id = `${prefix}${base.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+    // Normalize: lowercase, remove accents, replace non-alphanumeric with underscore
+    const normalized = base.toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, '_')
+        .replace(/^_+|_+$/g, '');
+        
+    let id = `${prefix}${normalized || 'unknown'}`;
 
     let counter = 1;
     const originalId = id;

@@ -141,7 +141,7 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                 (acc: FormDataRecord, fieldId: string) => ({
                     ...acc,
                     [fieldId]: predefinedValues.hasOwnProperty(fieldId)
-                        ? predefinedValues[fieldId]
+                        ? JSON.parse(JSON.stringify(predefinedValues[fieldId]))
                         : '',
                 }),
                 {}

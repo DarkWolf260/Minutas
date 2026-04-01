@@ -3,6 +3,7 @@ import React from 'react';
 import { Briefcase, PlusCircle, Trash2 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -113,7 +114,7 @@ export function RoleCard({
                         </div>
                         <div className="col-span-1"></div>
                     </div>
-                    <div className="max-h-[300px] overflow-y-auto">
+                    <ScrollArea className="max-h-[300px] w-full" type="always">
                         {filteredRoles.map((role) => (
                             <div
                                 key={role.name}
@@ -168,7 +169,7 @@ export function RoleCard({
                                 No hay cargos definidos para este filtro.
                             </div>
                         )}
-                    </div>
+                    </ScrollArea>
                 </div>
             </CardContent>
         </Card>

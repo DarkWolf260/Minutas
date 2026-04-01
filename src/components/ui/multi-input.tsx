@@ -6,6 +6,7 @@ import { Badge } from './badge';
 import { X, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 
 interface MultiInputProps {
@@ -39,7 +40,7 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
   ) => {
     const [inputValue, setInputValue] = useState('');
     const [open, setOpen] = useState(false);
-    const internalInputRef = useRef<HTMLInputElement>(null);
+    const internalInputRef = useRef<HTMLInputElement | null>(null);
 
     const handleAddValue = (newValue: string) => {
       const trimmed = newValue.trim();
@@ -146,39 +147,41 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
           className="w-[var(--radix-popover-trigger-width)] p-0"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <div role="listbox" className="p-1 max-h-60 overflow-y-auto">
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((option) => (
-                <Button
-                  key={option}
-                  variant="ghost"
-                  className="w-full justify-start h-8 px-2 font-normal"
-                  role="option"
-                  onClick={() => handleSelectOption(option)}
-                >
-                  {option}
-                </Button>
-              ))
-            ) : (
-              <p className="p-2 text-center text-xs text-muted-foreground">
-                {options.length > 0 && currentValuesSet.size === options.length
-                  ? 'Todas las opciones seleccionadas.'
-                  : 'No hay opciones disponibles.'}
-              </p>
-            )}
-            {displayValue &&
-              !options.includes(displayValue) &&
-              !currentValuesSet.has(displayValue) && (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start h-8 px-2 font-normal text-primary"
-                  role="option"
-                  onClick={() => handleSelectOption(displayValue)}
-                >
-                  Añadir &quot;{displayValue}&quot;
-                </Button>
+          <ScrollArea className="max-h-60 w-full" type="always">
+            <div role="listbox" className="p-1">
+              {filteredOptions.length > 0 ? (
+                filteredOptions.map((option) => (
+                  <Button
+                    key={option}
+                    variant="ghost"
+                    className="w-full justify-start h-8 px-2 font-normal"
+                    role="option"
+                    onClick={() => handleSelectOption(option)}
+                  >
+                    {option}
+                  </Button>
+                ))
+              ) : (
+                <p className="p-2 text-center text-xs text-muted-foreground">
+                  {options.length > 0 && currentValuesSet.size === options.length
+                    ? 'Todas las opciones seleccionadas.'
+                    : 'No hay opciones disponibles.'}
+                </p>
               )}
-          </div>
+              {displayValue &&
+                !options.includes(displayValue) &&
+                !currentValuesSet.has(displayValue) && (
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start h-8 px-2 font-normal text-primary"
+                    role="option"
+                    onClick={() => handleSelectOption(displayValue)}
+                  >
+                    Añadir &quot;{displayValue}&quot;
+                  </Button>
+                )}
+            </div>
+          </ScrollArea>
         </PopoverContent>
       </Popover>
     );

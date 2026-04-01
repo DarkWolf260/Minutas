@@ -5,7 +5,7 @@
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isDevelopment = import.meta.env.DEV;
 
 class Logger {
   private log(level: LogLevel, message: string, ...args: unknown[]) {
@@ -55,8 +55,24 @@ class Logger {
   }
 
   error(message: string, error?: unknown, ...args: unknown[]) {
+    // If it looks like a ZodError (has .issues), log those issues clearly
+    const isZodError = error && typeof error === 'object' && 'issues' in error && Array.isArray((error as any).issues);
+
     if (error instanceof Error) {
-      this.log('error', message, { error: error.message, stack: error.stack }, ...args);
+      const errorData: any = { 
+        error: error.message, 
+        stack: isDevelopment ? error.stack : undefined 
+      };
+      
+      if (isZodError) {
+        errorData.issues = (error as any).issues;
+      }
+
+      this.log('error', message, errorData, ...args);
+    } else if (error && typeof error === 'object') {
+      // For plain objects, ensure they are logged in a way that doesn't just show [object Object]
+      // console.error handles this in most browsers, but we can be more explicit for development logs
+      this.log('error', message, error, ...args);
     } else {
       this.log('error', message, error, ...args);
     }

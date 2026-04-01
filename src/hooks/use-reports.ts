@@ -74,7 +74,19 @@ export function useReports() {
     const reportToValidate = { ...report, workspaceId: currentWorkspace };
     
     // 1. Base validation
-    const validatedReport = ReportSchema.parse(reportToValidate);
+    let validatedReport: Report;
+    try {
+      validatedReport = ReportSchema.parse(reportToValidate) as Report;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        logger.error('Base report validation failed', err, { 
+          feature: 'Reports', 
+          reportId: report.id,
+          issues: err.issues 
+        });
+      }
+      throw err;
+    }
 
     // 2. Dynamic validation for formData if config exists
     const config = configs[report.templateId];
@@ -84,7 +96,8 @@ export function useReports() {
         dynamicSchema.parse(report.formData);
       } catch (err) {
         if (err instanceof z.ZodError) {
-          logger.error('Dynamic form validation failed', {
+          logger.error('Dynamic form validation failed', err, {
+            feature: 'Reports',
             issues: err.issues,
             templateId: report.templateId,
             formData: report.formData,
@@ -128,12 +141,14 @@ export function useReports() {
         if (doc) {
           await doc.patch(validatedReport as Partial<Report>);
           logger.info('Report updated', { id: validatedReport.id, workspaceId: currentWorkspace });
-          toast.success('Reporte actualizado correctamente.');
+          // No toast for background auto-saves (managed by the UI elsewhere if needed)
+          // toast.success('Reporte actualizado correctamente.');
         } else {
+          logger.warn('Report not found for update', { id: validatedReport.id });
           toast.error('Reporte no encontrado.');
         }
       } catch (error) {
-        logger.error('Failed to update report', error, { feature: 'Reports' });
+        logger.error('Failed to update report', error, { feature: 'Reports', id: updatedReport?.id });
         toast.error(getUserFriendlyErrorMessage(error));
       }
     },
