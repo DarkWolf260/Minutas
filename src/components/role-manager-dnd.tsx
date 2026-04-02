@@ -36,10 +36,12 @@ function SortableRoleItem({
   role,
   onRemove,
   onToggleSingle,
+  onToggleHidden,
 }: {
   role: StaffRole;
   onRemove: (role: StaffRole) => void;
   onToggleSingle: (name: string, checked: boolean) => void;
+  onToggleHidden: (name: string, checked: boolean) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: role.name,
@@ -66,11 +68,24 @@ function SortableRoleItem({
           {role.name}
         </span>
         <div className="flex items-center space-x-1 shrink-0 ml-auto">
-          <Switch
-            checked={role.isSingle}
-            onCheckedChange={(checked) => onToggleSingle(role.name, checked)}
-            aria-label={`Marcar como cargo único para ${role.name}`}
-          />
+          <div className="flex flex-col items-center mr-1">
+            <span className="text-[8px] uppercase font-bold text-muted-foreground leading-none mb-1">Único</span>
+            <Switch
+              checked={role.isSingle}
+              onCheckedChange={(checked) => onToggleSingle(role.name, checked)}
+              aria-label={`Marcar como cargo único para ${role.name}`}
+              className="scale-75"
+            />
+          </div>
+          <div className="flex flex-col items-center mr-1">
+            <span className="text-[8px] uppercase font-bold text-muted-foreground leading-none mb-1">Ocultar</span>
+            <Switch
+              checked={role.isHidden || false}
+              onCheckedChange={(checked) => onToggleHidden(role.name, checked)}
+              aria-label={`Ocultar cargo ${role.name} de reportes`}
+              className="scale-75"
+            />
+          </div>
           <Button
             variant="ghost"
             size="icon"
@@ -92,6 +107,7 @@ function RoleColumn({
   roles,
   onPrepareRemove,
   onToggleRoleSingle,
+  onToggleRoleHidden,
   onPrepareRemoveDepartment,
 }: {
   id: string;
@@ -99,6 +115,7 @@ function RoleColumn({
   roles: StaffRole[];
   onPrepareRemove: (role: StaffRole) => void;
   onToggleRoleSingle: (name: string, checked: boolean) => void;
+  onToggleRoleHidden: (name: string, checked: boolean) => void;
   onPrepareRemoveDepartment: (deptId: string) => void;
 }) {
   const { setNodeRef } = useDroppable({ id });
@@ -126,6 +143,7 @@ function RoleColumn({
               role={role}
               onRemove={onPrepareRemove}
               onToggleSingle={onToggleRoleSingle}
+              onToggleHidden={onToggleRoleHidden}
             />
           ))}
         </SortableContext>
@@ -191,6 +209,10 @@ export function RoleManagerDnD({
     onSave();
     setFeedback('¡Cargos guardados exitosamente!');
     setTimeout(() => setFeedback(''), 3000);
+  };
+  
+  const handleToggleHidden = (roleName: string, checked: boolean) => {
+    onRolesChange(roles.map((r) => (r.name === roleName ? { ...r, isHidden: checked } : r)));
   };
 
   const allDepartments = useMemo(() => departments, [departments]);
@@ -344,6 +366,7 @@ export function RoleManagerDnD({
             roles={roleBuckets.unassigned || []}
             onPrepareRemove={onPrepareRemoveRole}
             onToggleRoleSingle={handleToggleSingle}
+            onToggleRoleHidden={handleToggleHidden}
             onPrepareRemoveDepartment={() => {}}
           />
           {allDepartments.map((dept) => (
@@ -354,6 +377,7 @@ export function RoleManagerDnD({
               roles={roleBuckets[dept.id] || []}
               onPrepareRemove={onPrepareRemoveRole}
               onToggleRoleSingle={handleToggleSingle}
+              onToggleRoleHidden={handleToggleHidden}
               onPrepareRemoveDepartment={onPrepareRemoveDepartment}
             />
           ))}

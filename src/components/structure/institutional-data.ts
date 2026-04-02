@@ -17,6 +17,7 @@ ESTATUS Y ESPECIALES
 - Reposo
 - Permiso
 - Vacaciones
+- Ausente
 - Apoyo
 `;
 

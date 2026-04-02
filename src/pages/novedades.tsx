@@ -184,8 +184,8 @@ function NovedadesPageContent() {
               />
             </div>
           </div>
-          <div className="flex-1 relative min-h-0">
-            <ScrollArea className="absolute inset-0" type="always">
+          <div className="flex-1 min-h-0">
+            <ScrollArea className="h-full w-full" type="always">
               <div className="space-y-1 p-3 pt-3 pb-32 sm:pb-3">
                 {filteredReports.map((report) => {
                   const horaValue = findValueInFormData(report.formData, 'Hora');

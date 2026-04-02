@@ -204,8 +204,8 @@ export default function PlantillasPage() {
                   accept=".txt"
                 />
               </div>
-              <div className="flex-1 relative min-h-0 w-full overflow-hidden">
-                <div className="absolute inset-0 overflow-y-auto overflow-x-hidden custom-scrollbar">
+              <div className="flex-1 min-h-0 w-full overflow-hidden">
+                <ScrollArea className="h-full w-full" type="always">
                   <TooltipProvider>
                     <div className="space-y-1 p-4 pt-0 pb-20 sm:pb-4 min-w-0 w-full">
                       {templates.map((template, index) => {
@@ -316,7 +316,7 @@ export default function PlantillasPage() {
                       )}
                     </div>
                   </TooltipProvider>
-                </div>
+                </ScrollArea>
               </div>
             </aside>
 

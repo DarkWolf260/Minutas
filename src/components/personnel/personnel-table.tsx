@@ -108,6 +108,7 @@ export function PersonnelTable({
         return 'secondary';
       case 'reposo':
       case 'permiso':
+      case 'ausente':
         return 'outline';
       default:
         return 'default';

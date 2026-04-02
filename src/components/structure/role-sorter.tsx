@@ -27,16 +27,26 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { GripVertical, Layers, ArrowUpDown, Save } from 'lucide-react';
+import { GripVertical, Layers, ArrowUpDown, Save, EyeOff, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RoleSorterProps {
   roles: StaffRole[];
   onReorder: (roles: StaffRole[]) => void;
+  onUpdate: (name: string, updates: Partial<StaffRole>) => void;
+  onRemove: (name: string) => void;
   onSave?: () => void;
 }
 
-function SortableRoleItem({ role }: { role: StaffRole }) {
+function SortableRoleItem({ 
+  role, 
+  onRemoveFromHierarchy, 
+  onDelete 
+}: { 
+  role: StaffRole; 
+  onRemoveFromHierarchy: (name: string) => void;
+  onDelete: (name: string) => void;
+}) {
   const {
     attributes,
     listeners,
@@ -91,11 +101,23 @@ function SortableRoleItem({ role }: { role: StaffRole }) {
           Único
         </Badge>
       )}
+
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+          onClick={() => onRemoveFromHierarchy(role.name)}
+          title="Quitar de la jerarquía"
+        >
+          <EyeOff className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }
 
-export function RoleSorter({ roles, onReorder, onSave }: RoleSorterProps) {
+export function RoleSorter({ roles, onReorder, onUpdate, onRemove, onSave }: RoleSorterProps) {
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
@@ -116,7 +138,13 @@ export function RoleSorter({ roles, onReorder, onSave }: RoleSorterProps) {
   const [activeId, setActiveId] = React.useState<string | null>(null);
 
   const sortedRoles = useMemo(() => {
-    return [...roles].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    return [...roles]
+      .filter(r => !r.isHidden)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }, [roles]);
+
+  const hiddenRoles = useMemo(() => {
+    return roles.filter(r => r.isHidden);
   }, [roles]);
 
   const activeRole = useMemo(() => {
@@ -188,17 +216,55 @@ export function RoleSorter({ roles, onReorder, onSave }: RoleSorterProps) {
             >
               <div className="space-y-2 pb-4">
                 {sortedRoles.map((role) => (
-                  <SortableRoleItem key={role.name} role={role} />
+                  <SortableRoleItem 
+                    key={role.name} 
+                    role={role} 
+                    onRemoveFromHierarchy={(name) => onUpdate(name, { isHidden: true })}
+                    onDelete={onRemove} 
+                  />
                 ))}
                 
                 {sortedRoles.length === 0 && (
-                  <div className="py-12 text-center text-muted-foreground">
+                  <div className="py-12 text-center text-muted-foreground border border-dashed rounded-lg">
                     <Layers className="h-8 w-8 mx-auto opacity-20 mb-2" />
-                    <p className="text-xs">No hay cargos definidos</p>
+                    <p className="text-xs">No hay cargos en el reporte</p>
                   </div>
                 )}
               </div>
             </SortableContext>
+
+            {hiddenRoles.length > 0 && (
+              <div className="mt-8 pt-6 border-t border-muted/50">
+                <div className="flex items-center gap-2 mb-4 px-1">
+                   <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                   <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Cargos fuera del reporte</h3>
+                </div>
+                <div className="space-y-2">
+                  {hiddenRoles.map((role) => (
+                    <div
+                      key={role.name}
+                      className="flex items-center gap-3 p-3 rounded-lg border bg-muted/20 opacity-70 grayscale-[0.5]"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium leading-none truncate">{role.name}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1 uppercase">Oculto</p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-primary hover:bg-primary/10"
+                          onClick={() => onUpdate(role.name, { isHidden: false })}
+                          title="Restaurar a la jerarquía"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <DragOverlay dropAnimation={{
                 sideEffects: defaultDropAnimationSideEffects({

@@ -594,10 +594,9 @@ export default function ReporteFinalPage() {
     reportsLoaded && guardsLoaded && settingsLoaded && rolesLoadedHook && templatesLoaded && definitionsLoaded;
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden relative">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-        <div className="flex-1 flex flex-col md:h-full md:overflow-hidden">
-          <div className="p-4 sm:p-6 lg:p-8 w-full max-w-[1700px] mx-auto h-full flex flex-col gap-6 min-h-0">
+    <div className="flex-col w-full md:flex-1 md:flex md:min-h-0 md:overflow-hidden relative">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col sm:gap-6 md:flex-1 md:min-h-0">
+        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-28 sm:pb-6 flex flex-col md:flex-1 md:min-h-0">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <Link to="/" className="shrink-0">
@@ -634,7 +633,7 @@ export default function ReporteFinalPage() {
 
             <TabsContent 
               value="generate" 
-              className="m-0 border-none p-0 outline-none flex-1 min-h-0 animate-in fade-in slide-in-from-left-4 duration-500 ease-in-out"
+              className="mt-0 focus-visible:outline-none ring-offset-background data-[state=active]:flex data-[state=active]:flex-col md:data-[state=active]:flex-1 md:min-h-0 bg-transparent animate-in fade-in slide-in-from-left-4 duration-500 ease-in-out"
             >
               {!isLoaded ? (
                 <div className="space-y-8 flex-1">
@@ -645,9 +644,9 @@ export default function ReporteFinalPage() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-8 flex-1 flex flex-col min-h-0 pb-32">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 shrink-0">
-                    <Alert className="bg-primary/5 border-primary/20 shadow-sm leading-relaxed flex items-center h-full py-4">
+                <div className="md:flex-1 md:min-h-0 flex flex-col gap-6 h-full">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 shrink-0 px-1">
+                    <Alert className="bg-primary/5 border-primary/20 shadow-sm leading-normal flex items-center h-full py-2.5 rounded-2xl">
                       <div className="flex items-center gap-4 w-full">
                         <div className="bg-primary/10 p-2.5 rounded-xl">
                           <FileText className="h-5 w-5 text-primary" />
@@ -662,7 +661,7 @@ export default function ReporteFinalPage() {
                     </Alert>
 
                     {activeGuard ? (
-                      <Alert className="bg-emerald-500/5 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-sm flex items-center h-full py-4">
+                      <Alert className="bg-emerald-500/5 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-sm flex items-center h-full py-2.5 rounded-2xl">
                         <div className="flex items-center gap-4 w-full">
                           <div className="bg-emerald-500/10 p-2.5 rounded-xl">
                             <Users className="h-5 w-5" />
@@ -676,7 +675,7 @@ export default function ReporteFinalPage() {
                         </div>
                       </Alert>
                     ) : (
-                      <Alert variant="destructive" className="shadow-sm flex items-center h-full py-4 bg-destructive/5 border-destructive/20">
+                      <Alert variant="destructive" className="shadow-sm flex items-center h-full py-2.5 bg-destructive/5 border-destructive/20 rounded-2xl">
                         <div className="flex items-center gap-4 w-full">
                           <div className="bg-destructive/10 p-2.5 rounded-xl">
                             <Users className="h-5 w-5 text-destructive" />
@@ -692,10 +691,10 @@ export default function ReporteFinalPage() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch flex-1 min-h-0">
-                    <div className="flex flex-col gap-8 flex-1 min-h-0 h-full">
-                      <Card className="shadow-md border-muted/60 flex flex-col flex-1 shrink-0 lg:shrink min-h-[300px]">
-                        <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch md:flex-1 md:min-h-0 pb-4 overflow-hidden">
+                    <div className="flex flex-col gap-6 md:flex-1 md:min-h-0 md:h-full">
+                      <Card className="border-none shadow-xl shadow-foreground/5 bg-card/50 backdrop-blur-sm md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0">
+                        <CardHeader className="py-3 border-b bg-background/50 backdrop-blur-sm shrink-0">
                           <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                             <TrendingUp className="h-3.5 w-3.5 text-primary" />
                             Estadísticas del Día
@@ -711,8 +710,8 @@ export default function ReporteFinalPage() {
                         </CardContent>
                       </Card>
 
-                      <Card className="shadow-md border-muted/60 flex flex-col flex-1 min-h-0 overflow-hidden">
-                        <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
+                      <Card className="border-none shadow-xl shadow-foreground/5 bg-card/50 backdrop-blur-sm md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0">
+                        <CardHeader className="py-3 border-b bg-background/50 backdrop-blur-sm shrink-0">
                           <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                             <FileText className="h-3.5 w-3.5 text-primary" />
                             Novedades Automáticas a Consolidar ({finishedReports.length})
@@ -769,15 +768,16 @@ export default function ReporteFinalPage() {
                       </Card>
                     </div>
 
-                    <div className="flex flex-col gap-8 flex-1 min-h-0 h-full">
-                      <Card className="shadow-md border-muted/60 shrink-0">
-                        <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
+                    <div className="flex flex-col gap-6 flex-1 min-h-0 pb-2 h-full">
+                      <Card className="border-none shadow-xl shadow-foreground/5 bg-card/50 backdrop-blur-sm shrink-0">
+                        <CardHeader className="py-3 border-b bg-background/50 backdrop-blur-sm shrink-0">
                           <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                             <PlusCircle className="h-3.5 w-3.5 text-primary" />
                             {editingManualId ? 'Editar Evento Manual' : 'Nuevo Evento Manual'}
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-4 space-y-3">
+                        <CardContent className="p-0 shrink-0 overflow-hidden">
+                            <div className="p-4 space-y-3">
                           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
                             <div className="sm:col-span-4 space-y-1">
                               <Label className="text-[10px] font-bold uppercase opacity-50 ml-1">Fecha</Label>
@@ -834,17 +834,18 @@ export default function ReporteFinalPage() {
                               className="min-h-[80px] bg-background border-muted-foreground/20 focus-visible:ring-primary/20 rounded-xl resize-none text-sm"
                             />
                           </div>
-                        </CardContent>
-                      </Card>
+                        </div>
+                    </CardContent>
+                  </Card>
 
-                      <Card className="shadow-md border-muted/60 overflow-hidden flex flex-1 flex-col min-h-0">
-                        <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
+                      <Card className="border-none shadow-xl shadow-foreground/5 bg-card/50 backdrop-blur-sm md:overflow-hidden md:flex flex-col md:flex-1 md:min-h-0">
+                        <CardHeader className="py-3 border-b bg-background/50 backdrop-blur-sm shrink-0">
                           <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                             <TrendingUp className="h-3.5 w-3.5 text-primary" />
                             Cronología de Eventos Manuales ({manualNovedades.length})
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-0 flex-1 overflow-hidden min-h-0">
+                        <CardContent className="p-0 flex-1 min-h-0 overflow-hidden">
                           <ScrollArea className="h-full" type="always">
                             {manualNovedades.length === 0 ? (
                               <div className="py-12 flex flex-col items-center justify-center text-muted-foreground opacity-50">
@@ -907,10 +908,10 @@ export default function ReporteFinalPage() {
 
             <TabsContent 
               value="history" 
-              className="m-0 border-none p-0 outline-none animate-in fade-in slide-in-from-right-4 duration-500 ease-in-out"
+              className="mt-0 focus-visible:outline-none ring-offset-background data-[state=active]:flex data-[state=active]:flex-col md:data-[state=active]:flex-1 md:min-h-0 bg-transparent animate-in fade-in slide-in-from-right-4 duration-500 ease-in-out"
             >
-              <Card className="shadow-lg border-muted/50 rounded-2xl overflow-hidden">
-                <CardContent className="p-0">
+              <Card className="border-none shadow-xl shadow-foreground/5 bg-card/50 backdrop-blur-sm md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0">
+                <CardContent className="p-0 flex-1 flex flex-col min-h-0">
                   {!historyLoaded ? (
                     <div className="p-8 space-y-4">
                       <Skeleton className="h-20 w-full" />
@@ -926,71 +927,72 @@ export default function ReporteFinalPage() {
                       <p className="text-sm opacity-70">Los reportes que generes aparecerán aquí.</p>
                     </div>
                   ) : (
-                    <div className="divide-y divide-muted/50">
-                      {sortedSavedReports.map((report) => (
-                        <div
-                          key={report.id}
-                          className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 hover:bg-muted/30 transition-colors gap-4"
-                        >
-                          <div className="space-y-1.5 flex-1">
-                            <div className="font-bold text-lg leading-none">
-                              {report.summary || 'Reporte sin título'}
+                    <ScrollArea className="flex-1 w-full" type="always">
+                        <div className="divide-y divide-muted/50">
+                        {sortedSavedReports.map((report) => (
+                          <div
+                            key={report.id}
+                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 hover:bg-muted/30 transition-colors gap-4"
+                          >
+                            <div className="space-y-1.5 flex-1">
+                              <div className="font-bold text-lg leading-none">
+                                {report.summary || 'Reporte sin título'}
+                              </div>
+                              <div className="flex flex-wrap items-center text-sm text-muted-foreground gap-4">
+                                <span className="flex items-center bg-muted/30 px-2 py-0.5 rounded text-xs gap-1.5">
+                                  <Clock className="h-3.5 w-3.5 opacity-70" />
+                                  {format(new Date(report.generatedAt), "HH:mm 'hs'", { locale: es })}
+                                </span>
+                                {report.guardGroup && (
+                                  <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] h-5 px-1.5 font-bold">
+                                    {report.guardGroup}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
-                            <div className="flex flex-wrap items-center text-sm text-muted-foreground gap-4">
-                              <span className="flex items-center bg-muted/30 px-2 py-0.5 rounded text-xs gap-1.5">
-                                <Clock className="h-3.5 w-3.5 opacity-70" />
-                                {format(new Date(report.generatedAt), "HH:mm 'hs'", { locale: es })}
-                              </span>
-                              {report.guardGroup && (
-                                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] h-5 px-1.5 font-bold">
-                                  {report.guardGroup}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex gap-2 w-full sm:w-auto shrink-0">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 sm:flex-none font-bold rounded-xl h-10 px-4"
-                              onClick={() => handleViewSavedReport(report.id)}
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              Ver
-                            </Button>
+                            <div className="flex gap-2 w-full sm:w-auto shrink-0">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 sm:flex-none font-bold rounded-xl h-10 px-4"
+                                onClick={() => handleViewSavedReport(report.id)}
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                Ver
+                              </Button>
 
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm" className="flex-1 sm:flex-none font-bold rounded-xl h-10 px-4 text-destructive hover:bg-destructive/10 hover:text-destructive border-muted/50">
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Eliminar
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent className="rounded-2xl border-muted/50">
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>¿Eliminar reporte?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Esta acción no se puede deshacer. El reporte se borrará permanentemente de tu historial.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel className="rounded-xl font-bold">Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction onClick={(e) => handleDeleteSavedReport(report.id, e as any)} className="bg-destructive hover:bg-destructive/90 rounded-xl font-bold">
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm" className="flex-1 sm:flex-none font-bold rounded-xl h-10 px-4 text-destructive hover:bg-destructive/10 hover:text-destructive border-muted/50">
+                                    <Trash2 className="h-4 w-4 mr-2" />
                                     Eliminar
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent className="rounded-2xl border-muted/50">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>¿Eliminar reporte?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Esta acción no se puede deshacer. El reporte se borrará permanentemente de tu historial.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel className="rounded-xl font-bold">Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={(e) => handleDeleteSavedReport(report.id, e as any)} className="bg-destructive hover:bg-destructive/90 rounded-xl font-bold">
+                                      Eliminar
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
                   )}
                 </CardContent>
               </Card>
             </TabsContent>
           </div>
-        </div>
       </Tabs>
 
       {/* Resultado - Responsive */}
@@ -1165,7 +1167,7 @@ export default function ReporteFinalPage() {
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto max-h-[60vh] bg-background border-y border-muted/50 scrollbar-thin scrollbar-thumb-muted-foreground/20">
-                <div className="p-8 pb-32 font-mono text-sm whitespace-pre-wrap leading-relaxed">
+                <div className="p-8 pb-12 font-mono text-sm whitespace-pre-wrap leading-relaxed">
                   {selectedSavedReport.content}
                 </div>
               </div>

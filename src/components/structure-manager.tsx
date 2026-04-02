@@ -44,7 +44,7 @@ export function StructureManager({
   // Sync with props when they load initially (only once)
   const isInitialized = React.useRef(false);
 
-  const STATUS_ROLE_NAMES = ['vacaciones', 'reposo', 'permiso', 'apoyo'];
+    const STATUS_ROLE_NAMES = ['vacaciones', 'reposo', 'permiso', 'ausente', 'apoyo'];
 
   React.useEffect(() => {
     const patchRoles = (rs: StaffRole[]) => {
@@ -57,15 +57,23 @@ export function StructureManager({
       });
     };
 
-    if (!isInitialized.current && roles.length > 0) {
-      setLocalRoles(patchRoles(roles));
-      if (departments.length > 0) {
-        setLocalDepts(departments);
-        isInitialized.current = true;
+    if (!isInitialized.current && rolesLoaded && deptsLoaded) {
+      let updatedRoles = patchRoles(roles);
+      
+      // Ensure 'Ausente' role exists as it's a vital status role now
+      const hasAusente = updatedRoles.some(r => r.name.toLowerCase() === 'ausente');
+      if (!hasAusente) {
+        updatedRoles.push({
+          name: 'Ausente',
+          isStatus: true,
+          isSingle: false,
+          isHidden: false,
+          order: updatedRoles.length,
+          departmentScope: []
+        });
       }
-    } else if (!isInitialized.current && deptsLoaded && rolesLoaded) {
-      // If loaded but empty, still mark as initialized
-      setLocalRoles(patchRoles(roles));
+      
+      setLocalRoles(updatedRoles);
       setLocalDepts(departments);
       isInitialized.current = true;
     }
@@ -109,7 +117,6 @@ export function StructureManager({
       name: name,
       isSingle: false,
       departmentScope: deptId ? [deptId] : [],
-      isHidden: false,
       order: localRoles.length,
     };
     setLocalRoles((prev) => [...prev, newRole]);
@@ -187,6 +194,8 @@ export function StructureManager({
             <RoleSorter 
               roles={localRoles}
               onReorder={setLocalRoles}
+              onUpdate={handleUpdateRole}
+              onRemove={handleRemoveRole}
               onSave={handleSaveAll}
             />
           </TabsContent>
@@ -216,6 +225,8 @@ export function StructureManager({
           <RoleSorter 
             roles={localRoles}
             onReorder={setLocalRoles}
+            onUpdate={handleUpdateRole}
+            onRemove={handleRemoveRole}
             onSave={handleSaveAll}
           />
         </div>

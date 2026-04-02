@@ -31,6 +31,7 @@ export const StaffMemberSchema = z.object({
             PERSONNEL_STATUS.VACACIONES,
             PERSONNEL_STATUS.PERMISO,
             PERSONNEL_STATUS.REPOSO,
+            PERSONNEL_STATUS.AUSENTE,
         ],
         { errorMap: () => ({ message: 'Estado de personal inválido' }) }
     ).optional(),
@@ -78,7 +79,7 @@ export const ReportSchema = z.object({
     templateId: z.string().min(1, 'ID de plantilla es requerido'),
     title: z.string().min(1, 'Título es requerido').max(500, 'Título muy largo'),
     timestamp: z.string().datetime('Formato de fecha/hora inválido'),
-    content: z.string().min(1, 'Contenido es requerido'),
+    content: z.string(),
     isRelevant: z.boolean(),
     status: z.enum(['En proceso', 'Finalizado']).optional(),
     formData: z.record(z.unknown()).optional(), // Will be validated dynamically based on template
