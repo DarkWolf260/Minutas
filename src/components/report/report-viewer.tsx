@@ -36,7 +36,7 @@ import {
   SheetClose,
 } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { debounce, stableStringify } from '@/lib/utils';
+import { debounce, stableStringify, validateTimeHlv } from '@/lib/utils';
 import { renderFinalReport } from '@/lib/template-parser';
 import { toast } from 'sonner';
 import { ReportPreview } from './report-preview';
@@ -86,13 +86,10 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     const content = renderFinalReport(template.content, formData, config, { Estatus: status });
     const newTitle = String(formData.titulo || formData.title || template.name);
 
-    if (
-      report.content === content &&
-      report.title === newTitle &&
-      report.status === status &&
-      stableStringify(report.formData) === stableStringify(formData)
-    ) {
-      setSaveButtonText('Guardado');
+    // Time validation
+    const hora = formData['Hora'];
+    const timeValidation = validateTimeHlv(hora, status === 'Finalizado');
+    if (!timeValidation.isValid) {
       return;
     }
 
@@ -146,6 +143,14 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     if (!formRef.current) return;
     const formData = await formRef.current.validate();
     if (!formData) return;
+
+    const hora = formData['Hora'];
+    const timeValidation = validateTimeHlv(hora, newStatus === 'Finalizado');
+    
+    if (!timeValidation.isValid) {
+      toast.error(timeValidation.error);
+      return;
+    }
 
     setStatus(newStatus);
     debouncedSave.cancel();

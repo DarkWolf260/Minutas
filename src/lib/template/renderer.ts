@@ -296,13 +296,13 @@ function renderValue(
             if (typeof value[0] === 'object' && value[0] !== null && 'name' in value[0]) {
                 const isReporta = fieldId.toLowerCase() === 'reporta';
                 if (isReporta) {
-                    return value.map((member) => formatStaffReporta(member as import('@/types').StaffMember)).join(', ');
+                    return value.map((member) => formatStaffReporta(member as import('@/types').StaffMember)).join(' / ');
                 }
                 const showCedula = fieldId.toLowerCase() === 'analista';
-                return value.map((member) => formatStaffMember(member as import('@/types').StaffMember, showCedula)).join(', ');
+                return value.map((member) => formatStaffMember(member as import('@/types').StaffMember, showCedula)).join(' / ');
             }
         }
-        return value.join(', ');
+        return value.join(' / ');
     }
 
     // Semantic field rendering

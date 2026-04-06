@@ -735,11 +735,10 @@ export default function ReporteFinalPage() {
                                         <span className="font-mono text-xs font-bold px-2 py-0.5 bg-muted rounded text-muted-foreground whitespace-nowrap">
                                           {findValueInFormData(report.formData, "Hora") as string}
                                         </span>
-                                        <span className="text-xs font-bold truncate opacity-70">
+                                        <span className="text-xs font-bold opacity-70">
                                           {report.title}
                                         </span>
                                       </div>
-                                      <p className="text-sm leading-relaxed text-foreground truncate opacity-80">{report.content.substring(0, 100)}...</p>
                                     </div>
                                     <div className="flex items-center gap-1 shrink-0 ml-4">
                                       <Button
@@ -872,7 +871,7 @@ export default function ReporteFinalPage() {
                                             </Badge>
                                           )}
                                         </div>
-                                        <p className="text-xs sm:text-sm leading-relaxed text-foreground truncate font-medium">{novedad.text}</p>
+                                        <p className="text-xs sm:text-sm leading-relaxed text-foreground font-medium whitespace-pre-wrap">{novedad.text}</p>
                                       </div>
                                     <div className="flex items-center gap-0.5 shrink-0">
                                       <Button

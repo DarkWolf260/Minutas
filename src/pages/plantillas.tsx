@@ -18,7 +18,7 @@ import {
 import { useTemplates } from '@/hooks/use-templates';
 import type { Template } from '@/types';
 import { TemplateEditor } from '@/components/template/template-editor';
-import { cn } from '@/lib/utils';
+import { cn, getTemplateIcon } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -225,12 +225,17 @@ export default function PlantillasPage() {
                               className="flex items-center gap-2 flex-1 cursor-pointer min-w-0 overflow-hidden mr-2"
                               onClick={() => setSelectedTemplateId(template.id)}
                             >
-                              <FileText
-                                className={cn(
-                                  'h-4 w-4 text-primary shrink-0',
-                                  !isValid && 'text-destructive'
-                                )}
-                              />
+                              {(() => {
+                                const Icon = getTemplateIcon(template.name);
+                                return (
+                                  <Icon
+                                    className={cn(
+                                      'h-4 w-4 text-primary shrink-0',
+                                      !isValid && 'text-destructive'
+                                    )}
+                                  />
+                                );
+                              })()}
                               <span className="flex-1 font-medium truncate text-xs sm:text-sm">{template.name}</span>
                               {!isValid && (
                                 <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />

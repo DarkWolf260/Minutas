@@ -287,6 +287,7 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
                   initialData={finalInitialData}
                   onSubmit={handleCreateReport}
                   onDataChange={handleDataChange}
+                  controlledValues={{ Estatus: 'En proceso' }}
                 />
               </CardContent>
             </Card>

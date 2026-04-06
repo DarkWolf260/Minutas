@@ -74,7 +74,7 @@ export interface AppSettings {
   reportaRoleIds?: string[];
   ordenDelDiaDraft?: {
     staff: Staff;
-    activities: { id: string; content: string }[];
+    activities: ManualNovedad[];
     notes: { id: string; content: string }[];
     guardId: string;
     updatedAt: string;

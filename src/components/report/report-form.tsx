@@ -15,7 +15,7 @@ import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { Label } from '@/components/ui/label';
 import { parseTemplate, renderFinalReport } from '@/lib/template-parser';
 import { logger } from '@/lib/logger';
-import { cn, areEqual, stableStringify } from '@/lib/utils';
+import { cn, areEqual, stableStringify, validateTimeHlv } from '@/lib/utils';
 import { useRoles } from '@/hooks/use-roles';
 import { useGuards } from '@/hooks/use-guards';
 import { useUnits } from '@/hooks/use-units';
@@ -470,6 +470,16 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
 
     useImperativeHandle(ref, () => ({
       submit: () => {
+        const values = getValues();
+        const hora = values['Hora'];
+        if (hora) {
+          const timeValidation = validateTimeHlv(hora, false);
+          if (!timeValidation.isValid) {
+            toast.error(timeValidation.error);
+            return;
+          }
+        }
+
         handleSubmit(handleFormSubmit, (errors) => {
           logger.error('Form validation errors', new Error('Validation failed'), { feature: 'ReportForm', metadata: { errors } });
           toast.error('Por favor, corrige los errores en el formulario antes de guardar.');
@@ -478,7 +488,16 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       validate: async () => {
         const isValid = await trigger();
         if (isValid) {
-          return getValues() as FormDataRecord;
+          const values = getValues();
+          const hora = values['Hora'];
+          if (hora) {
+            const timeValidation = validateTimeHlv(hora, false);
+            if (!timeValidation.isValid) {
+              toast.error(timeValidation.error);
+              return null;
+            }
+          }
+          return values as FormDataRecord;
         }
         return null;
       },
@@ -609,6 +628,15 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
                   {chunk.map((fieldId) => {
                     const fieldConfig = finalConfig.fields[fieldId];
                     if (!fieldConfig) return null;
+
+                    // Skip rendering for fields that are controlled externally
+                    if (controlledValues) {
+                      const isControlled = Object.keys(controlledValues).some(
+                        (k) => k.toLowerCase() === fieldId.toLowerCase()
+                      );
+                      if (isControlled) return null;
+                    }
+
                     const isFullWidth = fieldConfig.type === 'textarea';
 
                     return (

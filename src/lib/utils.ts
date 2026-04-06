@@ -1,5 +1,16 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { 
+  FileText, 
+  ClipboardCheck, 
+  Globe, 
+  Activity, 
+  Truck, 
+  AlertTriangle, 
+  GraduationCap, 
+  Presentation,
+  type LucideIcon
+} from 'lucide-react';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -113,4 +124,49 @@ export function getInitials(name: string): string {
   const p1 = parts[0]?.[0] || '';
   const p2 = parts[1]?.[0] || '';
   return (p1 + p2).toUpperCase() || 'U';
+}
+
+/**
+ * Validates a Time HLV string.
+ * Checks for missing digits (dashes) and enforces range format for finalized reports.
+ */
+export function validateTimeHlv(value: any, isFinalizado: boolean = false): { isValid: boolean; error: string | null } {
+  const time = String(value || '').trim();
+  const digits = time.replace(/\D/g, ''); // Extract only digits
+  
+  if (!time || digits.length === 0) {
+    return { isValid: false, error: 'La hora es obligatoria.' };
+  }
+
+  // 1. Check for incompleteness based on digit count
+  // Single time part needs exactly 4 digits, range needs exactly 8.
+  if (digits.length > 0 && digits.length < 4) {
+    return { isValid: false, error: 'La hora está incompleta. Por favor, rellena todos los dígitos.' };
+  }
+  
+  if (digits.length > 4 && digits.length < 8) {
+    return { isValid: false, error: 'El rango de hora está incompleto. Por favor, rellena todos los dígitos.' };
+  }
+
+  // 2. Check for range if finalized (must have 8 digits)
+  if (isFinalizado && digits.length < 8) {
+    return { isValid: false, error: 'Para finalizar un reporte, la hora debe ser un rango (ej: 11:11 HLV - 11:11 HLV).' };
+  }
+
+  return { isValid: true, error: null };
+}
+
+/**
+ * Returns the appropriate icon component for a template based on its name.
+ */
+export function getTemplateIcon(name: string = ''): LucideIcon {
+  const n = name.toLowerCase();
+  if (n.includes('guardia preventiva')) return ClipboardCheck;
+  if (n.includes('recorrido preventivo')) return Globe;
+  if (n.includes('atención prehospitalaria y traslado')) return Truck;
+  if (n.includes('atención prehospitalaria')) return Activity;
+  if (n.includes('accidente de tránsito')) return AlertTriangle;
+  if (n.includes('capacitación')) return GraduationCap;
+  if (n.includes('sesión educativa')) return Presentation;
+  return FileText;
 }

@@ -12,7 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useSettings } from '@/hooks/use-settings';
 import { ReportGenerator, type ReportGeneratorRef } from '@/components/report/report-generator';
 import type { Report, Template } from '@/types';
-import { cn } from '@/lib/utils';
+import { cn, getTemplateIcon } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -154,7 +154,7 @@ function NovedadesPageContent() {
         {/* Sidebar / List */}
         <aside
           className={cn(
-            'h-full w-full sm:w-80 lg:w-96 flex-col border-r bg-card flex gap-0',
+            'h-full w-full sm:w-80 lg:w-96 flex-col border-r bg-card flex gap-0 animate-in fade-in slide-in-from-left-4 duration-300 sm:animate-none',
             selectedReportId || creatingReport ? 'hidden sm:flex' : 'flex'
           )}
         >
@@ -257,7 +257,7 @@ function NovedadesPageContent() {
 
         <main
           className={cn(
-            'flex-1 flex flex-col min-h-0 overflow-hidden',
+            'flex-1 flex flex-col min-h-0 overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300',
             !selectedReportId && !creatingReport ? 'hidden sm:flex' : 'flex'
           )}
         >
@@ -480,18 +480,21 @@ const NovedadesDialogs = memo(function NovedadesDialogs({
                 {templates.filter((t) => t.isActive).length > 0 ? (
                   templates
                     .filter((t) => t.isActive)
-                    .map((template) => (
-                      <button
-                        key={template.id}
-                        onClick={() => handleSelectTemplate(template.id)}
-                        className="w-full text-left p-4 rounded-xl border bg-card hover:bg-muted transition-colors flex items-center gap-4 active:scale-[0.98] transition-all"
-                      >
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <FileText className="h-5 w-5 text-primary" />
-                        </div>
-                        <span className="font-medium text-base">{template.name}</span>
-                      </button>
-                    ))
+                    .map((template) => {
+                      const Icon = getTemplateIcon(template.name);
+                      return (
+                        <button
+                          key={template.id}
+                          onClick={() => handleSelectTemplate(template.id)}
+                          className="w-full text-left p-4 rounded-xl border bg-card hover:bg-muted transition-colors flex items-center gap-4 active:scale-[0.98] transition-all"
+                        >
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Icon className="h-5 w-5 text-primary" />
+                          </div>
+                          <span className="font-medium text-base">{template.name}</span>
+                        </button>
+                      );
+                    })
                 ) : (
                   <div className="text-center text-muted-foreground py-10">
                     <p>No has subido o activado ninguna plantilla.</p>
@@ -525,16 +528,19 @@ const NovedadesDialogs = memo(function NovedadesDialogs({
                 {templates.filter((t) => t.isActive).length > 0 ? (
                   templates
                     .filter((t) => t.isActive)
-                    .map((template) => (
-                      <button
-                        key={template.id}
-                        onClick={() => handleSelectTemplate(template.id)}
-                        className="w-full text-left p-3 rounded-md hover:bg-muted transition-colors flex items-center gap-3"
-                      >
-                        <FileText className="h-5 w-5 text-primary" />
-                        <span className="flex-1">{template.name}</span>
-                      </button>
-                    ))
+                    .map((template) => {
+                      const Icon = getTemplateIcon(template.name);
+                      return (
+                        <button
+                          key={template.id}
+                          onClick={() => handleSelectTemplate(template.id)}
+                          className="w-full text-left p-3 rounded-md hover:bg-muted transition-colors flex items-center gap-3"
+                        >
+                          <Icon className="h-5 w-5 text-primary" />
+                          <span className="flex-1">{template.name}</span>
+                        </button>
+                      );
+                    })
                 ) : (
                   <div className="text-center text-muted-foreground py-10">
                     <p>No has subido o activado ninguna plantilla.</p>
@@ -677,21 +683,24 @@ function ReportContentHandler({
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-background overflow-hidden h-full">
       {creatingReport ? (
-        <ReportGenerator
-          ref={generatorRef}
-          template={creatingReport}
-          config={configs[creatingReport.id]}
-          initialData={initialDraftData}
-          onCancel={handleCancelCreation}
-          onSave={handleSaveNewReport}
-        />
+        <div key="generator" className="flex-1 flex flex-col min-h-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <ReportGenerator
+            ref={generatorRef}
+            template={creatingReport}
+            config={configs[creatingReport.id]}
+            initialData={initialDraftData}
+            onCancel={handleCancelCreation}
+            onSave={handleSaveNewReport}
+          />
+        </div>
       ) : selectedReport ? (
-        <ReportViewer
-          key={selectedReportId}
-          report={selectedReport}
-          onSave={updateReport}
-          onDelete={(id: string) => setReportToDelete(id)}
-        />
+        <div key={selectedReportId} className="flex-1 flex flex-col min-h-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <ReportViewer
+            report={selectedReport}
+            onSave={updateReport}
+            onDelete={(id: string) => setReportToDelete(id)}
+          />
+        </div>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center text-muted-foreground p-6 text-center animate-in fade-in duration-500 w-full h-full">
           <div className="max-w-md space-y-4">
