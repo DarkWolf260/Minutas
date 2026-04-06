@@ -15,8 +15,8 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Search, FileEdit, Trash2, Activity, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
-import type { StaffMember, PersonnelStatus, Department } from '@/types';
-import { cn } from '@/lib/utils';
+import { StaffMember, PersonnelStatus, Department } from '@/types';
+import { cn, normalizeString } from '@/lib/utils';
 
 interface PersonnelTableProps {
   personnel: StaffMember[];
@@ -77,13 +77,13 @@ export function PersonnelTable({
 
   // Filter and sort personnel
   const filteredPersonnel = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
+    const query = normalizeString(searchQuery);
     let result = query
       ? personnel.filter(
         (p) =>
-          p.name.toLowerCase().includes(query) ||
-          (p.cedula && p.cedula.toLowerCase().includes(query)) ||
-          (p.rank && p.rank.toLowerCase().includes(query))
+          normalizeString(p.name).includes(query) ||
+          normalizeString(p.cedula || '').includes(query) ||
+          normalizeString(p.rank || '').includes(query)
       )
       : [...personnel];
 

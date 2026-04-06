@@ -12,7 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useSettings } from '@/hooks/use-settings';
 import { ReportGenerator, type ReportGeneratorRef } from '@/components/report/report-generator';
 import type { Report, Template } from '@/types';
-import { cn, getTemplateIcon } from '@/lib/utils';
+import { cn, getTemplateIcon, normalizeString } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -76,12 +76,12 @@ function NovedadesPageContent() {
   const filteredReports = useMemo(() => {
     let result = sortedReports;
 
-    // Apply search
-    if (searchQuery) {
+    const query = normalizeString(searchQuery);
+    if (query) {
       result = result.filter(
         (report: Report) =>
-          report.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          report.content.toLowerCase().includes(searchQuery.toLowerCase())
+          normalizeString(report.title).includes(query) ||
+          normalizeString(report.content).includes(query)
       );
     }
 

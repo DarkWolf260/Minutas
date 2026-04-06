@@ -182,14 +182,15 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
     };
 
     const handleExport = () => {
-        const headers = ['Jerarquía', 'Nombre y Apellido', 'Cédula', 'Cargo', 'Departamento', 'Estatus'];
+        const headers = ['Jerarquía', 'Nombre y Apellido', 'Cédula', 'Cargo', 'Departamento', 'Estatus', 'Título Académico'];
         const rows = personnel.map((p) => [
             p.rank ?? '',
             p.name,
             p.cedula ?? '',
-            p.cargo ?? '',
+            p.cargo || p.roleId || '',
             p.department ?? '',
             p.status ?? 'activo',
+            p.titulo ?? '',
         ]);
         const csv = [headers, ...rows]
             .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))

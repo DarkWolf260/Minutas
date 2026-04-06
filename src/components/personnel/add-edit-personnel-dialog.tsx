@@ -25,6 +25,7 @@ import { MultiInput } from '@/components/ui/multi-input';
 import type { StaffMember, PersonnelStatus, StaffRole, Department } from '@/types';
 import { RANK_OPTIONS, STATUS_OPTIONS } from '@/constants/personnel';
 import { toast } from 'sonner';
+import { normalizeString } from '@/lib/utils';
 
 interface AddEditPersonnelDialogProps {
   open: boolean;
@@ -64,15 +65,23 @@ export function AddEditPersonnelDialog({
     if (member) {
       setName(member.name || '');
       setCedula(member.cedula || '');
-      setRank(member.rank || 'OPC');
-      setRoleId(member.roleId || 'none');
+      // Resolve rank: the stored value might be lowercase or missing accents from CSV.
+      const storedRank = member.rank || '';
+      const matchedRank = RANK_OPTIONS.find(r => normalizeString(r.value) === normalizeString(storedRank));
+      setRank(matchedRank?.value || 'OPC');
+      
+      // Resolve role: the stored value might be a role.name (from CSV) with different case or accents.
+      // We sync roleId and cargo for better compatibility.
+      const storedRole = member.roleId || member.cargo || '';
+      const matchedRole = roles.find(r => normalizeString(r.name) === normalizeString(storedRole));
+      setRoleId(matchedRole?.name || 'none');
 
       // Resolve department: the stored value might be a dept.id OR a dept.name
       // (CSV imports store the raw name). Look up the id from the departments list.
       const storedDept = member.department || '';
       const matchById = departments.find((d) => d.id === storedDept);
       const matchByName = departments.find(
-        (d) => d.name.toLowerCase() === storedDept.toLowerCase()
+        (d) => normalizeString(d.name) === normalizeString(storedDept)
       );
       setDepartment(matchById?.id || matchByName?.id || 'none');
 
@@ -102,6 +111,7 @@ export function AddEditPersonnelDialog({
       cedula: cedula || undefined,
       rank,
       roleId: roleId === 'none' ? undefined : roleId,
+      cargo: roleId === 'none' ? undefined : roleId,
       department: department === 'none' ? undefined : department,
       status,
       titulo: titulo.trim() || undefined,

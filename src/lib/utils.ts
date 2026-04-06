@@ -170,3 +170,15 @@ export function getTemplateIcon(name: string = ''): LucideIcon {
   if (n.includes('sesión educativa')) return Presentation;
   return FileText;
 }
+
+/**
+ * Normalizes a string by converting it to lowercase and removing diacritics (accents).
+ * Helpful for accent-insensitive search.
+ */
+export function normalizeString(str: string): string {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .normalize('NFD') // Decompose combined characters into base + accent
+    .replace(/[\u0300-\u036f]/g, ''); // Remove the accent characters
+}
