@@ -181,7 +181,16 @@ function extractSectionToken(
     const raw = template.substring(startPos, pos);
 
     // Check if this is a conditional: [?{Field} op value] or [?{Field}] or [?Field op value] or [?Field]
-    const conditionalMatch = content.match(
+    // Also support optional :show/:hide suffix: [?Field=Value:show]
+    let conditionMode: 'show' | 'hide' | undefined = undefined;
+    let condContent = content;
+    const showHideMatch = content.match(/:(show|hide)\s*$/i);
+    if (showHideMatch) {
+        conditionMode = showHideMatch[1]!.toLowerCase() as 'show' | 'hide';
+        condContent = content.slice(0, content.lastIndexOf(':' + showHideMatch[1]!)).trim();
+    }
+
+    const conditionalMatch = condContent.match(
         /^\?\s*(?:\{\s*)?([^\}=!<>]+?)(?:\s*\})?\s*(?:(!=|>=|<=|>|<|=)\s*(.+))?$/
     );
 
@@ -196,6 +205,7 @@ function extractSectionToken(
                 fieldId: fieldId?.trim() || '',
                 operator: (operator as ConditionalExpression['operator']) || '=',
                 value: cleanValue,
+                conditionMode,
             },
             raw,
             position: startPos,

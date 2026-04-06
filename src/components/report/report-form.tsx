@@ -42,10 +42,14 @@ export interface ReportFormProps {
   onSubmit: (formData: FormDataRecord, content: string, title: string) => void;
   disabled?: boolean;
   onDataChange?: (formData: FormDataRecord) => void;
+  /** Values controlled externally (e.g. Estatus from the report status dropdown). 
+   *  These are merged into predefinedValues and kept in sync via setValue.
+   *  The corresponding form fields are hidden from the UI. */
+  controlledValues?: Record<string, string>;
 }
 
 export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
-  ({ reportId, template, config, initialData, onSubmit, disabled = false, onDataChange }, ref) => {
+  ({ reportId, template, config, initialData, onSubmit, disabled = false, onDataChange, controlledValues }, ref) => {
     const { definitions } = useFieldDefinitions();
     const { roles, isLoaded: rolesLoaded } = useRoles();
     const { guards, isLoaded: guardsLoaded } = useGuards();
@@ -194,8 +198,12 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
           values[key] = config.value || '';
         }
       });
+      // Inject external controlled values (e.g. Estatus = report.status from the dropdown)
+      if (controlledValues) {
+        Object.assign(values, controlledValues);
+      }
       return values;
-    }, [definitions]);
+    }, [definitions, controlledValues]);
 
     const getInitialValues = useCallback(
       (data?: FormDataRecord) => {
@@ -411,6 +419,14 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       return () => subscription.unsubscribe();
     }, [watch, onDataChange, getValues]);
 
+    // Sync controlled values (e.g. status dropdown) into the form whenever they change
+    useEffect(() => {
+      if (!controlledValues) return;
+      Object.entries(controlledValues).forEach(([key, value]) => {
+        setValue(key, value, { shouldDirty: false, shouldValidate: false });
+      });
+    }, [controlledValues, setValue]);
+
     // Always read current values — getValues() is always up-to-date
     const allFormValues = getValues() as Record<string, any>;
 
@@ -505,6 +521,11 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
           chunks.push('section_separator');
         } else {
           // It's a field
+          // Skip fields controlled externally (driven by controlledValues — hidden from form UI)
+          const isControlled = controlledValues && Object.keys(controlledValues).some(
+            (k) => k.toLowerCase() === id.toLowerCase()
+          );
+          if (isControlled) return;
           // Check if it's already in a section
           const isAssignedToSection = finalConfig.sections.some((s) => s.fieldIds.includes(id));
           if (!isAssignedToSection) {

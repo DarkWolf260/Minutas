@@ -44,6 +44,7 @@ export interface SectionRendererProps {
 export function SectionRenderer(props: SectionRendererProps) {
     const { section, config, pathPrefix = '', conditionValue } = props;
     const condition = section.condition;
+    const conditionMode = condition?.conditionMode || 'hide';
 
     const watchPath = condition
         ? pathPrefix
@@ -61,6 +62,7 @@ export function SectionRenderer(props: SectionRendererProps) {
 
     let actualValueToEvaluate = conditionValue !== undefined ? conditionValue : watchedFieldValue;
 
+    let conditionMet = true;
     if (condition) {
         // If the field has snippet options (dropdown), check if we need to compare
         // against the value or the label. 'actualValueToEvaluate' might be the label.
@@ -72,37 +74,37 @@ export function SectionRenderer(props: SectionRendererProps) {
         if (fieldConfig?.snippetOptions?.length) {
             const options = fieldConfig.snippetOptions;
             const targetValue = condition.value;
-            // Does the targetValue match any option's value or label?
             const matchedOpt = options.find(
                 (opt: any) => opt.value === targetValue || opt.label === targetValue
             );
 
             if (matchedOpt) {
-                // Determine if actualValueToEvaluate is the label or value, and normalize
-                // comparison against the targetValue's represented concept
                 if (actualValueToEvaluate === matchedOpt.label || actualValueToEvaluate === String(matchedOpt.value)) {
                     actualValueToEvaluate = targetValue;
                 }
             }
         }
 
-        if (
-            !evaluateCondition(
-                actualValueToEvaluate,
-                condition.operator || '=',
-                condition.value
-            )
-        ) {
+        conditionMet = evaluateCondition(
+            actualValueToEvaluate,
+            condition.operator || '=',
+            condition.value
+        );
+
+        // hide mode (default): fields disappear from form when condition not met
+        if (!conditionMet && conditionMode === 'hide') {
             return null;
         }
     }
 
-    if (section.isRepeatable) {
-        return <RepeatableSectionRenderer {...props} />;
-    }
+    const inner = section.isRepeatable
+        ? <RepeatableSectionRenderer {...props} />
+        : <SingleSectionRenderer {...props} />;
 
-    return <SingleSectionRenderer {...props} />;
+    // show mode: always render — no wrapper, just like a normal section
+    return inner;
 }
+
 
 function RepeatableSectionRenderer(props: SectionRendererProps) {
     const {

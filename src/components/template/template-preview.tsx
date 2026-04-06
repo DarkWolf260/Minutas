@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Eye } from 'lucide-react';
 import { parseTemplate, renderFinalReport } from '@/lib/template-parser';
 import type { TemplateConfig, SectionConfig, FieldType, SnippetOption } from '@/types';
 
@@ -23,10 +23,19 @@ function generateMockData(
     Fecha: new Date().toLocaleDateString('es-VE'),
   };
 
+  // For :show conditional sections, satisfy their condition in mock data
+  // so the content appears in the rendered preview
+  sections.forEach((section) => {
+    if (section.condition && section.condition.conditionMode === 'show') {
+      const { fieldId, value } = section.condition;
+      data[fieldId] = value;
+    }
+  });
+
   // Generate mock data for each field
   fieldNames.forEach((fieldName) => {
-    if (predefinedValues[fieldName]) {
-      return; // Skip predefined values
+    if (predefinedValues[fieldName] || data[fieldName] !== undefined) {
+      return; // Skip predefined and already-set conditional fields
     }
 
     const fieldType = fieldTypes.get(fieldName);
@@ -55,7 +64,7 @@ function generateMockData(
     }
   });
 
-  // Generate mock data for sections
+  // Generate mock data for repeatable sections
   sections.forEach((section) => {
     if (section.isRepeatable) {
       const itemData: Record<string, string> = {};
@@ -67,8 +76,6 @@ function generateMockData(
             itemData[fieldId] = `Dato ${fieldId}`;
         }
       });
-
-      // Generate 2 example items for repeatable sections
       data[section.id] = [{ ...itemData }, { ...itemData }];
     }
   });
@@ -82,14 +89,20 @@ export function TemplatePreview({ templateContent }: TemplatePreviewProps) {
       return {
         errors: [],
         rendered: 'Plantilla vacía. Escriba contenido para ver la vista previa.',
+        showSections: [] as { fieldId: string; value: string }[],
       };
     }
 
     const parsed = parseTemplate(templateContent);
 
     if (parsed.errors.length > 0) {
-      return { errors: parsed.errors, rendered: null };
+      return { errors: parsed.errors, rendered: null, showSections: [] };
     }
+
+    // Collect :show conditional sections for the visual indicator
+    const showSections = parsed.sections
+      .filter(s => s.condition?.conditionMode === 'show')
+      .map(s => ({ fieldId: s.condition!.fieldId, value: s.condition!.value }));
 
     // Build config from parsed data
     const config: TemplateConfig = {
@@ -98,13 +111,11 @@ export function TemplatePreview({ templateContent }: TemplatePreviewProps) {
       fields: {},
     };
 
-    // Build fields config
     parsed.fieldNames.forEach((fieldName) => {
       config.fields[fieldName] = {
         type: parsed.fieldTypes.get(fieldName) || 'text',
         label: fieldName,
       };
-
       const options = parsed.templateOptions.get(fieldName);
       if (options) {
         config.fields[fieldName].snippetOptions = options;
@@ -120,13 +131,14 @@ export function TemplatePreview({ templateContent }: TemplatePreviewProps) {
 
     try {
       const rendered = renderFinalReport(templateContent, data, config, predefinedValues);
-      return { errors: [], rendered };
+      return { errors: [], rendered, showSections };
     } catch (error) {
       return {
         errors: [
           `Error al renderizar: ${error instanceof Error ? error.message : 'Error desconocido'}`,
         ],
         rendered: null,
+        showSections: [],
       };
     }
   }, [templateContent]);
@@ -136,7 +148,7 @@ export function TemplatePreview({ templateContent }: TemplatePreviewProps) {
       <CardHeader>
         <CardTitle>Vista Previa</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-3">
         {result.errors.length > 0 ? (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -152,9 +164,30 @@ export function TemplatePreview({ templateContent }: TemplatePreviewProps) {
             </AlertDescription>
           </Alert>
         ) : (
-          <div className="bg-muted rounded-lg p-4">
-            <pre className="whitespace-pre-wrap font-mono text-sm">{result.rendered}</pre>
-          </div>
+          <>
+            {/* Indicador para secciones :show — siempre visibles en el formulario */}
+            {result.showSections && result.showSections.length > 0 && (
+              <div className="relative rounded-lg border border-dashed border-muted-foreground/40 px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <div className="absolute -top-2.5 left-3 flex items-center gap-1.5 bg-background px-2">
+                  <Eye className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-[10px] font-medium text-muted-foreground">
+                    Siempre visibles en el formulario
+                  </span>
+                </div>
+                {result.showSections.map((s, i) => (
+                  <span key={i} className="text-[11px] text-muted-foreground font-mono">
+                    <span className="text-foreground font-semibold">{s.fieldId}</span>
+                    {' = '}
+                    <span className="text-foreground font-semibold">{s.value}</span>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div className="bg-muted rounded-lg p-4">
+              <pre className="whitespace-pre-wrap font-mono text-sm">{result.rendered}</pre>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

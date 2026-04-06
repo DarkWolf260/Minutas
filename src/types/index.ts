@@ -152,6 +152,8 @@ export interface SectionConfig {
     fieldId: string;
     operator?: '=' | '!=' | '>' | '<' | '>=' | '<=';
     value: string;
+    /** 'hide' (default) = oculto hasta cumplirse | 'show' = siempre visible en formulario */
+    conditionMode?: 'show' | 'hide';
   };
   statisticsCategory?: string; // New: Statistics category associated with this section
   originalContent?: string; // Used for re-parsing conditional blocks

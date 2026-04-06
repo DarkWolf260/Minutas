@@ -25,6 +25,13 @@ export interface ConditionalExpression {
     fieldId: string;
     operator: '=' | '!=' | '>' | '<' | '>=' | '<=';
     value: string;
+    /**
+     * Controls field visibility in the form:
+     * - 'hide' (default): fields hidden until condition is met
+     * - 'show': fields always visible; only included in report when condition is met
+     * Syntax: [?Campo=Valor:show]
+     */
+    conditionMode?: 'show' | 'hide';
 }
 
 /**

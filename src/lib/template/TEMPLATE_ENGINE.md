@@ -168,6 +168,21 @@ Contenido visible si Campo = valor
 [/]
 ```
 
+### Modo del condicional (conditionMode)
+
+Por defecto, los campos dentro de un condicional **se ocultan en el formulario** hasta que la condición se cumpla. Puedes cambiar este comportamiento con el sufijo `:show`:
+
+```
+[?{Campo} = valor:show]
+Contenido siempre visible en el formulario, pero solo en el reporte si se cumple
+[/]
+```
+
+| Sintaxis | Formulario | Reporte |
+|---|---|---|
+| `[?{Estatus}=Finalizado]` | Oculto hasta que se cumpla | Solo si condición es verdadera |
+| `[?{Estatus}=Finalizado:show]` | **Siempre visible** (con indicador visual) | Solo si condición es verdadera |
+
 ### Operadores disponibles
 
 | Operador | Descripción |

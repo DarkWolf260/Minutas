@@ -470,13 +470,35 @@ function renderSection(
                         let nestedBody = '';
                         if (isVirtual) {
                             nestedRegex = new RegExp(`${escapeRegExp(nestedSection.originalContent || '')}\\*`, 'g');
+                        } else if (nestedSection.isSelfContained) {
+                            // Self-contained sections: ["Label" body] — no closing [/]
+                            // Must match [Label + body content] as a single bracket block
+                            let labelPart = '';
+                            if (nestedSection.singularTitle || nestedSection.pluralTitle || nestedSection.repeatableItemLabel) {
+                                let attrPart = '';
+                                if (nestedSection.singularTitle) attrPart += `singular\\s*=\\s*"${escapeRegExp(nestedSection.singularTitle)}"\\s*`;
+                                if (nestedSection.pluralTitle) attrPart += `plural\\s*=\\s*"${escapeRegExp(nestedSection.pluralTitle)}"\\s*`;
+                                if (nestedSection.repeatableItemLabel) attrPart += `sub\\s*=\\s*"${escapeRegExp(nestedSection.repeatableItemLabel)}"\\s*`;
+                                labelPart = attrPart;
+                            } else if (nestedSection.label) {
+                                const escaped = escapeRegExp(nestedSection.label);
+                                labelPart = `(?:"${escaped}"|${escaped})`;
+                            }
+                            const nestedBodySC = nestedSection.originalContent || '';
+                            nestedRegex = new RegExp(
+                                `\\[\\s*${labelPart}${escapeRegExp(nestedBodySC)}\\s*\\]${nestedSection.isRepeatable ? '\\s*\\*' : ''}`,
+                                'gs'
+                            );
                         } else {
                             if (nestedSection.condition) {
                                 const cond = nestedSection.condition;
                                 const opPart = cond.operator && cond.value
                                     ? `\\s*${escapeRegExp(cond.operator)}\\s*(?:"${escapeRegExp(cond.value)}"|${escapeRegExp(cond.value)})`
                                     : '';
-                                header = `\\?\\s*\\{\\s*${escapeRegExp(cond.fieldId)}\\s*\\}${opPart}`;
+                                const escapedFieldId = escapeRegExp(cond.fieldId);
+                                const fieldPart = `(?:\\{\\s*${escapedFieldId}\\s*\\}|${escapedFieldId})`;
+                                const modeSuffix = `(?:\\s*:(?:show|hide))?`;
+                                header = `\\?\\s*${fieldPart}${opPart}${modeSuffix}`;
                             } else if (
                                 nestedSection.singularTitle ||
                                 nestedSection.pluralTitle ||
@@ -707,7 +729,13 @@ export function renderContentWithSections(
                 const opPart = cond.operator && cond.value
                     ? `\\s*${escapeRegExp(cond.operator)}\\s*(?:"${escapeRegExp(cond.value)}"|${escapeRegExp(cond.value)})`
                     : '';
-                headerPart = `\\?\\s*\\{\\s*${escapeRegExp(cond.fieldId)}\\s*\\}${opPart}`;
+                // Field name may appear with or without braces: [?{Campo}=val] or [?Campo=val]
+                const escapedFieldId = escapeRegExp(cond.fieldId);
+                const fieldPart = `(?:\\{\\s*${escapedFieldId}\\s*\\}|${escapedFieldId})`;
+                // Optional :show/:hide suffix at end of condition header
+                const modeSuffix = `(?:\\s*:(?:show|hide))?`;
+                headerPart = `\\?\\s*${fieldPart}${opPart}${modeSuffix}`;
+
             } else if (section.singularTitle || section.pluralTitle || section.repeatableItemLabel) {
                 headerPart += section.singularTitle ? `singular="${escapeRegExp(section.singularTitle)}"\\s*` : '';
                 headerPart += section.pluralTitle ? `plural="${escapeRegExp(section.pluralTitle)}"\\s*` : '';

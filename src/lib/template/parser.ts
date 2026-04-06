@@ -253,7 +253,17 @@ export function parse(tokens: Token[]): TemplateParserResult {
                             continue;
                         }
 
-                        if (currentToken.type === 'section_start') depth++;
+                        if (currentToken.type === 'section_start') {
+                            // Self-contained sections (those with { in their label, or separators [""])
+                            // don't emit a matching [/], so they must NOT increment depth.
+                            // Failing to account for this causes depth to grow and outer tokens
+                            // (fields after the [/]) to be swallowed into the conditional's inner list.
+                            const rawLabel = currentToken.label || '';
+                            const isSep = rawLabel.trim() === '""';
+                            const hasBrace = rawLabel.includes('{');
+                            const isSelfContainedInner = (hasBrace && !currentToken.condition) || isSep;
+                            if (!isSelfContainedInner) depth++;
+                        }
                         if (currentToken.type === 'section_end') depth--;
 
                         if (depth > 0) {
@@ -345,7 +355,12 @@ export function parse(tokens: Token[]): TemplateParserResult {
                     isRepeatable,
                     fieldIds: Array.from(innerResult.subFieldNames),
                     layout: innerResult.subLayout,
-                    condition: token.condition,
+                    condition: token.condition ? {
+                        fieldId: token.condition.fieldId,
+                        operator: token.condition.operator,
+                        value: token.condition.value,
+                        conditionMode: token.condition.conditionMode,
+                    } : undefined,
                     originalContent: inner.map(t => t.raw).join(''),
                     isSeparator: isSeparator,
                     isMapping: isMappingConditional || false,
@@ -404,8 +419,19 @@ export function parse(tokens: Token[]): TemplateParserResult {
         });
     });
 
+    // Collect IDs of sections that are NESTED INSIDE conditional sections.
+    // We must NOT modify their layouts with fieldToConditionMap — doing so
+    // would cause the conditional section's own ID to appear in absorbedItems,
+    // making the conditional disappear from the top-level layout.
+    const sectionsInsideConditionals = new Set<string>();
+    conditionalSections.forEach(condSec => {
+        (condSec.layout || []).forEach(id => sectionsInsideConditionals.add(id));
+    });
+
     sections.forEach(sec => {
         if (sec.condition) return;
+        // Skip sections nested inside conditional blocks
+        if (sectionsInsideConditionals.has(sec.id)) return;
 
         // Determine the base layout to modify (use fieldIds if layout is empty)
         const baseLayout = (sec.layout && sec.layout.length > 0) ? sec.layout : [...sec.fieldIds];

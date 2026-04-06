@@ -83,7 +83,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
   const saveLogic = useCallback(async (formData: Record<string, any>) => {
     if (!report || !template) return;
 
-    const content = renderFinalReport(template.content, formData, config, {});
+    const content = renderFinalReport(template.content, formData, config, { Estatus: status });
     const newTitle = String(formData.titulo || formData.title || template.name);
 
     if (
@@ -151,7 +151,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     debouncedSave.cancel();
 
     if (!report || !template) return;
-    const content = renderFinalReport(template.content, formData, config, {});
+    const content = renderFinalReport(template.content, formData, config, { Estatus: newStatus });
     const newTitle = String(formData.titulo || formData.title || template.name);
     const finalReport: Report = {
       ...report,
@@ -290,6 +290,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
                 onSubmit={() => { }} 
                 disabled={isFinalizado}
                 onDataChange={handleDataChange}
+                controlledValues={{ Estatus: status }}
               />
             </CardContent>
           </Card>
