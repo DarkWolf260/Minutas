@@ -14,10 +14,18 @@ import {
   Download,
   Pencil,
   ChevronLeft,
+  CloudDownload,
+  CloudUpload,
+  LogOut,
+  User,
 } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
+import { useUploadTemplate } from '@/hooks/use-upload-template';
+import { LoginDialog } from '@/components/auth/login-dialog';
 import { useTemplates } from '@/hooks/use-templates';
 import type { Template } from '@/lib/types';
 import { TemplateEditor } from '@/components/template/template-editor';
+import { CloudTemplatesDialog } from '@/components/template/cloud-templates-dialog';
 import { cn, getTemplateIcon } from '@/lib/utils';
 import {
   AlertDialog,
@@ -40,6 +48,12 @@ import {
 } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 import { parseTemplate } from '@/lib/template-parser';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -65,7 +79,13 @@ export default function PlantillasPage() {
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [activeTab, setActiveTab] = useState('editor');
+  const [isCloudDialogOpen, setIsCloudDialogOpen] = useState(false);
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
+  const [templateToUpload, setTemplateToUpload] = useState<Template | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { isAuthenticated, user, signOut } = useAuth();
+  const { uploadTemplate, isUploading } = useUploadTemplate();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -73,14 +93,25 @@ export default function PlantillasPage() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target?.result as string;
-        const newTemplate: Template = {
-          id: generateId('template'),
-          workspaceId: currentWorkspace,
-          name: file.name.replace(/\.txt$/, ''),
-          content,
-          type: 'normal',
-        };
-        addTemplate(newTemplate);
+        const name = file.name.replace(/\.txt$/, '');
+        
+        const existing = templates.find(t => t.name.toLowerCase() === name.toLowerCase());
+        
+        if (existing) {
+          updateTemplate({
+            ...existing,
+            content,
+          });
+        } else {
+          const newTemplate: Template = {
+            id: generateId('template'),
+            workspaceId: currentWorkspace,
+            name,
+            content,
+            type: 'normal',
+          };
+          addTemplate(newTemplate);
+        }
       };
       reader.readAsText(file);
     }
@@ -112,6 +143,17 @@ export default function PlantillasPage() {
     e.stopPropagation();
     setEditingTemplate(template);
     setActiveTab('builder');
+  };
+
+  const handleUploadToCloud = async (e: React.MouseEvent, template: Template) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      setTemplateToUpload(template);
+      setIsLoginDialogOpen(true);
+      return;
+    }
+    
+    await uploadTemplate(template);
   };
 
   const handleConfirmDelete = () => {
@@ -158,9 +200,9 @@ export default function PlantillasPage() {
                   <ChevronLeft className="h-5 w-5" />
                 </Button>
               </Link>
-              <div className="flex flex-col">
-                <h1 className="text-xl font-bold">Plantillas</h1>
-                <p className="text-sm text-muted-foreground">
+              <div className="flex flex-col gap-1 sm:gap-0">
+                <h1 className="text-lg sm:text-xl font-bold tracking-tight">Plantillas</h1>
+                <p className="text-[11px] sm:text-sm text-muted-foreground leading-tight sm:leading-normal">
                   Gestiona y construye plantillas para reportes internos.
                 </p>
               </div>
@@ -173,6 +215,25 @@ export default function PlantillasPage() {
                 Constructor
               </TabsTrigger>
             </TabsList>
+            
+            {isAuthenticated && (
+              <div className="flex items-center gap-3 bg-muted/50 px-3 py-1.5 rounded-full border border-primary/10 transition-all hover:bg-muted animate-in fade-in slide-in-from-right-4">
+                <div className="flex flex-col items-end">
+                  <span className="text-[10px] font-bold text-primary uppercase leading-tight">Admin Nube</span>
+                  <span className="text-[11px] text-muted-foreground truncate max-w-[150px]">{user?.email}</span>
+                </div>
+                <div className="h-4 w-[1px] bg-border mx-1" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => signOut()}
+                  title="Cerrar sesión de nube"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -183,7 +244,7 @@ export default function PlantillasPage() {
           <div className="flex flex-1 min-h-0 overflow-hidden h-full sm:p-4 sm:pt-0 gap-6">
             <aside
               className={cn(
-                'h-full w-full sm:w-96 flex-col bg-card flex sm:rounded-lg border sm:shadow-sm shrink-0 min-h-0 relative overflow-hidden',
+                'h-full w-full sm:w-96 flex-col bg-card flex sm:rounded-lg border sm:shadow-sm shrink-0 min-h-0 relative overflow-hidden overflow-x-hidden',
                 selectedTemplateId ? 'hidden sm:flex' : 'flex'
               )}
             >
@@ -192,10 +253,21 @@ export default function PlantillasPage() {
                 <CardDescription>Sube y gestiona tus plantillas de reportes.</CardDescription>
               </CardHeader>
               <div className="p-4 pt-0 space-y-2 shrink-0">
-                <Button className="w-full" size="sm" onClick={handleUploadClick}>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Subir Plantilla (.txt)
-                </Button>
+                <div className="flex flex-col sm:grid sm:grid-cols-2 gap-2">
+                  <Button className="w-full text-xs h-9" size="sm" onClick={handleUploadClick}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Local (.txt)
+                  </Button>
+                  <Button 
+                    className="w-full text-xs h-9" 
+                    size="sm" 
+                    variant="secondary"
+                    onClick={() => setIsCloudDialogOpen(true)}
+                  >
+                    <CloudDownload className="mr-2 h-4 w-4" />
+                    Desde Nube
+                  </Button>
+                </div>
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -205,9 +277,9 @@ export default function PlantillasPage() {
                 />
               </div>
               <div className="flex-1 min-h-0 w-full overflow-hidden">
-                <ScrollArea className="h-full w-full" type="always">
+                <ScrollArea className="h-full w-full overflow-hidden" type="always">
                   <TooltipProvider>
-                    <div className="space-y-1 p-4 pt-0 pb-20 sm:pb-4 min-w-0 w-full">
+                    <div className="space-y-1 p-4 pt-0 pb-20 sm:pb-4 min-w-0 w-full overflow-x-hidden">
                       {templates.map((template, index) => {
                         const { layout, fieldNames, errors } = parseTemplate(template.content);
                         const isValid =
@@ -217,12 +289,12 @@ export default function PlantillasPage() {
                           <div
                             key={`${template.id}-${index}`}
                             className={cn(
-                              'group w-full flex items-center justify-between rounded-md p-2.5 text-left transition-colors hover:bg-muted min-w-0 overflow-hidden flex-shrink-0',
-                              selectedTemplateId === template.id && 'bg-muted shadow-sm'
+                              'group w-full grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg p-2 text-left transition-all hover:bg-accent/50 border border-transparent min-w-0 overflow-hidden shrink-0',
+                              selectedTemplateId === template.id && 'bg-accent border-accent-foreground/10 shadow-sm'
                             )}
                           >
                             <div
-                              className="flex items-center gap-2 flex-1 cursor-pointer min-w-0 overflow-hidden mr-2"
+                              className="flex items-center gap-2 cursor-pointer min-w-0"
                               onClick={() => setSelectedTemplateId(template.id)}
                             >
                               {(() => {
@@ -236,79 +308,81 @@ export default function PlantillasPage() {
                                   />
                                 );
                               })()}
-                              <span className="flex-1 font-medium truncate text-xs sm:text-sm">{template.name}</span>
+                            </div>
+                            
+                            <div 
+                              className="min-w-0 cursor-pointer overflow-hidden"
+                              onClick={() => setSelectedTemplateId(template.id)}
+                            >
+                              <p className="font-medium truncate text-xs sm:text-sm leading-tight text-foreground/90">
+                                {template.name}
+                              </p>
                               {!isValid && (
-                                <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <AlertTriangle className="h-3 w-3 text-destructive" />
+                                  <span className="text-[9px] text-destructive uppercase font-bold">Error de sintaxis</span>
+                                </div>
                               )}
                             </div>
-                            <div className="flex items-center gap-1 shrink-0">
+
+                            <div className="flex items-center gap-0.5 shrink-0 justify-end">
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                                    className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-background/80"
                                     onClick={(e) => handleEditContentClick(e, template)}
                                   >
-                                    <Pencil className="h-4 w-4" />
+                                    <Pencil className="h-3.5 w-3.5" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  <p>Editar Contenido</p>
+                                  <p>Editar</p>
                                 </TooltipContent>
                               </Tooltip>
+
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                                    onClick={(e) => handleDownloadTemplate(e, template)}
+                                    className={cn(
+                                      "h-7 w-7 transition-colors",
+                                      isAuthenticated ? "text-primary hover:bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-background/80"
+                                    )}
+                                    onClick={(e) => handleUploadToCloud(e, template)}
+                                    disabled={isUploading}
                                   >
-                                    <Download className="h-4 w-4" />
+                                    <CloudUpload className="h-3.5 w-3.5" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  <p>Exportar</p>
+                                  <p>{isAuthenticated ? 'Subir a la Comunidad' : 'Inicia sesión para subir'}</p>
                                 </TooltipContent>
                               </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="flex items-center mx-1">
-                                    <Switch
-                                      checked={template.isActive && isValid}
-                                      onCheckedChange={() => toggleTemplateActive(template.id)}
-                                      disabled={!isValid}
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent className="max-w-xs">
-                                  {isValid ? (
-                                    <p>Activar/Desactivar</p>
-                                  ) : (
-                                    <div className="text-xs">
-                                      <p className="font-semibold mb-1 text-destructive">Inválida:</p>
-                                      <p>{errors[0] || "Contenido no reconocido."}</p>
-                                    </div>
-                                  )}
-                                </TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
+                              
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-7 w-7 text-destructive"
-                                    onClick={(e) => handleDeleteClick(e, template.id)}
+                                    className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Eliminar</p>
-                                </TooltipContent>
-                              </Tooltip>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem 
+                                    className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                                    onClick={(e: React.MouseEvent) => handleDeleteClick(e, template.id)}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <span>Eliminar</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </div>
                         );
@@ -327,7 +401,7 @@ export default function PlantillasPage() {
 
             <main
               className={cn(
-                'flex-1 h-full min-h-0 relative',
+                'flex-1 h-full min-h-0 min-w-0 relative',
                 !selectedTemplateId ? 'hidden sm:block' : 'block'
               )}
             >
@@ -485,6 +559,20 @@ export default function PlantillasPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <CloudTemplatesDialog 
+        open={isCloudDialogOpen} 
+        onOpenChange={setIsCloudDialogOpen} 
+      />
+      <LoginDialog
+        open={isLoginDialogOpen}
+        onOpenChange={setIsLoginDialogOpen}
+        onSuccess={() => {
+          if (templateToUpload) {
+            uploadTemplate(templateToUpload);
+            setTemplateToUpload(null);
+          }
+        }}
+      />
     </div>
   );
 }

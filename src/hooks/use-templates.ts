@@ -40,10 +40,16 @@ import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { TemplateSchema } from '@/lib/validations/schemas';
 import { logger } from '@/lib/logger';
 import { stableStringify } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { generateId } from '@/lib/utils/id';
+
 const getUserFriendlyErrorMessage = (error: any) => {
   if (error?.message) return error.message;
   return 'Error desconocido';
 };
+
+// Global lock to prevent multiple instances from bootstrapping the same workspace
+const bootstrapLocks: Record<string, boolean> = {};
 
 export function useTemplates() {
   const db = useDatabase();
@@ -185,6 +191,56 @@ export function useTemplates() {
     }
   }, [isTemplatesLoaded, definitionsLoaded, templates, db, currentWorkspace, parsedTemplates, globalDefinitions]);
 
+  // Bootstrap initial templates from Cloud if local list is empty
+  const [isBootstrapping, setIsBootstrapping] = useState(false);
+
+  useEffect(() => {
+    if (isTemplatesLoaded && templates.length === 0 && db && currentWorkspace) {
+      // Check global lock for this specific workspace
+      if (bootstrapLocks[currentWorkspace]) return;
+      bootstrapLocks[currentWorkspace] = true;
+      
+      const doBootstrap = async () => {
+        setIsBootstrapping(true);
+        const toastId = toast.loading('Sincronizando plantillas de la comunidad...');
+        
+        try {
+          const { data, error } = await supabase
+            .from('community_templates')
+            .select('*');
+
+          if (error) throw error;
+          if (!data || data.length === 0) {
+            toast.dismiss(toastId);
+            return;
+          }
+
+          logger.info('Bootstrapping templates from cloud', { count: data.length });
+          
+          // Bulk insert into templates
+          const newTemplates = data.map(ct => ({
+            id: generateId('template'),
+            workspaceId: currentWorkspace,
+            name: ct.name,
+            content: ct.content,
+            type: ct.type || 'normal',
+            isActive: true,
+          }));
+
+          await db.templates.bulkInsert(newTemplates);
+          toast.success(`${data.length} plantillas sincronizadas automáticamente.`, { id: toastId });
+        } catch (err) {
+          logger.error('Failed to bootstrap templates', err);
+          toast.error('No se pudieron descargar las plantillas iniciales.', { id: toastId });
+        } finally {
+          setIsBootstrapping(false);
+        }
+      };
+
+      doBootstrap();
+    }
+  }, [isTemplatesLoaded, templates.length, db, currentWorkspace]);
+
   const addTemplate = async (newTemplate: Template) => {
     if (!db || !currentWorkspace) return;
     try {
@@ -207,7 +263,7 @@ export function useTemplates() {
       await db.templates.insert({ ...validatedTemplate, isActive: errors.length === 0 });
 
       const newConfig: TemplateConfig = { fields: {}, sections, layout };
-      fieldNames.forEach(fieldName => {
+      fieldNames.forEach((fieldName: string) => {
         newConfig.fields[fieldName] = {
           ...(globalDefinitions[fieldName] || { type: 'text', label: fieldName }),
         };
@@ -303,6 +359,10 @@ export function useTemplates() {
 
   const clearAllTemplates = useCallback(async () => {
     if (!db || !currentWorkspace) return;
+    
+    // Prevent auto-bootstrap from triggering immediately after manual clear
+    bootstrapLocks[currentWorkspace] = true;
+    
     const allTemplates = await db.templates.find({
       selector: { workspaceId: currentWorkspace }
     }).exec();

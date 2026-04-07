@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Download, MonitorSmartphone } from 'lucide-react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Button } from '@/components/ui/button';
 
@@ -20,9 +20,23 @@ export function PWAStatus() {
     });
 
     const [isMounted, setIsMounted] = useState(false);
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+    const [showInstallBtn, setShowInstallBtn] = useState(true);
 
     useEffect(() => {
         setIsMounted(true);
+        
+        const handler = (e: any) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            setDeferredPrompt(e);
+            console.log('PWA Install Draft Captured');
+        };
+
+        window.addEventListener('beforeinstallprompt', handler);
+
+        return () => window.removeEventListener('beforeinstallprompt', handler);
     }, []);
 
     if (!isMounted) return null;
@@ -32,11 +46,49 @@ export function PWAStatus() {
         setNeedRefresh(false);
     };
 
+    const handleInstall = async () => {
+        if (!deferredPrompt) return;
+        
+        // Show the install prompt
+        deferredPrompt.prompt();
+        
+        // Wait for the user to respond to the prompt
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`PWA Install Choice: ${outcome}`);
+        
+        // We've used the prompt, and can't use it again
+        setDeferredPrompt(null);
+    };
+
     return (
         <div
             className="fixed bottom-4 right-4 z-[100] flex flex-col items-end gap-2 pointer-events-none"
             suppressHydrationWarning
         >
+            {/* Install Prompt - Only show if available and no update is pending */}
+            {deferredPrompt && !needRefresh && showInstallBtn && (
+                <div className="pointer-events-auto flex items-center gap-1 group">
+                    <Button
+                        size="sm"
+                        onClick={handleInstall}
+                        className="h-8 px-4 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl transition-all duration-300 backdrop-blur-xl bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 flex items-center gap-2 pr-2"
+                    >
+                        <MonitorSmartphone className="h-3.5 w-3.5 animate-bounce" />
+                        <span>Instalar PC Reportes</span>
+                        <div className="h-4 w-px bg-primary/20 mx-1" />
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowInstallBtn(false);
+                            }} 
+                            className="hover:bg-primary/20 p-0.5 rounded-full transition-colors"
+                        >
+                            ×
+                        </button>
+                    </Button>
+                </div>
+            )}
+
             {needRefresh && (
                 <div className="pointer-events-auto">
                     <Button

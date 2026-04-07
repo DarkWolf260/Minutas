@@ -72,9 +72,9 @@ function AppLayout() {
       <DatabaseProvider>
         <NotificationsProvider>
           <TooltipProvider>
-              <div className="flex min-h-full w-full flex-col sm:flex-row md:overflow-hidden bg-background" suppressHydrationWarning>
+              <div className="flex min-h-full w-full flex-col sm:flex-row md:overflow-hidden bg-background overflow-x-hidden" suppressHydrationWarning>
                 <SideNav />
-                <div className="flex flex-1 flex-col sm:pl-14 md:overflow-hidden relative">
+                <div className="flex flex-1 flex-col sm:pl-14 md:overflow-hidden relative min-w-0 overflow-x-hidden">
                   <MobileNav />
                   
                   {isOffline && location.pathname !== '/offline' && (
@@ -92,10 +92,10 @@ function AppLayout() {
                     </div>
                   )}
 
-                  <main className="flex-1 md:overflow-hidden flex flex-col min-h-0 relative bg-muted/30">
+                  <main className="flex-1 md:overflow-hidden flex flex-col min-h-0 min-w-0 relative bg-muted/30 overflow-x-hidden">
                     <ErrorBoundary name="MainContent">
                       <Suspense fallback={<PageLoader />}>
-                        <div key={location.pathname} className="flex-1 flex flex-col min-h-0 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">
+                        <div key={location.pathname} className="flex-1 flex flex-col min-h-0 min-w-0 animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out transform-gpu">
                           <Routes>
                             <Route path="/" element={<NovedadesPage />} />
                             <Route path="/settings/direcciones" element={<DireccionesPage />} />

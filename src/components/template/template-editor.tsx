@@ -108,8 +108,8 @@ const FieldEditor = React.memo(function FieldEditor({
 
   return (
     <div className="border rounded-md bg-background shadow-xs hover:border-primary/30 transition-all p-2 mb-2">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 overflow-hidden flex-1">
+      <div className="flex items-center justify-between gap-4 overflow-hidden">
+        <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -137,7 +137,7 @@ const FieldEditor = React.memo(function FieldEditor({
           onValueChange={(value) => onConfigChange(fieldId, { type: value as FieldType })}
           disabled={isTypeDefinedInTemplate}
         >
-          <SelectTrigger className="w-[120px] h-8 text-[11px] bg-background">
+          <SelectTrigger className="w-[100px] sm:w-[120px] h-8 text-[10px] sm:text-[11px] bg-background">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -210,7 +210,7 @@ export function TemplateEditor({
     setLocalConfig(config);
 
     const { templateOptions } = parseTemplate(template.content);
-    setOptionsDefinedInTemplate(new Map(Array.from(templateOptions.keys()).map((k) => [k, true])));
+    setOptionsDefinedInTemplate(new Map<string, boolean>(Array.from(templateOptions.keys()).map((k) => [k as string, true])));
 
     setHasChanges(false);
   }, [template, config]);
@@ -280,14 +280,14 @@ export function TemplateEditor({
 
   return (
     <Card className="shadow-lg border-none">
-      <CardHeader className="flex flex-row items-start justify-between">
-        <div>
-          <CardTitle>Editor de Plantilla: {localTemplate.name}</CardTitle>
-          <CardDescription>
-            Configura los tipos de campo. La estructura se define en el archivo .txt.
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <CardTitle className="text-lg sm:text-xl">Editor: {localTemplate.name}</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
+            Configura los tipos de campo para este reporte.
           </CardDescription>
         </div>
-        <Button onClick={handleSaveChanges} disabled={!hasChanges}>
+        <Button onClick={handleSaveChanges} disabled={!hasChanges} className="w-full sm:w-auto h-9 text-xs">
           {hasChanges ? 'Guardar Cambios' : 'Guardado'}
         </Button>
       </CardHeader>

@@ -96,7 +96,7 @@ export default defineConfig({
         ],
       },
       devOptions: {
-        enabled: false,
+        enabled: true,
       },
     }),
   ],
@@ -113,12 +113,17 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
-              return '@vendor';
+            if (
+              id.includes('react') ||
+              id.includes('react-dom') ||
+              id.includes('react-router-dom')
+            ) {
+              return '@vendor-react';
             }
             if (id.includes('rxdb') || id.includes('rxjs')) {
               return '@db';
@@ -131,6 +136,9 @@ export default defineConfig({
             }
             if (id.includes('@radix-ui')) {
               return '@ui';
+            }
+            if (id.includes('date-fns')) {
+              return '@utils';
             }
           }
         },

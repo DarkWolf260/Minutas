@@ -3,7 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, FileText, AlertTriangle, PlusCircle, ChevronLeft, CheckCircle2, Clock, Newspaper, Lock } from 'lucide-react';
+import { Search, FileText, AlertTriangle, PlusCircle, ChevronLeft, Clock, Newspaper, Lock, ShieldAlert } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { ReportViewer } from '@/components/report/report-viewer';
 import { useReports } from '@/hooks/use-reports';
 import { useTemplates } from '@/hooks/use-templates';
@@ -159,7 +160,9 @@ function NovedadesPageContent() {
           )}
         >
           <div className="flex items-center justify-between border-b p-4 min-h-[73px]">
-            <h2 className="text-xl font-bold tracking-tight">Novedades</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold tracking-tight">Novedades</h2>
+            </div>
             <Button
               size="sm"
               onClick={() => setIsCreateDialogOpen(true)}
@@ -239,15 +242,40 @@ function NovedadesPageContent() {
                 })}
                 {filteredReports.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 px-4 text-center animate-in fade-in duration-500">
-                    <div className="h-16 w-16 rounded-full bg-muted/20 flex items-center justify-center mx-auto mb-4 border-2 border-dashed border-muted-foreground/10 opacity-60">
-                      <Search className="h-7 w-7 opacity-20" />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="text-sm font-bold text-foreground/70 tracking-tight">Sin resultados</h3>
-                      <p className="text-xs text-muted-foreground/60 max-w-[200px] mx-auto leading-relaxed">
-                        No se encontraron reportes registrados.
-                      </p>
-                    </div>
+                    {!isGuardOpen && isMobile ? (
+                      <div className="max-w-[280px] space-y-6">
+                        <div className="h-20 w-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-2 border-2 border-dashed border-amber-500/20">
+                          <AlertTriangle className="h-9 w-9 text-amber-500/40" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <h3 className="text-lg font-bold text-foreground/80 tracking-tight">Guardia no Iniciada</h3>
+                          <p className="text-xs text-muted-foreground/60 leading-relaxed">
+                            Para registrar nuevas novedades o gestionar reportes, primero debes abrir una nueva guardia en la sección de orden del día.
+                          </p>
+                        </div>
+                        <Button
+                          onClick={() => navigate('/orden-del-dia')}
+                          variant="outline"
+                          size="sm"
+                          className="h-10 px-8 text-xs font-bold gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all duration-300 shadow-sm rounded-xl w-full"
+                        >
+                          <Newspaper className="h-4 w-4" />
+                          Ir a Orden del Día
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="h-16 w-16 rounded-full bg-muted/20 flex items-center justify-center mx-auto mb-4 border-2 border-dashed border-muted-foreground/10 opacity-60">
+                          <Search className="h-7 w-7 opacity-20" />
+                        </div>
+                        <div className="space-y-1">
+                          <h3 className="text-sm font-bold text-foreground/70 tracking-tight">Sin resultados</h3>
+                          <p className="text-xs text-muted-foreground/60 max-w-[200px] mx-auto leading-relaxed">
+                            No se encontraron reportes registrados.
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -476,7 +504,7 @@ const NovedadesDialogs = memo(function NovedadesDialogs({
             </SheetHeader>
             <ScrollArea className="flex-1 w-full" type="always">
               <div className="p-4 pb-24 sm:pb-4">
-                <div className="max-w-3xl mx-auto">
+                <div className="max-w-3xl mx-auto grid grid-cols-1 gap-3">
                 {templates.filter((t) => t.isActive).length > 0 ? (
                   templates
                     .filter((t) => t.isActive)
@@ -486,12 +514,12 @@ const NovedadesDialogs = memo(function NovedadesDialogs({
                         <button
                           key={template.id}
                           onClick={() => handleSelectTemplate(template.id)}
-                          className="w-full text-left p-4 rounded-xl border bg-card hover:bg-muted transition-colors flex items-center gap-4 active:scale-[0.98] transition-all"
+                          className="w-full text-left p-4 rounded-2xl border bg-card hover:bg-muted transition-all flex items-center gap-4 active:scale-[0.98] shadow-sm border-muted/60"
                         >
-                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0">
                             <Icon className="h-5 w-5 text-primary" />
                           </div>
-                          <span className="font-medium text-base">{template.name}</span>
+                          <span className="font-semibold text-sm tracking-tight">{template.name}</span>
                         </button>
                       );
                     })

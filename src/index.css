@@ -158,3 +158,18 @@
 .animate-shimmer {
   animation: shimmer 1.5s infinite linear;
 }
+
+/* Global Animation Optimizations */
+.animate-in {
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
+  transform: translateZ(0); /* Force GPU */
+}
+
+.duration-300 {
+  animation-duration: 300ms !important;
+}
+
+.duration-200 {
+  animation-duration: 200ms !important;
+}
