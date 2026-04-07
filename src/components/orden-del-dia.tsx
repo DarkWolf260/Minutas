@@ -130,7 +130,6 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
     const [generatedOrder, setGeneratedOrder] = useState('');
     const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
     const [copyButtonText, setCopyButtonText] = useState('Copiar');
-    const [isSnapshotSaved, setIsSnapshotSaved] = useState(false);
     const lastInitializedGuard = useRef<string | null>(null);
     const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -436,11 +435,6 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
       }
     };
 
-    const handleUseForFinalReport = () => {
-      // Now that the final report uses the draft directly, we only need to notify the user.
-      toast.success('Cambios sincronizados con el reporte final');
-      setIsSnapshotSaved(true);
-    };
 
     const handleGenerateOrder = () => {
       // Helper to find a key case-insensitively
@@ -544,7 +538,6 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
       setGeneratedOrder(finalReport);
       setIsResultDialogOpen(true);
       setCopyButtonText('Copiar');
-      setIsSnapshotSaved(false);
     };
 
     useImperativeHandle(ref, () => ({
@@ -854,15 +847,6 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full"
-                  onClick={handleUseForFinalReport}
-                  disabled={isSnapshotSaved}
-                >
-                  {isSnapshotSaved ? 'Guardado para Reporte Final' : 'Usar para Reporte Final'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
                   asChild
                   className="w-full"
                 >
@@ -906,15 +890,6 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
               </div>
               <DialogFooter className="mt-auto pt-6 flex-wrap gap-2">
                 <div className="flex-1 flex gap-2 flex-wrap sm:flex-nowrap">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleUseForFinalReport}
-                    disabled={isSnapshotSaved}
-                    className="flex-1 sm:flex-none"
-                  >
-                    {isSnapshotSaved ? 'Guardado' : 'Guardar Personal'}
-                  </Button>
                   <Button
                     type="button"
                     variant="outline"
