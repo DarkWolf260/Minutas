@@ -552,10 +552,10 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
     };
 
     return (
-      <div className="h-full flex flex-col min-h-0">
-        <div className="space-y-6 flex-1 flex flex-col min-h-0">
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 pb-2 flex-1 min-h-0">
-            <Card className="shadow-sm flex flex-col flex-1 h-full transition-all overflow-hidden border-muted/60 min-h-[400px]">
+      <div className="md:h-full flex flex-col min-h-0">
+        <div className="space-y-6 flex-1 md:flex md:flex-col min-h-0">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 pb-2 md:flex-1 min-h-0">
+            <Card className="shadow-sm flex flex-col md:flex-1 md:h-full transition-all overflow-hidden border-muted/60 min-h-[400px] h-auto">
               <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
                 <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                   <GripVertical className="h-3.5 w-3.5 text-primary" />
@@ -617,7 +617,7 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
             </Card>
 
             {/* ACTIVIDADES DEL DÍA */}
-            <Card className="shadow-sm flex flex-col flex-1 h-full transition-all overflow-hidden border-muted/60 min-h-[400px]">
+            <Card className="shadow-sm flex flex-col md:flex-1 md:h-full transition-all overflow-hidden border-muted/60 min-h-[400px] h-auto">
               <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -754,7 +754,7 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
             </Card>
 
             {/* NOTAS ADICIONALES */}
-            <Card className="shadow-sm flex flex-col flex-1 h-full transition-all overflow-hidden border-muted/60 min-h-[400px]">
+            <Card className="shadow-sm flex flex-col md:flex-1 md:h-full transition-all overflow-hidden border-muted/60 min-h-[400px] h-auto">
               <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
