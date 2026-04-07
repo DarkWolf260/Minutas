@@ -142,7 +142,9 @@ export interface FieldConfig {
 
 export interface SectionConfig {
   id: string;
+  parentId?: string;
   label: string;
+
   isRepeatable: boolean;
   fieldIds: string[];
   layout?: string[];
@@ -161,7 +163,9 @@ export interface SectionConfig {
   isSeparator?: boolean; // True if this section is just a visual separator
   isMapping?: boolean; // True if this is a mapping conditional [?{Field}] Key=Value [/]
   isSelfContained?: boolean; // True if this is a self-contained section ["Title" {field}]
+  hasStaticContent?: boolean; // True if the section contains non-whitespace static text
 }
+
 
 export interface TemplateConfig {
   fields: Record<string, FieldConfig>;

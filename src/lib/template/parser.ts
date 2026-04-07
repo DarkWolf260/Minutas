@@ -121,11 +121,12 @@ export function parse(tokens: Token[]): TemplateParserResult {
     const globalRenderedFields = new Set<string>();
 
     // Refactored internal parser for recursion
-    function parseInternal(tokenList: Token[]): {
+    function parseInternal(tokenList: Token[], parentId?: string): {
         subLayout: string[];
         subSections: SectionConfig[];
         subFieldNames: Set<string>;
     } {
+
         const subLayout: string[] = [];
         const subSections: SectionConfig[] = [];
         const subFieldNames = new Set<string>();
@@ -164,6 +165,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                     const sectionId = generateSectionId(fieldId, [...sections, ...subSections]);
                     const sec: SectionConfig = {
                         id: sectionId,
+                        parentId,
                         label: fieldId,
                         isRepeatable: true,
                         fieldIds: [fieldId],
@@ -171,6 +173,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                         repeatableItemLabel: fieldId.toUpperCase(),
                         originalContent: rawWithoutStar,
                     };
+
 
                     if (!globalRenderedFields.has(sectionId)) {
                         subSections.push(sec);
@@ -294,9 +297,11 @@ export function parse(tokens: Token[]): TemplateParserResult {
                 }
 
 
-                const innerResult = parseInternal(inner);
+                const baseId = baseLabel || (token.condition ? `cond_${token.condition.fieldId}` : 'section');
+                const sectionId = generateSectionId(baseId, [...sections, ...subSections]);
 
-                // Implicit dropdown options extraction from mapping conditionals
+                const innerResult = parseInternal(inner, sectionId);
+
                 const isMappingConditional = token.condition && token.condition.value === '' && inner.length > 0;
 
                 if (isMappingConditional) {
@@ -344,15 +349,14 @@ export function parse(tokens: Token[]): TemplateParserResult {
                     }
                 }
 
-                const baseId = baseLabel || (token.condition ? `cond_${token.condition.fieldId}` : 'section');
-                const sectionId = generateSectionId(baseId, [...sections, ...subSections, ...innerResult.subSections]);
-
                 subSections.push(...innerResult.subSections);
 
                 const section: SectionConfig = {
                     id: sectionId,
+                    parentId,
                     label: (isSeparator || token.condition) ? '' : (baseLabel || `Sección ${subSections.length + 1}`),
                     isRepeatable,
+
                     fieldIds: Array.from(innerResult.subFieldNames),
                     layout: innerResult.subLayout,
                     condition: token.condition ? {
@@ -365,7 +369,10 @@ export function parse(tokens: Token[]): TemplateParserResult {
                     isSeparator: isSeparator,
                     isMapping: isMappingConditional || false,
                     isSelfContained: isSelfContained && !isSeparator,
+                    hasStaticContent: inner.some(t => t.type === 'text' && t.raw.replace(/[\s\n\r\t]/g, '').length > 0),
                 };
+
+
 
                 if (singularTitle) section.singularTitle = singularTitle;
                 if (pluralTitle) section.pluralTitle = pluralTitle;
@@ -388,23 +395,10 @@ export function parse(tokens: Token[]): TemplateParserResult {
     layout.push(...finalResult.subLayout);
 
     finalResult.subFieldNames.forEach(fn => fieldNames.add(fn));
-    // Reconcile mapping conditional values
-    // If a condition requests a label that matches a dropdown option for the target field,
-    // convert the condition to expect the underlying value instead.
-    sections.forEach(section => {
-        if (section.condition) {
-            const targetFieldId = section.condition.fieldId;
-            const targetOpts = templateOptions.get(targetFieldId);
-            if (targetOpts && targetOpts.length > 0) {
-                const matchedOpt = targetOpts.find(
-                    opt => opt.label.trim() === section.condition!.value.trim()
-                );
-                if (matchedOpt) {
-                    section.condition.value = matchedOpt.value;
-                }
-            }
-        }
-    });
+    // NOTE: Reconciliation of mapping conditional values was removed because 
+    // it caused a mismatch between form data (labels) and condition targets.
+    // We now compare against the literal label as specified in the template.
+
 
     // Emulate replacing fields with their conditional sections in layout and non-condition sections
     // This allows conditionals to wrap fields even when they appear in self-contained Sections

@@ -174,6 +174,15 @@ function escapeRegExp(string: string): string {
 }
 
 /**
+ * Helper: Determines if a section is "virtual" (just a placeholder for a field)
+ */
+function isVirtualSection(content: string): boolean {
+    if (!content) return false;
+    const trimmed = content.trim();
+    return trimmed.startsWith('{') && trimmed.endsWith('}');
+}
+
+/**
  * Helper: Finds value for a field with fallback logic
  */
 function findValueForField(
@@ -352,6 +361,8 @@ function sectionHasValues(
     };
 
     const checkSectionRecursive = (s: SectionConfig, context: FormDataRecord): boolean => {
+        if (s.hasStaticContent && s.condition) return true;
+
         if (s.isRepeatable) {
             const sectionData = context[s.id] as FormDataValue[];
             if (!Array.isArray(sectionData) || sectionData.length === 0) return false;
@@ -434,61 +445,71 @@ function renderSection(
                 : hasSingularPlural ? [currentData] : []
         : [currentData[section.id] || (data[section.id] ? data[section.id] : currentData)];
 
+
+
     const itemsWithContent = (itemsToProcess as FormDataRecord[]).filter(
-        (item: FormDataRecord) =>
-            section.fieldIds.some((fid: string) =>
+        (item: FormDataRecord) => {
+            const hasFields = section.fieldIds.some((fid: string) =>
                 hasContent(findValueForField(fid, data, sections, predefinedValues, dynamicPredefinedValues, item))
-            ) ||
-            (section.layout || []).some(
-                (id: string) =>
-                    (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) &&
-                    sectionHasValues(
-                        sections.find((s) => s.id === id)!,
-                        data,
-                        sections,
-                        predefinedValues,
-                        dynamicPredefinedValues,
-                        item
-                    )
-            )
+            );
+            const hasNestedContent = (section.layout || []).some(
+                (id: string) => {
+                    if (!(id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_'))) return false;
+                    const nestedSec = sections.find((s) => s.id === id);
+                    return nestedSec ? sectionHasValues(nestedSec, data, sections, predefinedValues, dynamicPredefinedValues, item) : false;
+                }
+            );
+            return (section.hasStaticContent && section.condition) || hasFields || hasNestedContent;
+        }
     );
+
+
+
 
     if (itemsWithContent.length === 0) return '';
 
-    renderedItems = itemsWithContent
+    const renderedItemsArray = itemsWithContent
         .map((item: FormDataRecord, index: number) => {
+
             let itemContent = section.originalContent || '';
             let itemLayout = section.layout && section.layout.length > 0 ? section.layout : section.fieldIds;
 
             itemLayout.forEach((id: string) => {
                 if (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) {
+                    // ... (keep existing nested section logic)
                     const nestedSection = sections.find((s) => s.id === id);
                     if (nestedSection) {
-                        const isVirtual = nestedSection.originalContent?.startsWith('{');
+                        const isVirtual = isVirtualSection(nestedSection.originalContent || '');
                         let nestedRegex;
                         let header = '';
                         let nestedBody = '';
                         if (isVirtual) {
                             nestedRegex = new RegExp(`${escapeRegExp(nestedSection.originalContent || '')}\\*`, 'g');
                         } else if (nestedSection.isSelfContained) {
-                            // Self-contained sections: ["Label" body] — no closing [/]
-                            // Must match [Label + body content] as a single bracket block
                             let labelPart = '';
                             if (nestedSection.singularTitle || nestedSection.pluralTitle || nestedSection.repeatableItemLabel) {
-                                let attrPart = '';
-                                if (nestedSection.singularTitle) attrPart += `singular\\s*=\\s*"${escapeRegExp(nestedSection.singularTitle)}"\\s*`;
-                                if (nestedSection.pluralTitle) attrPart += `plural\\s*=\\s*"${escapeRegExp(nestedSection.pluralTitle)}"\\s*`;
-                                if (nestedSection.repeatableItemLabel) attrPart += `sub\\s*=\\s*"${escapeRegExp(nestedSection.repeatableItemLabel)}"\\s*`;
-                                labelPart = attrPart;
+                                // Allow attributes in any order for robustness
+                                const attrList = [];
+                                if (nestedSection.singularTitle) attrList.push(`singular\\s*=\\s*"${escapeRegExp(nestedSection.singularTitle)}"`);
+                                if (nestedSection.pluralTitle) attrList.push(`plural\\s*=\\s*"${escapeRegExp(nestedSection.pluralTitle)}"`);
+                                if (nestedSection.repeatableItemLabel) attrList.push(`sub\\s*=\\s*"${escapeRegExp(nestedSection.repeatableItemLabel)}"`);
+                                
+                                // Join with optional whitespace and allow any order using a more complex lookahead-based pattern 
+                                // OR simpler: just match the bunch of attributes. Since we know what we expect, 
+                                // we can just list them with \s* between them.
+                                labelPart = attrList.map(a => `${a}\\s*`).join('');
                             } else if (nestedSection.label) {
                                 const escaped = escapeRegExp(nestedSection.label);
                                 labelPart = `(?:"${escaped}"|${escaped})`;
                             }
+
                             const nestedBodySC = nestedSection.originalContent || '';
                             nestedRegex = new RegExp(
-                                `\\[\\s*${labelPart}${escapeRegExp(nestedBodySC)}\\s*\\]${nestedSection.isRepeatable ? '\\s*\\*' : ''}`,
+                                `\\[\\s*${labelPart}${escapeRegExp(nestedBodySC)}\\s*\\]${nestedSection.isRepeatable ? '\\*?' : ''}`,
                                 'gs'
                             );
+
+
                         } else {
                             if (nestedSection.condition) {
                                 const cond = nestedSection.condition;
@@ -504,27 +525,26 @@ function renderSection(
                                 nestedSection.pluralTitle ||
                                 nestedSection.repeatableItemLabel
                             ) {
-                                header += nestedSection.singularTitle
-                                    ? `singular="${escapeRegExp(nestedSection.singularTitle)}"\\s*`
-                                    : '';
+                                header = nestedSection.singularTitle ? `singular="${escapeRegExp(nestedSection.singularTitle)}"\\s*` : '';
                                 header += nestedSection.pluralTitle ? `plural="${escapeRegExp(nestedSection.pluralTitle)}"\\s*` : '';
                                 header += nestedSection.repeatableItemLabel
                                     ? `sub="${escapeRegExp(nestedSection.repeatableItemLabel)}"\\s*`
                                     : '';
+
                             } else if (nestedSection.label && nestedSection.label !== 'separator') {
+
                                 header = `"${escapeRegExp(nestedSection.label)}"?\\s*`;
                             } else if (nestedSection.isSeparator || nestedSection.label === 'separator') {
                                 header = '""';
                             }
 
-                            const nestedBody = nestedSection.originalContent || '';
+                            const nestedBodyStr = nestedSection.originalContent || '';
                             nestedRegex = new RegExp(
-                                `\\[\\s*${header}\\s*\\]${escapeRegExp(nestedBody)}\\[\\/\\s*\\]${nestedSection.isRepeatable ? '\\s*\\*' : ''}`,
+                                `\\[\\s*${header}\\s*\\]${nestedSection.isRepeatable ? '\\*?' : ''}${escapeRegExp(nestedBodyStr)}\\[\\/\\s*\\]`,
                                 'gs'
                             );
+
                         }
-                        // Check if this conditional block behaves only as a dependency declaration
-                        // (i.e. it only contains fields and whitespace, no static text)
                         let isDependencyBlock = false;
                         if (nestedSection.condition && !nestedSection.isMapping) {
                             const pureContent = (nestedSection.originalContent || '')
@@ -536,12 +556,12 @@ function renderSection(
                         }
 
                         if (isDependencyBlock) {
-                            // Enhanced regex to capture adjacent spaces/newlines so we don't leave massive gaps
                             const cleanRegex = new RegExp(
-                                `\\s*\\[\\s*${header}\\s*\\]${escapeRegExp(nestedBody)}\\[\\/\\s*\\]${nestedSection.isRepeatable ? '\\s*\\*' : ''}\\s*`,
+                                `\\[\\s*${header}\\s*\\]${nestedSection.isRepeatable ? '\\s*\\*?' : ''}${escapeRegExp(nestedSection.originalContent || '')}\\[\\/\\s*\\]`,
                                 'gs'
                             );
-                            itemContent = itemContent.replace(cleanRegex, '\n');
+
+                            itemContent = itemContent.replace(cleanRegex, '');
                         } else {
                             const renderedNested = renderSection(
                                 id,
@@ -559,18 +579,19 @@ function renderSection(
                     }
                 } else {
                     const baseVal = findValueForField(id, data, sections, predefinedValues, dynamicPredefinedValues, item);
-                    
                     // Case-insensitive mapping results lookup
                     const lowerId = id.toLowerCase();
                     const mappingKey = Object.keys(mappingResults).find(k => k.toLowerCase() === lowerId);
                     const val = mappingKey !== undefined ? mappingResults[mappingKey] : baseVal;
-                    
+
+
                     itemContent = itemContent.replace(
                         new RegExp(`\\{${escapeRegExp(id)}(:[^|}{]+)*(?:\\|[^{}]+?)?\\}(\\*)?`, 'g'),
                         renderValue(val, id, fields, config, { ...data, ...item })
                     );
                 }
             });
+
 
             if (section.isSelfContained) {
                 // For self-contained sections, omit lines that contained a field tag but ended up empty/contentless
@@ -603,29 +624,41 @@ function renderSection(
             }
 
             if (section.repeatableItemLabel) {
-                const isVirtual = section.originalContent?.trim().startsWith('{') && section.originalContent?.trim().endsWith('}');
+                const isVirtual = isVirtualSection(section.originalContent || '');
                 
                 if (isVirtual) {
                     if (itemsWithContent.length > 1) {
                         const labelPrefix = `- *${section.repeatableItemLabel} #${String(index + 1).padStart(2, '0')}:*`;
-                        itemContent = `${labelPrefix} ${itemContent.trim()}`;
+                        itemContent = `${labelPrefix} ${itemContent.replace(/^\s+/, '')}`;
                     } else {
                         const labelPrefix = `- *${section.repeatableItemLabel}:*`;
-                        itemContent = `${labelPrefix} ${itemContent.trim()}`;
+                        itemContent = `${labelPrefix} ${itemContent.replace(/^\s+/, '')}`;
                     }
                 } else if (itemsWithContent.length > 1) {
                     // Format: - *NOVEDAD #01*\ncontent — only when multiple items
                     const labelPrefix = `- *${section.repeatableItemLabel} #${String(index + 1).padStart(2, '0')}*`;
-                    itemContent = `${labelPrefix}\n${itemContent.trim()}`;
+                    // Only trim leading newline if it was explicitly there to avoid triple newlines
+                    const cleaned = itemContent.startsWith('\n') ? itemContent.slice(1) : itemContent;
+                    itemContent = `${labelPrefix}\n${cleaned}`;
                 }
             }
             return itemContent;
-        })
-        .join(
-            (section.originalContent?.trim().startsWith('{') && section.originalContent?.trim().endsWith('}'))
-                ? '\n'
-                : '\n\n'
-        );
+        });
+
+    // Determine appropriate joiner: 
+    // If originalContent was virtual, always join with \n. 
+    // Otherwise, join with \n ONLY if items don't already end with a newline.
+    const isVirtual = isVirtualSection(section.originalContent || '');
+    const hasInternalNewlines = renderedItemsArray.some(item => (item || '').trim().includes('\n'));
+    const anyEndsWithNewline = renderedItemsArray.some(item => (item || '').endsWith('\n'));
+    
+    // Choose joiner:
+    // 1. Virtual items -> joined by single \n
+    // 2. Multiline items that don't already end in \n -> joined by \n\n (for separation)
+    // 3. Items already ending in \n -> joined by '' (respect template)
+    // 4. Single line items -> joined by \n
+    const joiner = isVirtual ? '\n' : (anyEndsWithNewline ? '' : (hasInternalNewlines ? '\n\n' : '\n'));
+    renderedItems = renderedItemsArray.join(joiner);
 
     // Add section title only for singular/plural sections (not plain labeled ones)
     if (section.singularTitle || section.pluralTitle) {
@@ -696,7 +729,7 @@ export function renderContentWithSections(
     });
 
     topLevelSections.forEach((section: SectionConfig) => {
-        const isVirtual = section.originalContent?.startsWith('{');
+        const isVirtual = isVirtualSection(section.originalContent || '');
         let sectionRegex;
 
         if (section.isSelfContained) {
@@ -707,13 +740,13 @@ export function renderContentWithSections(
             // between labelPart and bodyContent.
             let labelPart = '';
             if (section.singularTitle || section.pluralTitle || section.repeatableItemLabel) {
-                // Build labelPart from the actual attribute syntax used in the template
-                let attrPart = '';
-                if (section.singularTitle) attrPart += `singular\\s*=\\s*"${escapeRegExp(section.singularTitle)}"\\s*`;
-                if (section.pluralTitle) attrPart += `plural\\s*=\\s*"${escapeRegExp(section.pluralTitle)}"\\s*`;
-                if (section.repeatableItemLabel) attrPart += `sub\\s*=\\s*"${escapeRegExp(section.repeatableItemLabel)}"\\s*`;
-                labelPart = attrPart;
+                const attrList = [];
+                if (section.singularTitle) attrList.push(`singular\\s*=\\s*"${escapeRegExp(section.singularTitle)}"`);
+                if (section.pluralTitle) attrList.push(`plural\\s*=\\s*"${escapeRegExp(section.pluralTitle)}"`);
+                if (section.repeatableItemLabel) attrList.push(`sub\\s*=\\s*"${escapeRegExp(section.repeatableItemLabel)}"`);
+                labelPart = attrList.map(a => `${a}\\s*`).join('');
             } else if (section.label) {
+
                 const escaped = escapeRegExp(section.label);
                 labelPart = `(?:"${escaped}"|${escaped})`;
             }
@@ -751,8 +784,11 @@ export function renderContentWithSections(
 
             const bodyContent = section.originalContent || '';
             const fullBlockPattern = `\\[\\s*${headerPart}\\s*\\]${section.isRepeatable ? '\\*?' : ''}${escapeRegExp(bodyContent)}\\[\\/\\s*\\]`;
-            sectionRegex = new RegExp(fullBlockPattern, 'g');
+            sectionRegex = new RegExp(fullBlockPattern, 'gs');
         }
+
+
+
 
         const rendered = renderSection(
             section.id,
@@ -765,8 +801,17 @@ export function renderContentWithSections(
             data,
             mappingResults
         );
-        finalContent = finalContent.replace(sectionRegex, rendered);
+
+        if (sectionRegex) {
+            finalContent = finalContent.replace(sectionRegex, rendered);
+        }
     });
+
+
+
+
+
+
 
 
     // Final cleanup of loose tags (omit semantic tags for post-processing)
@@ -871,7 +916,7 @@ export function renderFinalReport(
             .replace(/<<|>>/g, '') // Remove summary markers
             .replace(/\[\?.*?\][\s\S]*?\[\/\s*\]/g, '') // Remove unprocessed conditional blocks
             .replace(/\[""\]\s*/g, '') // Remove separators
-            .replace(/\[[\s\S]*?\](?:\s*)?(\*)?/g, ''); // Remove unprocessed section blocks
+            .replace(/\[[\s\S]*?\](\*)?/g, ''); // Remove unprocessed section blocks (don't swallow trailing whitespace)
 
         // Resolve literal semantic tags
         const semanticRegex = /\{([\s\S]+?):semantic\}/g;
@@ -890,13 +935,15 @@ export function renderFinalReport(
 
         finalOutput = finalOutput
             .replace(/\\\*/g, '*') // Convert escaped asterisks (\*) to literal asterisks (*)
-            .replace(/\n{3,}/g, '\n\n') // Limit consecutive line breaks to max 2
+            .replace(/\n{4,}/g, '\n\n\n') // Limit consecutive line breaks to max 3 (2 blank lines)
             .replace(/\t/g, '    ') // Convert tabs to spaces
             .trim();
 
         return finalOutput;
     } catch (error) {
         logger.error('Error rendering report', error instanceof Error ? error : new Error(String(error)), {
+
+
             feature: 'TemplateRenderer',
             message: error instanceof Error ? error.message : String(error)
         });

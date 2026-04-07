@@ -173,10 +173,11 @@ function extractSectionToken(
 
     // Capture optional * after ] for repeatable sections: [Label]*
     let isRepeatable = false;
-    if (template[pos] === '*') {
+    if (template[pos] === '*' && !content.trim().startsWith('?')) {
         isRepeatable = true;
         pos++; // include the * in the token
     }
+
 
     const raw = template.substring(startPos, pos);
 
