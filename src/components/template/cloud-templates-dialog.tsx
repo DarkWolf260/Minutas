@@ -72,7 +72,7 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col p-0">
+      <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col p-0 overflow-hidden">
         <DialogHeader className="p-6 pb-2">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl flex items-center gap-2">
@@ -88,7 +88,7 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
           {error ? (
             <div className="p-12 text-center flex flex-col items-center gap-4">
               <AlertCircle className="h-12 w-12 text-destructive opacity-50" />
@@ -111,7 +111,7 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
               <p className="text-sm text-muted-foreground">No hay plantillas disponibles en este momento.</p>
             </div>
           ) : (
-            <ScrollArea className="h-full px-6">
+            <ScrollArea className="flex-1 px-6" type="always">
               <div className="grid gap-4 py-4">
                 {cloudTemplates.map((template) => {
                   const isDownloaded = localTemplates.some(t => t.name === template.name);
