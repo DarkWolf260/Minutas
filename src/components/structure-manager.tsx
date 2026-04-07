@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { generateId } from '@/lib/utils/id';
-import { Department, StaffRole, StaffMember } from '@/types';
+import { Department, StaffRole, StaffMember } from '@/lib/types';
 import { StructureTree } from '@/components/structure/structure-tree';
 import { getInstitutionalData } from './structure/institutional-data';
 

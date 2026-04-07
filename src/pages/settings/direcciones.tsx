@@ -28,7 +28,7 @@ import {
   ChevronLeft,
 } from 'lucide-react';
 import { useAddresses } from '@/hooks/use-addresses';
-import type { Address } from '@/types';
+import type { Address } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddressFormDialog } from '@/components/address-form-dialog';
 import {

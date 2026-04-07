@@ -1,6 +1,6 @@
-import { DEFAULT_STATISTICS_CATEGORIES } from '@/constants/statistics';
+import { DEFAULT_STATISTICS_CATEGORIES } from '@/lib/constants/statistics';
 import { findValueInFormData } from '@/lib/report-sorter';
-import type { Report, Template, TemplateConfig } from '@/types';
+import type { Report, Template, TemplateConfig } from '@/lib/types';
 
 /**
  * Determines the statistical category for a given report based on its template configuration.

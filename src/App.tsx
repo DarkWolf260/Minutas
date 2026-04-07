@@ -9,7 +9,6 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { PWAStatus } from '@/components/pwa-status';
 import { DatabaseProvider } from '@/lib/db/db-provider';
-import { P2PProvider } from '@/lib/db/p2p-provider';
 import { NotificationsProvider } from '@/lib/notifications-provider';
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { LoadingScreen } from '@/components/loading-screen';
@@ -72,8 +71,7 @@ function AppLayout() {
     <ThemeProvider defaultTheme="system" storageKey="minutas-theme">
       <DatabaseProvider>
         <NotificationsProvider>
-          <P2PProvider>
-            <TooltipProvider>
+          <TooltipProvider>
               <div className="flex min-h-full w-full flex-col sm:flex-row md:overflow-hidden bg-background" suppressHydrationWarning>
                 <SideNav />
                 <div className="flex flex-1 flex-col sm:pl-14 md:overflow-hidden relative">
@@ -125,8 +123,7 @@ function AppLayout() {
               <WelcomeDialog />
               <PWAStatus />
               <Toaster />
-            </TooltipProvider>
-          </P2PProvider>
+          </TooltipProvider>
         </NotificationsProvider>
       </DatabaseProvider>
     </ThemeProvider>

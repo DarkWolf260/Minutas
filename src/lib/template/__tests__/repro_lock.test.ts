@@ -13,12 +13,12 @@ describe('Locking Issue Reproduction', () => {
         const result1 = parse(tokenize(template));
         const result2 = parse(tokenize(template));
 
-        expect(result1.sections[0].id).toBe(result2.sections[0].id);
-        expect(result1.sections[0].id).toBe('sec_datos_del_paciente');
+        expect(result1.sections[0]!.id).toBe(result2.sections[0]!.id);
+        expect(result1.sections[0]!.id).toBe('sec_datos_del_paciente');
         
         // Check field IDs
-        expect(result1.sections[0].fieldIds).toContain('Nombre y apellido');
-        expect(result1.sections[0].fieldIds).toContain('Edad');
-        expect(result1.sections[0].fieldIds).toContain('IDX');
+        expect(result1.sections[0]!.fieldIds).toContain('Nombre y apellido');
+        expect(result1.sections[0]!.fieldIds).toContain('Edad');
+        expect(result1.sections[0]!.fieldIds).toContain('IDX');
     });
 });

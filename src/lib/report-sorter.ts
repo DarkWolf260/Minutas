@@ -1,4 +1,4 @@
-import type { Report, FormDataRecord, FormDataValue } from '@/types';
+import type { Report, FormDataRecord, FormDataValue } from '@/lib/types';
 
 /**
  * Finds a value in the report's formData, checking both top-level and nested section data.

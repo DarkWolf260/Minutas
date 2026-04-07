@@ -23,7 +23,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import type { Address } from '@/types';
+import type { Address } from '@/lib/types';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {

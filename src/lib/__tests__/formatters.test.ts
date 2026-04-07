@@ -10,7 +10,7 @@ import {
     formatStaffMemberForAutocomplete,
     formatStaffMember,
 } from '../formatters';
-import type { StaffMember } from '@/types';
+import type { StaffMember } from '@/lib/types';
 
 // Mock data factory
 function createMockStaffMember(overrides: Partial<StaffMember> = {}): StaffMember {

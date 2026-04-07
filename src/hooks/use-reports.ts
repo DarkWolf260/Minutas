@@ -28,7 +28,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import type { Report } from '@/types';
+import type { Report } from '@/lib/types';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
 import { ReportSchema, generateFormDataSchema } from '@/lib/validations/schemas';

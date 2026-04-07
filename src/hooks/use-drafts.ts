@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { ReportDraft } from '@/types';
+import type { ReportDraft } from '@/lib/types';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
 

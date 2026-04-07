@@ -23,7 +23,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Department } from '@/types';
+import type { Department } from '@/lib/types';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
 

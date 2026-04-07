@@ -1,7 +1,7 @@
 
-import { Department, StaffRole } from '@/types';
+import { Department, StaffRole } from '@/lib/types';
 import { generateId } from '@/lib/utils/id';
-import { LEADER_ROLES } from '@/constants/roles';
+import { LEADER_ROLES } from '@/lib/constants/roles';
 
 // Estructura institucional predefinida
 const INSTITUTIONAL_STRUCTURE = `

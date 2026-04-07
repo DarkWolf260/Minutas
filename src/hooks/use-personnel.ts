@@ -30,7 +30,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import type { StaffMember } from '@/types';
+import type { StaffMember } from '@/lib/types';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { StaffMemberSchema } from '@/lib/validations/schemas';
 import { logger } from '@/lib/logger';

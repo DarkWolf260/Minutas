@@ -23,7 +23,7 @@ import {
 import { ChevronLeft, ChevronRight, FileDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { calculateMonthlyStats } from '@/lib/statistics-utils';
-import { STATISTICS_SECTIONS } from '@/constants/statistics';
+import { STATISTICS_SECTIONS } from '@/lib/constants/statistics';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function EstadisticasPage() {

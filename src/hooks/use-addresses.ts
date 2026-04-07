@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Address } from '@/types';
+import type { Address } from '@/lib/types';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
-import { DEFAULT_ADDRESSES } from '@/constants/addresses';
+import { DEFAULT_ADDRESSES } from '@/lib/constants/addresses';
 import { logger } from '@/lib/logger';
 
 export function useAddresses() {

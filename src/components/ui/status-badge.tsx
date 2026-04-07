@@ -6,9 +6,9 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { PersonnelStatus, AttendanceStatus } from '@/types';
-import { STATUS_OPTIONS } from '@/constants/personnel';
-import { ATTENDANCE_STATUS_CONFIG } from '@/constants/attendance';
+import type { PersonnelStatus, AttendanceStatus } from '@/lib/types';
+import { STATUS_OPTIONS } from '@/lib/constants/personnel';
+import { ATTENDANCE_STATUS_CONFIG } from '@/lib/constants/attendance';
 
 interface StatusBadgeProps {
   status: PersonnelStatus | AttendanceStatus;
@@ -44,7 +44,7 @@ export const StatusBadge = React.memo(function StatusBadge({
     ATTENDANCE_STATUS_CONFIG[status as keyof typeof ATTENDANCE_STATUS_CONFIG];
 
   if (attendanceStatus) {
-    const Icon = attendanceStatus.icon;
+    const Icon = attendanceStatus.icon as any;
     return (
       <Badge
         variant="outline"

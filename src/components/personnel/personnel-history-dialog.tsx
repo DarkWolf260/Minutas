@@ -20,7 +20,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { History, Calendar, Shield, User } from 'lucide-react';
 import { usePersonnelHistory } from '@/hooks/use-personnel-history';
-import type { StaffMember, PersonnelAssignment } from '@/types';
+import type { StaffMember, PersonnelAssignment } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 

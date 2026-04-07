@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { FieldConfig, SnippetOption } from '@/types';
+import type { FieldConfig, SnippetOption } from '@/lib/types';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { generateId } from '@/lib/utils/id';
 

@@ -28,7 +28,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Department, StaffRole } from '@/types';
+import { Department, StaffRole } from '@/lib/types';
 import { SortableRoleItem } from './sortable-role-item';
 
 interface RoleSortableListProps {

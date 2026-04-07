@@ -15,7 +15,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Search, FileEdit, Trash2, Activity, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
-import { StaffMember, PersonnelStatus, Department } from '@/types';
+import { StaffMember, PersonnelStatus, Department } from '@/lib/types';
 import { cn, normalizeString } from '@/lib/utils';
 
 interface PersonnelTableProps {

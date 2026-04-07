@@ -3,7 +3,7 @@
 import { useCallback } from 'react';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { type HistoryItem } from '@/lib/db/db';
-import type { PersonnelAssignment, Staff } from '@/types';
+import type { PersonnelAssignment, Staff } from '@/lib/types';
 import { logger } from '@/lib/logger';
 
 /**

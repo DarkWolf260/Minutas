@@ -16,7 +16,7 @@ import {
   ChevronLeft,
 } from 'lucide-react';
 import { useTemplates } from '@/hooks/use-templates';
-import type { Template } from '@/types';
+import type { Template } from '@/lib/types';
 import { TemplateEditor } from '@/components/template/template-editor';
 import { cn, getTemplateIcon } from '@/lib/utils';
 import {

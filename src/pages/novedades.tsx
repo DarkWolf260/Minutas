@@ -11,7 +11,7 @@ import { useDrafts } from '@/hooks/use-drafts';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSettings } from '@/hooks/use-settings';
 import { ReportGenerator, type ReportGeneratorRef } from '@/components/report/report-generator';
-import type { Report, Template } from '@/types';
+import type { Report, Template } from '@/lib/types';
 import { cn, getTemplateIcon, normalizeString } from '@/lib/utils';
 import {
   AlertDialog,

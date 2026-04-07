@@ -2,7 +2,7 @@
  * Utility functions for formatting data across the application
  */
 
-import type { StaffMember } from '@/types';
+import type { StaffMember } from '@/lib/types';
 
 /**
  * Helper to build a full name with rank and title

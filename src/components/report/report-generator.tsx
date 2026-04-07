@@ -2,7 +2,7 @@
 
 import { useState, useRef, useMemo, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { Template, TemplateConfig, Report, ReportDraft, StaffMember } from '@/types';
+import type { Template, TemplateConfig, Report, ReportDraft, StaffMember } from '@/lib/types';
 import { ReportForm, type ReportFormRef } from './report-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseTemplate, renderFinalReport } from '../../template-parser';
-import type { TemplateConfig, SnippetOption, FieldType } from '@/types';
+import type { TemplateConfig, SnippetOption, FieldType, SectionConfig } from '@/lib/types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -11,7 +11,7 @@ function buildConfig(templateContent: string): TemplateConfig {
         layout: parsed.layout,
         fields: {},
     };
-    parsed.fieldNames.forEach((name) => {
+    parsed.fieldNames.forEach((name: string) => {
         config.fields[name] = {
             type: parsed.fieldTypes.get(name) || 'text',
             label: name,
@@ -28,13 +28,13 @@ function render(template: string, data: Record<string, unknown>, predefined: Rec
 }
 
 function generateMockData(
-    sections: import('@/types').SectionConfig[],
+    sections: import('@/lib/types').SectionConfig[],
     fieldNames: Set<string>,
     fieldTypes: Map<string, FieldType>,
     templateOptions: Map<string, SnippetOption[]>
 ) {
     const data: Record<string, unknown> = {};
-    fieldNames.forEach((fieldName) => {
+    fieldNames.forEach((fieldName: string) => {
         const fieldType = fieldTypes.get(fieldName);
         switch (fieldType) {
             case 'date':
@@ -53,10 +53,10 @@ function generateMockData(
                 data[fieldName] = `Ejemplo ${fieldName}`;
         }
     });
-    sections.forEach((section) => {
+    sections.forEach((section: SectionConfig) => {
         if (section.isRepeatable) {
             const itemData: Record<string, string> = {};
-            section.fieldIds.forEach((fieldId) => {
+            section.fieldIds.forEach((fieldId: string) => {
                 itemData[fieldId] = `Dato ${fieldId}`;
             });
             data[section.id] = [{ ...itemData }, { ...itemData }];
@@ -124,7 +124,7 @@ describe('Template Renderer - Secciones Repetibles', () => {
         expect(parsed.fieldTypes.get('Ubicación')).toBe('textarea');
         expect(parsed.fieldTypes.get('Destino')).toBe('textarea');
         
-        const destinoSection = parsed.sections.find(s => s.fieldIds.includes('Destino') && s.isRepeatable);
+        const destinoSection = parsed.sections.find((s: SectionConfig) => s.fieldIds.includes('Destino') && s.isRepeatable);
         expect(destinoSection).toBeDefined();
         
         const data: Record<string, unknown> = {

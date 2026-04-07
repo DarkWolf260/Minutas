@@ -8,7 +8,7 @@ import type {
   FieldConfig,
   SectionConfig,
   FieldType,
-} from '@/types';
+} from '@/lib/types';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -27,7 +27,7 @@ import { parseTemplate } from '@/lib/template-parser';
 import { SnippetOptionEditor } from '@/components/snippet-option-editor';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { STATISTICS_SECTIONS } from '@/constants/statistics';
+import { STATISTICS_SECTIONS } from '@/lib/constants/statistics';
 import { Layers, BarChart3, Settings2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 

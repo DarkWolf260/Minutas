@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { getReportCategory, calculateMonthlyStats } from '../statistics-utils';
-import type { Report, Template, TemplateConfig } from '@/types';
+import type { Report, Template, TemplateConfig } from '@/lib/types';
 
 // Mock data factories
 function createMockReport(overrides: Partial<Report> = {}): Report {

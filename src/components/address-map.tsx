@@ -10,7 +10,7 @@ import { Map as MapIcon, Satellite } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-import type { Address } from '@/types';
+import type { Address } from '@/lib/types';
 
 interface AddressMapProps {
   latitude?: string | null;

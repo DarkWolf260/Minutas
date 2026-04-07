@@ -5,7 +5,7 @@
  */
 
 import type { ParseResult, ValidationResult } from './types';
-import type { SectionConfig, FieldType, SnippetOption } from '@/types';
+import type { SectionConfig, FieldType, SnippetOption } from '@/lib/types';
 
 /**
  * Validates a template string for syntax errors

@@ -14,7 +14,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Department, StaffRole } from '@/types';
+import { Department, StaffRole } from '@/lib/types';
 
 interface RoleCardProps {
     roles: StaffRole[];

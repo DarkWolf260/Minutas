@@ -14,11 +14,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
-import type { StaffMember, StaffRole, Department } from '@/types';
+import type { StaffMember, StaffRole, Department } from '@/lib/types';
 import { validatePersonnel } from '@/lib/validations/personnel';
 import { generateId } from '@/lib/utils/id';
 import { useWorkspaceManager } from '@/lib/db/db-context';
-import { RANK_OPTIONS, STATUS_OPTIONS } from '@/constants/personnel';
+import { RANK_OPTIONS, STATUS_OPTIONS } from '@/lib/constants/personnel';
 
 interface CSVManagerProps {
   personnel: StaffMember[];

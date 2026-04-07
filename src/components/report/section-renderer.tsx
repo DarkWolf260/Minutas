@@ -14,7 +14,7 @@ import {
     AppSettings,
     FormDataRecord,
     FormDataValue,
-} from '@/types';
+} from '@/lib/types';
 import { evaluateCondition } from '@/lib/template-parser';
 import { FieldRenderer } from './field-renderer';
 

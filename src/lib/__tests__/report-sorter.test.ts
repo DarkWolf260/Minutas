@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { findValueInFormData, sortReports } from '../report-sorter';
-import type { Report } from '@/types';
+import type { Report } from '@/lib/types';
 
 // Helper to create mock reports
 function createMockReport(overrides: Partial<Report> = {}): Report {

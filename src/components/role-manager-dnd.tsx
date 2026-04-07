@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Trash2, GripVertical, PlusCircle } from 'lucide-react';
-import type { StaffRole, Department } from '@/types';
+import type { StaffRole, Department } from '@/lib/types';
 import {
   DndContext,
   KeyboardSensor,

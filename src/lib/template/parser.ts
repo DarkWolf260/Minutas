@@ -1,5 +1,5 @@
 import type { Token } from './types';
-import type { SnippetOption, FieldType, SectionConfig, TemplateParserResult } from '@/types';
+import type { SnippetOption, FieldType, SectionConfig, TemplateParserResult } from '@/lib/types';
 import { tokenize } from './lexer';
 
 /**

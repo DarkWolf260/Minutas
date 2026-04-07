@@ -6,7 +6,7 @@
 
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import type { TemplateParserResult, SectionConfig, FieldConfig, FieldType, SnippetOption, FormDataRecord, FormDataValue } from '@/types';
+import type { TemplateParserResult, SectionConfig, FieldConfig, FieldType, SnippetOption, FormDataRecord, FormDataValue } from '@/lib/types';
 import { formatStaffMember, formatStaffReporta } from '../formatters';
 /** Inline type for semantic resolution results (previously in integration-engine.ts) */
 export interface ResolutionResult {
@@ -296,10 +296,10 @@ function renderValue(
             if (typeof value[0] === 'object' && value[0] !== null && 'name' in value[0]) {
                 const isReporta = fieldId.toLowerCase() === 'reporta';
                 if (isReporta) {
-                    return value.map((member) => formatStaffReporta(member as import('@/types').StaffMember)).join(' / ');
+                    return value.map((member) => formatStaffReporta(member as import('@/lib/types').StaffMember)).join(' / ');
                 }
                 const showCedula = fieldId.toLowerCase() === 'analista';
-                return value.map((member) => formatStaffMember(member as import('@/types').StaffMember, showCedula)).join(' / ');
+                return value.map((member) => formatStaffMember(member as import('@/lib/types').StaffMember, showCedula)).join(' / ');
             }
         }
         return value.join(' / ');

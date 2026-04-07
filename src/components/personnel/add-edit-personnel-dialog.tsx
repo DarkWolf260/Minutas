@@ -22,8 +22,8 @@ import {
 } from '@/components/ui/select';
 import { CedulaInput } from '@/components/cedula-input';
 import { MultiInput } from '@/components/ui/multi-input';
-import type { StaffMember, PersonnelStatus, StaffRole, Department } from '@/types';
-import { RANK_OPTIONS, STATUS_OPTIONS } from '@/constants/personnel';
+import type { StaffMember, PersonnelStatus, StaffRole, Department } from '@/lib/types';
+import { RANK_OPTIONS, STATUS_OPTIONS } from '@/lib/constants/personnel';
 import { toast } from 'sonner';
 import { normalizeString } from '@/lib/utils';
 

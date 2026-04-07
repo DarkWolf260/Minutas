@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { CalendarCheck, CheckCircle2, XCircle, Clock } from 'lucide-react';
-import type { StaffMember, AttendanceStatus } from '@/types';
+import type { StaffMember, AttendanceStatus } from '@/lib/types';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ATTENDANCE_STATUS_CONFIG } from '@/constants/attendance';
+import { ATTENDANCE_STATUS_CONFIG } from '@/lib/constants/attendance';
 import { cn } from '@/lib/utils';
 
 interface AttendanceManagerProps {
@@ -155,6 +155,7 @@ export function AttendanceManager({
                   <div className="flex gap-1">
                     {(Object.keys(ATTENDANCE_STATUS_CONFIG) as AttendanceStatus[]).map((status) => {
                       const config = ATTENDANCE_STATUS_CONFIG[status];
+                      const Icon = config.icon as any;
                       const isSelected = currentStatus === status;
 
                       return (
@@ -165,7 +166,7 @@ export function AttendanceManager({
                           className={cn('h-8 px-3 text-xs', isSelected && config.color)}
                           onClick={() => handleMark(member.id, status)}
                         >
-                          {config.icon && <config.icon className="h-3 w-3 mr-1" />}
+                          {Icon && <Icon className="h-3 w-3 mr-1" />}
                           {config.label}
                         </Button>
                       );

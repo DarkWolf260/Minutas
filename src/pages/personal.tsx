@@ -25,7 +25,7 @@ import { useGuards } from '@/hooks/use-guards';
 import { useUnits } from '@/hooks/use-units';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { useReports } from '@/hooks/use-reports';
-import type { StaffMember } from '@/types';
+import type { StaffMember } from '@/lib/types';
 import { StructureManager } from '@/components/structure-manager';
 import { DataTableSkeleton } from '@/components/ui/loading-skeleton';
 import { FeatureErrorBoundary } from '@/components/error-boundary-feature';

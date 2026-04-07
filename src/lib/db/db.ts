@@ -30,7 +30,7 @@ import {
   FieldConfig,
   ReportDraft,
   PersonnelAssignment,
-} from '@/types';
+} from '@/lib/types';
 
 import {
   personnelSchema,

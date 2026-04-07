@@ -1,6 +1,7 @@
-import { PERSONNEL_STATUS } from '@/constants/personnel';
+import { PERSONNEL_STATUS } from '@/lib/constants/personnel';
 
 export type PersonnelStatus = (typeof PERSONNEL_STATUS)[keyof typeof PERSONNEL_STATUS];
+export type AttendanceStatus = 'presente' | 'tarde' | 'ausente' | 'permiso';
 
 /** Represents any value that can appear in a form data field */
 export type FormDataValue =

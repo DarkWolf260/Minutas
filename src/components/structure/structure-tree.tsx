@@ -41,7 +41,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Department, StaffRole, StaffMember } from '@/types';
+import { Department, StaffRole, StaffMember } from '@/lib/types';
 
 interface StructureTreeProps {
   departments: Department[];

@@ -6,8 +6,8 @@
  */
 
 import { z } from 'zod';
-import type { FieldConfig, SectionConfig } from '@/types';
-import { PERSONNEL_STATUS } from '@/constants/personnel';
+import type { FieldConfig, SectionConfig } from '@/lib/types';
+import { PERSONNEL_STATUS } from '@/lib/constants/personnel';
 
 // ============================================================================
 // BASE SCHEMAS

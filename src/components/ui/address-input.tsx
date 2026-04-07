@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAddresses } from '@/hooks/use-addresses';
-import type { Address } from '@/types';
+import type { Address } from '@/lib/types';
 import { Skeleton } from './skeleton';
 import { cn } from '@/lib/utils';
 

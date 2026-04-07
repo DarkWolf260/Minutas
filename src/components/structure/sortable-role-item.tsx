@@ -6,7 +6,7 @@ import { GripVertical, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Department, StaffRole } from '@/types';
+import { Department, StaffRole } from '@/lib/types';
 
 interface SortableRoleItemProps {
     role: StaffRole;

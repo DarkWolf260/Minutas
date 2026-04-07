@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, Eye } from 'lucide-react';
 import { parseTemplate, renderFinalReport } from '@/lib/template-parser';
-import type { TemplateConfig, SectionConfig, FieldType, SnippetOption } from '@/types';
+import type { TemplateConfig, SectionConfig, FieldType, SnippetOption } from '@/lib/types';
 
 interface TemplatePreviewProps {
   templateContent: string;

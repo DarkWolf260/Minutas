@@ -4,7 +4,7 @@
  * Type definitions shared across all template modules
  */
 
-import { FieldType, SectionConfig, SnippetOption } from '@/types';
+import { FieldType, SectionConfig, SnippetOption } from '@/lib/types';
 
 // Re-export types from main types file for convenience
 export type { FieldType, SectionConfig, SnippetOption };

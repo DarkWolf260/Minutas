@@ -7,7 +7,7 @@ import {
     AppSettings,
     SnippetOption,
     FormDataValue,
-} from '@/types';
+} from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { TimeHlvInput } from '@/components/time-hlv-input';

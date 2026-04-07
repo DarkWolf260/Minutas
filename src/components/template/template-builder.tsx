@@ -22,7 +22,7 @@ import { Save, HelpCircle, X, FileText, Plus, Trash2, Copy, Eye } from 'lucide-r
 import { toast } from 'sonner';
 import { validateTemplateSyntax } from '@/lib/validators';
 import { ReportForm, ReportFormRef } from '@/components/report/report-form';
-import type { Template, TemplateConfig, StatisticRule } from '@/types';
+import type { Template, TemplateConfig, StatisticRule } from '@/lib/types';
 import { ReportPreview } from '@/components/report/report-preview';
 import {
   Dialog,

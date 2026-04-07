@@ -4,7 +4,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { parseTemplate, renderFinalReport } from '../../template-parser';
-import type { TemplateConfig, SectionConfig, FieldType, SnippetOption } from '@/types';
+import type { TemplateConfig, SectionConfig, FieldType, SnippetOption } from '@/lib/types';
 
 function generateMockData(
     sections: SectionConfig[],

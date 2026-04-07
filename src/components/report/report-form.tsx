@@ -10,7 +10,7 @@ import type {
   SectionConfig,
   StaffMember,
   FormDataRecord,
-} from '@/types';
+} from '@/lib/types';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { Label } from '@/components/ui/label';
 import { parseTemplate, renderFinalReport } from '@/lib/template-parser';

@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { Report, TemplateConfig } from '@/types';
+import type { Report, TemplateConfig } from '@/lib/types';
 import { Trash2, Copy, CheckIcon, Eye, Save, FileText } from 'lucide-react';
 import { useTemplates } from '@/hooks/use-templates';
 import { ReportForm, type ReportFormRef } from './report-form';

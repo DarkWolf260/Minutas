@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PERSONNEL_STATUS } from '@/constants/personnel';
+import { PERSONNEL_STATUS } from '@/lib/constants/personnel';
 import { GuardSchema } from '@/lib/validations/schemas';
 
 export const PERSONNEL_VALIDATION = {

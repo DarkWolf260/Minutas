@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWorkspaceManager } from '@/lib/db/db-context';
-import type { StaffMember } from '@/types';
+import type { StaffMember } from '@/lib/types';
 
 interface CsvImportButtonProps {
     onImport: (members: Omit<StaffMember, 'id'>[]) => Promise<{ added: StaffMember[]; skipped: number } | undefined>;

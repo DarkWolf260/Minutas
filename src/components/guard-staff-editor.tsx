@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef, forwardRef, useImperativeHandle }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { Guard, Staff, StaffRole, Department, StaffMember } from '@/types';
+import type { Guard, Staff, StaffRole, Department, StaffMember } from '@/lib/types';
 import { Trash2, Search, Check, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePersonnel } from '@/hooks/use-personnel';

@@ -49,7 +49,7 @@ import {
 } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
-import type { Staff, StaffMember, StaffRole, FieldConfig, ManualNovedad } from '@/types';
+import type { Staff, StaffMember, StaffRole, FieldConfig, ManualNovedad } from '@/lib/types';
 import { generateId } from '@/lib/utils/id';
 import { format } from 'date-fns';
 import { DatePicker } from './date-picker';

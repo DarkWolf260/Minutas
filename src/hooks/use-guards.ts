@@ -23,7 +23,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Guard } from '@/types';
+import type { Guard } from '@/lib/types';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
 

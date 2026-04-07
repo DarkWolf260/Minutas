@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { FieldConfig } from '@/types';
+import type { FieldConfig } from '@/lib/types';
 import { format } from 'date-fns';
 import { useSettings } from './use-settings';
 import { useGuards } from './use-guards';

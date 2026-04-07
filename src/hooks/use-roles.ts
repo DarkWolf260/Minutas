@@ -25,11 +25,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { StaffRole } from '@/types';
+import type { StaffRole } from '@/lib/types';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
-import { LEADER_ROLES } from '@/constants/roles';
-import { PERSONNEL_STATUS } from '@/constants/personnel';
+import { LEADER_ROLES } from '@/lib/constants/roles';
+import { PERSONNEL_STATUS } from '@/lib/constants/personnel';
 
 const defaultRoles: StaffRole[] = [
   { name: LEADER_ROLES.DIRECTOR, isSingle: true, departmentScope: [], order: 0 },
