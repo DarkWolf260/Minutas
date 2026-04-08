@@ -191,11 +191,11 @@ export function GuardAssignmentPanel({
               <Button
                 size="sm"
                 variant="default"
-                className="hidden md:flex gap-2 h-8 px-3 shadow-md"
+                className="flex gap-1.5 h-8 px-2.5 shadow-md"
                 onClick={() => editorRef.current?.save?.()}
               >
                 <Save className="h-4 w-4" />
-                <span className="font-bold">Guardar Personal</span>
+                <span className="font-bold text-xs sm:text-sm">Guardar</span>
               </Button>
             </CardHeader>
             <CardContent className="p-0 flex-1 min-h-0 flex flex-col overflow-hidden">

@@ -58,21 +58,7 @@ export function StructureManager({
     };
 
     if (!isInitialized.current && rolesLoaded && deptsLoaded) {
-      let updatedRoles = patchRoles(roles);
-      
-      // Ensure 'Ausente' role exists as it's a vital status role now
-      const hasAusente = updatedRoles.some(r => r.name.toLowerCase() === 'ausente');
-      if (!hasAusente) {
-        updatedRoles.push({
-          name: 'Ausente',
-          isStatus: true,
-          isSingle: false,
-          isHidden: false,
-          order: updatedRoles.length,
-          departmentScope: []
-        });
-      }
-      
+      const updatedRoles = patchRoles(roles);
       setLocalRoles(updatedRoles);
       setLocalDepts(departments);
       isInitialized.current = true;

@@ -339,8 +339,20 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
   onSave,
 }, ref) => {
   const [staff, setStaff] = useState<Staff>(guard.staff || {});
+  const staffRef = useRef<Staff>(staff);
+  const initialStaffRef = useRef<Staff>(guard.staff || {});
   const { recordAssignments } = usePersonnelHistory();
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    staffRef.current = staff;
+  }, [staff]);
+
+  // Update initial staff when guard changes
+  useEffect(() => {
+    initialStaffRef.current = guard.staff || {};
+  }, [guard.id]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -449,13 +461,46 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
     }
   };
 
-  const handleSave = async () => {
-    onUpdate({ ...guard, staff });
+  const performSave = async (showNotification = true) => {
+    const currentStaff = staffRef.current;
+    
+    // Simple check to avoid saving if no changes were made since last guard load
+    // or since last save. (Deep check might be overkill, but let's at least check if it's different from initial)
+    const hasChanges = JSON.stringify(currentStaff) !== JSON.stringify(initialStaffRef.current);
+    
+    if (!hasChanges) return;
+
+    onUpdate({ ...guard, staff: currentStaff });
     // Record history for the current date
     const today = format(new Date(), 'yyyy-MM-dd');
-    await recordAssignments(guard.id, staff, today);
-    onSave();
+    await recordAssignments(guard.id, currentStaff, today);
+    
+    // Update initialStaffRef to current state after saving
+    initialStaffRef.current = currentStaff;
+    
+    if (showNotification) {
+      onSave();
+    }
   };
+
+  const handleSave = () => performSave(true);
+
+  // Auto-save on visibility change (tab switch) or unmount (navigation)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        performSave(false);
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      // Silent save on unmount
+      performSave(false);
+    };
+  }, []);
 
   const handleListUpdate = (roleName: string, newMembers: StaffMember[]) => {
     setStaff((prev) => ({
@@ -474,24 +519,6 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
 
   return (
     <div className="space-y-4 p-1 relative">
-      {/* Save Button - Mobile FAB ONLY (Desktop uses Header button) */}
-      <div className={cn(
-        "z-50 transition-all duration-300 md:hidden",
-        // Mobile: Floating Action Button (Raised to avoid BottomNav)
-        "fixed bottom-24 right-6 flex items-center justify-center translate-y-0"
-      )}>
-        <Button 
-          onClick={handleSave} 
-          className={cn(
-            "shadow-lg gap-2 font-bold",
-            // Mobile Square with rounded edges
-            "rounded-xl w-14 h-14 p-0 shadow-lg shadow-primary/20",
-            "active:scale-95 bg-primary text-primary-foreground"
-          )}
-        >
-          <Save className="h-6 w-6" />
-        </Button>
-      </div>
 
       <DndContext
         sensors={sensors}

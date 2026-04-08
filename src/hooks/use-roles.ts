@@ -65,6 +65,12 @@ const defaultRoles: StaffRole[] = [
     departmentScope: [],
     order: 12,
   },
+  {
+    name: PERSONNEL_STATUS.AUSENTE.charAt(0).toUpperCase() + PERSONNEL_STATUS.AUSENTE.slice(1),
+    isSingle: false,
+    departmentScope: [],
+    order: 13,
+  },
 ];
 
 export function useRoles() {
