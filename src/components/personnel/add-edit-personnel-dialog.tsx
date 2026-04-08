@@ -1,9 +1,24 @@
-'use client';
-
 import { useState, useEffect } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from '@/components/ui/sheet';
 import {
   Dialog,
   DialogContent,
@@ -12,16 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { CedulaInput } from '@/components/cedula-input';
-import { MultiInput } from '@/components/ui/multi-input';
 import type { StaffMember, PersonnelStatus, StaffRole, Department } from '@/lib/types';
 import { RANK_OPTIONS, STATUS_OPTIONS } from '@/lib/constants/personnel';
 import { toast } from 'sonner';
@@ -96,7 +102,7 @@ export function AddEditPersonnelDialog({
       setStatus('activo');
       setTitulo('');
     }
-  }, [member, open, departments]);
+  }, [member, open, departments, roles]);
 
   const handleSubmit = () => {
     // Validation
@@ -125,135 +131,195 @@ export function AddEditPersonnelDialog({
     onSave(data);
   };
 
-  const handleClose = () => {
-    onCancel();
-  };
+  const formContent = (
+    <div className="space-y-4 py-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Jerarquía */}
+        <div className="space-y-2">
+          <Label htmlFor="rank">Jerarquía *</Label>
+          <Select value={rank} onValueChange={setRank}>
+            <SelectTrigger id="rank" name="rank">
+              <SelectValue placeholder="Seleccionar jerarquía..." />
+            </SelectTrigger>
+            <SelectContent>
+              {RANK_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Nombre */}
+        <div className="space-y-2">
+          <Label htmlFor="name">Nombre y Apellido *</Label>
+          <Input
+            id="name"
+            name="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Ej. Juan Pérez"
+            autoComplete="name"
+          />
+        </div>
+
+        {/* Cédula */}
+        <div className="space-y-2">
+          <Label htmlFor="cedula">Cédula</Label>
+          <CedulaInput id="cedula" name="cedula" value={cedula} onChange={setCedula} />
+        </div>
+
+        {/* Cargo Formal */}
+        <div className="space-y-2">
+          <Label htmlFor="role">Cargo Institucional</Label>
+          <Select value={roleId} onValueChange={setRoleId}>
+            <SelectTrigger id="role" name="role">
+              <SelectValue placeholder="Seleccionar cargo..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Sin cargo asignado</SelectItem>
+              {roles.map((role) => (
+                <SelectItem key={role.name} value={role.name}>
+                  {role.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Departamento */}
+        <div className="space-y-2">
+          <Label htmlFor="department">Departamento</Label>
+          <Select value={department} onValueChange={setDepartment}>
+            <SelectTrigger id="department" name="department">
+              <SelectValue placeholder="Seleccionar departamento..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Sin departamento</SelectItem>
+              {departments.map((dept) => (
+                <SelectItem key={dept.id} value={dept.id}>
+                  {dept.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Estado */}
+        <div className="space-y-2">
+          <Label htmlFor="status">Estado</Label>
+          <Select value={status} onValueChange={(v) => setStatus(v as PersonnelStatus)}>
+            <SelectTrigger id="status" name="status">
+              <SelectValue placeholder="Seleccionar estado..." />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Título (opcional, no visible en tabla) */}
+      <div className="space-y-2">
+        <Label htmlFor="titulo">Título Académico <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+        <Input
+          id="titulo"
+          name="titulo"
+          value={titulo}
+          onChange={(e) => setTitulo(e.target.value)}
+          placeholder="Ej. Licenciado en Criminalística"
+          autoComplete="off"
+        />
+      </div>
+    </div>
+  );
+
+  const footerActions = (
+    <>
+      <Button variant="outline" onClick={onCancel} className="w-full sm:w-auto">
+        Cancelar
+      </Button>
+      <Button onClick={handleSubmit} className="w-full sm:w-auto">
+        {isEditMode ? 'Actualizar' : 'Añadir'}
+      </Button>
+    </>
+  );
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
+    <ResponsiveModal
+      isOpen={open}
+      onOpenChange={(isOpen) => !isOpen && onCancel()}
+      title={isEditMode ? 'Editar Personal' : 'Añadir Personal'}
+      description={isEditMode
+        ? 'Actualiza la información del miembro del personal'
+        : 'Completa el formulario para añadir un nuevo miembro'}
+      footer={footerActions}
+    >
+      {formContent}
+    </ResponsiveModal>
+  );
+}
+
+/**
+ * A helper component that renders a Sheet on mobile and a Dialog on desktop
+ */
+function ResponsiveModal({ 
+  isOpen, 
+  onOpenChange, 
+  title, 
+  description, 
+  children, 
+  footer 
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  children: React.ReactNode;
+  footer: React.ReactNode;
+}) {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={onOpenChange}>
+        <SheetContent side="bottom" className="rounded-t-3xl border-t-2 border-primary/20 p-6 pb-12 focus-visible:outline-none flex flex-col max-h-[92vh]">
+          <SheetHeader className="text-left mb-4 shrink-0">
+            <SheetTitle className="text-xl font-bold">{title}</SheetTitle>
+            <SheetDescription className="text-sm">{description}</SheetDescription>
+          </SheetHeader>
+          <ScrollArea className="flex-1 overflow-y-auto pr-1">
+            <div className="py-2">
+              {children}
+            </div>
+          </ScrollArea>
+          <SheetFooter className="mt-6 flex flex-col gap-3 shrink-0">
+            {footer}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col p-0 overflow-hidden">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle>{isEditMode ? 'Editar Personal' : 'Añadir Personal'}</DialogTitle>
-          <DialogDescription>
-            {isEditMode
-              ? 'Actualiza la información del miembro del personal'
-              : 'Completa el formulario para añadir un nuevo miembro'}
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-
         <ScrollArea className="flex-1 w-full" type="always">
-          <div className="space-y-4 p-6 pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Jerarquía */}
-              <div className="space-y-2">
-                <Label htmlFor="rank">Jerarquía *</Label>
-                <Select value={rank} onValueChange={setRank}>
-                  <SelectTrigger id="rank" name="rank">
-                    <SelectValue placeholder="Seleccionar jerarquía..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {RANK_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Nombre */}
-              <div className="space-y-2">
-                <Label htmlFor="name">Nombre y Apellido *</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Ej. Juan Pérez"
-                  autoComplete="name"
-                />
-              </div>
-
-              {/* Cédula */}
-              <div className="space-y-2">
-                <Label htmlFor="cedula">Cédula</Label>
-                <CedulaInput id="cedula" name="cedula" value={cedula} onChange={setCedula} />
-              </div>
-
-              {/* Cargo Formal */}
-              <div className="space-y-2">
-                <Label htmlFor="role">Cargo Institucional</Label>
-                <Select value={roleId} onValueChange={setRoleId}>
-                  <SelectTrigger id="role" name="role">
-                    <SelectValue placeholder="Seleccionar cargo..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sin cargo asignado</SelectItem>
-                    {roles.map((role) => (
-                      <SelectItem key={role.name} value={role.name}>
-                        {role.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Departamento */}
-              <div className="space-y-2">
-                <Label htmlFor="department">Departamento</Label>
-                <Select value={department} onValueChange={setDepartment}>
-                  <SelectTrigger id="department" name="department">
-                    <SelectValue placeholder="Seleccionar departamento..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sin departamento</SelectItem>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Estado */}
-              <div className="space-y-2">
-                <Label htmlFor="status">Estado</Label>
-                <Select value={status} onValueChange={(v) => setStatus(v as PersonnelStatus)}>
-                  <SelectTrigger id="status" name="status">
-                    <SelectValue placeholder="Seleccionar estado..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Título (opcional, no visible en tabla) */}
-            <div className="space-y-2">
-              <Label htmlFor="titulo">Título Académico <span className="text-muted-foreground text-xs">(opcional)</span></Label>
-              <Input
-                id="titulo"
-                name="titulo"
-                value={titulo}
-                onChange={(e) => setTitulo(e.target.value)}
-                placeholder="Ej. Licenciado en Criminalística"
-                autoComplete="off"
-              />
-            </div>
+          <div className="p-6 pt-4">
+            {children}
           </div>
         </ScrollArea>
-
         <DialogFooter className="p-6 pt-0">
-          <Button variant="outline" onClick={handleClose}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSubmit}>{isEditMode ? 'Actualizar' : 'Añadir'}</Button>
+          {footer}
         </DialogFooter>
       </DialogContent>
     </Dialog>

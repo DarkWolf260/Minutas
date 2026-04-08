@@ -152,7 +152,7 @@ export function RoleSortableList({
                             }}
                         >
                             {activeId && activeRole ? (
-                                <div className="flex items-center justify-between p-3 px-6 bg-background border rounded-lg shadow-xl ring-2 ring-primary/20">
+                                <div className="flex items-center justify-between p-3 px-6 bg-background border rounded-lg shadow-sm">
                                     <div className="flex items-center gap-3 min-w-0">
                                         <div className="text-primary shrink-0 cursor-grabbing p-1">
                                             <GripVertical className="h-4 w-4" />

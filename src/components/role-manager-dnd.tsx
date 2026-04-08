@@ -390,7 +390,7 @@ export function RoleManagerDnD({
       </div>
       <DragOverlay>
         {activeRole ? (
-          <Card className="p-2 bg-background touch-none shadow-xl">
+          <Card className="p-2 bg-background touch-none border shadow-sm">
             <div className="flex items-center gap-2">
               <span className="cursor-grabbing p-1 text-muted-foreground hover:text-foreground">
                 <GripVertical className="h-5 w-5" />

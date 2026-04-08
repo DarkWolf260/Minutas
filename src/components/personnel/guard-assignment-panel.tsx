@@ -13,6 +13,7 @@ import { LEADER_ROLES } from '@/lib/constants/roles';
 import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface GuardAssignmentPanelProps {
   guards: Guard[];
@@ -36,6 +37,7 @@ export function GuardAssignmentPanel({
   const [selectedGuardId, setSelectedGuardId] = useState<string>(guards[0]?.id || '');
   const [newGuardName, setNewGuardName] = useState('');
   const editorRef = useRef<any>(null);
+  const [confirmDeleteGuardId, setConfirmDeleteGuardId] = useState<string | null>(null);
 
   const selectedGuard = guards.find((g) => g.id === selectedGuardId);
 
@@ -74,17 +76,15 @@ export function GuardAssignmentPanel({
   };
 
   const handleRemoveGuard = async (guardId: string) => {
-    if (window.confirm(`¿Eliminar Guardia "${guardId}"?`)) {
-      const updatedGuards = guards.filter((g) => g.id !== guardId);
-      await onGuardUpdate(updatedGuards);
+    const updatedGuards = guards.filter((g) => g.id !== guardId);
+    await onGuardUpdate(updatedGuards);
 
-      // Select first guard if current was deleted
-      if (selectedGuardId === guardId && updatedGuards.length > 0) {
-        setSelectedGuardId(updatedGuards[0]?.id || '');
-      }
-
-      toast.success('Guardia eliminada');
+    // Select first guard if current was deleted
+    if (selectedGuardId === guardId && updatedGuards.length > 0) {
+      setSelectedGuardId(updatedGuards[0]?.id || '');
     }
+
+    toast.success('Guardia eliminada');
   };
 
   const handleStaffUpdate = async (updatedGuard: Guard | Department) => {
@@ -98,8 +98,8 @@ export function GuardAssignmentPanel({
       {/* Guard Management */}
       <div className="grid md:grid-cols-[300px_1fr] gap-6 flex-1 min-h-0">
         {/* Sidebar */}
-        <Card className="flex flex-col min-h-0 border-muted/50 bg-muted/5 shadow-inner">
-          <CardHeader className="pb-3 border-b bg-background/50 backdrop-blur-sm">
+        <Card className="flex flex-col min-h-0 border bg-card shadow-sm">
+          <CardHeader className="pb-3 border-b bg-muted/5 backdrop-blur-sm">
             <CardTitle className="text-base font-bold">Guardias</CardTitle>
             <CardDescription className="text-[11px]">Selecciona o crea una guardia operativa.</CardDescription>
           </CardHeader>
@@ -152,7 +152,7 @@ export function GuardAssignmentPanel({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRemoveGuard(guard.id)}
+                          onClick={() => setConfirmDeleteGuardId(guard.id)}
                           className="text-muted-foreground hover:text-destructive h-8 w-8 p-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -174,7 +174,7 @@ export function GuardAssignmentPanel({
 
         {/* Main Content - Guard Staff Editor */}
         {selectedGuard ? (
-          <Card className="flex flex-col min-h-0 border-muted/50 bg-background shadow-xl shadow-foreground/5 overflow-visible">
+          <Card className="flex flex-col min-h-0 border bg-card shadow-sm overflow-visible">
             <CardHeader className="pb-3 border-b bg-muted/5 flex flex-row items-center justify-between space-y-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10 text-primary">
@@ -228,6 +228,21 @@ export function GuardAssignmentPanel({
           </Card>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!confirmDeleteGuardId}
+        onOpenChange={(open) => !open && setConfirmDeleteGuardId(null)}
+        title="Eliminar Guardia"
+        message={`¿Estás seguro de que deseas eliminar la Guardia "${confirmDeleteGuardId}"? Esta acción borrará permanentemente la asignación de personal para esta guardia.`}
+        confirmText="Eliminar"
+        variant="destructive"
+        onConfirm={() => {
+          if (confirmDeleteGuardId) {
+            handleRemoveGuard(confirmDeleteGuardId);
+            setConfirmDeleteGuardId(null);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -597,7 +597,7 @@ export default function ReporteFinalPage() {
     <div className="flex-col w-full md:flex-1 md:flex md:min-h-0 md:overflow-hidden relative">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col sm:gap-6 md:flex-1 md:min-h-0">
         <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-28 sm:pb-6 flex flex-col md:flex-1 md:min-h-0">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10">
               <div className="flex items-center gap-4">
                 <Link to="/" className="shrink-0">
                   <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
@@ -691,9 +691,9 @@ export default function ReporteFinalPage() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch md:flex-1 md:min-h-0 pb-4 overflow-hidden">
-                    <div className="flex flex-col gap-6 md:flex-1 md:min-h-0 md:h-full">
-                      <Card className="border-none shadow-xl shadow-foreground/5 bg-card/50 backdrop-blur-sm md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch md:flex-1 md:min-h-0 pb-4 overflow-hidden">
+                    <div className="flex flex-col gap-8 md:flex-1 md:min-h-0 md:h-full">
+                      <Card className="border bg-card/50 backdrop-blur-sm md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0 shadow-sm">
                         <CardHeader className="py-3 border-b bg-background/50 backdrop-blur-sm shrink-0">
                           <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                             <TrendingUp className="h-3.5 w-3.5 text-primary" />
@@ -710,7 +710,7 @@ export default function ReporteFinalPage() {
                         </CardContent>
                       </Card>
 
-                      <Card className="border-none shadow-xl shadow-foreground/5 bg-card/50 backdrop-blur-sm md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0">
+                      <Card className="border bg-card/50 backdrop-blur-sm md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0 shadow-sm">
                         <CardHeader className="py-3 border-b bg-background/50 backdrop-blur-sm shrink-0">
                           <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                             <FileText className="h-3.5 w-3.5 text-primary" />
@@ -768,7 +768,7 @@ export default function ReporteFinalPage() {
                     </div>
 
                     <div className="flex flex-col gap-6 flex-1 min-h-0 pb-2 h-full">
-                      <Card className="border-none shadow-xl shadow-foreground/5 bg-card/50 backdrop-blur-sm shrink-0">
+                      <Card className="border bg-card/50 backdrop-blur-sm shrink-0 shadow-sm">
                         <CardHeader className="py-3 border-b bg-background/50 backdrop-blur-sm shrink-0">
                           <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                             <PlusCircle className="h-3.5 w-3.5 text-primary" />
@@ -837,7 +837,7 @@ export default function ReporteFinalPage() {
                     </CardContent>
                   </Card>
 
-                      <Card className="border-none shadow-xl shadow-foreground/5 bg-card/50 backdrop-blur-sm md:overflow-hidden md:flex flex-col md:flex-1 md:min-h-0">
+                      <Card className="border bg-card/50 backdrop-blur-sm md:overflow-hidden md:flex flex-col md:flex-1 md:min-h-0 shadow-sm">
                         <CardHeader className="py-3 border-b bg-background/50 backdrop-blur-sm shrink-0">
                           <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                             <TrendingUp className="h-3.5 w-3.5 text-primary" />
@@ -909,7 +909,7 @@ export default function ReporteFinalPage() {
               value="history" 
               className="mt-0 focus-visible:outline-none ring-offset-background data-[state=active]:flex data-[state=active]:flex-col md:data-[state=active]:flex-1 md:min-h-0 bg-transparent animate-in fade-in slide-in-from-right-4 duration-500 ease-in-out"
             >
-              <Card className="border-none shadow-xl shadow-foreground/5 bg-card/50 backdrop-blur-sm md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0">
+              <Card className="border bg-card/50 backdrop-blur-sm md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0 shadow-sm">
                 <CardContent className="p-0 flex-1 flex flex-col min-h-0">
                   {!historyLoaded ? (
                     <div className="p-8 space-y-4">

@@ -134,7 +134,7 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
 
       dataToInject['Guardia'] = settings.activeGuardId;
 
-      initialFieldNames.forEach((templateFieldKey) => {
+      initialFieldNames.forEach((templateFieldKey: string) => {
         const lowerTemplateFieldKey = templateFieldKey.toLowerCase();
         const canonicalKey = Object.keys(dataToInject).find(
           (k) => k.toLowerCase() === lowerTemplateFieldKey
@@ -144,8 +144,8 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
           const valueToInject = dataToInject[canonicalKey];
           if (valueToInject === undefined) return;
 
-          const parentSection = initialSections.find((s) =>
-            s.fieldIds.some((sf) => sf.toLowerCase() === lowerTemplateFieldKey)
+          const parentSection = initialSections.find((s: any) =>
+            s.fieldIds.some((sf: string) => sf.toLowerCase() === lowerTemplateFieldKey)
           );
 
           if (parentSection) {
@@ -274,7 +274,7 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
         {/* Scrollable Area */}
         <ScrollArea className="flex-1 min-h-0 w-full bg-muted/20 pointer-events-auto" id="generator-scroll-area" type="always">
           <div className="w-full max-w-[1000px] mx-auto p-4 sm:p-8 pb-32">
-            <Card className="shadow-xl border-none ring-1 ring-border/50 font-inherit">
+            <Card className="border bg-card shadow-sm font-inherit">
               <CardHeader className="bg-card/50 border-b">
                 <CardTitle className="text-xl font-bold">{template.name}</CardTitle>
               </CardHeader>

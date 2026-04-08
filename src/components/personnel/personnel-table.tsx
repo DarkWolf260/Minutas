@@ -17,6 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Search, FileEdit, Trash2, Activity, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { StaffMember, PersonnelStatus, Department } from '@/lib/types';
 import { cn, normalizeString } from '@/lib/utils';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface PersonnelTableProps {
   personnel: StaffMember[];
@@ -46,6 +47,7 @@ export function PersonnelTable({
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<keyof StaffMember>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [confirmDeleteMember, setConfirmDeleteMember] = useState<StaffMember | null>(null);
 
   // Map dept id → name for display
   const deptNameById = useMemo(
@@ -265,11 +267,7 @@ export function PersonnelTable({
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => {
-                          if (window.confirm(`¿Eliminar a ${member.name}?`)) {
-                            onDelete(member.id);
-                          }
-                        }}
+                        onClick={() => setConfirmDeleteMember(member)}
                         title={`Eliminar ${member.name}`}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -378,11 +376,7 @@ export function PersonnelTable({
                     variant="ghost"
                     size="icon"
                     className="h-9 w-9 rounded-full text-destructive hover:bg-destructive/10 transition-colors"
-                    onClick={() => {
-                      if (window.confirm(`¿Eliminar a ${member.name}?`)) {
-                        onDelete(member.id);
-                      }
-                    }}
+                    onClick={() => setConfirmDeleteMember(member)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -392,6 +386,21 @@ export function PersonnelTable({
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!confirmDeleteMember}
+        onOpenChange={(open) => !open && setConfirmDeleteMember(null)}
+        title="Eliminar Personal"
+        message={`¿Estás seguro de que deseas eliminar a "${confirmDeleteMember?.name}"? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        variant="destructive"
+        onConfirm={() => {
+          if (confirmDeleteMember) {
+            onDelete(confirmDeleteMember.id);
+            setConfirmDeleteMember(null);
+          }
+        }}
+      />
     </div>
   );
 }

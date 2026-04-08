@@ -280,7 +280,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
         type="always"
       >
         <div className="w-full max-w-[1000px] mx-auto p-4 sm:p-8 pb-32">
-          <Card className="shadow-xl border-none ring-1 ring-border/50">
+          <Card className="border bg-card shadow-sm">
             <CardHeader className="bg-card/50 border-b">
               <CardTitle className="text-xl font-bold">{report.title}</CardTitle>
             </CardHeader>

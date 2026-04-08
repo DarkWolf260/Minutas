@@ -40,8 +40,19 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetDescription, 
+  SheetFooter 
+} from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { Department, StaffRole, StaffMember } from '@/lib/types';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { toast } from 'sonner';
 
 interface StructureTreeProps {
   departments: Department[];
@@ -74,6 +85,10 @@ export function StructureTree({
   const [newDeptName, setNewDeptName] = useState('');
   const [newRoleName, setNewRoleName] = useState('');
   const [targetDeptId, setTargetDeptId] = useState<string | undefined>(undefined);
+
+  // States for delete confirmations
+  const [confirmDeleteDept, setConfirmDeleteDept] = useState<{ id: string, name: string } | null>(null);
+  const [confirmDeleteRole, setConfirmDeleteRole] = useState<{ name: string } | null>(null);
 
   // Group roles by department, filtering out personnel statuses (Vacations, etc.) from the tree
   const globalRoles = roles.filter(r => (r.departmentScope ?? []).length === 0 && !r.isStatus);
@@ -120,8 +135,8 @@ export function StructureTree({
   };
 
   return (
-    <Card className="border-muted/50 bg-muted/5 shadow-inner overflow-hidden flex flex-col flex-1 min-h-0 w-full max-w-full overflow-x-hidden">
-      <CardHeader className="pb-3 border-b bg-background/50 backdrop-blur-sm">
+    <Card className="border bg-card shadow-sm overflow-hidden flex flex-col flex-1 min-h-0 w-full max-w-full overflow-x-hidden">
+      <CardHeader className="pb-3 border-b bg-muted/5 backdrop-blur-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
@@ -215,7 +230,7 @@ export function StructureTree({
                     role={role} 
                     members={role.members}
                     showPersonnel={showPersonnel}
-                    onRemove={onRemoveRole} 
+                    onRemove={(name) => setConfirmDeleteRole({ name })} 
                     onUpdate={onUpdateRole} 
                   />
                 ))}
@@ -275,9 +290,7 @@ export function StructureTree({
                           size="icon" 
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (confirm(`¿Eliminar departamento ${dept.name}?`)) {
-                              onRemoveDept(dept.id);
-                            }
+                            setConfirmDeleteDept({ id: dept.id, name: dept.name });
                           }}
                           className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         >
@@ -294,7 +307,7 @@ export function StructureTree({
                           role={role} 
                           members={role.members}
                           showPersonnel={showPersonnel}
-                          onRemove={onRemoveRole} 
+                          onRemove={(name) => setConfirmDeleteRole({ name })} 
                           onUpdate={onUpdateRole} 
                         />
                       ))}
@@ -327,64 +340,157 @@ export function StructureTree({
         </ScrollArea>
       </CardContent>
 
-      <Dialog open={isAddDeptOpen} onOpenChange={setIsAddDeptOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Añadir Departamento</DialogTitle>
-            <DialogDescription>
-              Crea una nueva unidad operativa para organizar el personal.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="dept-name">Nombre</Label>
-              <Input
-                id="dept-name"
-                placeholder="Nombre del departamento..."
-                value={newDeptName}
-                onChange={(e) => setNewDeptName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddDept()}
-                autoFocus
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDeptOpen(false)}>Cancelar</Button>
-            <Button onClick={handleAddDept} disabled={!newDeptName.trim()}>Crear Departamento</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Responsive Modal for Adding Department */}
+      <ResponsiveModal
+        isOpen={isAddDeptOpen}
+        onOpenChange={setIsAddDeptOpen}
+        title="Añadir Departamento"
+        description="Crea una nueva unidad operativa para organizar el personal."
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsAddDeptOpen(false)} className="w-full sm:w-auto">
+              Cancelar
+            </Button>
+            <Button onClick={handleAddDept} disabled={!newDeptName.trim()} className="w-full sm:w-auto">
+              Crear Departamento
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-2">
+          <Label htmlFor="dept-name">Nombre</Label>
+          <Input
+            id="dept-name"
+            placeholder="Nombre del departamento..."
+            value={newDeptName}
+            onChange={(e) => setNewDeptName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddDept()}
+            autoFocus
+          />
+        </div>
+      </ResponsiveModal>
 
-      <Dialog open={isAddRoleOpen} onOpenChange={setIsAddRoleOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Añadir Cargo</DialogTitle>
-            <DialogDescription>
-              {targetDeptId 
-                ? `Añadir cargo al departamento seleccionado.`
-                : 'Define un nuevo cargo global para la institución.'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="role-name">Nombre del Cargo</Label>
-              <Input
-                id="role-name"
-                placeholder="Ej: Director, Jefe de Guardia..."
-                value={newRoleName}
-                onChange={(e) => setNewRoleName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddRole()}
-                autoFocus
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddRoleOpen(false)}>Cancelar</Button>
-            <Button onClick={handleAddRole} disabled={!newRoleName.trim()}>Crear Cargo</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Responsive Modal for Adding Role */}
+      <ResponsiveModal
+        isOpen={isAddRoleOpen}
+        onOpenChange={setIsAddRoleOpen}
+        title="Añadir Cargo"
+        description={targetDeptId 
+          ? `Añadir cargo al departamento seleccionado.`
+          : 'Define un nuevo cargo global para la institución.'}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsAddRoleOpen(false)} className="w-full sm:w-auto">
+              Cancelar
+            </Button>
+            <Button onClick={handleAddRole} disabled={!newRoleName.trim()} className="w-full sm:w-auto">
+              Crear Cargo
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-2">
+          <Label htmlFor="role-name">Nombre del Cargo</Label>
+          <Input
+            id="role-name"
+            placeholder="Ej: Director, Jefe de Guardia..."
+            value={newRoleName}
+            onChange={(e) => setNewRoleName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddRole()}
+            autoFocus
+          />
+        </div>
+      </ResponsiveModal>
+
+      {/* Confirmation Dialog for Department Delete */}
+      <ConfirmDialog
+        open={!!confirmDeleteDept}
+        onOpenChange={(open) => !open && setConfirmDeleteDept(null)}
+        title="Eliminar Departamento"
+        message={`¿Estás seguro de que deseas eliminar el departamento "${confirmDeleteDept?.name}"? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        variant="destructive"
+        onConfirm={() => {
+          if (confirmDeleteDept) {
+            onRemoveDept(confirmDeleteDept.id);
+            setConfirmDeleteDept(null);
+          }
+        }}
+      />
+
+      {/* Confirmation Dialog for Role Delete */}
+      <ConfirmDialog
+        open={!!confirmDeleteRole}
+        onOpenChange={(open) => !open && setConfirmDeleteRole(null)}
+        title="Eliminar Cargo"
+        message={`¿Estás seguro de que deseas eliminar el cargo "${confirmDeleteRole?.name}"?`}
+        confirmText="Eliminar"
+        variant="destructive"
+        onConfirm={() => {
+          if (confirmDeleteRole) {
+            onRemoveRole(confirmDeleteRole.name);
+            setConfirmDeleteRole(null);
+          }
+        }}
+      />
     </Card>
+  );
+}
+
+/**
+ * A helper component that renders a Sheet on mobile and a Dialog on desktop
+ */
+function ResponsiveModal({ 
+  isOpen, 
+  onOpenChange, 
+  title, 
+  description, 
+  children, 
+  footer 
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  children: React.ReactNode;
+  footer: React.ReactNode;
+}) {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={onOpenChange}>
+        <SheetContent side="bottom" className="rounded-t-3xl border-t-2 border-primary/20 p-6 pb-12 focus-visible:outline-none">
+          <SheetHeader className="text-left mb-6">
+            <SheetTitle className="text-xl font-bold">{title}</SheetTitle>
+            <SheetDescription className="text-sm">{description}</SheetDescription>
+          </SheetHeader>
+          <div className="py-2">
+            {children}
+          </div>
+          <SheetFooter className="mt-8 flex flex-col gap-3">
+            {footer}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          {children}
+        </div>
+        <DialogFooter>
+          {footer}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -440,11 +546,7 @@ function RoleRow({
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={() => {
-            if (confirm(`¿Eliminar cargo ${role.name}?`)) {
-              onRemove(role.name);
-            }
-          }}
+          onClick={() => onRemove(role.name)}
           className="h-9 w-9 text-muted-foreground hover:text-destructive opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive/10"
         >
           <Trash2 className="h-4 w-4" />

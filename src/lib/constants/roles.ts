@@ -5,6 +5,7 @@
 export const LEADER_ROLES = {
   DIRECTOR: 'Director',
   JEFE_OPERACIONES: 'Jefe de Operaciones',
+  JEFE_DEPARTAMENTO: 'Jefe de Departamento',
 } as const;
 
 export const DEFAULT_ROLES = [

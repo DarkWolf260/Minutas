@@ -176,8 +176,8 @@ export function RoleSorter({ roles, onReorder, onUpdate, onRemove, onSave }: Rol
   }
 
   return (
-    <Card className="md:flex-1 border-muted/50 bg-muted/5 shadow-inner md:overflow-hidden md:flex md:flex-col md:min-h-0">
-      <CardHeader className="pb-3 border-b bg-background/50 backdrop-blur-sm sticky top-0 z-10">
+    <Card className="md:flex-1 border bg-card shadow-sm md:overflow-hidden md:flex md:flex-col md:min-h-0">
+      <CardHeader className="pb-3 border-b bg-muted/5 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-lg bg-primary/10 text-primary">

@@ -10,12 +10,14 @@ import { Trash2, PlusCircle, Save, Car } from 'lucide-react';
 import { useUnits } from '@/hooks/use-units';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export function UnitsManager() {
   const { units, saveUnits, isLoaded } = useUnits();
   const [localUnits, setLocalUnits] = useState<string[]>([]);
   const [newUnitName, setNewUnitName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [confirmDeleteUnit, setConfirmDeleteUnit] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoaded) {
@@ -35,6 +37,7 @@ export function UnitsManager() {
 
   const handleRemoveUnit = (unitToRemove: string) => {
     setLocalUnits(prev => prev.filter(u => u !== unitToRemove));
+    toast.success('Unidad removida del borrador');
   };
 
   const handleSave = async () => {
@@ -58,8 +61,8 @@ export function UnitsManager() {
   }
 
   return (
-    <div className="md:flex-1 md:flex md:flex-col md:min-h-0 md:h-full">
-      <Card className="border-muted/50 bg-background shadow-sm md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0 md:h-full">
+    <div className="md:flex-1 md:flex md:flex-col md:min-h-0 md:h-full animate-in fade-in duration-500">
+      <Card className="border bg-card md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0 md:h-full shadow-sm">
         <CardHeader className="pb-4 bg-muted/5 border-b">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-primary/10 text-primary">
@@ -137,7 +140,7 @@ export function UnitsManager() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                                onClick={() => handleRemoveUnit(unit)}
+                                onClick={() => setConfirmDeleteUnit(unit)}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -178,6 +181,21 @@ export function UnitsManager() {
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={!!confirmDeleteUnit}
+        onOpenChange={(open) => !open && setConfirmDeleteUnit(null)}
+        title="Eliminar Unidad"
+        message={`¿Estás seguro de que deseas eliminar la unidad "${confirmDeleteUnit}"?`}
+        confirmText="Eliminar"
+        variant="destructive"
+        onConfirm={() => {
+          if (confirmDeleteUnit) {
+            handleRemoveUnit(confirmDeleteUnit);
+            setConfirmDeleteUnit(null);
+          }
+        }}
+      />
     </div>
   );
 }

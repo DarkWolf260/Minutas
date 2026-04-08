@@ -13,6 +13,7 @@ import { generateId } from '@/lib/utils/id';
 import { Department, StaffRole, StaffMember } from '@/lib/types';
 import { StructureTree } from '@/components/structure/structure-tree';
 import { getInstitutionalData } from './structure/institutional-data';
+import { LEADER_ROLES } from '@/lib/constants/roles';
 
 interface StructureManagerProps {
   roles: StaffRole[];
@@ -102,6 +103,7 @@ export function StructureManager({
     const newRole: StaffRole = {
       name: name,
       isSingle: false,
+      isHidden: true,
       departmentScope: deptId ? [deptId] : [],
       order: localRoles.length,
     };
@@ -116,19 +118,66 @@ export function StructureManager({
 
   const handleLoadInstitutional = () => {
     const { newDepts, newRoles } = getInstitutionalData();
+    
+    // 1. Add new departments (if any from the institutional structure)
+    let updatedDepts: Department[] = [];
     setLocalDepts((prev) => {
       const existingNames = new Set(prev.map((d) => d.name.toLowerCase()));
       const filteredNew = newDepts.filter((d) => !existingNames.has(d.name.toLowerCase()));
-      return [...prev, ...filteredNew];
+      updatedDepts = [...prev, ...filteredNew];
+      return updatedDepts;
     });
 
+    // 2. Process roles and ensure each department has its own specific "Jefe de [Nombre]" role
     setLocalRoles((prev) => {
-      const existingNames = new Set(prev.map((r) => r.name.toLowerCase()));
-      const filteredNew = newRoles.filter((r) => !existingNames.has(r.name.toLowerCase()));
-      return [...prev, ...filteredNew];
+      let updatedRoles = [...prev];
+      
+      // Merge base roles from institutional data (Director, etc.)
+      const existingRoleNames = new Set(prev.map((r) => r.name.toLowerCase()));
+      const filteredNewRoles = newRoles.filter((r) => !existingRoleNames.has(r.name.toLowerCase()));
+      updatedRoles = [...updatedRoles, ...filteredNewRoles];
+
+      // For each department, ensure it has its own "Jefe de [Departamento]" role
+      const deptsToProcess = updatedDepts.length > 0 ? updatedDepts : localDepts;
+      
+      deptsToProcess.forEach(d => {
+        // Construct the specific boss name for this department, avoiding redundant "Departamento de"
+        const cleanDeptName = d.name.replace(/^Departamento de\s+/i, "");
+        const specificBossName = `Jefe de ${cleanDeptName}`;
+        
+        const existingBossIndex = updatedRoles.findIndex(
+          r => r.name.toLowerCase() === specificBossName.toLowerCase()
+        );
+        
+        const isBossOfOperations = specificBossName.toLowerCase() === LEADER_ROLES.JEFE_OPERACIONES.toLowerCase();
+        
+        if (existingBossIndex >= 0) {
+          // Ensure it's scoped and marked as single
+          const existingRole = updatedRoles[existingBossIndex];
+          if (existingRole) {
+            updatedRoles[existingBossIndex] = {
+              ...existingRole,
+              isSingle: true,
+              isHidden: isBossOfOperations ? false : true,
+              departmentScope: Array.from(new Set([...(existingRole.departmentScope || []), d.id]))
+            };
+          }
+        } else {
+          // Create a new specific role for this department
+          updatedRoles.push({
+            name: specificBossName,
+            isSingle: true,
+            isHidden: isBossOfOperations ? false : true,
+            departmentScope: [d.id],
+            order: updatedRoles.length
+          });
+        }
+      });
+
+      return updatedRoles;
     });
 
-    toast.success('Estructura institucional cargada');
+    toast.success('Estructura institucional cargada con Jefaturas de Departamento');
   };
 
   const handleUpdateRole = (roleName: string, updates: Partial<StaffRole>) => {
