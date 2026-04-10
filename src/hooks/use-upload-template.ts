@@ -34,8 +34,16 @@ export function useUploadTemplate() {
       toast.success(`Plantilla "${template.name}" publicada en la comunidad.`);
       return { data, error: null };
     } catch (err: any) {
-      console.error('Upload error:', err);
-      toast.error(err.message || 'Error al publicar la plantilla');
+      console.error('Detailed Upload error:', {
+        message: err.message,
+        details: err.details,
+        hint: err.hint,
+        code: err.code,
+        error: err
+      });
+      
+      const errorMessage = err.details || err.message || 'Error al publicar la plantilla';
+      toast.error(errorMessage);
       return { data: null, error: err };
     } finally {
       setIsUploading(false);

@@ -217,18 +217,31 @@ export function useTemplates() {
 
           logger.info('Bootstrapping templates from cloud', { count: data.length });
           
-          // Bulk insert into templates
-          const newTemplates = data.map(ct => ({
-            id: generateId('template'),
-            workspaceId: currentWorkspace,
-            name: ct.name,
-            content: ct.content,
-            type: ct.type || 'normal',
-            isActive: true,
-          }));
+          // 1. Fetch existing template names in this workspace to avoid duplicates
+          const existingTemplates = await db.templates.find({
+            selector: { workspaceId: currentWorkspace }
+          }).exec();
+          const existingNames = new Set(existingTemplates.map(t => t.name));
 
-          await db.templates.bulkInsert(newTemplates);
-          toast.success(`${data.length} plantillas sincronizadas automáticamente.`, { id: toastId });
+          // 2. Filter out already existing templates by name
+          const newTemplates = data
+            .filter(ct => !existingNames.has(ct.name))
+            .map(ct => ({
+              id: generateId('template'),
+              workspaceId: currentWorkspace,
+              name: ct.name,
+              content: ct.content,
+              type: ct.type || 'normal',
+              isActive: true,
+            }));
+
+          if (newTemplates.length > 0) {
+            logger.info('Inserting unique community templates', { count: newTemplates.length });
+            await db.templates.bulkInsert(newTemplates);
+            toast.success(`${newTemplates.length} plantillas sincronizadas automáticamente.`, { id: toastId });
+          } else {
+            toast.dismiss(toastId);
+          }
         } catch (err) {
           logger.error('Failed to bootstrap templates', err);
           toast.error('No se pudieron descargar las plantillas iniciales.', { id: toastId });

@@ -107,7 +107,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
           Object.keys(config.fields).find((k) => config.fields[k]?.type === 'time-hlv') || null;
       }
 
-      fieldNames.forEach((fieldId) => {
+      fieldNames.forEach((fieldId: string) => {
         const templateFieldConfig = templateConfigFields[fieldId];
         const globalDef = definitions[fieldId];
         const typeFromTemplate = fieldTypes.get(fieldId);
@@ -504,7 +504,11 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       getValues: getValues,
       getRenderedContent: () => {
         const formData = getValues();
-        return renderFinalReport(template.content, formData, finalConfig, predefinedValues);
+        const dynamicPredefinedValues = {
+          ...controlledValues,
+          Enc: settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : ''
+        };
+        return renderFinalReport(template.content, formData, finalConfig, predefinedValues, false, dynamicPredefinedValues);
       },
     }));
 

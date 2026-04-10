@@ -51,8 +51,14 @@ export function evaluateCondition(
     switch (operator) {
         case '=':
         case '==':
+            if (typeof val === 'string' && typeof target === 'string') {
+                return val.toLowerCase() === target.toLowerCase();
+            }
             return val === target;
         case '!=':
+            if (typeof val === 'string' && typeof target === 'string') {
+                return val.toLowerCase() !== target.toLowerCase();
+            }
             return val !== target;
         case '>':
             return val > target;

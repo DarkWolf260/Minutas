@@ -73,13 +73,14 @@ export interface AppSettings {
   finalReportManualNovedades?: ManualNovedad[];
   finalReportStatistics?: string;
   reportaRoleIds?: string[];
-  ordenDelDiaDraft?: {
-    staff: Staff;
-    activities: ManualNovedad[];
-    notes: { id: string; content: string }[];
-    guardId: string;
-    updatedAt: string;
-  };
+    ordenDelDiaDraft?: {
+      staff: Staff;
+      activities: ManualNovedad[];
+      notes: { id: string; content: string }[];
+      isJefeEncargado?: boolean;
+      guardId: string;
+      updatedAt: string;
+    };
   finalReportStaffSnapshot?: Staff;
   finalReportGuardId?: string;
   finalReportStartDate?: string;

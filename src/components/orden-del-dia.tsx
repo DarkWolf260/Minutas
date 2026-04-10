@@ -12,6 +12,7 @@ import { useRoles } from '@/hooks/use-roles';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useSettings } from '@/hooks/use-settings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { compareRanks } from '@/lib/utils';
@@ -117,6 +118,7 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
     const { settings, saveSettings, isLoaded: isSettingsLoaded } = useSettings();
     const { personnel, isLoaded: personnelLoaded } = usePersonnel();
     const [staff, setStaff] = useState<Staff>({});
+    const [isJefeEncargado, setIsJefeEncargado] = useState(false);
 
     const [activities, setActivities] = useState<ManualNovedad[]>(DEFAULT_ACTIVITIES);
     const [notes, setNotes] = useState<Note[]>(DEFAULT_NOTES);
@@ -192,6 +194,7 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
 
           setActivities(migratedActivities);
           setNotes(settings.ordenDelDiaDraft.notes);
+          setIsJefeEncargado(!!settings.ordenDelDiaDraft.isJefeEncargado);
           lastInitializedGuard.current = selectedGuard;
           return;
         }
@@ -227,6 +230,7 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
         });
 
         setStaff(newStaffState);
+        setIsJefeEncargado(false);
         setActivities(DEFAULT_ACTIVITIES);
         setNotes(DEFAULT_NOTES);
         lastInitializedGuard.current = selectedGuard;
@@ -246,6 +250,7 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
             staff,
             activities,
             notes,
+            isJefeEncargado,
             guardId: selectedGuard,
             updatedAt: new Date().toISOString()
           }
@@ -253,7 +258,7 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
       }, 1000);
 
       return () => clearTimeout(timer);
-    }, [staff, activities, notes, selectedGuard, isSettingsLoaded, rolesLoaded, personnelLoaded, saveSettings]);
+    }, [staff, activities, notes, isJefeEncargado, selectedGuard, isSettingsLoaded, rolesLoaded, personnelLoaded, saveSettings]);
 
     const handleRoleStaffUpdate = (roleName: string, members: StaffMember[]) => {
       setStaff((prev: Staff) => ({
@@ -499,9 +504,14 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
           personnelList.length > 0 &&
           personnelList.some((p: StaffMember) => p.name.trim() !== '')
         ) {
+          const isJefeServicios = role.toLowerCase() === 'jefe de los servicios';
+          const displayRole = isJefeServicios && isJefeEncargado 
+            ? `${role.toUpperCase()} (E)` 
+            : role.toUpperCase();
+
           reportParts.push(
             ``,
-            `*${role.toUpperCase()}*`,
+            `*${displayRole}*`,
             personnelList.map(m => formatStaffMember(m, false, true)).join('\n')
           );
         }
@@ -573,14 +583,30 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
                     {roles
                       .filter((r: StaffRole) => !r.isHidden)
                       .map((role: StaffRole) => (
-                        <StaffListEditor
-                          key={role.name}
-                          label={role.name}
-                          staffMembers={staff[role.name] || []}
-                          isSingle={role.isSingle}
-                          onUpdate={(members) => handleRoleStaffUpdate(role.name, members)}
-                          showObservations={true}
-                        />
+                        <div key={role.name} className="space-y-3">
+                          <StaffListEditor
+                            label={role.name}
+                            staffMembers={staff[role.name] || []}
+                            isSingle={role.isSingle}
+                            onUpdate={(members) => handleRoleStaffUpdate(role.name, members)}
+                            showObservations={true}
+                          />
+                          {role.name.toLowerCase() === 'jefe de los servicios' && (
+                            <div className="flex items-center justify-between px-4 py-2 bg-primary/5 rounded-xl border border-primary/10 animate-in fade-in slide-in-from-top-2 duration-300">
+                              <div className="flex flex-col">
+                                <Label htmlFor="jefe-encargado" className="text-[11px] font-bold uppercase tracking-tight text-primary/80">
+                                  Encargado (E)
+                                </Label>
+                                <p className="text-[9px] text-muted-foreground font-medium">Marcado como encargado de los servicios</p>
+                              </div>
+                              <Switch
+                                id="jefe-encargado"
+                                checked={isJefeEncargado}
+                                onCheckedChange={setIsJefeEncargado}
+                              />
+                            </div>
+                          )}
+                        </div>
                       ))}
                   </div>
                   <DragOverlay

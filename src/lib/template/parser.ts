@@ -413,34 +413,10 @@ export function parse(tokens: Token[]): TemplateParserResult {
         });
     });
 
-    // Collect IDs of sections that are NESTED INSIDE conditional sections.
-    // We must NOT modify their layouts with fieldToConditionMap — doing so
-    // would cause the conditional section's own ID to appear in absorbedItems,
-    // making the conditional disappear from the top-level layout.
-    const sectionsInsideConditionals = new Set<string>();
-    conditionalSections.forEach(condSec => {
-        (condSec.layout || []).forEach(id => sectionsInsideConditionals.add(id));
-    });
-
-    sections.forEach(sec => {
-        if (sec.condition) return;
-        // Skip sections nested inside conditional blocks
-        if (sectionsInsideConditionals.has(sec.id)) return;
-
-        // Determine the base layout to modify (use fieldIds if layout is empty)
-        const baseLayout = (sec.layout && sec.layout.length > 0) ? sec.layout : [...sec.fieldIds];
-
-        // Always set the layout with replaced condition wrappers
-        sec.layout = baseLayout.flatMap(fid => fieldToConditionMap.get(fid) || [fid])
-            .filter((val, idx, self) => self.indexOf(val) === idx);
-
-        // CRITICAL: We do NOT mutate sec.fieldIds here because renderer.ts relies on the
-        // original raw field IDs to match `{Field}` tags in the generated text!
-    });
-
     const absorbedItems = new Set<string>();
     sections.forEach(sec => {
-        if (!sec.condition && !sec.isMapping) {
+        // Mapping sections don't have a visual layout to absorb into
+        if (!sec.isMapping) {
             sec.fieldIds.forEach(id => absorbedItems.add(id));
             if (sec.layout) sec.layout.forEach(id => absorbedItems.add(id));
         }
@@ -449,11 +425,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
     // Also update global layout
     const updatedLayout = layout.flatMap(fid => fieldToConditionMap.get(fid) || [fid])
         .filter((val, idx, self) => self.indexOf(val) === idx)
-        .filter(val => {
-            // Remove condition sections from root layout if they are absorbed inside another section
-            if (val.startsWith('cond_') && absorbedItems.has(val)) return false;
-            return true;
-        });
+        .filter(val => !absorbedItems.has(val));
 
     return {
         sections,

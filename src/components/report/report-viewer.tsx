@@ -14,6 +14,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Report, TemplateConfig } from '@/lib/types';
 import { Trash2, Copy, CheckIcon, Eye, Save, FileText } from 'lucide-react';
 import { useTemplates } from '@/hooks/use-templates';
+import { useSettings } from '@/hooks/use-settings';
+import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { ReportForm, type ReportFormRef } from './report-form';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,6 +57,8 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
   const [saveButtonText, setSaveButtonText] = useState('Guardar Cambios');
 
   const { templates, configs, isLoaded } = useTemplates();
+  const { settings } = useSettings();
+  const { definitions } = useFieldDefinitions();
 
   const [previewContent, setPreviewContent] = useState('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -83,7 +87,10 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
   const saveLogic = useCallback(async (formData: Record<string, any>) => {
     if (!report || !template) return;
 
-    const content = renderFinalReport(template.content, formData, config, { Estatus: status });
+    const content = renderFinalReport(template.content, formData, config, { 
+      Estatus: status,
+      Enc: settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : ''
+    });
     const newTitle = String(formData.titulo || formData.title || template.name);
 
     // Time validation
@@ -156,7 +163,10 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     debouncedSave.cancel();
 
     if (!report || !template) return;
-    const content = renderFinalReport(template.content, formData, config, { Estatus: newStatus });
+    const content = renderFinalReport(template.content, formData, config, { 
+      Estatus: newStatus,
+      Enc: settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : ''
+    });
     const newTitle = String(formData.titulo || formData.title || template.name);
     const finalReport: Report = {
       ...report,

@@ -411,7 +411,7 @@ function renderSection(
 
     // Evaluate condition if present
     if (section.condition) {
-        const valToCompare = findValueForField(
+        let valToCompare = findValueForField(
             section.condition.fieldId,
             data,
             sections,
@@ -419,6 +419,29 @@ function renderSection(
             dynamicPredefinedValues,
             currentData
         );
+
+        // Resolve dropdown labels for comparison
+        const options = config.templateOptions?.get(section.condition.fieldId);
+        if (options && valToCompare !== undefined && valToCompare !== null) {
+            const valStr = String(valToCompare);
+            const opt = options.find(o => 
+                String(o.value) === valStr || 
+                String(o.label) === valStr
+            );
+            
+            if (opt) {
+                // Determine if we should compare against label or value
+                const targetValue = section.condition.value;
+                if (String(opt.label) === targetValue) {
+                    valToCompare = opt.label;
+                } else if (String(opt.value) === targetValue) {
+                    valToCompare = opt.value;
+                } else {
+                    // Fallback to label for documented behavior
+                    valToCompare = opt.label;
+                }
+            }
+        }
 
         if (section.isMapping) {
             // We just perform the evaluation to ensure logic works if needed,
@@ -642,7 +665,7 @@ function renderSection(
                     itemContent = `${labelPrefix}\n${cleaned}`;
                 }
             }
-            return itemContent;
+            return section.condition ? itemContent.trim() : itemContent;
         });
 
     // Determine appropriate joiner: 
@@ -932,12 +955,6 @@ export function renderFinalReport(
         if (data.id && semanticAudit.length > 0) {
             recordReportAudit(String(data.id), semanticAudit);
         }
-
-        finalOutput = finalOutput
-            .replace(/\\\*/g, '*') // Convert escaped asterisks (\*) to literal asterisks (*)
-            .replace(/\n{4,}/g, '\n\n\n') // Limit consecutive line breaks to max 3 (2 blank lines)
-            .replace(/\t/g, '    ') // Convert tabs to spaces
-            .trim();
 
         return finalOutput;
     } catch (error) {

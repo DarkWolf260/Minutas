@@ -187,7 +187,13 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
       }
 
       // 2. Import data to collections
-      for (const [colName, docs] of Object.entries(importData.collections)) {
+      const idMapping: Record<string, string> = {};
+      const collectionEntries = Object.entries(importData.collections);
+
+      // Sort collections: process templates first to build remapping table
+      collectionEntries.sort(([a], [b]) => (a === 'templates' ? -1 : b === 'templates' ? 1 : 0));
+
+      for (const [colName, docs] of collectionEntries) {
         const collection = (db.collections as any)[colName];
         if (!collection) {
           logger.warn(`Collection ${colName} not found in database during import. Skipping.`);
@@ -195,8 +201,43 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
         }
 
         for (const doc of (docs as any[])) {
+          const docToUpsert = { ...doc };
+
+          // 1. Semantic Deduplication for Templates
+          if (colName === 'templates') {
+            const existing = await collection.findOne({
+              selector: {
+                workspaceId: workspaceId,
+                name: doc.name
+              }
+            }).exec();
+
+            if (existing && existing.id !== doc.id) {
+              logger.info(`Deduplicating template [${doc.name}]: mapping imported ${doc.id} -> existing ${existing.id}`);
+              idMapping[doc.id] = existing.id;
+              docToUpsert.id = existing.id;
+            }
+          } 
+          
+          // 2. Remapping for Template-Dependent Entities
+          else if (colName === 'configs' && doc.type === 'template_config') {
+            // Remap template_config ID and its name field (which holds the template ID)
+            const mappedTemplateId = idMapping[doc.name];
+            if (mappedTemplateId) {
+              docToUpsert.id = `template_config:${mappedTemplateId}`;
+              docToUpsert.name = mappedTemplateId;
+            }
+          }
+          else if (colName === 'reports') {
+            // Ensure reports point to the correct deduplicated template
+            const mappedTemplateId = idMapping[doc.templateId];
+            if (mappedTemplateId) {
+              docToUpsert.templateId = mappedTemplateId;
+            }
+          }
+
           // Use upsert to handle existing documents
-          await collection.upsert(doc);
+          await collection.upsert(docToUpsert);
         }
       }
 

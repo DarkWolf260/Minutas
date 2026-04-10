@@ -400,7 +400,30 @@ export default function ReporteFinalPage() {
         const periodStr = settings.guardPeriod.toUpperCase().trim();
         if (periodStr.includes(' AL ')) {
           const parts = periodStr.split(' AL ');
-          return `DESDE EL ${parts[0]} HASTA EL ${parts[1]}`;
+          const formatDatePart = (part: string) => {
+            const dateMatch = part.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+            if (dateMatch) {
+              const [_, d, m, y] = dateMatch;
+              const dateObj = new Date(parseInt(y!, 10), parseInt(m!, 10) - 1, parseInt(d!, 10));
+              if (!isNaN(dateObj.getTime())) {
+                const dayStr = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: '2-digit' }).format(dateObj).replace(',', '').toUpperCase();
+                return dayStr;
+              }
+            }
+            return part;
+          };
+          
+          const startStr = formatDatePart(parts[0] || '');
+          const endStr = formatDatePart(parts[1] || '');
+          const endDateRaw = parts[1]?.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+          if (endDateRaw) {
+             const [_, d, m, y] = endDateRaw;
+             const dateObj = new Date(parseInt(y!, 10), parseInt(m!, 10) - 1, parseInt(d!, 10));
+             const monthLong = new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(dateObj).toUpperCase();
+             return `DESDE EL ${startStr} HASTA EL ${endStr} DE ${monthLong} DE ${y}`;
+          }
+          
+          return `DESDE EL ${startStr} HASTA EL ${endStr}`;
         }
         return periodStr;
       }
@@ -420,10 +443,22 @@ export default function ReporteFinalPage() {
       const startDate = shiftStart;
       const endDate = shiftEnd;
       
-      const dayStart = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: '2-digit' }).format(startDate);
-      const dayEnd = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: '2-digit', month: 'long' }).format(endDate);
+      const startMonth = startDate.getMonth();
+      const endMonth = endDate.getMonth();
       
-      return `DESDE EL ${dayStart.toUpperCase()} HASTA EL ${dayEnd.toUpperCase()} DE ${startDate.getFullYear()}`;
+      const dayStart = new Intl.DateTimeFormat('es-ES', { 
+        weekday: 'long', 
+        day: '2-digit',
+        month: startMonth !== endMonth ? 'long' : undefined
+      }).format(startDate).replace(',', '');
+      
+      const dayEnd = new Intl.DateTimeFormat('es-ES', { 
+        weekday: 'long', 
+        day: '2-digit', 
+        month: 'long' 
+      }).format(endDate).replace(',', '');
+      
+      return `DESDE EL ${dayStart.toUpperCase()} HASTA EL ${dayEnd.toUpperCase()} DE ${endDate.getFullYear()}`;
     })();
 
     const headerParts = [
@@ -467,7 +502,12 @@ export default function ReporteFinalPage() {
               .map((member) => formatStaffMemberForReport(member))
               .join(' / ');
             
-            headerParts.push(`- *${role.name.toUpperCase()}:* ${names}`);
+            const isJefeServicios = role.name.toLowerCase() === 'jefe de los servicios';
+            const displayRole = isJefeServicios && settings.ordenDelDiaDraft?.isJefeEncargado 
+              ? `${role.name.toUpperCase()} (E)` 
+              : role.name.toUpperCase();
+
+            headerParts.push(`- *${displayRole}:* ${names}`);
           }
         });
     }
@@ -510,6 +550,8 @@ export default function ReporteFinalPage() {
             const dynamicPredefinedValues = {
               ...globalSettings,
               Guardia: guardIdForReport,
+              Estatus: report.status || 'En proceso',
+              Enc: settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : '',
               [LEADER_ROLES.DIRECTOR]: director,
               [LEADER_ROLES.JEFE_OPERACIONES]: jefeDeOperaciones,
             };
