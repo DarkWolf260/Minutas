@@ -636,9 +636,24 @@ export default function ReporteFinalPage() {
     reportsLoaded && guardsLoaded && settingsLoaded && rolesLoadedHook && templatesLoaded && definitionsLoaded;
 
   return (
-    <div className="flex-col w-full md:flex-1 md:flex md:min-h-0 md:overflow-hidden relative">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col sm:gap-6 md:flex-1 md:min-h-0">
-        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-28 sm:pb-6 flex flex-col md:flex-1 md:min-h-0">
+    <div className="flex flex-col min-h-screen md:h-full bg-background overflow-y-auto md:overflow-hidden relative">
+      {/* Mobile Floating Action Button for Generating Report Final - Place here to ensure viewport fixed position */}
+      {activeTab === 'generate' && (
+        <div className="sm:hidden fixed bottom-24 right-6 z-[60] animate-in fade-in zoom-in duration-300 ease-out">
+          <Button
+            onClick={handleGenerateReport}
+            disabled={!isLoaded}
+            size="icon"
+            className="h-14 w-14 rounded-2xl bg-primary text-primary-foreground shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-primary-foreground/10 hover:scale-105 active:scale-95 transition-all duration-300"
+            title="Generar Reporte Final"
+          >
+            <FileText className="h-7 w-7" />
+          </Button>
+        </div>
+      )}
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col md:overflow-hidden">
+        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-32 sm:pb-10 flex flex-col md:flex-1 md:min-h-0">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10">
               <div className="flex items-center gap-4">
                 <Link to="/" className="shrink-0">
@@ -1027,14 +1042,14 @@ export default function ReporteFinalPage() {
                             </div>
                           </div>
                         ))}
-                      </div>
-                    </ScrollArea>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </div>
-      </Tabs>
+                        </div>
+                      </ScrollArea>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </div>
+          </Tabs>
 
       {/* Resultado - Responsive */}
       {isMobile ? (
@@ -1232,20 +1247,6 @@ export default function ReporteFinalPage() {
         )
       )}
 
-      {/* Mobile Floating Action Button for Generating Report Final */}
-      {activeTab === 'generate' && (
-        <div className="sm:hidden fixed bottom-24 right-6 z-50">
-          <Button
-            onClick={handleGenerateReport}
-            disabled={!isLoaded}
-            size="icon"
-            className="h-12 w-12 rounded-xl bg-primary text-primary-foreground shadow-2xl hover:scale-105 active:scale-95 transition-all"
-            title="Generar Reporte Final"
-          >
-            <FileText className="h-6 w-6" />
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

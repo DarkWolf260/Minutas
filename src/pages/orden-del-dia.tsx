@@ -226,15 +226,15 @@ export default function OrdenDelDiaPage() {
       </div>
       
       {/* Mobile Floating Action Button for Generating Order */}
-      <div className="sm:hidden fixed bottom-24 right-6 z-50">
+      <div className="sm:hidden fixed bottom-24 right-6 z-50 animate-in fade-in zoom-in duration-300 ease-out">
         <Button
           onClick={() => formRef.current?.generateOrder()}
           disabled={!selectedGuardId}
           size="icon"
-          className="h-12 w-12 rounded-xl bg-primary text-primary-foreground shadow-2xl hover:scale-105 active:scale-95 transition-all"
+          className="h-14 w-14 rounded-2xl bg-primary text-primary-foreground shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-primary-foreground/10 hover:scale-105 active:scale-95 transition-all duration-300"
           title="Generar Orden del Día"
         >
-          <Eye className="h-6 w-6" />
+          <Eye className="h-7 w-7" />
         </Button>
       </div>
     </div>

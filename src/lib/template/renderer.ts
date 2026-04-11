@@ -956,6 +956,9 @@ export function renderFinalReport(
             recordReportAudit(String(data.id), semanticAudit);
         }
 
+        // Final unescaping of characters (e.g. \* -> *, \\ -> \)
+        finalOutput = finalOutput.replace(/\\([\*\{\}\[\]\\])/g, '$1');
+
         return finalOutput;
     } catch (error) {
         logger.error('Error rendering report', error instanceof Error ? error : new Error(String(error)), {

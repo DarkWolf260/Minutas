@@ -545,9 +545,11 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
         } else {
           // It's a field
           // Skip fields controlled externally (driven by controlledValues — hidden from form UI)
-          const isControlled = controlledValues && Object.keys(controlledValues).some(
+          const systemTags = ['enc', 'pie', 'usuario', 'estatus'];
+          const isControlled = (controlledValues && Object.keys(controlledValues).some(
             (k) => k.toLowerCase() === id.toLowerCase()
-          );
+          )) || systemTags.includes(id.toLowerCase());
+          
           if (isControlled) return;
           // Check if it's already in a section
           const isAssignedToSection = finalConfig.sections.some((s) => s.fieldIds.includes(id));
@@ -571,9 +573,19 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       finalConfig.layout.forEach((id) => { if (!id.startsWith('section_') && !id.startsWith('sec_') && !id.startsWith('cond_')) allLayoutFields.add(id); });
       finalConfig.sections.forEach((s) => s.fieldIds.forEach((id) => allLayoutFields.add(id)));
 
+      const systemTags = ['enc', 'pie', 'usuario', 'estatus'];
       const orphanFields = Object.keys(finalConfig.fields).filter(
-        (id) => !allLayoutFields.has(id) && finalConfig.fields[id]
+        (id) => {
+          const isControlled = (controlledValues && Object.keys(controlledValues).some(
+            (k) => k.toLowerCase() === id.toLowerCase()
+          )) || systemTags.includes(id.toLowerCase());
+          
+          return !allLayoutFields.has(id) && finalConfig.fields[id] && !isControlled;
+        }
       );
+      if (orphanFields.length > 0) {
+        chunks.push(orphanFields);
+      }
       if (orphanFields.length > 0) {
         chunks.push(orphanFields);
       }

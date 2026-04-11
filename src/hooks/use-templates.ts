@@ -71,7 +71,9 @@ export function useTemplates() {
     const subTemplates = db.templates.find({
       selector: { workspaceId: currentWorkspace }
     }).$.subscribe(data => {
-      setTemplates(data.map(d => d.toJSON()) as Template[]);
+      const sortedTemplates = (data.map(d => d.toJSON()) as Template[])
+        .sort((a, b) => a.name.localeCompare(b.name));
+      setTemplates(sortedTemplates);
       setIsTemplatesLoaded(true);
     });
 

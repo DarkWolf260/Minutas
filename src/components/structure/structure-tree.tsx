@@ -507,6 +507,7 @@ function RoleRow({
   onRemove: (name: string) => void; 
   onUpdate: (name: string, updates: Partial<StaffRole>) => void;
 }) {
+  const isMobile = useIsMobile();
   return (
     <div className="flex items-center justify-between p-2 px-4 hover:bg-muted/10 transition-colors group">
       <div className="flex items-center gap-3 min-w-0">
@@ -517,7 +518,7 @@ function RoleRow({
           <span className="text-sm font-medium truncate" title={role.name}>
             {role.name}
           </span>
-          {showPersonnel && members.length > 0 && (
+          {showPersonnel && members.length > 0 && !isMobile && (
             <div className="flex flex-wrap gap-1 mt-1">
               {members.map(m => (
                 <Badge key={m.id} variant="secondary" className="text-[9px] py-0 h-4 bg-primary/5 text-primary border-primary/10">
@@ -525,9 +526,6 @@ function RoleRow({
                 </Badge>
               ))}
             </div>
-          )}
-          {showPersonnel && members.length === 0 && (
-            <span className="text-[10px] text-muted-foreground italic mt-0.5">Vacante</span>
           )}
         </div>
       </div>

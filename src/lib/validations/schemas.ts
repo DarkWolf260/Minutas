@@ -217,7 +217,12 @@ export function createArraySchema<T extends z.ZodType>(schema: T) {
  */
 export const cedulaValidator = z
     .string()
-    .regex(/^[VE]-\d{1,2}(\.\d{3}){2}$/, 'Formato de cédula inválido (Ej: V-12.345.678)');
+    .refine((val) => {
+        if (!val) return true;
+        const specialValues = ['No indicó', 'No posee', 'Se desconoce'];
+        if (specialValues.includes(val)) return true;
+        return /^[VE]-\d{1,2}(\.\d{3}){2}$/.test(val);
+    }, 'Formato de cédula inválido (Ej: V-12.345.678)');
 
 /**
  * Custom validator for time in HH:MM format
@@ -261,7 +266,12 @@ function createFieldZodSchema(fieldId: string, config: FieldConfig) {
         default:
             // Generic text or custom types - apply smart defaults based on name
             if (lowerId === 'cédula' || lowerId === 'cedula') {
-                fieldSchema = z.string().regex(/^$|^[VE]-[\d.]{3,12}$/, 'Formato de cédula inválido');
+                fieldSchema = z.string().refine((val) => {
+                    if (!val) return true;
+                    const specialValues = ['No indicó', 'No posee', 'Se desconoce'];
+                    if (specialValues.includes(val)) return true;
+                    return /^[VE]-[\d.]{3,12}$/.test(val);
+                }, 'Formato de cédula inválido');
             } else if (lowerId === 'hora') {
                 fieldSchema = z.string().regex(/^$|^[\d-]{2}:[\d-]{2} HLV( - [\d-]{2}:[\d-]{2} HLV)?$/, 'Formato de hora inválido');
             } else {

@@ -78,6 +78,19 @@ export function tokenize(template: string): Token[] {
             }
         }
 
+        // Handle escaped characters (e.g. \* means literal *, not repeatable marker)
+        if (char === '\\' && (next === '*' || next === '{' || next === '[' || next === '\\')) {
+            flushText();
+            tokens.push({
+                type: 'text',
+                content: next,
+                raw: char + next,
+                position: position,
+            });
+            position += 2;
+            continue;
+        }
+
         // Regular text
         currentText += char;
         position++;

@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 const formatCedula = (value: string): string => {
   if (!value) return '';
 
-  const specialValues = ['No indicó', 'No posee'];
+  const specialValues = ['No indicó', 'No posee', 'Se desconoce'];
   if (specialValues.includes(value)) return value;
 
   let cleaned = value.toUpperCase().replace(/[^VE0-9]/g, '');
@@ -141,6 +141,9 @@ export const CedulaInput = forwardRef<HTMLInputElement, CedulaInputProps>(
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onFormChange('No posee')}>
                 No posee
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onFormChange('Se desconoce')}>
+                Se desconoce
               </DropdownMenuItem>
               {propValue && (
                 <DropdownMenuItem onClick={() => onFormChange('')} className="text-destructive focus:text-destructive">

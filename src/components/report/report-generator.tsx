@@ -64,7 +64,7 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
     const { finalInitialData } = useMemo(() => {
       const parsedTemplate = parseTemplate(template.content);
       const initialSections = parsedTemplate.sections;
-      const initialFieldNames = Array.from(parsedTemplate.fieldNames);
+      const initialFieldNames = Array.from(parsedTemplate.fieldNames) as string[];
       const newInitialData = initialData ? JSON.parse(JSON.stringify(initialData)) : {};
 
       if (!settings?.activeGuardId || !guards || !personnel) {
@@ -287,7 +287,10 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
                   initialData={finalInitialData}
                   onSubmit={handleCreateReport}
                   onDataChange={handleDataChange}
-                  controlledValues={{ Estatus: 'En proceso' }}
+                  controlledValues={{ 
+                  Estatus: 'En proceso',
+                  Enc: settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : ''
+                }}
                 />
               </CardContent>
             </Card>

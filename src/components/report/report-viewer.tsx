@@ -305,7 +305,10 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
                 onSubmit={() => { }} 
                 disabled={isFinalizado}
                 onDataChange={handleDataChange}
-                controlledValues={{ Estatus: status }}
+                controlledValues={{ 
+                  Estatus: status,
+                  Enc: settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : ''
+                }}
               />
             </CardContent>
           </Card>

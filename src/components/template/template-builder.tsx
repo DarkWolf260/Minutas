@@ -63,6 +63,7 @@ export function TemplateBuilder({
   const [previewReportContent, setPreviewReportContent] = useState('');
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [mobileView, setMobileView] = useState<'editor' | 'preview'>('editor');
+  const [previewStatus, setPreviewStatus] = useState<'En proceso' | 'Finalizado'>('En proceso');
 
   // Si estamos editando, usamos el ID de la plantilla original
   const isEditing = !!initialTemplate;
@@ -109,7 +110,7 @@ export function TemplateBuilder({
     // Populate preview config fields with default values
     const fields: Record<string, any> = {};
     if (defaultValues) {
-      defaultValues.forEach((value, key) => {
+      defaultValues.forEach((value: string, key: string) => {
         fields[key] = { defaultValue: value };
       });
     }
@@ -419,61 +420,94 @@ export function TemplateBuilder({
         </Card>
 
         {/* Preview Panel (Card 2) */}
-        <Card
+        <div
           className={cn(
-            'flex flex-col h-full border-muted-foreground/20 shadow-md bg-muted/10 overflow-hidden min-h-0',
+            'flex flex-col h-full border rounded-xl shadow-lg bg-background overflow-hidden min-h-0',
             mobileView !== 'preview' && 'hidden lg:flex'
           )}
         >
-          <CardHeader className="bg-muted/30 py-3 px-4">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-base">Vista Previa</CardTitle>
+          {/* Header styled like ReportGenerator */}
+          <header className="flex-none flex items-center justify-between border-b p-4 bg-muted/40 z-20 shadow-sm">
+            <h2 className="text-base font-semibold flex items-center gap-2">
+              <Eye className="h-4 w-4 text-primary" />
+              Vista Previa
+            </h2>
+            <div className="flex items-center gap-2">
+              <div className="flex bg-background border rounded-lg p-0.5 shadow-sm overflow-hidden">
+                <Button 
+                  variant={previewStatus === 'En proceso' ? 'secondary' : 'ghost'} 
+                  size="sm" 
+                  className="h-7 text-[10px] px-2 rounded-md"
+                  onClick={() => setPreviewStatus('En proceso')}
+                >
+                  En proceso
+                </Button>
+                <Button 
+                  variant={previewStatus === 'Finalizado' ? 'secondary' : 'ghost'} 
+                  size="sm" 
+                  className="h-7 text-[10px] px-2 rounded-md"
+                  onClick={() => setPreviewStatus('Finalizado')}
+                >
+                  Finalizado
+                </Button>
+              </div>
               <Button
-                variant="secondary"
+                variant="outline"
                 size="sm"
                 onClick={handlePreviewReport}
-                className="h-8 text-xs"
+                className="h-8 text-xs bg-background shadow-sm"
               >
                 <FileText className="mr-2 h-3 w-3" />
                 Generar Texto
               </Button>
             </div>
-          </CardHeader>
-          <CardContent className="flex-1 p-0 overflow-hidden relative min-h-0 flex flex-col">
+          </header>
+
+          <CardContent className="flex-1 p-0 overflow-hidden relative min-h-0 flex flex-col bg-muted/10">
             <ScrollArea className="flex-1 w-full" type="always">
-              <div className="p-4">
-                <div className="max-w-3xl mx-auto">
-                  <ReportForm
-                    ref={formRef}
-                    template={previewTemplate}
-                    config={previewConfig}
-                    onSubmit={() => { }}
-                    disabled={false}
-                  />
-                </div>
+              <div className="w-full max-w-[1000px] mx-auto p-4 sm:p-8 pb-20">
+                <Card className="border bg-card shadow-sm">
+                  <CardHeader className="bg-card/50 border-b py-4">
+                    <CardTitle className="text-lg font-bold">{templateName || 'Nueva Plantilla'}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <ReportForm
+                      key={`preview-${templateContent.length}-${previewStatus}`}
+                      ref={formRef}
+                      template={previewTemplate}
+                      config={previewConfig}
+                      onSubmit={() => { }}
+                      disabled={false}
+                      controlledValues={{
+                        Estatus: previewStatus,
+                        Enc: '(E)' // Default preview value for Chief Encargado
+                      }}
+                    />
+                  </CardContent>
+                </Card>
               </div>
             </ScrollArea>
           </CardContent>
-        </Card>
+        </div>
       </div>
 
       {/* Mobile Preview & Actions Button (Floating) */}
-      <div className="lg:hidden fixed bottom-24 right-6 z-50 flex flex-col gap-3">
+      <div className="lg:hidden fixed bottom-24 right-6 z-50 flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
         <Button
           onClick={handlePreviewReport}
-          className="shadow-2xl rounded-xl h-12 w-12 bg-slate-500 hover:bg-slate-600 text-white hover:scale-105 active:scale-95 transition-all"
+          className="shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl h-14 w-14 bg-slate-500 hover:bg-slate-600 text-white hover:scale-105 active:scale-95 transition-all duration-300 border border-slate-400/20"
           size="icon"
           title="Ver Vista Previa del Reporte"
         >
-          <Eye className="h-6 w-6" />
+          <Eye className="h-7 w-7" />
         </Button>
         <Button
           onClick={handleSave}
-          className="shadow-2xl rounded-xl h-12 w-12 bg-blue-600 hover:bg-blue-700 text-white hover:scale-105 active:scale-95 transition-all"
+          className="shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl h-14 w-14 bg-blue-600 hover:bg-blue-700 text-white hover:scale-105 active:scale-95 transition-all duration-300 border border-blue-500/20"
           size="icon"
           title="Guardar Plantilla"
         >
-          <Save className="h-6 w-6" />
+          <Save className="h-7 w-7" />
         </Button>
       </div>
 

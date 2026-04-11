@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, FileText, AlertTriangle, PlusCircle, ChevronLeft, Clock, Newspaper, Lock, ShieldAlert } from 'lucide-react';
+import { Search, FileText, AlertTriangle, PlusCircle, ChevronLeft, Clock, Newspaper, Lock, ShieldAlert, Filter, ArrowDownWideNarrow, ArrowUpNarrowWide } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ReportViewer } from '@/components/report/report-viewer';
 import { useReports } from '@/hooks/use-reports';
@@ -62,6 +62,7 @@ function NovedadesPageContent() {
     undefined
   );
   const [isNavigatingBack, setIsNavigatingBack] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     if (isNavigatingBack) {
@@ -71,8 +72,8 @@ function NovedadesPageContent() {
   }, [isNavigatingBack]);
 
   const sortedReports = useMemo(() => {
-    return sortReports(reports, 'asc');
-  }, [reports]);
+    return sortReports(reports, sortOrder);
+  }, [reports, sortOrder]);
 
   const filteredReports = useMemo(() => {
     let result = sortedReports;
@@ -175,16 +176,34 @@ function NovedadesPageContent() {
           </div>
 
           <div className="p-4 space-y-4 border-b bg-muted/5">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="report-search"
-                name="report-search"
-                placeholder="Buscar reportes..."
-                className="pl-9 bg-background border-none shadow-sm focus-visible:ring-primary/20 rounded-lg"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="report-search"
+                  name="report-search"
+                  placeholder="Buscar reportes..."
+                  className="pl-9 bg-background border-none shadow-sm focus-visible:ring-primary/20 rounded-lg"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                className={cn(
+                  "h-9 w-9 shrink-0 rounded-lg border bg-background shadow-sm hover:bg-muted transition-all duration-300",
+                  sortOrder === 'desc' ? "text-primary border-primary/20 bg-primary/5" : "text-muted-foreground"
+                )}
+                title={sortOrder === 'desc' ? "Orden cronológico descendente" : "Orden cronológico ascendente"}
+              >
+                {sortOrder === 'desc' ? (
+                  <ArrowDownWideNarrow className="h-4 w-4 animate-in fade-in zoom-in duration-300" />
+                ) : (
+                  <ArrowUpNarrowWide className="h-4 w-4 animate-in fade-in zoom-in duration-300" />
+                )}
+              </Button>
             </div>
           </div>
           <div className="flex-1 min-h-0">

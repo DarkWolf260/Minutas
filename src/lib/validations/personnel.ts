@@ -24,7 +24,7 @@ export const PersonnelSchema = z.object({
     .string()
     .refine((val) => {
       if (!val) return true;
-      const specialValues = ['No indicó', 'No posee'];
+      const specialValues = ['No indicó', 'No posee', 'Se desconoce'];
       if (specialValues.includes(val)) return true;
       return cedulaRegex.test(val);
     }, {
