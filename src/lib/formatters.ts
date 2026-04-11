@@ -10,7 +10,7 @@ import type { StaffMember } from '@/lib/types';
 function buildFullStaffName(member: StaffMember): string {
   const parts: string[] = [];
   
-  if (member.rank) parts.push(member.rank);
+  if (member.rank && member.rank !== 'Sin jerarquía') parts.push(member.rank);
   if (member.titulo) parts.push(member.titulo);
   parts.push(member.name);
   
@@ -87,7 +87,7 @@ export function formatStaffReporta(member: StaffMember): string {
   const parts: string[] = [];
   
   if (member.cargo) parts.push(member.cargo);
-  if (member.rank) parts.push(member.rank);
+  if (member.rank && member.rank !== 'Sin jerarquía') parts.push(member.rank);
   parts.push(member.name);
   if (member.cedula) parts.push(member.cedula);
   

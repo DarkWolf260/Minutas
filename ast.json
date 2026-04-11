@@ -1,0 +1,38 @@
+[
+  {
+    "id": "sec_descripcion_de_los_hechos",
+    "label": "Descripción de los hechos",
+    "isRepeatable": false,
+    "fieldIds": [
+      "Nombre y apellido",
+      "Cédula",
+      "Edad",
+      "IDX",
+      "Dirección"
+    ],
+    "layout": [
+      "Nombre y apellido",
+      "Cédula",
+      "Edad",
+      "IDX",
+      "Dirección"
+    ],
+    "originalContent": "- *DESCRIPCIÓN DE LA NOVEDAD:* {Descripción de la novedad:textarea:def=(Se apersona a la institución ciudadano solicitando atención prehospitalaria para su persona ya que refiere encontranse en regulares condiciones de salud, el personal técnico procede a realizar dicha atención arrojando el diagnostico mencionado, cabe destacar que no amerito traslado.)\n    \n[singular=\"DATOS DEL PACIENTE\" plural=\"DATOS DE LOS PACIENTE\" sub=\"PACIENTE\"\n- *NOMBRE Y APELLIDO:* {Nombre y apellido:title:req}\n- *CÉDULA:* {Cédula:req}\n- *EDAD:* {Edad:req}\n- *IDX:* {IDX:req}\n- *DIRECCIÓN:* {Dirección}",
+    "isSeparator": false,
+    "isMapping": false,
+    "isSelfContained": true,
+    "hasStaticContent": true
+  },
+  {
+    "id": "sec_separator",
+    "label": "",
+    "isRepeatable": false,
+    "fieldIds": [],
+    "layout": [],
+    "originalContent": "",
+    "isSeparator": true,
+    "isMapping": false,
+    "isSelfContained": false,
+    "hasStaticContent": false
+  }
+]

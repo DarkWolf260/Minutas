@@ -68,7 +68,7 @@ interface ManualNovedad {
 
 const formatStaffMemberForReport = (member: StaffMember): string => {
   const parts: string[] = [];
-  if (member.rank) parts.push(member.rank);
+  if (member.rank && member.rank !== 'Sin jerarquía') parts.push(member.rank);
   if (member.titulo) parts.push(member.titulo);
   parts.push(member.name);
   return parts.filter(Boolean).join(' ').trim();

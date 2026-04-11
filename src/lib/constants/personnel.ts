@@ -13,6 +13,7 @@ export const RANK_OPTIONS = [
   { value: 'OCPC I', label: 'OCPC I' },
   { value: 'OCPC II', label: 'OCPC II' },
   { value: 'Voluntario', label: 'Voluntario' },
+  { value: 'Sin jerarquía', label: 'Sin jerarquía' },
 ];
 
 export const PERSONNEL_STATUS = {

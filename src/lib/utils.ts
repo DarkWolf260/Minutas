@@ -67,6 +67,7 @@ const RANK_HIERARCHY: Record<string, number> = {
   'OPC II': 3,
   'OPC I': 2,
   'OPC': 1,
+  'Sin jerarquía': 0,
 };
 
 /**
