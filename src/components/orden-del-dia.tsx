@@ -66,35 +66,72 @@ interface Note {
   content: string;
 }
 
-const getTodayISO = () => {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
+const parseDatesFromPeriodo = (periodo: string) => {
+  const matches = periodo.match(/(\d{2})\/(\d{2})\/(\d{4})/g);
+  if (!matches || matches.length < 2) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return { start: today.toISOString(), end: tomorrow.toISOString() };
+  }
+
+  const parse = (s: string) => {
+    const [d, m, y] = s.split('/').map(Number);
+    const date = new Date(y!, m! - 1, d!);
+    date.setHours(0, 0, 0, 0);
+    return date.toISOString();
+  };
+
+  return { start: parse(matches[0]!), end: parse(matches[1]!) };
 };
 
-const getTomorrowISO = () => {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
-};
-
-const DEFAULT_ACTIVITIES: ManualNovedad[] = [
-  { id: 'def-1', date: getTodayISO(), time: '08:00 HLV', text: 'Se realiza cambio y recepción de Guardia' },
-  { id: 'def-3', date: getTodayISO(), time: '08:30 HLV', text: 'Se envía reporte del estado del tiempo a la central de Protección Civil Anzoátegui.' },
-  { id: 'def-4', date: getTodayISO(), time: '12:00 HLV - 13:00 HLV', text: 'Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.' },
-  { id: 'def-5', date: getTodayISO(), time: '14:30 HLV', text: 'Se envía reporte del estado del tiempo a la central de Protección Civil Anzoátegui.' },
-  { id: 'def-6', date: getTodayISO(), time: '16:00 HLV', text: 'Se envía segundo corte de novedades diarias a la central de Protección Civil Anzoátegui.' },
-  { id: 'def-7', date: getTodayISO(), time: '17:30 HLV', text: 'Se envía reporte del estado del tiempo a la central de Protección Civil Anzoátegui.' },
-  { id: 'def-8', date: getTodayISO(), time: '18:00 HLV - 19:00 HLV', text: 'Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.' },
-  { id: 'def-9', date: getTodayISO(), time: '20:00 HLV', text: 'Se realiza mantenimiento limpieza de las unidades e instalaciones de la sede.' },
-  { id: 'def-10', date: getTodayISO(), time: '20:30 HLV', text: 'Se envía reporte del estado del tiempo a la central de Protección Civil Anzoátegui.' },
-  { id: 'def-11', date: getTodayISO(), time: '21:00 HLV', text: 'Se inicia el periodo de descanso del personal.' },
-  { id: 'def-12', date: getTomorrowISO(), time: '03:00 HLV', text: 'Se envía primer corte de novedades diarias a la central de Protección Civil Anzoátegui.' },
-  { id: 'def-13', date: getTomorrowISO(), time: '04:30 HLV', text: 'Se envía reporte del estado del tiempo a la central de Protección Civil Anzoátegui.' },
-  { id: 'def-14', date: getTomorrowISO(), time: '06:00 HLV - 07:00 HLV', text: 'Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.' },
-  { id: 'def-15', date: getTomorrowISO(), time: '06:00 HLV', text: 'Culmina el periodo de descanso del personal.' },
-  { id: 'def-17', date: getTomorrowISO(), time: '08:00 HLV', text: 'Se envía reporte final de novedades correspondiente a la guardia de 24 Horas del día a la dirección estadal y ZOEDAN / Se da culminación a la guardia de 24 Horas.' },
+const getGeneratedDefaultActivities = (startDate: string, endDate: string): ManualNovedad[] => [
+  { id: 'def-1', date: startDate, time: '08:00 HLV', text: 'Se realiza cambio y recepción de Guardia' },
+  { id: 'def-3', date: startDate, time: '08:30 HLV', text: 'Se envía reporte del estado del tiempo a la central de Protección Civil Anzoátegui.' },
+  {
+    id: 'def-4',
+    date: startDate,
+    time: '12:00 HLV - 13:00 HLV',
+    text: 'Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.',
+  },
+  { id: 'def-5', date: startDate, time: '14:30 HLV', text: 'Se envía reporte del estado del tiempo a la central de Protección Civil Anzoátegui.' },
+  {
+    id: 'def-6',
+    date: startDate,
+    time: '16:00 HLV',
+    text: 'Se envía segundo corte de novedades diarias a la central de Protección Civil Anzoátegui.',
+  },
+  { id: 'def-7', date: startDate, time: '17:30 HLV', text: 'Se envía reporte del estado del tiempo a la central de Protección Civil Anzoátegui.' },
+  {
+    id: 'def-8',
+    date: startDate,
+    time: '18:00 HLV - 19:00 HLV',
+    text: 'Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.',
+  },
+  { id: 'def-9', date: startDate, time: '20:00 HLV', text: 'Se realiza mantenimiento limpieza de las unidades e instalaciones de la sede.' },
+  { id: 'def-10', date: startDate, time: '20:30 HLV', text: 'Se envía reporte del estado del tiempo a la central de Protección Civil Anzoátegui.' },
+  { id: 'def-11', date: startDate, time: '21:00 HLV', text: 'Se inicia el periodo de descanso del personal.' },
+  {
+    id: 'def-12',
+    date: endDate,
+    time: '03:00 HLV',
+    text: 'Se envía primer corte de novedades diarias a la central de Protección Civil Anzoátegui.',
+  },
+  { id: 'def-13', date: endDate, time: '04:30 HLV', text: 'Se envía reporte del estado del tiempo a la central de Protección Civil Anzoátegui.' },
+  {
+    id: 'def-14',
+    date: endDate,
+    time: '06:00 HLV - 07:00 HLV',
+    text: 'Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.',
+  },
+  { id: 'def-15', date: endDate, time: '06:00 HLV', text: 'Culmina el periodo de descanso del personal.' },
+  {
+    id: 'def-17',
+    date: endDate,
+    time: '08:00 HLV',
+    text: 'Se envía reporte final de novedades correspondiente a la guardia de 24 Horas del día a la dirección estadal y ZOEDAN / Se da culminación a la guardia de 24 Horas.',
+  },
 ];
 
 const DEFAULT_NOTES: Note[] = [
@@ -120,7 +157,7 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
     const [staff, setStaff] = useState<Staff>({});
     const [isJefeEncargado, setIsJefeEncargado] = useState(false);
 
-    const [activities, setActivities] = useState<ManualNovedad[]>(DEFAULT_ACTIVITIES);
+    const [activities, setActivities] = useState<ManualNovedad[]>([]);
     const [notes, setNotes] = useState<Note[]>(DEFAULT_NOTES);
 
     // States for new activity controls
@@ -186,7 +223,7 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
 
             return {
               id: a.id,
-              date: getTodayISO(),
+              date: parseDatesFromPeriodo(periodo).start,
               time,
               text
             } as ManualNovedad;
@@ -231,7 +268,8 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
 
         setStaff(newStaffState);
         setIsJefeEncargado(false);
-        setActivities(DEFAULT_ACTIVITIES);
+        const { start, end } = parseDatesFromPeriodo(periodo);
+        setActivities(getGeneratedDefaultActivities(start, end));
         setNotes(DEFAULT_NOTES);
         lastInitializedGuard.current = selectedGuard;
       }
@@ -348,8 +386,9 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
     };
 
     const handleRestoreActivities = () => {
-      setActivities(DEFAULT_ACTIVITIES);
-      toast.success('Actividades restauradas por defecto');
+      const { start, end } = parseDatesFromPeriodo(periodo);
+      setActivities(getGeneratedDefaultActivities(start, end));
+      toast.success('Actividades restauradas con las fechas del periodo');
     };
 
     const handleRestoreNotes = () => {
@@ -863,7 +902,7 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
                 </SheetDescription>
               </SheetHeader>
               <div className="flex-1 min-h-0 mt-4 border rounded-md bg-muted/50 overflow-hidden">
-                <ScrollArea className="h-full w-full" type="always">
+                <ScrollArea className="h-[50vh] w-full" type="always">
                   <div className="p-4 font-mono text-xs whitespace-pre-wrap leading-relaxed">
                     {generatedOrder}
                   </div>
@@ -908,7 +947,7 @@ export const OrdenDelDiaForm = forwardRef<{ generateOrder: () => void }, OrdenDe
                 </DialogDescription>
               </DialogHeader>
               <div className="flex-1 min-h-0 border rounded-md bg-muted/50 overflow-hidden">
-                <ScrollArea className="h-full w-full" type="always">
+                <ScrollArea className="h-[60vh] w-full" type="always">
                   <div className="p-6 font-mono text-xs whitespace-pre-wrap leading-relaxed">
                     {generatedOrder}
                   </div>

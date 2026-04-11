@@ -137,6 +137,7 @@ export default function ReporteFinalPage() {
         activeGuardId: '', // Clear active guard
         finalReportManualNovedades: [], 
         finalReportStatistics: '', 
+        ordenDelDiaDraft: undefined, 
       });
 
       // Clear all individual reports (novedades) from the current guard session
