@@ -10,7 +10,7 @@ import { logger } from '@/lib/logger';
 
 const defaultDefinitions: Record<string, FieldConfig> = {
   Municipio: { label: 'Municipio', type: 'predefined', value: '', sectionId: 'default' },
-  Estado: { label: 'Estado', type: 'predefined', value: '', sectionId: 'default' },
+  Estado: { label: 'Estado', type: 'predefined', value: 'Anzoátegui', sectionId: 'default' },
   Director: { label: 'Director', type: 'predefined', value: '', sectionId: 'default' },
   'Jefe de Operaciones': {
     label: 'Jefe de Operaciones',
@@ -18,8 +18,8 @@ const defaultDefinitions: Record<string, FieldConfig> = {
     value: '',
     sectionId: 'default',
   },
-  REDAN: { label: 'REDAN', type: 'predefined', value: '', sectionId: 'default' },
-  ZOEDAN: { label: 'ZOEDAN', type: 'predefined', value: '', sectionId: 'default' },
+  REDAN: { label: 'REDAN', type: 'predefined', value: 'Oriente', sectionId: 'default' },
+  ZOEDAN: { label: 'ZOEDAN', type: 'predefined', value: 'Anzoátegui', sectionId: 'default' },
   Fecha: {
     label: 'Fecha',
     type: 'date',

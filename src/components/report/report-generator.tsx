@@ -22,6 +22,7 @@ import { formatStaffMember } from '@/lib/formatters';
 import { parseTemplate } from '@/lib/template-parser';
 import { toast } from 'sonner';
 import { generateId } from '@/lib/utils/id';
+import { cn } from '@/lib/utils';
 import { ReportPreview } from './report-preview';
 
 export interface ReportGeneratorRef {
@@ -35,10 +36,11 @@ interface ReportGeneratorProps {
   initialData?: Record<string, any>;
   onCancel: () => void;
   onSave: (report: Report) => void;
+  hideHeader?: boolean;
 }
 
 export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorProps>(
-  ({ template, config, initialData, onCancel, onSave }, ref) => {
+  ({ template, config, initialData, onCancel, onSave, hideHeader = false }, ref) => {
     const isMobile = useIsMobile();
     const { saveDraft, clearDraft } = useDrafts();
     const formRef = useRef<ReportFormRef>(null);
@@ -251,51 +253,76 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
       setIsPreviewOpen(true);
     };
 
+    const formContent = (
+      <div className={cn("w-full max-w-[1000px] mx-auto", !hideHeader && "p-4 sm:p-8 pb-32")}>
+        <Card className={cn("border bg-card shadow-sm font-inherit", hideHeader && "border-none shadow-none bg-transparent")}>
+          {!hideHeader && (
+            <CardHeader className="bg-card/50 border-b">
+              <CardTitle className="text-xl font-bold">{template.name}</CardTitle>
+            </CardHeader>
+          )}
+          <CardContent className={cn("pt-8", hideHeader && "pt-0 p-0")}>
+            <ReportForm
+              ref={formRef}
+              reportId={`new-${template.id}`}
+              template={template}
+              config={config}
+              initialData={finalInitialData}
+              onSubmit={handleCreateReport}
+              onDataChange={handleDataChange}
+              controlledValues={{ 
+              Estatus: 'En proceso',
+              Enc: settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : ''
+            }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+
     return (
       <div className="flex flex-col h-full w-full overflow-hidden relative" id="report-generator-root">
-        {/* Fixed Header */}
-        <header className="flex-none flex items-center justify-between border-b p-4 bg-background z-20 shadow-sm min-h-[73px]">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
-            Nuevo Reporte
-          </h2>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handlePreviewClick} className="bg-background shadow-sm">
-              <Eye className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Vista Previa</span>
-            </Button>
-            <Button size="sm" onClick={handleSaveClick} className="h-9 px-3 sm:px-4 shadow-sm">
-              <Save className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Guardar Reporte</span>
-            </Button>
-          </div>
-        </header>
+        {/* Fixed Header - Only if not hidden */}
+        {!hideHeader && (
+          <header className="flex-none flex items-center justify-between border-b p-4 bg-background z-20 shadow-sm min-h-[73px]">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Nuevo Reporte
+            </h2>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handlePreviewClick} className="bg-background shadow-sm">
+                <Eye className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Vista Previa</span>
+              </Button>
+              <Button size="sm" onClick={handleSaveClick} className="h-9 px-3 sm:px-4 shadow-sm">
+                <Save className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Guardar Reporte</span>
+              </Button>
+            </div>
+          </header>
+        )}
 
-        {/* Scrollable Area */}
-        <ScrollArea className="flex-1 min-h-0 w-full bg-muted/20 pointer-events-auto" id="generator-scroll-area" type="always">
-          <div className="w-full max-w-[1000px] mx-auto p-4 sm:p-8 pb-32">
-            <Card className="border bg-card shadow-sm font-inherit">
-              <CardHeader className="bg-card/50 border-b">
-                <CardTitle className="text-xl font-bold">{template.name}</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-8">
-                <ReportForm
-                  ref={formRef}
-                  reportId={`new-${template.id}`}
-                  template={template}
-                  config={config}
-                  initialData={finalInitialData}
-                  onSubmit={handleCreateReport}
-                  onDataChange={handleDataChange}
-                  controlledValues={{ 
-                  Estatus: 'En proceso',
-                  Enc: settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : ''
-                }}
-                />
-              </CardContent>
-            </Card>
+        {/* Scrollable Area - Only if not hidden (let modal handle scroll otherwise) */}
+        {!hideHeader ? (
+          <ScrollArea className="flex-1 min-h-0 w-full bg-muted/20 pointer-events-auto" id="generator-scroll-area" type="always">
+            {formContent}
+          </ScrollArea>
+        ) : (
+          <div className="flex-1 w-full bg-transparent">
+            {formContent}
+            {/* Footer actions for modal view */}
+            <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-muted/20">
+              <Button variant="outline" onClick={handlePreviewClick} className="shadow-sm">
+                <Eye className="h-4 w-4 mr-2" />
+                Vista Previa
+              </Button>
+              <Button onClick={handleSaveClick} className="shadow-sm px-6">
+                <Save className="h-4 w-4 mr-2" />
+                Guardar Reporte
+              </Button>
+            </div>
           </div>
-        </ScrollArea>
+        )}
 
         {/* Shared Preview Component */}
         <ReportPreview

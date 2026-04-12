@@ -33,9 +33,8 @@ import { cn } from '@/lib/utils';
 interface RoleSorterProps {
   roles: StaffRole[];
   onReorder: (roles: StaffRole[]) => void;
-  onUpdate: (name: string, updates: Partial<StaffRole>) => void;
-  onRemove: (name: string) => void;
-  onSave?: () => void;
+  onUpdate: (roleName: string, updates: Partial<StaffRole>) => void;
+  onRemove: (roleName: string) => void;
 }
 
 function SortableRoleItem({ 
@@ -117,7 +116,7 @@ function SortableRoleItem({
   );
 }
 
-export function RoleSorter({ roles, onReorder, onUpdate, onRemove, onSave }: RoleSorterProps) {
+export function RoleSorter({ roles, onReorder, onUpdate, onRemove }: RoleSorterProps) {
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
@@ -139,16 +138,16 @@ export function RoleSorter({ roles, onReorder, onUpdate, onRemove, onSave }: Rol
 
   const sortedRoles = useMemo(() => {
     return [...roles]
-      .filter(r => !r.isHidden)
+      .filter((r: StaffRole) => !r.isHidden)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   }, [roles]);
 
   const hiddenRoles = useMemo(() => {
-    return roles.filter(r => r.isHidden);
+    return roles.filter((r: StaffRole) => r.isHidden);
   }, [roles]);
 
   const activeRole = useMemo(() => {
-     return activeId ? roles.find(r => r.name === activeId) : null;
+     return activeId ? roles.find((r: StaffRole) => r.name === activeId) : null;
   }, [activeId, roles]);
 
   function handleDragEnd(event: DragEndEvent) {
@@ -188,17 +187,6 @@ export function RoleSorter({ roles, onReorder, onUpdate, onRemove, onSave }: Rol
               <CardDescription className="text-[11px] mt-0.5">Define el orden en el reporte.</CardDescription>
             </div>
           </div>
-          
-          {onSave && (
-            <Button 
-                onClick={onSave} 
-                size="sm"
-                className="shadow-md bg-primary hover:bg-primary/90 font-bold h-8 text-[11px] px-4 transition-all active:scale-95 shrink-0"
-            >
-                <Save className="mr-1.5 h-3.5 w-3.5" />
-                Guardar
-            </Button>
-          )}
         </div>
       </CardHeader>
       
@@ -211,11 +199,11 @@ export function RoleSorter({ roles, onReorder, onUpdate, onRemove, onSave }: Rol
             onDragEnd={handleDragEnd}
           >
             <SortableContext 
-              items={sortedRoles.map(r => r.name)}
+              items={sortedRoles.map((r: StaffRole) => r.name)}
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-2 pb-4">
-                {sortedRoles.map((role) => (
+                {sortedRoles.map((role: StaffRole) => (
                   <SortableRoleItem 
                     key={role.name} 
                     role={role} 
@@ -240,7 +228,7 @@ export function RoleSorter({ roles, onReorder, onUpdate, onRemove, onSave }: Rol
                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Cargos fuera del reporte</h3>
                 </div>
                 <div className="space-y-2">
-                  {hiddenRoles.map((role) => (
+                  {hiddenRoles.map((role: StaffRole) => (
                     <div
                       key={role.name}
                       className="flex items-center gap-3 p-3 rounded-lg border bg-muted/20 opacity-70 grayscale-[0.5]"

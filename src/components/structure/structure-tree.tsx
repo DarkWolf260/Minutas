@@ -62,7 +62,6 @@ interface StructureTreeProps {
   onAddRole: (name: string, deptId?: string) => void;
   onRemoveRole: (name: string) => void;
   onUpdateRole: (name: string, updates: Partial<StaffRole>) => void;
-  onLoadInstitutional: () => void;
   personnel?: StaffMember[];
   showPersonnel?: boolean;
 }
@@ -75,7 +74,6 @@ export function StructureTree({
   onAddRole,
   onRemoveRole,
   onUpdateRole,
-  onLoadInstitutional,
   personnel = [],
   showPersonnel = false,
 }: StructureTreeProps) {
@@ -169,16 +167,7 @@ export function StructureTree({
                 Contraer
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:items-center sm:gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={onLoadInstitutional}
-                className="h-9 sm:h-8 text-[11px] hover:bg-primary/5 border-primary/20 w-full"
-              >
-                <ShieldCheck className="mr-1.5 h-3.5 w-3.5 text-primary" />
-                Cargar IPP
-              </Button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Button 
                 size="sm" 
                 onClick={() => setIsAddDeptOpen(true)}

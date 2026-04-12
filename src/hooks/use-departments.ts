@@ -59,21 +59,7 @@ export function useDepartments() {
             return { ...(json.data as Department), workspaceId: currentWorkspace };
           }) as Department[]);
         } else {
-          // Initial departments if DB is empty for this workspace
-          const toInsert = defaultDepartments.map((dept) => ({
-            id: `${currentWorkspace}:dept:${dept.id}`,
-            workspaceId: currentWorkspace,
-            type: 'department' as const,
-            name: dept.name,
-            data: { ...dept, workspaceId: currentWorkspace },
-          }));
-
-          db.lookups.bulkInsert(toInsert as any).catch((err) => {
-            const isConflict = err.code === 'CONFLICT' || err.status === 409;
-            if (!isConflict) {
-              logger.error('Failed to insert default departments', err, { feature: 'Departments', workspaceId: currentWorkspace });
-            }
-          });
+          setDepartments([]);
         }
         setIsLoaded(true);
       });

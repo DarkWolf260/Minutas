@@ -33,8 +33,9 @@ import { useAddresses } from '@/hooks/use-addresses';
 import { useGuardHistory } from '@/hooks/use-guard-history';
 import { usePersonnelHistory } from '@/hooks/use-personnel-history';
 import { useProfile } from '@/hooks/use-profile';
-import { 
-  Trash2, 
+import { getInstitutionalData } from '@/components/structure/institutional-data'; // Añadido
+import {
+  Trash2,
   AlertTriangle,
   ChevronLeft
 } from 'lucide-react';
@@ -43,8 +44,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function BorrarDatosPage() {
   const { clearAllUnits } = useUnits();
-  const { clearAllRoles } = useRoles();
-  const { clearAllDepartments } = useDepartments();
+  const { clearAllRoles, saveRoles } = useRoles(); // Añadido saveRoles
+  const { clearAllDepartments, saveDepartments } = useDepartments(); // Añadido saveDepartments
   const { clearAllSettings } = useSettings();
   const { clearAllReports } = useReports();
   const { clearAllTemplates } = useTemplates();
@@ -71,11 +72,17 @@ export default function BorrarDatosPage() {
         await clearAllTemplates();
         break;
       case 'staff':
+        // 1. Limpiar datos actuales
         await clearAllRoles();
         await clearAllDepartments();
         await clearAllGuards();
         await clearAllUnits();
         await clearAllPersonnel();
+
+        // 2. Cargar estructura institucional (IPP) por defecto
+        const { newDepts, newRoles } = getInstitutionalData();
+        await saveDepartments(newDepts);
+        await saveRoles(newRoles);
         break;
       case 'definitions':
         await clearAllDefinitions();
@@ -121,10 +128,10 @@ export default function BorrarDatosPage() {
       buttonLabel: 'Limpiar Plantillas',
     },
     staff: {
-      title: '¿Restablecer personal, guardias y unidades?',
+      title: '¿Restablecer Módulo de Personal y Unidades?',
       description:
-        'Se eliminarán todas las guardias, departamentos, cargos personalizados y unidades, volviendo a la configuración por defecto. El personal y las unidades asignadas se perderán.',
-      buttonLabel: 'Restablecer Personal y Unidades',
+        'Esta acción eliminará todo el personal, cargos y unidades actuales, y restaurará automáticamente la estructura Institucional por defecto. Úsalo para volver a la configuración de fábrica del organigrama.',
+      buttonLabel: 'Restablecer Módulo de Personal y Unidades',
     },
     definitions: {
       title: '¿Restablecer etiquetas globales?',
@@ -143,112 +150,112 @@ export default function BorrarDatosPage() {
   return (
     <ScrollArea className="h-full w-full" type="always">
       <div className="p-4 sm:p-6 lg:p-8 pb-32 sm:pb-16 space-y-6">
-      <div className="max-w-4xl mx-auto flex items-center gap-4 mb-2">
-         <Link to="/settings" className="shrink-0">
-           <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+        <div className="max-w-4xl mx-auto flex items-center gap-4 mb-2">
+          <Link to="/settings" className="shrink-0">
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
               <ChevronLeft className="h-5 w-5" />
-           </Button>
-         </Link>
-         <h1 className="text-2xl font-bold tracking-tight">Borrar datos de la app</h1>
-      </div>
+            </Button>
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">Borrar datos de la app</h1>
+        </div>
 
-      <Card className="max-w-4xl mx-auto shadow-lg border-destructive">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
-            <AlertTriangle />
-            Zona de Peligro
-          </CardTitle>
-          <CardDescription>
-            Las siguientes acciones son destructivas y no se pueden deshacer. Úsalas con
-            precaución.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y divide-destructive/10">
-            {Object.entries(resetOptions).map(([key, option]) => (
-              <div
-                key={key}
-                className="flex flex-row items-center justify-between p-4 sm:p-6 gap-4 hover:bg-destructive/[0.02] transition-colors"
-              >
-                <div className="space-y-1">
-                  <h4 className="font-semibold text-destructive">{option.buttonLabel}</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
-                    {option.description.split('.')[0]}.
-                  </p>
+        <Card className="max-w-4xl mx-auto shadow-lg border-destructive">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle />
+              Zona de Peligro
+            </CardTitle>
+            <CardDescription>
+              Las siguientes acciones son destructivas y no se pueden deshacer. Úsalas con
+              precaución.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-destructive/10">
+              {Object.entries(resetOptions).map(([key, option]) => (
+                <div
+                  key={key}
+                  className="flex flex-row items-center justify-between p-4 sm:p-6 gap-4 hover:bg-destructive/[0.02] transition-colors"
+                >
+                  <div className="space-y-1">
+                    <h4 className="font-semibold text-destructive">{option.buttonLabel}</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
+                      {option.description.split('.')[0]}.
+                    </p>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setActionToConfirm(key)}
+                    className="h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-3 sm:py-2 shrink-0 shadow-sm"
+                    title={option.buttonLabel}
+                  >
+                    < Trash2 className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">{option.buttonLabel}</span>
+                  </Button>
                 </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {isMobile ? (
+          <Sheet
+            open={!!actionToConfirm}
+            onOpenChange={(open) => !open && setActionToConfirm(null)}
+          >
+            <SheetContent side="bottom" className="rounded-t-xl p-6">
+              <SheetHeader className="text-left">
+                <SheetTitle>
+                  {actionToConfirm && resetOptions[actionToConfirm]?.title}
+                </SheetTitle>
+                <SheetDescription>
+                  {actionToConfirm && resetOptions[actionToConfirm]?.description}
+                </SheetDescription>
+              </SheetHeader>
+              <div className="py-6 space-y-3">
                 <Button
                   variant="destructive"
-                  size="sm"
-                  onClick={() => setActionToConfirm(key)}
-                  className="h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-3 sm:py-2 shrink-0 shadow-sm"
-                  title={option.buttonLabel}
+                  className="w-full h-12 text-base font-semibold"
+                  onClick={handleConfirmReset}
                 >
-                  < Trash2 className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">{option.buttonLabel}</span>
+                  Sí, continuar
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full h-12 text-base"
+                  onClick={() => setActionToConfirm(null)}
+                >
+                  Cancelar
                 </Button>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {isMobile ? (
-        <Sheet
-          open={!!actionToConfirm}
-          onOpenChange={(open) => !open && setActionToConfirm(null)}
-        >
-          <SheetContent side="bottom" className="rounded-t-xl p-6">
-            <SheetHeader className="text-left">
-              <SheetTitle>
-                {actionToConfirm && resetOptions[actionToConfirm]?.title}
-              </SheetTitle>
-              <SheetDescription>
-                {actionToConfirm && resetOptions[actionToConfirm]?.description}
-              </SheetDescription>
-            </SheetHeader>
-            <div className="py-6 space-y-3">
-              <Button
-                variant="destructive"
-                className="w-full h-12 text-base font-semibold"
-                onClick={handleConfirmReset}
-              >
-                Sí, continuar
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full h-12 text-base"
-                onClick={() => setActionToConfirm(null)}
-              >
-                Cancelar
-              </Button>
-            </div>
-          </SheetContent>
-        </Sheet>
-      ) : (
-        <AlertDialog
-          open={!!actionToConfirm}
-          onOpenChange={(open) => !open && setActionToConfirm(null)}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {actionToConfirm && resetOptions[actionToConfirm]?.title}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {actionToConfirm && resetOptions[actionToConfirm]?.description}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setActionToConfirm(null)}>
-                Cancelar
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirmReset}>
-                Sí, continuar
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+            </SheetContent>
+          </Sheet>
+        ) : (
+          <AlertDialog
+            open={!!actionToConfirm}
+            onOpenChange={(open) => !open && setActionToConfirm(null)}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {actionToConfirm && resetOptions[actionToConfirm]?.title}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {actionToConfirm && resetOptions[actionToConfirm]?.description}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setActionToConfirm(null)}>
+                  Cancelar
+                </AlertDialogCancel>
+                <AlertDialogAction onClick={handleConfirmReset}>
+                  Sí, continuar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
     </ScrollArea>
   );

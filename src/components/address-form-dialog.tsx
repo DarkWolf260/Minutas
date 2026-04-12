@@ -36,12 +36,12 @@ import {
 } from '@/components/ui/form';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { 
-  MapPin, 
-  Home, 
-  Building2, 
-  Shield, 
-  Globe, 
+import {
+  MapPin,
+  Home,
+  Building2,
+  Shield,
+  Globe,
   FileText,
   Save,
   X
@@ -139,23 +139,23 @@ export function AddressFormDialog({
                   <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Datos principales</p>
                 </div>
               </div>
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-semibold">Nombre o Referencia</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Ej: Liceo Manuel Farías Luces" 
-                            className="bg-background border-2 border-muted/50 focus:border-primary/50 transition-all h-10 rounded-xl px-4" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage className="text-[10px]" />
-                      </FormItem>
-                    )}
-                  />
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold">Nombre o Referencia</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ej: Liceo Manuel Farías Luces"
+                        className="bg-background border-2 border-muted/50 focus:border-primary/50 transition-all h-10 rounded-xl px-4"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Sección 2: Dirección Física */}
@@ -323,22 +323,22 @@ export function AddressFormDialog({
                   <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Detalles adicionales</p>
                 </div>
               </div>
-                <FormField
-                  control={form.control}
-                  name="details"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Ej: Portón negro, frente a la plaza Bolívar, punto de referencia..." 
-                          className="bg-background border-2 border-muted/50 focus:bg-background focus:border-primary/50 transition-all min-h-[100px] rounded-xl px-4 resize-none" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="details"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Ej: Portón negro, frente a la plaza Bolívar, punto de referencia..."
+                        className="bg-background border-2 border-muted/50 focus:bg-background focus:border-primary/50 transition-all min-h-[100px] rounded-xl px-4 resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
         </ScrollArea>
@@ -348,10 +348,10 @@ export function AddressFormDialog({
           isMobile ? "p-4 pb-8" : "p-6 sm:justify-between"
         )}>
           {isMobile ? (
-             <Button type="submit" className="w-full h-12 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 rounded-xl font-bold gap-2">
-                <Save className="h-5 w-5" />
-                {address ? 'Guardar Cambios' : 'Registrar Ubicación'}
-             </Button>
+            <Button type="submit" className="w-full h-12 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 rounded-xl font-bold gap-2">
+              <Save className="h-5 w-5" />
+              {address ? 'Guardar Cambios' : 'Registrar Ubicación'}
+            </Button>
           ) : (
             <>
               <DialogClose asChild>

@@ -43,7 +43,7 @@ export function ConfirmDialog({
   variant = 'default',
 }: ConfirmDialogProps) {
   const isMobile = useIsMobile();
-  
+
   const handleConfirm = () => {
     onConfirm();
     onOpenChange(false);

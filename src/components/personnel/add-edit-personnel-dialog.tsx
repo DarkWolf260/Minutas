@@ -75,7 +75,7 @@ export function AddEditPersonnelDialog({
       const storedRank = member.rank || '';
       const matchedRank = RANK_OPTIONS.find(r => normalizeString(r.value) === normalizeString(storedRank));
       setRank(matchedRank?.value || 'OPC');
-      
+
       // Resolve role: the stored value might be a role.name (from CSV) with different case or accents.
       // We sync roleId and cargo for better compatibility.
       const storedRole = member.roleId || member.cargo || '';
@@ -179,11 +179,13 @@ export function AddEditPersonnelDialog({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Sin cargo asignado</SelectItem>
-              {roles.map((role) => (
-                <SelectItem key={role.name} value={role.name}>
-                  {role.name}
-                </SelectItem>
-              ))}
+              {roles
+                .filter((role) => !role.isStatus && !role.isHidden)
+                .map((role) => (
+                  <SelectItem key={role.name} value={role.name}>
+                    {role.name}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
@@ -268,13 +270,13 @@ export function AddEditPersonnelDialog({
 /**
  * A helper component that renders a Sheet on mobile and a Dialog on desktop
  */
-function ResponsiveModal({ 
-  isOpen, 
-  onOpenChange, 
-  title, 
-  description, 
-  children, 
-  footer 
+function ResponsiveModal({
+  isOpen,
+  onOpenChange,
+  title,
+  description,
+  children,
+  footer
 }: {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;

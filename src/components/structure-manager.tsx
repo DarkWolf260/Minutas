@@ -12,8 +12,6 @@ import { toast } from 'sonner';
 import { generateId } from '@/lib/utils/id';
 import { Department, StaffRole, StaffMember } from '@/lib/types';
 import { StructureTree } from '@/components/structure/structure-tree';
-import { getInstitutionalData } from './structure/institutional-data';
-import { LEADER_ROLES } from '@/lib/constants/roles';
 
 interface StructureManagerProps {
   roles: StaffRole[];
@@ -38,36 +36,22 @@ export function StructureManager({
 }: StructureManagerProps) {
 
 
-  // Local state for roles and departments to allow manual saving
-  const [localRoles, setLocalRoles] = React.useState<StaffRole[]>(roles);
-  const [localDepts, setLocalDepts] = React.useState<Department[]>(departments);
+  const STATUS_ROLE_NAMES = ['vacaciones', 'reposo', 'permiso', 'ausente', 'apoyo'];
 
-  // Sync with props when they load initially (only once)
-  const isInitialized = React.useRef(false);
+  const patchRoles = (rs: StaffRole[]) => {
+    return rs.map(r => {
+      const nameLower = (r.name || '').toLowerCase().trim();
+      if (STATUS_ROLE_NAMES.includes(nameLower) && !r.isStatus) {
+        return { ...r, isStatus: true };
+      }
+      return r;
+    });
+  };
 
-    const STATUS_ROLE_NAMES = ['vacaciones', 'reposo', 'permiso', 'ausente', 'apoyo'];
-
-  React.useEffect(() => {
-    const patchRoles = (rs: StaffRole[]) => {
-      return rs.map(r => {
-        const nameLower = (r.name || '').toLowerCase().trim();
-        if (STATUS_ROLE_NAMES.includes(nameLower) && !r.isStatus) {
-          return { ...r, isStatus: true };
-        }
-        return r;
-      });
-    };
-
-    if (!isInitialized.current && rolesLoaded && deptsLoaded) {
-      const updatedRoles = patchRoles(roles);
-      setLocalRoles(updatedRoles);
-      setLocalDepts(departments);
-      isInitialized.current = true;
-    }
-  }, [roles, departments, deptsLoaded, rolesLoaded]);
+  const processedRoles = React.useMemo(() => patchRoles(roles), [roles]);
 
   const handleAddDept = (name: string) => {
-    if (localDepts.some((d) => d.name.toLowerCase() === name.toLowerCase())) {
+    if (departments.some((d) => d.name.toLowerCase() === name.toLowerCase())) {
       toast.error('Ya existe un departamento con ese nombre');
       return;
     }
@@ -76,27 +60,28 @@ export function StructureManager({
       name: name,
       staff: {},
     };
-    setLocalDepts((prev) => [...prev, newDept]);
+    onDepartmentsChange([...departments, newDept]);
     toast.success('Departamento añadido');
   };
 
   const handleRemoveDepartment = (id: string) => {
-    setLocalDepts((prev) => prev.filter((d) => d.id !== id));
+    const updatedDepts = departments.filter((d) => d.id !== id);
+    onDepartmentsChange(updatedDepts);
+    
     // Also update roles that reference this department
-    setLocalRoles((prev) =>
-      prev.map((r) => {
-        if (!r.departmentScope) return r;
-        return {
-          ...r,
-          departmentScope: r.departmentScope.filter((scopeId) => scopeId !== id),
-        };
-      })
-    );
+    const updatedRoles = roles.map((r) => {
+      if (!r.departmentScope) return r;
+      return {
+        ...r,
+        departmentScope: r.departmentScope.filter((scopeId) => scopeId !== id),
+      };
+    });
+    onRolesChange(updatedRoles);
     toast.success('Departamento eliminado');
   };
 
   const handleAddRole = (name: string, deptId?: string) => {
-    if (localRoles.some((r) => r.name.toLowerCase() === name.toLowerCase())) {
+    if (roles.some((r) => r.name.toLowerCase() === name.toLowerCase())) {
       toast.error('Ya existe un cargo con ese nombre');
       return;
     }
@@ -105,94 +90,27 @@ export function StructureManager({
       isSingle: false,
       isHidden: true,
       departmentScope: deptId ? [deptId] : [],
-      order: localRoles.length,
+      order: roles.length,
     };
-    setLocalRoles((prev) => [...prev, newRole]);
+    onRolesChange([...roles, newRole]);
     toast.success('Cargo añadido');
   };
 
   const handleRemoveRole = (name: string) => {
-    setLocalRoles((prev) => prev.filter((r) => r.name !== name));
+    const updatedRoles = roles.filter((r) => r.name !== name);
+    onRolesChange(updatedRoles);
     toast.success('Cargo eliminado');
   };
 
-  const handleLoadInstitutional = () => {
-    const { newDepts, newRoles } = getInstitutionalData();
-    
-    // 1. Add new departments (if any from the institutional structure)
-    let updatedDepts: Department[] = [];
-    setLocalDepts((prev) => {
-      const existingNames = new Set(prev.map((d) => d.name.toLowerCase()));
-      const filteredNew = newDepts.filter((d) => !existingNames.has(d.name.toLowerCase()));
-      updatedDepts = [...prev, ...filteredNew];
-      return updatedDepts;
-    });
 
-    // 2. Process roles and ensure each department has its own specific "Jefe de [Nombre]" role
-    setLocalRoles((prev) => {
-      let updatedRoles = [...prev];
-      
-      // Merge base roles from institutional data (Director, etc.)
-      const existingRoleNames = new Set(prev.map((r) => r.name.toLowerCase()));
-      const filteredNewRoles = newRoles.filter((r) => !existingRoleNames.has(r.name.toLowerCase()));
-      updatedRoles = [...updatedRoles, ...filteredNewRoles];
-
-      // For each department, ensure it has its own "Jefe de [Departamento]" role
-      const deptsToProcess = updatedDepts.length > 0 ? updatedDepts : localDepts;
-      
-      deptsToProcess.forEach(d => {
-        // Construct the specific boss name for this department, avoiding redundant "Departamento de"
-        const cleanDeptName = d.name.replace(/^Departamento de\s+/i, "");
-        const specificBossName = `Jefe de ${cleanDeptName}`;
-        
-        const existingBossIndex = updatedRoles.findIndex(
-          r => r.name.toLowerCase() === specificBossName.toLowerCase()
-        );
-        
-        const isBossOfOperations = specificBossName.toLowerCase() === LEADER_ROLES.JEFE_OPERACIONES.toLowerCase();
-        
-        if (existingBossIndex >= 0) {
-          // Ensure it's scoped and marked as single
-          const existingRole = updatedRoles[existingBossIndex];
-          if (existingRole) {
-            updatedRoles[existingBossIndex] = {
-              ...existingRole,
-              isSingle: true,
-              isHidden: isBossOfOperations ? false : true,
-              departmentScope: Array.from(new Set([...(existingRole.departmentScope || []), d.id]))
-            };
-          }
-        } else {
-          // Create a new specific role for this department
-          updatedRoles.push({
-            name: specificBossName,
-            isSingle: true,
-            isHidden: isBossOfOperations ? false : true,
-            departmentScope: [d.id],
-            order: updatedRoles.length
-          });
-        }
-      });
-
-      return updatedRoles;
-    });
-
-    toast.success('Estructura institucional cargada con Jefaturas de Departamento');
-  };
 
   const handleUpdateRole = (roleName: string, updates: Partial<StaffRole>) => {
-    setLocalRoles((prev) =>
-      prev.map((r) => (r.name === roleName ? { ...r, ...updates } : r))
-    );
+    const updatedRoles = roles.map((r) => (r.name === roleName ? { ...r, ...updates } : r));
+    onRolesChange(updatedRoles);
   };
 
-  const handleSaveAll = () => {
-    // Persist all changes to parent/DB
-    onDepartmentsChange(localDepts);
-    onRolesChange(localRoles);
-    if (onSave) onSave();
-    toast.success('Estructura guardada exitosamente');
-  };
+    // Auto-saved handled by handlers
+;
 
   return (
     <div className="md:flex-1 md:flex md:flex-col md:min-h-0 bg-transparent">
@@ -209,14 +127,13 @@ export function StructureManager({
             className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
           >
             <StructureTree 
-              departments={localDepts}
-              roles={localRoles}
+              departments={departments}
+              roles={processedRoles}
               onAddDept={handleAddDept}
               onRemoveDept={handleRemoveDepartment}
               onAddRole={handleAddRole}
               onRemoveRole={handleRemoveRole}
               onUpdateRole={handleUpdateRole}
-              onLoadInstitutional={handleLoadInstitutional}
               personnel={personnel}
               showPersonnel={true}
             />
@@ -227,11 +144,10 @@ export function StructureManager({
             className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
           >
             <RoleSorter 
-              roles={localRoles}
-              onReorder={setLocalRoles}
+              roles={processedRoles}
+              onReorder={onRolesChange}
               onUpdate={handleUpdateRole}
               onRemove={handleRemoveRole}
-              onSave={handleSaveAll}
             />
           </TabsContent>
         </Tabs>
@@ -242,14 +158,13 @@ export function StructureManager({
         {/* Left Column: Hierarchical Tree View (Dynamic Management) */}
         <div className="lg:col-span-8 flex flex-col min-h-0">
           <StructureTree 
-            departments={localDepts}
-            roles={localRoles}
+            departments={departments}
+            roles={processedRoles}
             onAddDept={handleAddDept}
             onRemoveDept={handleRemoveDepartment}
             onAddRole={handleAddRole}
             onRemoveRole={handleRemoveRole}
             onUpdateRole={handleUpdateRole}
-            onLoadInstitutional={handleLoadInstitutional}
             personnel={personnel}
             showPersonnel={false}
           />
@@ -258,11 +173,10 @@ export function StructureManager({
         {/* Right Column: Organization for Reports (Sorting) */}
         <div className="lg:col-span-4 flex flex-col min-h-0">
           <RoleSorter 
-            roles={localRoles}
-            onReorder={setLocalRoles}
+            roles={processedRoles}
+            onReorder={onRolesChange}
             onUpdate={handleUpdateRole}
             onRemove={handleRemoveRole}
-            onSave={handleSaveAll}
           />
         </div>
       </div>

@@ -20,7 +20,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGuards } from '@/hooks/use-guards';
 import { useSettings } from '@/hooks/use-settings';
 import { useRoles } from '@/hooks/use-roles';
-import { OrdenDelDiaForm } from '@/components/orden-del-dia';
+import { OrdenDelDiaForm } from '@/components/orden-del-dia/index';
 
 export default function OrdenDelDiaPage() {
   const { guards, isLoaded: guardsLoaded } = useGuards();
