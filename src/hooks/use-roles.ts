@@ -86,6 +86,7 @@ export function useRoles() {
 
   useEffect(() => {
     if (!db || !currentWorkspace) return;
+    let initialized = false;
 
     const sub = db.lookups
       .find({
@@ -102,6 +103,20 @@ export function useRoles() {
             return { ...(json.data as StaffRole), workspaceId: currentWorkspace };
           }) as StaffRole[];
           setRoles(loadedRoles);
+          initialized = true;
+        } else if (!initialized) {
+          // Auto-seed default roles on first load for this workspace
+          initialized = true;
+          const toInsert = defaultRoles.map((role) => ({
+            id: `${currentWorkspace}:role:${role.name}`,
+            workspaceId: currentWorkspace,
+            type: 'role' as const,
+            name: role.name,
+            data: { ...role, workspaceId: currentWorkspace },
+          }));
+          
+          db.lookups.bulkInsert(toInsert as any)
+            .catch(err => logger.error('Failed to auto-seed default roles', err, { feature: 'Roles', workspaceId: currentWorkspace }));
         } else {
           setRoles([]);
         }
