@@ -173,6 +173,7 @@ export function PersonnelTable({
               <TableHead className="hidden md:table-cell cursor-pointer select-none" onClick={() => toggleSort('cedula')}>
                 Cédula<SortIcon field="cedula" />
               </TableHead>
+              <TableHead className="hidden md:table-cell">Sexo</TableHead>
               <TableHead className="hidden lg:table-cell">Cargo</TableHead>
               <TableHead className="hidden lg:table-cell cursor-pointer select-none" onClick={() => toggleSort('department')}>
                 Departamento<SortIcon field="department" />
@@ -220,6 +221,9 @@ export function PersonnelTable({
                   </TableCell>
                   <TableCell className="hidden md:table-cell font-mono text-sm">
                     {member.cedula || '-'}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {member.sex === 'M' ? 'Masc.' : member.sex === 'F' ? 'Fem.' : '-'}
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
                     {member.roleId && member.roleId !== 'none' ? (
@@ -316,9 +320,19 @@ export function PersonnelTable({
                       <span className="font-bold text-base text-card-foreground leading-tight truncate">
                         {member.name}
                       </span>
-                      <span className="text-[11px] text-muted-foreground font-medium mt-0.5 opacity-80 uppercase tracking-tight">
-                        C.I. {member.cedula || 'N/A'}
-                      </span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[11px] text-muted-foreground font-medium opacity-80 uppercase tracking-tight">
+                          C.I. {member.cedula || 'N/A'}
+                        </span>
+                        {member.sex && (
+                          <>
+                            <span className="text-muted-foreground/30">•</span>
+                            <span className="text-[11px] text-primary/70 font-bold uppercase tracking-widest">
+                              {member.sex === 'M' ? 'M' : 'F'}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <Badge

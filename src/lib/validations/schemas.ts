@@ -40,6 +40,7 @@ export const StaffMemberSchema = z.object({
     observation: z.string().optional(),
     titulo: z.string().optional(),
     cargo: z.string().optional(),
+    sex: z.enum(['M', 'F']).optional(),
 });
 
 export type ValidatedStaffMember = z.infer<typeof StaffMemberSchema>;

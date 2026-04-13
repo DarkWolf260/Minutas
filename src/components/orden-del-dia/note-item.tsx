@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,27 +14,40 @@ interface NoteItemProps {
   onRemove: (id: string) => void;
 }
 
-export const NoteItem: React.FC<NoteItemProps> = ({ 
+export const NoteItem: React.FC<NoteItemProps> = React.memo(({ 
   note, 
   onUpdate, 
   onRemove 
 }) => {
+  const [localContent, setLocalContent] = useState(note.content);
+
+  // Sync local state with prop only when prop changes from outside (e.g. restore)
+  useEffect(() => {
+    setLocalContent(note.content);
+  }, [note.content]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setLocalContent(newValue);
+    // Optimization: Sync with parent only on blur or via a parent-side debounce 
+    // to avoid full parent re-renders on every keystroke.
+  };
+
+  const handleBlur = () => {
+    if (localContent !== note.content) {
+      onUpdate(note.id, localContent);
+    }
+  };
+
   return (
     <div className="flex gap-2 items-start animate-in fade-in slide-in-from-top-1 duration-200">
       <Textarea
         className="flex-1 min-h-[40px] text-xs font-mono py-2 px-3 bg-muted/20 border-muted/30 focus-visible:ring-primary/20 resize-none scrollbar-none rounded-md"
         placeholder="Contenido de la nota..."
-        value={note.content}
+        value={localContent}
         rows={1}
-        onChange={(e) => {
-          onUpdate(note.id, e.target.value);
-          e.target.style.height = 'auto';
-          e.target.style.height = `${e.target.scrollHeight}px`;
-        }}
-        onFocus={(e) => {
-          e.target.style.height = 'auto';
-          e.target.style.height = `${e.target.scrollHeight}px`;
-        }}
+        onChange={handleChange}
+        onBlur={handleBlur}
       />
       <Button
         type="button"
@@ -47,4 +60,6 @@ export const NoteItem: React.FC<NoteItemProps> = ({
       </Button>
     </div>
   );
-};
+});
+
+NoteItem.displayName = 'NoteItem';

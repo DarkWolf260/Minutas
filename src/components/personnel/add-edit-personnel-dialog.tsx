@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/dialog';
 import { CedulaInput } from '@/components/cedula-input';
 import type { StaffMember, PersonnelStatus, StaffRole, Department } from '@/lib/types';
-import { RANK_OPTIONS, STATUS_OPTIONS } from '@/lib/constants/personnel';
+import { RANK_OPTIONS, STATUS_OPTIONS, GENDER_OPTIONS } from '@/lib/constants/personnel';
 import { toast } from 'sonner';
 import { normalizeString } from '@/lib/utils';
 
@@ -64,6 +64,7 @@ export function AddEditPersonnelDialog({
   const [roleId, setRoleId] = useState('none');
   const [department, setDepartment] = useState('none');
   const [status, setStatus] = useState<PersonnelStatus>('activo');
+  const [sex, setSex] = useState<'M' | 'F' | 'none'>('none');
   const [titulo, setTitulo] = useState('');
 
   // Initialize form with member data when editing
@@ -92,6 +93,7 @@ export function AddEditPersonnelDialog({
       setDepartment(matchById?.id || matchByName?.id || 'none');
 
       setStatus(member.status || 'activo');
+      setSex(member.sex || 'none');
       setTitulo((member as StaffMember & { titulo?: string }).titulo || '');
     } else {
       setName('');
@@ -100,6 +102,7 @@ export function AddEditPersonnelDialog({
       setRoleId('none');
       setDepartment('none');
       setStatus('activo');
+      setSex('none');
       setTitulo('');
     }
   }, [member, open, departments, roles]);
@@ -120,6 +123,7 @@ export function AddEditPersonnelDialog({
       cargo: roleId === 'none' ? undefined : roleId,
       department: department === 'none' ? undefined : department,
       status,
+      sex: sex === 'none' ? undefined : sex as 'M' | 'F',
       titulo: titulo.trim() || undefined,
     };
 
@@ -168,6 +172,24 @@ export function AddEditPersonnelDialog({
         <div className="space-y-2">
           <Label htmlFor="cedula">Cédula</Label>
           <CedulaInput id="cedula" name="cedula" value={cedula} onChange={setCedula} />
+        </div>
+
+        {/* Sexo (Género) */}
+        <div className="space-y-2">
+          <Label htmlFor="sex">Sexo</Label>
+          <Select value={sex} onValueChange={(v) => setSex(v as 'M' | 'F' | 'none')}>
+            <SelectTrigger id="sex" name="sex">
+              <SelectValue placeholder="Seleccionar sexo..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No especificado</SelectItem>
+              {GENDER_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Cargo Formal */}
@@ -224,19 +246,19 @@ export function AddEditPersonnelDialog({
             </SelectContent>
           </Select>
         </div>
-      </div>
 
-      {/* Título (opcional, no visible en tabla) */}
-      <div className="space-y-2">
-        <Label htmlFor="titulo">Título Académico <span className="text-muted-foreground text-xs">(opcional)</span></Label>
-        <Input
-          id="titulo"
-          name="titulo"
-          value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
-          placeholder="Ej. Licenciado en Criminalística"
-          autoComplete="off"
-        />
+        {/* Título (opcional, no visible en tabla) */}
+        <div className="space-y-2">
+          <Label htmlFor="titulo">Título Académico <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+          <Input
+            id="titulo"
+            name="titulo"
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+            placeholder="Ej. Lcdo., T.S.U., etc."
+            autoComplete="off"
+          />
+        </div>
       </div>
     </div>
   );

@@ -31,6 +31,7 @@ export interface StaffMember {
   status?: PersonnelStatus;
   department?: string;
   specialties?: string[];
+  sex?: 'M' | 'F';
   observation?: string; // For Orden del Día notations
 }
 

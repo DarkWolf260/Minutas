@@ -4,7 +4,7 @@
 
 export const personnelSchema = {
     title: 'personnel schema',
-    version: 0,
+    version: 1,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -19,6 +19,7 @@ export const personnelSchema = {
         roleId: { type: 'string' },
         status: { type: 'string' },
         department: { type: 'string' },
+        sex: { type: 'string' },
         specialties: { type: 'array', items: { type: 'string' } },
     },
     required: ['id', 'workspaceId', 'name'],

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useMemo, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -120,13 +120,13 @@ function SortableStaffItem({
   );
 }
 
-export function StaffListEditor({ 
+export const StaffListEditor = React.memo(({ 
   label, 
   staffMembers, 
   isSingle, 
   onUpdate,
   showObservations 
-}: StaffListEditorProps) {
+}: StaffListEditorProps) => {
   const { setNodeRef } = useDroppable({
     id: label,
   });
@@ -323,7 +323,9 @@ export function StaffListEditor({
       </div>
     </div>
   );
-}
+});
+
+StaffListEditor.displayName = 'StaffListEditor';
 
 interface GuardStaffEditorProps {
   guard: Guard | Department;

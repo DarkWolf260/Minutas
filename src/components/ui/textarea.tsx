@@ -48,7 +48,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     }
 
     return (
-      <ScrollArea 
+      <ScrollArea
         className={cn(
           'flex w-full rounded-md border border-input bg-background ring-offset-background focus-within:ring-1 focus-within:ring-primary focus-within:ring-offset-0 transition-all duration-200',
           className

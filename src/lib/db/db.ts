@@ -7,6 +7,7 @@ export { removeRxDatabase };
 import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
 export { getRxStorageDexie };
 import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
+import { RxDBMigrationSchemaPlugin } from 'rxdb/plugins/migration-schema';
 import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
 
 const DB_NAME = 'central_minutas_main';
@@ -46,6 +47,7 @@ import { logger } from '../logger';
 
 // Add necessary plugins
 addRxPlugin(RxDBQueryBuilderPlugin);
+addRxPlugin(RxDBMigrationSchemaPlugin);
 
 // Collection Types
 export type PersonnelCollection = RxCollection<StaffMember>;
@@ -182,6 +184,7 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
     database = await createRxDatabase<MinutasDatabaseCollections>({
       name: name,
       storage: wrappedValidateAjvStorage({ storage: getRxStorageDexie() }),
+      ignoreDuplicate: true,
     });
     
     // 3. Register IMMEDIATELY in the global tracking
@@ -199,7 +202,10 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
   try {
     const collectionsConfig: Record<string, any> = {
       personnel: { 
-        schema: personnelSchema
+        schema: personnelSchema,
+        migrationStrategies: {
+          1: (oldRole: any) => oldRole
+        }
       },
       reports: { 
         schema: reportsSchema

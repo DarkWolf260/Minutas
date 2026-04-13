@@ -12,9 +12,6 @@ interface CsvImportButtonProps {
     personnel: StaffMember[];
 }
 
-/** 
- * Parsea el estado del CSV a un valor válido de PersonnelStatus
- */
 function parseStatus(raw: string): StaffMember['status'] {
     const s = raw.toLowerCase().trim();
     if (s === 'activo' || s === 'active') return 'activo';
@@ -23,6 +20,16 @@ function parseStatus(raw: string): StaffMember['status'] {
     if (s === 'reposo' || s === 'rest') return 'reposo';
     if (s === 'apoyo' || s === 'support') return 'activo';
     return 'activo'; // default
+}
+
+/**
+ * Parsea el sexo del CSV
+ */
+function parseSex(raw: string): 'M' | 'F' | undefined {
+    const s = raw.toLowerCase().trim();
+    if (s === 'm' || s === 'masculino' || s === 'male' || s === 'hombre') return 'M';
+    if (s === 'f' || s === 'femenino' || s === 'female' || s === 'mujer') return 'F';
+    return undefined;
 }
 
 /**
@@ -67,6 +74,9 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
         estado: 'status',
         titulo: 'titulo' as keyof Omit<StaffMember, 'id'>,
         titulo_academico: 'titulo' as keyof Omit<StaffMember, 'id'>,
+        sexo: 'sex' as keyof Omit<StaffMember, 'id'>,
+        sex: 'sex' as keyof Omit<StaffMember, 'id'>,
+        genero: 'sex' as keyof Omit<StaffMember, 'id'>,
     };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,6 +149,7 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                     const rawStatus = getCol('status');
                     const rawCargo = getCol('cargo' as keyof Omit<StaffMember, 'id'>);
                     const rawTitulo = getCol('titulo' as keyof Omit<StaffMember, 'id'>);
+                    const rawSex = getCol('sex' as keyof Omit<StaffMember, 'id'>);
 
                     members.push({
                         workspaceId: currentWorkspace || '',
@@ -149,6 +160,7 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                         titulo: rawTitulo || undefined,
                         department: getCol('department') || undefined,
                         status: rawStatus ? parseStatus(rawStatus) : 'activo',
+                        sex: rawSex ? parseSex(rawSex) : undefined,
                     } as Omit<StaffMember, 'id'>);
                 }
 
@@ -182,11 +194,12 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
     };
 
     const handleExport = () => {
-        const headers = ['Jerarquía', 'Nombre y Apellido', 'Cédula', 'Cargo', 'Departamento', 'Estatus', 'Título Académico'];
+        const headers = ['Jerarquía', 'Nombre y Apellido', 'Cédula', 'Sexo', 'Cargo', 'Departamento', 'Estatus', 'Título Académico'];
         const rows = personnel.map((p) => [
             p.rank ?? '',
             p.name,
             p.cedula ?? '',
+            p.sex ?? '',
             p.cargo || p.roleId || '',
             p.department ?? '',
             p.status ?? 'activo',
@@ -220,7 +233,7 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={importing}
             >
-                <Upload className="h-4 w-4" />
+                <Download className="h-4 w-4" />
                 {importing ? 'Importando…' : 'Importar CSV'}
             </Button>
             <Button
@@ -229,7 +242,7 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                 className="shadow-sm gap-1.5"
                 onClick={handleExport}
             >
-                <Download className="h-4 w-4" />
+                <Upload className="h-4 w-4" />
                 Exportar CSV
             </Button>
         </div>

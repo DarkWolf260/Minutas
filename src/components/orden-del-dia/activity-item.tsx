@@ -12,7 +12,7 @@ interface ActivityItemProps {
   onRemove: (id: string) => void;
 }
 
-export const ActivityItem: React.FC<ActivityItemProps> = ({ 
+export const ActivityItem: React.FC<ActivityItemProps> = React.memo(({ 
   activity, 
   isEditing, 
   onEdit, 
@@ -58,4 +58,6 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
       </div>
     </div>
   );
-};
+});
+
+ActivityItem.displayName = 'ActivityItem';

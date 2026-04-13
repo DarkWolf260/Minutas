@@ -122,6 +122,10 @@ function PersonnelPageContent() {
           cedula: data.cedula || '',
           rank: data.rank || '',
           department: data.department || '',
+          sex: data.sex,
+          cargo: data.cargo,
+          roleId: data.roleId,
+          titulo: data.titulo,
         };
         await addMember(newMemberData);
         toast.success('Personal añadido');

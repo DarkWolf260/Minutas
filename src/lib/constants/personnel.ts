@@ -51,3 +51,8 @@ export const STATUS_OPTIONS = [
     color: 'bg-slate-500/10 text-slate-500 border-slate-500/20',
   },
 ];
+
+export const GENDER_OPTIONS = [
+  { value: 'M', label: 'Masculino' },
+  { value: 'F', label: 'Femenino' },
+];

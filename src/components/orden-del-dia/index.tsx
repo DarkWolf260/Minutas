@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, useMemo, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { Clock, GripVertical, PlusCircle, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -38,6 +38,7 @@ import { formatStaffMember } from '@/lib/formatters';
 import { ActivityItem } from './activity-item';
 import { NoteItem } from './note-item';
 import { ResultDialog } from './result-dialog';
+import { AddActivityForm } from './add-activity-form';
 
 interface Note {
   id: string;
@@ -66,10 +67,6 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
     const [activities, setActivities] = useState<ManualNovedad[]>([]);
     const [notes, setNotes] = useState<Note[]>(DEFAULT_NOTES);
 
-    // States for new activity controls
-    const [newActivityText, setNewActivityText] = useState('');
-    const [newActivityTime, setNewActivityTime] = useState('');
-    const [newActivityDate, setNewActivityDate] = useState(new Date());
     const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
 
     const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
@@ -183,84 +180,62 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
     }, [staff, isJefeEncargado, activities, notes, selectedGuard, saveSettings, isInitialized]);
 
     // Handlers
-    const handleRoleStaffUpdate = (roleName: string, members: StaffMember[]) => {
+    const handleRoleStaffUpdate = useCallback((roleName: string, members: StaffMember[]) => {
       setStaff((prev) => ({
         ...prev,
         [roleName]: members,
       }));
-    };
+    }, []);
 
-    const handleAddActivity = () => {
-      if (!newActivityText || !newActivityTime) return;
+    const handleAddActivity = useCallback((activity: Omit<ManualNovedad, 'id'>) => {
+      setActivities((prev) => [
+        ...prev,
+        { ...activity, id: generateId('activity') },
+      ]);
+    }, []);
 
-      if (editingActivityId) {
-        setActivities((prev) =>
-          prev.map((act) =>
-            act.id === editingActivityId
-              ? {
-                  ...act,
-                  date: format(newActivityDate, 'yyyy-MM-dd'),
-                  time: newActivityTime,
-                  text: newActivityText,
-                }
-              : act
-          )
-        );
-        setEditingActivityId(null);
-        toast.success('Actividad actualizada');
-      } else {
-        const newActivity: ManualNovedad = {
-          id: generateId(),
-          date: format(newActivityDate, 'yyyy-MM-dd'),
-          time: newActivityTime,
-          text: newActivityText,
-        };
-        setActivities((prev) => [...prev, newActivity]);
-        toast.success('Actividad añadida');
-      }
-
-      setNewActivityText('');
-      setNewActivityTime('');
-      setNewActivityDate(new Date());
-    };
-
-    const handleEditActivity = (activity: ManualNovedad) => {
-      setEditingActivityId(activity.id);
-      setNewActivityText(activity.text);
-      setNewActivityTime(activity.time);
-      setNewActivityDate(new Date(activity.date + 'T00:00:00'));
-    };
-
-    const handleCancelEditActivity = () => {
+    const handleSaveEditActivity = useCallback((updated: ManualNovedad) => {
+      setActivities((prev) =>
+        prev.map((act) => (act.id === updated.id ? updated : act))
+      );
       setEditingActivityId(null);
-      setNewActivityText('');
-      setNewActivityTime('');
-      setNewActivityDate(new Date());
-    };
+    }, []);
 
-    const handleRemoveActivity = (id: string) => {
-      setActivities((prev) => prev.filter((a) => a.id !== id));
-      if (editingActivityId === id) handleCancelEditActivity();
-    };
+    const handleRemoveActivity = useCallback((id: string) => {
+      setActivities((prev) => prev.filter((act) => act.id !== id));
+      if (editingActivityId === id) setEditingActivityId(null);
+    }, [editingActivityId]);
+
+    const handleEditActivity = useCallback((activity: ManualNovedad) => {
+      setEditingActivityId(activity.id);
+    }, []);
+
+    const handleCancelEditActivity = useCallback(() => {
+      setEditingActivityId(null);
+    }, []);
+
+    const handleUpdateNote = useCallback((id: string, content: string) => {
+      setNotes((prev) =>
+        prev.map((note) => (note.id === id ? { ...note, content } : note))
+      );
+    }, []);
+
+    const handleRemoveNote = useCallback((id: string) => {
+      setNotes((prev) => prev.filter((note) => note.id !== id));
+    }, []);
+
+    const handleAddNote = useCallback(() => {
+      setNotes((prev) => [
+        ...prev,
+        { id: generateId('note'), content: '' },
+      ]);
+    }, []);
 
     const handleRestoreActivities = () => {
       const { start, end } = parseDatesFromPeriodo(periodo);
       const estado = findInsensitive(settings as any, 'Estado');
       setActivities(getGeneratedDefaultActivities(start, end, estado));
       toast.success('Actividades restauradas con las fechas del periodo');
-    };
-
-    const handleAddNote = () => {
-      const newNote: Note = { id: generateId(), content: '' };
-      setNotes((prev) => [...prev, newNote]);
-    };
-
-    const handleUpdateNote = (id: string, content: string) => {
-      setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, content } : n)));
-    };
-
-    const handleRemoveNote = (id: string) => {
-      setNotes((prev) => prev.filter((n) => n.id !== id));
     };
 
     const handleRestoreNotes = () => {
@@ -503,34 +478,12 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
                   <Button type="button" variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold text-primary hover:bg-primary/10" onClick={handleRestoreActivities}>Restaurar</Button>
                 </div>
               </CardHeader>
-              <div className="p-4 border-b bg-muted/10">
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-                  <div className="sm:col-span-4 space-y-1">
-                    <Label className="text-[10px] font-bold uppercase opacity-50 ml-1">Fecha</Label>
-                    <DatePicker value={format(newActivityDate, 'yyyy-MM-dd')} onChange={(val) => setNewActivityDate(new Date(val + 'T00:00:00'))} />
-                  </div>
-                  <div className="sm:col-span-3 space-y-1">
-                    <Label className="text-[10px] font-bold uppercase opacity-50 ml-1">Hora</Label>
-                    <TimeHlvInput value={newActivityTime} onChange={setNewActivityTime} className="h-9 text-xs" />
-                  </div>
-                  <div className="sm:col-span-5 flex gap-2 items-end">
-                    <Button onClick={handleAddActivity} disabled={!newActivityText || !newActivityTime} className="w-full sm:w-auto h-9 px-6 rounded-xl font-bold gap-2 text-xs">
-                      {editingActivityId ? <Save className="h-3.5 w-3.5" /> : <PlusCircle className="h-3.5 w-3.5" />}
-                      {editingActivityId ? 'Guardar' : 'Añadir'}
-                    </Button>
-                    {editingActivityId && <Button variant="outline" onClick={handleCancelEditActivity} className="h-9 px-4 rounded-xl font-bold gap-2 text-xs"><X className="h-3.5 w-3.5" />Cancelar</Button>}
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <Textarea 
-                    placeholder="Descripción de la actividad..." 
-                    value={newActivityText} 
-                    onChange={(e) => setNewActivityText(e.target.value)} 
-                    autoSize={false}
-                    className="h-28 rounded-xl text-sm" 
-                  />
-                </div>
-              </div>
+              <AddActivityForm 
+                onAdd={handleAddActivity}
+                editingActivity={editingActivityId ? activities.find(a => a.id === editingActivityId) || null : null}
+                onSaveEdit={handleSaveEditActivity}
+                onCancelEdit={handleCancelEditActivity}
+              />
               <ScrollArea className="flex-1" type="always">
                 <div className="p-4 space-y-2">
                   {sortedActivities.length === 0 ? (
