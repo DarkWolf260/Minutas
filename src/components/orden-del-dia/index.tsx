@@ -519,7 +519,13 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
                   </div>
                 </div>
                 <div className="mt-3">
-                  <Textarea placeholder="Descripción de la actividad..." value={newActivityText} onChange={(e) => setNewActivityText(e.target.value)} className="min-h-[80px] rounded-xl resize-none text-sm" />
+                  <Textarea 
+                    placeholder="Descripción de la actividad..." 
+                    value={newActivityText} 
+                    onChange={(e) => setNewActivityText(e.target.value)} 
+                    autoSize={false}
+                    className="h-28 rounded-xl text-sm" 
+                  />
                 </div>
               </div>
               <ScrollArea className="flex-1" type="always">

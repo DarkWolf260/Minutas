@@ -785,7 +785,8 @@ export default function ReporteFinalPage() {
                               setStatisticsLocal(newValue);
                               debouncedSaveStats(newValue);
                             }}
-                            className="font-mono text-xs leading-relaxed flex-1 w-full resize-none bg-muted/20 border-muted/30 focus-visible:ring-primary/20 p-3 rounded-md"
+                            autoSize={false}
+                            className="font-mono text-xs leading-relaxed flex-1 w-full bg-muted/20 border-muted/30 focus-visible:ring-primary/20 p-3 rounded-md min-h-[150px]"
                           />
                         </CardContent>
                       </Card>
@@ -910,7 +911,8 @@ export default function ReporteFinalPage() {
                               placeholder="Descripción breve del evento..."
                               value={newNovedadText}
                               onChange={(e) => setNewNovedadText(e.target.value)}
-                              className="min-h-[80px] bg-background border-muted-foreground/20 focus-visible:ring-primary/20 rounded-xl resize-none text-sm"
+                              autoSize={false}
+                              className="h-28 bg-background border-muted-foreground/20 focus-visible:ring-primary/20 rounded-xl text-sm"
                             />
                           </div>
                         </div>
@@ -1085,13 +1087,12 @@ export default function ReporteFinalPage() {
               </SheetDescription>
             </SheetHeader>
             <div className="flex-1 overflow-hidden mt-4">
-              <ScrollArea className="h-[60vh] sm:h-[50vh] w-full rounded-md border bg-muted/30">
-                <Textarea
-                  readOnly
-                  value={generatedReport}
-                  className="w-full h-full min-h-[50vh] font-mono text-xs whitespace-pre-wrap border-none focus-visible:ring-0 p-4"
-                />
-              </ScrollArea>
+              <Textarea
+                readOnly
+                value={generatedReport}
+                autoSize={false}
+                className="w-full h-[60vh] sm:h-[50vh] font-mono text-xs whitespace-pre-wrap border bg-muted/30 focus-visible:ring-0 p-4"
+              />
             </div>
             <SheetFooter className="mt-4 flex flex-col gap-2 pb-6">
               <Button className="w-full h-12" type="button" onClick={handleCopyToClipboard}>
@@ -1150,13 +1151,12 @@ export default function ReporteFinalPage() {
             </DialogHeader>
             
             <div className="flex-1 overflow-hidden p-6 bg-muted/30">
-              <ScrollArea className="h-[50vh] w-full rounded-md border bg-background shadow-inner">
-                <Textarea
-                  readOnly
-                  value={generatedReport}
-                  className="w-full h-full min-h-[50vh] bg-transparent font-mono text-xs whitespace-pre-wrap border-none focus-visible:ring-0 p-6"
-                />
-              </ScrollArea>
+              <Textarea
+                readOnly
+                value={generatedReport}
+                autoSize={false}
+                className="w-full h-[50vh] bg-background shadow-inner font-mono text-xs whitespace-pre-wrap border focus-visible:ring-0 p-6"
+              />
             </div>
 
             <DialogFooter className="p-4 bg-background border-t gap-2 sm:gap-0">
