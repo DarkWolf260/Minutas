@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -58,6 +58,7 @@ import { LEADER_ROLES } from '@/lib/constants/roles';
 import { generateId } from '@/lib/utils/id';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { debounce } from '@/lib/utils';
 
 interface ManualNovedad {
   id: string;
@@ -99,7 +100,24 @@ export default function ReporteFinalPage() {
   const navigate = useNavigate();
 
   const manualNovedades = useMemo(() => settings.finalReportManualNovedades || [], [settings.finalReportManualNovedades]);
-  const statisticsText = settings.finalReportStatistics || '';
+  const [statisticsLocal, setStatisticsLocal] = useState('');
+  const lastSavedValue = useRef<string | undefined>(undefined);
+
+  // Sync statistics from settings on initial load or if changed from outside
+  useEffect(() => {
+    if (settingsLoaded && settings.finalReportStatistics !== lastSavedValue.current) {
+      setStatisticsLocal(settings.finalReportStatistics || '');
+      lastSavedValue.current = settings.finalReportStatistics;
+    }
+  }, [settingsLoaded, settings.finalReportStatistics]);
+
+  const debouncedSaveStats = useMemo(
+    () => debounce((value: string) => {
+      saveSettings({ finalReportStatistics: value });
+      lastSavedValue.current = value;
+    }, 500),
+    [saveSettings]
+  );
   
   
   const [generatedReport, setGeneratedReport] = useState('');
@@ -345,7 +363,7 @@ export default function ReporteFinalPage() {
   }, [reports, activeGuard?.id]);
 
   const handleGenerateReport = () => {
-    if (finishedReports.length === 0 && !statisticsText.trim() && manualNovedades.length === 0) {
+    if (finishedReports.length === 0 && !statisticsLocal.trim() && manualNovedades.length === 0) {
       setGeneratedReport('No hay novedades finalizadas ni estadísticas para reportar.');
       setIsResultDialogOpen(true);
       return;
@@ -584,8 +602,8 @@ export default function ReporteFinalPage() {
       .join('\n\n');
 
     const finalReportParts = [...headerParts];
-    if (statisticsText.trim())
-      finalReportParts.push(``, `*ESTADÍSTICAS DE LA GUARDIA*`, ``, statisticsText.trim());
+    if (statisticsLocal.trim())
+      finalReportParts.push(``, `*ESTADÍSTICAS DE LA GUARDIA*`, ``, statisticsLocal.trim());
   
     if (reportContent.trim()) finalReportParts.push(``, `*NOVEDADES DE LA GUARDIA*`, ``, reportContent);
     finalReportParts.push(``, `*PROTECCIÓN CIVIL ${(municipio || '').toUpperCase()}*`);
@@ -761,8 +779,12 @@ export default function ReporteFinalPage() {
                         <CardContent className="p-4 flex-1 flex flex-col min-h-0">
                           <Textarea
                             placeholder="Ej: - TRASLADOS URBANOS 5"
-                            value={statisticsText}
-                            onChange={(e) => saveSettings({ finalReportStatistics: e.target.value })}
+                            value={statisticsLocal}
+                            onChange={(e) => {
+                              const newValue = e.target.value;
+                              setStatisticsLocal(newValue);
+                              debouncedSaveStats(newValue);
+                            }}
                             className="font-mono text-xs leading-relaxed flex-1 w-full resize-none bg-muted/20 border-muted/30 focus-visible:ring-primary/20 p-3 rounded-md"
                           />
                         </CardContent>

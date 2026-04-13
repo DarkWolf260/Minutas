@@ -30,12 +30,15 @@ export default function OrdenDelDiaPage() {
   const [selectedGuardId, setSelectedGuardId] = useState<string>('');
   const [periodo, setPeriodo] = useState('');
   const formRef = useRef<{ generateOrder: () => void }>(null);
+  const lastSavedSettings = useRef<{ activeGuardId?: string, guardPeriod?: string }>({});
 
   useEffect(() => {
     if (settingsLoaded) {
-      if (settings.guardPeriod) {
-        setPeriodo(settings.guardPeriod);
-      } else {
+      const globalPeriod = settings.guardPeriod || '';
+      
+      // Default to auto-calculated period if no period is set in settings
+      let fallbackPeriod = '';
+      if (!globalPeriod) {
         const today = new Date();
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -46,8 +49,15 @@ export default function OrdenDelDiaPage() {
           const year = date.getFullYear();
           return `${day}/${month}/${year}`;
         };
+        fallbackPeriod = `${formatDate(today)} AL ${formatDate(tomorrow)}`;
+      }
 
-        setPeriodo(`${formatDate(today)} AL ${formatDate(tomorrow)}`);
+      const effectivePeriod = globalPeriod || fallbackPeriod;
+
+      // Only sync if different from OUR last saved value
+      if (lastSavedSettings.current.guardPeriod !== globalPeriod) {
+        setPeriodo(effectivePeriod);
+        lastSavedSettings.current.guardPeriod = globalPeriod;
       }
     }
   }, [settingsLoaded, settings.guardPeriod]);
@@ -57,17 +67,21 @@ export default function OrdenDelDiaPage() {
     if (
       settingsLoaded &&
       settings.activeGuardId &&
-      selectedGuardId !== settings.activeGuardId &&
       guardsLoaded &&
       guards.some((g) => g.id === settings.activeGuardId)
     ) {
-      setSelectedGuardId(settings.activeGuardId);
+      // Only sync if different from OUR last saved value
+      if (lastSavedSettings.current.activeGuardId !== settings.activeGuardId) {
+        setSelectedGuardId(settings.activeGuardId);
+        lastSavedSettings.current.activeGuardId = settings.activeGuardId;
+      }
     }
-  }, [settings, settingsLoaded, guards, guardsLoaded, selectedGuardId]);
+  }, [settings.activeGuardId, settingsLoaded, guards, guardsLoaded]);
 
   const handleActiveGuardChange = (guardId: string) => {
     if (!guardId) return;
     setSelectedGuardId(guardId);
+    lastSavedSettings.current.activeGuardId = guardId;
     saveSettings({ ...settings, activeGuardId: guardId });
   };
 
@@ -76,6 +90,8 @@ export default function OrdenDelDiaPage() {
 
   const handleOpenGuard = () => {
     if (!selectedGuardId) return;
+    lastSavedSettings.current.activeGuardId = selectedGuardId;
+    lastSavedSettings.current.guardPeriod = periodo;
     saveSettings({ isGuardOpen: true, activeGuardId: selectedGuardId, guardPeriod: periodo });
   };
   const isLoaded = guardsLoaded && rolesLoaded && settingsLoaded;

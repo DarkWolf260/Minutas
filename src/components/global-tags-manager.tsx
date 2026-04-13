@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,23 +34,44 @@ export function GlobalTagsManager() {
   const [localValues, setLocalValues] = useState<Record<string, string>>({});
   const [localReportaRoles, setLocalReportaRoles] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const lastSavedValues = useRef<Record<string, string>>({});
+  const lastSavedReportaRoles = useRef<string[]>([]);
 
   // Sync local state when data loads
   useEffect(() => {
     if (definitionsLoaded) {
       const values: Record<string, string> = {};
+      let hasChangesFromOutside = false;
+
       Object.keys(definitions).forEach(key => {
-        values[key] = definitions[key]?.value || '';
+        const globalValue = definitions[key]?.value || '';
+        values[key] = globalValue;
+        
+        // Only consider it an "outside change" if it's different from what we last saved
+        if (lastSavedValues.current[key] === undefined || lastSavedValues.current[key] !== globalValue) {
+          hasChangesFromOutside = true;
+        }
       });
-      setLocalValues(values);
+
+      if (hasChangesFromOutside) {
+        setLocalValues(values);
+        lastSavedValues.current = values;
+      }
     }
   }, [definitions, definitionsLoaded]);
 
   useEffect(() => {
     if (settingsLoaded) {
-      setLocalReportaRoles(settings.reportaRoleIds || []);
+      const globalRoles = settings.reportaRoleIds || [];
+      const currentLastSaved = JSON.stringify(lastSavedReportaRoles.current);
+      const incomingGlobal = JSON.stringify(globalRoles);
+
+      if (currentLastSaved !== incomingGlobal) {
+        setLocalReportaRoles(globalRoles);
+        lastSavedReportaRoles.current = globalRoles;
+      }
     }
-  }, [settings, settingsLoaded]);
+  }, [settings.reportaRoleIds, settingsLoaded]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -71,6 +92,14 @@ export function GlobalTagsManager() {
         saveDefinitions(newDefinitions),
         saveSettings({ ...settings, reportaRoleIds: cleanedReportaRoles })
       ]);
+
+      // Update refs to prevent sync loops
+      const savedValues: Record<string, string> = {};
+      Object.keys(localValues).forEach(key => {
+        savedValues[key] = localValues[key] || '';
+      });
+      lastSavedValues.current = savedValues;
+      lastSavedReportaRoles.current = cleanedReportaRoles;
 
       // Update local state with cleaned roles
       setLocalReportaRoles(cleanedReportaRoles);

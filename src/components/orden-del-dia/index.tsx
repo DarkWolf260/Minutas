@@ -77,6 +77,7 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
     const [copyButtonText, setCopyButtonText] = useState('Copiar');
 
     const lastInitializedGuard = useRef<string | null>(null);
+    const lastSavedDraftTime = useRef<string | null>(null);
 
     // DND Sensors
     const sensors = useSensors(
@@ -104,28 +105,34 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
       if (lastInitializedGuard.current !== selectedGuard) {
         // Priority 1: Check for existing draft for this guard
         if (settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === selectedGuard) {
-          setStaff(settings.ordenDelDiaDraft.staff);
+          const draft = settings.ordenDelDiaDraft;
+          
+          // Only sync if it's actually NEWER than our last saved value
+          if (!lastSavedDraftTime.current || draft.updatedAt > lastSavedDraftTime.current) {
+            setStaff(draft.staff);
 
-          // Migration logic for old activities format
-          const activitiesDraft = settings.ordenDelDiaDraft.activities || [];
-          const migratedActivities = activitiesDraft.map((a: any) => {
-            if (a.text !== undefined) return a; // Already new format
+            // Migration logic for old activities format
+            const activitiesDraft = draft.activities || [];
+            const migratedActivities = activitiesDraft.map((a: any) => {
+              if (a.text !== undefined) return a; // Already new format
 
-            const timeMatch = a.content ? a.content.match(/(\d{2}:\d{2})/) : null;
-            const time = (timeMatch ? timeMatch[1] : '08:00') + ' HLV';
-            const text = a.content ? a.content.replace(/^\*?(\d{2}:\d{2})(?:\s+HLV)?\*?\s*/, '').trim() : '';
+              const timeMatch = a.content ? a.content.match(/(\d{2}:\d{2})/) : null;
+              const time = (timeMatch ? timeMatch[1] : '08:00') + ' HLV';
+              const text = a.content ? a.content.replace(/^\*?(\d{2}:\d{2})(?:\s+HLV)?\*?\s*/, '').trim() : '';
 
-            return {
-              id: a.id,
-              date: parseDatesFromPeriodo(periodo).start,
-              time,
-              text
-            } as ManualNovedad;
-          });
+              return {
+                id: a.id,
+                date: parseDatesFromPeriodo(periodo).start,
+                time,
+                text
+              } as ManualNovedad;
+            });
 
-          setActivities(migratedActivities);
-          setNotes(settings.ordenDelDiaDraft.notes);
-          setIsJefeEncargado(!!settings.ordenDelDiaDraft.isJefeEncargado);
+            setActivities(migratedActivities);
+            setNotes(draft.notes);
+            setIsJefeEncargado(!!draft.isJefeEncargado);
+            lastSavedDraftTime.current = draft.updatedAt;
+          }
           lastInitializedGuard.current = selectedGuard;
           return;
         }
@@ -157,6 +164,8 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
       if (!selectedGuard) return;
 
       const timer = setTimeout(() => {
+        const nowIso = new Date().toISOString();
+        lastSavedDraftTime.current = nowIso;
         saveSettings({
           ordenDelDiaDraft: {
             guardId: selectedGuard,
@@ -164,7 +173,7 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
             isJefeEncargado,
             activities,
             notes,
-            updatedAt: new Date().toISOString(),
+            updatedAt: nowIso,
           },
         });
       }, 1000);
