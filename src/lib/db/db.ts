@@ -127,6 +127,7 @@ interface RxDBInternalState {
   isDevModePluginAdded: boolean;
   allDatabases: Map<string, any>;
   retryCount: number;
+  storage: any | null;
 }
 
 const getInternalState = (): RxDBInternalState => {
@@ -136,10 +137,23 @@ const getInternalState = (): RxDBInternalState => {
       activeDatabaseName: null,
       dbPromiseChain: Promise.resolve(),
       isDevModePluginAdded: false,
-      allDatabases: new Map<string, any>() // name -> instance
+      allDatabases: new Map<string, any>(), // name -> instance
+      storage: null
     } as RxDBInternalState;
   }
   return _global.__rxdb_singleton;
+};
+
+const getStorage = () => {
+  const state = getInternalState();
+  if (!state.storage) {
+    // IMPORTANT: For ignoreDuplicate: true to work, we MUST use the exact same storage instance
+    // on subsequent calls. Reference: https://rxdb.info/rx-database.html#ignoreduplicate
+    state.storage = wrappedValidateAjvStorage({ 
+      storage: getRxStorageDexie() 
+    });
+  }
+  return state.storage;
 };
 
 const ensureDevMode = async () => {
@@ -183,15 +197,18 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
   try {
     database = await createRxDatabase<MinutasDatabaseCollections>({
       name: name,
-      storage: wrappedValidateAjvStorage({ storage: getRxStorageDexie() }),
-      ignoreDuplicate: true,
+      storage: getStorage(),
+      ignoreDuplicate: import.meta.env.DEV,
     });
     
     // 3. Register IMMEDIATELY in the global tracking
     state.allDatabases.set(name, database);
   } catch (err: any) {
+    const rxErr = err as any;
     logger.error(`Failed to create RxDatabase [${name}]`, {
       message: err.message,
+      code: rxErr.code,
+      parameters: rxErr.parameters,
       stack: err.stack
     });
     throw err;
