@@ -102,6 +102,15 @@ export default function ReporteFinalPage() {
   const manualNovedades = useMemo(() => settings.finalReportManualNovedades || [], [settings.finalReportManualNovedades]);
   const [statisticsLocal, setStatisticsLocal] = useState('');
   const lastSavedValue = useRef<string | undefined>(undefined);
+  const [canAutoSave, setCanAutoSave] = useState(false);
+
+  // Initialization safety lock
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCanAutoSave(true);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Sync statistics from settings on initial load or if changed from outside
   useEffect(() => {
@@ -113,10 +122,11 @@ export default function ReporteFinalPage() {
 
   const debouncedSaveStats = useMemo(
     () => debounce((value: string) => {
+      if (!canAutoSave) return;
       saveSettings({ finalReportStatistics: value });
       lastSavedValue.current = value;
     }, 500),
-    [saveSettings]
+    [saveSettings, canAutoSave]
   );
   
   

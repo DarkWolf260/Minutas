@@ -95,7 +95,7 @@ function AppLayout() {
                   <main className="flex-1 md:overflow-hidden flex flex-col min-h-0 min-w-0 relative bg-muted/30 overflow-x-hidden">
                     <ErrorBoundary name="MainContent">
                       <Suspense fallback={<PageLoader />}>
-                        <div key={location.pathname} className="flex-1 flex flex-col min-h-0 min-w-0 animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out transform-gpu">
+                        <div key={location.pathname} className="flex-1 flex flex-col min-h-0 min-w-0 animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out">
                           <Routes>
                             <Route path="/" element={<NovedadesPage />} />
                             <Route path="/settings/direcciones" element={<DireccionesPage />} />

@@ -75,7 +75,7 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
     const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
     const [generatedOrder, setGeneratedOrder] = useState('');
     const [copyButtonText, setCopyButtonText] = useState('Copiar');
-
+    const [isInitialized, setIsInitialized] = useState(false);
     const lastInitializedGuard = useRef<string | null>(null);
     const lastSavedDraftTime = useRef<string | null>(null);
 
@@ -102,42 +102,36 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
     useEffect(() => {
       if (!selectedGuard) return;
 
-      if (lastInitializedGuard.current !== selectedGuard) {
-        // Priority 1: Check for existing draft for this guard
+      const isNewGuard = lastInitializedGuard.current !== selectedGuard;
+      const staffIsEmpty = Object.keys(staff).length === 0;
+
+      // Always try to load the draft if we are on a new guard OR the current state is empty
+      if (isNewGuard || staffIsEmpty) {
         if (settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === selectedGuard) {
           const draft = settings.ordenDelDiaDraft;
+          setStaff(draft.staff || {});
           
-          // Only sync if it's actually NEWER than our last saved value
-          if (!lastSavedDraftTime.current || draft.updatedAt > lastSavedDraftTime.current) {
-            setStaff(draft.staff);
+          // Migration logic
+          const activitiesDraft = draft.activities || [];
+          const migratedActivities = activitiesDraft.map((a: any) => {
+            if (a.text !== undefined) return a;
+            const timeMatch = a.content ? a.content.match(/(\d{2}:\d{2})/) : null;
+            const time = (timeMatch ? timeMatch[1] : '08:00') + ' HLV';
+            const text = a.content ? a.content.replace(/^\*?(\d{2}:\d{2})(?:\s+HLV)?\*?\s*/, '').trim() : '';
+            return { id: a.id, date: parseDatesFromPeriodo(periodo).start, time, text } as ManualNovedad;
+          });
 
-            // Migration logic for old activities format
-            const activitiesDraft = draft.activities || [];
-            const migratedActivities = activitiesDraft.map((a: any) => {
-              if (a.text !== undefined) return a; // Already new format
-
-              const timeMatch = a.content ? a.content.match(/(\d{2}:\d{2})/) : null;
-              const time = (timeMatch ? timeMatch[1] : '08:00') + ' HLV';
-              const text = a.content ? a.content.replace(/^\*?(\d{2}:\d{2})(?:\s+HLV)?\*?\s*/, '').trim() : '';
-
-              return {
-                id: a.id,
-                date: parseDatesFromPeriodo(periodo).start,
-                time,
-                text
-              } as ManualNovedad;
-            });
-
-            setActivities(migratedActivities);
-            setNotes(draft.notes);
-            setIsJefeEncargado(!!draft.isJefeEncargado);
-            lastSavedDraftTime.current = draft.updatedAt;
-          }
+          setActivities(migratedActivities);
+          setNotes(draft.notes || DEFAULT_NOTES);
+          setIsJefeEncargado(!!draft.isJefeEncargado);
           lastInitializedGuard.current = selectedGuard;
+          setIsInitialized(true);
           return;
         }
+      }
 
-        // Priority 2: Use Initial Data or default generation
+      // If we are on a new guard and no draft was found/loaded, use initial data
+      if (isNewGuard) {
         const newStaffState: Staff = {};
         roles.forEach((role: StaffRole) => {
           let assignedMembers = (initialData && initialData[role.name]) || [];
@@ -145,7 +139,6 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
             const latestData = personnel.find((p: StaffMember) => p.id === member.id);
             return latestData || member;
           });
-
           newStaffState[role.name] = assignedMembers;
         });
 
@@ -156,12 +149,20 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
         setActivities(getGeneratedDefaultActivities(start, end, estado));
         setNotes(DEFAULT_NOTES);
         lastInitializedGuard.current = selectedGuard;
+        setIsInitialized(true);
       }
     }, [selectedGuard, settings.ordenDelDiaDraft, roles, initialData, personnel, periodo]);
 
+    // Reset initialization when guard changes
+    useEffect(() => {
+      if (selectedGuard !== lastInitializedGuard.current) {
+        setIsInitialized(false);
+      }
+    }, [selectedGuard]);
+
     // Auto-save debounced effect
     useEffect(() => {
-      if (!selectedGuard) return;
+      if (!selectedGuard || !isInitialized) return;
 
       const timer = setTimeout(() => {
         const nowIso = new Date().toISOString();
@@ -179,7 +180,7 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
       }, 1000);
 
       return () => clearTimeout(timer);
-    }, [staff, isJefeEncargado, activities, notes, selectedGuard, saveSettings]);
+    }, [staff, isJefeEncargado, activities, notes, selectedGuard, saveSettings, isInitialized]);
 
     // Handlers
     const handleRoleStaffUpdate = (roleName: string, members: StaffMember[]) => {
@@ -441,15 +442,15 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
         <div className="space-y-6 flex-1 md:flex md:flex-col min-h-0">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 pb-2 md:flex-1 min-h-0">
             {/* DISTRIBUCIÓN DE PERSONAL */}
-            <Card className="shadow-sm flex flex-col md:flex-1 md:h-full transition-all overflow-hidden border-muted/60 min-h-[400px] h-auto">
+            <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/60 min-h-[400px] h-auto">
               <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
                 <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                   <GripVertical className="h-3.5 w-3.5 text-primary" />
                   Distribución de Personal
                 </CardTitle>
               </CardHeader>
-              <ScrollArea className="flex-1 p-4 pt-0" type="always">
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                <ScrollArea className="flex-1 p-4 pt-0" type="always">
                   <div className="grid grid-cols-1 gap-4">
                     {roles.filter((r: StaffRole) => !r.isHidden).map((role: StaffRole) => (
                       <div key={role.name} className="space-y-3">
@@ -472,25 +473,27 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
                       </div>
                     ))}
                   </div>
-                  <DragOverlay dropAnimation={{ sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) }}>
-                    {activeId && activeMember ? (
-                      <div className="flex items-center justify-between p-3 pl-4 bg-background border rounded-lg shadow-sm">
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <GripVertical className="h-4 w-4 text-muted-foreground" />
-                          <div className="min-w-0 flex-1">
-                            <p className="font-bold text-sm text-foreground/90 truncate">{activeMember.name}</p>
-                            <p className="text-[10px] font-mono text-muted-foreground/70 uppercase tracking-tighter">{activeMember.cedula || 'SIN CÉDULA'}</p>
-                          </div>
+                </ScrollArea>
+                <DragOverlay 
+                  dropAnimation={{ sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) }}
+                >
+                  {activeId && activeMember ? (
+                    <div className="flex items-center justify-between p-3 pl-4 bg-background border rounded-lg shadow-xl z-[500] pointer-events-none">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <GripVertical className="h-4 w-4 text-muted-foreground" />
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-sm text-foreground/90 truncate">{activeMember.name}</p>
+                          <p className="text-[10px] font-mono text-muted-foreground/70 uppercase tracking-tighter">{activeMember.cedula || 'SIN CÉDULA'}</p>
                         </div>
                       </div>
-                    ) : null}
-                  </DragOverlay>
-                </DndContext>
-              </ScrollArea>
+                    </div>
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
             </Card>
 
             {/* ACTIVIDADES DEL DÍA */}
-            <Card className="shadow-sm flex flex-col md:flex-1 md:h-full transition-all overflow-hidden border-muted/60 min-h-[400px] h-auto">
+            <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/60 min-h-[400px] h-auto">
               <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -551,7 +554,7 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
             </Card>
 
             {/* NOTAS ADMINISTRATIVAS */}
-            <Card className="shadow-sm flex flex-col md:flex-1 md:h-full transition-all overflow-hidden border-muted/60 min-h-[400px] h-auto">
+            <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/60 min-h-[400px] h-auto">
               <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">

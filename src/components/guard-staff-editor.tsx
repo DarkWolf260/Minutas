@@ -518,7 +518,7 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
   }));
 
   return (
-    <div className="space-y-4 p-1 relative">
+    <div className="flex-1 flex flex-col min-h-0 h-full p-1 relative">
 
       <DndContext
         sensors={sensors}
@@ -526,23 +526,25 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="space-y-4">
-          {availableRoles.map((role) => (
-            <StaffListEditor
-              key={role.name}
-              label={role.name}
-              staffMembers={staff[role.name] || []}
-              isSingle={role.isSingle}
-              onUpdate={(members) => handleListUpdate(role.name, members)}
-            />
-          ))}
-          {availableRoles.length === 0 && (
-            <p className="p-4 text-center text-sm text-muted-foreground">
-              No hay cargos definidos para este departamento. Puedes definirlos en "Gestión de
-              Personal".
-            </p>
-          )}
-        </div>
+        <ScrollArea className="flex-1 h-full" type="always">
+          <div className="space-y-4 p-6">
+            {availableRoles.map((role) => (
+              <StaffListEditor
+                key={role.name}
+                label={role.name}
+                staffMembers={staff[role.name] || []}
+                isSingle={role.isSingle}
+                onUpdate={(members) => handleListUpdate(role.name, members)}
+              />
+            ))}
+            {availableRoles.length === 0 && (
+              <p className="p-4 text-center text-sm text-muted-foreground">
+                No hay cargos definidos para este departamento. Puedes definirlos en "Gestión de
+                Personal".
+              </p>
+            )}
+          </div>
+        </ScrollArea>
         <DragOverlay
           dropAnimation={{
             sideEffects: defaultDropAnimationSideEffects({
@@ -555,7 +557,7 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
           }}
         >
           {activeId && activeMember ? (
-            <div className="flex items-center justify-between p-3 pl-4 bg-background border rounded-lg shadow-sm">
+            <div className="flex items-center justify-between p-3 pl-4 bg-background border rounded-lg shadow-xl z-[900] pointer-events-none w-[400px]">
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div className="text-muted-foreground shrink-0 cursor-grabbing p-1.5">
                   <GripVertical className="h-4 w-4" />

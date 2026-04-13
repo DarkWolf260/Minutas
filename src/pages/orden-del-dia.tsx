@@ -35,7 +35,7 @@ export default function OrdenDelDiaPage() {
   useEffect(() => {
     if (settingsLoaded) {
       const globalPeriod = settings.guardPeriod || '';
-      
+
       // Default to auto-calculated period if no period is set in settings
       let fallbackPeriod = '';
       if (!globalPeriod) {
@@ -123,7 +123,7 @@ export default function OrdenDelDiaPage() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3 shrink-0">
               {isGuardOpen && (
                 <Badge variant="outline" className="hidden md:flex h-9 px-4 gap-2 bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold uppercase tracking-wider animate-pulse rounded-xl">
@@ -131,8 +131,8 @@ export default function OrdenDelDiaPage() {
                   Guardia Activa
                 </Badge>
               )}
-              <Button 
-                onClick={() => formRef.current?.generateOrder()} 
+              <Button
+                onClick={() => formRef.current?.generateOrder()}
                 disabled={!selectedGuardId}
                 size="sm"
                 className="hidden sm:flex gap-2 shadow-sm font-bold"
@@ -159,8 +159,8 @@ export default function OrdenDelDiaPage() {
                   >
                     Guardia de Turno
                   </Label>
-                  <Select 
-                    value={selectedGuardId} 
+                  <Select
+                    value={selectedGuardId}
                     onValueChange={handleActiveGuardChange}
                     disabled={isGuardOpen}
                   >
@@ -193,7 +193,7 @@ export default function OrdenDelDiaPage() {
                   />
                 </div>
                 {!isGuardOpen && (
-                  <Button 
+                  <Button
                     onClick={handleOpenGuard}
                     disabled={!selectedGuardId}
                     size="sm"
@@ -240,7 +240,7 @@ export default function OrdenDelDiaPage() {
           </div>
         </div>
       </div>
-      
+
       {/* Mobile Floating Action Button for Generating Order */}
       <div className="sm:hidden fixed bottom-24 right-6 z-50 animate-in fade-in zoom-in duration-300 ease-out">
         <Button
