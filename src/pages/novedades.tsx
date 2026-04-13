@@ -446,7 +446,7 @@ const NovedadesDialogs = memo(function NovedadesDialogs({
           open={!!reportToDelete}
           onOpenChange={(open) => !open && setReportToDelete(null)}
         >
-          <SheetContent side="bottom" className="rounded-t-xl p-6">
+          <SheetContent side="bottom" className="h-[90vh] rounded-t-xl flex flex-col p-6">
             <SheetHeader className="text-left">
               <SheetTitle>¿Estás seguro?</SheetTitle>
               <SheetDescription>
@@ -514,7 +514,7 @@ const NovedadesDialogs = memo(function NovedadesDialogs({
 
       {isMobile ? (
         <Sheet open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <SheetContent side="bottom" className="rounded-t-xl p-6">
+          <SheetContent side="bottom" className="h-[90vh] rounded-t-xl flex flex-col p-6">
             <SheetHeader className="text-left">
               <SheetTitle>Crear Novedad</SheetTitle>
               <SheetDescription>
