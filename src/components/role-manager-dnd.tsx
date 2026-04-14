@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Trash2, GripVertical, PlusCircle } from 'lucide-react';
 import type { StaffRole, Department } from '@/lib/types';
+import { DEPARTMENT_IDS } from '@/lib/constants/departments';
 import {
   DndContext,
   KeyboardSensor,
@@ -194,7 +195,7 @@ export function RoleManagerDnD({
       const newRole: StaffRole = {
         name: newRoleName.trim(),
         isSingle: false,
-        departmentScope: ['ops'], // Use dynamic ops ID instead of hardcoded OPERATIONS
+        departmentScope: [DEPARTMENT_IDS.OPERATIONS],
       };
       onRolesChange([...roles, newRole]);
       setNewRoleName('');

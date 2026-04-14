@@ -33,6 +33,7 @@ export interface StaffMember {
   specialties?: string[];
   sex?: 'M' | 'F';
   observation?: string; // For Orden del Día notations
+  order?: number;
 }
 
 export interface ManualNovedad {
@@ -49,7 +50,8 @@ export interface StaffRole {
   departmentScope: string[]; // Array of department IDs, 'OPERATIONS' for guards. Empty array means global.
   isHidden?: boolean; // If true, this role won't appear in the default Orden del Día / Reports
   isStatus?: boolean; // If true, this is a personnel status (Reposo, Vacaciones) rather than a fixed position
-  order?: number; // Sorting order for reports
+  order?: number; // Para el Organigrama
+  hierarchyOrder?: number; // Para la Jerarquía de Reporte
 }
 
 // Staff is a record mapping a role name to a list of personnel for that role.
@@ -205,6 +207,7 @@ export interface Department {
   workspaceId?: string;
   name: string;
   staff: Staff;
+  order?: number;
 }
 
 export interface Address {

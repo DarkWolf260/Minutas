@@ -49,7 +49,8 @@ export function usePersonnel() {
     const sub = db.personnel.find({
       selector: {
         workspaceId: currentWorkspace
-      }
+      },
+      sort: [{ 'order': 'asc' }]
     }).$.subscribe((data) => {
       setPersonnel(data.map((d) => d.toJSON()) as StaffMember[]);
       setIsLoaded(true);

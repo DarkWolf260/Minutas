@@ -51,6 +51,7 @@ function PersonnelPageContent() {
     updateMember,
     removeMember,
     removeMembers,
+    savePersonnel,
     isLoaded: personnelLoaded,
     isCedulaDuplicate,
   } = usePersonnel();
@@ -288,6 +289,7 @@ function PersonnelPageContent() {
                     personnel={personnel}
                     onRolesChange={saveRoles}
                     onDepartmentsChange={saveDepartments}
+                    onUpdatePersonnel={savePersonnel}
                     onSave={() => { }}
                     rolesLoaded={rolesLoaded}
                     deptsLoaded={deptsLoaded}

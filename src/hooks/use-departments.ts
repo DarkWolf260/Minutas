@@ -26,15 +26,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Department } from '@/lib/types';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
-
-const defaultDepartments: Department[] = [
-  { id: 'ops', name: 'Departamento de Operaciones', staff: {} },
-  { id: 'cemuprad', name: 'CEMUPRAD', staff: {} },
-  { id: 'educ', name: 'Departamento de Educación', staff: {} },
-  { id: 'riesgos', name: 'Departamento de Gestión de Riesgos', staff: {} },
-  { id: 'it', name: 'Departamento de Informática', staff: {} },
-  { id: 'log', name: 'Departamento de Logística', staff: {} },
-];
+import { DEFAULT_DEPARTMENTS } from '@/lib/constants/structure';
 
 export function useDepartments() {
   const db = useDatabase();
@@ -44,6 +36,7 @@ export function useDepartments() {
 
   useEffect(() => {
     if (!db || !currentWorkspace) return;
+    let initialized = false;
 
     const sub = db.lookups
       .find({
@@ -51,6 +44,7 @@ export function useDepartments() {
           type: 'department',
           workspaceId: currentWorkspace 
         },
+        sort: [{ 'data.order': 'asc' }],
       })
       .$.subscribe((data) => {
         if (data.length > 0) {
@@ -58,6 +52,20 @@ export function useDepartments() {
             const json = d.toJSON();
             return { ...(json.data as Department), workspaceId: currentWorkspace };
           }) as Department[]);
+          initialized = true;
+        } else if (!initialized) {
+          // Auto-seed default departments on first load for this workspace
+          initialized = true;
+          const toInsert = DEFAULT_DEPARTMENTS.map((dept) => ({
+            id: `${currentWorkspace}:dept:${dept.id}`,
+            workspaceId: currentWorkspace,
+            type: 'department' as const,
+            name: dept.name,
+            data: { ...dept, workspaceId: currentWorkspace },
+          }));
+          
+          db.lookups.bulkInsert(toInsert as any)
+            .catch(err => logger.error('Failed to auto-seed default departments', err, { feature: 'Departments', workspaceId: currentWorkspace }));
         } else {
           setDepartments([]);
         }
@@ -148,7 +156,7 @@ export function useDepartments() {
       const allDocs = await db.lookups.find({ selector: { type: 'department', workspaceId: currentWorkspace } }).exec();
       await db.lookups.bulkRemove(allDocs.map((d) => d.primary));
       
-      const toInsert = defaultDepartments.map((dept) => ({
+      const toInsert = DEFAULT_DEPARTMENTS.map((dept) => ({
         id: `${currentWorkspace}:dept:${dept.id}`,
         workspaceId: currentWorkspace,
         type: 'department' as const,

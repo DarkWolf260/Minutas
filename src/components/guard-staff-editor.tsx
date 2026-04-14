@@ -512,7 +512,9 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
   };
 
   const availableRoles = useMemo(() => {
-    return roles.filter((role) => !role.isHidden);
+    return [...roles]
+      .filter((role) => !role.isHidden)
+      .sort((a, b) => (a.hierarchyOrder ?? a.order ?? 0) - (b.hierarchyOrder ?? b.order ?? 0));
   }, [roles]);
 
   useImperativeHandle(ref, () => ({

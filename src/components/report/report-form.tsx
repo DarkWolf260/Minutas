@@ -230,66 +230,78 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
         const applyDefaults = (target: FormDataRecord, fieldIds: string[]) => {
           if (!target) return;
           fieldIds.forEach((fieldId) => {
-            if (target[fieldId] === undefined || target[fieldId] === null) {
-              const keyLower = fieldId.toLowerCase();
-              const foundKey = Object.keys(predefinedValues).find(
-                (k) => k.toLowerCase() === keyLower
-              );
+            const keyLower = fieldId.toLowerCase();
+            const role = roles.find((r: any) => r.name.toLowerCase() === keyLower);
+            const MANUAL_FIELDS = ['técnico', 'auxiliar', 'conductor'];
+            const isLeadershipRole = keyLower === 'director' || keyLower === 'jefe de operaciones' || keyLower === 'jefe de los servicios';
+            const currentValue = target[fieldId];
 
-              if (foundKey && predefinedValues[foundKey]) {
-                target[fieldId] = safeClone(predefinedValues[foundKey]);
-              } else if (finalConfig.fields[fieldId]?.defaultValue !== undefined) {
-                target[fieldId] = safeClone(finalConfig.fields[fieldId].defaultValue);
-              } else {
-                const MANUAL_FIELDS = ['técnico', 'auxiliar', 'conductor'];
-                const role = roles.find((r: any) => r.name.toLowerCase() === keyLower);
-                
-                if (role && !MANUAL_FIELDS.includes(keyLower)) {
+            // Decide if we should attempt to fill this field:
+            // - Always fill if undefined/null
+            // - Also fill if it's an empty array and this is a role field with available staff
+            const isEmpty = currentValue === undefined || currentValue === null;
+            const isEmptyRoleArray = Array.isArray(currentValue) && currentValue.length === 0 && role && !MANUAL_FIELDS.includes(keyLower);
+
+            if (!isEmpty && !isEmptyRoleArray) return;
+
+            if (role && !MANUAL_FIELDS.includes(keyLower)) {
                   let initialStaff: any[] = [];
                   if (activeStaff) {
-                    const staffList = activeStaff[role.name];
+                    // Optimized search for the staff (Copied from working logic for Jefe de los servicios)
+                    const staffKey = Object.keys(activeStaff).find(k => k.toLowerCase() === keyLower);
+                    const staffList = staffKey ? activeStaff[staffKey] : undefined;
+                    
                     if (staffList && staffList.length > 0) {
                       const isReporta = keyLower === 'reporta';
                       if (isReporta) {
-                        initialStaff = staffList.length > 0 ? [rehydrate(staffList[0])] : [];
+                        initialStaff = [rehydrate(staffList[0])];
                       } else {
-                        initialStaff = staffList.map((s) => formatStaffMember(rehydrate(s)));
+                        initialStaff = staffList.map((s: any) => formatStaffMember(rehydrate(s)));
                       }
                     }
                   }
 
-                  // Fallback for Leader Roles (Director, Jefe de Operaciones) if guard list is empty
-                  if (initialStaff.length === 0) {
-                    const roleLower = role.name.toLowerCase();
-                    if (roleLower === 'director' || roleLower === 'jefe de operaciones' || roleLower === 'jefe de los servicios') {
-                      const globalMatches = personnel.filter(
-                        (p) => p.roleId?.toLowerCase() === roleLower
-                      );
-                      if (globalMatches.length > 0) {
-                        const isReporta = keyLower === 'reporta';
-                        if (isReporta) {
-                          initialStaff = globalMatches.length > 0 ? [safeClone(globalMatches[0])] : [];
-                        } else {
-                          initialStaff = globalMatches.map((p) => safeClone(formatStaffMember(p)));
-                        }
-                      }
+                  // Leadership fallback
+                  if (initialStaff.length === 0 && isLeadershipRole) {
+                    const globalMatches = personnel.filter(
+                      (p) => p.roleId?.toLowerCase() === keyLower || p.cargo?.toLowerCase() === keyLower
+                    );
+                    if (globalMatches.length > 0) {
+                      initialStaff = globalMatches.map((p) => safeClone(formatStaffMember(p)));
                     }
                   }
 
-                  target[fieldId] = initialStaff;
-                } else if (
-                  keyLower === 'guardia' ||
-                  keyLower === 'grupo' ||
-                  keyLower === 'grupo de guardia' ||
-                  keyLower === 'guardia de servicio'
-                ) {
-                  target[fieldId] = settings?.activeGuardId || '';
-                } else if (fieldId === 'Unidad') {
-                  target[fieldId] = [];
-                } else {
-                  target[fieldId] = '';
-                }
+              if (initialStaff.length > 0) {
+                target[fieldId] = initialStaff;
+                return;
               }
+            }
+
+            // Only apply non-role defaults if field is truly empty (not just an empty array)
+            if (!isEmpty) return;
+
+            // Default fallback to predefined and others
+            const foundKey = Object.keys(predefinedValues).find(
+              (k) => k.toLowerCase() === keyLower
+            );
+
+            if (foundKey && predefinedValues[foundKey]) {
+              target[fieldId] = safeClone(predefinedValues[foundKey]);
+            } else if (finalConfig.fields[fieldId]?.defaultValue !== undefined) {
+              target[fieldId] = safeClone(finalConfig.fields[fieldId].defaultValue);
+            } else if (role && !MANUAL_FIELDS.includes(keyLower)) {
+              target[fieldId] = [];
+            } else if (
+              keyLower === 'guardia' ||
+              keyLower === 'grupo' ||
+              keyLower === 'grupo de guardia' ||
+              keyLower === 'guardia de servicio'
+            ) {
+              target[fieldId] = settings?.activeGuardId || '';
+            } else if (fieldId === 'Unidad') {
+              target[fieldId] = [];
+            } else {
+              target[fieldId] = '';
             }
           });
         };
@@ -374,12 +386,12 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
 
         return initialFormValues;
       },
-      [finalConfig, predefinedValues, roles, guards, settings?.activeGuardId, personnel]
+      [finalConfig, predefinedValues, roles, guards, settings?.activeGuardId, settings?.ordenDelDiaDraft, personnel, settingsLoaded, guardsLoaded]
     );
 
 
     const methods = useForm<Record<string, any>>({
-      defaultValues: getInitialValues(initialData) as Record<string, unknown>,
+      defaultValues: {},
     });
     const { handleSubmit, control, watch, reset, getValues, setValue, trigger } = methods;
 
@@ -427,40 +439,47 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       });
     }, [controlledValues, setValue]);
 
-    // Always read current values — getValues() is always up-to-date
-    const allFormValues = getValues() as Record<string, any>;
-
-    // Track the last report ID to only reset when switching documents, 
-    // avoiding resets caused by prop updates (like auto-saves).
-    const [lastReportId, setLastReportId] = useState<string | undefined>(reportId);
+    // Track whether we've done the first authoritative reset once all DB data is ready.
+    const hasInitialized = useRef<boolean>(false);
+    const lastBaseDataHash = useRef<string>('');
 
     useEffect(() => {
-      // 1. Identify if the report ID physically changed (different document)
+      // 1. Report ID changed → always reset to new document's data
       const didIdChange = reportId !== lastPropReportId.current;
-      
-      // 2. If it's the SAME report, but the initial data prop updated (e.g. after save)
-      const currentInitialDataHash = stableStringify(initialData || {});
-      const initialDataChanged = currentInitialDataHash !== processedInitialDataHash.current;
-
-      // CRITICAL: NEVER reset if the user has a field focused, 
-      // unless we definitely switched to a completely different report.
       if (didIdChange) {
-          lastPropReportId.current = reportId;
-          processedInitialDataHash.current = currentInitialDataHash;
-          const formValues = getInitialValues(initialData);
-          reset(formValues);
-          return;
+        lastPropReportId.current = reportId;
+        hasInitialized.current = false; // Force re-initialization for new report
+        lastBaseDataHash.current = '';
       }
 
-      // If ID is same, but data changed (e.g. background sync)
-      // Only reset if NOT dirty and NOT focused.
-      if (initialDataChanged && !methods.formState.isDirty && !isFocused.current) {
-          processedInitialDataHash.current = currentInitialDataHash;
-          const formValues = getInitialValues(initialData);
-          reset(formValues, { keepDefaultValues: true });
-          return;
+      // 2. Only proceed once all async data sources are ready
+      const baseDataLoaded = rolesLoaded && guardsLoaded && settingsLoaded;
+      if (!baseDataLoaded) return;
+
+      // 3. Build a hash of the data that affects form initialization
+      const currentInitialDataHash = stableStringify(initialData || {});
+      const currentDraftKey = settings?.ordenDelDiaDraft?.updatedAt || 'no-draft';
+      const baseDataState = `${currentInitialDataHash}:${settings?.activeGuardId}:${currentDraftKey}:${roles.length}:${personnel.length}`;
+      
+      const baseDataChanged = baseDataState !== lastBaseDataHash.current;
+
+      // 4a. First load: always reset (data is now ready, overwrite the empty {} we started with)
+      if (!hasInitialized.current) {
+        lastPropReportId.current = reportId;
+        lastBaseDataHash.current = baseDataState;
+        hasInitialized.current = true;
+        const formValues = getInitialValues(initialData);
+        reset(formValues);
+        return;
       }
-    }, [reportId, lastReportId, initialData, finalConfig, getInitialValues, reset, methods.formState.isDirty]);
+
+      // 4b. Subsequent changes: only reset if the user hasn't started editing and isn't focused
+      if (baseDataChanged && !methods.formState.isDirty && !isFocused.current) {
+        lastBaseDataHash.current = baseDataState;
+        const formValues = getInitialValues(initialData);
+        reset(formValues);
+      }
+    }, [reportId, initialData, getInitialValues, reset, methods.formState.isDirty, rolesLoaded, guardsLoaded, settingsLoaded, roles, personnel, settings?.activeGuardId, settings?.ordenDelDiaDraft?.updatedAt]);
 
     const handleFormSubmit = (data: FormDataRecord) => {
       const finalContent = renderFinalReport(template.content, data, finalConfig, predefinedValues);
@@ -592,6 +611,9 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
 
       return chunks;
     }, [finalConfig]);
+
+    // Always read current values — getValues() is always up-to-date
+    const allFormValues = getValues() as Record<string, any>;
 
     return (
       <FormProvider {...methods}>

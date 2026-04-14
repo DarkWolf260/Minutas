@@ -1,18 +1,33 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { 
   Building2, 
   User, 
   Plus, 
   Trash2, 
-  ShieldCheck, 
   ChevronRight,
   PlusCircle,
   Briefcase,
-  Layers,
-  ArrowUpDown
+  GripVertical
 } from 'lucide-react';
+import { 
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { 
   Accordion, 
   AccordionContent, 
@@ -20,8 +35,8 @@ import {
   AccordionTrigger 
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { 
   Card,
   CardContent,
@@ -52,7 +67,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { Department, StaffRole, StaffMember } from '@/lib/types';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { toast } from 'sonner';
 
 interface StructureTreeProps {
   departments: Department[];
@@ -62,11 +76,369 @@ interface StructureTreeProps {
   onAddRole: (name: string, deptId?: string) => void;
   onRemoveRole: (name: string) => void;
   onUpdateRole: (name: string, updates: Partial<StaffRole>) => void;
+  onReorderDepts: (departments: Department[]) => void;
+  onReorderRoles: (roles: StaffRole[]) => void;
+  onUpdatePersonnel: (personnel: StaffMember[]) => void;
   personnel?: StaffMember[];
   showPersonnel?: boolean;
 }
 
-export function StructureTree({
+/**
+ * A helper component that renders a Sheet on mobile and a Dialog on desktop
+ */
+const ResponsiveModal = React.memo(({ 
+  isOpen, 
+  onOpenChange, 
+  title, 
+  description, 
+  children, 
+  footer 
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  children: React.ReactNode;
+  footer: React.ReactNode;
+}) => {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={onOpenChange}>
+        <SheetContent side="bottom" className="rounded-t-3xl border-t-2 border-primary/20 p-6 pb-12 focus-visible:outline-none">
+          <SheetHeader className="text-left mb-6">
+            <SheetTitle className="text-xl font-bold">{title}</SheetTitle>
+            <SheetDescription className="text-sm">{description}</SheetDescription>
+          </SheetHeader>
+          <div className="py-2">
+            {children}
+          </div>
+          <SheetFooter className="mt-8 flex flex-col gap-3">
+            {footer}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          {children}
+        </div>
+        <DialogFooter>
+          {footer}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+});
+
+const SortableMemberBadge = React.memo(({ member }: { member: StaffMember }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: `member-${member.id}` });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    zIndex: isDragging ? 60 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn("cursor-grab active:cursor-grabbing", isDragging && "opacity-50")}>
+       <Badge variant="secondary" className="text-[10px] py-1 px-2 flex items-center gap-1.5 bg-primary/5 text-primary border-primary/10 hover:bg-primary/10 transition-colors">
+          <GripVertical className="h-3 w-3 opacity-30" />
+          {member.name}
+       </Badge>
+    </div>
+  );
+});
+
+const RoleRow = React.memo(({ 
+  role, 
+  members = [],
+  showPersonnel = false,
+  onRemove, 
+  onUpdate 
+}: { 
+  role: StaffRole; 
+  members?: StaffMember[];
+  showPersonnel?: boolean;
+  onRemove: (name: string) => void; 
+  onUpdate: (name: string, updates: Partial<StaffRole>) => void;
+}) => {
+  const isMobile = useIsMobile();
+  return (
+    <div className="flex flex-col hover:bg-muted/10 transition-colors group">
+      <div className="flex items-center justify-between p-2 px-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="p-1.5 rounded-full bg-primary/5 text-primary group-hover:bg-primary/10 transition-colors">
+            <User className="h-3.5 w-3.5" />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-medium truncate" title={role.name}>
+              {role.name}
+            </span>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-6 shrink-0 ml-auto">
+          <div className="flex items-center gap-2">
+            <Label htmlFor={`single-${role.name}`} className="text-[10px] uppercase font-bold text-muted-foreground/70 hidden sm:block">Único</Label>
+            <Switch 
+              id={`single-${role.name}`}
+              checked={role.isSingle}
+              onCheckedChange={(checked) => onUpdate(role.name, { isSingle: checked })}
+              className="scale-75 data-[state=checked]:bg-primary"
+            />
+          </div>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => onRemove(role.name)}
+            className="h-9 w-9 text-muted-foreground hover:text-destructive opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive/10"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {showPersonnel && !isMobile && (
+        <div className="px-14 pb-2">
+          <div className="flex flex-wrap gap-2">
+            {members.map(m => (
+              <Badge key={m.id} variant="secondary" className="text-[10px] py-1 px-2 bg-primary/5 text-primary border-primary/10">
+                {m.name}
+              </Badge>
+            ))}
+            {members.length === 0 && (
+              <span className="text-[10px] text-muted-foreground italic">Sin personal asignado</span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
+
+const SortableRoleRow = React.memo(({ 
+  role, 
+  members = [],
+  showPersonnel = false,
+  onRemove, 
+  onUpdate 
+}: { 
+  role: StaffRole; 
+  members?: StaffMember[];
+  showPersonnel?: boolean;
+  onRemove: (name: string) => void; 
+  onUpdate: (name: string, updates: Partial<StaffRole>) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: `role-item-${role.name}` });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+  };
+
+  const isMobile = useIsMobile();
+
+  return (
+    <div ref={setNodeRef} style={style} className={cn("flex flex-col hover:bg-muted/10 transition-colors group", isDragging && "bg-muted/30 z-50")}>
+      <div className="flex items-center justify-between p-2 px-4">
+        <div className="flex items-center gap-2 min-w-0">
+          <div {...attributes} {...listeners} className="p-1 cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-primary shrink-0">
+            <GripVertical className="h-4 w-4" />
+          </div>
+          
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-1.5 rounded-full bg-primary/5 text-primary group-hover:bg-primary/10 transition-colors">
+              <User className="h-3.5 w-3.5" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-medium truncate" title={role.name}>
+                {role.name}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-6 shrink-0 ml-auto">
+          <div className="flex items-center gap-2">
+            <Label htmlFor={`single-sort-${role.name}`} className="text-[10px] uppercase font-bold text-muted-foreground/70 hidden sm:block">Único</Label>
+            <Switch 
+              id={`single-sort-${role.name}`}
+              checked={role.isSingle}
+              onCheckedChange={(checked) => onUpdate(role.name, { isSingle: checked })}
+              className="scale-75 data-[state=checked]:bg-primary"
+            />
+          </div>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => onRemove(role.name)}
+            className="h-9 w-9 text-muted-foreground hover:text-destructive opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive/10"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {showPersonnel && !isMobile && (
+        <div className="px-14 pb-2">
+          <SortableContext 
+            items={members.map(m => `member-${m.id}`)} 
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="flex flex-wrap gap-2">
+              {members.map(m => (
+                <SortableMemberBadge key={m.id} member={m} />
+              ))}
+              {members.length === 0 && (
+                <span className="text-[10px] text-muted-foreground italic">Sin personal asignado</span>
+              )}
+            </div>
+          </SortableContext>
+        </div>
+      )}
+    </div>
+  );
+});
+
+const SortableDeptItem = React.memo(({ 
+  dept, 
+  showPersonnel, 
+  onAddRole, 
+  onRemoveDept, 
+  onRemoveRole, 
+  onUpdateRole 
+}: { 
+  dept: any; 
+  showPersonnel: boolean;
+  onAddRole: (e: any) => void;
+  onRemoveDept: (e: any) => void;
+  onRemoveRole: (name: string) => void;
+  onUpdateRole: (name: string, updates: Partial<StaffRole>) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: `dept-${dept.id}` });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={cn(isDragging && "z-50 opacity-50")}>
+      <AccordionItem 
+        value={dept.id}
+        className="rounded-lg border border-muted/30 bg-card shadow-sm overflow-hidden border-b-0 group"
+      >
+        <div className="flex items-center w-full min-w-0">
+          <div {...attributes} {...listeners} className="px-1 cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-primary transition-colors">
+            <GripVertical className="h-4 w-4" />
+          </div>
+          
+          <AccordionTrigger className="flex-1 hover:no-underline p-3 py-2 bg-muted/5 data-[state=open]:bg-muted/10 [&>svg]:hidden group min-w-0 overflow-hidden">
+            <div className="flex items-center gap-3 w-full min-w-0">
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90 shrink-0" />
+              <div className="p-1.5 rounded-lg bg-primary/5 text-primary group-data-[state=open]:bg-primary/10 transition-colors">
+                <Building2 className="h-3.5 w-3.5" />
+              </div>
+              <div className="flex flex-col items-start text-left min-w-0">
+                <span className="font-bold text-xs sm:text-sm truncate w-full">{dept.name}</span>
+                <span className="text-[9px] text-muted-foreground uppercase font-semibold">
+                  {dept.roles.length} {dept.roles.length === 1 ? 'Cargo' : 'Cargos'}
+                </span>
+              </div>
+            </div>
+          </AccordionTrigger>
+          
+          <div className="flex items-center gap-1.5 pr-3 bg-muted/5 group-data-[state=open]:bg-muted/10 h-12 transition-colors ml-auto">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddRole(e);
+                }}
+                className="h-8 p-0 w-8 sm:w-auto sm:px-2.5 text-[10px] hover:bg-primary/10 text-primary font-bold bg-primary/5 border border-primary/10"
+                title="Añadir Cargo"
+              >
+                <Plus className="h-3.5 w-3.5 sm:mr-1" />
+                <span className="hidden sm:inline">Cargo</span>
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemoveDept(e);
+                }}
+                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+
+        <AccordionContent className="p-0 border-t border-muted/20">
+          <div className="divide-y divide-muted/20">
+            <SortableContext 
+              items={dept.roles.map((r: any) => `role-item-${r.name}`)} 
+               strategy={verticalListSortingStrategy}
+            >
+              {dept.roles.map((role: any) => (
+                <SortableRoleRow
+                  key={role.name} 
+                  role={role} 
+                  members={role.members}
+                  showPersonnel={showPersonnel}
+                  onRemove={onRemoveRole} 
+                  onUpdate={onUpdateRole} 
+                />
+              ))}
+            </SortableContext>
+            {dept.roles.length === 0 && (
+              <div className="p-8 text-center text-xs text-muted-foreground bg-muted/5">
+                Sin cargos asignados.
+              </div>
+            )}
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </div>
+  );
+});
+
+function StructureTreeComponent({
   departments,
   roles,
   onAddDept,
@@ -74,9 +446,53 @@ export function StructureTree({
   onAddRole,
   onRemoveRole,
   onUpdateRole,
+  onReorderDepts,
+  onReorderRoles,
+  onUpdatePersonnel,
   personnel = [],
   showPersonnel = false,
 }: StructureTreeProps) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Track the last time a local action occurred to prevent prop-sync flickering
+  const lastActionTimeRef = React.useRef<number>(0);
+  
+  // Optimistic local state
+  const [localDepts, setLocalDepts] = useState<Department[]>(departments);
+  const [localRoles, setLocalRoles] = useState<StaffRole[]>(roles);
+
+  // Sync with props only when necessary (e.g. workspace change or long delay after action)
+  React.useEffect(() => {
+    const now = Date.now();
+    const timeSinceLastAction = now - lastActionTimeRef.current;
+    
+    // If the number of departments changed, always sync
+    // Otherwise, only sync if more than 1000ms have passed since the last local action
+    if (departments.length !== localDepts.length || timeSinceLastAction > 1000) {
+      setLocalDepts(departments);
+    }
+  }, [departments]); // Still rely on departments content, but filter by time
+
+  React.useEffect(() => {
+    const now = Date.now();
+    const timeSinceLastAction = now - lastActionTimeRef.current;
+    
+    // If the number of roles changed, always sync
+    // Otherwise, only sync if more than 1000ms have passed since the last local action
+    if (roles.length !== localRoles.length || timeSinceLastAction > 1000) {
+      setLocalRoles(roles);
+    }
+  }, [roles]);
+
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isAddDeptOpen, setIsAddDeptOpen] = useState(false);
   const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
@@ -89,47 +505,139 @@ export function StructureTree({
   const [confirmDeleteRole, setConfirmDeleteRole] = useState<{ name: string } | null>(null);
 
   // Group roles by department, filtering out personnel statuses (Vacations, etc.) from the tree
-  const globalRoles = roles.filter(r => (r.departmentScope ?? []).length === 0 && !r.isStatus);
-  const deptMap = departments.map(d => ({
-    ...d,
-    roles: roles.filter(r => (r.departmentScope ?? []).includes(d.id) && !r.isStatus).map(r => ({
-      ...r,
-      members: personnel.filter(p => p.department === d.id && p.roleId === r.name)
-    }))
-  }));
+  const globalRoles = localRoles
+    .filter(r => (r.departmentScope ?? []).length === 0 && !r.isStatus)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    
+  const deptMap = localDepts
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .map(d => ({
+      ...d,
+      roles: localRoles
+        .filter(r => (r.departmentScope ?? []).includes(d.id) && !r.isStatus)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .map(r => ({
+          ...r,
+          members: personnel.filter(p => p.department === d.id && p.roleId === r.name)
+        }))
+    }));
 
   const globalRolesWithMembers = globalRoles.map(r => ({
     ...r,
     members: personnel.filter(p => (p.department === 'none' || !p.department) && p.roleId === r.name)
   }));
 
-  const handleExpandAll = () => {
+  const handleExpandAll = useCallback(() => {
     setExpandedItems(departments.map(d => d.id));
-  };
+  }, [departments]);
 
-  const handleCollapseAll = () => {
+  const handleCollapseAll = useCallback(() => {
     setExpandedItems([]);
-  };
+  }, []);
 
-  const handleAddDept = () => {
+  const handleAddDept = useCallback(() => {
     if (newDeptName.trim()) {
       onAddDept(newDeptName.trim());
       setNewDeptName('');
       setIsAddDeptOpen(false);
     }
-  };
+  }, [newDeptName, onAddDept]);
 
-  const handleAddRole = () => {
+  const handleAddRole = useCallback(() => {
     if (newRoleName.trim()) {
       onAddRole(newRoleName.trim(), targetDeptId);
       setNewRoleName('');
       setIsAddRoleOpen(false);
     }
-  };
+  }, [newRoleName, onAddRole, targetDeptId]);
 
-  const openAddRole = (deptId?: string) => {
+  const openAddRole = useCallback((deptId?: string) => {
     setTargetDeptId(deptId);
     setIsAddRoleOpen(true);
+  }, []);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const activeId = active.id.toString();
+    const overId = over.id.toString();
+
+    // 1. Department Reordering
+    if (activeId.startsWith('dept-') && overId.startsWith('dept-')) {
+      const oldIndex = localDepts.findIndex(d => d.id === activeId.replace('dept-', ''));
+      const newIndex = localDepts.findIndex(d => d.id === overId.replace('dept-', ''));
+      const reordered = arrayMove(localDepts, oldIndex, newIndex).map((d, i) => ({ ...d, order: i }));
+      
+      lastActionTimeRef.current = Date.now();
+      setLocalDepts(reordered);
+      onReorderDepts(reordered);
+    } 
+    // 2. Role Reordering (within department)
+    else if (activeId.startsWith('role-item-') && overId.startsWith('role-item-')) {
+      const activeRoleName = activeId.replace('role-item-', '');
+      const overRoleName = overId.replace('role-item-', '');
+      
+      const oldIndex = localRoles.findIndex(r => r.name === activeRoleName);
+      const newIndex = localRoles.findIndex(r => r.name === overRoleName);
+      
+      const reordered = arrayMove(localRoles, oldIndex, newIndex).map((r, i) => ({ ...r, order: i }));
+      
+      lastActionTimeRef.current = Date.now();
+      setLocalRoles(reordered);
+      onReorderRoles(reordered);
+    }
+    // 3. Personnel Reordering (within role or between roles)
+    else if (activeId.startsWith('member-')) {
+      const activeMemberId = activeId.replace('member-', '');
+      
+      // Find what we are over
+      let overRoleName: string | null = null;
+      let newIndex = 0;
+
+      if (overId.startsWith('member-')) {
+        const overMemberId = overId.replace('member-', '');
+        const overMember = personnel.find(p => p.id === overMemberId);
+        if (overMember) {
+          overRoleName = overMember.roleId || null;
+          newIndex = personnel.filter(p => p.roleId === overRoleName).findIndex(p => p.id === overMemberId);
+        }
+      } else if (overId.startsWith('role-item-')) {
+        overRoleName = overId.replace('role-item-', '');
+        newIndex = personnel.filter(p => p.roleId === overRoleName).length;
+      }
+
+      if (overRoleName) {
+        const updatedPersonnel = [...personnel];
+        const activeIndex = updatedPersonnel.findIndex(p => p.id === activeMemberId);
+        
+        if (activeIndex !== -1) {
+          const [movedMember] = updatedPersonnel.splice(activeIndex, 1);
+          if (movedMember) {
+            // Update role and department if moved to a role scoped to a department
+            const targetRole = roles.find(r => r.name === overRoleName);
+            const targetDeptId = (targetRole?.departmentScope ?? [])[0] || 'none';
+            
+            const updatedMember = { 
+              ...movedMember, 
+              roleId: overRoleName,
+              department: targetDeptId === 'none' ? undefined : targetDeptId
+            };
+            
+            // Re-insert at new position among role members
+            const currentRoleMembers = updatedPersonnel.filter(p => p.roleId === overRoleName);
+            const overItem = currentRoleMembers[newIndex] || currentRoleMembers[currentRoleMembers.length - 1];
+            const insertGlobalIndex = overItem ? updatedPersonnel.indexOf(overItem) : updatedPersonnel.length;
+            
+            updatedPersonnel.splice(insertGlobalIndex, 0, updatedMember);
+            
+            // Recalculate all orders
+            const finalPersonnel = updatedPersonnel.map((p, i) => ({ ...p, order: i }));
+            onUpdatePersonnel(finalPersonnel);
+          }
+        }
+      }
+    }
   };
 
   return (
@@ -232,84 +740,35 @@ export function StructureTree({
             </div>
 
             {/* Departments Accordion */}
-            <Accordion 
-              type="multiple" 
-              className="space-y-2 w-full max-w-full overflow-x-hidden"
-              value={expandedItems}
-              onValueChange={setExpandedItems}
+            <DndContext 
+              sensors={sensors} 
+              collisionDetection={closestCenter} 
+              onDragEnd={handleDragEnd}
             >
-              {deptMap.map(dept => (
-                <AccordionItem 
-                  key={dept.id} 
-                  value={dept.id}
-                  className="rounded-lg border border-muted/30 bg-card shadow-sm overflow-hidden border-b-0 group"
+              <SortableContext 
+                items={localDepts.map(d => `dept-${d.id}`)} 
+                strategy={verticalListSortingStrategy}
+              >
+                <Accordion 
+                  type="multiple" 
+                  className="space-y-2 w-full max-w-full overflow-x-hidden"
+                  value={expandedItems}
+                  onValueChange={setExpandedItems}
                 >
-                  <div className="flex items-center w-full min-w-0">
-                    <AccordionTrigger className="flex-1 hover:no-underline p-3 py-2 bg-muted/5 data-[state=open]:bg-muted/10 [&>svg]:hidden group min-w-0 overflow-hidden">
-                      <div className="flex items-center gap-3 w-full min-w-0">
-                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90 shrink-0" />
-                        <div className="p-1.5 rounded-lg bg-primary/5 text-primary group-data-[state=open]:bg-primary/10 transition-colors">
-                          <Building2 className="h-3.5 w-3.5" />
-                        </div>
-                        <div className="flex flex-col items-start text-left min-w-0">
-                          <span className="font-bold text-xs sm:text-sm truncate w-full">{dept.name}</span>
-                          <span className="text-[9px] text-muted-foreground uppercase font-semibold">
-                            {dept.roles.length} {dept.roles.length === 1 ? 'Cargo' : 'Cargos'}
-                          </span>
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    
-                    <div className="flex items-center gap-1.5 pr-3 bg-muted/5 group-data-[state=open]:bg-muted/10 h-12 transition-colors ml-auto">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openAddRole(dept.id);
-                          }}
-                          className="h-8 p-0 w-8 sm:w-auto sm:px-2.5 text-[10px] hover:bg-primary/10 text-primary font-bold bg-primary/5 border border-primary/10"
-                          title="Añadir Cargo"
-                        >
-                          <Plus className="h-3.5 w-3.5 sm:mr-1" />
-                          <span className="hidden sm:inline">Cargo</span>
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setConfirmDeleteDept({ id: dept.id, name: dept.name });
-                          }}
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-
-                  <AccordionContent className="p-0 border-t border-muted/20">
-                    <div className="divide-y divide-muted/20">
-                      {dept.roles.map(role => (
-                        <RoleRow
-                          key={role.name} 
-                          role={role} 
-                          members={role.members}
-                          showPersonnel={showPersonnel}
-                          onRemove={(name) => setConfirmDeleteRole({ name })} 
-                          onUpdate={onUpdateRole} 
-                        />
-                      ))}
-                      {dept.roles.length === 0 && (
-                        <div className="p-8 text-center text-xs text-muted-foreground bg-muted/5">
-                          Sin cargos asignados.
-                        </div>
-                      )}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+                  {deptMap.map(dept => (
+                    <SortableDeptItem 
+                      key={dept.id}
+                      dept={dept}
+                      showPersonnel={showPersonnel}
+                      onAddRole={() => openAddRole(dept.id)}
+                      onRemoveDept={() => setConfirmDeleteDept({ id: dept.id, name: dept.name })}
+                      onRemoveRole={(name) => setConfirmDeleteRole({ name })}
+                      onUpdateRole={onUpdateRole}
+                    />
+                  ))}
+                </Accordion>
+              </SortableContext>
+            </DndContext>
 
             {departments.length === 0 && (
               <div className="rounded-xl border border-dashed border-muted-foreground/20 p-12 text-center bg-muted/5">
@@ -329,7 +788,6 @@ export function StructureTree({
         </ScrollArea>
       </CardContent>
 
-      {/* Responsive Modal for Adding Department */}
       <ResponsiveModal
         isOpen={isAddDeptOpen}
         onOpenChange={setIsAddDeptOpen}
@@ -359,7 +817,6 @@ export function StructureTree({
         </div>
       </ResponsiveModal>
 
-      {/* Responsive Modal for Adding Role */}
       <ResponsiveModal
         isOpen={isAddRoleOpen}
         onOpenChange={setIsAddRoleOpen}
@@ -391,7 +848,6 @@ export function StructureTree({
         </div>
       </ResponsiveModal>
 
-      {/* Confirmation Dialog for Department Delete */}
       <ConfirmDialog
         open={!!confirmDeleteDept}
         onOpenChange={(open) => !open && setConfirmDeleteDept(null)}
@@ -407,7 +863,6 @@ export function StructureTree({
         }}
       />
 
-      {/* Confirmation Dialog for Role Delete */}
       <ConfirmDialog
         open={!!confirmDeleteRole}
         onOpenChange={(open) => !open && setConfirmDeleteRole(null)}
@@ -426,119 +881,4 @@ export function StructureTree({
   );
 }
 
-/**
- * A helper component that renders a Sheet on mobile and a Dialog on desktop
- */
-function ResponsiveModal({ 
-  isOpen, 
-  onOpenChange, 
-  title, 
-  description, 
-  children, 
-  footer 
-}: {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  description: string;
-  children: React.ReactNode;
-  footer: React.ReactNode;
-}) {
-  const isMobile = useIsMobile();
-
-  if (isMobile) {
-    return (
-      <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="rounded-t-3xl border-t-2 border-primary/20 p-6 pb-12 focus-visible:outline-none">
-          <SheetHeader className="text-left mb-6">
-            <SheetTitle className="text-xl font-bold">{title}</SheetTitle>
-            <SheetDescription className="text-sm">{description}</SheetDescription>
-          </SheetHeader>
-          <div className="py-2">
-            {children}
-          </div>
-          <SheetFooter className="mt-8 flex flex-col gap-3">
-            {footer}
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-        <div className="py-4">
-          {children}
-        </div>
-        <DialogFooter>
-          {footer}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function RoleRow({ 
-  role, 
-  members = [],
-  showPersonnel = false,
-  onRemove, 
-  onUpdate 
-}: { 
-  role: StaffRole; 
-  members?: StaffMember[];
-  showPersonnel?: boolean;
-  onRemove: (name: string) => void; 
-  onUpdate: (name: string, updates: Partial<StaffRole>) => void;
-}) {
-  const isMobile = useIsMobile();
-  return (
-    <div className="flex items-center justify-between p-2 px-4 hover:bg-muted/10 transition-colors group">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="p-1.5 rounded-full bg-primary/5 text-primary group-hover:bg-primary/10 transition-colors">
-          <User className="h-3.5 w-3.5" />
-        </div>
-        <div className="flex flex-col min-w-0">
-          <span className="text-sm font-medium truncate" title={role.name}>
-            {role.name}
-          </span>
-          {showPersonnel && members.length > 0 && !isMobile && (
-            <div className="flex flex-wrap gap-1 mt-1">
-              {members.map(m => (
-                <Badge key={m.id} variant="secondary" className="text-[9px] py-0 h-4 bg-primary/5 text-primary border-primary/10">
-                  {m.name}
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-      
-      <div className="flex items-center gap-6 shrink-0 ml-auto">
-        <div className="flex items-center gap-2">
-          <Label htmlFor={`single-${role.name}`} className="text-[10px] uppercase font-bold text-muted-foreground/70 hidden sm:block">Único</Label>
-          <Switch 
-            id={`single-${role.name}`}
-            checked={role.isSingle}
-            onCheckedChange={(checked) => onUpdate(role.name, { isSingle: checked })}
-            className="scale-75 data-[state=checked]:bg-primary"
-          />
-        </div>
-        
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => onRemove(role.name)}
-          className="h-9 w-9 text-muted-foreground hover:text-destructive opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive/10"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
+export const StructureTree = React.memo(StructureTreeComponent);

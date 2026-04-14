@@ -22,6 +22,7 @@ interface StructureManagerProps {
   rolesLoaded?: boolean;
   deptsLoaded?: boolean;
   personnel?: StaffMember[];
+  onUpdatePersonnel?: (personnel: StaffMember[]) => void;
 }
 
 export function StructureManager({
@@ -33,6 +34,7 @@ export function StructureManager({
   rolesLoaded = true,
   deptsLoaded = true,
   personnel = [],
+  onUpdatePersonnel,
 }: StructureManagerProps) {
 
 
@@ -50,7 +52,7 @@ export function StructureManager({
 
   const processedRoles = React.useMemo(() => patchRoles(roles), [roles]);
 
-  const handleAddDept = (name: string) => {
+  const handleAddDept = React.useCallback((name: string) => {
     if (departments.some((d) => d.name.toLowerCase() === name.toLowerCase())) {
       toast.error('Ya existe un departamento con ese nombre');
       return;
@@ -62,9 +64,9 @@ export function StructureManager({
     };
     onDepartmentsChange([...departments, newDept]);
     toast.success('Departamento añadido');
-  };
+  }, [departments, onDepartmentsChange]);
 
-  const handleRemoveDepartment = (id: string) => {
+  const handleRemoveDepartment = React.useCallback((id: string) => {
     const updatedDepts = departments.filter((d) => d.id !== id);
     onDepartmentsChange(updatedDepts);
     
@@ -78,9 +80,9 @@ export function StructureManager({
     });
     onRolesChange(updatedRoles);
     toast.success('Departamento eliminado');
-  };
+  }, [departments, roles, onDepartmentsChange, onRolesChange]);
 
-  const handleAddRole = (name: string, deptId?: string) => {
+  const handleAddRole = React.useCallback((name: string, deptId?: string) => {
     if (roles.some((r) => r.name.toLowerCase() === name.toLowerCase())) {
       toast.error('Ya existe un cargo con ese nombre');
       return;
@@ -94,20 +96,18 @@ export function StructureManager({
     };
     onRolesChange([...roles, newRole]);
     toast.success('Cargo añadido');
-  };
+  }, [roles, onRolesChange]);
 
-  const handleRemoveRole = (name: string) => {
+  const handleRemoveRole = React.useCallback((name: string) => {
     const updatedRoles = roles.filter((r) => r.name !== name);
     onRolesChange(updatedRoles);
     toast.success('Cargo eliminado');
-  };
+  }, [roles, onRolesChange]);
 
-
-
-  const handleUpdateRole = (roleName: string, updates: Partial<StaffRole>) => {
+  const handleUpdateRole = React.useCallback((roleName: string, updates: Partial<StaffRole>) => {
     const updatedRoles = roles.map((r) => (r.name === roleName ? { ...r, ...updates } : r));
     onRolesChange(updatedRoles);
-  };
+  }, [roles, onRolesChange]);
 
     // Auto-saved handled by handlers
 ;
@@ -134,6 +134,9 @@ export function StructureManager({
               onAddRole={handleAddRole}
               onRemoveRole={handleRemoveRole}
               onUpdateRole={handleUpdateRole}
+              onReorderDepts={onDepartmentsChange}
+              onReorderRoles={onRolesChange}
+              onUpdatePersonnel={onUpdatePersonnel || (() => {})}
               personnel={personnel}
               showPersonnel={true}
             />
@@ -145,6 +148,7 @@ export function StructureManager({
           >
             <RoleSorter 
               roles={processedRoles}
+              departments={departments}
               onReorder={onRolesChange}
               onUpdate={handleUpdateRole}
               onRemove={handleRemoveRole}
@@ -165,6 +169,9 @@ export function StructureManager({
             onAddRole={handleAddRole}
             onRemoveRole={handleRemoveRole}
             onUpdateRole={handleUpdateRole}
+            onReorderDepts={onDepartmentsChange}
+            onReorderRoles={onRolesChange}
+            onUpdatePersonnel={onUpdatePersonnel || (() => {})}
             personnel={personnel}
             showPersonnel={false}
           />
@@ -174,6 +181,7 @@ export function StructureManager({
         <div className="lg:col-span-4 flex flex-col min-h-0">
           <RoleSorter 
             roles={processedRoles}
+            departments={departments}
             onReorder={onRolesChange}
             onUpdate={handleUpdateRole}
             onRemove={handleRemoveRole}

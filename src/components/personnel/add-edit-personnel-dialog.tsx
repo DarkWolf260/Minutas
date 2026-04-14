@@ -202,7 +202,7 @@ export function AddEditPersonnelDialog({
             <SelectContent>
               <SelectItem value="none">Sin cargo asignado</SelectItem>
               {roles
-                .filter((role) => !role.isStatus && !role.isHidden)
+                .filter((role) => !role.isStatus)
                 .map((role) => (
                   <SelectItem key={role.name} value={role.name}>
                     {role.name}

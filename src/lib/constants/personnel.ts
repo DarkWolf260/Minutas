@@ -1,6 +1,4 @@
-/**
- * Personnel-related constants for the Minutas application
- */
+import { STATUS_ROLES } from './roles';
 
 export const RANK_OPTIONS = [
   { value: 'OPC', label: 'OPC' },
@@ -18,10 +16,10 @@ export const RANK_OPTIONS = [
 
 export const PERSONNEL_STATUS = {
   ACTIVO: 'activo',
-  VACACIONES: 'vacaciones',
-  PERMISO: 'permiso',
-  REPOSO: 'reposo',
-  AUSENTE: 'ausente',
+  VACACIONES: STATUS_ROLES.VACACIONES,
+  PERMISO: STATUS_ROLES.PERMISO,
+  REPOSO: STATUS_ROLES.REPOSO,
+  AUSENTE: STATUS_ROLES.AUSENTE,
 } as const;
 
 export const STATUS_OPTIONS = [

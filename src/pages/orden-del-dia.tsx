@@ -215,6 +215,7 @@ export default function OrdenDelDiaPage() {
                   selectedGuard={selectedGuardId}
                   initialData={selectedGuardForForm?.staff}
                   periodo={periodo}
+                  isGuardOpen={isGuardOpen}
                 />
               </div>
             ) : (

@@ -13,12 +13,13 @@
  * ```tsx
  * const { roles, saveRoles } = useRoles();
  *
- * const updatedRoles = [...roles, {
- *   name: 'Coordinador',
- *   isSingle: true,
- *   departmentScope: ['ops']
- * }];
- * saveRoles(updatedRoles);
+ * const defaultRole: StaffRole = {
+ *   name: 'Nuevo Cargo',
+ *   isSingle: false,
+ *   departmentScope: [DEPARTMENT_IDS.OPERATIONS], // Default to operations
+ *   order: roles.length
+ * };
+ * saveRoles([...roles, defaultRole]);
  * ```
  */
 
@@ -28,55 +29,9 @@ import { useState, useEffect, useCallback } from 'react';
 import type { StaffRole } from '@/lib/types';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
-import { LEADER_ROLES } from '@/lib/constants/roles';
 import { PERSONNEL_STATUS } from '@/lib/constants/personnel';
-
-const defaultRoles: StaffRole[] = [
-  { name: LEADER_ROLES.DIRECTOR, isSingle: true, departmentScope: [], order: 0 },
-  { name: LEADER_ROLES.JEFE_OPERACIONES, isSingle: true, departmentScope: ['ops'], order: 1 },
-  { name: 'Jefe de los Servicios', isSingle: true, departmentScope: ['ops'], order: 2 },
-  { name: 'Analista de CEMUPRAD', isSingle: false, departmentScope: ['cemuprad'], order: 3 },
-  { name: 'Auxiliar de CEMUPRAD', isSingle: false, departmentScope: ['cemuprad'], order: 4 },
-  { name: 'Operador de radio', isSingle: false, departmentScope: ['ops'], order: 5 },
-  { name: 'Técnico', isSingle: false, departmentScope: ['ops'], order: 6 },
-  { name: 'Auxiliar', isSingle: false, departmentScope: ['ops'], order: 7 },
-  { name: 'Conductor', isSingle: false, departmentScope: ['ops'], order: 8 },
-  {
-    name: PERSONNEL_STATUS.REPOSO.charAt(0).toUpperCase() + PERSONNEL_STATUS.REPOSO.slice(1),
-    isSingle: false,
-    departmentScope: [],
-    isStatus: true,
-    order: 9,
-  },
-  {
-    name: PERSONNEL_STATUS.PERMISO.charAt(0).toUpperCase() + PERSONNEL_STATUS.PERMISO.slice(1),
-    isSingle: false,
-    departmentScope: [],
-    isStatus: true,
-    order: 10,
-  },
-  {
-    name: 'Apoyo',
-    isSingle: false,
-    departmentScope: [],
-    isHidden: true,
-    order: 11,
-  },
-  {
-    name: PERSONNEL_STATUS.VACACIONES.charAt(0).toUpperCase() + PERSONNEL_STATUS.VACACIONES.slice(1),
-    isSingle: false,
-    departmentScope: [],
-    isStatus: true,
-    order: 12,
-  },
-  {
-    name: PERSONNEL_STATUS.AUSENTE.charAt(0).toUpperCase() + PERSONNEL_STATUS.AUSENTE.slice(1),
-    isSingle: false,
-    departmentScope: [],
-    isStatus: true,
-    order: 13,
-  },
-];
+import { DEFAULT_ROLES } from '@/lib/constants/structure';
+import { DEPARTMENT_IDS } from '@/lib/constants/departments';
 
 export function useRoles() {
   const db = useDatabase();
@@ -96,7 +51,7 @@ export function useRoles() {
         },
         sort: [{ 'data.order': 'asc' }],
       })
-      .$.subscribe((data) => {
+      .$.subscribe(async (data) => {
         if (data.length > 0) {
           const loadedRoles = data.map((d) => {
             const json = d.toJSON();
@@ -107,16 +62,20 @@ export function useRoles() {
         } else if (!initialized) {
           // Auto-seed default roles on first load for this workspace
           initialized = true;
-          const toInsert = defaultRoles.map((role) => ({
-            id: `${currentWorkspace}:role:${role.name}`,
-            workspaceId: currentWorkspace,
-            type: 'role' as const,
-            name: role.name,
-            data: { ...role, workspaceId: currentWorkspace },
-          }));
-          
-          db.lookups.bulkInsert(toInsert as any)
-            .catch(err => logger.error('Failed to auto-seed default roles', err, { feature: 'Roles', workspaceId: currentWorkspace }));
+          try {
+            const existing = await db.lookups.find({ selector: { type: 'role', workspaceId: currentWorkspace } }).exec();
+            if (existing.length === 0) {
+              await db.lookups.bulkInsert(DEFAULT_ROLES.map(role => ({
+                id: `${currentWorkspace}:role:${role.name}`,
+                workspaceId: currentWorkspace,
+                type: 'role' as const,
+                name: role.name,
+                data: role
+              })));
+            }
+          } catch (err) {
+            logger.error('Failed to auto-seed default roles', err, { feature: 'Roles', workspaceId: currentWorkspace });
+          }
         } else {
           setRoles([]);
         }
@@ -164,7 +123,7 @@ export function useRoles() {
       const allDocs = await db.lookups.find({ selector: { type: 'role', workspaceId: currentWorkspace } }).exec();
       await db.lookups.bulkRemove(allDocs.map((d) => d.primary));
       
-      const toInsert = defaultRoles.map((role) => ({
+      const toInsert = DEFAULT_ROLES.map((role) => ({
         id: `${currentWorkspace}:role:${role.name}`,
         workspaceId: currentWorkspace,
         type: 'role' as const,

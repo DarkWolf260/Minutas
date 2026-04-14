@@ -88,30 +88,30 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
           </DialogDescription>
         </DialogHeader>
 
-        {error ? (
-          <div className="flex-1 p-12 text-center flex flex-col items-center justify-center gap-4">
-            <AlertCircle className="h-12 w-12 text-destructive opacity-50" />
-            <div className="space-y-1">
-              <p className="font-medium text-destructive">Error de conexión</p>
-              <p className="text-sm text-muted-foreground">{error}</p>
+        <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-[400px] flex flex-col">
+          {error ? (
+            <div className="flex-1 p-12 text-center flex flex-col items-center justify-center gap-4">
+              <AlertCircle className="h-12 w-12 text-destructive opacity-50" />
+              <div className="space-y-1">
+                <p className="font-medium text-destructive">Error de conexión</p>
+                <p className="text-sm text-muted-foreground">{error}</p>
+              </div>
+              <Button variant="outline" onClick={() => refetch()}>
+                Reintentar
+              </Button>
             </div>
-            <Button variant="outline" onClick={() => refetch()}>
-              Reintentar
-            </Button>
-          </div>
-        ) : loading && cloudTemplates.length === 0 ? (
-          <div className="flex-1 p-12 text-center flex flex-col items-center justify-center gap-4">
-            <RefreshCw className="h-12 w-12 text-primary opacity-20 animate-spin" />
-            <p className="text-sm text-muted-foreground">Cargando plantillas desde la nube...</p>
-          </div>
-        ) : cloudTemplates.length === 0 ? (
-          <div className="flex-1 p-12 text-center flex flex-col items-center justify-center gap-4">
-            <FileText className="h-12 w-12 text-muted-foreground opacity-20" />
-            <p className="text-sm text-muted-foreground">No hay plantillas disponibles en este momento.</p>
-          </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
-            <div className="grid gap-4 p-6 pt-0">
+          ) : loading && cloudTemplates.length === 0 ? (
+            <div className="flex-1 p-12 text-center flex flex-col items-center justify-center gap-4">
+              <RefreshCw className="h-12 w-12 text-primary opacity-20 animate-spin" />
+              <p className="text-sm text-muted-foreground">Cargando plantillas desde la nube...</p>
+            </div>
+          ) : cloudTemplates.length === 0 ? (
+            <div className="flex-1 p-12 text-center flex flex-col items-center justify-center gap-4">
+              <FileText className="h-12 w-12 text-muted-foreground opacity-20" />
+              <p className="text-sm text-muted-foreground">No hay plantillas disponibles en este momento.</p>
+            </div>
+          ) : (
+            <div className="grid gap-4 p-6 pt-0 animate-in fade-in duration-500">
               {cloudTemplates.map((template) => {
                 const isDownloaded = localTemplates.some(t => t.name === template.name);
                 const isDownloading = downloadingIds.has(template.id);
@@ -169,8 +169,8 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
                 );
               })}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         <DialogFooter className="p-6 pt-2 border-t shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>

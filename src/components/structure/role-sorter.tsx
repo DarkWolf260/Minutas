@@ -22,7 +22,7 @@ import {
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { StaffRole } from '@/lib/types';
+import { StaffRole, Department } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,12 +32,13 @@ import { cn } from '@/lib/utils';
 
 interface RoleSorterProps {
   roles: StaffRole[];
+  departments: Department[];
   onReorder: (roles: StaffRole[]) => void;
   onUpdate: (roleName: string, updates: Partial<StaffRole>) => void;
   onRemove: (roleName: string) => void;
 }
 
-function SortableRoleItem({ 
+const SortableRoleItem = React.memo(({ 
   role, 
   onRemoveFromHierarchy, 
   onDelete 
@@ -45,7 +46,7 @@ function SortableRoleItem({
   role: StaffRole; 
   onRemoveFromHierarchy: (name: string) => void;
   onDelete: (name: string) => void;
-}) {
+}) => {
   const {
     attributes,
     listeners,
@@ -114,9 +115,9 @@ function SortableRoleItem({
       </div>
     </div>
   );
-}
+});
 
-export function RoleSorter({ roles, onReorder, onUpdate, onRemove }: RoleSorterProps) {
+export function RoleSorter({ roles, departments, onReorder, onUpdate, onRemove }: RoleSorterProps) {
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
@@ -135,20 +136,55 @@ export function RoleSorter({ roles, onReorder, onUpdate, onRemove }: RoleSorterP
   );
 
   const [activeId, setActiveId] = React.useState<string | null>(null);
+  
+  // Track the last time a local action occurred to prevent prop-sync flickering
+  const lastActionTimeRef = React.useRef<number>(0);
+
+  // Optimistic local state to prevent flickering
+  const [localRoles, setLocalRoles] = React.useState<StaffRole[]>(roles);
+
+  // Sync with props only when workspace changes or a significant change occurs
+  React.useEffect(() => {
+    const now = Date.now();
+    const timeSinceLastAction = now - lastActionTimeRef.current;
+    
+    // Only sync if more than 1000ms have passed since the last local action
+    // or if the number of roles has changed (added/removed)
+    if (roles.length !== localRoles.length || timeSinceLastAction > 1000) {
+      setLocalRoles(roles);
+    }
+  }, [roles]);
+
+  const deptIds = useMemo(() => new Set(departments.map(d => d.id)), [departments]);
+
+  const reachableRoles = useMemo(() => {
+    return localRoles.filter(role => {
+      // 1. Personnel statuses are handled separately in some views, but here we want to see them if they are in the hierarchy
+      // 2. Global roles (no scope) are always reachable
+      const scope = role.departmentScope ?? [];
+      if (scope.length === 0) return true;
+      
+      // 3. Status roles are also generally considered reachable if they don't have a scope
+      if (role.isStatus && scope.length === 0) return true;
+
+      // 4. Role is reachable if at least one of its departments exists
+      return scope.some(deptId => deptIds.has(deptId));
+    });
+  }, [roles, deptIds]);
 
   const sortedRoles = useMemo(() => {
-    return [...roles]
+    return [...reachableRoles]
       .filter((r: StaffRole) => !r.isHidden)
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  }, [roles]);
+      .sort((a, b) => (a.hierarchyOrder ?? a.order ?? 0) - (b.hierarchyOrder ?? b.order ?? 0));
+  }, [reachableRoles]);
 
   const hiddenRoles = useMemo(() => {
-    return roles.filter((r: StaffRole) => r.isHidden);
-  }, [roles]);
+    return reachableRoles.filter((r: StaffRole) => r.isHidden);
+  }, [reachableRoles]);
 
   const activeRole = useMemo(() => {
-     return activeId ? roles.find((r: StaffRole) => r.name === activeId) : null;
-  }, [activeId, roles]);
+     return activeId ? localRoles.find((r: StaffRole) => r.name === activeId) : null;
+  }, [activeId, localRoles]);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -158,21 +194,43 @@ export function RoleSorter({ roles, onReorder, onUpdate, onRemove }: RoleSorterP
       const oldIndex = sortedRoles.findIndex((item) => item.name === active.id);
       const newIndex = sortedRoles.findIndex((item) => item.name === over.id);
 
-      const reordered = arrayMove(sortedRoles, oldIndex, newIndex);
+      const reorderedVisible = arrayMove(sortedRoles, oldIndex, newIndex);
       
-      // Update the 'order' property for all roles based on their new position
-      const updatedRoles = reordered.map((role, index) => ({
-        ...role,
-        order: index
-      }));
+      // Update the hierarchyOrder for all roles in localRoles
+      // based on their position in the visible sorted list
+      const updatedLocalRoles = localRoles.map(role => {
+        const visibleIndex = reorderedVisible.findIndex(vr => vr.name === role.name);
+        if (visibleIndex !== -1) {
+          return { ...role, hierarchyOrder: visibleIndex };
+        }
+        return role;
+      });
 
-      onReorder(updatedRoles);
+      lastActionTimeRef.current = Date.now();
+      setLocalRoles(updatedLocalRoles);
+      onReorder(updatedLocalRoles);
     }
   }
 
   function handleDragStart(event: any) {
     setActiveId(event.active.id);
   }
+
+  const handleUpdateRole = React.useCallback((name: string, updates: Partial<StaffRole>) => {
+    // Optimistic update
+    const updated = localRoles.map(r => r.name === name ? { ...r, ...updates } : r);
+    lastActionTimeRef.current = Date.now();
+    setLocalRoles(updated);
+    onUpdate(name, updates);
+  }, [localRoles, onUpdate]);
+
+  const handleRemoveRole = React.useCallback((name: string) => {
+    // Optimistic update
+    const updated = localRoles.filter(r => r.name !== name);
+    lastActionTimeRef.current = Date.now();
+    setLocalRoles(updated);
+    onRemove(name);
+  }, [localRoles, onRemove]);
 
   return (
     <Card className="md:flex-1 border bg-card shadow-sm md:overflow-hidden md:flex md:flex-col md:min-h-0">
@@ -202,13 +260,13 @@ export function RoleSorter({ roles, onReorder, onUpdate, onRemove }: RoleSorterP
               items={sortedRoles.map((r: StaffRole) => r.name)}
               strategy={verticalListSortingStrategy}
             >
-              <div className="space-y-2 pb-4">
+              <div className="space-y-2 pb-4 transition-all duration-300">
                 {sortedRoles.map((role: StaffRole) => (
                   <SortableRoleItem 
                     key={role.name} 
                     role={role} 
-                    onRemoveFromHierarchy={(name) => onUpdate(name, { isHidden: true })}
-                    onDelete={onRemove} 
+                    onRemoveFromHierarchy={(name) => handleUpdateRole(name, { isHidden: true })}
+                    onDelete={handleRemoveRole} 
                   />
                 ))}
                 
@@ -242,7 +300,7 @@ export function RoleSorter({ roles, onReorder, onUpdate, onRemove }: RoleSorterP
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-primary hover:bg-primary/10"
-                          onClick={() => onUpdate(role.name, { isHidden: false })}
+                          onClick={() => handleUpdateRole(role.name, { isHidden: false })}
                           title="Restaurar a la jerarquía"
                         >
                           <Plus className="h-4 w-4" />

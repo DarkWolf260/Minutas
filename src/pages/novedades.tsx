@@ -522,8 +522,8 @@ const NovedadesDialogs = memo(function NovedadesDialogs({
               </SheetDescription>
             </SheetHeader>
             <ScrollArea className="flex-1 w-full" type="always">
-              <div className="p-4 pb-24 sm:pb-4">
-                <div className="max-w-3xl mx-auto grid grid-cols-1 gap-3">
+              <div className="p-4 pb-24 sm:pb-4 min-h-[300px]">
+                <div className="max-w-3xl mx-auto grid grid-cols-1 gap-3 animate-in fade-in duration-500">
                 {templates.filter((t) => t.isActive).length > 0 ? (
                   templates
                     .filter((t) => t.isActive)
@@ -570,8 +570,8 @@ const NovedadesDialogs = memo(function NovedadesDialogs({
                 Selecciona una plantilla para empezar a generar un nuevo reporte.
               </DialogDescription>
             </DialogHeader>
-            <ScrollArea className="max-h-96 w-full" type="always">
-              <div className="py-4 px-1 space-y-2">
+            <ScrollArea className="h-[400px] w-full" type="always">
+              <div className="py-4 px-1 space-y-2 animate-in fade-in duration-500">
                 {templates.filter((t) => t.isActive).length > 0 ? (
                   templates
                     .filter((t) => t.isActive)

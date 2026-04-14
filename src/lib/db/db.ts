@@ -221,7 +221,11 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
       personnel: { 
         schema: personnelSchema,
         migrationStrategies: {
-          1: (oldRole: any) => oldRole
+          1: (oldData: any) => oldData,
+          2: (oldData: any) => ({
+            ...oldData,
+            order: oldData.order ?? 0
+          })
         }
       },
       reports: { 

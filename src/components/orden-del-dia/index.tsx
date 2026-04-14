@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { usePersonnel } from '@/hooks/use-personnel';
 import { useRoles } from '@/hooks/use-roles';
 import { useSettings } from '@/hooks/use-settings';
+import { useGuards } from '@/hooks/use-guards';
+import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -49,6 +51,7 @@ interface OrdenDelDiaFormProps {
   selectedGuard: string;
   periodo: string;
   initialData?: Staff;
+  isGuardOpen?: boolean;
 }
 
 export interface OrdenDelDiaFormRef {
@@ -56,10 +59,12 @@ export interface OrdenDelDiaFormRef {
 }
 
 export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormProps>(
-  ({ selectedGuard, periodo, initialData }, ref) => {
+  ({ selectedGuard, periodo, initialData, isGuardOpen = false }, ref) => {
     const { personnel } = usePersonnel();
     const { roles } = useRoles();
+    const { guards, isLoaded: guardsLoaded } = useGuards();
     const { settings, saveSettings } = useSettings();
+    const { definitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
     const isMobile = useIsMobile();
 
     const [staff, setStaff] = useState<Staff>({});
@@ -97,58 +102,84 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
 
     // Initialization and Draft Loading
     useEffect(() => {
-      if (!selectedGuard) return;
+      if (!selectedGuard || !guardsLoaded || !definitionsLoaded) return;
 
       const isNewGuard = lastInitializedGuard.current !== selectedGuard;
       const staffIsEmpty = Object.keys(staff).length === 0;
 
-      // Always try to load the draft if we are on a new guard OR the current state is empty
-      if (isNewGuard || staffIsEmpty) {
-        if (settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === selectedGuard) {
-          const draft = settings.ordenDelDiaDraft;
-          setStaff(draft.staff || {});
-          
-          // Migration logic
-          const activitiesDraft = draft.activities || [];
-          const migratedActivities = activitiesDraft.map((a: any) => {
-            if (a.text !== undefined) return a;
-            const timeMatch = a.content ? a.content.match(/(\d{2}:\d{2})/) : null;
-            const time = (timeMatch ? timeMatch[1] : '08:00') + ' HLV';
-            const text = a.content ? a.content.replace(/^\*?(\d{2}:\d{2})(?:\s+HLV)?\*?\s*/, '').trim() : '';
-            return { id: a.id, date: parseDatesFromPeriodo(periodo).start, time, text } as ManualNovedad;
-          });
+      // Handle logic for OPEN guards (Use Draft)
+      if (isGuardOpen) {
+        if (isNewGuard || staffIsEmpty) {
+          if (settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === selectedGuard) {
+            const draft = settings.ordenDelDiaDraft;
+            setStaff(draft.staff || {});
+            
+            // Migration logic
+            const activitiesDraft = draft.activities || [];
+            const migratedActivities = activitiesDraft.map((a: any) => {
+              if (a.text !== undefined) return a;
+              const timeMatch = a.content ? a.content.match(/(\d{2}:\d{2})/) : null;
+              const time = (timeMatch ? timeMatch[1] : '08:00') + ' HLV';
+              const text = a.content ? a.content.replace(/^\*?(\d{2}:\d{2})(?:\s+HLV)?\*?\s*/, '').trim() : '';
+              return { id: a.id, date: parseDatesFromPeriodo(periodo).start, time, text } as ManualNovedad;
+            });
 
-          setActivities(migratedActivities);
-          setNotes(draft.notes || DEFAULT_NOTES);
-          setIsJefeEncargado(!!draft.isJefeEncargado);
-          lastInitializedGuard.current = selectedGuard;
-          setIsInitialized(true);
-          return;
+            setActivities(migratedActivities);
+            setNotes(draft.notes || DEFAULT_NOTES);
+            setIsJefeEncargado(!!draft.isJefeEncargado);
+            lastInitializedGuard.current = selectedGuard;
+            setIsInitialized(true);
+            return;
+          }
         }
       }
 
-      // If we are on a new guard and no draft was found/loaded, use initial data
-      if (isNewGuard) {
+      // Handle logic for CLOSED guards OR cases where no draft exists (Use Master Configuration)
+      // We always sync with Master if guard is NOT open OR if we transition to a new guard without a draft
+      if (isNewGuard || !isGuardOpen) {
+        const matchingGuard = guards.find(g => 
+          g.id.trim().toUpperCase() === selectedGuard.trim().toUpperCase()
+        );
         const newStaffState: Staff = {};
+
         roles.forEach((role: StaffRole) => {
-          let assignedMembers = (initialData && initialData[role.name]) || [];
+          let assignedMembers: StaffMember[] = [];
+          
+          // Try to find the role in the guard staff (insensitively)
+          if (matchingGuard && matchingGuard.staff) {
+            const staffKey = Object.keys(matchingGuard.staff).find(k => k.toLowerCase() === role.name.toLowerCase());
+            if (staffKey) {
+              assignedMembers = (matchingGuard.staff as any)[staffKey] || [];
+            }
+          }
+          
+          // Fallback to initialData (which comes from the report's own staff data if it exists)
+          if (assignedMembers.length === 0 && initialData) {
+            const initialKey = Object.keys(initialData).find(k => k.toLowerCase() === role.name.toLowerCase());
+            if (initialKey) {
+              assignedMembers = (initialData as any)[initialKey] || [];
+            }
+          }
+
+          // Rehydrate with latest personnel data if possible
           assignedMembers = assignedMembers.map((member: StaffMember) => {
             const latestData = personnel.find((p: StaffMember) => p.id === member.id);
             return latestData || member;
           });
+          
           newStaffState[role.name] = assignedMembers;
         });
 
         setStaff(newStaffState);
         setIsJefeEncargado(false);
         const { start, end } = parseDatesFromPeriodo(periodo);
-        const estado = findInsensitive(settings as any, 'Estado');
+        const estado = findInsensitiveField(definitions, 'Estado');
         setActivities(getGeneratedDefaultActivities(start, end, estado));
         setNotes(DEFAULT_NOTES);
         lastInitializedGuard.current = selectedGuard;
         setIsInitialized(true);
       }
-    }, [selectedGuard, settings.ordenDelDiaDraft, roles, initialData, personnel, periodo]);
+    }, [selectedGuard, isGuardOpen, settings.ordenDelDiaDraft, roles, initialData, personnel, periodo, guards, guardsLoaded, definitions, definitionsLoaded]);
 
     // Reset initialization when guard changes
     useEffect(() => {
@@ -159,7 +190,7 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
 
     // Auto-save debounced effect
     useEffect(() => {
-      if (!selectedGuard || !isInitialized) return;
+      if (!selectedGuard || !isInitialized || !isGuardOpen) return;
 
       const timer = setTimeout(() => {
         const nowIso = new Date().toISOString();
@@ -350,8 +381,8 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
         return '';
       })();
 
-      const municipio = findInsensitive(settings as any, 'Municipio');
-      const estado = findInsensitive(settings as any, 'Estado');
+      const municipio = findInsensitiveField(definitions, 'Municipio');
+      const estado = findInsensitiveField(definitions, 'Estado');
 
       const reportParts = [
         `*ORDEN DEL DÍA DEL INSTITUTO AUTONOMO DE PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES DEL MUNICIPIO ${(municipio || '').toUpperCase()} ESTADO ${(estado || '').toUpperCase()}*`,
@@ -367,12 +398,19 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
         `*PERIODO:* ${periodo}`
       );
 
-      Object.entries(staff).forEach(([role, personnelList]) => {
-        if (role.toLowerCase() === 'director' || role.toLowerCase() === 'jefe de operaciones') return;
+      // Sort roles by hierarchy order for the final report generation
+      const sortedRolesForReport = [...roles]
+        .sort((a, b) => (a.hierarchyOrder ?? a.order ?? 0) - (b.hierarchyOrder ?? b.order ?? 0));
 
+      sortedRolesForReport.forEach((role) => {
+        // Skip Director and Jefe de Operaciones as they are handled above in the header
+        const roleNameLower = role.name.toLowerCase();
+        if (roleNameLower === 'director' || roleNameLower === 'jefe de operaciones') return;
+
+        const personnelList = staff[role.name];
         if (personnelList && personnelList.length > 0 && personnelList.some((p: StaffMember) => p.name.trim() !== '')) {
-          const isJefeServicios = role.toLowerCase() === 'jefe de los servicios';
-          const displayRole = isJefeServicios && isJefeEncargado ? `${role.toUpperCase()} (E)` : role.toUpperCase();
+          const isJefeServicios = roleNameLower === 'jefe de los servicios';
+          const displayRole = isJefeServicios && isJefeEncargado ? `${role.name.toUpperCase()} (E)` : role.name.toUpperCase();
           reportParts.push(``, `*${displayRole}*`, personnelList.map(m => formatStaffMember(m, false, true)).join('\n'));
         }
       });
@@ -427,7 +465,10 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 <ScrollArea className="flex-1 p-4 pt-0" type="always">
                   <div className="grid grid-cols-1 gap-4">
-                    {roles.filter((r: StaffRole) => !r.isHidden).map((role: StaffRole) => (
+                    {roles
+                      .filter((r: StaffRole) => !r.isHidden)
+                      .sort((a, b) => (a.hierarchyOrder ?? a.order ?? 0) - (b.hierarchyOrder ?? b.order ?? 0))
+                      .map((role: StaffRole) => (
                       <div key={role.name} className="space-y-3">
                         <StaffListEditor
                           label={role.name}
@@ -548,6 +589,14 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
 );
 
 // Utilities and Constants
+const findInsensitiveField = (definitions: Record<string, any>, key: string): string => {
+  if (!definitions) return '';
+  const keyLower = key.toLowerCase();
+  const foundKey = Object.keys(definitions).find((k) => k.toLowerCase() === keyLower);
+  if (!foundKey) return '';
+  return definitions[foundKey]?.value || '';
+};
+
 const findInsensitive = (obj: Record<string, string>, key: string): string => {
   if (!obj) return '';
   const keyLower = key.toLowerCase();
