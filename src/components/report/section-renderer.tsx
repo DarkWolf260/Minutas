@@ -46,10 +46,20 @@ export function SectionRenderer(props: SectionRendererProps) {
     const condition = section.condition;
     const conditionMode = condition?.conditionMode || 'hide';
 
+    // For dotted condition field IDs like "Director.sex", we need to watch
+    // the BASE field ("Director") and derive the property at evaluation time.
+    const isDottedCondition = condition ? condition.fieldId.includes('.') : false;
+    const baseConditionFieldId = isDottedCondition && condition
+        ? condition.fieldId.slice(0, condition.fieldId.indexOf('.'))
+        : condition?.fieldId;
+    const conditionProp = isDottedCondition && condition
+        ? condition.fieldId.slice(condition.fieldId.indexOf('.') + 1)
+        : null;
+
     const watchPath = condition
         ? pathPrefix
-            ? `${pathPrefix}.${condition.fieldId}`
-            : condition.fieldId
+            ? `${pathPrefix}.${baseConditionFieldId}`
+            : (baseConditionFieldId ?? 'dummy_no_condition')
         : 'dummy_no_condition';
 
     // By not passing a 'control' prop, useWatch automatically attempts to find 
@@ -60,7 +70,23 @@ export function SectionRenderer(props: SectionRendererProps) {
         disabled: !condition
     });
 
-    let actualValueToEvaluate = conditionValue !== undefined ? conditionValue : watchedFieldValue;
+    // If the condition uses dot-notation (e.g. Director.sex), resolve the property
+    // from the watched base value (e.g. Director[0].sex)
+    let resolvedWatchValue = conditionValue !== undefined ? conditionValue : watchedFieldValue;
+    if (isDottedCondition && conditionProp && resolvedWatchValue !== undefined) {
+        if (Array.isArray(resolvedWatchValue) && resolvedWatchValue.length > 0) {
+            const first = resolvedWatchValue[0];
+            if (first && typeof first === 'object') {
+                resolvedWatchValue = (first as Record<string, unknown>)[conditionProp] as FormDataValue ?? undefined;
+            } else {
+                resolvedWatchValue = undefined;
+            }
+        } else {
+            resolvedWatchValue = undefined;
+        }
+    }
+
+    let actualValueToEvaluate = resolvedWatchValue;
 
     let conditionMet = true;
     if (condition) {
@@ -337,6 +363,9 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                                         );
                                     }
 
+                                    // Skip derived property fields (e.g. "Director.sex")
+                                    if (fieldId.includes('.')) return null;
+
                                     const fieldConfig = (config.fields || {})[fieldId];
                                     if (!fieldConfig) return null;
                                     const isFullWidth =
@@ -455,6 +484,72 @@ function SingleSectionRenderer(props: SectionRendererProps) {
         );
     }
 
+    // Transparent conditional: nested section with a condition but no label.
+    // Render its fields as Fragment children so they participate directly in the
+    // parent's CSS grid — no inner grid wrapper and no col-span forcing.
+    if (isNested && section.condition && !section.label) {
+        return (
+            <>
+                {layoutItems
+                    .filter((fid: string) => !fid.includes('.'))
+                    .map((fieldId: string, fIdx: number) => {
+                        const fieldConfig = (config.fields || {})[fieldId];
+                        if (!fieldConfig) return null;
+                        const isFullWidth = fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
+                        const path = fieldNamePrefix ? `${fieldNamePrefix}.${fieldId}` : fieldId;
+                        return (
+                            <div
+                                key={`${fieldId}-${fIdx}`}
+                                className={cn('space-y-2', isFullWidth && 'sm:col-span-2 3xl:col-span-3')}
+                            >
+                                <Label htmlFor={path}>
+                                    {fieldConfig?.label || fieldId}
+                                    {fieldConfig.required && (
+                                        <span className="text-destructive ml-1">*</span>
+                                    )}
+                                </Label>
+                                <Controller
+                                    name={path}
+                                    control={control}
+                                    rules={{
+                                        required: fieldConfig.required
+                                            ? 'Este campo es obligatorio'
+                                            : false,
+                                    }}
+                                    render={({ field, fieldState: { error } }) => (
+                                        <div className="flex flex-col gap-1">
+                                            <FieldRenderer
+                                                fieldId={fieldId}
+                                                fieldConfig={fieldConfig}
+                                                roles={roles}
+                                                rolesLoaded={rolesLoaded}
+                                                units={units}
+                                                staffOptions={activeGuardStaff}
+                                                setValue={setValue}
+                                                settings={settings}
+                                                value={field.value}
+                                                onChange={field.onChange}
+                                                onBlur={field.onBlur}
+                                                ref={field.ref}
+                                                name={field.name}
+                                                disabled={disabled}
+                                                className={cn(error && 'border-destructive')}
+                                            />
+                                            {error && (
+                                                <span className="text-[10px] text-destructive">
+                                                    {error.message}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+                                />
+                            </div>
+                        );
+                    })}
+            </>
+        );
+    }
+
     return (
         <div className={cn('space-y-4', !isNested && 'pt-4', props.wrapperClassName)}>
             {section.label && (
@@ -468,11 +563,16 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                             fieldId.startsWith('sec_') ||
                             fieldId.startsWith('cond_')
                         ) {
-                            // Nested non-repeatable section
+                            // Nested section
                             const nestedSection = config.sections.find(
                                 (s: SectionConfig) => s.id === fieldId
                             );
                             if (!nestedSection) return null;
+                            // Transparent conditionals (no label, with condition) render their
+                            // fields directly as Fragment children of the parent grid — don't
+                            // force full width on them.
+                            const isTransparentConditional =
+                                !!nestedSection.condition && !nestedSection.label;
                             return (
                                 <SectionRenderer
                                     key={`${fieldId}-${fIdx}`}
@@ -489,10 +589,14 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                                     settings={settings}
                                     isNested={true}
                                     pathPrefix={fieldNamePrefix}
-                                    wrapperClassName="sm:col-span-2 3xl:col-span-3"
+                                    wrapperClassName={isTransparentConditional ? undefined : "sm:col-span-2 3xl:col-span-3"}
                                 />
                             );
                         }
+
+                        // Skip derived property fields (e.g. "Director.sex") —
+                        // they are read-only properties resolved at render time, not user form fields.
+                        if (fieldId.includes('.')) return null;
 
                         const fieldConfig = (config.fields || {})[fieldId];
                         if (!fieldConfig) return null;

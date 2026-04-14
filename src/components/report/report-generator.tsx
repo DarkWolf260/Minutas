@@ -45,6 +45,8 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
     const { saveDraft, clearDraft } = useDrafts();
     const formRef = useRef<ReportFormRef>(null);
     const hasCompleted = useRef(false);
+    // Stable session key so that a re-created form (same template) gets a fresh hasInitialized cycle
+    const sessionKey = useRef(`new-${template.id}-${Date.now()}`);
 
     useImperativeHandle(ref, () => ({
       submit: () => {
@@ -102,6 +104,7 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
         }
       };
 
+      // Inject Jefe de los Servicios
       const jefeDeServiciosKey = Object.keys(activeStaff).find(
         (k) => k.toLowerCase() === 'jefe de los servicios'
       );
@@ -110,7 +113,36 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
         if (staffList.length > 0 && staffList[0]) {
           const firstMember = rehydrate(staffList[0] as StaffMember);
           if (firstMember) {
-            dataToInject[jefeDeServiciosKey] = [formatStaffMember(firstMember)];
+            // Store raw StaffMember so {Campo.propiedad} works and renderer formats correctly
+            dataToInject[jefeDeServiciosKey] = [firstMember];
+          }
+        }
+      }
+
+      // Inject Director
+      const directorKey = Object.keys(activeStaff).find(
+        (k) => k.toLowerCase() === 'director'
+      );
+      if (directorKey) {
+        const staffList = activeStaff[directorKey] || [];
+        if (staffList.length > 0 && staffList[0]) {
+          const firstMember = rehydrate(staffList[0] as StaffMember);
+          if (firstMember) {
+            dataToInject[directorKey] = [firstMember];
+          }
+        }
+      }
+
+      // Inject Jefe de Operaciones
+      const jefeOperacionesKey = Object.keys(activeStaff).find(
+        (k) => k.toLowerCase() === 'jefe de operaciones'
+      );
+      if (jefeOperacionesKey) {
+        const staffList = activeStaff[jefeOperacionesKey] || [];
+        if (staffList.length > 0 && staffList[0]) {
+          const firstMember = rehydrate(staffList[0] as StaffMember);
+          if (firstMember) {
+            dataToInject[jefeOperacionesKey] = [firstMember];
           }
         }
       }
@@ -264,7 +296,7 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
           <CardContent className={cn("pt-8", hideHeader && "pt-0 p-0")}>
             <ReportForm
               ref={formRef}
-              reportId={`new-${template.id}`}
+              reportId={sessionKey.current}
               template={template}
               config={config}
               initialData={finalInitialData}

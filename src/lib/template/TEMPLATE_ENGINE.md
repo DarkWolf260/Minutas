@@ -72,7 +72,51 @@ Ejemplo: {Estado:dropdown(A=Activo|I=Inactivo|S=Suspendido)}
 
 ---
 
-## 2. Campos Repetibles `{Campo}*`
+## 2. Acceso a propiedades de personal `{Campo.propiedad}`
+
+Permite acceder a una propiedad específica del **primer miembro** asignado a un campo de personal (array de StaffMember).
+
+### Sintaxis
+
+```
+{Campo.propiedad}
+```
+
+### Propiedades disponibles
+
+| Propiedad | Descripción | Ejemplo |
+|-----------|-------------|---------|
+| `sex` | Sexo del miembro (`M` o `F`) | `{Director.sex}` |
+| `name` | Nombre completo | `{Director.name}` |
+| `cargo` | Cargo institucional | `{Director.cargo}` |
+| `rank` | Jerarquía/Rango | `{Director.rank}` |
+| `cedula` | Cédula de identidad | `{Director.cedula}` |
+| `titulo` | Título profesional | `{Director.titulo}` |
+
+### Uso en texto
+
+```
+El {Director.cargo} {Director} se reunió con...
+```
+
+### Uso en condicionales (caso de género)
+
+```
+[?{Director.sex} = F]
+*DIRECTORA-PRESIDENTA:* {Director}
+[/]
+[?{Director.sex} = M]
+*DIRECTOR-PRESIDENTE:* {Director}
+[/]
+```
+
+Si el Director es femenino (`sex = "F"`), solo se renderiza el primer bloque. El segundo se suprime sin dejar líneas en blanco extra.
+
+> **Nota**: El campo base (`{Director}`) debe ser un campo de tipo personal (array de StaffMember). Si el campo no tiene personal asignado, la propiedad devuelve vacío.
+
+---
+
+## 3. Campos Repetibles `{Campo}*`
 
 Un campo seguido de `*` genera automáticamente una sección repetible.
 
@@ -92,7 +136,7 @@ Ejemplo con campos de direcciones repetibles:
 
 ---
 
-## 3. Secciones `[Label]...[/]`
+## 4. Secciones `[Label]...[/]`
 
 ### Sección simple
 
@@ -132,7 +176,7 @@ El `*` al final del `[Label]*` marca la sección como repetible.
 
 ---
 
-## 4. Secciones Auto-contenidas `["Título" {Campo}]`
+## 5. Secciones Auto-contenidas `["Título" {Campo}]`
 
 Una sección completa en una sola línea (sin `[/]`):
 
@@ -144,7 +188,7 @@ El contenido entre `"Título"` y `]` son los campos de la sección.
 
 ---
 
-## 5. Separadores Visuales `[""]`
+## 6. Separadores Visuales `[""]`
 
 Una sección vacía con comillas vacías actúa como separador visual:
 
@@ -156,7 +200,7 @@ Se elimina limpiamente en el reporte final (no genera texto).
 
 ---
 
-## 6. Condicionales `[?{Campo} op valor]...[/]`
+## 7. Condicionales `[?{Campo} op valor]...[/]`
 
 Muestra el contenido solo si la condición es verdadera.
 
@@ -187,17 +231,32 @@ Contenido siempre visible en el formulario, pero solo en el reporte si se cumple
 
 | Operador | Descripción |
 |----------|-------------|
-| `=` | Igual |
+| `=` | Igual (case-insensitive para texto) |
 | `!=` | Diferente |
 | `>` | Mayor que |
 | `<` | Menor que |
 | `>=` | Mayor o igual |
 | `<=` | Menor o igual |
 
+### Verificar si un campo tiene contenido
+
+Usando `!= ""` el condicional solo renderiza si el campo tiene algún valor:
+
+```
+[?{Observaciones} != ""]
+- *OBSERVACIONES:* {Observaciones}
+[/]
+```
+
+Funciona con:
+- Texto: vacío (`""`) → condición falsa
+- Arrays de personal: vacío (`[]`) → condición falsa; con elementos → condición verdadera
+- Arrays de texto: vacío → falsa; con contenido → verdadera
+
 ### Comparación de valores
 
 - Si ambos valores son numéricos, la comparación es **numérica**.
-- Si alguno no es numérico, la comparación es **de texto**.
+- Si alguno no es numérico, la comparación es **de texto** (case-insensitive).
 - Los valores pueden ir entre **comillas dobles opcionales**: `[?{Estado} = "activo"]`
 
 ### Condicional con dropdown
@@ -216,6 +275,19 @@ Monto robado: {monto}
 [/]
 ```
 
+### Condicional de género (uso típico con personal)
+
+```
+[?{Director.sex} = F]
+*DIRECTORA-PRESIDENTA:* {Director}
+[/]
+[?{Director.sex} = M]
+*DIRECTOR-PRESIDENTE:* {Director}
+[/]
+```
+
+El bloque cuya condición sea falsa se suprime automáticamente. Los saltos de línea extra que quedarían se colapsan en la limpieza final.
+
 ### Condicional anidado
 
 Los condicionales pueden anidarse dentro de secciones:
@@ -231,7 +303,7 @@ Los condicionales pueden anidarse dentro de secciones:
 
 ---
 
-## 7. Condicionales de Mapeo `[?{Campo}]...[/]`
+## 8. Condicionales de Mapeo `[?{Campo}]...[/]`
 
 Un condicional **sin operador ni valor** es un bloque de mapeo. Define una tabla de traducción para un campo.
 
@@ -252,7 +324,7 @@ Accidente=Ocurrió un accidente de tránsito en...
 
 ---
 
-## 8. Marcadores de Resumen `<<...>>`
+## 9. Marcadores de Resumen `<<...>>`
 
 El contenido entre `<<` y `>>` se puede extraer como resumen:
 
@@ -264,14 +336,14 @@ Si se renderiza con `summaryOnly: true`, solo se extrae el contenido de los marc
 
 ---
 
-## 9. Escapado
+## 10. Escapado
 
 - `{{` → Literal `{` (no se interpreta como campo)
 - `[[` → Literal `[` (no se interpreta como sección)
 
 ---
 
-## 10. Orden de resolución de valores
+## 11. Orden de resolución de valores
 
 Al renderizar, el motor busca el valor de un campo en este orden:
 
@@ -283,20 +355,23 @@ Al renderizar, el motor busca el valor de un campo en este orden:
 
 La búsqueda de claves es **case-insensitive** (se compara en minúsculas).
 
+Para campos con notación de punto (`{Director.sex}`), primero se resuelve el campo base (`Director`) usando el orden anterior, y luego se extrae la propiedad del objeto resultante.
+
 ---
 
-## 11. Limpieza final del reporte
+## 12. Limpieza final del reporte
 
 Después del renderizado, el motor aplica automáticamente:
 
-1. Elimina bloques condicionales no procesados `[?...][/]`
-2. Elimina separadores `[""]`
-3. Elimina otras secciones `[...]` no procesadas
-4. Elimina marcadores de resumen `<<` y `>>`
-5. Convierte `\*` en `*` (asterisco literal)
-6. Reduce más de 2 saltos de línea consecutivos a máximo 2
-7. Convierte tabulaciones en 4 espacios
-8. Hace trim del resultado final
+1. Elimina marcadores de resumen `<<` y `>>`
+2. Elimina bloques condicionales no procesados `[?...][/]`
+3. Elimina separadores `[""]`
+4. Elimina otras secciones `[...]` no procesadas
+5. Resuelve etiquetas semánticas `{campo:semantic}`
+6. Convierte `\*` en `*` (asterisco literal)
+7. **Colapsa 3+ saltos de línea consecutivos a máximo 2** (elimina líneas en blanco fantasma de bloques condicionales no renderizados)
+8. Elimina líneas que quedaron con solo espacios/tabulaciones tras la sustitución
+9. Hace `trim()` del resultado final
 
 ---
 
@@ -307,6 +382,13 @@ REPORTE DE INCIDENTE
 Fecha: {fecha}
 Hora: {hora}
 Reportado por: {reportante:upper:req}
+
+[?{Director.sex} = F]
+*DIRECTORA-PRESIDENTA:* {Director}
+[/]
+[?{Director.sex} = M]
+*DIRECTOR-PRESIDENTE:* {Director}
+[/]
 
 Tipo de incidente: {tipo:dropdown(Robo=Robo|Vandalismo=Vandalismo|Accidente=Accidente)}
 
@@ -323,6 +405,10 @@ Objetos sustraídos: {objetos:textarea:full}
 
 [?{tipo} = Vandalismo]
 Área afectada: {area:textarea:full}
+[/]
+
+[?{Observaciones} != ""]
+- *OBSERVACIONES:* {Observaciones}
 [/]
 
 [""]

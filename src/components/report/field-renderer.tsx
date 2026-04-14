@@ -70,6 +70,10 @@ export const FieldRenderer = memo(
             const lowerFieldId = fieldId.toLowerCase();
             const addressFieldNames = ['ubicación', 'destino'];
 
+            // Derived property fields (e.g. "Director.sex") must never render as form inputs.
+            // They are resolved at render time from the base field's StaffMember data.
+            if (fieldId.includes('.')) return null;
+
             // Check for Reporta field (Analista is discarded)
             if (lowerFieldId === 'reporta') {
                 const reportaRoleIds = settings?.reportaRoleIds || [];
@@ -291,9 +295,12 @@ export const FieldRenderer = memo(
                 : null;
 
             if (role) {
+                // currentValue: show formatted display strings in the autocomplete input
                 const currentValue = Array.isArray(value)
                     ? (value as any[]).map((val: any) =>
-                        typeof val === 'object' && val && 'name' in val ? (val as any).name : String(val || '')
+                        typeof val === 'object' && val && 'name' in val
+                            ? formatStaffMemberForAutocomplete(val as StaffMember, false)
+                            : String(val || '')
                     )
                     : [];
                 const autocompleteOptions = staffOptions.map((member) =>
@@ -301,7 +308,14 @@ export const FieldRenderer = memo(
                 );
                 const handleMultiInputChange = (newValue: string[] | string) => {
                     const finalValueArray = Array.isArray(newValue) ? newValue : [newValue];
-                    onChange(finalValueArray);
+                    // Map display strings back to raw StaffMember objects so {Campo.propiedad} works
+                    const resolved = finalValueArray.map((displayStr) => {
+                        const found = staffOptions.find(
+                            (m) => formatStaffMemberForAutocomplete(m, false) === displayStr
+                        );
+                        return found ?? displayStr;
+                    });
+                    onChange(resolved);
                 };
 
                 return (

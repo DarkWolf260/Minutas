@@ -183,6 +183,34 @@ function isVirtualSection(content: string): boolean {
 }
 
 /**
+ * Resolves a dot-notation property from a resolved field value.
+ * e.g. "Director.sex" resolves "Director" first, then reads `.sex` from the first StaffMember.
+ * Supported properties: sex, name, cargo, rank, cedula, titulo, roleId, observations, id
+ */
+function resolvePropertyAccess(fieldId: string, baseValue: FormDataValue): FormDataValue {
+    const dotIndex = fieldId.indexOf('.');
+    if (dotIndex === -1) return undefined;
+    const prop = fieldId.slice(dotIndex + 1).trim();
+    if (!prop) return undefined;
+
+    // Array of objects (e.g. StaffMember[]) — read from first element
+    if (Array.isArray(baseValue) && baseValue.length > 0) {
+        const first = baseValue[0] as Record<string, unknown>;
+        if (first && typeof first === 'object') {
+            const val = first[prop] ?? first[prop.toLowerCase()];
+            return val as FormDataValue;
+        }
+    }
+    // Plain object
+    if (baseValue && typeof baseValue === 'object' && !Array.isArray(baseValue)) {
+        const obj = baseValue as Record<string, unknown>;
+        const val = obj[prop] ?? obj[prop.toLowerCase()];
+        return val as FormDataValue;
+    }
+    return undefined;
+}
+
+/**
  * Helper: Finds value for a field with fallback logic
  */
 function findValueForField(
@@ -193,7 +221,19 @@ function findValueForField(
     dynamicPredefinedValues: Record<string, string>,
     itemData?: FormDataRecord
 ): FormDataValue {
+    // Dot-notation property access: {Director.sex}, {Reporta.cargo}, etc.
+    if (fieldId.includes('.')) {
+        const baseFieldId = fieldId.slice(0, fieldId.indexOf('.'));
+        const baseValue = findValueForField(baseFieldId, data, sections, predefinedValues, dynamicPredefinedValues, itemData);
+        // If the base field was found (even as empty array), attempt property resolution
+        if (baseValue !== undefined) {
+            return resolvePropertyAccess(fieldId, baseValue);
+        }
+        return undefined;
+    }
+
     const lowerCaseFieldId = fieldId.toLowerCase();
+
 
     // 1. Check dynamic predefined values
     if (dynamicPredefinedValues[fieldId] !== undefined) return dynamicPredefinedValues[fieldId];
@@ -536,7 +576,7 @@ function renderSection(
                         } else {
                             if (nestedSection.condition) {
                                 const cond = nestedSection.condition;
-                                const opPart = cond.operator && cond.value
+                                const opPart = cond.operator
                                     ? `\\s*${escapeRegExp(cond.operator)}\\s*(?:"${escapeRegExp(cond.value)}"|${escapeRegExp(cond.value)})`
                                     : '';
                                 const escapedFieldId = escapeRegExp(cond.fieldId);
@@ -615,38 +655,34 @@ function renderSection(
                 }
             });
 
-
             if (section.isSelfContained) {
-                // For self-contained sections, omit lines that contained a field tag but ended up empty/contentless
+                // Filter out "label-only" lines where the field rendered to empty.
+                // Example: "- *MONTO:* " where {monto} resolved to '' → remove.
+                // Blank lines (empty or only whitespace) are ALWAYS preserved — they are
+                // intentional spacing that the user put in the template.
                 const lines = itemContent.split(/\r?\n/);
-                const originalLines = (section.originalContent || '').split(/\r?\n/);
-                
-                const filteredLines = lines.filter((line, idx) => {
-                    // Use the index from filter to align with original lines
-                    const originalLine = originalLines[idx] || '';
-                    
-                    // Check if this line had any field tags originally
-                    const fieldTagPattern = /\{([^:{}]+?)(:[^|}{]+)*(?:\|[^{}]+?)?\}/g;
-                    if (fieldTagPattern.test(originalLine)) {
-                        // If it had fields, check if the resulting line after substitution
-                        // effectively has no meaningful content (only labels, asterisks, dashes, etc.)
-                        const contentOnly = line
-                            .replace(/- \*\*.*?\:\*\*/g, '') // Remove labels like - **LABEL:**
-                            .replace(/- \*.*?\:\*/g, '')   // Remove labels like - *LABEL:*
-                            .replace(/\*\*.*?\:\*\*/g, '')  // Remove labels like **LABEL:**
-                            .replace(/\*.*?\:\*/g, '')     // Remove labels like *LABEL:*
-                            .replace(/^[ ]*-[ ]*/g, '')     // Remove leading dash/bullet
-                            .replace(/[*\-:\s]/g, '')       // Remove remaining decorative chars and whitespace
-                            .trim();
-                        
-                        return contentOnly.length > 0;
-                    }
-                    return true;
+                const filteredLines = lines.filter(line => {
+                    // Blank/whitespace-only line: always keep (intentional spacing)
+                    if (line.trim().length === 0) return true;
+
+                    // Check if any alphanumeric content remains after stripping decorative chars.
+                    // If nothing remains, this was a "- *LABEL:* {empty-field}" line → remove it.
+                    const alphanumeric = line
+                        .replace(/- \*\*[^*]+:\*\*/g, '')  // - **LABEL:**
+                        .replace(/- \*[^*]+:\*/g, '')        // - *LABEL:*
+                        .replace(/\*\*[^*]+:\*\*/g, '')      // **LABEL:**
+                        .replace(/\*[^*]+:\*/g, '')          // *LABEL:*
+                        .replace(/^[ \t]*-[ \t]*/gm, '')     // leading bullet
+                        .replace(/[*\-:"'\s]/g, '')          // remaining decorative + quotes
+                        .trim();
+
+                    return alphanumeric.length > 0;
                 });
                 itemContent = filteredLines.join('\n');
             }
 
             if (section.repeatableItemLabel) {
+
                 const isVirtual = isVirtualSection(section.originalContent || '');
                 
                 if (isVirtual) {
@@ -782,7 +818,7 @@ export function renderContentWithSections(
             let headerPart = '';
             if (section.condition) {
                 const cond = section.condition;
-                const opPart = cond.operator && cond.value
+                const opPart = cond.operator
                     ? `\\s*${escapeRegExp(cond.operator)}\\s*(?:"${escapeRegExp(cond.value)}"|${escapeRegExp(cond.value)})`
                     : '';
                 // Field name may appear with or without braces: [?{Campo}=val] or [?Campo=val]
@@ -837,17 +873,20 @@ export function renderContentWithSections(
 
 
 
-    // Final cleanup of loose tags (omit semantic tags for post-processing)
+    // Final cleanup of loose tags (omit semantic tags for post-processing).
+    // Regex extended to also handle dotted field names like {Director.sex}.
     finalContent = finalContent.replace(
-        /\{([^:{}]+?)(:[^|}{]+)*(?:\|[^{}]+?)?\}/g,
+        /\{([^:{}]+?(?:\.[^:{}]+?)?)(:[^|}{]+)*(?:\|[^{}]+?)?\}/g,
         (match, fieldId: string) => {
             if (match.includes(':semantic')) return match;
             fieldId = fieldId.trim();
             const lowerFieldId = fieldId.toLowerCase();
             const baseVal = findValueForField(fieldId, data, sections, predefinedValues, dynamicPredefinedValues);
             
-            // Case-insensitive mapping results lookup
-            const mappingKey = Object.keys(mappingResults).find(k => k.toLowerCase() === lowerFieldId);
+            // Mapping results are only applicable for non-dotted field names
+            const mappingKey = !fieldId.includes('.')
+                ? Object.keys(mappingResults).find(k => k.toLowerCase() === lowerFieldId)
+                : undefined;
             const formValue = mappingKey !== undefined ? mappingResults[mappingKey] : baseVal;
             
             return hasContent(formValue) ? renderValue(formValue, fieldId, fields, config) : '';
@@ -959,7 +998,15 @@ export function renderFinalReport(
         // Final unescaping of characters (e.g. \* -> *, \\ -> \)
         finalOutput = finalOutput.replace(/\\([\*\{\}\[\]\\])/g, '$1');
 
-        return finalOutput;
+        // Collapse blank lines left by non-rendered conditional blocks.
+        // Reduces 3+ consecutive newlines to a maximum of 2 (one visible blank line).
+        finalOutput = finalOutput.replace(/\n{3,}/g, '\n\n');
+
+        // Remove lines that became entirely whitespace after substitution
+        // (e.g. a label line like "- *DIRECTOR:*" whose field resolved to empty).
+        finalOutput = finalOutput.replace(/^[\t ]+$/gm, '');
+
+        return finalOutput.trim();
     } catch (error) {
         logger.error('Error rendering report', error instanceof Error ? error : new Error(String(error)), {
 

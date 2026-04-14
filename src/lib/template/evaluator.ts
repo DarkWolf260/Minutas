@@ -41,12 +41,21 @@ export function evaluateCondition(
     operator: string,
     targetValue: string
 ): boolean {
+    // Treat undefined/null as empty string — a field with no value is semantically
+    // equivalent to "": so `{Campo} = ""` is true and `{Campo} != ""` is false.
     if (fieldValue === undefined || fieldValue === null) {
-        return operator === '!=';
+        fieldValue = '';
+    }
+
+    // Empty arrays (e.g. multi-text field with no entries) → treat as ""
+    // Non-empty arrays → join to a string for comparison ("text1,text2")
+    if (Array.isArray(fieldValue)) {
+        fieldValue = fieldValue.length === 0 ? '' : fieldValue.join(',');
     }
 
     const val = coerceForComparison(fieldValue);
     const target = coerceForComparison(targetValue);
+
 
     switch (operator) {
         case '=':

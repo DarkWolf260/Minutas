@@ -15,13 +15,13 @@ import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { Label } from '@/components/ui/label';
 import { parseTemplate, renderFinalReport } from '@/lib/template-parser';
 import { logger } from '@/lib/logger';
-import { cn, areEqual, stableStringify, validateTimeHlv } from '@/lib/utils';
+import { cn, stableStringify, validateTimeHlv } from '@/lib/utils';
 import { useRoles } from '@/hooks/use-roles';
 import { useGuards } from '@/hooks/use-guards';
 import { useUnits } from '@/hooks/use-units';
 import { useSettings } from '@/hooks/use-settings';
 import { usePersonnel } from '@/hooks/use-personnel';
-import { formatStaffMember, formatStaffMemberForDisplay, formatStaffReporta } from '@/lib/formatters';
+import { formatStaffMember } from '@/lib/formatters';
 import { toast } from 'sonner';
 
 import { FieldRenderer } from './field-renderer';
@@ -227,18 +227,18 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
           return safeClone(latest || member);
         };
 
+        // Constant: fields that are assigned manually and are NOT auto-populated from guard staff
+        const MANUAL_FIELDS = ['técnico', 'auxiliar', 'conductor'];
+
         const applyDefaults = (target: FormDataRecord, fieldIds: string[]) => {
           if (!target) return;
           fieldIds.forEach((fieldId) => {
             const keyLower = fieldId.toLowerCase();
             const role = roles.find((r: any) => r.name.toLowerCase() === keyLower);
-            const MANUAL_FIELDS = ['técnico', 'auxiliar', 'conductor'];
             const isLeadershipRole = keyLower === 'director' || keyLower === 'jefe de operaciones' || keyLower === 'jefe de los servicios';
             const currentValue = target[fieldId];
 
-            // Decide if we should attempt to fill this field:
-            // - Always fill if undefined/null
-            // - Also fill if it's an empty array and this is a role field with available staff
+            // Fill if: undefined/null, OR empty array for a role that has available staff
             const isEmpty = currentValue === undefined || currentValue === null;
             const isEmptyRoleArray = Array.isArray(currentValue) && currentValue.length === 0 && role && !MANUAL_FIELDS.includes(keyLower);
 
@@ -254,9 +254,12 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
                     if (staffList && staffList.length > 0) {
                       const isReporta = keyLower === 'reporta';
                       if (isReporta) {
+                        // Reporta stores raw StaffMember so formatStaffReporta can render it properly
                         initialStaff = [rehydrate(staffList[0])];
                       } else {
-                        initialStaff = staffList.map((s: any) => formatStaffMember(rehydrate(s)));
+                        // Store raw StaffMember objects so {Campo.propiedad} syntax works
+                        // The renderer (renderValue) already formats them correctly
+                        initialStaff = staffList.map((s: any) => rehydrate(s));
                       }
                     }
                   }
@@ -402,7 +405,6 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
     // combined with getValues() to always read the latest store state.
     const [, forceRender] = useState(0);
     const lastDataHash = useRef<string>('');
-    const processedInitialDataHash = useRef<string>('');
     const lastPropReportId = useRef<string | undefined>(reportId);
     const isFocused = useRef<boolean>(false);
 
@@ -602,9 +604,6 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
           return !allLayoutFields.has(id) && finalConfig.fields[id] && !isControlled;
         }
       );
-      if (orphanFields.length > 0) {
-        chunks.push(orphanFields);
-      }
       if (orphanFields.length > 0) {
         chunks.push(orphanFields);
       }

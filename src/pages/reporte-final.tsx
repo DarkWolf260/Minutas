@@ -510,7 +510,12 @@ export default function ReporteFinalPage() {
         headerParts.push(`- *EQUIPO DE GUARDIA:* Grupo “${guardIdForReport}”`);
       }
 
-      roles
+      // Sort roles by hierarchyOrder to respect the institutional hierarchy in the report
+      const sortedRoles = [...roles].sort(
+        (a, b) => (a.hierarchyOrder ?? a.order ?? 0) - (b.hierarchyOrder ?? b.order ?? 0)
+      );
+
+      sortedRoles
         .filter((r) => !r.isHidden)
         .forEach((role) => {
           if (

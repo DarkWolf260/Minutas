@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { FieldConfig } from '@/lib/types';
 import { format } from 'date-fns';
-import { useSettings } from './use-settings';
-import { useGuards } from './use-guards';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
 
@@ -27,8 +25,6 @@ const defaultDefinitions: Record<string, FieldConfig> = {
 export function useFieldDefinitions() {
   const db = useDatabase();
   const { currentWorkspace } = useWorkspaceManager();
-  const { isLoaded: settingsLoaded } = useSettings();
-  const { isLoaded: guardsLoaded } = useGuards();
 
   const [definitions, setDefinitions] = useState<Record<string, FieldConfig>>({});
   const [isLoaded, setIsLoaded] = useState(false);
@@ -162,7 +158,7 @@ export function useFieldDefinitions() {
     updateDefinition,
     removeDefinition,
     saveDefinitions,
-    isLoaded: isLoaded && settingsLoaded && guardsLoaded,
+    isLoaded,
     clearAllDefinitions,
-  }), [definitions, updateDefinition, removeDefinition, saveDefinitions, isLoaded, settingsLoaded, guardsLoaded, clearAllDefinitions]);
+  }), [definitions, updateDefinition, removeDefinition, saveDefinitions, isLoaded, clearAllDefinitions]);
 }

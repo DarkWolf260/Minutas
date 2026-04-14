@@ -1,4 +1,5 @@
-import { TemplateParserResult, SectionConfig, FormDataRecord, FieldConfig, SnippetOption } from '../types';
+import { TemplateParserResult, SectionConfig, FormDataRecord, FieldConfig, SnippetOption } from '@/lib/types';
+
 import type { ResolutionResult } from './template/renderer';
 
 /** No-op audit recorder (audit-engine was removed during cleanup) */

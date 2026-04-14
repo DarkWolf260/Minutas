@@ -68,7 +68,12 @@ export function validateSemantics(
             const { fieldId, value, operator } = section.condition;
 
             // Verificar que el campo existe
-            if (!fieldNames.has(fieldId)) {
+            // For dotted field IDs (e.g. Director.sex), check if the BASE field exists
+            // since dotted fields are derived properties and won't appear as standalone {tags}
+            const baseFieldId = fieldId.includes('.')
+                ? fieldId.slice(0, fieldId.indexOf('.'))
+                : fieldId;
+            if (!fieldNames.has(fieldId) && !fieldNames.has(baseFieldId)) {
                 errors.push(
                     `El condicional hace referencia al campo '{${fieldId}}' que no está definido en la plantilla.`
                 );

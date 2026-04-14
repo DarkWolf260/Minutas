@@ -160,18 +160,36 @@ function extractSectionToken(
     let pos = startPos + 1; // Skip opening [
     let content = '';
 
-    // Find closing ]
-    while (pos < template.length && template[pos] !== ']') {
-        content += template[pos];
+    // Find the MATCHING closing ] using depth counting so nested [...] blocks
+    // inside self-contained sections like ["TITLE" [?...][/] text] work correctly.
+    let depth = 1;
+    while (pos < template.length && depth > 0) {
+        const ch = template[pos];
+        // Handle [[ escape — treat as literal [, do not increment depth
+        if (ch === '[' && template[pos + 1] === '[') {
+            content += ch;
+            pos++;
+        } else if (ch === '[') {
+            depth++;
+            content += ch;
+        } else if (ch === ']') {
+            depth--;
+            if (depth > 0) {
+                // Still inside nested block — keep the ]
+                content += ch;
+            }
+            // depth === 0: this is OUR closing ] — don't add to content, just stop
+        } else {
+            content += ch;
+        }
         pos++;
     }
 
-    if (pos >= template.length) {
-        // No closing bracket found
+    if (depth !== 0) {
+        // No matching closing bracket found
         return null;
     }
 
-    pos++; // Skip closing ]
 
     // Check if this is a section end marker: [/]
     if (content.trim() === '/') {
