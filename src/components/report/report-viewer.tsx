@@ -12,7 +12,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Report, TemplateConfig } from '@/lib/types';
-import { Trash2, Copy, CheckIcon, Eye, Save, FileText } from 'lucide-react';
+import { Trash2, Copy, CheckIcon, Eye, Save, FileText, Send } from 'lucide-react';
 import { useTemplates } from '@/hooks/use-templates';
 import { useSettings } from '@/hooks/use-settings';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
@@ -42,6 +42,7 @@ import { debounce, stableStringify, validateTimeHlv } from '@/lib/utils';
 import { renderFinalReport } from '@/lib/template-parser';
 import { toast } from 'sonner';
 import { ReportPreview } from './report-preview';
+import { useSyncManager } from '@/hooks/use-sync';
 
 export interface ReportViewerProps {
   report: Report | null;
@@ -59,6 +60,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
   const { templates, configs, isLoaded } = useTemplates();
   const { settings } = useSettings();
   const { definitions } = useFieldDefinitions();
+  const { isSecondary, sendReport: sendToSync, isSyncing: isSendingSyncReport } = useSyncManager();
 
   const [previewContent, setPreviewContent] = useState('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -267,6 +269,19 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
               <SelectItem value="Finalizado">Finalizado</SelectItem>
             </SelectContent>
           </Select>
+          {isSecondary && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => sendToSync(report)}
+              disabled={isSendingSyncReport}
+              className="h-9 px-3 sm:px-4 shadow-sm border-violet-500/40 text-violet-600 hover:bg-violet-500/10"
+              title="Enviar al dispositivo principal"
+            >
+              <Send className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Enviar al Principal</span>
+            </Button>
+          )}
           <Button
             size="sm"
             onClick={handleSave}

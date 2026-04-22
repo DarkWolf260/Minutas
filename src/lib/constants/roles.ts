@@ -12,8 +12,8 @@ export const LEADER_ROLES = {
 export const OPERATIONAL_ROLES = {
   OPERADOR_RADIO: 'Operador de radio',
   TECNICO: 'Técnico',
-  CONDUCTOR: 'Conductor',
   AUXILIAR: 'Auxiliar',
+  CONDUCTOR: 'Conductor',
 } as const;
 
 export const SPECIAL_ROLES = {

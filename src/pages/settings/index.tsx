@@ -20,7 +20,8 @@ import {
   AlertTriangle,
   Settings2,
   MapPin,
-  Info
+  Info,
+  Wifi,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -140,7 +141,21 @@ export default function SettingsPage() {
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </Link>
-
+                <Link
+                  to="/settings/sync"
+                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-600 group-hover:scale-110 transition-transform">
+                      <Wifi className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Sincronización</p>
+                      <p className="text-xs text-muted-foreground">Enviar reportes entre dispositivos en tiempo real</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </Link>
 
 
                 <Link

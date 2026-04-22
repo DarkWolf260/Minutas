@@ -21,8 +21,8 @@ export const DEFAULT_ROLES: StaffRole[] = [
   { name: LEADER_ROLES.JEFE_SERVICIOS, isSingle: true, departmentScope: [DEPARTMENT_IDS.OPERATIONS], order: 2, hierarchyOrder: 2 },
   { name: OPERATIONAL_ROLES.OPERADOR_RADIO, isSingle: false, departmentScope: [DEPARTMENT_IDS.OPERATIONS], order: 11, hierarchyOrder: 11 },
   { name: OPERATIONAL_ROLES.TECNICO, isSingle: false, departmentScope: [DEPARTMENT_IDS.OPERATIONS], order: 12, hierarchyOrder: 12 },
-  { name: OPERATIONAL_ROLES.CONDUCTOR, isSingle: false, departmentScope: [DEPARTMENT_IDS.OPERATIONS], order: 13, hierarchyOrder: 13 },
-  { name: OPERATIONAL_ROLES.AUXILIAR, isSingle: false, departmentScope: [DEPARTMENT_IDS.OPERATIONS], order: 14, hierarchyOrder: 14 },
+  { name: OPERATIONAL_ROLES.AUXILIAR, isSingle: false, departmentScope: [DEPARTMENT_IDS.OPERATIONS], order: 13, hierarchyOrder: 13 },
+  { name: OPERATIONAL_ROLES.CONDUCTOR, isSingle: false, departmentScope: [DEPARTMENT_IDS.OPERATIONS], order: 14, hierarchyOrder: 14 },
 
   // CEMUPRAD
   { name: SPECIAL_ROLES.JEFE_CEMUPRAD, isSingle: true, departmentScope: [DEPARTMENT_IDS.CEMUPRAD], order: 3, hierarchyOrder: 3, isHidden: true },

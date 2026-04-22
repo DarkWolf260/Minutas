@@ -42,11 +42,9 @@ import { logger } from '@/lib/logger';
 import { stableStringify } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { generateId } from '@/lib/utils/id';
+import { createConfigRepository, createTemplateRepository } from '@/lib/repositories';
+import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
 
-const getUserFriendlyErrorMessage = (error: any) => {
-  if (error?.message) return error.message;
-  return 'Error desconocido';
-};
 
 // Global lock to prevent multiple instances from bootstrapping the same workspace
 const bootstrapLocks: Record<string, boolean> = {};
@@ -183,7 +181,7 @@ export function useTemplates() {
             name: id,
             data: config,
           }));
-          
+
           db.configs.bulkUpsert(entries as any).catch((err: any) =>
             logger.error('Failed to sync template configs', err, { feature: 'Templates' })
           );
@@ -259,23 +257,28 @@ export function useTemplates() {
   const addTemplate = async (newTemplate: Template) => {
     if (!db || !currentWorkspace) return;
     try {
-      // Validate with Zod first
       const validatedTemplate = TemplateSchema.parse({
         ...newTemplate,
-        workspaceId: currentWorkspace
+        workspaceId: currentWorkspace,
       });
 
-      const { sections, layout, fieldNames, fieldTypes, templateOptions, errors } = parseTemplate(validatedTemplate.content);
+      const { sections, layout, fieldNames, fieldTypes, templateOptions, errors } =
+        parseTemplate(validatedTemplate.content);
 
       if (errors.length > 0) {
         toast.error(`La plantilla tiene errores: ${errors[0]}`);
         logger.warn('Template has parsing errors', { id: validatedTemplate.id, errors });
       } else {
         toast.success(`Plantilla "${validatedTemplate.name}" agregada correctamente.`);
-        logger.info('Template added', { id: validatedTemplate.id, name: validatedTemplate.name, workspaceId: currentWorkspace });
+        logger.info('Template added', {
+          id: validatedTemplate.id,
+          name: validatedTemplate.name,
+          workspaceId: currentWorkspace,
+        });
       }
 
-      await db.templates.insert({ ...validatedTemplate, isActive: errors.length === 0 });
+      const templateRepo = createTemplateRepository(db, currentWorkspace);
+      await templateRepo.add({ ...validatedTemplate, isActive: errors.length === 0 });
 
       const newConfig: TemplateConfig = { fields: {}, sections, layout };
       fieldNames.forEach((fieldName: string) => {
@@ -294,14 +297,8 @@ export function useTemplates() {
         }
       });
 
-      await db.configs.upsert({
-        id: `template_config:${validatedTemplate.id}`,
-        workspaceId: currentWorkspace,
-        type: 'template_config',
-        name: validatedTemplate.id,
-        data: newConfig,
-      } as any);
-
+      const configRepo = createConfigRepository(db, currentWorkspace);
+      await configRepo.upsertTemplateConfig(validatedTemplate.id, newConfig);
     } catch (error) {
       logger.error('Error adding template', error);
       toast.error(getUserFriendlyErrorMessage(error));
@@ -309,55 +306,28 @@ export function useTemplates() {
   };
 
   const removeTemplate = async (templateId: string) => {
-    if (!db) return;
-    try {
-      const templateDoc = await db.templates.findOne(templateId).exec();
-      if (templateDoc) await templateDoc.remove();
-
-      const configDoc = await db.configs.findOne(`template_config:${templateId}`).exec();
-      if (configDoc) await configDoc.remove();
-
-      logger.info('Template removed', { id: templateId });
-      toast.success('Plantilla eliminada.');
-    } catch (error) {
-      logger.error('Failed to remove template', error);
-      toast.error('Error al eliminar la plantilla.');
-    }
+    if (!db || !currentWorkspace) return;
+    const repo = createTemplateRepository(db, currentWorkspace);
+    await repo.remove(templateId);
+    logger.info('Template removed', { id: templateId });
   };
 
   const updateTemplateConfig = async (templateId: string, config: TemplateConfig) => {
     if (!db || !currentWorkspace) return;
-    try {
-      await db.configs.upsert({
-        id: `template_config:${templateId}`,
-        workspaceId: currentWorkspace,
-        type: 'template_config',
-        name: templateId,
-        data: config,
-      } as any);
-      toast.success('Configuración de campos actualizada.');
-    } catch (error) {
-      logger.error('Failed to update template config', error, { feature: 'Templates', metadata: { templateId } });
-    }
+    const configRepo = createConfigRepository(db, currentWorkspace);
+    await configRepo.upsertTemplateConfig(templateId, config);
   };
 
   const updateTemplate = async (updatedTemplate: Template) => {
     if (!db || !currentWorkspace) return;
     try {
-      // Validate with Zod
       const validatedTemplate = TemplateSchema.parse({
         ...updatedTemplate,
-        workspaceId: currentWorkspace
+        workspaceId: currentWorkspace,
       });
-
-      const doc = await db.templates.findOne(validatedTemplate.id).exec();
-      if (doc) {
-        await doc.patch(validatedTemplate);
-        logger.info('Template updated', { id: validatedTemplate.id, workspaceId: currentWorkspace });
-        toast.success('Plantilla actualizada.');
-      } else {
-        toast.error('Plantilla no encontrada.');
-      }
+      const repo = createTemplateRepository(db, currentWorkspace);
+      await repo.update(validatedTemplate);
+      logger.info('Template updated', { id: validatedTemplate.id, workspaceId: currentWorkspace });
     } catch (error) {
       logger.error('Failed to update template', error);
       toast.error(getUserFriendlyErrorMessage(error));
@@ -365,30 +335,17 @@ export function useTemplates() {
   };
 
   const toggleTemplateActive = useCallback(async (templateId: string) => {
-    if (!db) return;
-    const doc = await db.templates.findOne(templateId).exec();
-    if (doc) {
-      await doc.patch({ isActive: !(doc.toJSON().isActive ?? true) });
-    }
-  }, [db]);
+    if (!db || !currentWorkspace) return;
+    const repo = createTemplateRepository(db, currentWorkspace);
+    await repo.toggle(templateId);
+  }, [db, currentWorkspace]);
 
   const clearAllTemplates = useCallback(async () => {
     if (!db || !currentWorkspace) return;
-    
     // Prevent auto-bootstrap from triggering immediately after manual clear
     bootstrapLocks[currentWorkspace] = true;
-    
-    const allTemplates = await db.templates.find({
-      selector: { workspaceId: currentWorkspace }
-    }).exec();
-    await Promise.all(allTemplates.map(d => d.remove()));
-    const allConfigs = await db.configs.find({ 
-      selector: { 
-        type: 'template_config',
-        workspaceId: currentWorkspace
-      } 
-    }).exec();
-    await Promise.all(allConfigs.map((d: any) => d.remove()));
+    const repo = createTemplateRepository(db, currentWorkspace);
+    await repo.clearAll();
   }, [db, currentWorkspace]);
 
   return useMemo(() => ({

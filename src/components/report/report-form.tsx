@@ -67,15 +67,20 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
 
       if (!activeStaff) return [];
 
-      const staffSetWithRoles = new Set<StaffMember & { roleId?: string }>();
+      // Use a Map keyed by person.id to prevent duplicates.
+      // A Set of objects compares by reference, not content, so the same person
+      // added twice (from two different roles) would not be deduplicated.
+      const staffMap = new Map<string, StaffMember & { roleId?: string }>();
       Object.entries(activeStaff).forEach(([roleName, staffList]) => {
-        const roleId = roles.find((r: any) => r.name === roleName)?.name; // Using name as ID for now
+        const roleId = roles.find((r: any) => r.name === roleName)?.name;
         staffList.forEach((person) => {
-          staffSetWithRoles.add({ ...person, roleId: roleId });
+          if (!staffMap.has(person.id)) {
+            staffMap.set(person.id, { ...person, roleId });
+          }
         });
       });
 
-      return Array.from(staffSetWithRoles).sort((a, b) => a.name.localeCompare(b.name));
+      return Array.from(staffMap.values()).sort((a, b) => a.name.localeCompare(b.name));
     }, [settings?.activeGuardId, settings?.ordenDelDiaDraft, guards, settingsLoaded, guardsLoaded, roles]);
 
     const finalConfig = useMemo(() => {

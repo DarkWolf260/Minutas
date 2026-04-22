@@ -10,6 +10,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { PWAStatus } from '@/components/pwa-status';
 import { DatabaseProvider } from '@/lib/db/db-provider';
 import { NotificationsProvider } from '@/lib/notifications-provider';
+import { SyncProvider } from '@/lib/sync/sync-context';
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { LoadingScreen } from '@/components/loading-screen';
 
@@ -29,6 +30,7 @@ const SettingsPage = lazy(() => import('@/pages/settings'));
 const SettingsWorkspacesPage = lazy(() => import('@/pages/settings/workspaces'));
 const SettingsProfilePage = lazy(() => import('@/pages/settings/profile'));
 const SettingsBorrarDatosPage = lazy(() => import('@/pages/settings/borrar-datos'));
+const SettingsSyncPage = lazy(() => import('@/pages/settings/sync'));
 
 const SettingsAboutPage = lazy(() => import('@/pages/settings/about'));
 const OfflinePage = lazy(() => import('@/pages/offline'));
@@ -71,6 +73,7 @@ function AppLayout() {
     <ThemeProvider defaultTheme="system" storageKey="minutas-theme">
       <DatabaseProvider>
         <NotificationsProvider>
+          <SyncProvider>
           <TooltipProvider>
               <div className="flex min-h-full w-full flex-col sm:flex-row md:overflow-hidden bg-background overflow-x-hidden" suppressHydrationWarning>
                 <SideNav />
@@ -108,6 +111,7 @@ function AppLayout() {
                             <Route path="/settings/workspaces" element={<SettingsWorkspacesPage />} />
                             <Route path="/settings/profile" element={<SettingsProfilePage />} />
                             <Route path="/settings/borrar-datos" element={<SettingsBorrarDatosPage />} />
+                            <Route path="/settings/sync" element={<SettingsSyncPage />} />
 
                             <Route path="/settings/about" element={<SettingsAboutPage />} />
                             <Route path="/offline" element={<OfflinePage />} />
@@ -124,6 +128,7 @@ function AppLayout() {
               <PWAStatus />
               <Toaster />
           </TooltipProvider>
+          </SyncProvider>
         </NotificationsProvider>
       </DatabaseProvider>
     </ThemeProvider>

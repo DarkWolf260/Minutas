@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { ReportDraft } from '@/lib/types';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
-import { logger } from '@/lib/logger';
+import { createConfigRepository } from '@/lib/repositories';
 
 export function useDrafts() {
   const db = useDatabase();
@@ -14,12 +14,10 @@ export function useDrafts() {
   useEffect(() => {
     if (!db || !currentWorkspace) return;
 
-    const sub = db.configs.findOne(`${currentWorkspace}:draft:active-draft`).$.subscribe((doc) => {
-      if (doc) {
-        setDraft(doc.toJSON().data as ReportDraft);
-      } else {
-        setDraft(null);
-      }
+    const repo = createConfigRepository(db, currentWorkspace);
+
+    const sub = repo.watchDraft().subscribe((doc) => {
+      setDraft(doc ? (doc.toJSON().data as ReportDraft) : null);
       setIsLoaded(true);
     });
 
@@ -29,33 +27,16 @@ export function useDrafts() {
   const saveDraft = useCallback(
     async (newDraft: ReportDraft) => {
       if (!db || !currentWorkspace) return;
-      try {
-        await db.configs.upsert({
-          id: `${currentWorkspace}:draft:active-draft`,
-          workspaceId: currentWorkspace,
-          type: 'draft' as const,
-          name: 'active-draft',
-          data: {
-            ...newDraft,
-            workspaceId: currentWorkspace,
-            lastSaved: new Date().toISOString(),
-          },
-        });
-      } catch (error) {
-        logger.error('Failed to save draft', error, { feature: 'Drafts', workspaceId: currentWorkspace });
-      }
+      const repo = createConfigRepository(db, currentWorkspace);
+      await repo.saveDraft(newDraft);
     },
     [db, currentWorkspace]
   );
 
   const clearDraft = useCallback(async () => {
     if (!db || !currentWorkspace) return;
-    try {
-      const doc = await db.configs.findOne(`${currentWorkspace}:draft:active-draft`).exec();
-      if (doc) await doc.remove();
-    } catch (error) {
-      logger.error('Failed to clear draft', error, { feature: 'Drafts', workspaceId: currentWorkspace });
-    }
+    const repo = createConfigRepository(db, currentWorkspace);
+    await repo.clearDraft();
   }, [db, currentWorkspace]);
 
   return { draft, saveDraft, clearDraft, isLoaded };

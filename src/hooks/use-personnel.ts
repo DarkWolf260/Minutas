@@ -10,32 +10,18 @@
  * @property {(id: string) => void} removeMember - Remove a member
  * @property {(newPersonnel: StaffMember[]) => void} savePersonnel - Batch update personnel
  * @property {boolean} isLoaded - Loading state indicator
- *
- * @example
- * ```tsx
- * const { personnel, addMember, updateMember, isLoaded } = usePersonnel();
- *
- * // Wait for data to load
- * if (!isLoaded) return <Loading />;
- *
- * // Add new member (ID is auto-generated)
- * addMember({ name: 'Juan Pérez', cedula: 'V-12345678', rank: 'SGT' });
- *
- * // Update member
- * updateMember('member-id', { status: 'vacaciones' });
- * ```
  */
 
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
 import type { StaffMember } from '@/lib/types';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { StaffMemberSchema } from '@/lib/validations/schemas';
 import { logger } from '@/lib/logger';
 import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
 import { generateId } from '@/lib/utils/id';
+import { createPersonnelRepository } from '@/lib/repositories';
 
 export function usePersonnel() {
   const db = useDatabase();
@@ -46,12 +32,8 @@ export function usePersonnel() {
   useEffect(() => {
     if (!db || !currentWorkspace) return;
 
-    const sub = db.personnel.find({
-      selector: {
-        workspaceId: currentWorkspace
-      },
-      sort: [{ 'order': 'asc' }]
-    }).$.subscribe((data) => {
+    const repo = createPersonnelRepository(db, currentWorkspace);
+    const sub = repo.watchAll().subscribe((data) => {
       setPersonnel(data.map((d) => d.toJSON()) as StaffMember[]);
       setIsLoaded(true);
     });
@@ -63,20 +45,22 @@ export function usePersonnel() {
     async (newMember: Omit<StaffMember, 'id'>) => {
       if (!db || !currentWorkspace) return;
       try {
-        // Generate ID and create complete member object
         const memberWithId: StaffMember = {
           ...newMember,
           id: generateId('personnel'),
           workspaceId: currentWorkspace,
         } as any;
 
-        // Validate with Zod
         const validatedMember = StaffMemberSchema.parse(memberWithId) as StaffMember;
-        await db.personnel.insert(validatedMember);
-        logger.info('Personnel added', { id: validatedMember.id, name: validatedMember.name, workspaceId: currentWorkspace });
+        const repo = createPersonnelRepository(db, currentWorkspace);
+        await repo.add(validatedMember);
+        logger.info('Personnel added', {
+          id: validatedMember.id,
+          name: validatedMember.name,
+          workspaceId: currentWorkspace,
+        });
       } catch (error) {
         logger.error('Failed to add personnel', error);
-        toast.error(getUserFriendlyErrorMessage(error));
         throw error;
       }
     },
@@ -87,7 +71,9 @@ export function usePersonnel() {
     async (members: Omit<StaffMember, 'id'>[]) => {
       if (!db || !currentWorkspace) return { added: [], skipped: 0 };
 
-      const existingCedulas = new Set(personnel.filter((p) => p.cedula).map((p) => p.cedula));
+      const existingCedulas = new Set(
+        personnel.filter((p) => p.cedula).map((p) => p.cedula)
+      );
       const newMembers: StaffMember[] = [];
       let skippedCount = 0;
 
@@ -96,15 +82,14 @@ export function usePersonnel() {
           skippedCount++;
           return;
         }
-
         const id = generateId('personnel');
         newMembers.push({ ...m, id, workspaceId: currentWorkspace } as any);
-
         if (m.cedula) existingCedulas.add(m.cedula);
       });
 
       if (newMembers.length > 0) {
-        await db.personnel.bulkInsert(newMembers);
+        const repo = createPersonnelRepository(db, currentWorkspace);
+        await repo.bulkAdd(newMembers);
       }
 
       return { added: newMembers, skipped: skippedCount };
@@ -114,19 +99,14 @@ export function usePersonnel() {
 
   const updateMember = useCallback(
     async (id: string, updates: Partial<StaffMember>) => {
-      if (!db) return;
+      if (!db || !currentWorkspace) return;
       try {
-        const doc = await db.personnel.findOne(id).exec();
-        if (doc) {
-          await doc.patch(updates);
-          logger.info('Personnel updated', { id, updates, workspaceId: currentWorkspace });
-        } else {
-          logger.warn('Personnel not found for update', { id });
-          toast.error('Miembro del personal no encontrado.');
-          throw new Error('Personnel not found');
-        }
+        const repo = createPersonnelRepository(db, currentWorkspace);
+        await repo.update(id, updates);
+        logger.info('Personnel updated', { id, updates, workspaceId: currentWorkspace });
       } catch (error) {
         logger.error('Failed to update personnel', error);
+        const { toast } = await import('sonner');
         toast.error(getUserFriendlyErrorMessage(error));
         throw error;
       }
@@ -136,71 +116,27 @@ export function usePersonnel() {
 
   const removeMember = useCallback(
     async (id: string) => {
-      if (!db) return;
-      const doc = await db.personnel.findOne(id).exec();
-      if (doc) {
-        await doc.remove();
-      }
+      if (!db || !currentWorkspace) return;
+      const repo = createPersonnelRepository(db, currentWorkspace);
+      await repo.remove(id);
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const removeMembers = useCallback(
     async (ids: string[]) => {
-      if (!db) return;
-      const query = db.personnel.find({
-        selector: {
-          id: { $in: ids },
-        },
-      });
-      await query.remove();
+      if (!db || !currentWorkspace) return;
+      const repo = createPersonnelRepository(db, currentWorkspace);
+      await repo.bulkRemove(ids);
     },
-    [db]
+    [db, currentWorkspace]
   );
 
   const savePersonnel = useCallback(
     async (newPersonnel: StaffMember[]) => {
       if (!db || !currentWorkspace) return;
-      
-      const existingDocs = await db.personnel.find({
-        selector: { workspaceId: currentWorkspace }
-      }).exec();
-      const existingMap = new Map(existingDocs.map((d) => [d.id, d]));
-      
-      // Ensure all incoming personnel have the workspaceId
-      const preparedPersonnel = newPersonnel.map(p => ({ ...p, workspaceId: currentWorkspace }));
-      const newMap = new Map(preparedPersonnel.map((p) => [p.id, p]));
-
-      // Documents to remove
-      const toRemove = existingDocs.filter((d) => !newMap.has(d.id));
-
-      // Documents to insert
-      const toInsert = preparedPersonnel.filter((p) => !existingMap.has(p.id));
-
-      // Documents to update
-      const toUpdate: { doc: any; data: any }[] = [];
-      for (const p of preparedPersonnel) {
-        const existing = existingMap.get(p.id);
-        if (existing) {
-          const existingData = existing.toMutableJSON();
-          const hasChanges = JSON.stringify(existingData) !== JSON.stringify(p);
-          if (hasChanges) {
-            toUpdate.push({ doc: existing, data: p });
-          }
-        }
-      }
-
-      if (toRemove.length > 0) {
-        await Promise.all(toRemove.map((d) => d.remove()));
-      }
-      if (toUpdate.length > 0) {
-        await Promise.all(
-          toUpdate.map(({ doc, data }) => doc.patch(data))
-        );
-      }
-      if (toInsert.length > 0) {
-        await db.personnel.bulkInsert(toInsert);
-      }
+      const repo = createPersonnelRepository(db, currentWorkspace);
+      await repo.syncAll(newPersonnel);
     },
     [db, currentWorkspace]
   );
@@ -215,16 +151,9 @@ export function usePersonnel() {
 
   const clearAllPersonnel = useCallback(async () => {
     if (!db || !currentWorkspace) return;
-    try {
-      const allDocs = await db.personnel.find({
-        selector: { workspaceId: currentWorkspace }
-      }).exec();
-      await Promise.all(allDocs.map((d) => d.remove()));
-      logger.info('All personnel cleared', { workspaceId: currentWorkspace });
-    } catch (error) {
-      logger.error('Failed to clear personnel', error);
-      throw error;
-    }
+    const repo = createPersonnelRepository(db, currentWorkspace);
+    await repo.clearAll();
+    logger.info('All personnel cleared', { workspaceId: currentWorkspace });
   }, [db, currentWorkspace]);
 
   return {
