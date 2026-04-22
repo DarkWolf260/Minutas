@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, MonitorSmartphone } from 'lucide-react';
+import { RefreshCw, Download, MonitorSmartphone } from 'lucide-react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Button } from '@/components/ui/button';
 
 export function PWAStatus() {
     const {
+        offlineReady: [offlineReady, setOfflineReady],
         needRefresh: [needRefresh, setNeedRefresh],
         updateServiceWorker,
     } = useRegisterSW({
@@ -24,7 +25,7 @@ export function PWAStatus() {
 
     useEffect(() => {
         setIsMounted(true);
-        
+
         const handler = (e: any) => {
             // Prevent the mini-infobar from appearing on mobile
             e.preventDefault();
@@ -39,25 +40,29 @@ export function PWAStatus() {
     }, []);
 
     if (!isMounted) return null;
-    
+
+    const close = () => {
+        setOfflineReady(false);
+        setNeedRefresh(false);
+    };
 
     const handleInstall = async () => {
         if (!deferredPrompt) return;
-        
+
         // Show the install prompt
         deferredPrompt.prompt();
-        
+
         // Wait for the user to respond to the prompt
         const { outcome } = await deferredPrompt.userChoice;
         console.log(`PWA Install Choice: ${outcome}`);
-        
+
         // We've used the prompt, and can't use it again
         setDeferredPrompt(null);
     };
 
     return (
         <div
-        className="fixed bottom-20 sm:bottom-4 right-4 z-[100] flex flex-col items-end gap-2 pointer-events-none"
+            className="fixed bottom-20 sm:bottom-4 right-4 z-[100] flex flex-col items-end gap-2 pointer-events-none"
             suppressHydrationWarning
         >
             {/* Install Prompt - Only show if available and no update is pending */}
@@ -71,11 +76,11 @@ export function PWAStatus() {
                         <MonitorSmartphone className="h-3.5 w-3.5 animate-bounce" />
                         <span>Instalar PC Reportes</span>
                         <div className="h-4 w-px bg-primary/20 mx-1" />
-                        <button 
+                        <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setShowInstallBtn(false);
-                            }} 
+                            }}
                             className="hover:bg-primary/20 p-0.5 rounded-full transition-colors"
                         >
                             ×
@@ -98,7 +103,14 @@ export function PWAStatus() {
                 </div>
             )}
 
-
+            {offlineReady && !needRefresh && (
+                <div className="pointer-events-auto">
+                    <div className="h-7 px-3 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-lg transition-all duration-300 backdrop-blur-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-2">
+                        <span>Lista para usar sin conexión</span>
+                        <button onClick={close} className="ml-1 opacity-50 hover:opacity-100">×</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
