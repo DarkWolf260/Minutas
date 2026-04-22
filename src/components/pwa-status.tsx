@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Download, MonitorSmartphone } from 'lucide-react';
+import { RefreshCw, MonitorSmartphone } from 'lucide-react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Button } from '@/components/ui/button';
 
 export function PWAStatus() {
     const {
-        offlineReady: [offlineReady, setOfflineReady],
         needRefresh: [needRefresh, setNeedRefresh],
         updateServiceWorker,
     } = useRegisterSW({
@@ -41,10 +40,6 @@ export function PWAStatus() {
 
     if (!isMounted) return null;
     
-    const close = () => {
-        setOfflineReady(false);
-        setNeedRefresh(false);
-    };
 
     const handleInstall = async () => {
         if (!deferredPrompt) return;
@@ -62,7 +57,7 @@ export function PWAStatus() {
 
     return (
         <div
-            className="fixed bottom-4 right-4 z-[100] flex flex-col items-end gap-2 pointer-events-none"
+        className="fixed bottom-20 sm:bottom-4 right-4 z-[100] flex flex-col items-end gap-2 pointer-events-none"
             suppressHydrationWarning
         >
             {/* Install Prompt - Only show if available and no update is pending */}
@@ -103,14 +98,7 @@ export function PWAStatus() {
                 </div>
             )}
 
-            {offlineReady && !needRefresh && (
-                <div className="pointer-events-auto">
-                     <div className="h-7 px-3 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-lg transition-all duration-300 backdrop-blur-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-2">
-                        <span>Lista para usar sin conexión</span>
-                        <button onClick={close} className="ml-1 opacity-50 hover:opacity-100">×</button>
-                    </div>
-                </div>
-            )}
+
         </div>
     );
 }

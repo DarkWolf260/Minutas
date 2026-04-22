@@ -22,6 +22,7 @@ import {
   MapPin,
   Info,
   Wifi,
+  MessageSquarePlus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -157,6 +158,21 @@ export default function SettingsPage() {
                   <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </Link>
 
+                <Link
+                  to="/settings/feedback"
+                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+                      <MessageSquarePlus className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Enviar Comentarios</p>
+                      <p className="text-xs text-muted-foreground">Sugerencias, errores o cualquier opinión</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </Link>
 
                 <Link
                   to="/settings/borrar-datos"

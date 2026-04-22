@@ -34,31 +34,33 @@ import {
   PlayCircle,
   Zap,
   BookOpen,
+  MessageSquarePlus,
+  Heart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-// ─── Storage keys ─────────────────────────────────────────────────────────────
+// ─── Storage helpers ──────────────────────────────────────────────────────────
 
-const SETUP_DONE_KEY  = 'minutas-setup-complete-v1';
-const SETUP_STEP_KEY  = 'minutas-setup-step';       // persists current step
-const SETUP_WS_KEY    = 'minutas-setup-workspace';  // persists workspace name
+export const SETUP_DONE_KEY = 'minutas-setup-complete-v1';
+export const SETUP_STEP_KEY = 'minutas-setup-step';
+export const SETUP_WS_KEY   = 'minutas-setup-workspace';
 
-function tryGet(key: string): string | null {
+export function tryGet(key: string): string | null {
   try { return localStorage.getItem(key); }
   catch { return sessionStorage.getItem(key); }
 }
-function trySet(key: string, val: string) {
+export function trySet(key: string, val: string) {
   try { localStorage.setItem(key, val); }
   catch { sessionStorage.setItem(key, val); }
 }
-function tryRemove(key: string) {
+export function tryRemove(key: string) {
   try { localStorage.removeItem(key); }
   catch { sessionStorage.removeItem(key); }
 }
 
 // ─── Progress dots ────────────────────────────────────────────────────────────
-// Shown for steps 1–5 (5 active dots)
+// Steps 1–5 show dots (5 total)
 
 const TOTAL_DOTS = 5;
 
@@ -120,9 +122,9 @@ function StepWelcome({ onNext }: { onNext: () => void }) {
 // ─── Step 1: Theme ────────────────────────────────────────────────────────────
 
 const THEME_OPTIONS = [
-  { value: 'light'  as const, label: 'Claro',   icon: Sun,     desc: 'Fondo blanco, ideal para luz del día' },
-  { value: 'system' as const, label: 'Sistema',  icon: Monitor, desc: 'Sigue la preferencia del dispositivo' },
-  { value: 'dark'   as const, label: 'Oscuro',   icon: Moon,    desc: 'Fondo oscuro, más cómodo de noche' },
+  { value: 'light'  as const, label: 'Claro',  icon: Sun,     desc: 'Fondo blanco, ideal para luz del día' },
+  { value: 'system' as const, label: 'Sistema', icon: Monitor, desc: 'Sigue la preferencia del dispositivo' },
+  { value: 'dark'   as const, label: 'Oscuro',  icon: Moon,    desc: 'Fondo oscuro, más cómodo de noche' },
 ];
 
 function StepTheme({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
@@ -227,9 +229,9 @@ function StepWorkspace({
 
       {mode === 'new' ? (
         <div className="space-y-2">
-          <Label htmlFor="workspace-name" className="text-sm font-medium">Nombre del área</Label>
+          <Label htmlFor="ws-name" className="text-sm font-medium">Nombre del área</Label>
           <Input
-            id="workspace-name"
+            id="ws-name"
             placeholder='Ej. "Puesto Norte", "Guardia Nocturna"'
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -288,7 +290,6 @@ const NONE_SENTINEL = '__none__';
 function StepGeneralSettings({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
   const { definitions, saveDefinitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
   const { isLoaded: settingsLoaded } = useSettings();
-
   const [localValues, setLocalValues] = useState<Record<string, string>>(DEFAULT_GENERAL_VALUES);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -323,7 +324,7 @@ function StepGeneralSettings({ onNext, onBack }: { onNext: () => void; onBack: (
   if (!definitionsLoaded || !settingsLoaded) {
     return (
       <div className="flex flex-col max-w-md mx-auto space-y-4 animate-in fade-in duration-300">
-        {[1,2,3,4].map(i => <div key={i} className="h-10 bg-muted rounded animate-pulse" />)}
+        {[1, 2, 3, 4].map(i => <div key={i} className="h-10 bg-muted rounded animate-pulse" />)}
       </div>
     );
   }
@@ -484,38 +485,14 @@ function StepFirstTime({
 
 // ─── Step 6: Workflow guide (first-time only) ─────────────────────────────────
 
-const WORKFLOW_STEPS = [
-  {
-    icon: Users,
-    color: 'bg-blue-500/10 text-blue-600',
-    title: '1. Lista de Personal',
-    desc: 'Registra el equipo que trabaja en tu área. Ve a Personal y añade a cada miembro con su cargo y jerarquía.',
-    path: '/personal',
-  },
-  {
-    icon: Shield,
-    color: 'bg-violet-500/10 text-violet-600',
-    title: '2. Configurar Guardias',
-    desc: 'Define los grupos de guardia (Guardia A, B, etc.) y asigna el personal a cada turno.',
-    path: '/personal',
-  },
-  {
-    icon: ClipboardList,
-    color: 'bg-amber-500/10 text-amber-600',
-    title: '3. Orden del Día',
-    desc: 'Antes de empezar el turno, completa la Orden del Día: relevo de guardia, actividades y observaciones.',
-    path: '/orden-del-dia',
-  },
-  {
-    icon: PlayCircle,
-    color: 'bg-green-500/10 text-green-600',
-    title: '4. Abrir la Guardia',
-    desc: 'Con la Orden del Día completa, abre la guardia. Desde ese momento podrás registrar novedades y generar reportes.',
-    path: '/orden-del-dia',
-  },
+const WORKFLOW_STEPS_DATA = [
+  { icon: Users,        color: 'bg-blue-500/10 text-blue-600',   title: '1. Lista de Personal',   desc: 'Registra el equipo que trabaja en tu área. Ve a Personal y añade a cada miembro con su cargo y jerarquía.' },
+  { icon: Shield,       color: 'bg-violet-500/10 text-violet-600', title: '2. Configurar Guardias', desc: 'Define los grupos de guardia (Guardia A, B, etc.) y asigna el personal a cada turno.' },
+  { icon: ClipboardList,color: 'bg-amber-500/10 text-amber-600',  title: '3. Orden del Día',       desc: 'Antes de empezar el turno, completa la Orden del Día: relevo, actividades y observaciones.' },
+  { icon: PlayCircle,   color: 'bg-green-500/10 text-green-600',  title: '4. Abrir la Guardia',    desc: 'Con la Orden del Día completa, abre la guardia. Desde ese momento podrás registrar novedades y generar reportes.' },
 ];
 
-function StepGuide({ onFinish }: { onFinish: () => void }) {
+function StepGuide({ onNext }: { onNext: () => void }) {
   return (
     <div className="flex flex-col max-w-md mx-auto space-y-6 animate-in fade-in slide-in-from-right-4 duration-400">
       <div className="space-y-2">
@@ -529,7 +506,7 @@ function StepGuide({ onFinish }: { onFinish: () => void }) {
       </div>
 
       <div className="space-y-3">
-        {WORKFLOW_STEPS.map(({ icon: Icon, color, title, desc }) => (
+        {WORKFLOW_STEPS_DATA.map(({ icon: Icon, color, title, desc }) => (
           <div key={title} className="flex gap-4 p-4 rounded-xl border bg-muted/20">
             <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center shrink-0', color)}>
               <Icon className="h-5 w-5" />
@@ -544,18 +521,54 @@ function StepGuide({ onFinish }: { onFinish: () => void }) {
 
       <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-muted-foreground">
         💡 <strong className="text-foreground">Consejo:</strong> Puedes volver a esta guía en cualquier momento desde{' '}
-        <span className="font-medium text-foreground">Configuración → Acerca de</span>.
+        <span className="font-medium text-foreground">Configuración → Acerca de → Guía</span>.
       </div>
 
-      <Button className="w-full h-11" onClick={onFinish}>
-        ¡Entendido, empezar!
-        <ArrowRight className="h-4 w-4 ml-2" />
+      <Button className="w-full h-11" onClick={onNext}>
+        Continuar<ChevronRight className="h-4 w-4 ml-1" />
       </Button>
     </div>
   );
 }
 
-// ─── Step 7: Done ─────────────────────────────────────────────────────────────
+// ─── Step 7: Feedback CTA ─────────────────────────────────────────────────────
+
+function StepFeedback({ onFinish }: { onFinish: () => void }) {
+  return (
+    <div className="flex flex-col items-center text-center max-w-md mx-auto space-y-8 animate-in fade-in slide-in-from-right-4 duration-400">
+      <div className="h-20 w-20 rounded-3xl bg-indigo-500/10 flex items-center justify-center">
+        <MessageSquarePlus className="h-10 w-10 text-indigo-600" />
+      </div>
+      <div className="space-y-3">
+        <h2 className="text-2xl font-bold tracking-tight">¡Tu opinión importa!</h2>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Si encuentras algún error, tienes una sugerencia o simplemente quieres compartir tu experiencia,
+          puedes enviarnos un comentario en cualquier momento desde{' '}
+          <strong className="text-foreground">Configuración → Enviar Comentarios</strong>.
+        </p>
+      </div>
+      <div className="w-full bg-muted/40 rounded-xl p-4 text-left space-y-2.5 border text-sm">
+        {[
+          'Puedes enviar tantos comentarios como necesites',
+          'Reporta errores, bugs o comportamientos inesperados',
+          'Propón nuevas funciones o mejoras',
+          'Cada mensaje es leído y tomado en cuenta',
+        ].map((text, i) => (
+          <div key={i} className="flex items-center gap-3 text-muted-foreground">
+            <Heart className="h-4 w-4 text-indigo-500 shrink-0" />
+            <span>{text}</span>
+          </div>
+        ))}
+      </div>
+      <Button size="lg" className="w-full text-base h-12 shadow-md" onClick={onFinish}>
+        ¡Entendido, empezar!
+        <ArrowRight className="h-5 w-5 ml-2" />
+      </Button>
+    </div>
+  );
+}
+
+// ─── Step 8: Done ─────────────────────────────────────────────────────────────
 
 function StepDone({ workspaceName }: { workspaceName: string }) {
   return (
@@ -574,8 +587,7 @@ function StepDone({ workspaceName }: { workspaceName: string }) {
   );
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
-
+// ─── Main Setup Page ──────────────────────────────────────────────────────────
 /**
  * Steps:
  *  0  Welcome
@@ -584,40 +596,33 @@ function StepDone({ workspaceName }: { workspaceName: string }) {
  *  3  General Settings
  *  4  Templates
  *  5  First-time question
- *  6  Guide (first-time only; skipped for returning users)
- *  7  Done
+ *  6  Guide (first-time only)
+ *  7  Feedback CTA (first-time only; skipped for returning users)
+ *  8  Done
  *
  * Progress dots shown for steps 1–5 (TOTAL_DOTS = 5).
- * Current step is persisted in localStorage so users resume after closing.
+ * Current step persists in localStorage so users resume after reload.
  */
 
-export function WelcomeDialog() {
-  const [show, setShow]               = useState(false);
-  const [step, setStepState]          = useState(0);
+export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?: boolean) => void }) {
+  const [step, setStepState] = useState(0);
   const [workspaceName, setWorkspaceName] = useState('');
-
   const { createWorkspace, switchWorkspace, workspaces } = useWorkspaceManager();
   const { isLoaded } = useSettings();
 
-  // Wrap setStep to also persist
   const setStep = (s: number) => {
     setStepState(s);
     trySet(SETUP_STEP_KEY, String(s));
   };
 
-  // On mount: only show if setup isn't done; restore persisted step if any
+  // Restore persisted step on mount (the gate in welcome-gate.tsx already verified setup is not done)
   useEffect(() => {
     if (!isLoaded) return;
-    const done = tryGet(SETUP_DONE_KEY);
-    if (done) return;
-    setShow(true);
     const savedStep = tryGet(SETUP_STEP_KEY);
     const savedWs   = tryGet(SETUP_WS_KEY);
     if (savedStep) setStepState(Number(savedStep));
     if (savedWs)   setWorkspaceName(savedWs);
   }, [isLoaded]);
-
-  // ─── Finish helpers ──────────────────────────────────────────────────────
 
   const markDone = () => {
     trySet(SETUP_DONE_KEY, 'true');
@@ -628,14 +633,9 @@ export function WelcomeDialog() {
   const finish = (goToTemplates = false) => {
     markDone();
     if (goToTemplates) trySet('minutas-template-bootstrap-ok', 'true');
-    setStepState(7); // done screen (no need to persist — we're done)
-    setTimeout(() => {
-      setShow(false);
-      if (goToTemplates) window.location.href = '/plantillas';
-    }, 1800);
+    setStepState(8); // done screen
+    setTimeout(() => onComplete(goToTemplates), 1800);
   };
-
-  // ─── Workspace continue ──────────────────────────────────────────────────
 
   const handleWorkspaceContinue = async (name: string, isExisting: boolean) => {
     setWorkspaceName(name);
@@ -654,13 +654,15 @@ export function WelcomeDialog() {
     setStep(3);
   };
 
-  if (!show) return null;
+  // Step 2 & 3 need the database. Step 0, 1, 4-8 do not strictly need it to render,
+  // though Step 4-8 are usually reached after Step 2 which ensures DB is ready.
 
   const showProgress = step >= 1 && step <= 5;
   const progressCurrent = step - 1;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 backdrop-blur-sm p-4 overflow-y-auto">
+      {/* Ambient blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
@@ -677,11 +679,7 @@ export function WelcomeDialog() {
         )}
 
         {step === 0 && <StepWelcome onNext={() => setStep(1)} />}
-
-        {step === 1 && (
-          <StepTheme onNext={() => setStep(2)} onBack={() => setStep(0)} />
-        )}
-
+        {step === 1 && <StepTheme onNext={() => setStep(2)} onBack={() => setStep(0)} />}
         {step === 2 && (
           <StepWorkspace
             existingWorkspaces={workspaces}
@@ -689,11 +687,11 @@ export function WelcomeDialog() {
             onBack={() => setStep(1)}
           />
         )}
-
         {step === 3 && (
-          <StepGeneralSettings onNext={() => setStep(4)} onBack={() => setStep(2)} />
+          <div className="animate-in fade-in duration-500">
+            <StepGeneralSettings onNext={() => setStep(4)} onBack={() => setStep(2)} />
+          </div>
         )}
-
         {step === 4 && (
           <StepTemplates
             onNext={() => { trySet('minutas-template-bootstrap-ok', 'true'); setStep(5); }}
@@ -701,20 +699,16 @@ export function WelcomeDialog() {
             onSkip={() => setStep(5)}
           />
         )}
-
         {step === 5 && (
           <StepFirstTime
             onFirstTime={() => setStep(6)}
-            onReturning={() => finish(false)}
+            onReturning={() => setStep(7)}
             onBack={() => setStep(4)}
           />
         )}
-
-        {step === 6 && (
-          <StepGuide onFinish={() => finish(false)} />
-        )}
-
-        {step === 7 && <StepDone workspaceName={workspaceName} />}
+        {step === 6 && <StepGuide onNext={() => setStep(7)} />}
+        {step === 7 && <StepFeedback onFinish={() => finish(false)} />}
+        {step === 8 && <StepDone workspaceName={workspaceName} />}
       </div>
     </div>
   );

@@ -42,7 +42,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGuards } from '@/hooks/use-guards';
 import { useSettings } from '@/hooks/use-settings';
 import { useRoles } from '@/hooks/use-roles';
-import { usePersonnel } from '@/hooks/use-personnel';
 import { useTemplates } from '@/hooks/use-templates';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -95,7 +94,6 @@ export default function ReporteFinalPage() {
   const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
   const { roles, isLoaded: rolesLoadedHook } = useRoles();
   const { templates, configs, isLoaded: templatesLoaded } = useTemplates();
-  const { personnel } = usePersonnel();
   const { definitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
   const navigate = useNavigate();
 
@@ -342,30 +340,18 @@ export default function ReporteFinalPage() {
   }, [manualNovedades]);
 
   const finishedReports = useMemo(() => {
-    const now = new Date();
-    // Ajustar a las 08:00 AM de hoy o de ayer dependiendo de la hora actual
-    const shiftStart = new Date(now);
-    if (now.getHours() < 8) {
-      shiftStart.setDate(now.getDate() - 1);
-    }
-    shiftStart.setHours(8, 0, 0, 0);
-    
     const currentGuardId = activeGuard?.id;
     
     return reports.filter((report) => {
+      // Only include completed reports
       if (report.status !== 'Finalizado') return false;
       
-      // 1. Filtrar por guardia si está definida
-      const reportGuard = findValueInFormData(report.formData, 'Guardia');
-      if (currentGuardId && reportGuard && String(reportGuard).trim().toUpperCase() !== String(currentGuardId).trim().toUpperCase()) {
-        return false;
-      }
-
-      // 2. Filtrar por fecha
-      const reportDate = getReportDateTime(report);
-      if (reportDate) {
-        // En tiempo real, desde el inicio del turno (08:00)
-        if (reportDate < shiftStart) return false;
+      // Filter by active guard if defined — include ALL dates/times within that guard
+      if (currentGuardId) {
+        const reportGuard = findValueInFormData(report.formData, 'Guardia');
+        if (reportGuard && String(reportGuard).trim().toUpperCase() !== String(currentGuardId).trim().toUpperCase()) {
+          return false;
+        }
       }
       
       return true;
@@ -389,6 +375,7 @@ export default function ReporteFinalPage() {
       : (activeGuard?.id || settings.activeGuardId || '');
 
     const getLeaderName = (roleName: string) => {
+      // Only use the Orden del Día draft — never fall back to the global personnel list
       if (staffForReport) {
         const key = Object.keys(staffForReport).find(
           (k) => k.toLowerCase() === roleName.toLowerCase()
@@ -399,21 +386,6 @@ export default function ReporteFinalPage() {
           if (firstMember) {
             return formatStaffMemberForReport(firstMember).trim();
           }
-        }
-      }
-
-      // Fallback a personal global si no está en la guardia específica
-      if (personnel) {
-        const roleMatch = personnel.find(
-          (p) => {
-            const pRoleId = (p.roleId || '').toLowerCase();
-            const pCargo = (p.cargo || '').toLowerCase();
-            const target = roleName.toLowerCase();
-            return pRoleId === target || pCargo === target || pRoleId.includes(target);
-          }
-        );
-        if (roleMatch) {
-          return formatStaffMemberForReport(roleMatch).trim();
         }
       }
       return '';

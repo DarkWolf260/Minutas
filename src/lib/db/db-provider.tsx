@@ -10,13 +10,14 @@ import { LoadingScreen } from '@/components/loading-screen';
 
 interface DatabaseProviderProps {
   children: React.ReactNode;
+  setupMode?: boolean;
 }
 
 const STORAGE_KEY_ACTIVE = 'active-workspace';
 const STORAGE_KEY_LIST = 'workspaces-list';
 const DEFAULT_WORKSPACE = 'minutasdb';
 
-export function DatabaseProvider({ children }: DatabaseProviderProps) {
+export function DatabaseProvider({ children, setupMode = false }: DatabaseProviderProps) {
   const [db, setDb] = useState<MinutasDatabase | null>(null);
   const [currentWorkspace, setCurrentWorkspace] = useState<string>(DEFAULT_WORKSPACE);
   const [workspaces, setWorkspaces] = useState<string[]>([DEFAULT_WORKSPACE]);
@@ -59,8 +60,10 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
         
         if (mounted) {
           await migrateData(database);
-          // Small delay for initial splash feel
-          await new Promise(resolve => setTimeout(resolve, 800));
+          // Small delay for initial splash feel (skip in setup mode)
+          if (!setupMode) {
+            await new Promise(resolve => setTimeout(resolve, 800));
+          }
           setDb(database);
           logger.info(`RxDB Central instance initialized successfully`);
         }
@@ -326,7 +329,7 @@ export function DatabaseProvider({ children }: DatabaseProviderProps) {
     );
   }
 
-  if (!db) {
+  if (!db && !setupMode) {
     return <LoadingScreen message={`Iniciando área de trabajo: ${currentWorkspace}...`} />;
   }
 
