@@ -1,17 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { 
-  ChevronLeft, 
-  Coffee, 
-  Code2, 
-  Globe, 
-  Database, 
-  FileText, 
-  ClipboardCheck, 
-  Activity, 
-  Truck, 
-  AlertTriangle, 
-  GraduationCap, 
-  Presentation 
+import {
+  ChevronLeft,
+  Coffee,
+  Code2,
+  Globe,
+  Database,
+  FileText,
+  ClipboardCheck,
+  Activity,
+  Truck,
+  AlertTriangle,
+  GraduationCap,
+  Presentation
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -107,10 +107,10 @@ export default function SettingsAboutPage() {
                   </div>
                   <blockquote className="relative p-6 rounded-2xl bg-muted/30 border-l-4 border-primary">
                     <p className="italic text-sm text-muted-foreground leading-relaxed">
-                      "Esta aplicación fue hecha con la flojera que me daba seguir editando en Word las
-                      minutas, un esclavo de IA y bastante paciencia para explicarle al esclavo toda la
-                      lógica que me saqué del forro para que funcione esta aplicación en un lenguaje y framework
-                      de los cuales ni me molesté en aprender su sintaxis."
+                      "Esta aplicación fue hecha con la flojera que me daba seguir haciendo minutas en Word,
+                      un esclavo de inteligencia artificial y bastante paciencia para explicarle a este toda
+                      la lógica que me saqué del forro para que funcione esta vaina, todo esto con tecnologías
+                      que ni me molesté en averiguar como funcionan"
                     </p>
                     <div className="mt-4 flex items-center justify-center gap-4">
                       <div className="h-px flex-1 bg-muted-foreground/10" />
@@ -142,8 +142,8 @@ export default function SettingsAboutPage() {
               </CardHeader>
               <CardContent className="grid grid-cols-1 gap-3">
                 {templates.map((template, idx) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className="flex items-center gap-4 p-4 rounded-xl border bg-muted/5 hover:bg-muted/10 transition-colors group"
                   >
                     <div className={cn("p-2 rounded-lg bg-background shadow-sm border group-hover:scale-110 transition-transform", template.color)}>

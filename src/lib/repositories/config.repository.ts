@@ -39,7 +39,7 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
   const initSettings = async (defaults: AppSettings) =>
     silentWrite(
       () =>
-        db.configs.insert({
+        db.configs.upsert({
           id: DbKeys.settings(ws),
           workspaceId: ws,
           type: 'settings',
@@ -95,7 +95,7 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
   const initProfile = async <T extends object>(defaults: T) =>
     silentWrite(
       () =>
-        db.configs.insert({
+        db.configs.upsert({
           id: DbKeys.profile(ws),
           workspaceId: ws,
           type: 'profile',

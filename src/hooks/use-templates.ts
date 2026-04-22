@@ -191,13 +191,26 @@ export function useTemplates() {
     }
   }, [isTemplatesLoaded, definitionsLoaded, templates, db, currentWorkspace, parsedTemplates, globalDefinitions]);
 
-  // Bootstrap initial templates from Cloud if local list is empty
+  // Bootstrap initial templates from Cloud ONLY if:
+  //   1. No local templates exist yet
+  //   2. The user explicitly opted in during onboarding (minutas-template-bootstrap-ok)
+  //   3. The setup flow has been completed (minutas-setup-complete-v1)
   const [isBootstrapping, setIsBootstrapping] = useState(false);
 
   useEffect(() => {
     if (isTemplatesLoaded && templates.length === 0 && db && currentWorkspace) {
       // Check global lock for this specific workspace
       if (bootstrapLocks[currentWorkspace]) return;
+
+      // Respect the user's choice from onboarding — don't auto-download if they skipped
+      let userOptedIn = false;
+      try {
+        userOptedIn = localStorage.getItem('minutas-template-bootstrap-ok') === 'true';
+      } catch {
+        userOptedIn = sessionStorage.getItem('minutas-template-bootstrap-ok') === 'true';
+      }
+      if (!userOptedIn) return;
+
       bootstrapLocks[currentWorkspace] = true;
       
       const doBootstrap = async () => {
@@ -241,6 +254,13 @@ export function useTemplates() {
             toast.success(`${newTemplates.length} plantillas sincronizadas automáticamente.`, { id: toastId });
           } else {
             toast.dismiss(toastId);
+          }
+
+          // Clear the one-time bootstrap flag so it doesn't run again
+          try {
+            localStorage.removeItem('minutas-template-bootstrap-ok');
+          } catch {
+            sessionStorage.removeItem('minutas-template-bootstrap-ok');
           }
         } catch (err) {
           logger.error('Failed to bootstrap templates', err);

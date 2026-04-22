@@ -1,84 +1,721 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from '@/components/ui/dialog';
+import { useWorkspaceManager } from '@/lib/db/db-context';
+import { useSettings } from '@/hooks/use-settings';
+import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+import { useTheme } from '@/components/theme-provider';
 import { Button } from '@/components/ui/button';
-import { Rocket } from 'lucide-react';
-import { logger } from '@/lib/logger';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Layers,
+  ChevronRight,
+  ChevronLeft,
+  CheckCircle2,
+  Sparkles,
+  FileText,
+  ArrowRight,
+  Settings2,
+  Sun,
+  Moon,
+  Monitor,
+  Palette,
+  Users,
+  Shield,
+  ClipboardList,
+  PlayCircle,
+  Zap,
+  BookOpen,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
-const WELCOME_MESSAGE_KEY = 'report-app-welcome-seen';
+// ─── Storage keys ─────────────────────────────────────────────────────────────
 
-export function WelcomeDialog() {
-  const [isOpen, setIsOpen] = useState(false);
+const SETUP_DONE_KEY  = 'minutas-setup-complete-v1';
+const SETUP_STEP_KEY  = 'minutas-setup-step';       // persists current step
+const SETUP_WS_KEY    = 'minutas-setup-workspace';  // persists workspace name
 
-  useEffect(() => {
-    // This effect runs only on the client side.
-    try {
-      const hasSeenMessage = localStorage.getItem(WELCOME_MESSAGE_KEY);
-      if (!hasSeenMessage) {
-        setIsOpen(true);
-      }
-    } catch (error) {
-      // localStorage can be disabled in some environments (e.g. private browsing)
-      logger.warn('Could not access localStorage', { feature: 'UI', metadata: { component: 'WelcomeDialog', error } });
-      // We can still show it once per session if localStorage is off
-      if (!sessionStorage.getItem(WELCOME_MESSAGE_KEY)) {
-        setIsOpen(true);
-      }
-    }
-  }, []);
+function tryGet(key: string): string | null {
+  try { return localStorage.getItem(key); }
+  catch { return sessionStorage.getItem(key); }
+}
+function trySet(key: string, val: string) {
+  try { localStorage.setItem(key, val); }
+  catch { sessionStorage.setItem(key, val); }
+}
+function tryRemove(key: string) {
+  try { localStorage.removeItem(key); }
+  catch { sessionStorage.removeItem(key); }
+}
 
-  const handleClose = () => {
-    try {
-      localStorage.setItem(WELCOME_MESSAGE_KEY, 'true');
-    } catch (error) {
-      logger.warn('Could not save to localStorage', { feature: 'UI', metadata: { component: 'WelcomeDialog', error } });
-      // Fallback to sessionStorage for the current session
-      sessionStorage.setItem(WELCOME_MESSAGE_KEY, 'true');
-    }
-    setIsOpen(false);
+// ─── Progress dots ────────────────────────────────────────────────────────────
+// Shown for steps 1–5 (5 active dots)
+
+const TOTAL_DOTS = 5;
+
+function ProgressDots({ current, total }: { current: number; total: number }) {
+  return (
+    <div className="flex items-center gap-2">
+      {Array.from({ length: total }).map((_, i) => (
+        <div
+          key={i}
+          className={cn(
+            'h-1.5 rounded-full transition-all duration-300',
+            i < current ? 'bg-primary w-6' : i === current ? 'bg-primary/60 w-4' : 'bg-muted w-3'
+          )}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── Step 0: Welcome ──────────────────────────────────────────────────────────
+
+function StepWelcome({ onNext }: { onNext: () => void }) {
+  return (
+    <div className="flex flex-col items-center text-center max-w-md mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="relative">
+        <div className="absolute inset-0 rounded-3xl bg-primary/20 blur-2xl scale-110" />
+        <img
+          src="/icons/icon-192x192.png"
+          alt="Minutas"
+          className="relative h-32 w-32 rounded-3xl shadow-2xl ring-2 ring-white/20 object-contain"
+        />
+      </div>
+      <div className="space-y-3">
+        <h1 className="text-3xl font-bold tracking-tight">Bienvenido a Minutas</h1>
+        <p className="text-muted-foreground leading-relaxed">
+          Tu app de gestión de reportes y novedades. Configura tu espacio de trabajo en unos pocos pasos.
+        </p>
+      </div>
+      <div className="w-full bg-muted/40 rounded-xl p-4 text-left space-y-2.5 border text-sm">
+        {[
+          'Todo se guarda localmente en tu dispositivo',
+          'Ningún dato se comparte con terceros',
+          'Puedes sincronizar entre dispositivos opcionalmente',
+        ].map((text, i) => (
+          <div key={i} className="flex items-center gap-3 text-muted-foreground">
+            <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+            <span>{text}</span>
+          </div>
+        ))}
+      </div>
+      <Button size="lg" className="w-full text-base h-12 shadow-md" onClick={onNext}>
+        Comenzar configuración
+        <ArrowRight className="h-5 w-5 ml-2" />
+      </Button>
+    </div>
+  );
+}
+
+// ─── Step 1: Theme ────────────────────────────────────────────────────────────
+
+const THEME_OPTIONS = [
+  { value: 'light'  as const, label: 'Claro',   icon: Sun,     desc: 'Fondo blanco, ideal para luz del día' },
+  { value: 'system' as const, label: 'Sistema',  icon: Monitor, desc: 'Sigue la preferencia del dispositivo' },
+  { value: 'dark'   as const, label: 'Oscuro',   icon: Moon,    desc: 'Fondo oscuro, más cómodo de noche' },
+];
+
+function StepTheme({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
+  const { theme, setTheme } = useTheme();
+  return (
+    <div className="flex flex-col max-w-md mx-auto space-y-6 animate-in fade-in slide-in-from-right-4 duration-400">
+      <div className="space-y-2">
+        <div className="h-12 w-12 rounded-2xl bg-violet-500/10 flex items-center justify-center mb-4">
+          <Palette className="h-6 w-6 text-violet-600" />
+        </div>
+        <h2 className="text-2xl font-bold tracking-tight">Apariencia</h2>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Elige el tema visual de la aplicación. Puedes cambiarlo en cualquier momento.
+        </p>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        {THEME_OPTIONS.map(({ value, label, icon: Icon, desc }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setTheme(value)}
+            className={cn(
+              'flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all',
+              theme === value
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-muted-foreground/40 hover:bg-muted/30'
+            )}
+          >
+            <Icon className={cn('h-7 w-7', theme === value ? 'text-primary' : 'text-muted-foreground')} />
+            <span className={cn('text-sm font-semibold', theme === value ? 'text-primary' : 'text-foreground')}>
+              {label}
+            </span>
+            <span className="text-[10px] text-muted-foreground text-center leading-tight">{desc}</span>
+          </button>
+        ))}
+      </div>
+      <div className="flex gap-3 pt-2">
+        <Button variant="outline" onClick={onBack} className="flex-1">
+          <ChevronLeft className="h-4 w-4 mr-1" />Atrás
+        </Button>
+        <Button className="flex-1" onClick={onNext}>
+          Continuar<ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Step 2: Workspace ────────────────────────────────────────────────────────
+
+function StepWorkspace({
+  existingWorkspaces,
+  onNext,
+  onBack,
+}: {
+  existingWorkspaces: string[];
+  onNext: (name: string, isExisting: boolean) => void;
+  onBack: () => void;
+}) {
+  const [mode, setMode] = useState<'new' | 'existing'>(
+    existingWorkspaces.length > 0 ? 'existing' : 'new'
+  );
+  const [name, setName] = useState('');
+  const [selected, setSelected] = useState(existingWorkspaces[0] ?? '');
+
+  const handleContinue = () => {
+    if (mode === 'new' && name.trim()) onNext(name.trim(), false);
+    if (mode === 'existing' && selected) onNext(selected, true);
   };
 
+  const canContinue = mode === 'new' ? !!name.trim() : !!selected;
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Rocket className="h-6 w-6 text-primary" />
-            ¡Bienvenido al Generador de Reportes!
-          </DialogTitle>
-          <DialogDescription className="pt-2">
-            Una nueva herramienta para simplificar tu trabajo diario.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="py-4 text-sm text-muted-foreground space-y-4">
-          <p>
-            Esta aplicación se encuentra en desarrollo y fue creada para facilitar la creación de
-            reportes en base a plantillas que tú mismo puedes subir y personalizar.
-          </p>
-          <p className="font-semibold text-foreground">
-            Tu privacidad es importante: todos los datos que ingreses, incluyendo plantillas y
-            reportes, se guardan exclusivamente de forma local en tu navegador. No se comparte
-            ninguna información con terceros.
-          </p>
+    <div className="flex flex-col max-w-md mx-auto space-y-6 animate-in fade-in slide-in-from-right-4 duration-400">
+      <div className="space-y-2">
+        <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-4">
+          <Layers className="h-6 w-6 text-emerald-600" />
         </div>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button type="button" onClick={handleClose}>
-              ¡Entendido!
-            </Button>
-          </DialogClose>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <h2 className="text-2xl font-bold tracking-tight">Área de Trabajo</h2>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Organiza tus reportes, plantillas y personal por área. Puedes crear varias (ej. por puesto o turno).
+        </p>
+      </div>
+
+      {existingWorkspaces.length > 0 && (
+        <div className="flex bg-muted/50 rounded-lg p-1 gap-1">
+          {(['existing', 'new'] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMode(m)}
+              className={cn(
+                'flex-1 text-sm py-1.5 rounded-md transition-all font-medium',
+                mode === m ? 'bg-background shadow text-foreground' : 'text-muted-foreground'
+              )}
+            >
+              {m === 'existing' ? 'Usar existente' : 'Crear nueva'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {mode === 'new' ? (
+        <div className="space-y-2">
+          <Label htmlFor="workspace-name" className="text-sm font-medium">Nombre del área</Label>
+          <Input
+            id="workspace-name"
+            placeholder='Ej. "Puesto Norte", "Guardia Nocturna"'
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && canContinue && handleContinue()}
+            autoFocus
+            className="h-11"
+          />
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Seleccionar área de trabajo</Label>
+          <Select value={selected} onValueChange={setSelected}>
+            <SelectTrigger className="h-11"><SelectValue placeholder="Elige un área..." /></SelectTrigger>
+            <SelectContent className="z-[200]">
+              {existingWorkspaces.map((ws) => (
+                <SelectItem key={ws} value={ws}>{ws}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      <div className="flex gap-3 pt-2">
+        <Button variant="outline" onClick={onBack} className="flex-1">
+          <ChevronLeft className="h-4 w-4 mr-1" />Atrás
+        </Button>
+        <Button className="flex-1" disabled={!canContinue} onClick={handleContinue}>
+          Continuar<ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Step 3: General Settings ─────────────────────────────────────────────────
+
+const GENERAL_FIELD_META: { key: string; label: string; options?: { label: string; value: string }[] }[] = [
+  {
+    key: 'Municipio', label: 'Municipio',
+    options: [
+      { label: '(Ninguno)', value: '' },
+      { label: 'Guanta', value: 'Guanta' },
+      { label: 'Juan Antonio Sotillo', value: 'Juan Antonio Sotillo' },
+      { label: 'Urbaneja', value: 'Urbaneja' },
+    ],
+  },
+  { key: 'Estado', label: 'Estado',  options: [{ label: 'Anzoátegui', value: 'Anzoátegui' }] },
+  { key: 'REDAN',  label: 'REDAN',   options: [{ label: 'Oriente', value: 'Oriente' }] },
+  { key: 'ZOEDAN', label: 'ZOEDAN',  options: [{ label: 'Anzoátegui', value: 'Anzoátegui' }] },
+];
+const DEFAULT_GENERAL_VALUES: Record<string, string> = {
+  Municipio: '', Estado: 'Anzoátegui', REDAN: 'Oriente', ZOEDAN: 'Anzoátegui',
+};
+const NONE_SENTINEL = '__none__';
+
+function StepGeneralSettings({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
+  const { definitions, saveDefinitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
+  const { isLoaded: settingsLoaded } = useSettings();
+
+  const [localValues, setLocalValues] = useState<Record<string, string>>(DEFAULT_GENERAL_VALUES);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!definitionsLoaded) return;
+    setLocalValues((prev) => {
+      const merged = { ...prev };
+      GENERAL_FIELD_META.forEach(({ key }) => {
+        const stored = definitions[key]?.value;
+        if (stored !== undefined) merged[key] = stored;
+      });
+      return merged;
+    });
+  }, [definitionsLoaded, definitions]);
+
+  const handleSaveAndContinue = async () => {
+    setIsSaving(true);
+    try {
+      const newDefs = { ...definitions };
+      GENERAL_FIELD_META.forEach(({ key }) => {
+        newDefs[key] = {
+          ...(newDefs[key] ?? { label: key, type: 'predefined', sectionId: 'default' }),
+          value: localValues[key] ?? '',
+        };
+      });
+      await saveDefinitions(newDefs);
+      onNext();
+    } catch { toast.error('Error al guardar la configuración.'); }
+    finally { setIsSaving(false); }
+  };
+
+  if (!definitionsLoaded || !settingsLoaded) {
+    return (
+      <div className="flex flex-col max-w-md mx-auto space-y-4 animate-in fade-in duration-300">
+        {[1,2,3,4].map(i => <div key={i} className="h-10 bg-muted rounded animate-pulse" />)}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col max-w-md mx-auto space-y-6 animate-in fade-in slide-in-from-right-4 duration-400">
+      <div className="space-y-2">
+        <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+          <Settings2 className="h-6 w-6 text-primary" />
+        </div>
+        <h2 className="text-2xl font-bold tracking-tight">Ajustes Generales</h2>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Estos valores se usarán automáticamente en tus reportes. Puedes cambiarlos en cualquier momento.
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        {GENERAL_FIELD_META.map(({ key, label, options }) => (
+          <div key={key} className="space-y-1.5">
+            <Label htmlFor={`gen-${key}`} className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              {label}
+            </Label>
+            {options ? (
+              <Select
+                value={localValues[key] === '' ? NONE_SENTINEL : (localValues[key] ?? NONE_SENTINEL)}
+                onValueChange={(v) => setLocalValues((p) => ({ ...p, [key]: v === NONE_SENTINEL ? '' : v }))}
+              >
+                <SelectTrigger id={`gen-${key}`} className="h-9 bg-background text-sm w-full">
+                  <SelectValue placeholder="Seleccionar..." />
+                </SelectTrigger>
+                <SelectContent className="z-[200]">
+                  {options.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value === '' ? NONE_SENTINEL : opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                id={`gen-${key}`}
+                value={localValues[key] ?? ''}
+                onChange={(e) => setLocalValues((p) => ({ ...p, [key]: e.target.value }))}
+                className="h-9 bg-background text-sm"
+              />
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-3 pt-2">
+        <Button variant="outline" onClick={onBack} className="flex-1">
+          <ChevronLeft className="h-4 w-4 mr-1" />Atrás
+        </Button>
+        <Button className="flex-1" onClick={handleSaveAndContinue} disabled={isSaving}>
+          {isSaving ? 'Guardando...' : 'Guardar y Continuar'}<ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Step 4: Templates ────────────────────────────────────────────────────────
+
+function StepTemplates({ onNext, onBack, onSkip }: { onNext: () => void; onBack: () => void; onSkip: () => void }) {
+  return (
+    <div className="flex flex-col max-w-md mx-auto space-y-8 animate-in fade-in slide-in-from-right-4 duration-400">
+      <div className="space-y-2">
+        <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+          <FileText className="h-6 w-6 text-primary" />
+        </div>
+        <h2 className="text-2xl font-bold tracking-tight">Plantillas de Reporte</h2>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Las plantillas definen la estructura de tus reportes. Descarga plantillas base o créalas desde cero.
+        </p>
+      </div>
+      <div className="space-y-3">
+        <button type="button" onClick={onNext}
+          className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors text-left group">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <Sparkles className="h-5 w-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm">Descargar Plantillas de Nube</p>
+            <p className="text-xs text-muted-foreground">Plantillas listas para usar de la comunidad</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+        </button>
+        <button type="button" onClick={onSkip}
+          className="w-full flex items-center gap-4 p-4 rounded-xl border hover:bg-muted/50 transition-colors text-left group">
+          <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
+            <FileText className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm">Lo haré más tarde</p>
+            <p className="text-xs text-muted-foreground">Empezar sin plantillas y agregarlas después</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+        </button>
+      </div>
+      <Button variant="ghost" onClick={onBack} className="self-start -ml-2">
+        <ChevronLeft className="h-4 w-4 mr-1" />Atrás
+      </Button>
+    </div>
+  );
+}
+
+// ─── Step 5: First time? ──────────────────────────────────────────────────────
+
+function StepFirstTime({
+  onFirstTime,
+  onReturning,
+  onBack,
+}: {
+  onFirstTime: () => void;
+  onReturning: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="flex flex-col max-w-md mx-auto space-y-8 animate-in fade-in slide-in-from-right-4 duration-400">
+      <div className="space-y-2">
+        <div className="h-12 w-12 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-4">
+          <Zap className="h-6 w-6 text-amber-600" />
+        </div>
+        <h2 className="text-2xl font-bold tracking-tight">¿Primera vez?</h2>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Cuéntanos un poco sobre tu experiencia con Minutas para mostrarte la información más relevante.
+        </p>
+      </div>
+      <div className="space-y-3">
+        <button type="button" onClick={onFirstTime}
+          className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 transition-colors text-left group">
+          <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+            <BookOpen className="h-5 w-5 text-amber-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm">Sí, es mi primera vez</p>
+            <p className="text-xs text-muted-foreground">Quiero ver cómo funciona el flujo de trabajo</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+        </button>
+        <button type="button" onClick={onReturning}
+          className="w-full flex items-center gap-4 p-4 rounded-xl border hover:bg-muted/50 transition-colors text-left group">
+          <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
+            <Zap className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm">Ya he usado Minutas antes</p>
+            <p className="text-xs text-muted-foreground">Saltar la guía e ir directamente a la app</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+        </button>
+      </div>
+      <Button variant="ghost" onClick={onBack} className="self-start -ml-2">
+        <ChevronLeft className="h-4 w-4 mr-1" />Atrás
+      </Button>
+    </div>
+  );
+}
+
+// ─── Step 6: Workflow guide (first-time only) ─────────────────────────────────
+
+const WORKFLOW_STEPS = [
+  {
+    icon: Users,
+    color: 'bg-blue-500/10 text-blue-600',
+    title: '1. Lista de Personal',
+    desc: 'Registra el equipo que trabaja en tu área. Ve a Personal y añade a cada miembro con su cargo y jerarquía.',
+    path: '/personal',
+  },
+  {
+    icon: Shield,
+    color: 'bg-violet-500/10 text-violet-600',
+    title: '2. Configurar Guardias',
+    desc: 'Define los grupos de guardia (Guardia A, B, etc.) y asigna el personal a cada turno.',
+    path: '/personal',
+  },
+  {
+    icon: ClipboardList,
+    color: 'bg-amber-500/10 text-amber-600',
+    title: '3. Orden del Día',
+    desc: 'Antes de empezar el turno, completa la Orden del Día: relevo de guardia, actividades y observaciones.',
+    path: '/orden-del-dia',
+  },
+  {
+    icon: PlayCircle,
+    color: 'bg-green-500/10 text-green-600',
+    title: '4. Abrir la Guardia',
+    desc: 'Con la Orden del Día completa, abre la guardia. Desde ese momento podrás registrar novedades y generar reportes.',
+    path: '/orden-del-dia',
+  },
+];
+
+function StepGuide({ onFinish }: { onFinish: () => void }) {
+  return (
+    <div className="flex flex-col max-w-md mx-auto space-y-6 animate-in fade-in slide-in-from-right-4 duration-400">
+      <div className="space-y-2">
+        <div className="h-12 w-12 rounded-2xl bg-green-500/10 flex items-center justify-center mb-4">
+          <BookOpen className="h-6 w-6 text-green-600" />
+        </div>
+        <h2 className="text-2xl font-bold tracking-tight">Flujo de Trabajo</h2>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Antes de generar tu primer reporte, sigue estos pasos en orden:
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        {WORKFLOW_STEPS.map(({ icon: Icon, color, title, desc }) => (
+          <div key={title} className="flex gap-4 p-4 rounded-xl border bg-muted/20">
+            <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center shrink-0', color)}>
+              <Icon className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 space-y-0.5">
+              <p className="font-semibold text-sm">{title}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-muted-foreground">
+        💡 <strong className="text-foreground">Consejo:</strong> Puedes volver a esta guía en cualquier momento desde{' '}
+        <span className="font-medium text-foreground">Configuración → Acerca de</span>.
+      </div>
+
+      <Button className="w-full h-11" onClick={onFinish}>
+        ¡Entendido, empezar!
+        <ArrowRight className="h-4 w-4 ml-2" />
+      </Button>
+    </div>
+  );
+}
+
+// ─── Step 7: Done ─────────────────────────────────────────────────────────────
+
+function StepDone({ workspaceName }: { workspaceName: string }) {
+  return (
+    <div className="flex flex-col items-center text-center max-w-md mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-500">
+      <div className="h-24 w-24 rounded-3xl bg-green-500/10 flex items-center justify-center shadow-lg ring-1 ring-green-500/20">
+        <CheckCircle2 className="h-12 w-12 text-green-500" />
+      </div>
+      <div className="space-y-3">
+        <h2 className="text-3xl font-bold tracking-tight">¡Listo!</h2>
+        <p className="text-muted-foreground leading-relaxed">
+          El área de trabajo{' '}
+          <strong className="text-foreground">"{workspaceName}"</strong> está configurada. Ya puedes comenzar.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Steps:
+ *  0  Welcome
+ *  1  Theme
+ *  2  Workspace
+ *  3  General Settings
+ *  4  Templates
+ *  5  First-time question
+ *  6  Guide (first-time only; skipped for returning users)
+ *  7  Done
+ *
+ * Progress dots shown for steps 1–5 (TOTAL_DOTS = 5).
+ * Current step is persisted in localStorage so users resume after closing.
+ */
+
+export function WelcomeDialog() {
+  const [show, setShow]               = useState(false);
+  const [step, setStepState]          = useState(0);
+  const [workspaceName, setWorkspaceName] = useState('');
+
+  const { createWorkspace, switchWorkspace, workspaces } = useWorkspaceManager();
+  const { isLoaded } = useSettings();
+
+  // Wrap setStep to also persist
+  const setStep = (s: number) => {
+    setStepState(s);
+    trySet(SETUP_STEP_KEY, String(s));
+  };
+
+  // On mount: only show if setup isn't done; restore persisted step if any
+  useEffect(() => {
+    if (!isLoaded) return;
+    const done = tryGet(SETUP_DONE_KEY);
+    if (done) return;
+    setShow(true);
+    const savedStep = tryGet(SETUP_STEP_KEY);
+    const savedWs   = tryGet(SETUP_WS_KEY);
+    if (savedStep) setStepState(Number(savedStep));
+    if (savedWs)   setWorkspaceName(savedWs);
+  }, [isLoaded]);
+
+  // ─── Finish helpers ──────────────────────────────────────────────────────
+
+  const markDone = () => {
+    trySet(SETUP_DONE_KEY, 'true');
+    tryRemove(SETUP_STEP_KEY);
+    tryRemove(SETUP_WS_KEY);
+  };
+
+  const finish = (goToTemplates = false) => {
+    markDone();
+    if (goToTemplates) trySet('minutas-template-bootstrap-ok', 'true');
+    setStepState(7); // done screen (no need to persist — we're done)
+    setTimeout(() => {
+      setShow(false);
+      if (goToTemplates) window.location.href = '/plantillas';
+    }, 1800);
+  };
+
+  // ─── Workspace continue ──────────────────────────────────────────────────
+
+  const handleWorkspaceContinue = async (name: string, isExisting: boolean) => {
+    setWorkspaceName(name);
+    trySet(SETUP_WS_KEY, name);
+    try {
+      if (isExisting) {
+        await switchWorkspace(name);
+      } else {
+        await createWorkspace(name);
+        await switchWorkspace(name);
+      }
+    } catch {
+      toast.error('No se pudo configurar el área de trabajo.');
+      return;
+    }
+    setStep(3);
+  };
+
+  if (!show) return null;
+
+  const showProgress = step >= 1 && step <= 5;
+  const progressCurrent = step - 1;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
+      </div>
+
+      <div className="relative w-full max-w-lg my-auto py-8">
+        {showProgress && (
+          <div className="flex items-center justify-between mb-8 px-1">
+            <ProgressDots current={progressCurrent} total={TOTAL_DOTS} />
+            <span className="text-xs text-muted-foreground tabular-nums">
+              Paso {step} de {TOTAL_DOTS}
+            </span>
+          </div>
+        )}
+
+        {step === 0 && <StepWelcome onNext={() => setStep(1)} />}
+
+        {step === 1 && (
+          <StepTheme onNext={() => setStep(2)} onBack={() => setStep(0)} />
+        )}
+
+        {step === 2 && (
+          <StepWorkspace
+            existingWorkspaces={workspaces}
+            onNext={handleWorkspaceContinue}
+            onBack={() => setStep(1)}
+          />
+        )}
+
+        {step === 3 && (
+          <StepGeneralSettings onNext={() => setStep(4)} onBack={() => setStep(2)} />
+        )}
+
+        {step === 4 && (
+          <StepTemplates
+            onNext={() => { trySet('minutas-template-bootstrap-ok', 'true'); setStep(5); }}
+            onBack={() => setStep(3)}
+            onSkip={() => setStep(5)}
+          />
+        )}
+
+        {step === 5 && (
+          <StepFirstTime
+            onFirstTime={() => setStep(6)}
+            onReturning={() => finish(false)}
+            onBack={() => setStep(4)}
+          />
+        )}
+
+        {step === 6 && (
+          <StepGuide onFinish={() => finish(false)} />
+        )}
+
+        {step === 7 && <StepDone workspaceName={workspaceName} />}
+      </div>
+    </div>
   );
 }
