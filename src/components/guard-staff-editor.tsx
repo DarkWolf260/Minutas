@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { Guard, Staff, StaffRole, Department, StaffMember } from '@/lib/types';
 import { Trash2, Search, Check, Save } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, normalizeString } from '@/lib/utils';
 import { usePersonnel } from '@/hooks/use-personnel';
 import { usePersonnelHistory } from '@/hooks/use-personnel-history';
 
@@ -161,13 +161,13 @@ export const StaffListEditor = React.memo(({
 
   // Filter logic
   const filteredPersonnel = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
+    const query = normalizeString(searchQuery.trim());
     const activePersonnel = personnel.filter((p) => p.status === 'activo' || !p.status);
 
-    if (!query) return activePersonnel.slice(0, 50); // Show up to 50 without search
+    if (!query) return activePersonnel.slice(0, 50);
     return activePersonnel.filter(
-      (p) => p.name.toLowerCase().includes(query) || (p.cedula && p.cedula.includes(query))
-    ); // Show all results when searching
+      (p) => normalizeString(p.name).includes(query) || (p.cedula && p.cedula.includes(query))
+    );
   }, [personnel, searchQuery]);
 
   const canAdd = !isSingle || (isSingle && staffMembers.length === 0);

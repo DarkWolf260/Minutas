@@ -18,7 +18,9 @@ import {
   Moon,
   Sun,
   Monitor,
-  User
+  User,
+  BarChart2,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/notification-bell';
@@ -26,12 +28,15 @@ import { useTheme } from '@/components/theme-provider';
 import { useProfile } from '@/hooks/use-profile';
 import { useSettings } from '@/hooks/use-settings';
 import { getInitials } from '@/lib/utils';
+import type { AppModuleId } from '@/lib/types';
 
-const navItems = [
-  { href: '/', label: 'Novedades', icon: Newspaper },
-  { href: '/orden-del-dia', label: 'Lista', icon: ClipboardList },
-  { href: '/reporte-final', label: 'Reporte', icon: History },
-  { href: '/personal', label: 'Personal', icon: Users },
+const ALL_NAV_ITEMS: { href: string; label: string; icon: any; moduleId: AppModuleId }[] = [
+  { href: '/',              label: 'Novedades',    icon: Newspaper,    moduleId: 'novedades' },
+  { href: '/orden-del-dia', label: 'Lista',        icon: ClipboardList, moduleId: 'orden-del-dia' },
+  { href: '/reporte-final', label: 'Reporte',      icon: History,      moduleId: 'reporte-final' },
+  { href: '/personal',      label: 'Personal',     icon: Users,        moduleId: 'personal' },
+  { href: '/estadisticas',  label: 'Estadísticas', icon: BarChart2,    moduleId: 'estadisticas' },
+  { href: '/plantillas',    label: 'Plantillas',   icon: FileText,     moduleId: 'plantillas' },
 ];
 
 export function SideNav() {
@@ -40,6 +45,9 @@ export function SideNav() {
   const { theme, setTheme } = useTheme();
   const { profile } = useProfile();
   const { settings } = useSettings();
+
+  const disabledModules = settings.disabledModules || [];
+  const navItems = ALL_NAV_ITEMS.filter((item) => !disabledModules.includes(item.moduleId));
 
   // Dynamic name logic: Use Analista de CEMUPRAD if a guard is active
   const analyst = settings.isGuardOpen 

@@ -4,7 +4,7 @@ import React, { useState, KeyboardEvent, useRef, forwardRef } from 'react';
 import { Input } from './input';
 import { Badge } from './badge';
 import { X, ChevronsUpDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, normalizeString } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -57,8 +57,15 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        handleAddValue(inputValue);
-        setOpen(false);
+        if (isSingle) {
+          // For single-value mode, typing updates the value directly via onChange.
+          // inputValue state is never set in isSingle, so calling handleAddValue('')
+          // would clear the field. Just close the popover.
+          setOpen(false);
+        } else {
+          handleAddValue(inputValue);
+          setOpen(false);
+        }
       } else if (e.key === 'Backspace' && inputValue === '' && value.length > 0 && !isSingle) {
         const lastValue = value[value.length - 1];
         if (lastValue) handleRemoveValue(lastValue);
@@ -81,7 +88,8 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
 
     const filteredOptions = options.filter(
       (option) =>
-        !currentValuesSet.has(option) && option.toLowerCase().includes(displayValue.toLowerCase())
+        !currentValuesSet.has(option) &&
+        normalizeString(option).includes(normalizeString(displayValue))
     );
 
     return (
@@ -147,7 +155,7 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
           className="w-[var(--radix-popover-trigger-width)] p-0"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <ScrollArea className="max-h-60 w-full" type="always">
+          <ScrollArea className="w-full" style={{ height: '240px' }} type="always">
             <div role="listbox" className="p-1">
               {filteredOptions.length > 0 ? (
                 filteredOptions.map((option) => (

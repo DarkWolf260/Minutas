@@ -33,6 +33,7 @@ const SettingsBorrarDatosPage = lazy(() => import('@/pages/settings/borrar-datos
 const SettingsSyncPage        = lazy(() => import('@/pages/settings/sync'));
 const SettingsFeedbackPage    = lazy(() => import('@/pages/settings/feedback'));
 const SettingsAboutPage       = lazy(() => import('@/pages/settings/about'));
+const SettingsModulesPage     = lazy(() => import('@/pages/settings/modules'));
 const AboutAppPage            = lazy(() => import('@/pages/settings/about/app'));
 const AboutGuidePage          = lazy(() => import('@/pages/settings/about/guide'));
 const AboutChangelogPage      = lazy(() => import('@/pages/settings/about/changelog'));
@@ -117,6 +118,7 @@ function AppLayout() {
                   <Route path="/settings/profile"          element={<SettingsProfilePage />} />
                   <Route path="/settings/borrar-datos"     element={<SettingsBorrarDatosPage />} />
                   <Route path="/settings/sync"             element={<SettingsSyncPage />} />
+                  <Route path="/settings/modules"          element={<SettingsModulesPage />} />
                   <Route path="/settings/feedback"         element={<SettingsFeedbackPage />} />
                   <Route path="/settings/about"            element={<SettingsAboutPage />} />
                   <Route path="/settings/about/app"        element={<AboutAppPage />} />

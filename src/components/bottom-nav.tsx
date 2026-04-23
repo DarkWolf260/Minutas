@@ -1,21 +1,31 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { 
-  Newspaper, 
-  Users, 
+import {
+  Newspaper,
+  Users,
   ClipboardList,
-  History
+  History,
+  BarChart2,
+  FileText,
 } from 'lucide-react';
+import { useSettings } from '@/hooks/use-settings';
+import type { AppModuleId } from '@/lib/types';
 
-const navItems = [
-  { href: '/', label: 'Novedades', icon: Newspaper },
-  { href: '/orden-del-dia', label: 'Lista', icon: ClipboardList },
-  { href: '/reporte-final', label: 'Reporte', icon: History },
-  { href: '/personal', label: 'Personal', icon: Users },
+const ALL_NAV_ITEMS: { href: string; label: string; icon: any; moduleId: AppModuleId }[] = [
+  { href: '/',              label: 'Novedades',    icon: Newspaper,    moduleId: 'novedades' },
+  { href: '/orden-del-dia', label: 'Lista',        icon: ClipboardList, moduleId: 'orden-del-dia' },
+  { href: '/reporte-final', label: 'Reporte',      icon: History,      moduleId: 'reporte-final' },
+  { href: '/personal',      label: 'Personal',     icon: Users,        moduleId: 'personal' },
+  { href: '/estadisticas',  label: 'Estadísticas', icon: BarChart2,    moduleId: 'estadisticas' },
+  { href: '/plantillas',    label: 'Plantillas',   icon: FileText,     moduleId: 'plantillas' },
 ];
 
 export function BottomNav() {
   const { pathname } = useLocation();
+  const { settings } = useSettings();
+
+  const disabledModules = settings.disabledModules || [];
+  const navItems = ALL_NAV_ITEMS.filter((item) => !disabledModules.includes(item.moduleId));
 
   return (
     <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-lg border-t pb-safe">
@@ -28,8 +38,8 @@ export function BottomNav() {
               to={item.href}
               className={cn(
                 "flex flex-col items-center justify-center flex-1 h-full transition-all duration-200 gap-1 px-1",
-                isActive 
-                  ? "text-primary scale-110" 
+                isActive
+                  ? "text-primary scale-110"
                   : "text-muted-foreground hover:text-foreground active:scale-95"
               )}
             >

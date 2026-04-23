@@ -37,14 +37,14 @@ import {
 import { useReports } from '@/hooks/use-reports';
 import { useGuardHistory } from '@/hooks/use-guard-history';
 import { Skeleton } from '@/components/ui/skeleton';
-import { findValueInFormData, getReportDateTime } from '@/lib/report-sorter';
+import { findValueInFormData } from '@/lib/report-sorter';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useGuards } from '@/hooks/use-guards';
-import { useSettings } from '@/hooks/use-settings';
+import { useActiveGuard } from '@/hooks/use-active-guard';
 import { useRoles } from '@/hooks/use-roles';
 import { useTemplates } from '@/hooks/use-templates';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { NoGuardBanner } from '@/components/guard-selector';
 import { renderFinalReport } from '@/lib/template-parser';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -81,7 +81,6 @@ const findInsensitive = (obj: Record<string, string>, key: string): string => {
 };
 
 export default function ReporteFinalPage() {
-  // const { toast } = useToast(); -- Removed as we use sonner directly
   const { reports, clearAllReports, isLoaded: reportsLoaded } = useReports();
   const { reports: savedReports, isLoaded: historyLoaded, saveGuardReport, deleteGuardReport } = useGuardHistory();
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -89,9 +88,17 @@ export default function ReporteFinalPage() {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [isConfirmSaveOpen, setIsConfirmSaveOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('generate');
-  const { guards, isLoaded: guardsLoaded } = useGuards();
+  const {
+    guards,
+    activeGuard,
+    isGuardOpen,
+    settings,
+    saveSettings,
+    isLoaded: guardIsLoaded,
+    guardsLoaded,
+    settingsLoaded,
+  } = useActiveGuard();
   const isMobile = useIsMobile();
-  const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
   const { roles, isLoaded: rolesLoadedHook } = useRoles();
   const { templates, configs, isLoaded: templatesLoaded } = useTemplates();
   const { definitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
@@ -131,7 +138,7 @@ export default function ReporteFinalPage() {
   const [generatedReport, setGeneratedReport] = useState('');
   const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
   const [copyButtonText, setCopyButtonText] = useState('Copiar');
-  const isGuardOpen = settings.isGuardOpen || false;
+  // isGuardOpen is now provided by useActiveGuard()
 
   const handleFinalizeAndSave = async () => {
     if (!generatedReport || !activeGuard) {
@@ -238,10 +245,7 @@ export default function ReporteFinalPage() {
     );
   }, [configs, definitions]);
 
-  const activeGuard = useMemo(() => {
-    if (!settings.activeGuardId || !guards.length) return null;
-    return guards.find((g) => g.id === settings.activeGuardId);
-  }, [settings.activeGuardId, guards]);
+  // activeGuard is now provided by useActiveGuard()
 
 
   const handleAddManualNovedad = () => {
@@ -365,7 +369,11 @@ export default function ReporteFinalPage() {
       return;
     }
 
-    const draft = settings.ordenDelDiaDraft;
+    // If Orden del Día module is disabled, always use the base guard staff from Personal.
+    // Otherwise prefer the session draft (which may have custom assignments).
+    const ordenDelDiaDisabled = (settings.disabledModules || []).includes('orden-del-dia');
+    const draft = !ordenDelDiaDisabled ? settings.ordenDelDiaDraft : undefined;
+
     const staffForReport = (draft && draft.guardId === settings.activeGuardId)
       ? draft.staff
       : activeGuard?.staff;
@@ -509,8 +517,8 @@ export default function ReporteFinalPage() {
               .join(' / ');
             
             const isJefeServicios = role.name.toLowerCase() === 'jefe de los servicios';
-            const displayRole = isJefeServicios && settings.ordenDelDiaDraft?.isJefeEncargado 
-              ? `${role.name.toUpperCase()} (E)` 
+            const displayRole = isJefeServicios && !ordenDelDiaDisabled && settings.ordenDelDiaDraft?.isJefeEncargado
+              ? `${role.name.toUpperCase()} (E)`
               : role.name.toUpperCase();
 
             headerParts.push(`- *${displayRole}:* ${names}`);
@@ -557,7 +565,7 @@ export default function ReporteFinalPage() {
               ...globalSettings,
               Guardia: guardIdForReport,
               Estatus: report.status || 'En proceso',
-              Enc: settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : '',
+              Enc: !ordenDelDiaDisabled && settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : '',
               [LEADER_ROLES.DIRECTOR]: director,
               [LEADER_ROLES.JEFE_OPERACIONES]: jefeDeOperaciones,
             };
@@ -639,7 +647,7 @@ export default function ReporteFinalPage() {
   [savedReports, selectedReportId]);
 
   const isLoaded =
-    reportsLoaded && guardsLoaded && settingsLoaded && rolesLoadedHook && templatesLoaded && definitionsLoaded;
+    reportsLoaded && guardsLoaded && settingsLoaded && rolesLoadedHook && templatesLoaded && definitionsLoaded && guardIsLoaded;
 
   return (
     <div className="flex flex-col min-h-screen md:h-full bg-background overflow-y-auto md:overflow-hidden relative">

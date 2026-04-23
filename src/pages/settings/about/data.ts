@@ -62,9 +62,23 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.0.1';
+export const APP_VERSION = '1.1.0';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.1.0',
+    date: '23/04/2026',
+    changes: [
+      { type: 'nueva', text: 'Página dedicada de Módulos en Ajustes: activa o desactiva secciones de la app desde /settings/modules.' },
+      { type: 'nueva', text: 'Nuevo tipo de campo {Campo:cedula} en plantillas: renderiza el input de cédula venezolana con formato automático.' },
+      { type: 'nueva', text: 'Scroll con estilo Radix en el dropdown del multi-input.' },
+      { type: 'nueva', text: 'Scroll en la tarjeta "Otros ajustes" de Configuración.' },
+      { type: 'mejora', text: 'Búsqueda insensible a mayúsculas y acentos en campos de personal, direcciones y autocompletado de reportes (García = Garcia, José = Jose).' },
+      { type: 'mejora', text: 'Los módulos desactivados excluyen su personal de los reportes: si Orden del Día está desactivada, se usa el personal de la guardia directamente.' },
+      { type: 'corrección', text: 'Campos del sistema (Enc, Pie, Usuario, Estatus) ya no aparecen como inputs en el formulario, sin importar dónde estén en la plantilla.' },
+      { type: 'corrección', text: 'Presionar Enter en campos de personal (Director, Jefe de los servicios) ya no borra el valor seleccionado.' },
+    ],
+  },
   {
     version: '1.0.1',
     date: '22/04/2026',

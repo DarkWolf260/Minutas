@@ -366,6 +366,10 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                                     // Skip derived property fields (e.g. "Director.sex")
                                     if (fieldId.includes('.')) return null;
 
+                                    // Skip system/dynamic fields (enc, pie, usuario, estatus)
+                                    const SYSTEM_TAGS = new Set(['enc', 'pie', 'usuario', 'estatus']);
+                                    if (SYSTEM_TAGS.has(fieldId.toLowerCase())) return null;
+
                                     const fieldConfig = (config.fields || {})[fieldId];
                                     if (!fieldConfig) return null;
                                     const isFullWidth =
@@ -492,6 +496,7 @@ function SingleSectionRenderer(props: SectionRendererProps) {
             <>
                 {layoutItems
                     .filter((fid: string) => !fid.includes('.'))
+                    .filter((fid: string) => !['enc', 'pie', 'usuario', 'estatus'].includes(fid.toLowerCase()))
                     .map((fieldId: string, fIdx: number) => {
                         const fieldConfig = (config.fields || {})[fieldId];
                         if (!fieldConfig) return null;
@@ -597,6 +602,10 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                         // Skip derived property fields (e.g. "Director.sex") —
                         // they are read-only properties resolved at render time, not user form fields.
                         if (fieldId.includes('.')) return null;
+
+                        // Skip system/dynamic fields (enc, pie, usuario, estatus)
+                        const SYSTEM_TAGS = new Set(['enc', 'pie', 'usuario', 'estatus']);
+                        if (SYSTEM_TAGS.has(fieldId.toLowerCase())) return null;
 
                         const fieldConfig = (config.fields || {})[fieldId];
                         if (!fieldConfig) return null;

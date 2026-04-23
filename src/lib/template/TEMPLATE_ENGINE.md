@@ -33,9 +33,10 @@ Los segmentos están separados por `:`. El orden de los segmentos después del n
 | `textarea` | Texto largo / multilinea |
 | `date` | Fecha (formato YYYY-MM-DD → se renderiza como DD/Mes/YYYY) |
 | `time-hlv` | Hora (HH:MM) |
-| `predefined` | Valor predefinido globalmente |
+| `def` | Valor predefinido globalmente |
 | `multi-text` | Lista de textos |
 | `dropdown` | Selección de opciones |
+| `cedula` | Número de cédula venezolana (V-XX.XXX.XXX) con formato automático |
 | `semantic` | Concepto semántico (resuelto en post-proceso) |
 
 #### Modificadores de campo
@@ -103,10 +104,12 @@ El {Director.cargo} {Director} se reunió con...
 
 ```
 [?{Director.sex} = F]
-*DIRECTORA-PRESIDENTA:* {Director}
+*DIRECTORA*
+{Director}
 [/]
 [?{Director.sex} = M]
-*DIRECTOR-PRESIDENTE:* {Director}
+*DIRECTOR*
+{Director}
 [/]
 ```
 

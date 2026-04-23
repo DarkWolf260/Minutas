@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import {
@@ -15,86 +15,28 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Eye, Play, Lock, CheckCircle2, ChevronLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { useGuards } from '@/hooks/use-guards';
-import { useSettings } from '@/hooks/use-settings';
-import { useRoles } from '@/hooks/use-roles';
+import { useActiveGuard } from '@/hooks/use-active-guard';
 import { OrdenDelDiaForm } from '@/components/orden-del-dia/index';
 
 export default function OrdenDelDiaPage() {
-  const { guards, isLoaded: guardsLoaded } = useGuards();
-  const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
-  const { isLoaded: rolesLoaded } = useRoles();
+  const {
+    guards,
+    selectedGuardId,
+    setSelectedGuardId,
+    periodo,
+    setPeriodo,
+    activeGuard: selectedGuardForForm,
+    isGuardOpen,
+    openGuard,
+    isLoaded,
+  } = useActiveGuard();
 
-  const [selectedGuardId, setSelectedGuardId] = useState<string>('');
-  const [periodo, setPeriodo] = useState('');
   const formRef = useRef<{ generateOrder: () => void }>(null);
-  const lastSavedSettings = useRef<{ activeGuardId?: string, guardPeriod?: string }>({});
-
-  useEffect(() => {
-    if (settingsLoaded) {
-      const globalPeriod = settings.guardPeriod || '';
-
-      // Default to auto-calculated period if no period is set in settings
-      let fallbackPeriod = '';
-      if (!globalPeriod) {
-        const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        const formatDate = (date: Date) => {
-          const day = String(date.getDate()).padStart(2, '0');
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const year = date.getFullYear();
-          return `${day}/${month}/${year}`;
-        };
-        fallbackPeriod = `${formatDate(today)} AL ${formatDate(tomorrow)}`;
-      }
-
-      const effectivePeriod = globalPeriod || fallbackPeriod;
-
-      // Only sync if different from OUR last saved value
-      if (lastSavedSettings.current.guardPeriod !== globalPeriod) {
-        setPeriodo(effectivePeriod);
-        lastSavedSettings.current.guardPeriod = globalPeriod;
-      }
-    }
-  }, [settingsLoaded, settings.guardPeriod]);
-
-  // Sync selectedGuardId with the active guard from settings
-  useEffect(() => {
-    if (
-      settingsLoaded &&
-      settings.activeGuardId &&
-      guardsLoaded &&
-      guards.some((g) => g.id === settings.activeGuardId)
-    ) {
-      // Only sync if different from OUR last saved value
-      if (lastSavedSettings.current.activeGuardId !== settings.activeGuardId) {
-        setSelectedGuardId(settings.activeGuardId);
-        lastSavedSettings.current.activeGuardId = settings.activeGuardId;
-      }
-    }
-  }, [settings.activeGuardId, settingsLoaded, guards, guardsLoaded]);
-
-  const handleActiveGuardChange = (guardId: string) => {
-    if (!guardId) return;
-    setSelectedGuardId(guardId);
-    lastSavedSettings.current.activeGuardId = guardId;
-    saveSettings({ ...settings, activeGuardId: guardId });
-  };
-
-  const selectedGuardForForm = guards.find((g) => g.id === selectedGuardId);
-  const isGuardOpen = settings.isGuardOpen || false;
 
   const handleOpenGuard = () => {
-    if (!selectedGuardId) return;
-    lastSavedSettings.current.activeGuardId = selectedGuardId;
-    lastSavedSettings.current.guardPeriod = periodo;
-    saveSettings({ isGuardOpen: true, activeGuardId: selectedGuardId, guardPeriod: periodo });
+    openGuard();
   };
-  const isLoaded = guardsLoaded && rolesLoaded && settingsLoaded;
 
   if (!isLoaded) {
     return (
@@ -161,7 +103,7 @@ export default function OrdenDelDiaPage() {
                   </Label>
                   <Select
                     value={selectedGuardId}
-                    onValueChange={handleActiveGuardChange}
+                    onValueChange={setSelectedGuardId}
                     disabled={isGuardOpen}
                   >
                     <SelectTrigger id="guard-select" className={`h-10 rounded-lg shadow-sm ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}>
@@ -170,7 +112,7 @@ export default function OrdenDelDiaPage() {
                     <SelectContent>
                       {guards.map((guard) => (
                         <SelectItem key={guard.id} value={guard.id}>
-                          Guardia "{guard.id}"
+                          Guardia &quot;{guard.id}&quot;
                         </SelectItem>
                       ))}
                     </SelectContent>

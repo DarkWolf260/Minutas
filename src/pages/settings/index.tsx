@@ -1,7 +1,4 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GlobalTagsManager } from '@/components/global-tags-manager';
 import { useSettings } from '@/hooks/use-settings';
@@ -10,10 +7,6 @@ import { useRoles } from '@/hooks/use-roles';
 import { useDepartments } from '@/hooks/use-departments';
 import {
   User,
-  Zap,
-  Database,
-  Plus,
-  Trash2,
   Layers,
   FileText,
   ChevronRight,
@@ -23,8 +16,8 @@ import {
   Info,
   Wifi,
   MessageSquarePlus,
+  LayoutGrid,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -64,7 +57,8 @@ export default function SettingsPage() {
 
           {/* Lado Derecho: Otros Ajustes */}
           <div className="lg:col-span-5 space-y-8">
-            {/* Tarjeta Consolidad: Otros Ajustes */}
+
+            {/* Tarjeta Consolidada: Otros Ajustes */}
             <Card className="shadow-lg border-muted/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -72,10 +66,29 @@ export default function SettingsPage() {
                   Otros ajustes
                 </CardTitle>
                 <CardDescription>
-                  Configuración de plantillas, sincronización y mantenimiento de datos.
+                  Configuración de módulos, plantillas, sincronización y mantenimiento de datos.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="p-0">
+                <ScrollArea style={{ height: '480px' }} type="always">
+                  <div className="space-y-2 p-6 pt-0">
+
+                <Link
+                  to="/settings/modules"
+                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                      <LayoutGrid className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Módulos</p>
+                      <p className="text-xs text-muted-foreground">Activa o desactiva secciones de la aplicación</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </Link>
+
                 <Link
                   to="/settings/workspaces"
                   className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
@@ -142,6 +155,7 @@ export default function SettingsPage() {
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </Link>
+
                 <Link
                   to="/settings/sync"
                   className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
@@ -205,6 +219,9 @@ export default function SettingsPage() {
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </Link>
+
+                  </div>
+                </ScrollArea>
               </CardContent>
             </Card>
           </div>

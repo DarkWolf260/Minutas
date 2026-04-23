@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAddresses } from '@/hooks/use-addresses';
 import type { Address } from '@/lib/types';
 import { Skeleton } from './skeleton';
-import { cn } from '@/lib/utils';
+import { cn, normalizeString } from '@/lib/utils';
 
 interface AddressInputProps {
   value: string;
@@ -50,17 +50,17 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
 
     const filteredAddresses = useMemo(() => {
       if (!value) return addresses;
-      const lowercasedValue = value.toLowerCase();
+      const normalizedValue = normalizeString(value);
 
       const isAFormattedAddress = addresses.some(
-        (addr) => formatAddressToString(addr).toLowerCase() === lowercasedValue
+        (addr) => normalizeString(formatAddressToString(addr)) === normalizedValue
       );
       if (isAFormattedAddress) {
         return addresses;
       }
 
       return addresses.filter((address) =>
-        formatAddressToString(address).toLowerCase().includes(lowercasedValue)
+        normalizeString(formatAddressToString(address)).includes(normalizedValue)
       );
     }, [addresses, value]);
 

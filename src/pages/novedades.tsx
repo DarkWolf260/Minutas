@@ -3,14 +3,15 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, FileText, AlertTriangle, PlusCircle, ChevronLeft, Clock, Newspaper, Lock, ShieldAlert, Filter, ArrowDownWideNarrow, ArrowUpNarrowWide } from 'lucide-react';
+import { Search, FileText, PlusCircle, ChevronLeft, Clock, ArrowDownWideNarrow, ArrowUpNarrowWide } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ReportViewer } from '@/components/report/report-viewer';
 import { useReports } from '@/hooks/use-reports';
 import { useTemplates } from '@/hooks/use-templates';
 import { useDrafts } from '@/hooks/use-drafts';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useSettings } from '@/hooks/use-settings';
+import { useActiveGuard } from '@/hooks/use-active-guard';
+import { NoGuardBanner } from '@/components/guard-selector';
 import { ReportGenerator, type ReportGeneratorRef } from '@/components/report/report-generator';
 import type { Report, Template } from '@/lib/types';
 import { cn, getTemplateIcon, normalizeString } from '@/lib/utils';
@@ -45,12 +46,10 @@ function NovedadesPageContent() {
   const { reports, addReport, updateReport, removeReport, clearAllReports } = useReports();
   const { templates, configs } = useTemplates();
   const { draft, clearDraft, isLoaded: draftIsLoaded } = useDrafts();
-  const { settings } = useSettings();
+  const { isGuardOpen } = useActiveGuard();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const generatorRef = useRef<ReportGeneratorRef>(null);
-
-  const isGuardOpen = settings.isGuardOpen || false;
 
   const [isMounted, setIsMounted] = useState(false);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -262,26 +261,10 @@ function NovedadesPageContent() {
                 {filteredReports.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 px-4 text-center animate-in fade-in duration-500">
                     {!isGuardOpen && isMobile ? (
-                      <div className="max-w-[280px] space-y-6">
-                        <div className="h-20 w-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-2 border-2 border-dashed border-amber-500/20">
-                          <AlertTriangle className="h-9 w-9 text-amber-500/40" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <h3 className="text-lg font-bold text-foreground/80 tracking-tight">Guardia no Iniciada</h3>
-                          <p className="text-xs text-muted-foreground/60 leading-relaxed">
-                            Para registrar nuevas novedades o gestionar reportes, primero debes abrir una nueva guardia en la sección de orden del día.
-                          </p>
-                        </div>
-                        <Button
-                          onClick={() => navigate('/orden-del-dia')}
-                          variant="outline"
-                          size="sm"
-                          className="h-10 px-8 text-xs font-bold gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all duration-300 shadow-sm rounded-xl w-full"
-                        >
-                          <Newspaper className="h-4 w-4" />
-                          Ir a Orden del Día
-                        </Button>
-                      </div>
+                      <NoGuardBanner
+                        message="Para registrar novedades primero debes abrir una nueva guardia."
+                        allowOpenHere
+                      />
                     ) : (
                       <>
                         <div className="h-16 w-16 rounded-full bg-muted/20 flex items-center justify-center mx-auto mb-4 border-2 border-dashed border-muted-foreground/10 opacity-60">
@@ -323,27 +306,11 @@ function NovedadesPageContent() {
           {/* Content area — takes remaining height and allows inner scroll */}
           <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
             {!isGuardOpen && !selectedReportId && !creatingReport ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-6 text-center animate-in fade-in duration-500 bg-muted/5 h-full">
-                <div className="max-w-md space-y-6">
-                  <div className="h-20 w-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-2 border-2 border-dashed border-amber-500/20">
-                    <AlertTriangle className="h-9 w-9 text-amber-500/40" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <h3 className="text-lg font-bold text-foreground/80 tracking-tight">Guardia no Iniciada</h3>
-                    <p className="text-sm max-w-[280px] mx-auto text-muted-foreground/60 leading-relaxed">
-                      Para registrar nuevas novedades o gestionar reportes, primero debes abrir una nueva guardia en la sección de orden del día.
-                    </p>
-                  </div>
-                  <Button
-                    onClick={() => navigate('/orden-del-dia')}
-                    variant="outline"
-                    size="sm"
-                    className="h-10 px-8 text-xs font-bold gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all duration-300 shadow-sm"
-                  >
-                    <Newspaper className="h-4 w-4" />
-                    Ir a Orden del Día
-                  </Button>
-                </div>
+              <div className="flex-1 flex flex-col items-center justify-center bg-muted/5 h-full">
+                <NoGuardBanner
+                  message="Para registrar nuevas novedades o gestionar reportes, primero debes abrir una nueva guardia."
+                  allowOpenHere
+                />
               </div>
             ) : creatingReport || selectedReportId ? (
               <Suspense

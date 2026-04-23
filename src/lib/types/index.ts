@@ -65,6 +65,15 @@ export interface Guard {
   staff: Staff;
 }
 
+/** IDs of toggleable modules in the app navigation */
+export type AppModuleId =
+  | 'novedades'
+  | 'orden-del-dia'
+  | 'reporte-final'
+  | 'personal'
+  | 'estadisticas'
+  | 'plantillas';
+
 export interface AppSettings {
   id?: string;
   workspaceId?: string;
@@ -76,6 +85,8 @@ export interface AppSettings {
   finalReportManualNovedades?: ManualNovedad[];
   finalReportStatistics?: string;
   reportaRoleIds?: string[];
+  /** Modules explicitly disabled by the user. undefined = all enabled (backwards-compatible). */
+  disabledModules?: AppModuleId[];
     ordenDelDiaDraft?: {
       staff: Staff;
       activities: ManualNovedad[];
@@ -120,6 +131,7 @@ export type FieldType =
   | 'time-hlv'
   | 'multi-text'
   | 'dropdown'
+  | 'cedula'
   | 'semantic';
 
 export type TextModifier = 'upper' | 'lower' | 'title';

@@ -74,6 +74,10 @@ export const FieldRenderer = memo(
             // They are resolved at render time from the base field's StaffMember data.
             if (fieldId.includes('.')) return null;
 
+            // System/dynamic fields are injected at render time and must never appear in the form.
+            const SYSTEM_TAGS = new Set(['enc', 'pie', 'usuario', 'estatus']);
+            if (SYSTEM_TAGS.has(lowerFieldId)) return null;
+
             // Check for Reporta field (Analista is discarded)
             if (lowerFieldId === 'reporta') {
                 const reportaRoleIds = settings?.reportaRoleIds || [];
@@ -236,6 +240,19 @@ export const FieldRenderer = memo(
                             </Select>
                         );
                     }
+                    case 'cedula':
+                        return (
+                            <CedulaInput
+                                value={(typeof value === 'string' ? value : '')}
+                                onChange={onChange}
+                                disabled={disabled}
+                                className={className}
+                                ref={ref}
+                                onBlur={onBlur}
+                                name={name}
+                                id={fieldId}
+                            />
+                        );
                 }
             }
 

@@ -49,6 +49,7 @@ export function parseFieldTag(
         'time-hlv',
         'multi-text',
         'dropdown',
+        'cedula',
         'semantic',
     ]);
     const VALID_TEXT_MODS = new Set(['upper', 'lower', 'title']);

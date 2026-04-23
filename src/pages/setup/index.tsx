@@ -8,6 +8,7 @@ import { useTheme } from '@/components/theme-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -36,9 +37,16 @@ import {
   BookOpen,
   MessageSquarePlus,
   Heart,
+  LayoutGrid,
+  Newspaper,
+  History,
+  BarChart2,
+  Laptop,
+  Smartphone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import type { AppModuleId } from '@/lib/types';
 
 // ─── Storage helpers ──────────────────────────────────────────────────────────
 
@@ -62,7 +70,7 @@ export function tryRemove(key: string) {
 // ─── Progress dots ────────────────────────────────────────────────────────────
 // Steps 1–5 show dots (5 total)
 
-const TOTAL_DOTS = 5;
+const TOTAL_DOTS = 6;
 
 function ProgressDots({ current, total }: { current: number; total: number }) {
   return (
@@ -385,7 +393,136 @@ function StepGeneralSettings({ onNext, onBack }: { onNext: () => void; onBack: (
   );
 }
 
-// ─── Step 4: Templates ────────────────────────────────────────────────────────
+// ─── Step 4: Modules ──────────────────────────────────────────────────────────
+
+const ALL_MODULE_DEFS: { id: AppModuleId; label: string; description: string; icon: any; color: string }[] = [
+  { id: 'novedades',     label: 'Novedades',      description: 'Registra reportes del turno activo',              icon: Newspaper,    color: 'text-blue-600 bg-blue-500/10' },
+  { id: 'orden-del-dia', label: 'Orden del Día',  description: 'Distribuye personal y planifica actividades',       icon: ClipboardList, color: 'text-emerald-600 bg-emerald-500/10' },
+  { id: 'reporte-final', label: 'Reporte Final',  description: 'Genera y archiva el cierre de guardia',            icon: History,       color: 'text-violet-600 bg-violet-500/10' },
+  { id: 'personal',      label: 'Personal',       description: 'Gestiona efectivos y asignación de guardias',      icon: Users,         color: 'text-amber-600 bg-amber-500/10' },
+  { id: 'estadisticas',  label: 'Estadísticas',   description: 'Panel de métricas e indicadores históricos',      icon: BarChart2,     color: 'text-rose-600 bg-rose-500/10' },
+  { id: 'plantillas',    label: 'Plantillas',     description: 'Crea y gestiona plantillas de novedades',          icon: FileText,      color: 'text-slate-600 bg-slate-500/10' },
+];
+
+// Modules disabled in each preset (novedades is always enabled)
+const PRESET_DESKTOP: AppModuleId[] = []; // all enabled
+const PRESET_MOBILE: AppModuleId[]  = ['estadisticas', 'plantillas'];
+
+function StepModules({
+  onNext,
+  onBack,
+  onSave,
+}: {
+  onNext: () => void;
+  onBack: () => void;
+  onSave: (disabled: AppModuleId[]) => void;
+}) {
+  const [disabledModules, setDisabledModules] = useState<AppModuleId[]>([]);
+
+  const isEnabled = (id: AppModuleId) => !disabledModules.includes(id);
+  const toggle = (id: AppModuleId) => {
+    setDisabledModules((prev) =>
+      prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]
+    );
+  };
+
+  const applyPreset = (preset: AppModuleId[]) => setDisabledModules(preset);
+
+  const handleContinue = () => {
+    onSave(disabledModules);
+    onNext();
+  };
+
+  return (
+    <div className="flex flex-col max-w-md mx-auto space-y-6 animate-in fade-in slide-in-from-right-4 duration-400">
+      <div className="space-y-2">
+        <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+          <LayoutGrid className="h-6 w-6 text-primary" />
+        </div>
+        <h2 className="text-2xl font-bold tracking-tight">Módulos</h2>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Activa solo las secciones que necesitas. Puedes cambiarlas en cualquier momento desde Configuración.
+        </p>
+      </div>
+
+      {/* Presets */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={() => applyPreset(PRESET_DESKTOP)}
+          className={cn(
+            'flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-left',
+            disabledModules.length === PRESET_DESKTOP.length && disabledModules.every(m => PRESET_DESKTOP.includes(m))
+              ? 'border-primary bg-primary/5'
+              : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30'
+          )}
+        >
+          <Laptop className="h-7 w-7 text-primary" />
+          <div>
+            <p className="font-semibold text-sm">Escritorio</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">Todos los módulos activos</p>
+          </div>
+        </button>
+        <button
+          type="button"
+          onClick={() => applyPreset(PRESET_MOBILE)}
+          className={cn(
+            'flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-left',
+            JSON.stringify([...disabledModules].sort()) === JSON.stringify([...PRESET_MOBILE].sort())
+              ? 'border-primary bg-primary/5'
+              : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30'
+          )}
+        >
+          <Smartphone className="h-7 w-7 text-primary" />
+          <div>
+            <p className="font-semibold text-sm">Móvil</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">Novedades, Personal, Orden y Reporte</p>
+          </div>
+        </button>
+      </div>
+
+      {/* Module toggles */}
+      <div className="rounded-xl border divide-y overflow-hidden">
+        {ALL_MODULE_DEFS.map(({ id, label, description, icon: Icon, color }) => (
+          <div
+            key={id}
+            className={cn(
+              'flex items-center justify-between px-4 py-3 transition-colors',
+              isEnabled(id) ? 'bg-background hover:bg-muted/20' : 'bg-muted/30 opacity-60'
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <div className={cn('h-8 w-8 rounded-lg flex items-center justify-center shrink-0', color)}>
+                <Icon className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-medium leading-tight">{label}</p>
+                <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{description}</p>
+              </div>
+            </div>
+            <Switch
+              id={`setup-module-${id}`}
+              checked={isEnabled(id)}
+              onCheckedChange={() => toggle(id)}
+              disabled={id === 'novedades'}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-3 pt-2">
+        <Button variant="outline" onClick={onBack} className="flex-1">
+          <ChevronLeft className="h-4 w-4 mr-1" />Atrás
+        </Button>
+        <Button className="flex-1" onClick={handleContinue}>
+          Continuar<ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Step 5: Templates ────────────────────────────────────────────────────────
 
 function StepTemplates({ onNext, onBack, onSkip }: { onNext: () => void; onBack: () => void; onSkip: () => void }) {
   return (
@@ -608,7 +745,7 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
   const [step, setStepState] = useState(0);
   const [workspaceName, setWorkspaceName] = useState('');
   const { createWorkspace, switchWorkspace, workspaces } = useWorkspaceManager();
-  const { isLoaded } = useSettings();
+  const { saveSettings, isLoaded } = useSettings();
 
   const setStep = (s: number) => {
     setStepState(s);
@@ -633,7 +770,7 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
   const finish = (goToTemplates = false) => {
     markDone();
     if (goToTemplates) trySet('minutas-template-bootstrap-ok', 'true');
-    setStepState(8); // done screen
+    setStepState(9); // done screen
     setTimeout(() => onComplete(goToTemplates), 1800);
   };
 
@@ -657,7 +794,7 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
   // Step 2 & 3 need the database. Step 0, 1, 4-8 do not strictly need it to render,
   // though Step 4-8 are usually reached after Step 2 which ensures DB is ready.
 
-  const showProgress = step >= 1 && step <= 5;
+  const showProgress = step >= 1 && step <= 6;
   const progressCurrent = step - 1;
 
   return (
@@ -693,22 +830,29 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
           </div>
         )}
         {step === 4 && (
-          <StepTemplates
-            onNext={() => { trySet('minutas-template-bootstrap-ok', 'true'); setStep(5); }}
+          <StepModules
+            onNext={() => setStep(5)}
             onBack={() => setStep(3)}
-            onSkip={() => setStep(5)}
+            onSave={(disabled) => saveSettings({ disabledModules: disabled })}
           />
         )}
         {step === 5 && (
-          <StepFirstTime
-            onFirstTime={() => setStep(6)}
-            onReturning={() => setStep(7)}
+          <StepTemplates
+            onNext={() => { trySet('minutas-template-bootstrap-ok', 'true'); setStep(6); }}
             onBack={() => setStep(4)}
+            onSkip={() => setStep(6)}
           />
         )}
-        {step === 6 && <StepGuide onNext={() => setStep(7)} />}
-        {step === 7 && <StepFeedback onFinish={() => finish(false)} />}
-        {step === 8 && <StepDone workspaceName={workspaceName} />}
+        {step === 6 && (
+          <StepFirstTime
+            onFirstTime={() => setStep(7)}
+            onReturning={() => setStep(8)}
+            onBack={() => setStep(5)}
+          />
+        )}
+        {step === 7 && <StepGuide onNext={() => setStep(8)} />}
+        {step === 8 && <StepFeedback onFinish={() => finish(false)} />}
+        {step === 9 && <StepDone workspaceName={workspaceName} />}
       </div>
     </div>
   );
