@@ -98,7 +98,8 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     // Time validation
     const hora = formData['Hora'];
     const timeValidation = validateTimeHlv(hora, status === 'Finalizado');
-    if (!timeValidation.isValid) {
+    if (!timeValidation.isValid && status === 'Finalizado') {
+      toast.error(timeValidation.error);
       return;
     }
 
@@ -141,8 +142,13 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
 
   const handleSave = async () => {
     if (!formRef.current) return;
-    const formData = await formRef.current.validate();
-    if (!formData) return;
+    
+    // Get current values regardless of validation state
+    const formData = formRef.current.getValues();
+    
+    // Trigger validation visually so the user sees what's missing,
+    // but don't block the save operation.
+    formRef.current.validate();
 
     debouncedSave.cancel();
     await saveLogic(formData);
@@ -150,15 +156,23 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
 
   const handleStatusChange = async (newStatus: 'En proceso' | 'Finalizado') => {
     if (!formRef.current) return;
-    const formData = await formRef.current.validate();
-    if (!formData) return;
-
-    const hora = formData['Hora'];
-    const timeValidation = validateTimeHlv(hora, newStatus === 'Finalizado');
     
-    if (!timeValidation.isValid) {
-      toast.error(timeValidation.error);
-      return;
+    let formData: Record<string, any> | null = null;
+    
+    if (newStatus === 'Finalizado') {
+      formData = await formRef.current.validate();
+      if (!formData) return;
+      
+      const hora = formData['Hora'];
+      const timeValidation = validateTimeHlv(hora, true);
+      if (!timeValidation.isValid) {
+        toast.error(timeValidation.error);
+        return;
+      }
+    } else {
+      // If switching back to "En proceso", don't block on validation
+      formData = formRef.current.getValues();
+      formRef.current.validate(); // Show red errors visually
     }
 
     setStatus(newStatus);

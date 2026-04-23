@@ -136,7 +136,10 @@ export function validateTimeHlv(value: any, isFinalizado: boolean = false): { is
   const digits = time.replace(/\D/g, ''); // Extract only digits
   
   if (!time || digits.length === 0) {
-    return { isValid: false, error: 'La hora es obligatoria.' };
+    if (isFinalizado) {
+      return { isValid: false, error: 'La hora es obligatoria para finalizar el reporte.' };
+    }
+    return { isValid: true, error: null };
   }
 
   // 1. Check for incompleteness based on digit count

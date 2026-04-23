@@ -29,6 +29,7 @@ import { SectionRenderer } from './section-renderer';
 
 export interface ReportFormRef {
   submit: () => void;
+  save: () => void;
   validate: () => Promise<FormDataRecord | null>;
   getValues: () => FormDataRecord;
   getRenderedContent: () => string;
@@ -477,6 +478,12 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
         hasInitialized.current = true;
         const formValues = getInitialValues(initialData);
         reset(formValues);
+        
+        // Trigger validation visually for existing reports so the user
+        // immediately sees what's missing in "novedades ya creadas".
+        if (reportId && !reportId.startsWith('new-')) {
+          trigger();
+        }
         return;
       }
 
@@ -510,6 +517,10 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
           logger.error('Form validation errors', new Error('Validation failed'), { feature: 'ReportForm', metadata: { errors } });
           toast.error('Por favor, corrige los errores en el formulario antes de guardar.');
         })();
+      },
+      save: () => {
+        const values = getValues();
+        handleFormSubmit(values);
       },
       validate: async () => {
         const isValid = await trigger();

@@ -267,7 +267,7 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
     };
 
     const handleSaveClick = () => {
-      formRef.current?.submit();
+      formRef.current?.save();
     };
 
     const handleCopyToClipboard = () => {
@@ -302,10 +302,10 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
               initialData={finalInitialData}
               onSubmit={handleCreateReport}
               onDataChange={handleDataChange}
-              controlledValues={{ 
-              Estatus: 'En proceso',
-              Enc: settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : ''
-            }}
+              controlledValues={{
+                Estatus: 'En proceso',
+                Enc: settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : ''
+              }}
             />
           </CardContent>
         </Card>
@@ -328,7 +328,7 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
               </Button>
               <Button size="sm" onClick={handleSaveClick} className="h-9 px-3 sm:px-4 shadow-sm">
                 <Save className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Guardar Reporte</span>
+                <span className="hidden sm:inline">Crear Reporte</span>
               </Button>
             </div>
           </header>
