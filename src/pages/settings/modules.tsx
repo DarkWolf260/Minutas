@@ -33,8 +33,11 @@ const MODULE_DEFS: {
   { id: 'orden-del-dia', label: 'Orden del Día',  description: 'Distribuye personal y planifica actividades',       icon: ClipboardList, color: 'text-emerald-600 bg-emerald-500/10' },
   { id: 'reporte-final', label: 'Reporte Final',  description: 'Genera y archiva el cierre de guardia',            icon: History,       color: 'text-violet-600 bg-violet-500/10' },
   { id: 'personal',      label: 'Personal',       description: 'Gestiona efectivos y asignación de guardias',      icon: Users,         color: 'text-amber-600 bg-amber-500/10' },
-  { id: 'estadisticas',  label: 'Estadísticas',   description: 'Panel de métricas e indicadores históricos',       icon: BarChart2,     color: 'text-rose-600 bg-rose-500/10' },
   { id: 'plantillas',    label: 'Plantillas',     description: 'Crea y gestiona plantillas de novedades',          icon: FileText,      color: 'text-slate-600 bg-slate-500/10' },
+];
+
+const COMING_SOON_MODULES = [
+  { label: 'Estadísticas', description: 'Panel de métricas e indicadores históricos', icon: BarChart2, color: 'text-rose-600 bg-rose-500/10' },
 ];
 
 // Modules disabled in each preset (novedades is always enabled)
@@ -192,6 +195,29 @@ export default function SettingsModulesPage() {
               );
             })}
           </div>
+          {/* Coming soon modules */}
+          {COMING_SOON_MODULES.map(({ label, description, icon: Icon, color }) => (
+            <div
+              key={label}
+              title="Función futura..."
+              className="flex items-center justify-between px-4 py-3.5 bg-muted/20 opacity-50 cursor-not-allowed rounded-2xl border mt-2 shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className={cn('h-9 w-9 rounded-xl flex items-center justify-center shrink-0', color)}>
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium leading-tight">{label}</p>
+                    <span className="text-[9px] font-bold uppercase tracking-wide bg-background border px-1.5 py-0.5 rounded text-muted-foreground">
+                      PRÓXIMAMENTE
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{description}</p>
+                </div>
+              </div>
+            </div>
+          ))}
           <p className="text-[10px] text-muted-foreground/50 text-center pt-1">
             Los módulos desactivados se ocultan de la navegación. Sus datos se conservan.
           </p>
