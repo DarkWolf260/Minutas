@@ -1,18 +1,18 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { 
-  Building2, 
-  User, 
-  Plus, 
-  Trash2, 
+import {
+  Building2,
+  User,
+  Plus,
+  Trash2,
   ChevronRight,
   PlusCircle,
   Briefcase,
   GripVertical
 } from 'lucide-react';
-import { 
-  DndContext, 
+import {
+  DndContext,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
@@ -28,40 +28,40 @@ import {
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { 
-  Accordion, 
-  AccordionContent, 
-  AccordionItem, 
-  AccordionTrigger 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { 
+import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription
 } from '@/components/ui/card';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription, 
-  DialogFooter 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetDescription, 
-  SheetFooter 
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter
 } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -87,13 +87,13 @@ interface StructureTreeProps {
 /**
  * A helper component that renders a Sheet on mobile and a Dialog on desktop
  */
-const ResponsiveModal = ({ 
-  isOpen, 
-  onOpenChange, 
-  title, 
-  description, 
-  children, 
-  footer 
+const ResponsiveModal = ({
+  isOpen,
+  onOpenChange,
+  title,
+  description,
+  children,
+  footer
 }: {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -107,7 +107,7 @@ const ResponsiveModal = ({
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="z-[100] rounded-t-3xl border-t-2 border-primary/20 p-6 pb-12 focus-visible:outline-none max-h-[90vh] overflow-y-auto">
+        <SheetContent side="bottom" className="rounded-t-3xl border-t-2 border-primary/20 p-6 pb-12 focus-visible:outline-none">
           <SheetHeader className="text-left mb-6">
             <SheetTitle className="text-xl font-bold">{title}</SheetTitle>
             <SheetDescription className="text-sm">{description}</SheetDescription>
@@ -125,7 +125,7 @@ const ResponsiveModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] z-[100]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -159,25 +159,25 @@ const SortableMemberBadge = React.memo(({ member }: { member: StaffMember }) => 
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn("cursor-grab active:cursor-grabbing", isDragging && "opacity-50")}>
-       <Badge variant="secondary" className="text-[10px] py-1 px-2 flex items-center gap-1.5 bg-primary/5 text-primary border-primary/10 hover:bg-primary/10 transition-colors">
-          <GripVertical className="h-3 w-3 opacity-30" />
-          {member.name}
-       </Badge>
+      <Badge variant="secondary" className="text-[10px] py-1 px-2 flex items-center gap-1.5 bg-primary/5 text-primary border-primary/10 hover:bg-primary/10 transition-colors">
+        <GripVertical className="h-3 w-3 opacity-30" />
+        {member.name}
+      </Badge>
     </div>
   );
 });
 
-const RoleRow = React.memo(({ 
-  role, 
+const RoleRow = React.memo(({
+  role,
   members = [],
   showPersonnel = false,
-  onRemove, 
-  onUpdate 
-}: { 
-  role: StaffRole; 
+  onRemove,
+  onUpdate
+}: {
+  role: StaffRole;
   members?: StaffMember[];
   showPersonnel?: boolean;
-  onRemove: (name: string) => void; 
+  onRemove: (name: string) => void;
   onUpdate: (name: string, updates: Partial<StaffRole>) => void;
 }) => {
   const isMobile = useIsMobile();
@@ -191,21 +191,21 @@ const RoleRow = React.memo(({
             </span>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2 shrink-0 ml-auto">
           <div className="flex items-center gap-2 mr-2">
             <Label htmlFor={`single-${role.name}`} className="text-[10px] uppercase font-bold text-muted-foreground/60 hidden sm:block">Único</Label>
-            <Switch 
+            <Switch
               id={`single-${role.name}`}
               checked={role.isSingle}
               onCheckedChange={(checked) => onUpdate(role.name, { isSingle: checked })}
               className="scale-90"
             />
           </div>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
+
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => onRemove(role.name)}
             className="h-8 w-8 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors rounded-full"
           >
@@ -230,17 +230,17 @@ const RoleRow = React.memo(({
   );
 });
 
-const SortableRoleRow = React.memo(({ 
-  role, 
+const SortableRoleRow = React.memo(({
+  role,
   members = [],
   showPersonnel = false,
-  onRemove, 
-  onUpdate 
-}: { 
-  role: StaffRole; 
+  onRemove,
+  onUpdate
+}: {
+  role: StaffRole;
   members?: StaffMember[];
   showPersonnel?: boolean;
-  onRemove: (name: string) => void; 
+  onRemove: (name: string) => void;
   onUpdate: (name: string, updates: Partial<StaffRole>) => void;
 }) => {
   const {
@@ -266,7 +266,7 @@ const SortableRoleRow = React.memo(({
           <div {...attributes} {...listeners} className="p-1 cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-primary shrink-0 -ml-1">
             <GripVertical className="h-4 w-4" />
           </div>
-          
+
           <div className="flex items-center min-w-0">
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-semibold truncate" title={role.name}>
@@ -275,21 +275,21 @@ const SortableRoleRow = React.memo(({
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2 shrink-0 ml-auto">
           <div className="flex items-center gap-2 mr-2">
             <Label htmlFor={`single-sort-${role.name}`} className="text-[10px] uppercase font-bold text-muted-foreground/60 hidden sm:block">Único</Label>
-            <Switch 
+            <Switch
               id={`single-sort-${role.name}`}
               checked={role.isSingle}
               onCheckedChange={(checked) => onUpdate(role.name, { isSingle: checked })}
               className="scale-90"
             />
           </div>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
+
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => onRemove(role.name)}
             className="h-8 w-8 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors rounded-full"
           >
@@ -300,8 +300,8 @@ const SortableRoleRow = React.memo(({
 
       {showPersonnel && !isMobile && (
         <div className="px-14 pb-2">
-          <SortableContext 
-            items={members.map(m => `member-${m.id}`)} 
+          <SortableContext
+            items={members.map(m => `member-${m.id}`)}
             strategy={verticalListSortingStrategy}
           >
             <div className="flex flex-wrap gap-2">
@@ -317,15 +317,15 @@ const SortableRoleRow = React.memo(({
   );
 });
 
-const SortableDeptItem = React.memo(({ 
-  dept, 
-  showPersonnel, 
-  onAddRole, 
-  onRemoveDept, 
-  onRemoveRole, 
-  onUpdateRole 
-}: { 
-  dept: any; 
+const SortableDeptItem = React.memo(({
+  dept,
+  showPersonnel,
+  onAddRole,
+  onRemoveDept,
+  onRemoveRole,
+  onUpdateRole
+}: {
+  dept: any;
   showPersonnel: boolean;
   onAddRole: (e: any) => void;
   onRemoveDept: (e: any) => void;
@@ -348,7 +348,7 @@ const SortableDeptItem = React.memo(({
 
   return (
     <div ref={setNodeRef} style={style} className={cn(isDragging && "z-50 opacity-50")}>
-      <AccordionItem 
+      <AccordionItem
         value={dept.id}
         className="rounded-lg border border-muted/30 bg-card shadow-sm overflow-hidden border-b-0 group"
       >
@@ -356,7 +356,7 @@ const SortableDeptItem = React.memo(({
           <div {...attributes} {...listeners} className="px-1 cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-primary transition-colors">
             <GripVertical className="h-4 w-4" />
           </div>
-          
+
           <AccordionTrigger className="flex-1 hover:no-underline p-3 py-2 bg-muted/5 data-[state=open]:bg-muted/10 [&>svg]:hidden group min-w-0">
             <div className="flex items-center gap-3 w-full min-w-0">
               <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90 shrink-0" />
@@ -368,49 +368,49 @@ const SortableDeptItem = React.memo(({
               </div>
             </div>
           </AccordionTrigger>
-          
+
           <div className="flex items-center gap-2 pr-3 bg-muted/5 group-data-[state=open]:bg-muted/10 h-12 transition-colors shrink-0 ml-auto">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddRole(e);
-                }}
-                className="h-8 w-8 flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 transition-all rounded-full"
-                title="Añadir Cargo"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemoveDept(e);
-                }}
-                className="h-8 w-8 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all rounded-full"
-                title="Eliminar Departamento"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddRole(e);
+              }}
+              className="h-8 w-8 flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 transition-all rounded-full"
+              title="Añadir Cargo"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemoveDept(e);
+              }}
+              className="h-8 w-8 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all rounded-full"
+              title="Eliminar Departamento"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
+        </div>
 
         <AccordionContent className="p-0 border-t border-muted/20">
           <div className="divide-y divide-muted/20">
-            <SortableContext 
-              items={dept.roles.map((r: any) => `role-item-${r.name}`)} 
-               strategy={verticalListSortingStrategy}
+            <SortableContext
+              items={dept.roles.map((r: any) => `role-item-${r.name}`)}
+              strategy={verticalListSortingStrategy}
             >
               {dept.roles.map((role: any) => (
                 <SortableRoleRow
-                  key={role.name} 
-                  role={role} 
+                  key={role.name}
+                  role={role}
                   members={role.members}
                   showPersonnel={showPersonnel}
-                  onRemove={onRemoveRole} 
-                  onUpdate={onUpdateRole} 
+                  onRemove={onRemoveRole}
+                  onUpdate={onUpdateRole}
                 />
               ))}
             </SortableContext>
@@ -454,7 +454,7 @@ function StructureTreeComponent({
 
   // Track the last time a local action occurred to prevent prop-sync flickering
   const lastActionTimeRef = React.useRef<number>(0);
-  
+
   // Optimistic local state
   const [localDepts, setLocalDepts] = useState<Department[]>(departments);
   const [localRoles, setLocalRoles] = useState<StaffRole[]>(roles);
@@ -463,7 +463,7 @@ function StructureTreeComponent({
   React.useEffect(() => {
     const now = Date.now();
     const timeSinceLastAction = now - lastActionTimeRef.current;
-    
+
     // If the number of departments changed, always sync
     // Otherwise, only sync if more than 1000ms have passed since the last local action
     if (departments.length !== localDepts.length || timeSinceLastAction > 1000) {
@@ -474,7 +474,7 @@ function StructureTreeComponent({
   React.useEffect(() => {
     const now = Date.now();
     const timeSinceLastAction = now - lastActionTimeRef.current;
-    
+
     // If the number of roles changed, always sync
     // Otherwise, only sync if more than 1000ms have passed since the last local action
     if (roles.length !== localRoles.length || timeSinceLastAction > 1000) {
@@ -497,7 +497,7 @@ function StructureTreeComponent({
   const globalRoles = localRoles
     .filter(r => (r.departmentScope ?? []).length === 0 && !r.isStatus)
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    
+
   const deptMap = localDepts
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     .map(d => ({
@@ -557,21 +557,21 @@ function StructureTreeComponent({
       const oldIndex = localDepts.findIndex(d => d.id === activeId.replace('dept-', ''));
       const newIndex = localDepts.findIndex(d => d.id === overId.replace('dept-', ''));
       const reordered = arrayMove(localDepts, oldIndex, newIndex).map((d, i) => ({ ...d, order: i }));
-      
+
       lastActionTimeRef.current = Date.now();
       setLocalDepts(reordered);
       onReorderDepts(reordered);
-    } 
+    }
     // 2. Role Reordering (within department)
     else if (activeId.startsWith('role-item-') && overId.startsWith('role-item-')) {
       const activeRoleName = activeId.replace('role-item-', '');
       const overRoleName = overId.replace('role-item-', '');
-      
+
       const oldIndex = localRoles.findIndex(r => r.name === activeRoleName);
       const newIndex = localRoles.findIndex(r => r.name === overRoleName);
-      
+
       const reordered = arrayMove(localRoles, oldIndex, newIndex).map((r, i) => ({ ...r, order: i }));
-      
+
       lastActionTimeRef.current = Date.now();
       setLocalRoles(reordered);
       onReorderRoles(reordered);
@@ -579,7 +579,7 @@ function StructureTreeComponent({
     // 3. Personnel Reordering (within role or between roles)
     else if (activeId.startsWith('member-')) {
       const activeMemberId = activeId.replace('member-', '');
-      
+
       // Find what we are over
       let overRoleName: string | null = null;
       let newIndex = 0;
@@ -599,27 +599,27 @@ function StructureTreeComponent({
       if (overRoleName) {
         const updatedPersonnel = [...personnel];
         const activeIndex = updatedPersonnel.findIndex(p => p.id === activeMemberId);
-        
+
         if (activeIndex !== -1) {
           const [movedMember] = updatedPersonnel.splice(activeIndex, 1);
           if (movedMember) {
             // Update role and department if moved to a role scoped to a department
             const targetRole = roles.find(r => r.name === overRoleName);
             const targetDeptId = (targetRole?.departmentScope ?? [])[0] || 'none';
-            
-            const updatedMember = { 
-              ...movedMember, 
+
+            const updatedMember = {
+              ...movedMember,
               roleId: overRoleName,
               department: targetDeptId === 'none' ? undefined : targetDeptId
             };
-            
+
             // Re-insert at new position among role members
             const currentRoleMembers = updatedPersonnel.filter(p => p.roleId === overRoleName);
             const overItem = currentRoleMembers[newIndex] || currentRoleMembers[currentRoleMembers.length - 1];
             const insertGlobalIndex = overItem ? updatedPersonnel.indexOf(overItem) : updatedPersonnel.length;
-            
+
             updatedPersonnel.splice(insertGlobalIndex, 0, updatedMember);
-            
+
             // Recalculate all orders
             const finalPersonnel = updatedPersonnel.map((p, i) => ({ ...p, order: i }));
             onUpdatePersonnel(finalPersonnel);
@@ -650,18 +650,18 @@ function StructureTreeComponent({
             </div>
             <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <div className="flex items-center bg-muted/30 p-1 rounded-lg border w-full sm:w-auto justify-center sm:justify-start">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleExpandAll}
                   className="flex-1 sm:flex-initial h-7 px-2 text-[10px] font-bold uppercase tracking-tight hover:bg-background/50"
                 >
                   Expandir Todo
                 </Button>
                 <div className="w-px h-3 bg-muted-foreground/20 mx-1" />
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleCollapseAll}
                   className="flex-1 sm:flex-initial h-7 px-2 text-[10px] font-bold uppercase tracking-tight hover:bg-background/50"
                 >
@@ -669,8 +669,8 @@ function StructureTreeComponent({
                 </Button>
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   onClick={() => setIsAddDeptOpen(true)}
                   className="h-9 sm:h-8 text-[11px] shadow-sm bg-primary hover:bg-primary/90 w-full"
                 >
@@ -685,18 +685,18 @@ function StructureTreeComponent({
 
       {compact && (
         <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/5">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setIsAddDeptOpen(true)} 
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsAddDeptOpen(true)}
             className="h-8 text-[10px] uppercase font-bold tracking-tight bg-background shadow-sm hover:bg-primary/5 hover:text-primary transition-all rounded-lg"
           >
             <Plus className="h-3 w-3 mr-1.5" /> Nuevo Dept.
           </Button>
           <div className="flex items-center gap-1">
-             <Button variant="ghost" size="sm" onClick={handleExpandAll} className="h-7 px-2 text-[10px] text-muted-foreground hover:text-primary transition-colors font-medium">Expandir</Button>
-             <div className="w-px h-3 bg-border mx-1" />
-             <Button variant="ghost" size="sm" onClick={handleCollapseAll} className="h-7 px-2 text-[10px] text-muted-foreground hover:text-destructive transition-colors font-medium">Contraer</Button>
+            <Button variant="ghost" size="sm" onClick={handleExpandAll} className="h-7 px-2 text-[10px] text-muted-foreground hover:text-primary transition-colors font-medium">Expandir</Button>
+            <div className="w-px h-3 bg-border mx-1" />
+            <Button variant="ghost" size="sm" onClick={handleCollapseAll} className="h-7 px-2 text-[10px] text-muted-foreground hover:text-destructive transition-colors font-medium">Contraer</Button>
           </div>
         </div>
       )}
@@ -717,9 +717,9 @@ function StructureTreeComponent({
                   </div>
                 </div>
                 <div className="flex items-center gap-2 ml-auto shrink-0">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => openAddRole()}
                     className="h-9 w-9 flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 transition-all rounded-full"
                     title="Añadir Cargo"
@@ -728,16 +728,16 @@ function StructureTreeComponent({
                   </Button>
                 </div>
               </div>
-              
+
               <div className="divide-y divide-muted/30">
                 {globalRolesWithMembers.map(role => (
-                  <RoleRow 
-                    key={role.name} 
-                    role={role} 
+                  <RoleRow
+                    key={role.name}
+                    role={role}
                     members={role.members}
                     showPersonnel={showPersonnel}
-                    onRemove={(name) => setConfirmDeleteRole({ name })} 
-                    onUpdate={onUpdateRole} 
+                    onRemove={(name) => setConfirmDeleteRole({ name })}
+                    onUpdate={onUpdateRole}
                   />
                 ))}
                 {globalRoles.length === 0 && (
@@ -749,23 +749,23 @@ function StructureTreeComponent({
             </div>
 
             {/* Departments Accordion */}
-            <DndContext 
-              sensors={sensors} 
-              collisionDetection={closestCenter} 
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
             >
-              <SortableContext 
-                items={localDepts.map(d => `dept-${d.id}`)} 
+              <SortableContext
+                items={localDepts.map(d => `dept-${d.id}`)}
                 strategy={verticalListSortingStrategy}
               >
-                <Accordion 
-                  type="multiple" 
+                <Accordion
+                  type="multiple"
                   className="space-y-2 w-full"
                   value={expandedItems}
                   onValueChange={setExpandedItems}
                 >
                   {deptMap.map(dept => (
-                    <SortableDeptItem 
+                    <SortableDeptItem
                       key={dept.id}
                       dept={dept}
                       showPersonnel={showPersonnel}
@@ -815,7 +815,7 @@ function StructureTreeComponent({
         isOpen={isAddRoleOpen}
         onOpenChange={setIsAddRoleOpen}
         title="Añadir Cargo"
-        description={targetDeptId 
+        description={targetDeptId
           ? `Añadir cargo al departamento seleccionado.`
           : 'Define un nuevo cargo global para la institución.'}
         footer={
