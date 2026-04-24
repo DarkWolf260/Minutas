@@ -19,7 +19,7 @@ export function useRoles() {
 
   useEffect(() => {
     if (!db || !currentWorkspace) return;
-    let initialized = false;
+    let initializedFlag = false;
 
     const repo = createLookupRepository(db, currentWorkspace);
 
@@ -31,9 +31,10 @@ export function useRoles() {
             return { ...(json.data as StaffRole), workspaceId: currentWorkspace };
           }) as StaffRole[]
         );
-        initialized = true;
-      } else if (!initialized) {
-        initialized = true;
+        initializedFlag = true;
+        setIsLoaded(true);
+      } else if (!initializedFlag) {
+        initializedFlag = true;
         try {
           await repo.bulkInitRoles(DEFAULT_ROLES);
         } catch (err) {
@@ -41,11 +42,12 @@ export function useRoles() {
             feature: 'Roles',
             workspaceId: currentWorkspace,
           });
+          setIsLoaded(true);
         }
       } else {
         setRoles([]);
+        setIsLoaded(true);
       }
-      setIsLoaded(true);
     });
 
     return () => sub.unsubscribe();

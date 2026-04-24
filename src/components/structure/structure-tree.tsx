@@ -81,12 +81,13 @@ interface StructureTreeProps {
   onUpdatePersonnel: (personnel: StaffMember[]) => void;
   personnel?: StaffMember[];
   showPersonnel?: boolean;
+  compact?: boolean;
 }
 
 /**
  * A helper component that renders a Sheet on mobile and a Dialog on desktop
  */
-const ResponsiveModal = React.memo(({ 
+const ResponsiveModal = ({ 
   isOpen, 
   onOpenChange, 
   title, 
@@ -106,7 +107,7 @@ const ResponsiveModal = React.memo(({
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="rounded-t-3xl border-t-2 border-primary/20 p-6 pb-12 focus-visible:outline-none">
+        <SheetContent side="bottom" className="z-[100] rounded-t-3xl border-t-2 border-primary/20 p-6 pb-12 focus-visible:outline-none max-h-[90vh] overflow-y-auto">
           <SheetHeader className="text-left mb-6">
             <SheetTitle className="text-xl font-bold">{title}</SheetTitle>
             <SheetDescription className="text-sm">{description}</SheetDescription>
@@ -124,7 +125,7 @@ const ResponsiveModal = React.memo(({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] z-[100]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -138,7 +139,7 @@ const ResponsiveModal = React.memo(({
       </DialogContent>
     </Dialog>
   );
-});
+};
 
 const SortableMemberBadge = React.memo(({ member }: { member: StaffMember }) => {
   const {
@@ -181,27 +182,24 @@ const RoleRow = React.memo(({
 }) => {
   const isMobile = useIsMobile();
   return (
-    <div className="flex flex-col hover:bg-muted/10 transition-colors group">
-      <div className="flex items-center justify-between p-2 px-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="p-1.5 rounded-full bg-primary/5 text-primary group-hover:bg-primary/10 transition-colors">
-            <User className="h-3.5 w-3.5" />
-          </div>
+    <div className="flex flex-col hover:bg-muted/5 transition-colors group">
+      <div className="flex items-center justify-between py-3 px-3 sm:px-4">
+        <div className="flex items-center min-w-0">
           <div className="flex flex-col min-w-0">
-            <span className="text-sm font-medium truncate" title={role.name}>
+            <span className="text-sm font-semibold truncate" title={role.name}>
               {role.name}
             </span>
           </div>
         </div>
         
-        <div className="flex items-center gap-6 shrink-0 ml-auto">
-          <div className="flex items-center gap-2">
-            <Label htmlFor={`single-${role.name}`} className="text-[10px] uppercase font-bold text-muted-foreground/70 hidden sm:block">Único</Label>
+        <div className="flex items-center gap-2 shrink-0 ml-auto">
+          <div className="flex items-center gap-2 mr-2">
+            <Label htmlFor={`single-${role.name}`} className="text-[10px] uppercase font-bold text-muted-foreground/60 hidden sm:block">Único</Label>
             <Switch 
               id={`single-${role.name}`}
               checked={role.isSingle}
               onCheckedChange={(checked) => onUpdate(role.name, { isSingle: checked })}
-              className="scale-75 data-[state=checked]:bg-primary"
+              className="scale-90"
             />
           </div>
           
@@ -209,7 +207,7 @@ const RoleRow = React.memo(({
             variant="ghost" 
             size="icon" 
             onClick={() => onRemove(role.name)}
-            className="h-9 w-9 text-muted-foreground hover:text-destructive opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive/10"
+            className="h-8 w-8 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors rounded-full"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -224,9 +222,7 @@ const RoleRow = React.memo(({
                 {m.name}
               </Badge>
             ))}
-            {members.length === 0 && (
-              <span className="text-[10px] text-muted-foreground italic">Sin personal asignado</span>
-            )}
+            {members.length === 0 && null}
           </div>
         </div>
       )}
@@ -266,31 +262,28 @@ const SortableRoleRow = React.memo(({
   return (
     <div ref={setNodeRef} style={style} className={cn("flex flex-col hover:bg-muted/10 transition-colors group", isDragging && "bg-muted/30 z-50")}>
       <div className="flex items-center justify-between p-2 px-4">
-        <div className="flex items-center gap-2 min-w-0">
-          <div {...attributes} {...listeners} className="p-1 cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-primary shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <div {...attributes} {...listeners} className="p-1 cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-primary shrink-0 -ml-1">
             <GripVertical className="h-4 w-4" />
           </div>
           
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="p-1.5 rounded-full bg-primary/5 text-primary group-hover:bg-primary/10 transition-colors">
-              <User className="h-3.5 w-3.5" />
-            </div>
+          <div className="flex items-center min-w-0">
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-medium truncate" title={role.name}>
+              <span className="text-sm font-semibold truncate" title={role.name}>
                 {role.name}
               </span>
             </div>
           </div>
         </div>
         
-        <div className="flex items-center gap-6 shrink-0 ml-auto">
-          <div className="flex items-center gap-2">
-            <Label htmlFor={`single-sort-${role.name}`} className="text-[10px] uppercase font-bold text-muted-foreground/70 hidden sm:block">Único</Label>
+        <div className="flex items-center gap-2 shrink-0 ml-auto">
+          <div className="flex items-center gap-2 mr-2">
+            <Label htmlFor={`single-sort-${role.name}`} className="text-[10px] uppercase font-bold text-muted-foreground/60 hidden sm:block">Único</Label>
             <Switch 
               id={`single-sort-${role.name}`}
               checked={role.isSingle}
               onCheckedChange={(checked) => onUpdate(role.name, { isSingle: checked })}
-              className="scale-75 data-[state=checked]:bg-primary"
+              className="scale-90"
             />
           </div>
           
@@ -298,7 +291,7 @@ const SortableRoleRow = React.memo(({
             variant="ghost" 
             size="icon" 
             onClick={() => onRemove(role.name)}
-            className="h-9 w-9 text-muted-foreground hover:text-destructive opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive/10"
+            className="h-8 w-8 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors rounded-full"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -315,9 +308,7 @@ const SortableRoleRow = React.memo(({
               {members.map(m => (
                 <SortableMemberBadge key={m.id} member={m} />
               ))}
-              {members.length === 0 && (
-                <span className="text-[10px] text-muted-foreground italic">Sin personal asignado</span>
-              )}
+              {members.length === 0 && null}
             </div>
           </SortableContext>
         </div>
@@ -366,34 +357,30 @@ const SortableDeptItem = React.memo(({
             <GripVertical className="h-4 w-4" />
           </div>
           
-          <AccordionTrigger className="flex-1 hover:no-underline p-3 py-2 bg-muted/5 data-[state=open]:bg-muted/10 [&>svg]:hidden group min-w-0 overflow-hidden">
+          <AccordionTrigger className="flex-1 hover:no-underline p-3 py-2 bg-muted/5 data-[state=open]:bg-muted/10 [&>svg]:hidden group min-w-0">
             <div className="flex items-center gap-3 w-full min-w-0">
-              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90 shrink-0" />
-              <div className="p-1.5 rounded-lg bg-primary/5 text-primary group-data-[state=open]:bg-primary/10 transition-colors">
-                <Building2 className="h-3.5 w-3.5" />
-              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90 shrink-0" />
               <div className="flex flex-col items-start text-left min-w-0">
-                <span className="font-bold text-xs sm:text-sm truncate w-full">{dept.name}</span>
-                <span className="text-[9px] text-muted-foreground uppercase font-semibold">
+                <span className="font-bold text-sm truncate w-full">{dept.name}</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight mt-0.5">
                   {dept.roles.length} {dept.roles.length === 1 ? 'Cargo' : 'Cargos'}
                 </span>
               </div>
             </div>
           </AccordionTrigger>
           
-          <div className="flex items-center gap-1.5 pr-3 bg-muted/5 group-data-[state=open]:bg-muted/10 h-12 transition-colors ml-auto">
+          <div className="flex items-center gap-2 pr-3 bg-muted/5 group-data-[state=open]:bg-muted/10 h-12 transition-colors shrink-0 ml-auto">
               <Button 
                 variant="ghost" 
-                size="sm" 
+                size="icon" 
                 onClick={(e) => {
                   e.stopPropagation();
                   onAddRole(e);
                 }}
-                className="h-8 p-0 w-8 sm:w-auto sm:px-2.5 text-[10px] hover:bg-primary/10 text-primary font-bold bg-primary/5 border border-primary/10"
+                className="h-8 w-8 flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 transition-all rounded-full"
                 title="Añadir Cargo"
               >
-                <Plus className="h-3.5 w-3.5 sm:mr-1" />
-                <span className="hidden sm:inline">Cargo</span>
+                <Plus className="h-4 w-4" />
               </Button>
               <Button 
                 variant="ghost" 
@@ -402,9 +389,10 @@ const SortableDeptItem = React.memo(({
                   e.stopPropagation();
                   onRemoveDept(e);
                 }}
-                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                className="h-8 w-8 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all rounded-full"
+                title="Eliminar Departamento"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -451,6 +439,7 @@ function StructureTreeComponent({
   onUpdatePersonnel,
   personnel = [],
   showPersonnel = false,
+  compact = false,
 }: StructureTreeProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -535,7 +524,7 @@ function StructureTreeComponent({
     setExpandedItems([]);
   }, []);
 
-  const handleAddDept = useCallback(() => {
+  const submitAddDept = useCallback(() => {
     if (newDeptName.trim()) {
       onAddDept(newDeptName.trim());
       setNewDeptName('');
@@ -543,7 +532,7 @@ function StructureTreeComponent({
     }
   }, [newDeptName, onAddDept]);
 
-  const handleAddRole = useCallback(() => {
+  const submitAddRole = useCallback(() => {
     if (newRoleName.trim()) {
       onAddRole(newRoleName.trim(), targetDeptId);
       setNewRoleName('');
@@ -641,81 +630,101 @@ function StructureTreeComponent({
   };
 
   return (
-    <Card className="border bg-card shadow-sm overflow-hidden flex flex-col flex-1 min-h-0 w-full max-w-full overflow-x-hidden">
-      <CardHeader className="pb-3 border-b bg-muted/5 backdrop-blur-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
-              <Building2 className="h-5 w-5" />
+    <div className={cn(
+      "flex flex-col flex-1 min-h-0 w-full max-w-full overflow-x-hidden",
+      !compact && "Card border bg-card shadow-sm overflow-hidden rounded-xl"
+    )}>
+      {!compact && (
+        <CardHeader className="pb-3 border-b bg-muted/5 backdrop-blur-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <CardTitle className="text-sm sm:text-base font-bold truncate">Organigrama Institucional</CardTitle>
+                <CardDescription className="text-[10px] sm:text-[11px] leading-tight mt-0.5 max-w-[200px] sm:max-w-none truncate">
+                  Estructura de departamentos y cargos.
+                </CardDescription>
+              </div>
             </div>
-            <div className="min-w-0">
-              <CardTitle className="text-sm sm:text-base font-bold truncate">Organigrama Institucional</CardTitle>
-              <CardDescription className="text-[10px] sm:text-[11px] leading-tight mt-0.5 max-w-[200px] sm:max-w-none truncate">
-                Estructura de departamentos y cargos.
-              </CardDescription>
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <div className="flex items-center bg-muted/30 p-1 rounded-lg border w-full sm:w-auto justify-center sm:justify-start">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleExpandAll}
+                  className="flex-1 sm:flex-initial h-7 px-2 text-[10px] font-bold uppercase tracking-tight hover:bg-background/50"
+                >
+                  Expandir Todo
+                </Button>
+                <div className="w-px h-3 bg-muted-foreground/20 mx-1" />
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleCollapseAll}
+                  className="flex-1 sm:flex-initial h-7 px-2 text-[10px] font-bold uppercase tracking-tight hover:bg-background/50"
+                >
+                  Contraer
+                </Button>
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Button 
+                  size="sm" 
+                  onClick={() => setIsAddDeptOpen(true)}
+                  className="h-9 sm:h-8 text-[11px] shadow-sm bg-primary hover:bg-primary/90 w-full"
+                >
+                  <PlusCircle className="mr-1 h-3.5 w-3.5" />
+                  Departamento
+                </Button>
+              </div>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-            <div className="flex items-center bg-muted/30 p-1 rounded-lg border w-full sm:w-auto justify-center sm:justify-start">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleExpandAll}
-                className="flex-1 sm:flex-initial h-7 px-2 text-[10px] font-bold uppercase tracking-tight hover:bg-background/50"
-              >
-                Expandir Todo
-              </Button>
-              <div className="w-px h-3 bg-muted-foreground/20 mx-1" />
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleCollapseAll}
-                className="flex-1 sm:flex-initial h-7 px-2 text-[10px] font-bold uppercase tracking-tight hover:bg-background/50"
-              >
-                Contraer
-              </Button>
-            </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Button 
-                size="sm" 
-                onClick={() => setIsAddDeptOpen(true)}
-                className="h-9 sm:h-8 text-[11px] shadow-sm bg-primary hover:bg-primary/90 w-full"
-              >
-                <PlusCircle className="mr-1 h-3.5 w-3.5" />
-                Departamento
-              </Button>
-            </div>
+        </CardHeader>
+      )}
+
+      {compact && (
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/5">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setIsAddDeptOpen(true)} 
+            className="h-8 text-[10px] uppercase font-bold tracking-tight bg-background shadow-sm hover:bg-primary/5 hover:text-primary transition-all rounded-lg"
+          >
+            <Plus className="h-3 w-3 mr-1.5" /> Nuevo Dept.
+          </Button>
+          <div className="flex items-center gap-1">
+             <Button variant="ghost" size="sm" onClick={handleExpandAll} className="h-7 px-2 text-[10px] text-muted-foreground hover:text-primary transition-colors font-medium">Expandir</Button>
+             <div className="w-px h-3 bg-border mx-1" />
+             <Button variant="ghost" size="sm" onClick={handleCollapseAll} className="h-7 px-2 text-[10px] text-muted-foreground hover:text-destructive transition-colors font-medium">Contraer</Button>
           </div>
         </div>
-      </CardHeader>
+      )}
 
-      <CardContent className="p-4 flex-1 min-h-0 overflow-hidden w-full max-w-full overflow-x-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden w-full max-w-full">
         <ScrollArea className="h-full w-full" type="auto">
-          <div className="space-y-4 pb-4 px-1 overflow-x-hidden">
+          <div className="space-y-4 pb-6 px-4 pt-4">
             {/* Cargos Globales Section */}
-            <div className="rounded-xl border border-muted/30 bg-card overflow-hidden shadow-sm">
-              <div className="flex items-center justify-between p-3 bg-muted/20 border-b">
-                <div className="flex items-center gap-3">
-                  <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                    <Briefcase className="h-3.5 w-3.5" />
-                  </div>
-                  <div>
+            <div className="rounded-xl border border-muted/30 bg-card/50 overflow-hidden shadow-sm">
+              <div className="flex items-center justify-between px-4 py-3 bg-muted/20 border-b">
+                <div className="flex items-center min-w-0">
+                  <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-xs sm:text-sm">Cargos Globales</span>
-                      <Badge variant="outline" className="text-[9px] uppercase font-bold py-0 h-3.5 border-muted-foreground/30">BASE</Badge>
+                      <span className="font-bold text-sm truncate">Cargos Globales</span>
+                      <Badge variant="outline" className="text-[9px] uppercase font-bold py-0 h-4 border-muted-foreground/30 whitespace-nowrap">BASE</Badge>
                     </div>
-                    <p className="text-[9px] text-muted-foreground">Visibles institucionalmente</p>
+                    <p className="text-[10px] text-muted-foreground truncate">Visibles institucionalmente</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 ml-auto">
+                <div className="flex items-center gap-2 ml-auto shrink-0">
                   <Button 
                     variant="ghost" 
-                    size="sm" 
+                    size="icon" 
                     onClick={() => openAddRole()}
-                    className="h-7 text-[10px] hover:bg-primary/10 text-primary font-bold bg-primary/5 border border-primary/10 px-2"
+                    className="h-9 w-9 flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 transition-all rounded-full"
+                    title="Añadir Cargo"
                   >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Cargo
+                    <Plus className="h-5 w-5" />
                   </Button>
                 </div>
               </div>
@@ -732,7 +741,7 @@ function StructureTreeComponent({
                   />
                 ))}
                 {globalRoles.length === 0 && (
-                  <div className="p-8 text-center text-xs text-muted-foreground">
+                  <div className="p-8 text-center text-xs text-muted-foreground italic">
                     Sin cargos globales definidos.
                   </div>
                 )}
@@ -751,7 +760,7 @@ function StructureTreeComponent({
               >
                 <Accordion 
                   type="multiple" 
-                  className="space-y-2 w-full max-w-full overflow-x-hidden"
+                  className="space-y-2 w-full"
                   value={expandedItems}
                   onValueChange={setExpandedItems}
                 >
@@ -769,24 +778,9 @@ function StructureTreeComponent({
                 </Accordion>
               </SortableContext>
             </DndContext>
-
-            {departments.length === 0 && (
-              <div className="rounded-xl border border-dashed border-muted-foreground/20 p-12 text-center bg-muted/5">
-                <Building2 className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
-                <p className="text-sm font-medium text-muted-foreground">No hay departamentos definidos</p>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setIsAddDeptOpen(true)}
-                  className="mt-2 text-primary"
-                >
-                  Configurar el primero
-                </Button>
-              </div>
-            )}
           </div>
         </ScrollArea>
-      </CardContent>
+      </div>
 
       <ResponsiveModal
         isOpen={isAddDeptOpen}
@@ -798,7 +792,7 @@ function StructureTreeComponent({
             <Button variant="outline" onClick={() => setIsAddDeptOpen(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={handleAddDept} disabled={!newDeptName.trim()} className="w-full sm:w-auto">
+            <Button onClick={submitAddDept} disabled={!newDeptName.trim()} className="w-full sm:w-auto">
               Crear Departamento
             </Button>
           </>
@@ -811,7 +805,7 @@ function StructureTreeComponent({
             placeholder="Nombre del departamento..."
             value={newDeptName}
             onChange={(e) => setNewDeptName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddDept()}
+            onKeyDown={(e) => e.key === 'Enter' && submitAddDept()}
             autoFocus
           />
         </div>
@@ -829,7 +823,7 @@ function StructureTreeComponent({
             <Button variant="outline" onClick={() => setIsAddRoleOpen(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={handleAddRole} disabled={!newRoleName.trim()} className="w-full sm:w-auto">
+            <Button onClick={submitAddRole} disabled={!newRoleName.trim()} className="w-full sm:w-auto">
               Crear Cargo
             </Button>
           </>
@@ -842,7 +836,7 @@ function StructureTreeComponent({
             placeholder="Ej: Director, Jefe de Guardia..."
             value={newRoleName}
             onChange={(e) => setNewRoleName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddRole()}
+            onKeyDown={(e) => e.key === 'Enter' && submitAddRole()}
             autoFocus
           />
         </div>
@@ -877,8 +871,8 @@ function StructureTreeComponent({
           }
         }}
       />
-    </Card>
+    </div>
   );
 }
 
-export const StructureTree = React.memo(StructureTreeComponent);
+export const StructureTree = StructureTreeComponent;

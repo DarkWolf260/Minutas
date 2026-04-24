@@ -19,11 +19,11 @@ export function useDepartments() {
 
   useEffect(() => {
     if (!db || !currentWorkspace) return;
-    let initialized = false;
+    let initializedFlag = false;
 
     const repo = createLookupRepository(db, currentWorkspace);
 
-    const sub = repo.watchDepartments().subscribe((data) => {
+    const sub = repo.watchDepartments().subscribe(async (data) => {
       if (data.length > 0) {
         setDepartments(
           data.map((d) => {
@@ -31,21 +31,23 @@ export function useDepartments() {
             return { ...(json.data as Department), workspaceId: currentWorkspace };
           }) as Department[]
         );
-        initialized = true;
-      } else if (!initialized) {
-        initialized = true;
-        repo
-          .bulkInitDepartments(DEFAULT_DEPARTMENTS)
-          .catch((err) =>
-            logger.error('Failed to auto-seed default departments', err, {
-              feature: 'Departments',
-              workspaceId: currentWorkspace,
-            })
-          );
+        initializedFlag = true;
+        setIsLoaded(true);
+      } else if (!initializedFlag) {
+        initializedFlag = true;
+        try {
+          await repo.bulkInitDepartments(DEFAULT_DEPARTMENTS);
+        } catch (err) {
+          logger.error('Failed to auto-seed default departments', err, {
+            feature: 'Departments',
+            workspaceId: currentWorkspace,
+          });
+          setIsLoaded(true);
+        }
       } else {
         setDepartments([]);
+        setIsLoaded(true);
       }
-      setIsLoaded(true);
     });
 
     return () => sub.unsubscribe();

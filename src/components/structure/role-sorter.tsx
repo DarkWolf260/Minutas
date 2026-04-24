@@ -36,6 +36,7 @@ interface RoleSorterProps {
   onReorder: (roles: StaffRole[]) => void;
   onUpdate: (roleName: string, updates: Partial<StaffRole>) => void;
   onRemove: (roleName: string) => void;
+  compact?: boolean;
 }
 
 const SortableRoleItem = React.memo(({ 
@@ -117,7 +118,7 @@ const SortableRoleItem = React.memo(({
   );
 });
 
-export function RoleSorter({ roles, departments, onReorder, onUpdate, onRemove }: RoleSorterProps) {
+export function RoleSorter({ roles, departments, onReorder, onUpdate, onRemove, compact = false }: RoleSorterProps) {
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
@@ -233,22 +234,36 @@ export function RoleSorter({ roles, departments, onReorder, onUpdate, onRemove }
   }, [localRoles, onRemove]);
 
   return (
-    <Card className="md:flex-1 border bg-card shadow-sm md:overflow-hidden md:flex md:flex-col md:min-h-0">
-      <CardHeader className="pb-3 border-b bg-muted/5 backdrop-blur-sm sticky top-0 z-10">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary">
-              <ArrowUpDown className="h-4 w-4" />
-            </div>
-            <div>
-              <CardTitle className="text-sm font-bold">Jerarquía de Reporte</CardTitle>
-              <CardDescription className="text-[11px] mt-0.5">Define el orden en el reporte.</CardDescription>
+    <div className={cn(
+      "md:flex-1 md:flex md:flex-col md:min-h-0",
+      !compact && "Card border bg-card shadow-sm md:overflow-hidden rounded-xl"
+    )}>
+      {!compact && (
+        <CardHeader className="pb-3 border-b bg-muted/5 backdrop-blur-sm sticky top-0 z-10">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                <ArrowUpDown className="h-4 w-4" />
+              </div>
+              <div>
+                <CardTitle className="text-sm font-bold">Jerarquía de Cargos</CardTitle>
+                <CardDescription className="text-[11px] mt-0.5">Este orden se utilizará al crear las guardias.</CardDescription>
+              </div>
             </div>
           </div>
+        </CardHeader>
+      )}
+
+      {compact && (
+        <div className="px-4 py-3 border-b bg-muted/5">
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="h-4 w-4 text-primary" />
+            <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Ordenar Jerarquía</span>
+          </div>
         </div>
-      </CardHeader>
+      )}
       
-      <CardContent className="p-4 md:flex-1 md:min-h-0 md:overflow-hidden">
+      <div className={cn("md:flex-1 md:min-h-0 md:overflow-hidden", compact ? "p-4" : "p-4")}>
         <ScrollArea className="md:h-full pr-4 -mr-4" type="always">
           <DndContext
             sensors={sensors}
@@ -332,7 +347,7 @@ export function RoleSorter({ roles, departments, onReorder, onUpdate, onRemove }
             </DragOverlay>
           </DndContext>
         </ScrollArea>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

@@ -54,23 +54,45 @@ export function UnitsManager() {
 
   if (!isLoaded) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-48 w-full" />
+      <div className="md:flex-1 md:flex md:flex-col md:min-h-0 md:h-full animate-in fade-in duration-300">
+        <Card className="border bg-card md:flex-1 md:flex md:flex-col shadow-sm">
+          <CardHeader className="p-4 sm:px-6 sm:py-5 bg-muted/5 border-b">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-10 w-10 rounded-xl" />
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-3 w-60" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-[400px] w-full rounded-xl" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="md:flex-1 md:flex md:flex-col md:min-h-0 md:h-full animate-in fade-in duration-500">
+    <div className="md:flex-1 md:flex md:flex-col md:min-h-0 md:h-full animate-in fade-in duration-300">
       <Card className="border bg-card md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0 md:h-full shadow-sm">
-        <CardHeader className="pb-4 bg-muted/5 border-b">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+        <CardHeader className="p-4 sm:px-6 sm:py-5 bg-muted/5 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
               <Car className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <CardTitle className="text-lg sm:text-xl font-bold text-primary truncate">Gestión de Unidades</CardTitle>
-              <CardDescription className="text-[10px] sm:text-xs">
+              <CardTitle className="text-lg font-bold">Gestión de Unidades</CardTitle>
+              <CardDescription className="text-xs text-muted-foreground mt-0.5">
                 Administra la flota de vehículos operativos.
               </CardDescription>
             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { useSettings } from '@/hooks/use-settings';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
@@ -43,16 +43,28 @@ import {
   BarChart2,
   Laptop,
   Smartphone,
+  Building2,
+  Plus,
+  Trash2,
+  Building,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import type { AppModuleId } from '@/lib/types';
+import type { AppModuleId, StaffRole, Department } from '@/lib/types';
+import { useRoles } from '@/hooks/use-roles';
+import { useDepartments } from '@/hooks/use-departments';
+import { usePersonnel } from '@/hooks/use-personnel';
+import { StructureManager } from '@/components/structure-manager';
+import { generateId } from '@/lib/utils/id';
+import { DEFAULT_DEPARTMENTS, DEFAULT_ROLES } from '@/lib/constants/structure';
 
 // ─── Storage helpers ──────────────────────────────────────────────────────────
 
 export const SETUP_DONE_KEY = 'minutas-setup-complete-v1';
 export const SETUP_STEP_KEY = 'minutas-setup-step';
 export const SETUP_WS_KEY   = 'minutas-setup-workspace';
+export const SETUP_ROLES_KEY = 'minutas-setup-roles-v1';
+export const SETUP_DEPTS_KEY = 'minutas-setup-depts-v1';
 
 export function tryGet(key: string): string | null {
   try { return localStorage.getItem(key); }
@@ -70,7 +82,7 @@ export function tryRemove(key: string) {
 // ─── Progress dots ────────────────────────────────────────────────────────────
 // Steps 1–5 show dots (5 total)
 
-const TOTAL_DOTS = 6;
+const TOTAL_DOTS = 8;
 
 function ProgressDots({ current, total }: { current: number; total: number }) {
   return (
@@ -393,7 +405,210 @@ function StepGeneralSettings({ onNext, onBack }: { onNext: () => void; onBack: (
   );
 }
 
-// ─── Step 4: Modules ──────────────────────────────────────────────────────────
+// ─── Step 4: Structure (Organigrama) ──────────────────────────────────────────
+
+const STRUCTURE_PRESETS = [
+  {
+    id: 'comun',
+    label: 'Organigrama Común',
+    description: 'Estructura estándar sin sala de monitoreo.',
+    icon: Building2,
+    departments: DEFAULT_DEPARTMENTS.filter(d => d.id !== 'cemuprad' && d.id !== 'it'),
+    roles: DEFAULT_ROLES.filter(r => !r.departmentScope?.includes('cemuprad') && !r.isStatus)
+  },
+  {
+    id: 'extendido',
+    label: 'Organigrama Extendido',
+    description: 'Estructura completa con Sala de Monitoreo.',
+    icon: Shield,
+    departments: DEFAULT_DEPARTMENTS.map(d => ({
+      ...d,
+      name: d.name === 'CEMUPRAD' ? '{MONITORING_ROOM}' : d.name
+    })),
+    roles: DEFAULT_ROLES.map(r => ({
+      ...r,
+      name: r.name.replace('CEMUPRAD', '{MONITORING_ROOM}')
+    })).filter(r => !r.isStatus)
+  }
+];
+
+function StepStructure({ 
+  onNext, 
+  onBack,
+  roles,
+  setRoles,
+  departments,
+  setDepartments
+}: { 
+  onNext: () => void; 
+  onBack: () => void;
+  roles: StaffRole[];
+  setRoles: (r: StaffRole[]) => void;
+  departments: Department[];
+  setDepartments: (d: Department[]) => void;
+}) {
+  const [monitoringInput, setMonitoringInput] = useState('CEMUPRAD');
+  const [selectedPreset, setSelectedPreset] = useState<'comun' | 'extendido' | null>(null);
+
+  const applyPreset = (presetId: 'comun' | 'extendido') => {
+    setSelectedPreset(presetId);
+    const p = STRUCTURE_PRESETS.find(x => x.id === presetId);
+    if (!p) return;
+
+    const currentMonitoringName = monitoringInput.trim() || 'Sala de Monitoreo';
+
+    const newDepts = p.departments.map((d: any) => ({
+      id: d.id || generateId('dept'),
+      name: (typeof d === 'string' ? d : d.name).replace('{MONITORING_ROOM}', currentMonitoringName),
+      staff: d.staff || {}
+    }));
+
+    const newRoles = p.roles.map((r: any, index: number) => ({
+      ...r,
+      name: r.name.replace('{MONITORING_ROOM}', currentMonitoringName),
+      order: index
+    }));
+
+    setDepartments(newDepts);
+    setRoles(newRoles);
+  };
+
+  return (
+    <div className="flex flex-col max-w-md mx-auto space-y-6 animate-in fade-in slide-in-from-right-4 duration-400">
+      <div className="space-y-2">
+        <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+          <Building2 className="h-6 w-6 text-primary" />
+        </div>
+        <h2 className="text-2xl font-bold tracking-tight">Estructura Institucional</h2>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Selecciona una base para comenzar. El modo extendido incluye sala de monitoreo.
+        </p>
+      </div>
+
+      {/* Presets */}
+      <div className="grid grid-cols-2 gap-3">
+        {STRUCTURE_PRESETS.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => applyPreset(p.id as any)}
+            className={cn(
+              "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-left",
+              selectedPreset === p.id 
+                ? "border-primary bg-primary/5 shadow-sm" 
+                : "border-border hover:border-muted-foreground/30 hover:bg-muted/30"
+            )}
+          >
+            <p.icon className={cn("h-6 w-6", selectedPreset === p.id ? "text-primary" : "text-muted-foreground")} />
+            <div>
+              <p className="font-semibold text-[13px] leading-tight">{p.label}</p>
+              <p className="text-[10px] text-muted-foreground leading-tight mt-1">{p.description}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Monitoring Room Config - Only if extended is selected */}
+      {selectedPreset === 'extendido' && (
+        <div className="bg-primary/5 rounded-xl border border-primary/20 p-4 space-y-3 animate-in zoom-in-95 duration-300">
+          <div className="flex items-center gap-2">
+            <Monitor className="h-4 w-4 text-primary" />
+            <Label className="text-xs font-bold uppercase tracking-wider text-primary">Nombre de la Sala de Monitoreo</Label>
+          </div>
+          <div className="flex gap-2">
+            <Input 
+              value={monitoringInput}
+              onChange={e => setMonitoringInput(e.target.value)}
+              placeholder="Ej: CEMUPRAD, Sala Situacional..."
+              className="h-9 bg-background border-primary/20 focus-visible:ring-primary"
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground italic leading-tight">
+            Se usará el nombre <span className="text-primary font-medium">{monitoringInput}</span> para el departamento y cargos correspondientes.
+          </p>
+        </div>
+      )}
+
+      <div className="bg-background/50 border rounded-xl overflow-hidden min-h-[300px]">
+        <StructureManager 
+          compact={true}
+          roles={roles}
+          departments={departments}
+          onRolesChange={setRoles}
+          onDepartmentsChange={setDepartments}
+          onSave={() => {}}
+          rolesLoaded={true}
+          deptsLoaded={true}
+          initialTab="departments"
+        />
+      </div>
+
+      <div className="flex gap-3 pt-4 border-t">
+        <Button variant="outline" onClick={onBack} className="flex-1">
+          <ChevronLeft className="h-4 w-4 mr-1" />Atrás
+        </Button>
+        <Button className="flex-1" onClick={onNext}>
+          Continuar<ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function StepHierarchy({ 
+  onNext, 
+  onBack,
+  roles,
+  setRoles,
+  departments,
+  setDepartments
+}: { 
+  onNext: () => void; 
+  onBack: () => void;
+  roles: StaffRole[];
+  setRoles: (r: StaffRole[]) => void;
+  departments: Department[];
+  setDepartments: (d: Department[]) => void;
+}) {
+  return (
+    <div className="flex flex-col max-w-md mx-auto space-y-6 animate-in fade-in slide-in-from-right-4 duration-400">
+      <div className="space-y-2">
+        <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+          <Users className="h-6 w-6 text-primary" />
+        </div>
+        <h2 className="text-2xl font-bold tracking-tight">Jerarquía de Cargos</h2>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Organiza la jerarquía de los cargos. Este será el orden que se utilizará por defecto al crear las guardias y en los reportes.
+        </p>
+      </div>
+
+      <div className="bg-background/50 border rounded-xl overflow-hidden min-h-[400px]">
+        <StructureManager 
+          compact={true}
+          roles={roles}
+          departments={departments}
+          onRolesChange={setRoles}
+          onDepartmentsChange={setDepartments}
+          onSave={() => {}}
+          rolesLoaded={true}
+          deptsLoaded={true}
+          initialTab="roles"
+        />
+      </div>
+
+      <div className="flex gap-3 pt-4 border-t">
+        <Button variant="outline" onClick={onBack} className="flex-1">
+          <ChevronLeft className="h-4 w-4 mr-1" />Atrás
+        </Button>
+        <Button className="flex-1" onClick={onNext}>
+          Continuar<ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Step 5: Modules ──────────────────────────────────────────────────────────
 
 const ALL_MODULE_DEFS: { id: AppModuleId; label: string; description: string; icon: any; color: string }[] = [
   { id: 'novedades',     label: 'Novedades',      description: 'Registra reportes del turno activo',              icon: Newspaper,    color: 'text-blue-600 bg-blue-500/10' },
@@ -747,6 +962,38 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
   const { createWorkspace, switchWorkspace, workspaces } = useWorkspaceManager();
   const { saveSettings, isLoaded } = useSettings();
 
+  const { roles: dbRoles, saveRoles, isLoaded: rolesLoaded } = useRoles();
+  const { departments: dbDepts, saveDepartments, isLoaded: deptsLoaded } = useDepartments();
+
+  const [roles, setRolesState] = useState<StaffRole[]>([]);
+  const [departments, setDepartmentsState] = useState<Department[]>([]);
+  const initialized = useRef(false);
+
+  const setRoles = (r: StaffRole[]) => {
+    setRolesState(r);
+    trySet(SETUP_ROLES_KEY, JSON.stringify(r));
+  };
+  const setDepartments = (d: Department[]) => {
+    setDepartmentsState(d);
+    trySet(SETUP_DEPTS_KEY, JSON.stringify(d));
+  };
+
+  // Sync with DB or LocalStorage once loaded
+  useEffect(() => {
+    if (!initialized.current && rolesLoaded && deptsLoaded) {
+      const savedRoles = tryGet(SETUP_ROLES_KEY);
+      const savedDepts = tryGet(SETUP_DEPTS_KEY);
+      
+      if (savedRoles) setRolesState(JSON.parse(savedRoles));
+      else if (dbRoles.length > 0) setRolesState(dbRoles);
+
+      if (savedDepts) setDepartmentsState(JSON.parse(savedDepts));
+      else if (dbDepts.length > 0) setDepartmentsState(dbDepts);
+
+      initialized.current = true;
+    }
+  }, [rolesLoaded, deptsLoaded, dbRoles, dbDepts]);
+
   const setStep = (s: number) => {
     setStepState(s);
     trySet(SETUP_STEP_KEY, String(s));
@@ -765,12 +1012,18 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
     trySet(SETUP_DONE_KEY, 'true');
     tryRemove(SETUP_STEP_KEY);
     tryRemove(SETUP_WS_KEY);
+    tryRemove(SETUP_ROLES_KEY);
+    tryRemove(SETUP_DEPTS_KEY);
   };
 
-  const finish = (goToTemplates = false) => {
+  const finish = async (goToTemplates = false) => {
+    // Save pending structure only at the end
+    if (roles.length > 0) await saveRoles(roles);
+    if (departments.length > 0) await saveDepartments(departments);
+
     markDone();
     if (goToTemplates) trySet('minutas-template-bootstrap-ok', 'true');
-    setStepState(9); // done screen
+    setStepState(10); // done screen
     setTimeout(() => onComplete(goToTemplates), 1800);
   };
 
@@ -794,16 +1047,11 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
   // Step 2 & 3 need the database. Step 0, 1, 4-8 do not strictly need it to render,
   // though Step 4-8 are usually reached after Step 2 which ensures DB is ready.
 
-  const showProgress = step >= 1 && step <= 6;
+  const showProgress = step >= 1 && step <= 7;
   const progressCurrent = step - 1;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 backdrop-blur-sm p-4 overflow-y-auto">
-      {/* Ambient blobs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
-      </div>
 
       <div className="relative w-full max-w-lg my-auto py-8">
         {showProgress && (
@@ -837,22 +1085,42 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
           />
         )}
         {step === 5 && (
-          <StepTemplates
-            onNext={() => { trySet('minutas-template-bootstrap-ok', 'true'); setStep(6); }}
+          <StepStructure 
+            onNext={() => setStep(6)} 
             onBack={() => setStep(4)}
-            onSkip={() => setStep(6)}
+            roles={roles}
+            setRoles={setRoles}
+            departments={departments}
+            setDepartments={setDepartments}
           />
         )}
         {step === 6 && (
-          <StepFirstTime
-            onFirstTime={() => setStep(7)}
-            onReturning={() => setStep(8)}
+          <StepHierarchy
+            onNext={() => setStep(7)}
             onBack={() => setStep(5)}
+            roles={roles}
+            setRoles={setRoles}
+            departments={departments}
+            setDepartments={setDepartments}
           />
         )}
-        {step === 7 && <StepGuide onNext={() => setStep(8)} />}
-        {step === 8 && <StepFeedback onFinish={() => finish(false)} />}
-        {step === 9 && <StepDone workspaceName={workspaceName} />}
+        {step === 7 && (
+          <StepTemplates
+            onNext={() => { trySet('minutas-template-bootstrap-ok', 'true'); setStep(8); }}
+            onBack={() => setStep(6)}
+            onSkip={() => setStep(8)}
+          />
+        )}
+        {step === 8 && (
+          <StepFirstTime
+            onFirstTime={() => setStep(9)}
+            onReturning={() => setStep(10)}
+            onBack={() => setStep(7)}
+          />
+        )}
+        {step === 9 && <StepGuide onNext={() => setStep(10)} />}
+        {step === 10 && <StepFeedback onFinish={() => finish(false)} />}
+        {step === 11 && <StepDone workspaceName={workspaceName} />}
       </div>
     </div>
   );

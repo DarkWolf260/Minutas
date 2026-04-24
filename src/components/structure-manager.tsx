@@ -23,6 +23,8 @@ interface StructureManagerProps {
   deptsLoaded?: boolean;
   personnel?: StaffMember[];
   onUpdatePersonnel?: (personnel: StaffMember[]) => void;
+  compact?: boolean;
+  initialTab?: 'tree' | 'sorter' | 'departments' | 'roles';
 }
 
 export function StructureManager({
@@ -35,6 +37,8 @@ export function StructureManager({
   deptsLoaded = true,
   personnel = [],
   onUpdatePersonnel,
+  compact = false,
+  initialTab,
 }: StructureManagerProps) {
 
 
@@ -114,18 +118,19 @@ export function StructureManager({
 
   return (
     <div className="md:flex-1 md:flex md:flex-col md:min-h-0 bg-transparent">
-      {/* Mobile view: Tabbed interface to expand space */}
-      <div className="flex flex-col md:hidden">
-        <Tabs defaultValue="tree" className="w-full bg-transparent">
-          <TabsList className="grid w-full grid-cols-2 mb-2 shrink-0">
-            <TabsTrigger value="tree" className="text-xs font-bold uppercase transition-all">Organigrama</TabsTrigger>
-            <TabsTrigger value="sorter" className="text-xs font-bold uppercase transition-all">Jerarquía</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent 
-            value="tree" 
-            className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
-          >
+      {/* Compact view: No tabs, just direct content */}
+      {compact ? (
+        <div className="flex flex-col flex-1 min-h-0">
+          {initialTab === 'roles' ? (
+            <RoleSorter 
+              roles={processedRoles}
+              departments={departments}
+              onReorder={onRolesChange}
+              onUpdate={handleUpdateRole}
+              onRemove={handleRemoveRole}
+              compact={true}
+            />
+          ) : (
             <StructureTree 
               departments={departments}
               roles={processedRoles}
@@ -139,55 +144,89 @@ export function StructureManager({
               onUpdatePersonnel={onUpdatePersonnel || (() => {})}
               personnel={personnel}
               showPersonnel={true}
+              compact={true}
             />
-          </TabsContent>
-          
-          <TabsContent 
-            value="sorter" 
-            className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
-          >
-            <RoleSorter 
-              roles={processedRoles}
-              departments={departments}
-              onReorder={onRolesChange}
-              onUpdate={handleUpdateRole}
-              onRemove={handleRemoveRole}
-            />
-          </TabsContent>
-        </Tabs>
-      </div>
-
-      {/* Desktop view: Classic side-by-side grid */}
-      <div className="hidden lg:grid grid-cols-12 gap-8 items-stretch md:flex-1 md:min-h-0">
-        {/* Left Column: Hierarchical Tree View (Dynamic Management) */}
-        <div className="lg:col-span-8 flex flex-col min-h-0">
-          <StructureTree 
-            departments={departments}
-            roles={processedRoles}
-            onAddDept={handleAddDept}
-            onRemoveDept={handleRemoveDepartment}
-            onAddRole={handleAddRole}
-            onRemoveRole={handleRemoveRole}
-            onUpdateRole={handleUpdateRole}
-            onReorderDepts={onDepartmentsChange}
-            onReorderRoles={onRolesChange}
-            onUpdatePersonnel={onUpdatePersonnel || (() => {})}
-            personnel={personnel}
-            showPersonnel={false}
-          />
+          )}
         </div>
+      ) : (
+        <>
+          {/* Mobile view: Tabbed interface */}
+          <div className="flex flex-col lg:hidden">
+            <Tabs defaultValue={initialTab || "departments"} className="w-full bg-transparent">
+              <TabsList className="grid w-full grid-cols-2 mb-2 shrink-0">
+                <TabsTrigger value="departments" className="text-xs font-bold uppercase transition-all">Organigrama</TabsTrigger>
+                <TabsTrigger value="roles" className="text-xs font-bold uppercase transition-all">Jerarquía</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent 
+                value="departments" 
+                className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
+              >
+                <StructureTree 
+                  departments={departments}
+                  roles={processedRoles}
+                  onAddDept={handleAddDept}
+                  onRemoveDept={handleRemoveDepartment}
+                  onAddRole={handleAddRole}
+                  onRemoveRole={handleRemoveRole}
+                  onUpdateRole={handleUpdateRole}
+                  onReorderDepts={onDepartmentsChange}
+                  onReorderRoles={onRolesChange}
+                  onUpdatePersonnel={onUpdatePersonnel || (() => {})}
+                  personnel={personnel}
+                  showPersonnel={true}
+                  compact={false}
+                />
+              </TabsContent>
+              
+              <TabsContent 
+                value="roles" 
+                className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
+              >
+                <RoleSorter 
+                  roles={processedRoles}
+                  departments={departments}
+                  onReorder={onRolesChange}
+                  onUpdate={handleUpdateRole}
+                  onRemove={handleRemoveRole}
+                  compact={false}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
 
-        {/* Right Column: Organization for Reports (Sorting) */}
-        <div className="lg:col-span-4 flex flex-col min-h-0">
-          <RoleSorter 
-            roles={processedRoles}
-            departments={departments}
-            onReorder={onRolesChange}
-            onUpdate={handleUpdateRole}
-            onRemove={handleRemoveRole}
-          />
-        </div>
-      </div>
+          {/* Desktop view: Classic side-by-side grid */}
+          <div className="hidden lg:grid grid-cols-12 gap-8 items-stretch md:flex-1 md:min-h-0">
+            <div className="lg:col-span-8 flex flex-col min-h-0">
+              <StructureTree 
+                departments={departments}
+                roles={processedRoles}
+                onAddDept={handleAddDept}
+                onRemoveDept={handleRemoveDepartment}
+                onAddRole={handleAddRole}
+                onRemoveRole={handleRemoveRole}
+                onUpdateRole={handleUpdateRole}
+                onReorderDepts={onDepartmentsChange}
+                onReorderRoles={onRolesChange}
+                onUpdatePersonnel={onUpdatePersonnel || (() => {})}
+                personnel={personnel}
+                showPersonnel={false}
+                compact={false}
+              />
+            </div>
+            <div className="lg:col-span-4 flex flex-col min-h-0">
+              <RoleSorter 
+                roles={processedRoles}
+                departments={departments}
+                onReorder={onRolesChange}
+                onUpdate={handleUpdateRole}
+                onRemove={handleRemoveRole}
+                compact={false}
+              />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

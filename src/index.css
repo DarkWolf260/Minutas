@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 @layer base {
-  html, body {
+
+  html,
+  body {
     @apply h-full w-full bg-background text-foreground;
     font-size: 14px;
     -webkit-tap-highlight-color: transparent;
@@ -13,12 +15,19 @@
 
   /* Only lock scrolling on desktop to maintain app-like feel */
   @media (min-width: 640px) {
-    html, body {
+
+    html,
+    body {
       @apply overflow-hidden;
     }
   }
-  
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply text-foreground;
   }
 
@@ -40,13 +49,15 @@
 
   :root {
     --font-sans: 'Outfit', sans-serif;
-    --background: 210 33% 97%; /* Light gray (#F0F4F8) */
+    --background: 210 33% 97%;
+    /* Light gray (#F0F4F8) */
     --foreground: 224 71% 4%;
     --card: 0 0% 100%;
     --card-foreground: 224 71% 4%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
-    --primary: 217.2 91.2% 59.8%; /* Vivid Cobalt Blue */
+    --primary: 217.2 91.2% 59.8%;
+    /* Vivid Cobalt Blue */
     --primary-foreground: 210 40% 98%;
     --secondary: 210 30% 91%;
     --secondary-foreground: 224 71% 4%;
@@ -64,18 +75,22 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 1rem; /* rounded-2xl look for premium cards */
+    --radius: 1rem;
+    /* rounded-2xl look for premium cards */
   }
 
   .dark {
-    --background: 240 10% 2%; /* Deep Obsidian (#050505) */
+    --background: 240 10% 2%;
+    /* Deep Obsidian (#050505) */
     --foreground: 0 0% 98%;
-    --card: 240 10% 4.5%; /* Subtle elevation */
+    --card: 240 10% 4.5%;
+    /* Subtle elevation */
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 2%;
     --popover-foreground: 0 0% 98%;
     --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 0 0% 100%; /* Pure White for contrast */
+    --primary-foreground: 0 0% 100%;
+    /* Pure White for contrast */
     --secondary: 240 3.7% 12%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 12%;
@@ -85,9 +100,11 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 3.7% 14%;
-    --input: 240 3.7% 10%; /* Slightly darker inputs for depth */
+    --input: 240 3.7% 10%;
+    /* Slightly darker inputs for depth */
     --ring: 240 4.9% 83.9%;
-    --radius: 1rem; /* rounded-2xl feel */
+    --radius: 1rem;
+    /* rounded-2xl feel */
     --success: 142 70.6% 45.3%;
     --success-foreground: 144 61.2% 91.2%;
 
@@ -134,25 +151,52 @@
 [data-radix-scroll-area-viewport] {
   scrollbar-width: none !important;
 }
+
 [data-radix-scroll-area-viewport]::-webkit-scrollbar {
   display: none !important;
 }
 
 /* Parche para Leaflet */
-.leaflet-container { z-index: 10 !important; }
-.leaflet-control-container { z-index: 10 !important; }
-.leaflet-pane { z-index: 20 !important; }
-.leaflet-top, .leaflet-bottom { z-index: 30 !important; }
+.leaflet-container {
+  z-index: 10 !important;
+}
+
+.leaflet-control-container {
+  z-index: 10 !important;
+}
+
+.leaflet-pane {
+  z-index: 20 !important;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 30 !important;
+}
 
 @layer utilities {
-  .no-scrollbar::-webkit-scrollbar { display: none; }
-  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .animate-shimmer {
