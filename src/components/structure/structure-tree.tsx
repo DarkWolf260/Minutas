@@ -66,7 +66,7 @@ import {
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { Department, StaffRole, StaffMember } from '@/lib/types';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
 
 interface StructureTreeProps {
   departments: Department[];
@@ -876,3 +876,4 @@ function StructureTreeComponent({
 }
 
 export const StructureTree = StructureTreeComponent;
+

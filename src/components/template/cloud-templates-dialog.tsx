@@ -43,6 +43,9 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
           ...existing,
           content: cloudTemplate.content,
           type: cloudTemplate.type || existing.type || 'normal',
+          statisticsCategory: cloudTemplate.statisticsCategory || existing.statisticsCategory,
+          statisticsSubCategories: cloudTemplate.statisticsSubCategories || existing.statisticsSubCategories,
+          statisticsRules: cloudTemplate.statisticsRules || existing.statisticsRules,
         });
         toast.success(`Plantilla "${cloudTemplate.name}" actualizada con la versión de la nube.`);
       } else {
@@ -54,6 +57,9 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
           content: cloudTemplate.content,
           type: cloudTemplate.type || 'normal',
           isActive: true,
+          statisticsCategory: cloudTemplate.statisticsCategory,
+          statisticsSubCategories: cloudTemplate.statisticsSubCategories,
+          statisticsRules: cloudTemplate.statisticsRules,
         };
 
         await addTemplate(newTemplate);

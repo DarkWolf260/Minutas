@@ -3,8 +3,8 @@ import { PlusCircle, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { DatePicker } from '../date-picker';
-import { TimeHlvInput } from '../time-hlv-input';
+import { DatePicker } from '@/components/ui/custom/date-picker';
+import { TimeHlvInput } from '@/components/ui/custom/time-hlv-input';
 import { format } from 'date-fns';
 import type { ManualNovedad } from '@/lib/types';
 

@@ -232,7 +232,29 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
         schema: reportsSchema
       },
       templates: { 
-        schema: templatesSchema
+        schema: templatesSchema,
+        migrationStrategies: {
+          1: (oldData: any) => {
+            const rules = (oldData.statisticsRules || []).map((rule: any) => ({
+              fieldId: rule.fieldId,
+              operator: rule.operator || '=',
+              condition: rule.condition || rule.value || '',
+              category: rule.category
+            }));
+            return {
+              ...oldData,
+              statisticsSubCategories: oldData.statisticsSubCategories || [],
+              statisticsRules: rules
+            };
+          },
+          2: (oldData: any) => {
+            return {
+              ...oldData,
+              statisticsSubCategories: oldData.statisticsSubCategories || [],
+              statisticsRules: oldData.statisticsRules || []
+            };
+          }
+        }
       },
       lookups: { 
         schema: lookupsSchema

@@ -44,13 +44,13 @@ import { useRoles } from '@/hooks/use-roles';
 import { useTemplates } from '@/hooks/use-templates';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { NoGuardBanner } from '@/components/guard-selector';
+import { NoGuardBanner } from '@/components/guards/guard-selector';
 import { renderFinalReport } from '@/lib/template-parser';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { Report, StaffMember } from '@/lib/types';
-import { DatePicker } from '@/components/date-picker';
-import { TimeHlvInput } from '@/components/time-hlv-input';
+import { DatePicker } from '@/components/ui/custom/date-picker';
+import { TimeHlvInput } from '@/components/ui/custom/time-hlv-input';
 import { PlusCircle, Trash2, FileText, Save, TrendingUp, Users, X, ChevronLeft, Eye, RotateCcw, History, ClipboardCheck, Calendar, Clock, Pencil } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { LEADER_ROLES } from '@/lib/constants/roles';
@@ -58,6 +58,8 @@ import { generateId } from '@/lib/utils/id';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { debounce } from '@/lib/utils';
+import { calculateDayStats, formatDayStats } from '@/lib/statistics-utils';
+
 
 interface ManualNovedad {
   id: string;
@@ -361,6 +363,23 @@ export default function ReporteFinalPage() {
       return true;
     });
   }, [reports, activeGuard?.id]);
+
+  const handleCalculateStats = () => {
+    if (finishedReports.length === 0) {
+      toast.error('No hay reportes finalizados para calcular estadísticas.');
+      return;
+    }
+    const dayStats = calculateDayStats(finishedReports, templates, configs);
+    const formatted = formatDayStats(dayStats);
+    
+    if (formatted) {
+      setStatisticsLocal(formatted);
+      debouncedSaveStats(formatted);
+      toast.success('Estadísticas calculadas correctamente.');
+    } else {
+      toast.info('No se encontraron categorías estadísticas en los reportes de hoy.');
+    }
+  };
 
   const handleGenerateReport = () => {
     if (finishedReports.length === 0 && !statisticsLocal.trim() && manualNovedades.length === 0) {
@@ -765,11 +784,20 @@ export default function ReporteFinalPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch md:flex-1 md:min-h-0 pb-4 overflow-hidden">
                     <div className="flex flex-col gap-8 md:flex-1 md:min-h-0 md:h-full">
                       <Card className="border bg-card/50 backdrop-blur-sm md:overflow-hidden md:flex-1 md:flex md:flex-col md:min-h-0 shadow-sm">
-                        <CardHeader className="py-3 border-b bg-background/50 backdrop-blur-sm shrink-0">
+                        <CardHeader className="py-2.5 border-b bg-background/50 backdrop-blur-sm shrink-0 flex flex-row items-center justify-between">
                           <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                             <TrendingUp className="h-3.5 w-3.5 text-primary" />
                             Estadísticas del Día
                           </CardTitle>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={handleCalculateStats}
+                            className="h-7 px-2 text-[10px] font-bold gap-1.5 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            CALCULAR
+                          </Button>
                         </CardHeader>
                         <CardContent className="p-4 flex-1 flex flex-col min-h-0">
                           <Textarea
@@ -1268,3 +1296,4 @@ export default function ReporteFinalPage() {
     </div>
   );
 }
+

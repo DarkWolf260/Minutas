@@ -2,7 +2,7 @@
 
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { NotificationBell } from '@/components/notification-bell';
+import { NotificationBell } from '@/components/layout/notification-bell';
 import { useProfile } from '@/hooks/use-profile';
 import { useSettings } from '@/hooks/use-settings';
 import { getInitials } from '@/lib/utils';
@@ -20,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useTheme } from '@/components/theme-provider';
+import { useTheme } from '@/components/providers/theme-provider';
 
 export function MobileNav() {
   const { profile } = useProfile();
@@ -119,3 +119,4 @@ export function MobileNav() {
     </header>
   );
 }
+

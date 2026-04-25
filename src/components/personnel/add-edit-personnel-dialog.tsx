@@ -27,7 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { CedulaInput } from '@/components/cedula-input';
+import { CedulaInput } from '@/components/ui/custom/cedula-input';
 import type { StaffMember, PersonnelStatus, StaffRole, Department } from '@/lib/types';
 import { RANK_OPTIONS, STATUS_OPTIONS, GENDER_OPTIONS } from '@/lib/constants/personnel';
 import { toast } from 'sonner';
@@ -349,3 +349,4 @@ function ResponsiveModal({
     </Dialog>
   );
 }
+

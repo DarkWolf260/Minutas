@@ -30,6 +30,7 @@ export function parseFieldTag(
     isFullWidth: boolean;
     isRequired: boolean;
     defaultValue?: string;
+    value?: string;
 } {
     const segments = tagContent.split(':').map((s) => s.trim());
     const fieldId = segments[0] || '';
@@ -39,6 +40,7 @@ export function parseFieldTag(
     let isFullWidth = false;
     let isRequired = false;
     let defaultValue: string | undefined = undefined;
+    let value: string | undefined = undefined;
     const modifiers: string[] = [];
 
     const VALID_FIELD_TYPES = new Set<FieldType>([
@@ -98,12 +100,19 @@ export function parseFieldTag(
                 } else if (trimmed === 'full') isFullWidth = true;
                 else if (trimmed === 'req') isRequired = true;
                 else if (VALID_TEXT_MODS.has(trimmed)) modifiers.push(trimmed);
-                else if (trimmed) modifiers.push(trimmed);
+                else if (trimmed) {
+                    // If it's not a known flag/modifier, it's likely the predefined value
+                    if (value === undefined) {
+                        value = trimmed;
+                    } else {
+                        modifiers.push(trimmed);
+                    }
+                }
             });
         }
     });
 
-    return { fieldId, fieldType, modifiers, isFullWidth, isRequired, defaultValue };
+    return { fieldId, fieldType, modifiers, isFullWidth, isRequired, defaultValue, value };
 }
 
 /**
@@ -119,6 +128,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
     const fieldWidths = new Map<string, boolean>();
     const requiredFields = new Map<string, boolean>();
     const defaultValues = new Map<string, string>();
+    const predefinedValues = new Map<string, string>();
     const globalRenderedFields = new Set<string>();
 
     // Refactored internal parser for recursion
@@ -160,7 +170,8 @@ export function parse(tokens: Token[]): TemplateParserResult {
                 if (config.modifiers.length > 0) fieldModifiers.set(fieldId, config.modifiers);
                 if (config.isFullWidth) fieldWidths.set(fieldId, true);
                 if (config.isRequired) requiredFields.set(fieldId, true);
-                if (config.defaultValue) defaultValues.set(fieldId, config.defaultValue);
+                if (config.defaultValue !== undefined) defaultValues.set(fieldId, config.defaultValue);
+                if (config.value !== undefined) predefinedValues.set(fieldId, config.value);
 
                 if (token.raw.endsWith('}*')) {
                     const sectionId = generateSectionId(fieldId, [...sections, ...subSections]);
@@ -182,7 +193,17 @@ export function parse(tokens: Token[]): TemplateParserResult {
                         globalRenderedFields.add(sectionId);
                     }
                 } else {
-                    if (!globalRenderedFields.has(fieldId)) {
+                    // Allow fields to appear in multiple sections, especially useful for 
+                    // mutually exclusive conditionals (e.g., [?{sex}=F]{Director}[/] [?{sex}=M]{Director}[/])
+                    // We only prevent duplicates at the same level if they are at the root.
+                    if (!parentId) {
+                        if (!globalRenderedFields.has(fieldId)) {
+                            subLayout.push(fieldId);
+                            globalRenderedFields.add(fieldId);
+                        }
+                    } else {
+                        // Inside a section, always add it to the section's layout.
+                        // The section's visibility logic in the form will handle showing only one instance.
                         subLayout.push(fieldId);
                         globalRenderedFields.add(fieldId);
                     }
@@ -438,6 +459,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
         fieldWidths,
         requiredFields,
         defaultValues,
+        predefinedValues,
         errors: [],
     };
 }

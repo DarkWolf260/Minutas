@@ -20,6 +20,7 @@ export function createTemplateRepository(db: MinutasDatabase, workspaceId: strin
       {
         feature: 'Templates',
         errorMessage: getUserFriendlyErrorMessage(null),
+        rethrow: true,
       }
     );
 
@@ -33,7 +34,7 @@ export function createTemplateRepository(db: MinutasDatabase, workspaceId: strin
         const { id, workspaceId, ...patchData } = template;
         await doc.patch(patchData);
       },
-      { feature: 'Templates', successMessage: 'Plantilla actualizada.' }
+      { feature: 'Templates', rethrow: true }
     );
 
   const remove = async (templateId: string) =>

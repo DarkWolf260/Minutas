@@ -60,7 +60,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
 
     const activeGuardStaff = useMemo(() => {
       if (!settingsLoaded || !guardsLoaded || !settings?.activeGuardId) return [];
-      
+
       // Use Orden del Día draft if it matches the current active guard, otherwise static config
       const activeStaff = (settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === settings.activeGuardId)
         ? settings.ordenDelDiaDraft.staff
@@ -251,34 +251,34 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
             if (!isEmpty && !isEmptyRoleArray) return;
 
             if (role && !MANUAL_FIELDS.includes(keyLower)) {
-                  let initialStaff: any[] = [];
-                  if (activeStaff) {
-                    // Optimized search for the staff (Copied from working logic for Jefe de los servicios)
-                    const staffKey = Object.keys(activeStaff).find(k => k.toLowerCase() === keyLower);
-                    const staffList = staffKey ? activeStaff[staffKey] : undefined;
-                    
-                    if (staffList && staffList.length > 0) {
-                      const isReporta = keyLower === 'reporta';
-                      if (isReporta) {
-                        // Reporta stores raw StaffMember so formatStaffReporta can render it properly
-                        initialStaff = [rehydrate(staffList[0])];
-                      } else {
-                        // Store raw StaffMember objects so {Campo.propiedad} syntax works
-                        // The renderer (renderValue) already formats them correctly
-                        initialStaff = staffList.map((s: any) => rehydrate(s));
-                      }
-                    }
-                  }
+              let initialStaff: any[] = [];
+              if (activeStaff) {
+                // Optimized search for the staff (Copied from working logic for Jefe de los servicios)
+                const staffKey = Object.keys(activeStaff).find(k => k.toLowerCase() === keyLower);
+                const staffList = staffKey ? activeStaff[staffKey] : undefined;
 
-                  // Leadership fallback
-                  if (initialStaff.length === 0 && isLeadershipRole) {
-                    const globalMatches = personnel.filter(
-                      (p) => p.roleId?.toLowerCase() === keyLower || p.cargo?.toLowerCase() === keyLower
-                    );
-                    if (globalMatches.length > 0) {
-                      initialStaff = globalMatches.map((p) => safeClone(formatStaffMember(p)));
-                    }
+                if (staffList && staffList.length > 0) {
+                  const isReporta = keyLower === 'reporta';
+                  if (isReporta) {
+                    // Reporta stores raw StaffMember so formatStaffReporta can render it properly
+                    initialStaff = [rehydrate(staffList[0])];
+                  } else {
+                    // Store raw StaffMember objects so {Campo.propiedad} syntax works
+                    // The renderer (renderValue) already formats them correctly
+                    initialStaff = staffList.map((s: any) => rehydrate(s));
                   }
+                }
+              }
+
+              // Leadership fallback
+              if (initialStaff.length === 0 && isLeadershipRole) {
+                const globalMatches = personnel.filter(
+                  (p) => p.roleId?.toLowerCase() === keyLower || p.cargo?.toLowerCase() === keyLower
+                );
+                if (globalMatches.length > 0) {
+                  initialStaff = globalMatches.map((p) => safeClone(formatStaffMember(p)));
+                }
+              }
 
               if (initialStaff.length > 0) {
                 target[fieldId] = initialStaff;
@@ -329,13 +329,13 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
 
         const initializeSection = (sectionId: string, target: FormDataRecord, seenIds = new Set<string>()) => {
           if (seenIds.has(sectionId)) {
-            logger.error('Circular dependency detected in template sections', new Error('Infinite recursion in initializeSection'), { 
-              feature: 'ReportForm', 
-              metadata: { sectionId, seenIds: Array.from(seenIds) } 
+            logger.error('Circular dependency detected in template sections', new Error('Infinite recursion in initializeSection'), {
+              feature: 'ReportForm',
+              metadata: { sectionId, seenIds: Array.from(seenIds) }
             });
             return;
           }
-          
+
           const section = finalConfig.sections.find((s) => s.id === sectionId);
           if (!section) return;
 
@@ -420,7 +420,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
         // Force parent re-render so conditionValue props get recalculated
         forceRender((n) => n + 1);
         if (type !== 'change' || !name) return;
-        
+
         if (onDataChange) {
           // Debounce the call to onDataChange to avoid excessive parent re-renders 
           // that can interfere with input focus and cursor positioning
@@ -428,7 +428,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
           const dataHash = stableStringify(currentValues);
           if (dataHash !== lastDataHash.current) {
             lastDataHash.current = dataHash;
-            
+
             const timer = setTimeout(() => {
               onDataChange(currentValues);
             }, 1000); // 1s debounce for sync
@@ -468,7 +468,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       const currentInitialDataHash = stableStringify(initialData || {});
       const currentDraftKey = settings?.ordenDelDiaDraft?.updatedAt || 'no-draft';
       const baseDataState = `${currentInitialDataHash}:${settings?.activeGuardId}:${currentDraftKey}:${roles.length}:${personnel.length}`;
-      
+
       const baseDataChanged = baseDataState !== lastBaseDataHash.current;
 
       // 4a. First load: always reset (data is now ready, overwrite the empty {} we started with)
@@ -478,7 +478,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
         hasInitialized.current = true;
         const formValues = getInitialValues(initialData);
         reset(formValues);
-        
+
         // Trigger validation visually for existing reports so the user
         // immediately sees what's missing in "novedades ya creadas".
         if (reportId && !reportId.startsWith('new-')) {
@@ -586,7 +586,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
           const isControlled = (controlledValues && Object.keys(controlledValues).some(
             (k) => k.toLowerCase() === id.toLowerCase()
           )) || systemTags.includes(id.toLowerCase());
-          
+
           if (isControlled) return;
           // Check if it's already in a section
           const isAssignedToSection = finalConfig.sections.some((s) => s.fieldIds.includes(id));
@@ -616,7 +616,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
           const isControlled = (controlledValues && Object.keys(controlledValues).some(
             (k) => k.toLowerCase() === id.toLowerCase()
           )) || systemTags.includes(id.toLowerCase());
-          
+
           return !allLayoutFields.has(id) && finalConfig.fields[id] && !isControlled;
         }
       );
@@ -632,17 +632,17 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
 
     return (
       <FormProvider {...methods}>
-        <form 
-          onSubmit={handleSubmit(handleFormSubmit)} 
-          className="space-y-6" 
+        <form
+          onSubmit={handleSubmit(handleFormSubmit)}
+          className="space-y-6"
           autoComplete="off"
-          onFocusCapture={() => { 
-            isFocused.current = true; 
+          onFocusCapture={() => {
+            isFocused.current = true;
           }}
-          onBlurCapture={(e) => { 
+          onBlurCapture={(e) => {
             // Use relatedTarget to check if focus is still within the form
             if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-              isFocused.current = false; 
+              isFocused.current = false;
             }
           }}
         >

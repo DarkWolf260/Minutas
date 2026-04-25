@@ -49,7 +49,7 @@ export const reportsSchema = {
 
 export const templatesSchema = {
     title: 'templates schema',
-    version: 0,
+    version: 2,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -59,16 +59,20 @@ export const templatesSchema = {
         content: { type: 'string' },
         type: { type: 'string' },
         isActive: { type: 'boolean' },
-        statisticsCategory: { type: 'string' },
+        statisticsCategory: { type: ['string', 'null'] },
+        statisticsSubCategories: {
+            type: ['array', 'null'],
+            items: { type: 'string' }
+        },
         statisticsRules: {
-            type: 'array',
+            type: ['array', 'null'],
             items: {
-                type: 'object',
+                type: ['object', 'null'],
                 properties: {
-                    fieldId: { type: 'string' },
-                    condition: { type: 'string' },
-                    value: { type: 'string' },
-                    category: { type: 'string' },
+                    fieldId: { type: ['string', 'null'] },
+                    operator: { type: ['string', 'null'] },
+                    condition: { type: ['string', 'null'] },
+                    category: { type: ['string', 'null'] },
                 },
             },
         },

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { GlobalTagsManager } from '@/components/global-tags-manager';
+import { GlobalTagsManager } from '@/components/shared/global-tags-manager';
 import { useSettings } from '@/hooks/use-settings';
 import { useUnits } from '@/hooks/use-units';
 import { useRoles } from '@/hooks/use-roles';
@@ -230,3 +230,4 @@ export default function SettingsPage() {
     </ScrollArea>
   );
 }
+

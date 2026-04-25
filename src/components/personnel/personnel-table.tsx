@@ -17,7 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Search, FileEdit, Trash2, Activity, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { StaffMember, PersonnelStatus, Department } from '@/lib/types';
 import { cn, normalizeString } from '@/lib/utils';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
 
 interface PersonnelTableProps {
   personnel: StaffMember[];
@@ -106,11 +106,11 @@ export function PersonnelTable({
     switch (status) {
       case 'activo':
         return 'default';
-      case 'vacaciones':
+      case 'Vacaciones':
         return 'secondary';
-      case 'reposo':
-      case 'permiso':
-      case 'ausente':
+      case 'Reposo':
+      case 'Permiso':
+      case 'Ausente':
         return 'outline';
       default:
         return 'default';
@@ -418,3 +418,4 @@ export function PersonnelTable({
     </div>
   );
 }
+

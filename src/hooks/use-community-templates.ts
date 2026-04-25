@@ -10,6 +10,9 @@ export interface CommunityTemplate {
   description?: string;
   type: 'normal' | 'relevante';
   created_at?: string;
+  statisticsCategory?: string | null;
+  statisticsSubCategories?: string[] | null;
+  statisticsRules?: any[] | null;
 }
 
 export function useCommunityTemplates() {

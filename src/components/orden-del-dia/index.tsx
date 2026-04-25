@@ -31,9 +31,9 @@ import { toast } from 'sonner';
 import type { Staff, StaffMember, StaffRole, ManualNovedad } from '@/lib/types';
 import { generateId } from '@/lib/utils/id';
 import { format } from 'date-fns';
-import { StaffListEditor } from '../guard-staff-editor';
-import { DatePicker } from '../date-picker';
-import { TimeHlvInput } from '../time-hlv-input';
+import { StaffListEditor } from '@/components/guards/guard-staff-editor';
+import { DatePicker } from '@/components/ui/custom/date-picker';
+import { TimeHlvInput } from '@/components/ui/custom/time-hlv-input';
 import { formatStaffMember } from '@/lib/formatters';
 
 // Sub-components
@@ -474,7 +474,7 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
                           label={role.name}
                           staffMembers={staff[role.name] || []}
                           isSingle={role.isSingle}
-                          onUpdate={(members) => handleRoleStaffUpdate(role.name, members)}
+                          onUpdate={(members: StaffMember[]) => handleRoleStaffUpdate(role.name, members)}
                           showObservations={true}
                         />
                         {role.name.toLowerCase() === 'jefe de los servicios' && (

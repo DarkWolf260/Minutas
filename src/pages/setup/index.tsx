@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { useSettings } from '@/hooks/use-settings';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
-import { useTheme } from '@/components/theme-provider';
+import { useTheme } from '@/components/providers/theme-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -54,7 +54,7 @@ import type { AppModuleId, StaffRole, Department } from '@/lib/types';
 import { useRoles } from '@/hooks/use-roles';
 import { useDepartments } from '@/hooks/use-departments';
 import { usePersonnel } from '@/hooks/use-personnel';
-import { StructureManager } from '@/components/structure-manager';
+import { StructureManager } from '@/components/structure/structure-manager';
 import { generateId } from '@/lib/utils/id';
 import { DEFAULT_DEPARTMENTS, DEFAULT_ROLES } from '@/lib/constants/structure';
 
@@ -1125,3 +1125,4 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
     </div>
   );
 }
+

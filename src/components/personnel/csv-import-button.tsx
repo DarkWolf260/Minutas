@@ -15,9 +15,9 @@ interface CsvImportButtonProps {
 function parseStatus(raw: string): StaffMember['status'] {
     const s = raw.toLowerCase().trim();
     if (s === 'activo' || s === 'active') return 'activo';
-    if (s === 'vacaciones' || s === 'vacation') return 'vacaciones';
-    if (s === 'permiso' || s === 'leave') return 'permiso';
-    if (s === 'reposo' || s === 'rest') return 'reposo';
+    if (s === 'vacaciones' || s === 'vacation') return 'Vacaciones';
+    if (s === 'permiso' || s === 'leave') return 'Permiso';
+    if (s === 'reposo' || s === 'rest') return 'Reposo';
     if (s === 'apoyo' || s === 'support') return 'activo';
     return 'activo'; // default
 }

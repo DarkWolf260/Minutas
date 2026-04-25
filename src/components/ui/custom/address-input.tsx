@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useMemo, useRef, forwardRef } from 'react';
-import { Input } from './input';
-import { Textarea } from './textarea';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { ChevronsUpDown } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAddresses } from '@/hooks/use-addresses';
 import type { Address } from '@/lib/types';
-import { Skeleton } from './skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn, normalizeString } from '@/lib/utils';
 
 interface AddressInputProps {
@@ -81,13 +81,13 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
           <div className="relative">
             {isTextarea ? (
               <Textarea
-                ref={(node) => {
-                  internalInputRef.current = node as any;
+                ref={(node: HTMLTextAreaElement | null) => {
+                  internalInputRef.current = node;
                   if (typeof ref === 'function') ref(node);
-                  else if (ref) (ref as React.MutableRefObject<any>).current = node;
+                  else if (ref) (ref as React.MutableRefObject<HTMLTextAreaElement | null>).current = node;
                 }}
                 value={value}
-                onChange={(e) => onChange(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
                 placeholder={placeholder || 'Selecciona o escribe una dirección...'}
                 disabled={disabled}
                 className={cn("pr-8 min-h-[80px]", className)}
@@ -97,13 +97,13 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
               />
             ) : (
               <Input
-                ref={(node) => {
-                  internalInputRef.current = node as any;
+                ref={(node: HTMLInputElement | null) => {
+                  internalInputRef.current = node;
                   if (typeof ref === 'function') ref(node);
-                  else if (ref) (ref as React.MutableRefObject<any>).current = node;
+                  else if (ref) (ref as React.MutableRefObject<HTMLInputElement | null>).current = node;
                 }}
                 value={value}
-                onChange={(e) => onChange(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
                 placeholder={placeholder || 'Selecciona o escribe una dirección...'}
                 disabled={disabled}
                 className={cn("pr-8", className)}
@@ -153,3 +153,4 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
   }
 );
 AddressInput.displayName = 'AddressInput';
+

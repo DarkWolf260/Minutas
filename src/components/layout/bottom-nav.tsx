@@ -15,6 +15,7 @@ const ALL_NAV_ITEMS: { href: string; label: string; icon: any; moduleId: AppModu
   { href: '/',              label: 'Novedades',    icon: Newspaper,    moduleId: 'novedades' },
   { href: '/orden-del-dia', label: 'Lista',        icon: ClipboardList, moduleId: 'orden-del-dia' },
   { href: '/reporte-final', label: 'Reporte',      icon: History,      moduleId: 'reporte-final' },
+  { href: '/estadisticas',  label: 'Estadísticas', icon: BarChart2,    moduleId: 'estadisticas' },
   { href: '/personal',      label: 'Personal',     icon: Users,        moduleId: 'personal' },
   { href: '/plantillas',    label: 'Plantillas',   icon: FileText,     moduleId: 'plantillas' },
 ];

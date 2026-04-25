@@ -57,16 +57,19 @@ export const TemplateSchema = z.object({
         errorMap: () => ({ message: 'Tipo debe ser "normal" o "relevante"' }),
     }),
     isActive: z.boolean().default(true),
-    statisticsCategory: z.string().optional(),
-    statisticsRules: z
-        .array(
-            z.object({
-                fieldId: z.string(), // ID del campo (ej: "{Tipo}")
-                condition: z.string(), // Condición (ej: "Robo")
-                category: z.string(), // Categoría de estadística
-            })
-        )
-        .optional(),
+    statisticsCategory: z.string().nullable().optional(),
+    statisticsSubCategories: z.array(z.string()).nullable().optional(),
+    statisticsRules: z.array(z.object({
+        fieldId: z.string().nullable().optional(),
+        operator: z.enum(['=', '!=', 'filled', 'empty', 'not_empty', 'contains', 'not_contains', 'starts_with', 'ends_with', 'extract_value', '>', '<', '>=', '<=']).nullable().optional(),
+        condition: z.string().nullable().optional(),
+        category: z.string().nullable().optional(),
+        conditions: z.array(z.object({
+            fieldId: z.string().nullable().optional(),
+            operator: z.enum(['=', '!=', 'filled', 'empty', 'not_empty', 'contains', 'not_contains', 'starts_with', 'ends_with', 'extract_value', '>', '<', '>=', '<=']).nullable().optional(),
+            condition: z.string().nullable().optional(),
+        })).nullable().optional(),
+    })).nullable().optional(),
 });
 
 export type ValidatedTemplate = z.infer<typeof TemplateSchema>;
@@ -187,7 +190,6 @@ export const FieldConfigSchema = z.object({
     required: z.boolean().optional(),
     value: z.string().optional(),
     sectionId: z.string().optional(),
-    targetField: z.string().optional(),
     snippetOptions: z.array(SnippetOptionSchema).optional(),
     modifiers: z.array(z.enum(['upper', 'lower', 'title'])).optional(),
     isFullWidth: z.boolean().optional(),

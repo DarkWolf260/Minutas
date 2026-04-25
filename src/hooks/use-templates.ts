@@ -128,7 +128,7 @@ export function useTemplates() {
             };
           }),
           layout: parsed.layout,
-          fields: {}
+          fields: {},
         };
 
         parsed.fieldNames.forEach((fieldName: string) => {
@@ -246,6 +246,9 @@ export function useTemplates() {
               content: ct.content,
               type: ct.type || 'normal',
               isActive: true,
+              statisticsCategory: ct.statisticsCategory,
+              statisticsSubCategories: ct.statisticsSubCategories,
+              statisticsRules: ct.statisticsRules,
             }));
 
           if (newTemplates.length > 0) {

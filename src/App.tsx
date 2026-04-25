@@ -1,12 +1,12 @@
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { ThemeProvider } from '@/components/theme-provider';
-import { SideNav } from '@/components/side-nav';
-import { MobileNav } from '@/components/mobile-nav';
-import { BottomNav } from '@/components/bottom-nav';
-import { Toaster } from '@/components/toaster';
-import { ErrorBoundary } from '@/components/error-boundary';
+import { ThemeProvider } from '@/components/providers/theme-provider';
+import { SideNav } from '@/components/layout/side-nav';
+import { MobileNav } from '@/components/layout/mobile-nav';
+import { BottomNav } from '@/components/layout/bottom-nav';
+import { Toaster } from '@/components/ui/toaster';
+import { ErrorBoundary } from '@/components/common/error-boundary';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { PWAStatus } from '@/components/pwa-status';
+import { PWAStatus } from '@/components/layout/pwa-status';
 import { DatabaseProvider } from '@/lib/db/db-provider';
 import { NotificationsProvider } from '@/lib/notifications-provider';
 import { SyncProvider } from '@/lib/sync/sync-context';
@@ -193,3 +193,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+

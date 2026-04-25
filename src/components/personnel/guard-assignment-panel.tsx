@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { GuardStaffEditor } from '@/components/guard-staff-editor';
+import { GuardStaffEditor } from '@/components/guards/guard-staff-editor';
 import { PlusCircle, Trash2, ShieldCheck, Save } from 'lucide-react';
 import { useRef } from 'react';
 import type { Guard, StaffMember, StaffRole, Department } from '@/lib/types';
@@ -13,7 +13,7 @@ import { LEADER_ROLES } from '@/lib/constants/roles';
 import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
 
 interface GuardAssignmentPanelProps {
   guards: Guard[];
@@ -242,3 +242,4 @@ export function GuardAssignmentPanel({
     </div>
   );
 }
+

@@ -26,9 +26,9 @@ import { useUnits } from '@/hooks/use-units';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { useReports } from '@/hooks/use-reports';
 import type { StaffMember } from '@/lib/types';
-import { StructureManager } from '@/components/structure-manager';
-import { DataTableSkeleton } from '@/components/ui/loading-skeleton';
-import { FeatureErrorBoundary } from '@/components/error-boundary-feature';
+import { StructureManager } from '@/components/structure/structure-manager';
+import { DataTableSkeleton } from '@/components/ui/custom/loading-skeleton';
+import { FeatureErrorBoundary } from '@/components/common/error-boundary-feature';
 
 // Extracted components
 import { PersonnelTable } from '@/components/personnel/personnel-table';
@@ -39,7 +39,7 @@ import { PersonnelHistoryDialog } from '@/components/personnel/personnel-history
 import { CsvImportButton } from '@/components/personnel/csv-import-button';
 
 import { UnitsManager } from '@/components/personnel/units-manager';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 function PersonnelPageContent() {
@@ -349,3 +349,4 @@ export default function PersonnelPage() {
     </FeatureErrorBoundary>
   );
 }
+

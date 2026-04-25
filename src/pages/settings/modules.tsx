@@ -33,12 +33,16 @@ const MODULE_DEFS: {
   { id: 'orden-del-dia', label: 'Orden del Día',  description: 'Distribuye personal y planifica actividades',       icon: ClipboardList, color: 'text-emerald-600 bg-emerald-500/10' },
   { id: 'reporte-final', label: 'Reporte Final',  description: 'Genera y archiva el cierre de guardia',            icon: History,       color: 'text-violet-600 bg-violet-500/10' },
   { id: 'personal',      label: 'Personal',       description: 'Gestiona efectivos y asignación de guardias',      icon: Users,         color: 'text-amber-600 bg-amber-500/10' },
+  { id: 'estadisticas',  label: 'Estadísticas',   description: 'Panel de métricas e indicadores históricos',        icon: BarChart2,     color: 'text-rose-600 bg-rose-500/10' },
   { id: 'plantillas',    label: 'Plantillas',     description: 'Crea y gestiona plantillas de novedades',          icon: FileText,      color: 'text-slate-600 bg-slate-500/10' },
 ];
 
-const COMING_SOON_MODULES = [
-  { label: 'Estadísticas', description: 'Panel de métricas e indicadores históricos', icon: BarChart2, color: 'text-rose-600 bg-rose-500/10' },
-];
+const COMING_SOON_MODULES: {
+  label: string;
+  description: string;
+  icon: any;
+  color: string;
+}[] = [];
 
 // Modules disabled in each preset (novedades is always enabled)
 const PRESET_DESKTOP: AppModuleId[] = [];

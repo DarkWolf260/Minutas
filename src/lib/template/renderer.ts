@@ -70,16 +70,16 @@ export function renderContent(
         if (condMatch && condMatch[1]) {
             const condFieldId = condMatch[1].trim();
             const operator = condMatch[2];
-            
+
             // Re-use findValueForField for robust case-insensitive lookup
             const actualValue = findValueForField(
-                condFieldId, 
-                localData, 
-                config.sections || [], 
-                {}, 
+                condFieldId,
+                localData,
+                config.sections || [],
+                {},
                 {}
             );
-            
+
             const options = config.templateOptions.get(condFieldId);
 
             if (!operator) {
@@ -295,7 +295,6 @@ function renderValue(
 
     // Dropdown rendering
     if (fieldConfig?.type === 'dropdown' && typeof value === 'string') {
-        if (fieldConfig.targetField) return '';
         const allOptions = [
             ...(fieldConfig.snippetOptions || []),
             ...(config.templateOptions?.get(fieldId) || []),
@@ -464,11 +463,11 @@ function renderSection(
         const options = config.templateOptions?.get(section.condition.fieldId);
         if (options && valToCompare !== undefined && valToCompare !== null) {
             const valStr = String(valToCompare);
-            const opt = options.find(o => 
-                String(o.value) === valStr || 
+            const opt = options.find(o =>
+                String(o.value) === valStr ||
                 String(o.label) === valStr
             );
-            
+
             if (opt) {
                 // Determine if we should compare against label or value
                 const targetValue = section.condition.value;
@@ -556,7 +555,7 @@ function renderSection(
                                 if (nestedSection.singularTitle) attrList.push(`singular\\s*=\\s*"${escapeRegExp(nestedSection.singularTitle)}"`);
                                 if (nestedSection.pluralTitle) attrList.push(`plural\\s*=\\s*"${escapeRegExp(nestedSection.pluralTitle)}"`);
                                 if (nestedSection.repeatableItemLabel) attrList.push(`sub\\s*=\\s*"${escapeRegExp(nestedSection.repeatableItemLabel)}"`);
-                                
+
                                 // Join with optional whitespace and allow any order using a more complex lookahead-based pattern 
                                 // OR simpler: just match the bunch of attributes. Since we know what we expect, 
                                 // we can just list them with \s* between them.
@@ -684,7 +683,7 @@ function renderSection(
             if (section.repeatableItemLabel) {
 
                 const isVirtual = isVirtualSection(section.originalContent || '');
-                
+
                 if (isVirtual) {
                     if (itemsWithContent.length > 1) {
                         const labelPrefix = `- *${section.repeatableItemLabel} #${String(index + 1).padStart(2, '0')}:*`;
@@ -710,7 +709,7 @@ function renderSection(
     const isVirtual = isVirtualSection(section.originalContent || '');
     const hasInternalNewlines = renderedItemsArray.some(item => (item || '').trim().includes('\n'));
     const anyEndsWithNewline = renderedItemsArray.some(item => (item || '').endsWith('\n'));
-    
+
     // Choose joiner:
     // 1. Virtual items -> joined by single \n
     // 2. Multiline items that don't already end in \n -> joined by \n\n (for separation)
@@ -882,13 +881,13 @@ export function renderContentWithSections(
             fieldId = fieldId.trim();
             const lowerFieldId = fieldId.toLowerCase();
             const baseVal = findValueForField(fieldId, data, sections, predefinedValues, dynamicPredefinedValues);
-            
+
             // Mapping results are only applicable for non-dotted field names
             const mappingKey = !fieldId.includes('.')
                 ? Object.keys(mappingResults).find(k => k.toLowerCase() === lowerFieldId)
                 : undefined;
             const formValue = mappingKey !== undefined ? mappingResults[mappingKey] : baseVal;
-            
+
             return hasContent(formValue) ? renderValue(formValue, fieldId, fields, config) : '';
         }
     );

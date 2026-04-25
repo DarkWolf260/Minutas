@@ -23,6 +23,9 @@ export function useUploadTemplate() {
               content: template.content,
               description: description || `Plantilla para reportes de ${template.name}`,
               type: 'normal', // Default for user uploads
+              statisticsCategory: template.statisticsCategory,
+              statisticsSubCategories: template.statisticsSubCategories,
+              statisticsRules: template.statisticsRules,
             },
           ], 
           { onConflict: 'name' }

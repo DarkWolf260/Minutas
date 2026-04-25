@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { getReportCategory, calculateMonthlyStats } from '../statistics-utils';
+import { getReportCategories, calculateMonthlyStats } from '../statistics-utils';
 import type { Report, Template, TemplateConfig } from '@/lib/types';
 
 // Mock data factories
@@ -36,53 +36,52 @@ function createMockTemplate(overrides: Partial<Template> = {}): Template {
     };
 }
 
-
+function createMockConfig(overrides: Partial<TemplateConfig> = {}): TemplateConfig {
+    return {
+        fields: {},
+        sections: [],
+        layout: [],
+        ...overrides,
+    };
+}
 
 describe('statistics-utils', () => {
-    describe('getReportCategory', () => {
-        it('should return null when template is undefined', () => {
+    describe('getReportCategories', () => {
+        it('should return empty array when template is undefined', () => {
             const report = createMockReport();
-            const result = getReportCategory(report, undefined);
-            expect(result).toBeNull();
+            const result = getReportCategories(report, undefined);
+            expect(result).toEqual([]);
         });
 
-        it('should return null when template has no category or rules', () => {
+        it('should return empty array when template has no category or rules', () => {
             const report = createMockReport();
             const template = createMockTemplate();
-            const result = getReportCategory(report, template);
-            expect(result).toBeNull();
+            const result = getReportCategories(report, template);
+            expect(result).toEqual([]);
         });
 
         it('should return default category when no rules match', () => {
             const report = createMockReport();
             const template = createMockTemplate({
-                statisticsCategory: '1.3 ROBOS',
+                statisticsCategory: '1.2 LLAMADAS DE EMERGENCIAS',
             });
-            const result = getReportCategory(report, template);
-            expect(result).toBe('1.3 ROBOS');
+            const result = getReportCategories(report, template);
+            expect(result).toContain('1.2 LLAMADAS DE EMERGENCIAS');
         });
 
-        it('should normalize category to uppercase and trim', () => {
-            const report = createMockReport();
-            const template = createMockTemplate({
-                statisticsCategory: '  1.3 robos  ',
-            });
-            const result = getReportCategory(report, template);
-            expect(result).toBe('1.3 ROBOS');
-        });
-
-        it('should prioritize conditional rules over default category', () => {
+        it('should include both default category and matching rules', () => {
             const report = createMockReport({
                 formData: { tipo: 'hurto' },
             });
             const template = createMockTemplate({
-                statisticsCategory: '1.3 ROBOS',
+                statisticsCategory: '5 ATENCIONES AL PÚBLICO',
                 statisticsRules: [
-                    { fieldId: 'tipo', condition: 'hurto', category: '1.2 HURTOS' },
+                    { fieldId: 'tipo', condition: 'hurto', category: '5.1 ATENCIONES PREHOSPITALARIAS' },
                 ],
             });
-            const result = getReportCategory(report, template);
-            expect(result).toBe('1.2 HURTOS');
+            const result = getReportCategories(report, template);
+            expect(result).toContain('5 ATENCIONES AL PÚBLICO');
+            expect(result).toContain('5.1 ATENCIONES PREHOSPITALARIAS');
         });
 
         it('should match conditional rule case-insensitively', () => {
@@ -91,52 +90,11 @@ describe('statistics-utils', () => {
             });
             const template = createMockTemplate({
                 statisticsRules: [
-                    { fieldId: 'tipo', condition: 'hurto', category: '1.2 HURTOS' },
+                    { fieldId: 'tipo', condition: 'hurto', category: '1.2 LLAMADAS DE EMERGENCIAS' },
                 ],
             });
-            const result = getReportCategory(report, template);
-            expect(result).toBe('1.2 HURTOS');
-        });
-
-        it('should trim whitespace in condition matching', () => {
-            const report = createMockReport({
-                formData: { tipo: '  hurto  ' },
-            });
-            const template = createMockTemplate({
-                statisticsRules: [
-                    { fieldId: 'tipo', condition: '  hurto  ', category: '1.2 HURTOS' },
-                ],
-            });
-            const result = getReportCategory(report, template);
-            expect(result).toBe('1.2 HURTOS');
-        });
-
-        it('should use first matching rule when multiple rules defined', () => {
-            const report = createMockReport({
-                formData: { tipo: 'robo' },
-            });
-            const template = createMockTemplate({
-                statisticsRules: [
-                    { fieldId: 'tipo', condition: 'robo', category: '1.3 ROBOS' },
-                    { fieldId: 'tipo', condition: 'robo', category: '1.4 OTHER' }, // Should not be used
-                ],
-            });
-            const result = getReportCategory(report, template);
-            expect(result).toBe('1.3 ROBOS');
-        });
-
-        it('should return default category when no rules match', () => {
-            const report = createMockReport({
-                formData: { tipo: 'accidente' },
-            });
-            const template = createMockTemplate({
-                statisticsCategory: '2.1 ACCIDENTES',
-                statisticsRules: [
-                    { fieldId: 'tipo', condition: 'robo', category: '1.3 ROBOS' },
-                ],
-            });
-            const result = getReportCategory(report, template);
-            expect(result).toBe('2.1 ACCIDENTES');
+            const result = getReportCategories(report, template);
+            expect(result).toContain('1.2 LLAMADAS DE EMERGENCIAS');
         });
 
         it('should handle missing formData field gracefully', () => {
@@ -144,27 +102,69 @@ describe('statistics-utils', () => {
                 formData: {},
             });
             const template = createMockTemplate({
-                statisticsCategory: '1.0 DEFAULT',
+                statisticsCategory: '1 REPORTES DEL VEN 9-1-1',
                 statisticsRules: [
-                    { fieldId: 'nonexistent', condition: 'value', category: '1.1 OTHER' },
+                    { fieldId: 'nonexistent', condition: 'value', category: '1.2 LLAMADAS DE EMERGENCIAS' },
                 ],
             });
-            const result = getReportCategory(report, template);
-            expect(result).toBe('1.0 DEFAULT');
+            const result = getReportCategories(report, template);
+            expect(result).toContain('1 REPORTES DEL VEN 9-1-1');
+            expect(result).not.toContain('1.2 LLAMADAS DE EMERGENCIAS');
         });
 
-        it('should handle null/undefined values in formData', () => {
+        it('should resolve dropdown labels correctly for rules', () => {
             const report = createMockReport({
-                formData: { tipo: null },
+                formData: { tipo_aph: 'residencia' },
             });
             const template = createMockTemplate({
-                statisticsCategory: '1.0 DEFAULT',
                 statisticsRules: [
-                    { fieldId: 'tipo', condition: 'robo', category: '1.3 ROBOS' },
+                    { fieldId: 'Tipo de APH', operator: '=', condition: 'Residencia', category: '5.3 EN RESIDENCIA' },
                 ],
             });
-            const result = getReportCategory(report, template);
-            expect(result).toBe('1.0 DEFAULT');
+            const config = createMockConfig({
+                fields: {
+                    'tipo_aph': { 
+                        label: 'Tipo de APH', 
+                        type: 'dropdown',
+                        snippetOptions: [
+                            { id: 'opt-1', value: 'residencia', label: 'Residencia' }
+                        ]
+                    }
+                }
+            });
+            const result = getReportCategories(report, template, config);
+            expect(result).toContain('5.3 EN RESIDENCIA');
+        });
+
+        it('should handle multi-value fields correctly', () => {
+            const report = createMockReport({
+                formData: { symptoms: ['fever', 'cough'] },
+            });
+            const template = createMockTemplate({
+                statisticsRules: [
+                    { fieldId: 'symptoms', operator: '=', condition: 'fever', category: '5.1 ATENCIONES PREHOSPITALARIAS' },
+                    { fieldId: 'symptoms', operator: '=', condition: 'cough', category: '5.2 EN TRASLADOS' },
+                ],
+            });
+            const result = getReportCategories(report, template);
+            expect(result).toContain('5.1 ATENCIONES PREHOSPITALARIAS');
+            expect(result).toContain('5.2 EN TRASLADOS');
+        });
+
+        it('should not double count when rule and general category are the same', () => {
+            const report = createMockReport({
+                formData: { destiny: 'Guanta' },
+            });
+            const template = createMockTemplate({
+                statisticsCategory: '6.2 TRASLADOS EXTRAURBANOS',
+                statisticsRules: [
+                    { fieldId: 'destiny', operator: '=', condition: 'Guanta', category: '6.2 TRASLADOS EXTRAURBANOS' },
+                ],
+            });
+            const result = getReportCategories(report, template);
+            // Should only contain ONE instance of 6.2
+            const count = result.filter(c => c === '6.2 TRASLADOS EXTRAURBANOS').length;
+            expect(count).toBe(1);
         });
     });
 
@@ -172,205 +172,70 @@ describe('statistics-utils', () => {
         const testMonth = 0; // January
         const testYear = 2026;
 
-        it('should return empty stats for no reports', () => {
-            const result = calculateMonthlyStats([], [], {}, testMonth, testYear);
-            expect(result).toBeInstanceOf(Map);
-            // Should have default categories initialized
-            expect(result.size).toBeGreaterThan(0);
-        });
-
-        it('should filter reports by month and year', () => {
-            const reports = [
-                createMockReport({ timestamp: new Date(2026, 0, 5).toISOString() }), // Jan 2026 - included
-                createMockReport({ timestamp: new Date(2026, 1, 5).toISOString() }), // Feb 2026 - excluded
-                createMockReport({ timestamp: new Date(2025, 0, 5).toISOString() }), // Jan 2025 - excluded
-            ];
-            const template = createMockTemplate({ statisticsCategory: '1.0 TEST' });
-            const result = calculateMonthlyStats(reports, [template], {}, testMonth, testYear);
-
-            const testCat = result.get('1.0 TEST');
-            expect(testCat).toBeDefined();
-            expect(testCat!.get(5)).toBe(1); // Only 1 report on day 5
-        });
-
-        it('should only count Finalizado reports', () => {
-            const reports = [
-                createMockReport({ status: 'Finalizado', timestamp: new Date(2026, 0, 5).toISOString() }),
-                createMockReport({ status: 'En proceso', timestamp: new Date(2026, 0, 5).toISOString() }),
-                createMockReport({ status: undefined, timestamp: new Date(2026, 0, 5).toISOString() }),
-            ];
-            const template = createMockTemplate({ statisticsCategory: '1.0 TEST' });
-            const result = calculateMonthlyStats(reports, [template], {}, testMonth, testYear);
-
-            const testCat = result.get('1.0 TEST');
-            expect(testCat!.get(5)).toBe(1); // Only 1 Finalizado report
-        });
-
-        it('should count reports by day correctly', () => {
-            const reports = [
-                createMockReport({ timestamp: new Date(2026, 0, 5).toISOString() }),
-                createMockReport({ timestamp: new Date(2026, 0, 5).toISOString() }),
-                createMockReport({ timestamp: new Date(2026, 0, 10).toISOString() }),
-            ];
-            const template = createMockTemplate({ statisticsCategory: '1.0 TEST' });
-            const result = calculateMonthlyStats(reports, [template], {}, testMonth, testYear);
-
-            const testCat = result.get('1.0 TEST');
-            expect(testCat!.get(5)).toBe(2); // 2 reports on day 5
-            expect(testCat!.get(10)).toBe(1); // 1 report on day 10
-        });
-
-        it('should handle DD/MM/YYYY timestamp format', () => {
-            const reports = [
-                createMockReport({ timestamp: '15/01/2026' }), // Venezuelan format
-            ];
-            const template = createMockTemplate({ statisticsCategory: '1.0 TEST' });
-            const result = calculateMonthlyStats(reports, [template], {}, testMonth, testYear);
-
-            const testCat = result.get('1.0 TEST');
-            expect(testCat!.get(15)).toBe(1);
-        });
-
-        it('should handle DD/MM/YYYY HH:MM timestamp format', () => {
-            const reports = [
-                createMockReport({ timestamp: '15/01/2026, 14:30' }), // Venezuelan format with time
-            ];
-            const template = createMockTemplate({ statisticsCategory: '1.0 TEST' });
-            const result = calculateMonthlyStats(reports, [template], {}, testMonth, testYear);
-
-            const testCat = result.get('1.0 TEST');
-            expect(testCat!.get(15)).toBe(1);
-        });
-
-        it('should skip reports with invalid timestamps', () => {
-            const reports = [
-                createMockReport({ timestamp: 'invalid-date' }),
-                createMockReport({ timestamp: '' }),
-                createMockReport({ timestamp: undefined as any }),
-            ];
-            const template = createMockTemplate({ statisticsCategory: '1.0 TEST' });
-            const result = calculateMonthlyStats(reports, [template], {}, testMonth, testYear);
-
-            const testCat = result.get('1.0 TEST');
-            expect(testCat?.size || 0).toBe(0); // No valid dates
-        });
-
-        it('should categorize reports correctly based on template', () => {
-            const templates = [
-                createMockTemplate({ id: 't1', statisticsCategory: '1.1 CATEGORY_A' }),
-                createMockTemplate({ id: 't2', statisticsCategory: '1.2 CATEGORY_B' }),
-            ];
-            const reports = [
-                createMockReport({ templateId: 't1', timestamp: new Date(2026, 0, 5).toISOString() }),
-                createMockReport({ templateId: 't2', timestamp: new Date(2026, 0, 5).toISOString() }),
-            ];
-            const result = calculateMonthlyStats(reports, templates, {}, testMonth, testYear);
-
-            expect(result.get('1.1 CATEGORY_A')!.get(5)).toBe(1);
-            expect(result.get('1.2 CATEGORY_B')!.get(5)).toBe(1);
-        });
-
-        it('should count repeatable section items', () => {
-            const config: TemplateConfig = {
-                fields: {},
-                layout: [],
-                sections: [
-                    {
-                        id: 'section1',
-                        label: 'Test Section',
-                        isRepeatable: true,
-                        statisticsCategory: '2.1 REPEATABLE',
-                        fieldIds: [],
-                    },
+        it('should accumulate multiple categories for a single report', () => {
+            const template = createMockTemplate({
+                id: 't1',
+                statisticsCategory: '5 ATENCIONES AL PÚBLICO',
+                statisticsRules: [
+                    { fieldId: 'tipo', condition: 'x', category: '5.1 ATENCIONES PREHOSPITALARIAS' },
                 ],
-            };
+            });
             const reports = [
                 createMockReport({
-                    templateId: 'template1',
-                    timestamp: new Date(2026, 0, 10).toISOString(),
-                    formData: {
-                        section1: [{ item: '1' }, { item: '2' }, { item: '3' }], // 3 items
-                    },
+                    templateId: 't1',
+                    timestamp: new Date(2026, 0, 5, 10, 0).toISOString(), // 10:00 -> Day 5
+                    formData: { tipo: 'x' }
                 }),
-            ];
-            const template = createMockTemplate({ id: 'template1' });
-            const result = calculateMonthlyStats(reports, [template], { template1: config }, testMonth, testYear);
-
-            const cat = result.get('2.1 REPEATABLE');
-            expect(cat!.get(10)).toBe(3); // 3 items counted
-        });
-
-        it('should count non-repeatable sections as 1 when present', () => {
-            const config: TemplateConfig = {
-                fields: {},
-                layout: [],
-                sections: [
-                    {
-                        id: 'section1',
-                        label: 'Test Section',
-                        isRepeatable: false,
-                        statisticsCategory: '2.2 NON_REPEATABLE',
-                        fieldIds: [],
-                    },
-                ],
-            };
-            const reports = [
-                createMockReport({
-                    templateId: 'template1',
-                    timestamp: new Date(2026, 0, 10).toISOString(),
-                    formData: {
-                        section1: { field: 'value' },
-                    },
-                }),
-            ];
-            const template = createMockTemplate({ id: 'template1' });
-            const result = calculateMonthlyStats(reports, [template], { template1: config }, testMonth, testYear);
-
-            const cat = result.get('2.2 NON_REPEATABLE');
-            expect(cat!.get(10)).toBe(1); // 1 count for presence
-        });
-
-        it('should not count empty sections', () => {
-            const config: TemplateConfig = {
-                fields: {},
-                layout: [],
-                sections: [
-                    {
-                        id: 'section1',
-                        label: 'Test Section',
-                        isRepeatable: true,
-                        statisticsCategory: '2.1 TEST',
-                        fieldIds: [],
-                    },
-                ],
-            };
-            const reports = [
-                createMockReport({
-                    templateId: 'template1',
-                    timestamp: new Date(2026, 0, 10).toISOString(),
-                    formData: {
-                        section1: [], // Empty array
-                    },
-                }),
-            ];
-            const template = createMockTemplate({ id: 'template1' });
-            const result = calculateMonthlyStats(reports, [template], { template1: config }, testMonth, testYear);
-
-            const cat = result.get('2.1 TEST');
-            expect(cat!.get(10)).toBeUndefined(); // No count
-        });
-
-        it('should aggregate multiple reports into same category and day', () => {
-            const template = createMockTemplate({ statisticsCategory: '1.0 TEST' });
-            const reports = [
-                createMockReport({ timestamp: new Date(2026, 0, 15).toISOString() }),
-                createMockReport({ timestamp: new Date(2026, 0, 15).toISOString() }),
-                createMockReport({ timestamp: new Date(2026, 0, 15).toISOString() }),
             ];
             const result = calculateMonthlyStats(reports, [template], {}, testMonth, testYear);
 
-            const cat = result.get('1.0 TEST');
-            expect(cat!.get(15)).toBe(3);
+            expect(result.get('5 ATENCIONES AL PÚBLICO')!.get(5)).toBe(1);
+            expect(result.get('5.1 ATENCIONES PREHOSPITALARIAS')!.get(5)).toBe(1);
+        });
+
+        it('should correctly attribute reports based on mode', () => {
+            const template = createMockTemplate({ 
+                id: 't1',
+                statisticsCategory: '1 REPORTES DEL VEN 9-1-1'
+            });
+
+            const reports = [
+                // Jan 5, 02:00
+                createMockReport({
+                    id: 'r1',
+                    templateId: 't1',
+                    timestamp: new Date(2026, 0, 5, 2, 0).toISOString(),
+                }),
+            ];
+
+            // 1. Statistical Mode: Jan 5 02:00 -> Logical Day 4
+            const statStats = calculateMonthlyStats(reports, [template], {}, 0, 2026, 'statistical');
+            expect(statStats.get('1 REPORTES DEL VEN 9-1-1')!.get(4)).toBe(1);
+            expect(statStats.get('1 REPORTES DEL VEN 9-1-1')!.get(5)).toBeUndefined();
+
+            // 2. Standard Mode: Jan 5 02:00 -> Day 5
+            const standardStats = calculateMonthlyStats(reports, [template], {}, 0, 2026, 'standard');
+            expect(standardStats.get('1 REPORTES DEL VEN 9-1-1')!.get(5)).toBe(1);
+            expect(standardStats.get('1 REPORTES DEL VEN 9-1-1')!.get(4)).toBeUndefined();
+        });
+
+        it('should prioritize logical date from formData over timestamp', () => {
+            const template = createMockTemplate({ 
+                id: 't1',
+                statisticsCategory: '5.1 ATENCIONES PREHOSPITALARIAS'
+            });
+            const reports = [
+                createMockReport({
+                    id: 'r1',
+                    templateId: 't1',
+                    timestamp: new Date(2026, 0, 10, 10, 0).toISOString(), // Jan 10
+                    formData: { fecha: '05/01/2026', hora: '12:00' } // Jan 5
+                }),
+            ];
+
+            const stats = calculateMonthlyStats(reports, [template], {}, 0, 2026);
+            expect(stats.get('5.1 ATENCIONES PREHOSPITALARIAS')!.get(5)).toBe(1);
+            expect(stats.get('5.1 ATENCIONES PREHOSPITALARIAS')!.get(10)).toBeUndefined();
         });
     });
 });

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, KeyboardEvent, useRef, forwardRef } from 'react';
-import { Input } from './input';
-import { Badge } from './badge';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { X, ChevronsUpDown } from 'lucide-react';
 import { cn, normalizeString } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -126,13 +126,13 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
                 </Badge>
               ))}
             <Input
-              ref={(node) => {
+              ref={(node: HTMLInputElement | null) => {
                 internalInputRef.current = node;
                 if (typeof ref === 'function') ref(node);
-                else if (ref) ref.current = node;
+                else if (ref) (ref as React.MutableRefObject<HTMLInputElement | null>).current = node;
               }}
               value={isSingle ? (Array.isArray(value) ? value[0] || '' : value || '') : inputValue}
-              onChange={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 if (isSingle) {
                   onChange(e.target.value);
                 } else {
@@ -196,3 +196,4 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
   }
 );
 MultiInput.displayName = 'MultiInput';
+

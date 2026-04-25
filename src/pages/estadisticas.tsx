@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ChevronLeft, ChevronRight, FileDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileDown, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { calculateMonthlyStats } from '@/lib/statistics-utils';
 import { STATISTICS_SECTIONS } from '@/lib/constants/statistics';
@@ -32,6 +32,7 @@ export default function EstadisticasPage() {
 
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth()); // 0-11
+  const [mode, setMode] = useState<'standard' | 'statistical'>('statistical');
 
   // Generate years option (current year - 2 to current + 2)
   const years = useMemo(() => {
@@ -56,8 +57,8 @@ export default function EstadisticasPage() {
 
   const stats = useMemo(() => {
     if (!reportsLoaded || !templatesLoaded) return null;
-    return calculateMonthlyStats(reports, templates, configs, month, year);
-  }, [reports, templates, configs, month, year, reportsLoaded, templatesLoaded]);
+    return calculateMonthlyStats(reports, templates, configs, month, year, mode);
+  }, [reports, templates, configs, month, year, mode, reportsLoaded, templatesLoaded]);
 
   const daysInMonth = useMemo(() => {
     return new Date(year, month + 1, 0).getDate();
@@ -133,6 +134,20 @@ export default function EstadisticasPage() {
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
+
+            <Select value={mode} onValueChange={(v: any) => setMode(v)}>
+              <SelectTrigger className="w-[180px] shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <SelectValue />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="statistical">Corte 03:00 HLV</SelectItem>
+                <SelectItem value="standard">Corte 00:00 HLV</SelectItem>
+              </SelectContent>
+            </Select>
+
             {/* Placeholder for export */}
             <Button variant="secondary" size="icon" className="h-9 w-9 shadow-sm" title="Exportar (Próximamente)">
               <FileDown className="h-4 w-4" />
@@ -142,8 +157,11 @@ export default function EstadisticasPage() {
 
         <Card className="overflow-hidden border-2">
           <CardHeader className="bg-muted/30 py-4">
-            <CardTitle className="text-lg font-medium text-center uppercase tracking-wide">
-              Estadística Mensual - {months[month]} {year}
+            <CardTitle className="text-lg font-medium text-center uppercase tracking-wide flex flex-col gap-1">
+              <span>Estadística Mensual - {months[month]} {year}</span>
+              <span className="text-[10px] text-muted-foreground font-normal lowercase italic">
+                {mode === 'statistical' ? 'Corte operacional de 03:00 a 03:00 HLV' : 'Corte estándar de 00:00 a 23:59 HLV'}
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 overflow-hidden">

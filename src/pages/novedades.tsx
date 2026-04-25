@@ -11,7 +11,7 @@ import { useTemplates } from '@/hooks/use-templates';
 import { useDrafts } from '@/hooks/use-drafts';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useActiveGuard } from '@/hooks/use-active-guard';
-import { NoGuardBanner } from '@/components/guard-selector';
+import { NoGuardBanner } from '@/components/guards/guard-selector';
 import { ReportGenerator, type ReportGeneratorRef } from '@/components/report/report-generator';
 import type { Report, Template } from '@/lib/types';
 import { cn, getTemplateIcon, normalizeString } from '@/lib/utils';
@@ -783,3 +783,4 @@ function MobileHeader({
 }
 
 export default memo(NovedadesPageContent);
+

@@ -30,7 +30,7 @@ import {
 import { useAddresses } from '@/hooks/use-addresses';
 import type { Address } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AddressFormDialog } from '@/components/address-form-dialog';
+import { AddressFormDialog } from '@/components/shared/address-form-dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,7 +62,7 @@ import { generateId } from '@/lib/utils/id';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const AddressMap = lazy(() => import('@/components/address-map').then((mod) => ({ default: mod.AddressMap })));
+const AddressMap = lazy(() => import('@/components/shared/address-map').then((mod) => ({ default: mod.AddressMap })));
 
 export default function DireccionesPage() {
   const { addresses, addAddress, updateAddress, removeAddress, isLoaded } = useAddresses();
@@ -511,3 +511,4 @@ export default function DireccionesPage() {
     </>
   );
 }
+

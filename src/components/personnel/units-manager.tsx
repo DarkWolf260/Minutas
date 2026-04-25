@@ -10,7 +10,7 @@ import { Trash2, PlusCircle, Save, Car } from 'lucide-react';
 import { useUnits } from '@/hooks/use-units';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
 
 export function UnitsManager() {
   const { units, saveUnits, isLoaded } = useUnits();
@@ -221,3 +221,4 @@ export function UnitsManager() {
     </div>
   );
 }
+

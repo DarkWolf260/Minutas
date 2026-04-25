@@ -62,9 +62,35 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.1.0';
+export const APP_VERSION = '1.2.0';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.2.0',
+    date: '24/04/2026',
+    changes: [
+      { type: 'nueva', text: 'Suma inteligente de cantidades: ahora puedes configurar plantillas para sumar números específicos (ej. total de heridos o insumos) en las estadísticas.' },
+      { type: 'nueva', text: 'Cálculo automático en el Cierre de Guardia: nuevo botón que genera al instante el cuadro estadístico del día para tu reporte final.' },
+      { type: 'nueva', text: 'Módulo de Estadísticas activado: el panel de métricas ya es oficial y puedes activarlo desde los ajustes de la aplicación.' },
+      { type: 'mejora', text: 'Reportes más limpios: las estadísticas ahora se ven más profesionales, sin códigos numéricos y con un formato de texto más elegante.' },
+      { type: 'mejora', text: 'Mejor organización visual: las sub-categorías de los reportes ahora se ordenan con sangría automáticamente para una lectura más fácil.' },
+      { type: 'mejora', text: 'Reglas estadísticas potentes: nuevas opciones para filtrar datos por "mayor que", "menor que", o si el texto empieza/termina con algo específico.' },
+      { type: 'mejora', text: 'Buscador de categorías mejorado: el selector de estadísticas en el editor de plantillas ahora es más estable y fácil de usar.' },
+      { type: 'corrección', text: 'Solucionados errores al guardar plantillas con reglas estadísticas avanzadas y mejoras de estabilidad general.' },
+    ],
+  },
+  {
+    version: '1.1.1',
+    date: '23/04/2026',
+    changes: [
+      { type: 'mejora', text: 'Arquitectura de componentes reorganizada: mayor orden en carpetas layout, common, providers y ui/custom.' },
+      { type: 'mejora', text: 'Animaciones de interfaz ultra-rápidas (100ms - 200ms) para una navegación más fluida.' },
+      { type: 'mejora', text: 'Gestión de capas (z-index) estandarizada: se acabaron los diálogos ocultos detrás del fondo.' },
+      { type: 'mejora', text: 'Scroll inteligente en modales: el contenido se adapta a la pantalla y nunca bloquea los botones de acción.' },
+      { type: 'mejora', text: 'Tarjeta de Gestión de Unidades refinada: carga suave con skeletons y diseño unificado con el resto de la app.' },
+      { type: 'corrección', text: 'Eliminados artefactos visuales (destellos azules) que se cortaban al hacer scroll en el asistente de configuración.' },
+    ],
+  },
   {
     version: '1.1.0',
     date: '23/04/2026',

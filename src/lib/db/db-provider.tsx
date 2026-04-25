@@ -6,7 +6,7 @@ import { MinutasDatabase, getDatabase, removeRxDatabase, getRxStorageDexie } fro
 import { logger } from '../logger';
 import { DatabaseContext } from './db-context';
 
-import { LoadingScreen } from '@/components/loading-screen';
+import { LoadingScreen } from '@/components/common/loading-screen';
 
 interface DatabaseProviderProps {
   children: React.ReactNode;
@@ -349,3 +349,4 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
     </DatabaseContext.Provider>
   );
 }
+

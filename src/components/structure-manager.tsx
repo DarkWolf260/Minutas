@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Building2, Save, CheckCircle2, ArrowUpDown } from 'lucide-react';
-import { RoleSorter } from './role-sorter';
+import { RoleSorter } from './structure/role-sorter';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -73,13 +73,13 @@ export function StructureManager({
   const handleRemoveDepartment = React.useCallback((id: string) => {
     const updatedDepts = departments.filter((d) => d.id !== id);
     onDepartmentsChange(updatedDepts);
-    
+
     // Also update roles that reference this department
     const updatedRoles = roles.map((r) => {
       if (!r.departmentScope) return r;
       return {
         ...r,
-        departmentScope: r.departmentScope.filter((scopeId: string) => scopeId !== id),
+        departmentScope: r.departmentScope.filter((scopeId) => scopeId !== id),
       };
     });
     onRolesChange(updatedRoles);
@@ -113,8 +113,8 @@ export function StructureManager({
     onRolesChange(updatedRoles);
   }, [roles, onRolesChange]);
 
-    // Auto-saved handled by handlers
-;
+  // Auto-saved handled by handlers
+  ;
 
   return (
     <div className="md:flex-1 md:flex md:flex-col md:min-h-0 bg-transparent">
@@ -122,7 +122,7 @@ export function StructureManager({
       {compact ? (
         <div className="flex flex-col flex-1 min-h-0">
           {initialTab === 'roles' ? (
-            <RoleSorter 
+            <RoleSorter
               roles={processedRoles}
               departments={departments}
               onReorder={onRolesChange}
@@ -131,7 +131,7 @@ export function StructureManager({
               compact={true}
             />
           ) : (
-            <StructureTree 
+            <StructureTree
               departments={departments}
               roles={processedRoles}
               onAddDept={handleAddDept}
@@ -141,7 +141,7 @@ export function StructureManager({
               onUpdateRole={handleUpdateRole}
               onReorderDepts={onDepartmentsChange}
               onReorderRoles={onRolesChange}
-              onUpdatePersonnel={onUpdatePersonnel || (() => {})}
+              onUpdatePersonnel={onUpdatePersonnel || (() => { })}
               personnel={personnel}
               showPersonnel={true}
               compact={true}
@@ -157,12 +157,12 @@ export function StructureManager({
                 <TabsTrigger value="departments" className="text-xs font-bold uppercase transition-all">Organigrama</TabsTrigger>
                 <TabsTrigger value="roles" className="text-xs font-bold uppercase transition-all">Jerarquía</TabsTrigger>
               </TabsList>
-              
-              <TabsContent 
-                value="departments" 
+
+              <TabsContent
+                value="departments"
                 className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
               >
-                <StructureTree 
+                <StructureTree
                   departments={departments}
                   roles={processedRoles}
                   onAddDept={handleAddDept}
@@ -172,18 +172,18 @@ export function StructureManager({
                   onUpdateRole={handleUpdateRole}
                   onReorderDepts={onDepartmentsChange}
                   onReorderRoles={onRolesChange}
-                  onUpdatePersonnel={onUpdatePersonnel || (() => {})}
+                  onUpdatePersonnel={onUpdatePersonnel || (() => { })}
                   personnel={personnel}
                   showPersonnel={true}
                   compact={false}
                 />
               </TabsContent>
-              
-              <TabsContent 
-                value="roles" 
+
+              <TabsContent
+                value="roles"
                 className="mt-0 focus-visible:outline-none data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
               >
-                <RoleSorter 
+                <RoleSorter
                   roles={processedRoles}
                   departments={departments}
                   onReorder={onRolesChange}
@@ -198,7 +198,7 @@ export function StructureManager({
           {/* Desktop view: Classic side-by-side grid */}
           <div className="hidden lg:grid grid-cols-12 gap-8 items-stretch md:flex-1 md:min-h-0">
             <div className="lg:col-span-8 flex flex-col min-h-0">
-              <StructureTree 
+              <StructureTree
                 departments={departments}
                 roles={processedRoles}
                 onAddDept={handleAddDept}
@@ -208,14 +208,14 @@ export function StructureManager({
                 onUpdateRole={handleUpdateRole}
                 onReorderDepts={onDepartmentsChange}
                 onReorderRoles={onRolesChange}
-                onUpdatePersonnel={onUpdatePersonnel || (() => {})}
+                onUpdatePersonnel={onUpdatePersonnel || (() => { })}
                 personnel={personnel}
                 showPersonnel={false}
                 compact={false}
               />
             </div>
             <div className="lg:col-span-4 flex flex-col min-h-0">
-              <RoleSorter 
+              <RoleSorter
                 roles={processedRoles}
                 departments={departments}
                 onReorder={onRolesChange}

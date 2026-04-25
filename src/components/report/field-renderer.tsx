@@ -10,9 +10,9 @@ import {
 } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { TimeHlvInput } from '@/components/time-hlv-input';
-import { DatePicker } from '@/components/date-picker';
-import { MultiInput } from '@/components/ui/multi-input';
+import { TimeHlvInput } from '@/components/ui/custom/time-hlv-input';
+import { DatePicker } from '@/components/ui/custom/date-picker';
+import { MultiInput } from '@/components/ui/custom/multi-input';
 import {
     Select,
     SelectContent,
@@ -20,8 +20,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { AddressInput } from '@/components/ui/address-input';
-import { CedulaInput } from '@/components/cedula-input';
+import { AddressInput } from '@/components/ui/custom/address-input';
+import { CedulaInput } from '@/components/ui/custom/cedula-input';
 import { formatStaffMemberForAutocomplete } from '@/lib/formatters';
 
 interface FieldRendererProps {
@@ -210,15 +210,6 @@ export const FieldRenderer = memo(
                             );
                             if (selectedOption) {
                                 onChange(selectedOption.label);
-                                if (fieldConfig.targetField) {
-                                    const pathParts = name.split('.');
-                                    // Replace the last part with targetField to get the sibling field path
-                                    pathParts[pathParts.length - 1] = fieldConfig.targetField;
-                                    const targetPath = pathParts.join('.');
-                                    setValue(targetPath, selectedOption.value, {
-                                        shouldDirty: true,
-                                    });
-                                }
                             }
                         };
                         return (
@@ -368,3 +359,4 @@ export const FieldRenderer = memo(
     )
 );
 FieldRenderer.displayName = 'FieldRenderer';
+

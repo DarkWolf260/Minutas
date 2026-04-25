@@ -278,7 +278,7 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
           name: templateId,
           data: config,
         } as any),
-      { feature: 'Templates', successMessage: 'Configuración de campos actualizada.' }
+      { feature: 'Templates' }
     );
 
   const removeTemplateConfig = async (templateId: string) => {

@@ -23,8 +23,8 @@ import {
   FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { NotificationBell } from '@/components/notification-bell';
-import { useTheme } from '@/components/theme-provider';
+import { NotificationBell } from '@/components/layout/notification-bell';
+import { useTheme } from '@/components/providers/theme-provider';
 import { useProfile } from '@/hooks/use-profile';
 import { useSettings } from '@/hooks/use-settings';
 import { getInitials } from '@/lib/utils';
@@ -34,6 +34,7 @@ const ALL_NAV_ITEMS: { href: string; label: string; icon: any; moduleId: AppModu
   { href: '/',              label: 'Novedades',    icon: Newspaper,    moduleId: 'novedades' },
   { href: '/orden-del-dia', label: 'Lista',        icon: ClipboardList, moduleId: 'orden-del-dia' },
   { href: '/reporte-final', label: 'Reporte',      icon: History,      moduleId: 'reporte-final' },
+  { href: '/estadisticas',  label: 'Estadísticas', icon: BarChart2,    moduleId: 'estadisticas' },
   { href: '/personal',      label: 'Personal',     icon: Users,        moduleId: 'personal' },
   { href: '/plantillas',    label: 'Plantillas',   icon: FileText,     moduleId: 'plantillas' },
 ];
@@ -166,3 +167,4 @@ export function SideNav() {
     </TooltipProvider>
   );
 }
+

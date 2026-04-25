@@ -87,14 +87,14 @@ export interface AppSettings {
   reportaRoleIds?: string[];
   /** Modules explicitly disabled by the user. undefined = all enabled (backwards-compatible). */
   disabledModules?: AppModuleId[];
-    ordenDelDiaDraft?: {
-      staff: Staff;
-      activities: ManualNovedad[];
-      notes: { id: string; content: string }[];
-      isJefeEncargado?: boolean;
-      guardId: string;
-      updatedAt: string;
-    };
+  ordenDelDiaDraft?: {
+    staff: Staff;
+    activities: ManualNovedad[];
+    notes: { id: string; content: string }[];
+    isJefeEncargado?: boolean;
+    guardId: string;
+    updatedAt: string;
+  };
   finalReportStaffSnapshot?: Staff;
   finalReportGuardId?: string;
   finalReportStartDate?: string;
@@ -111,6 +111,11 @@ export interface Report {
   isRelevant: boolean;
   status?: 'En proceso' | 'Finalizado';
   formData?: FormDataRecord;
+  sections?: Array<{
+    title: string;
+    content: string;
+    fields: Record<string, any>;
+  }>;
 }
 
 export interface GuardReport {
@@ -150,7 +155,6 @@ export interface FieldConfig {
   value?: string;
   defaultValue?: string;
   sectionId?: string;
-  targetField?: string;
   snippetOptions?: SnippetOption[];
   modifiers?: TextModifier[]; // Transformaciones de texto: upper, lower, title
   isFullWidth?: boolean;
@@ -189,10 +193,20 @@ export interface TemplateConfig {
   layout: string[]; // Order of fields and section IDs
 }
 
+export type StatisticOperator = '=' | '!=' | 'filled' | 'empty' | 'not_empty' | 'contains' | 'not_contains' | 'starts_with' | 'ends_with' | 'extract_value' | '>' | '<' | '>=' | '<=';
+
+export interface StatisticRuleCondition {
+  fieldId?: string | null;
+  operator?: StatisticOperator | null;
+  condition?: string | null;
+}
+
 export interface StatisticRule {
-  fieldId: string;
-  condition: string; // The value to match (e.g., "Robo", "Accidente")
-  category: string;
+  fieldId?: string | null; // Primary condition field
+  operator?: StatisticOperator | null; // Primary condition operator
+  condition?: string | null; // Primary condition value
+  category?: string | null;
+  conditions?: StatisticRuleCondition[]; // Additional secondary conditions (AND)
 }
 
 export interface Template {
@@ -202,8 +216,9 @@ export interface Template {
   content: string;
   type: 'normal' | 'relevante';
   isActive?: boolean;
-  statisticsCategory?: string;
-  statisticsRules?: StatisticRule[];
+  statisticsCategory?: string | null;
+  statisticsSubCategories?: string[] | null;
+  statisticsRules?: StatisticRule[] | null;
 }
 
 export interface ReportDraft {
@@ -252,6 +267,7 @@ export interface TemplateParserResult {
   fieldWidths: Map<string, boolean>;
   requiredFields: Map<string, boolean>;
   defaultValues: Map<string, string>;
+  predefinedValues: Map<string, string>;
   errors: string[];
 }
 export interface PersonnelAssignment {
