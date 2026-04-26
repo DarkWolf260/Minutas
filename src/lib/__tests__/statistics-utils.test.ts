@@ -166,6 +166,67 @@ describe('statistics-utils', () => {
             const count = result.filter(c => c === '6.2 TRASLADOS EXTRAURBANOS').length;
             expect(count).toBe(1);
         });
+
+        it('should handle orConditions (at least one must match)', () => {
+            const template = createMockTemplate({
+                statisticsRules: [
+                    { 
+                        fieldId: 'type', 
+                        operator: '=', 
+                        condition: 'emergency', 
+                        category: '1.2 LLAMADAS DE EMERGENCIAS',
+                        orConditions: [
+                            { fieldId: 'priority', operator: '=', condition: 'high' },
+                            { fieldId: 'priority', operator: '=', condition: 'critical' }
+                        ]
+                    },
+                ],
+            });
+
+            // Matches primary but none of the OR conditions -> fail
+            const report1 = createMockReport({ formData: { type: 'emergency', priority: 'low' } });
+            expect(getReportCategories(report1, template)).not.toContain('1.2 LLAMADAS DE EMERGENCIAS');
+
+            // Matches primary and one of the OR conditions -> success
+            const report2 = createMockReport({ formData: { type: 'emergency', priority: 'high' } });
+            expect(getReportCategories(report2, template)).toContain('1.2 LLAMADAS DE EMERGENCIAS');
+
+            // Matches primary and another OR condition -> success
+            const report3 = createMockReport({ formData: { type: 'emergency', priority: 'critical' } });
+            expect(getReportCategories(report3, template)).toContain('1.2 LLAMADAS DE EMERGENCIAS');
+        });
+
+        it('should handle complex rules with both conditions (AND) and orConditions (OR)', () => {
+            const template = createMockTemplate({
+                statisticsRules: [
+                    { 
+                        fieldId: 'a', 
+                        operator: '=', 
+                        condition: '1', 
+                        category: 'CAT',
+                        conditions: [
+                            { fieldId: 'b', operator: '=', condition: '2' }
+                        ],
+                        orConditions: [
+                            { fieldId: 'c', operator: '=', condition: '3' },
+                            { fieldId: 'd', operator: '=', condition: '4' }
+                        ]
+                    },
+                ],
+            });
+
+            // a=1, b=2, c=3 (matches primary, AND, and one OR) -> success
+            const r1 = createMockReport({ formData: { a: '1', b: '2', c: '3' } });
+            expect(getReportCategories(r1, template)).toContain('CAT');
+
+            // a=1, b=1, c=3 (fails AND) -> fail
+            const r2 = createMockReport({ formData: { a: '1', b: '1', c: '3' } });
+            expect(getReportCategories(r2, template)).not.toContain('CAT');
+
+            // a=1, b=2, c=1 (fails OR) -> fail
+            const r3 = createMockReport({ formData: { a: '1', b: '2', c: '1' } });
+            expect(getReportCategories(r3, template)).not.toContain('CAT');
+        });
     });
 
     describe('calculateMonthlyStats', () => {

@@ -151,9 +151,29 @@ export default function ReporteFinalPage() {
     try {
       const reportId = generateId();
       const now = new Date();
+      
+      // Try to extract the reference date from the guard period (e.g. "21/04/2026 AL 22/04/2026")
+      // If found, we use the end date of the period as the logical archive date.
+      let archiveDate = now;
+      if (settings.guardPeriod) {
+        // Support common delimiters like "AL", "-", "–", "a"
+        const parts = settings.guardPeriod.split(/ AL | - | – | a /i).map(p => p.trim());
+        const firstPart = parts[0]; // Use the START date as requested
+        const match = firstPart?.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (match) {
+          const [_, d, m, y] = match;
+          const extracted = new Date(parseInt(y!), parseInt(m!) - 1, parseInt(d!), 8, 0, 0);
+          if (!isNaN(extracted.getTime())) archiveDate = extracted;
+        }
+      }
+
       // Ensure date is exactly 20 characters (no milliseconds) to stay within DB's maxLength: 20 limit
-      const isoDate20 = now.toISOString().split('.')[0] + 'Z';
+      const isoDate20 = archiveDate.toISOString().split('.')[0] + 'Z';
       const fullIsoDate = now.toISOString();
+
+      // Calculate aggregated statistics to persist before clearing reports
+      const dayStats = calculateDayStats(finishedReports, templates, configs, globalSettings);
+      const statsObj = Object.fromEntries(dayStats.entries());
       
       await saveGuardReport({
         id: reportId,
@@ -163,6 +183,7 @@ export default function ReporteFinalPage() {
         content: generatedReport,
         guardGroup: activeGuard.id.split(' ')[0] || '',
         workspaceId: '', 
+        statistics: statsObj,
       });
 
       // After saving to history, close the actual guard data
@@ -185,6 +206,38 @@ export default function ReporteFinalPage() {
     } catch (error) {
       console.error('Failed to finalize and save', error);
       toast.error('Error al finalizar la guardia.');
+    }
+  };
+
+  const handleFixHistoryDates = async () => {
+    let fixedCount = 0;
+    try {
+      for (const report of savedReports) {
+        if (report.summary) {
+          const parts = report.summary.split(/ AL | - | – | a /i).map(p => p.trim());
+          const firstPart = parts[0];
+          const match = firstPart?.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+          if (match) {
+            const [_, d, m, y] = match;
+            const archiveDate = new Date(parseInt(y!), parseInt(m!) - 1, parseInt(d!), 8, 0, 0);
+            if (!isNaN(archiveDate.getTime())) {
+              const isoDate20 = archiveDate.toISOString().split('.')[0] + 'Z';
+              if (report.date !== isoDate20) {
+                await saveGuardReport({ ...report, date: isoDate20 });
+                fixedCount++;
+              }
+            }
+          }
+        }
+      }
+      if (fixedCount > 0) {
+        toast.success(`${fixedCount} reportes corregidos exitosamente.`);
+      } else {
+        toast.info('No se encontraron reportes que necesiten corrección.');
+      }
+    } catch (error) {
+      console.error('Error fixing dates', error);
+      toast.error('Error al intentar corregir las fechas.');
     }
   };
 
@@ -369,7 +422,7 @@ export default function ReporteFinalPage() {
       toast.error('No hay reportes finalizados para calcular estadísticas.');
       return;
     }
-    const dayStats = calculateDayStats(finishedReports, templates, configs);
+    const dayStats = calculateDayStats(finishedReports, templates, configs, globalSettings);
     const formatted = formatDayStats(dayStats);
     
     if (formatted) {
@@ -708,6 +761,18 @@ export default function ReporteFinalPage() {
                     <TabsTrigger value="history">Historial</TabsTrigger>
                   </TabsList>
                 
+                {activeTab === 'history' && savedReports.length > 0 && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleFixHistoryDates}
+                    className="text-[10px] font-bold uppercase tracking-wider h-8 border-primary/20 text-primary hover:bg-primary/5 ml-2"
+                  >
+                    <RotateCcw className="h-3 w-3 mr-1.5" />
+                    Sincronizar Fechas
+                  </Button>
+                )}
+
                 {activeTab === 'generate' && !isMobile && isLoaded && (
                   <Button 
                     onClick={handleGenerateReport} 
@@ -1045,7 +1110,11 @@ export default function ReporteFinalPage() {
                               <div className="flex flex-wrap items-center text-sm text-muted-foreground gap-4">
                                 <span className="flex items-center bg-muted/30 px-2 py-0.5 rounded text-xs gap-1.5">
                                   <Clock className="h-3.5 w-3.5 opacity-70" />
-                                  {format(new Date(report.generatedAt), "HH:mm 'hs'", { locale: es })}
+                                  Generado: {format(new Date(report.generatedAt), "HH:mm 'hs'", { locale: es })}
+                                </span>
+                                <span className="flex items-center bg-primary/5 px-2 py-0.5 rounded text-xs gap-1.5 text-primary font-medium">
+                                  <Calendar className="h-3.5 w-3.5 opacity-70" />
+                                  Estadísticas: {format(new Date(report.date), "dd/MM/yyyy")}
                                 </span>
                                 {report.guardGroup && (
                                   <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] h-5 px-1.5 font-bold">

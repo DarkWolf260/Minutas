@@ -20,7 +20,7 @@ export function createHistoryRepository(db: MinutasDatabase, workspaceId: string
   const saveGuardReport = async (report: GuardReport) =>
     safeWrite(
       () =>
-        db.history.insert({
+        db.history.upsert({
           id: DbKeys.guardHistory(ws, report.id),
           workspaceId: ws,
           type: 'guard_history',

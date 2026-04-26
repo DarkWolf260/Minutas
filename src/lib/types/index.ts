@@ -126,6 +126,7 @@ export interface GuardReport {
   guardGroup?: string; // e.g. "Guardia A" or "Guardia B" based on active guard
   content: string; // The full text content of the report
   summary?: string; // Short summary or title, e.g. "Reporte de Cierre - [Date]"
+  statistics?: Record<string, number>; // Persisted aggregated statistics
 }
 
 export type FieldType =
@@ -207,6 +208,7 @@ export interface StatisticRule {
   condition?: string | null; // Primary condition value
   category?: string | null;
   conditions?: StatisticRuleCondition[]; // Additional secondary conditions (AND)
+  orConditions?: StatisticRuleCondition[]; // Additional secondary conditions (OR)
 }
 
 export interface Template {

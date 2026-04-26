@@ -23,12 +23,35 @@ import {
 import { ChevronLeft, ChevronRight, FileDown, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { calculateMonthlyStats } from '@/lib/statistics-utils';
+import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+import { useGuardHistory } from '@/hooks/use-guard-history';
 import { STATISTICS_SECTIONS } from '@/lib/constants/statistics';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function EstadisticasPage() {
   const { reports, isLoaded: reportsLoaded } = useReports();
+  const { reports: savedReports, isLoaded: historyLoaded } = useGuardHistory();
   const { templates, configs, isLoaded: templatesLoaded } = useTemplates();
+  const { definitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
+
+  const globalSettings = useMemo(() => {
+    const settingsMap: Record<string, string> = {};
+    Object.keys(definitions).forEach((key) => {
+      if (definitions[key]?.value) {
+        settingsMap[key] = definitions[key]!.value!;
+      }
+    });
+
+    return Object.values(configs).reduce((acc, config) => {
+      Object.keys(config.fields).forEach((fieldName) => {
+        const field = config.fields[fieldName];
+        if (field && field.type === 'predefined' && field.value) {
+          acc[fieldName] = field.value;
+        }
+      });
+      return acc;
+    }, settingsMap);
+  }, [configs, definitions]);
 
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth()); // 0-11
@@ -56,9 +79,9 @@ export default function EstadisticasPage() {
   ];
 
   const stats = useMemo(() => {
-    if (!reportsLoaded || !templatesLoaded) return null;
-    return calculateMonthlyStats(reports, templates, configs, month, year, mode);
-  }, [reports, templates, configs, month, year, mode, reportsLoaded, templatesLoaded]);
+    if (!reportsLoaded || !templatesLoaded || !definitionsLoaded || !historyLoaded) return null;
+    return calculateMonthlyStats(reports, templates, configs, month, year, mode, globalSettings, savedReports);
+  }, [reports, savedReports, templates, configs, month, year, mode, reportsLoaded, historyLoaded, templatesLoaded, definitionsLoaded, globalSettings]);
 
   const daysInMonth = useMemo(() => {
     return new Date(year, month + 1, 0).getDate();

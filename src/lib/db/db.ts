@@ -253,7 +253,21 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
               statisticsSubCategories: oldData.statisticsSubCategories || [],
               statisticsRules: oldData.statisticsRules || []
             };
-          }
+          },
+          3: (oldData: any) => {
+            return {
+              ...oldData,
+              statisticsRules: (oldData.statisticsRules || []).map((rule: any) => {
+                if (!rule) return rule;
+                return {
+                  ...rule,
+                  conditions: rule.conditions || [],
+                  orConditions: rule.orConditions || []
+                };
+              })
+            };
+          },
+          4: (oldData: any) => oldData
         }
       },
       lookups: { 

@@ -98,8 +98,20 @@ export const getReportDateTime = (report: Report): Date | null => {
     return null;
   }
 
-  // `fechaString` is 'YYYY-MM-DD'. Appending 'T00:00:00' ensures it's parsed in the local timezone.
-  const date = new Date(`${fechaString}T00:00:00`);
+  // Support both YYYY-MM-DD and DD/MM/YYYY
+  let date: Date;
+  if (fechaString.includes('/')) {
+    const parts = fechaString.split('/');
+    if (parts.length === 3) {
+      // DD/MM/YYYY -> YYYY-MM-DD
+      date = new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}T00:00:00`);
+    } else {
+      date = new Date(`${fechaString}T00:00:00`);
+    }
+  } else {
+    date = new Date(`${fechaString}T00:00:00`);
+  }
+
   if (isNaN(date.getTime())) {
     return null;
   }

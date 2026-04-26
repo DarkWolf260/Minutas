@@ -31,7 +31,7 @@ import { SnippetOptionEditor } from '@/components/template/snippet-option-editor
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { STATISTICS_SECTIONS } from '@/lib/constants/statistics';
-import { Layers, BarChart3, Settings2, Plus, Trash2, ChevronDown, ChevronUp, Save, Search, Check, X } from 'lucide-react';
+import { Layers, BarChart3, Settings2, Plus, Trash2, ChevronDown, ChevronUp, Save, Search, Check, X, Copy } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -719,18 +719,57 @@ export function TemplateEditor({
                                   </div>
                                 ))}
 
-                                {/* Add Secondary Condition Button */}
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-6 w-full text-[10px] mt-1 border-dashed border-muted-foreground/30 text-muted-foreground hover:text-foreground"
-                                  onClick={() => {
-                                    const newSecConditions = [...(rule.conditions || []), { fieldId: '', operator: '=' as const, condition: '' }];
-                                    updateRule({ conditions: newSecConditions as any });
-                                  }}
-                                >
-                                  <Plus className="h-3 w-3 mr-1" /> Añadir condición (Y)
-                                </Button>
+                                {rule.orConditions?.map((orCond, cIdx) => (
+                                  <div key={cIdx} className="flex flex-col gap-2 w-full mt-2 pt-2 border-t border-muted/30 relative">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                                        <div className="w-1 h-3 bg-amber-400/40 rounded-full"></div> O (OR)
+                                      </span>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-5 w-5 text-muted-foreground hover:text-destructive shrink-0"
+                                        onClick={() => {
+                                          const newOrConditions = [...(rule.orConditions || [])];
+                                          newOrConditions.splice(cIdx, 1);
+                                          updateRule({ orConditions: newOrConditions });
+                                        }}
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                    {renderConditionInputs(orCond, (field, val) => {
+                                      const newOrConditions = [...(rule.orConditions || [])];
+                                      newOrConditions[cIdx] = { ...newOrConditions[cIdx], [field]: val };
+                                      updateRule({ orConditions: newOrConditions });
+                                    })}
+                                  </div>
+                                ))}
+
+                                <div className="flex gap-2 mt-1">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-6 flex-1 text-[10px] border-dashed border-muted-foreground/30 text-muted-foreground hover:text-foreground"
+                                    onClick={() => {
+                                      const newSecConditions = [...(rule.conditions || []), { fieldId: '', operator: '=' as const, condition: '' }];
+                                      updateRule({ conditions: newSecConditions as any });
+                                    }}
+                                  >
+                                    <Plus className="h-3 w-3 mr-1" /> Condición (Y)
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-6 flex-1 text-[10px] border-dashed border-muted-foreground/30 text-muted-foreground hover:text-foreground"
+                                    onClick={() => {
+                                      const newOrConditions = [...(rule.orConditions || []), { fieldId: '', operator: '=' as const, condition: '' }];
+                                      updateRule({ orConditions: newOrConditions as any });
+                                    }}
+                                  >
+                                    <Plus className="h-3 w-3 mr-1" /> Condición (O)
+                                  </Button>
+                                </div>
 
                                 <div className="flex items-center gap-2 pt-2 border-t border-muted/50 mt-1">
                               <SearchableCategorySelector
@@ -746,6 +785,22 @@ export function TemplateEditor({
                                 className="h-8 bg-primary/5 border-dashed border-primary/20 hover:bg-primary/10"
                                 placeholder="Categoría Destino"
                               />
+        
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10 shrink-0"
+                                onClick={() => {
+                                  const ruleToDuplicate = JSON.parse(JSON.stringify(localTemplate.statisticsRules![idx]));
+                                  const newRules = [...(localTemplate.statisticsRules || [])];
+                                  newRules.splice(idx + 1, 0, ruleToDuplicate);
+                                  setLocalTemplate(p => ({ ...p, statisticsRules: newRules }));
+                                  setHasChanges(true);
+                                  toast.success("Regla duplicada");
+                                }}
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </Button>
 
                               <Button
                                 variant="ghost"
