@@ -255,15 +255,13 @@ export function RoleSorter({ roles, departments, onReorder, onUpdate, onRemove, 
       )}
 
       {compact && (
-        <div className="px-4 py-3 border-b bg-muted/5">
-          <div className="flex items-center gap-2">
-            <ArrowUpDown className="h-4 w-4 text-primary" />
-            <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Ordenar Jerarquía</span>
-          </div>
+        <div className="flex items-center gap-2 mb-4 px-1">
+          <ArrowUpDown className="h-4 w-4 text-primary" />
+          <span className="text-[10px] uppercase font-bold tracking-[0.1em] text-muted-foreground">Ordenar Jerarquía</span>
         </div>
       )}
       
-      <div className={cn("md:flex-1 md:min-h-0 md:overflow-hidden", compact ? "p-4" : "p-4")}>
+      <div className={cn("md:flex-1 md:min-h-0 md:overflow-hidden", compact ? "px-1 sm:px-4" : "p-4")}>
         <ScrollArea className="md:h-full pr-4 -mr-4" type="always">
           <DndContext
             sensors={sensors}

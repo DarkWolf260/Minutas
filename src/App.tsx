@@ -13,10 +13,11 @@ import { SyncProvider } from '@/lib/sync/sync-context';
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { OnboardingTour } from '@/components/ui/custom/onboarding-tour';
 
 // Setup helpers
 import SetupPage from '@/pages/setup';
-import { SETUP_DONE_KEY, tryGet, trySet } from '@/hooks/use-setup';
+import { SETUP_DONE_KEY, tryGet, trySet, tryRemove } from '@/hooks/use-setup';
 
 // ─── Lazy-load app pages ──────────────────────────────────────────────────────
 
@@ -55,7 +56,6 @@ const PageLoader = () => (
   </div>
 );
 
-// ─── Main App Layout (only rendered after setup is complete) ──────────────────
 
 function AppLayout() {
   const location = useLocation();
@@ -63,12 +63,20 @@ function AppLayout() {
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false
   );
+  const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
     const onOnline = () => setIsOffline(false);
     const onOffline = () => setIsOffline(true);
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
+
+    // Check if we should trigger the tour
+    if (tryGet('minutas-trigger-tour') === 'true') {
+      setShowTour(true);
+      tryRemove('minutas-trigger-tour');
+    }
+
     return () => {
       window.removeEventListener('online', onOnline);
       window.removeEventListener('offline', onOffline);
@@ -136,6 +144,8 @@ function AppLayout() {
 
         <BottomNav />
       </div>
+
+      {showTour && <OnboardingTour onComplete={() => setShowTour(false)} />}
     </div>
   );
 }

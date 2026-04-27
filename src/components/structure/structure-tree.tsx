@@ -15,10 +15,13 @@ import {
   DndContext,
   closestCenter,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
-  DragEndEvent
+  DragEndEvent,
+  DragOverlay,
+  defaultDropAnimationSideEffects
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -158,7 +161,7 @@ const SortableMemberBadge = React.memo(({ member }: { member: StaffMember }) => 
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={cn("cursor-grab active:cursor-grabbing", isDragging && "opacity-50")}>
+    <div ref={setNodeRef} style={{ ...style, userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }} {...attributes} {...listeners} onContextMenu={(e) => e.preventDefault()} className={cn("cursor-grab active:cursor-grabbing touch-none select-none", isDragging && "opacity-50")}>
       <Badge variant="secondary" className="text-[10px] py-1 px-2 flex items-center gap-1.5 bg-primary/5 text-primary border-primary/10 hover:bg-primary/10 transition-colors">
         <GripVertical className="h-3 w-3 opacity-30" />
         {member.name}
@@ -182,8 +185,8 @@ const RoleRow = React.memo(({
 }) => {
   const isMobile = useIsMobile();
   return (
-    <div className="flex flex-col hover:bg-muted/5 transition-colors group">
-      <div className="flex items-center justify-between py-3 px-3 sm:px-4">
+    <div className="flex flex-col hover:bg-muted/5 transition-colors group select-none" style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}>
+      <div className="flex items-center justify-between py-1 px-1 sm:px-4">
         <div className="flex items-center min-w-0">
           <div className="flex flex-col min-w-0">
             <span className="text-sm font-semibold truncate" title={role.name}>
@@ -192,14 +195,14 @@ const RoleRow = React.memo(({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0 ml-auto">
-          <div className="flex items-center gap-2 mr-2">
+        <div className="flex items-center gap-1 shrink-0 ml-auto">
+          <div className="flex items-center gap-1 mr-1">
             <Label htmlFor={`single-${role.name}`} className="text-[10px] uppercase font-bold text-muted-foreground/60 hidden sm:block">Único</Label>
             <Switch
               id={`single-${role.name}`}
               checked={role.isSingle}
               onCheckedChange={(checked) => onUpdate(role.name, { isSingle: checked })}
-              className="scale-90"
+              className="scale-75 sm:scale-90"
             />
           </div>
 
@@ -207,9 +210,9 @@ const RoleRow = React.memo(({
             variant="ghost"
             size="icon"
             onClick={() => onRemove(role.name)}
-            className="h-8 w-8 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors rounded-full"
+            className="h-7 w-7 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all rounded-full opacity-0 group-hover:opacity-100"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -260,12 +263,17 @@ const SortableRoleRow = React.memo(({
   const isMobile = useIsMobile();
 
   return (
-    <div ref={setNodeRef} style={style} className={cn("flex flex-col hover:bg-muted/10 transition-colors group", isDragging && "bg-muted/30 z-50")}>
-      <div className="flex items-center justify-between p-2 px-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <div {...attributes} {...listeners} className="p-1 cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-primary shrink-0 -ml-1">
+    <div ref={setNodeRef} style={{ ...style, userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }} className={cn("flex flex-col hover:bg-muted/10 transition-colors group select-none", isDragging && "bg-muted/30 z-50")}>
+      <div className="flex items-center justify-between p-1 px-1 sm:px-4">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <button 
+            {...attributes} 
+            {...listeners} 
+            onContextMenu={(e) => e.preventDefault()}
+            className="p-1 cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-primary shrink-0 -ml-1 touch-none"
+          >
             <GripVertical className="h-4 w-4" />
-          </div>
+          </button>
 
           <div className="flex items-center min-w-0">
             <div className="flex flex-col min-w-0">
@@ -276,14 +284,14 @@ const SortableRoleRow = React.memo(({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0 ml-auto">
-          <div className="flex items-center gap-2 mr-2">
+        <div className="flex items-center gap-1 shrink-0 ml-auto">
+          <div className="flex items-center gap-1 mr-1">
             <Label htmlFor={`single-sort-${role.name}`} className="text-[10px] uppercase font-bold text-muted-foreground/60 hidden sm:block">Único</Label>
             <Switch
               id={`single-sort-${role.name}`}
               checked={role.isSingle}
               onCheckedChange={(checked) => onUpdate(role.name, { isSingle: checked })}
-              className="scale-90"
+              className="scale-75 sm:scale-90"
             />
           </div>
 
@@ -291,9 +299,9 @@ const SortableRoleRow = React.memo(({
             variant="ghost"
             size="icon"
             onClick={() => onRemove(role.name)}
-            className="h-8 w-8 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors rounded-full"
+            className="h-7 w-7 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all rounded-full opacity-0 group-hover:opacity-100"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -350,18 +358,28 @@ const SortableDeptItem = React.memo(({
     <div ref={setNodeRef} style={style} className={cn(isDragging && "z-50 opacity-50")}>
       <AccordionItem
         value={dept.id}
-        className="rounded-lg border border-muted/30 bg-card shadow-sm overflow-hidden border-b-0 group"
+        className="rounded-lg border border-muted/30 bg-card shadow-sm overflow-hidden border-b-0 group select-none"
       >
         <div className="flex items-center w-full min-w-0">
-          <div {...attributes} {...listeners} className="px-1 cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-primary transition-colors">
+          <button 
+            {...attributes} 
+            {...listeners} 
+            onContextMenu={(e) => e.preventDefault()}
+            className="px-1 cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-primary transition-colors touch-none"
+          >
             <GripVertical className="h-4 w-4" />
-          </div>
+          </button>
 
-          <AccordionTrigger className="flex-1 hover:no-underline p-3 py-2 bg-muted/5 data-[state=open]:bg-muted/10 [&>svg]:hidden group min-w-0">
-            <div className="flex items-center gap-3 w-full min-w-0">
-              <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90 shrink-0" />
+          <AccordionTrigger className="flex-1 hover:no-underline p-1 py-1 bg-muted/5 data-[state=open]:bg-muted/10 [&>svg]:hidden group min-w-0">
+            <div className="flex items-center gap-1 w-full min-w-0">
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-90 shrink-0" />
               <div className="flex flex-col items-start text-left min-w-0">
-                <span className="font-bold text-sm truncate w-full">{dept.name}</span>
+                <span 
+                  className="font-bold text-[13px] truncate w-full select-none"
+                  style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
+                >
+                  {dept.name}
+                </span>
                 <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight mt-0.5">
                   {dept.roles.length} {dept.roles.length === 1 ? 'Cargo' : 'Cargos'}
                 </span>
@@ -369,7 +387,7 @@ const SortableDeptItem = React.memo(({
             </div>
           </AccordionTrigger>
 
-          <div className="flex items-center gap-2 pr-3 bg-muted/5 group-data-[state=open]:bg-muted/10 h-12 transition-colors shrink-0 ml-auto">
+          <div className="flex items-center gap-0.5 pr-1 bg-muted/5 group-data-[state=open]:bg-muted/10 h-8 transition-colors shrink-0 ml-auto">
             <Button
               variant="ghost"
               size="icon"
@@ -377,10 +395,10 @@ const SortableDeptItem = React.memo(({
                 e.stopPropagation();
                 onAddRole(e);
               }}
-              className="h-8 w-8 flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 transition-all rounded-full"
+              className="h-7 w-7 flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 transition-all rounded-full"
               title="Añadir Cargo"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
@@ -389,10 +407,10 @@ const SortableDeptItem = React.memo(({
                 e.stopPropagation();
                 onRemoveDept(e);
               }}
-              className="h-8 w-8 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all rounded-full"
+              className="h-7 w-7 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all rounded-full opacity-0 group-hover:opacity-100"
               title="Eliminar Departamento"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
@@ -441,10 +459,17 @@ function StructureTreeComponent({
   showPersonnel = false,
   compact = false,
 }: StructureTreeProps) {
+  const isMobile = useIsMobile();
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -483,6 +508,7 @@ function StructureTreeComponent({
   }, [roles]);
 
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [isAddDeptOpen, setIsAddDeptOpen] = useState(false);
   const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
   const [newDeptName, setNewDeptName] = useState('');
@@ -545,7 +571,12 @@ function StructureTreeComponent({
     setIsAddRoleOpen(true);
   }, []);
 
+  const handleDragStart = (event: any) => {
+    setActiveId(event.active.id);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
+    setActiveId(null);
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -630,10 +661,14 @@ function StructureTreeComponent({
   };
 
   return (
-    <div className={cn(
-      "flex flex-col flex-1 min-h-0 w-full max-w-full overflow-x-hidden",
-      !compact && "Card border bg-card shadow-sm overflow-hidden rounded-xl"
-    )}>
+    <div 
+      className={cn(
+        "flex flex-col flex-1 min-h-0 w-full max-w-full overflow-x-hidden",
+        !compact && "Card border bg-card shadow-sm overflow-hidden rounded-xl",
+        isMobile && "select-none"
+      )}
+      style={isMobile ? { userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' } : {}}
+    >
       {!compact && (
         <CardHeader className="pb-3 border-b bg-muted/5 backdrop-blur-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -703,15 +738,14 @@ function StructureTreeComponent({
 
       <div className="flex-1 min-h-0 overflow-hidden w-full max-w-full">
         <ScrollArea className="h-full w-full" type="auto">
-          <div className="space-y-4 pb-6 px-4 pt-4">
+          <div className="space-y-1.5 pb-4 px-0.5 sm:px-2 pt-1.5">
             {/* Cargos Globales Section */}
             <div className="rounded-xl border border-muted/30 bg-card/50 overflow-hidden shadow-sm">
-              <div className="flex items-center justify-between px-4 py-3 bg-muted/20 border-b">
+              <div className="flex items-center justify-between px-3 py-2 bg-muted/20 border-b">
                 <div className="flex items-center min-w-0">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-sm truncate">Cargos Globales</span>
-                      <Badge variant="outline" className="text-[9px] uppercase font-bold py-0 h-4 border-muted-foreground/30 whitespace-nowrap">BASE</Badge>
                     </div>
                     <p className="text-[10px] text-muted-foreground truncate">Visibles institucionalmente</p>
                   </div>
@@ -752,6 +786,7 @@ function StructureTreeComponent({
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
             >
               <SortableContext
@@ -777,6 +812,31 @@ function StructureTreeComponent({
                   ))}
                 </Accordion>
               </SortableContext>
+
+              <DragOverlay dropAnimation={{
+                sideEffects: defaultDropAnimationSideEffects({
+                  styles: {
+                    active: {
+                      opacity: '0.4',
+                    },
+                  },
+                }),
+              }}>
+                {activeId ? (
+                  <div className="flex items-center gap-2 p-2 rounded-lg border bg-card shadow-2xl scale-105 z-[100] border-primary pointer-events-none min-w-[200px]">
+                    <GripVertical className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-bold truncate">
+                      {activeId.startsWith('dept-') 
+                        ? localDepts.find(d => d.id === activeId.replace('dept-', ''))?.name 
+                        : activeId.startsWith('role-item-')
+                          ? activeId.replace('role-item-', '')
+                          : activeId.startsWith('member-')
+                            ? personnel.find(p => p.id === activeId.replace('member-', ''))?.name
+                            : activeId}
+                    </span>
+                  </div>
+                ) : null}
+              </DragOverlay>
             </DndContext>
           </div>
         </ScrollArea>

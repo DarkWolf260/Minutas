@@ -98,6 +98,7 @@ function SidebarLista({ hook, isMobile }: { hook: any, isMobile: boolean }) {
 
   return (
     <aside
+      id="novedades-sidebar"
       className={cn(
         'h-full w-full sm:w-80 lg:w-96 flex-col border-r bg-card flex gap-0 animate-in fade-in slide-in-from-left-4 duration-300 sm:animate-none',
         idReporteSeleccionado || creandoReporte ? 'hidden sm:flex' : 'flex'

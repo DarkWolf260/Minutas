@@ -86,14 +86,18 @@ export function useSetup(onComplete: (goToTemplates?: boolean) => void) {
     tryRemove(DEPTOS_KEY);
   };
 
-  const finalizar = async (irAPlantillas = false) => {
-    if (roles.length > 0) await saveRoles(roles);
-    if (departamentos.length > 0) await saveDepartments(departamentos);
-
-    marcarCompletado();
-    if (irAPlantillas) trySet('minutas-template-bootstrap-ok', 'true');
-    setPasoEstado(11); // Pantalla final
-    setTimeout(() => onComplete(irAPlantillas), 1800);
+  const finalizar = async (irAPlantillas = false, triggerTour = false) => {
+    try {
+      if (roles.length > 0) await saveRoles(roles);
+      if (departamentos.length > 0) await saveDepartments(departamentos);
+    } catch (err) {
+      console.error('Error al guardar datos finales del setup:', err);
+    } finally {
+      marcarCompletado();
+      if (irAPlantillas) trySet('minutas-template-bootstrap-ok', 'true');
+      if (triggerTour) trySet('minutas-trigger-tour', 'true');
+      setPasoEstado(9); // Pantalla final
+    }
   };
 
   const manejarContinuarWorkspace = async (nombre: string, esExistente: boolean) => {
@@ -110,7 +114,7 @@ export function useSetup(onComplete: (goToTemplates?: boolean) => void) {
       toast.error('No se pudo configurar el área de trabajo.');
       return;
     }
-    setPaso(3);
+    setPaso(2);
   };
 
   return {

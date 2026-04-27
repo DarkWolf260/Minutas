@@ -96,6 +96,8 @@ function CabeceraSync({ usuario, esPrincipal, esSecundario, modoSimple = false }
 function PantallaConfiguracionSync({ hook }: { hook: any }) {
   const { 
     estaAutenticado, 
+    usuario,
+    signOut,
     setEsLoginOpen, 
     modo, 
     setModo, 
@@ -111,55 +113,83 @@ function PantallaConfiguracionSync({ hook }: { hook: any }) {
     <div className="max-w-2xl mx-auto w-full px-4 py-8 space-y-8">
       <CabeceraSync modoSimple={true} />
 
-      {!estaAutenticado && (
-        <Card className="border-amber-500/30 bg-amber-500/5">
-          <CardContent className="flex items-center gap-4 p-4">
-            <LogIn className="h-5 w-5 text-amber-500 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">Inicio de sesión requerido</p>
-              <p className="text-xs text-muted-foreground">
-                Necesitas una cuenta para usar la sincronización.
-              </p>
-            </div>
-            <Button size="sm" onClick={() => setEsLoginOpen(true)}>
-              Iniciar sesión
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+      <div className="space-y-4">
+        <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Cuenta</Label>
+        {!estaAutenticado ? (
+          <Card className="border-blue-500/30 bg-blue-500/5 shadow-sm">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="h-10 w-10 rounded-xl bg-blue-500/20 flex items-center justify-center shrink-0">
+                <LogIn className="h-5 w-5 text-blue-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold tracking-tight">Inicio de sesión requerido</p>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Necesitas una cuenta para habilitar la sincronización en la nube.
+                </p>
+              </div>
+              <Button size="sm" onClick={() => setEsLoginOpen(true)} className="bg-blue-600 hover:bg-blue-500 font-bold">
+                Iniciar sesión
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-green-500/20 bg-green-500/5 shadow-sm">
+            <CardContent className="flex items-center gap-4 p-4">
+              <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center border border-green-500/20">
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold truncate">{usuario?.email}</p>
+                <p className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Sesión Activa</p>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={signOut}
+                className="h-8 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-destructive"
+              >
+                Cerrar sesión
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <button
-          onClick={() => setModo('primary')}
-          className={cn(
-            'rounded-xl border-2 p-5 text-left transition-all hover:bg-accent/50',
-            modo === 'primary'
-              ? 'border-primary bg-primary/5 shadow-sm'
-              : 'border-border'
-          )}
-        >
-          <Monitor className={cn('h-7 w-7 mb-3', modo === 'primary' ? 'text-primary' : 'text-muted-foreground')} />
-          <p className="font-bold text-sm">Principal</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Este dispositivo recibe los reportes de los demás.
-          </p>
-        </button>
+      <div className="space-y-4">
+        <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Modo de dispositivo</Label>
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => setModo('primary')}
+            className={cn(
+              'rounded-xl border-2 p-5 text-left transition-all hover:bg-accent/50',
+              modo === 'primary'
+                ? 'border-primary bg-primary/5 shadow-sm'
+                : 'border-border bg-muted/5'
+            )}
+          >
+            <Monitor className={cn('h-7 w-7 mb-3', modo === 'primary' ? 'text-primary' : 'text-muted-foreground')} />
+            <p className="font-bold text-sm">Principal</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Recibe los reportes de los demás dispositivos.
+            </p>
+          </button>
 
-        <button
-          onClick={() => setModo('secondary')}
-          className={cn(
-            'rounded-xl border-2 p-5 text-left transition-all hover:bg-accent/50',
-            modo === 'secondary'
-              ? 'border-primary bg-primary/5 shadow-sm'
-              : 'border-border'
-          )}
-        >
-          <Smartphone className={cn('h-7 w-7 mb-3', modo === 'secondary' ? 'text-primary' : 'text-muted-foreground')} />
-          <p className="font-bold text-sm">Secundario</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Este dispositivo envía reportes al principal.
-          </p>
-        </button>
+          <button
+            onClick={() => setModo('secondary')}
+            className={cn(
+              'rounded-xl border-2 p-5 text-left transition-all hover:bg-accent/50',
+              modo === 'secondary'
+                ? 'border-primary bg-primary/5 shadow-sm'
+                : 'border-border bg-muted/5'
+            )}
+          >
+            <Smartphone className={cn('h-7 w-7 mb-3', modo === 'secondary' ? 'text-primary' : 'text-muted-foreground')} />
+            <p className="font-bold text-sm">Secundario</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Envía reportes al dispositivo principal.
+            </p>
+          </button>
+        </div>
       </div>
 
       <Card>

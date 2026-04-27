@@ -1,23 +1,22 @@
-'use client';
-
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useSetup } from '@/hooks/use-setup';
 import { 
   PasoBienvenida, 
-  PasoTema, 
   PasoAreaTrabajo, 
-  PasoAjustesGenerales, 
+  PasoPreferencias,
   PasoModulos, 
   PasoEstructura, 
   PasoJerarquia, 
   PasoPlantillas, 
   PasoPrimeraVez, 
   PasoGuia, 
-  PasoFeedback, 
   PasoDone 
 } from './steps';
 
-const TOTAL_PUNTOS = 8;
+const TOTAL_PUNTOS = 9;
 
 function PuntosProgreso({ actual, total }: { actual: number; total: number }) {
   return (
@@ -51,79 +50,92 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
     saveSettings 
   } = hook;
 
-  const mostrarProgreso = paso >= 1 && paso <= 7;
+  const mostrarProgreso = paso >= 1 && paso <= 8;
   const progresoActual = paso - 1;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="relative w-full max-w-lg my-auto py-8">
+    <div className="fixed inset-0 z-[100] flex flex-col items-center bg-background overflow-hidden">
+      <div className="relative w-full max-w-lg flex flex-col h-full">
         {mostrarProgreso && (
-          <div className="flex items-center justify-between mb-8 px-1">
-            <PuntosProgreso actual={progresoActual} total={TOTAL_PUNTOS} />
-            <span className="text-xs text-muted-foreground tabular-nums">
-              Paso {paso} de {TOTAL_PUNTOS}
-            </span>
+          <div className="flex items-center justify-between py-4 px-6 shrink-0 border-b bg-background/50 backdrop-blur-md">
+            <div className="flex items-center gap-4">
+              <PuntosProgreso actual={progresoActual} total={TOTAL_PUNTOS} />
+              <span className="text-xs text-muted-foreground tabular-nums">
+                Paso {paso} de {TOTAL_PUNTOS}
+              </span>
+            </div>
+            {paso < 9 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground hover:text-foreground h-8 px-2"
+                onClick={() => finalizar()}
+              >
+                Saltar
+              </Button>
+            )}
           </div>
         )}
 
-        {paso === 0 && <PasoBienvenida alSiguiente={() => setPaso(1)} />}
-        {paso === 1 && <PasoTema alSiguiente={() => setPaso(2)} alAtras={() => setPaso(0)} />}
-        {paso === 2 && (
-          <PasoAreaTrabajo
-            workspacesExistentes={workspaces}
-            alSiguiente={manejarContinuarWorkspace}
-            alAtras={() => setPaso(1)}
-          />
-        )}
-        {paso === 3 && (
-          <div className="animate-in fade-in duration-500">
-            <PasoAjustesGenerales alSiguiente={() => setPaso(4)} alAtras={() => setPaso(2)} />
-          </div>
-        )}
-        {paso === 4 && (
-          <PasoModulos
-            alSiguiente={() => setPaso(5)}
-            alAtras={() => setPaso(3)}
-            alGuardar={(deshabilitados) => saveSettings({ disabledModules: deshabilitados })}
-          />
-        )}
-        {paso === 5 && (
-          <PasoEstructura 
-            alSiguiente={() => setPaso(6)} 
-            alAtras={() => setPaso(4)}
-            roles={roles}
-            setRoles={setRoles}
-            departamentos={departamentos}
-            setDepartamentos={setDepartamentos}
-          />
-        )}
-        {paso === 6 && (
-          <PasoJerarquia
-            alSiguiente={() => setPaso(7)}
-            alAtras={() => setPaso(5)}
-            roles={roles}
-            setRoles={setRoles}
-            departamentos={departamentos}
-            setDepartamentos={setDepartamentos}
-          />
-        )}
-        {paso === 7 && (
-          <PasoPlantillas
-            alSiguiente={() => { localStorage.setItem('minutas-template-bootstrap-ok', 'true'); setPaso(8); }}
-            alAtras={() => setPaso(6)}
-            alOmitir={() => setPaso(8)}
-          />
-        )}
-        {paso === 8 && (
-          <PasoPrimeraVez
-            alPrimero={() => setPaso(9)}
-            alRegresar={() => setPaso(10)}
-            alAtras={() => setPaso(7)}
-          />
-        )}
-        {paso === 9 && <PasoGuia alSiguiente={() => setPaso(10)} />}
-        {paso === 10 && <PasoFeedback alFinalizar={() => finalizar(false)} />}
-        {paso === 11 && <PasoDone nombreWorkspace={nombreWorkspace} />}
+        <div className="flex-1 min-h-0">
+          {paso === 0 && <PasoBienvenida alSiguiente={() => setPaso(1)} />}
+          {paso === 1 && (
+            <PasoAreaTrabajo
+              workspacesExistentes={workspaces}
+              alSiguiente={manejarContinuarWorkspace}
+              alAtras={() => setPaso(0)}
+            />
+          )}
+          {paso === 2 && (
+            <PasoPreferencias 
+              alSiguiente={() => setPaso(3)} 
+              alAtras={() => setPaso(1)} 
+            />
+          )}
+          {paso === 3 && (
+            <PasoModulos
+              alSiguiente={() => setPaso(4)}
+              alAtras={() => setPaso(2)}
+              alGuardar={(deshabilitados) => saveSettings({ disabledModules: deshabilitados })}
+            />
+          )}
+          {paso === 4 && (
+            <PasoEstructura 
+              alSiguiente={() => setPaso(5)} 
+              alAtras={() => setPaso(3)}
+              roles={roles}
+              setRoles={setRoles}
+              departamentos={departamentos}
+              setDepartamentos={setDepartamentos}
+            />
+          )}
+          {paso === 5 && (
+            <PasoJerarquia
+              alSiguiente={() => setPaso(6)}
+              alAtras={() => setPaso(4)}
+              roles={roles}
+              setRoles={setRoles}
+              departamentos={departamentos}
+              setDepartamentos={setDepartamentos}
+            />
+          )}
+          {paso === 6 && (
+            <PasoPlantillas
+              alSiguiente={() => { localStorage.setItem('minutas-template-bootstrap-ok', 'true'); setPaso(7); }}
+              alAtras={() => setPaso(5)}
+              alOmitir={() => setPaso(7)}
+            />
+          )}
+          {paso === 7 && (
+            <PasoPrimeraVez
+              alPrimero={() => setPaso(8)}
+              alRegresar={() => finalizar(false, false)}
+              alAtras={() => setPaso(6)}
+            />
+          )}
+          {paso === 8 && <PasoGuia alSiguiente={() => finalizar(false, true)} />}
+          {paso === 9 && <PasoDone nombreWorkspace={nombreWorkspace} alFinalizar={() => onComplete(false)} />}
+        </div>
       </div>
     </div>
   );

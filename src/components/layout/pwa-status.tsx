@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { RefreshCw, Download, MonitorSmartphone } from 'lucide-react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Button } from '@/components/ui/button';
+import { SETUP_DONE_KEY, tryGet } from '@/hooks/use-setup';
 
 export function PWAStatus() {
     const {
@@ -22,9 +23,12 @@ export function PWAStatus() {
     const [isMounted, setIsMounted] = useState(false);
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [showInstallBtn, setShowInstallBtn] = useState(true);
+    const [isSetup, setIsSetup] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
+        const setupDone = !!tryGet(SETUP_DONE_KEY);
+        setIsSetup(!setupDone || window.location.pathname.includes('/setup'));
 
         const handler = (e: any) => {
             // Prevent the mini-infobar from appearing on mobile
@@ -39,7 +43,7 @@ export function PWAStatus() {
         return () => window.removeEventListener('beforeinstallprompt', handler);
     }, []);
 
-    if (!isMounted) return null;
+    if (!isMounted || isSetup) return null;
 
     const close = () => {
         setOfflineReady(false);

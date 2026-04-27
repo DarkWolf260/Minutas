@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 
 export function useSyncPagina() {
-  const { isAuthenticated: estaAutenticado, user: usuario } = useAuth();
+  const { isAuthenticated: estaAutenticado, user: usuario, signOut } = useAuth();
   const {
     syncConfig: configSync,
     inboxReports: reportesBandeja,
@@ -55,6 +55,7 @@ export function useSyncPagina() {
     // Estado
     estaAutenticado,
     usuario,
+    signOut,
     configSync,
     reportesBandeja,
     sincronizando,
