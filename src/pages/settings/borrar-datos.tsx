@@ -1,24 +1,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
 import { useSettings } from '@/hooks/use-settings';
 import { useUnits } from '@/hooks/use-units';
 import { useRoles } from '@/hooks/use-roles';
@@ -199,63 +183,16 @@ export default function BorrarDatosPage() {
           </CardContent>
         </Card>
 
-        {isMobile ? (
-          <Sheet
-            open={!!actionToConfirm}
-            onOpenChange={(open) => !open && setActionToConfirm(null)}
-          >
-            <SheetContent side="bottom" className="rounded-t-xl p-6">
-              <SheetHeader className="text-left">
-                <SheetTitle>
-                  {actionToConfirm && resetOptions[actionToConfirm]?.title}
-                </SheetTitle>
-                <SheetDescription>
-                  {actionToConfirm && resetOptions[actionToConfirm]?.description}
-                </SheetDescription>
-              </SheetHeader>
-              <div className="py-6 space-y-3">
-                <Button
-                  variant="destructive"
-                  className="w-full h-12 text-base font-semibold"
-                  onClick={handleConfirmReset}
-                >
-                  Sí, continuar
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full h-12 text-base"
-                  onClick={() => setActionToConfirm(null)}
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
-        ) : (
-          <AlertDialog
-            open={!!actionToConfirm}
-            onOpenChange={(open) => !open && setActionToConfirm(null)}
-          >
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {actionToConfirm && resetOptions[actionToConfirm]?.title}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {actionToConfirm && resetOptions[actionToConfirm]?.description}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setActionToConfirm(null)}>
-                  Cancelar
-                </AlertDialogCancel>
-                <AlertDialogAction onClick={handleConfirmReset}>
-                  Sí, continuar
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
+        <ConfirmDialog
+          open={!!actionToConfirm}
+          onOpenChange={(open) => !open && setActionToConfirm(null)}
+          onConfirm={handleConfirmReset}
+          title={actionToConfirm ? resetOptions[actionToConfirm]?.title : ''}
+          message={actionToConfirm ? resetOptions[actionToConfirm]?.description || '' : ''}
+          confirmText="Sí, continuar"
+          cancelText="Cancelar"
+          variant="destructive"
+        />
       </div>
     </ScrollArea>
   );

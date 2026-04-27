@@ -14,32 +14,33 @@ import { lazy, Suspense, useState, useEffect } from 'react';
 import { WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-// Setup helpers (synchronous localStorage check — zero flash)
-import SetupPage, { SETUP_DONE_KEY, tryGet, trySet } from '@/pages/setup';
+// Setup helpers
+import SetupPage from '@/pages/setup';
+import { SETUP_DONE_KEY, tryGet, trySet } from '@/hooks/use-setup';
 
 // ─── Lazy-load app pages ──────────────────────────────────────────────────────
 
-const NovedadesPage           = lazy(() => import('@/pages/novedades'));
-const DireccionesPage         = lazy(() => import('@/pages/settings/direcciones'));
-const EstadisticasPage        = lazy(() => import('@/pages/estadisticas'));
-const OrdenDelDiaPage         = lazy(() => import('@/pages/orden-del-dia'));
-const PersonalPage            = lazy(() => import('@/pages/personal'));
-const PlantillasPage          = lazy(() => import('@/pages/plantillas'));
-const ReporteFinalPage        = lazy(() => import('@/pages/reporte-final'));
-const SettingsPage            = lazy(() => import('@/pages/settings'));
-const SettingsWorkspacesPage  = lazy(() => import('@/pages/settings/workspaces'));
-const SettingsProfilePage     = lazy(() => import('@/pages/settings/profile'));
+const NovedadesPage = lazy(() => import('@/pages/novedades'));
+const DireccionesPage = lazy(() => import('@/pages/settings/direcciones'));
+const EstadisticasPage = lazy(() => import('@/pages/estadisticas'));
+const OrdenDelDiaPage = lazy(() => import('@/pages/orden-del-dia'));
+const PersonalPage = lazy(() => import('@/pages/personal'));
+const PlantillasPage = lazy(() => import('@/pages/plantillas'));
+const ReporteFinalPage = lazy(() => import('@/pages/reporte-final'));
+const SettingsPage = lazy(() => import('@/pages/settings'));
+const SettingsWorkspacesPage = lazy(() => import('@/pages/settings/workspaces'));
+const SettingsProfilePage = lazy(() => import('@/pages/settings/profile'));
 const SettingsBorrarDatosPage = lazy(() => import('@/pages/settings/borrar-datos'));
-const SettingsSyncPage        = lazy(() => import('@/pages/settings/sync'));
-const SettingsFeedbackPage    = lazy(() => import('@/pages/settings/feedback'));
-const SettingsAboutPage       = lazy(() => import('@/pages/settings/about'));
-const SettingsModulesPage     = lazy(() => import('@/pages/settings/modules'));
-const AboutAppPage            = lazy(() => import('@/pages/settings/about/app'));
-const AboutGuidePage          = lazy(() => import('@/pages/settings/about/guide'));
-const AboutChangelogPage      = lazy(() => import('@/pages/settings/about/changelog'));
-const AboutTemplatesPage      = lazy(() => import('@/pages/settings/about/templates'));
-const OfflinePage             = lazy(() => import('@/pages/offline'));
-const NotFoundPage            = lazy(() => import('@/pages/not-found'));
+const SettingsSyncPage = lazy(() => import('@/pages/settings/sync'));
+const SettingsFeedbackPage = lazy(() => import('@/pages/settings/feedback'));
+const SettingsAboutPage = lazy(() => import('@/pages/settings/about'));
+const SettingsModulesPage = lazy(() => import('@/pages/settings/modules'));
+const AboutAppPage = lazy(() => import('@/pages/settings/about/app'));
+const AboutGuidePage = lazy(() => import('@/pages/settings/about/guide'));
+const AboutChangelogPage = lazy(() => import('@/pages/settings/about/changelog'));
+const AboutTemplatesPage = lazy(() => import('@/pages/settings/about/templates'));
+const OfflinePage = lazy(() => import('@/pages/offline'));
+const NotFoundPage = lazy(() => import('@/pages/not-found'));
 
 // ─── Shared loader ────────────────────────────────────────────────────────────
 
@@ -64,12 +65,12 @@ function AppLayout() {
   );
 
   useEffect(() => {
-    const onOnline  = () => setIsOffline(false);
+    const onOnline = () => setIsOffline(false);
     const onOffline = () => setIsOffline(true);
-    window.addEventListener('online',  onOnline);
+    window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
     return () => {
-      window.removeEventListener('online',  onOnline);
+      window.removeEventListener('online', onOnline);
       window.removeEventListener('offline', onOffline);
     };
   }, []);
@@ -106,27 +107,27 @@ function AppLayout() {
                 className="flex-1 flex flex-col min-h-0 min-w-0 animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out"
               >
                 <Routes>
-                  <Route path="/"                          element={<NovedadesPage />} />
-                  <Route path="/settings/direcciones"      element={<DireccionesPage />} />
-                  <Route path="/estadisticas"              element={<EstadisticasPage />} />
-                  <Route path="/orden-del-dia"             element={<OrdenDelDiaPage />} />
-                  <Route path="/personal"                  element={<PersonalPage />} />
-                  <Route path="/plantillas"                element={<PlantillasPage />} />
-                  <Route path="/reporte-final"             element={<ReporteFinalPage />} />
-                  <Route path="/settings"                  element={<SettingsPage />} />
-                  <Route path="/settings/workspaces"       element={<SettingsWorkspacesPage />} />
-                  <Route path="/settings/profile"          element={<SettingsProfilePage />} />
-                  <Route path="/settings/borrar-datos"     element={<SettingsBorrarDatosPage />} />
-                  <Route path="/settings/sync"             element={<SettingsSyncPage />} />
-                  <Route path="/settings/modules"          element={<SettingsModulesPage />} />
-                  <Route path="/settings/feedback"         element={<SettingsFeedbackPage />} />
-                  <Route path="/settings/about"            element={<SettingsAboutPage />} />
-                  <Route path="/settings/about/app"        element={<AboutAppPage />} />
-                  <Route path="/settings/about/guide"      element={<AboutGuidePage />} />
-                  <Route path="/settings/about/changelog"  element={<AboutChangelogPage />} />
-                  <Route path="/settings/about/templates"  element={<AboutTemplatesPage />} />
-                  <Route path="/offline"                   element={<OfflinePage />} />
-                  <Route path="*"                          element={<NotFoundPage />} />
+                  <Route path="/" element={<NovedadesPage />} />
+                  <Route path="/settings/direcciones" element={<DireccionesPage />} />
+                  <Route path="/estadisticas" element={<EstadisticasPage />} />
+                  <Route path="/orden-del-dia" element={<OrdenDelDiaPage />} />
+                  <Route path="/personal" element={<PersonalPage />} />
+                  <Route path="/plantillas" element={<PlantillasPage />} />
+                  <Route path="/reporte-final" element={<ReporteFinalPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/settings/workspaces" element={<SettingsWorkspacesPage />} />
+                  <Route path="/settings/profile" element={<SettingsProfilePage />} />
+                  <Route path="/settings/borrar-datos" element={<SettingsBorrarDatosPage />} />
+                  <Route path="/settings/sync" element={<SettingsSyncPage />} />
+                  <Route path="/settings/modules" element={<SettingsModulesPage />} />
+                  <Route path="/settings/feedback" element={<SettingsFeedbackPage />} />
+                  <Route path="/settings/about" element={<SettingsAboutPage />} />
+                  <Route path="/settings/about/app" element={<AboutAppPage />} />
+                  <Route path="/settings/about/guide" element={<AboutGuidePage />} />
+                  <Route path="/settings/about/changelog" element={<AboutChangelogPage />} />
+                  <Route path="/settings/about/templates" element={<AboutTemplatesPage />} />
+                  <Route path="/offline" element={<OfflinePage />} />
+                  <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </div>
             </Suspense>

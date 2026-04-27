@@ -91,7 +91,7 @@ export interface AppSettings {
     staff: Staff;
     activities: ManualNovedad[];
     notes: { id: string; content: string }[];
-    isJefeEncargado?: boolean;
+    esJefeEncargado?: boolean;
     guardId: string;
     updatedAt: string;
   };

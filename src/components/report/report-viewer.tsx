@@ -91,7 +91,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
 
     const content = renderFinalReport(template.content, formData, config, { 
       Estatus: status,
-      Enc: settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : ''
+      Enc: settings.ordenDelDiaDraft?.esJefeEncargado ? '(E)' : ''
     });
     const newTitle = String(formData.titulo || formData.title || template.name);
 
@@ -181,7 +181,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
     if (!report || !template) return;
     const content = renderFinalReport(template.content, formData, config, { 
       Estatus: newStatus,
-      Enc: settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : ''
+      Enc: settings.ordenDelDiaDraft?.esJefeEncargado ? '(E)' : ''
     });
     const newTitle = String(formData.titulo || formData.title || template.name);
     const finalReport: Report = {
@@ -336,7 +336,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
                 onDataChange={handleDataChange}
                 controlledValues={{ 
                   Estatus: status,
-                  Enc: settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : ''
+                  Enc: settings.ordenDelDiaDraft?.esJefeEncargado ? '(E)' : ''
                 }}
               />
             </CardContent>

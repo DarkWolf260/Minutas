@@ -304,7 +304,7 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
               onDataChange={handleDataChange}
               controlledValues={{
                 Estatus: 'En proceso',
-                Enc: settings.ordenDelDiaDraft?.isJefeEncargado ? '(E)' : ''
+                Enc: settings.ordenDelDiaDraft?.esJefeEncargado ? '(E)' : ''
               }}
             />
           </CardContent>

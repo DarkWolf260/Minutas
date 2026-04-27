@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { getReportCategories, calculateMonthlyStats } from '../statistics-utils';
+import { obtenerCategoriasReporte, calcularEstadisticasMensuales } from '../estadisticas-utils';
 import type { Report, Template, TemplateConfig } from '@/lib/types';
 
 // Mock data factories
@@ -49,14 +49,14 @@ describe('statistics-utils', () => {
     describe('getReportCategories', () => {
         it('should return empty array when template is undefined', () => {
             const report = createMockReport();
-            const result = getReportCategories(report, undefined);
+            const result = obtenerCategoriasReporte(report, undefined);
             expect(result).toEqual([]);
         });
 
         it('should return empty array when template has no category or rules', () => {
             const report = createMockReport();
             const template = createMockTemplate();
-            const result = getReportCategories(report, template);
+            const result = obtenerCategoriasReporte(report, template);
             expect(result).toEqual([]);
         });
 
@@ -65,7 +65,7 @@ describe('statistics-utils', () => {
             const template = createMockTemplate({
                 statisticsCategory: '1.2 LLAMADAS DE EMERGENCIAS',
             });
-            const result = getReportCategories(report, template);
+            const result = obtenerCategoriasReporte(report, template);
             expect(result).toContain('1.2 LLAMADAS DE EMERGENCIAS');
         });
 
@@ -79,7 +79,7 @@ describe('statistics-utils', () => {
                     { fieldId: 'tipo', condition: 'hurto', category: '5.1 ATENCIONES PREHOSPITALARIAS' },
                 ],
             });
-            const result = getReportCategories(report, template);
+            const result = obtenerCategoriasReporte(report, template);
             expect(result).toContain('5 ATENCIONES AL PÚBLICO');
             expect(result).toContain('5.1 ATENCIONES PREHOSPITALARIAS');
         });
@@ -93,7 +93,7 @@ describe('statistics-utils', () => {
                     { fieldId: 'tipo', condition: 'hurto', category: '1.2 LLAMADAS DE EMERGENCIAS' },
                 ],
             });
-            const result = getReportCategories(report, template);
+            const result = obtenerCategoriasReporte(report, template);
             expect(result).toContain('1.2 LLAMADAS DE EMERGENCIAS');
         });
 
@@ -107,7 +107,7 @@ describe('statistics-utils', () => {
                     { fieldId: 'nonexistent', condition: 'value', category: '1.2 LLAMADAS DE EMERGENCIAS' },
                 ],
             });
-            const result = getReportCategories(report, template);
+            const result = obtenerCategoriasReporte(report, template);
             expect(result).toContain('1 REPORTES DEL VEN 9-1-1');
             expect(result).not.toContain('1.2 LLAMADAS DE EMERGENCIAS');
         });
@@ -132,7 +132,7 @@ describe('statistics-utils', () => {
                     }
                 }
             });
-            const result = getReportCategories(report, template, config);
+            const result = obtenerCategoriasReporte(report, template, config);
             expect(result).toContain('5.3 EN RESIDENCIA');
         });
 
@@ -146,7 +146,7 @@ describe('statistics-utils', () => {
                     { fieldId: 'symptoms', operator: '=', condition: 'cough', category: '5.2 EN TRASLADOS' },
                 ],
             });
-            const result = getReportCategories(report, template);
+            const result = obtenerCategoriasReporte(report, template);
             expect(result).toContain('5.1 ATENCIONES PREHOSPITALARIAS');
             expect(result).toContain('5.2 EN TRASLADOS');
         });
@@ -161,7 +161,7 @@ describe('statistics-utils', () => {
                     { fieldId: 'destiny', operator: '=', condition: 'Guanta', category: '6.2 TRASLADOS EXTRAURBANOS' },
                 ],
             });
-            const result = getReportCategories(report, template);
+            const result = obtenerCategoriasReporte(report, template);
             // Should only contain ONE instance of 6.2
             const count = result.filter(c => c === '6.2 TRASLADOS EXTRAURBANOS').length;
             expect(count).toBe(1);
@@ -185,15 +185,15 @@ describe('statistics-utils', () => {
 
             // Matches primary but none of the OR conditions -> fail
             const report1 = createMockReport({ formData: { type: 'emergency', priority: 'low' } });
-            expect(getReportCategories(report1, template)).not.toContain('1.2 LLAMADAS DE EMERGENCIAS');
+            expect(obtenerCategoriasReporte(report1, template)).not.toContain('1.2 LLAMADAS DE EMERGENCIAS');
 
             // Matches primary and one of the OR conditions -> success
             const report2 = createMockReport({ formData: { type: 'emergency', priority: 'high' } });
-            expect(getReportCategories(report2, template)).toContain('1.2 LLAMADAS DE EMERGENCIAS');
+            expect(obtenerCategoriasReporte(report2, template)).toContain('1.2 LLAMADAS DE EMERGENCIAS');
 
             // Matches primary and another OR condition -> success
             const report3 = createMockReport({ formData: { type: 'emergency', priority: 'critical' } });
-            expect(getReportCategories(report3, template)).toContain('1.2 LLAMADAS DE EMERGENCIAS');
+            expect(obtenerCategoriasReporte(report3, template)).toContain('1.2 LLAMADAS DE EMERGENCIAS');
         });
 
         it('should handle complex rules with both conditions (AND) and orConditions (OR)', () => {
@@ -217,15 +217,15 @@ describe('statistics-utils', () => {
 
             // a=1, b=2, c=3 (matches primary, AND, and one OR) -> success
             const r1 = createMockReport({ formData: { a: '1', b: '2', c: '3' } });
-            expect(getReportCategories(r1, template)).toContain('CAT');
+            expect(obtenerCategoriasReporte(r1, template)).toContain('CAT');
 
             // a=1, b=1, c=3 (fails AND) -> fail
             const r2 = createMockReport({ formData: { a: '1', b: '1', c: '3' } });
-            expect(getReportCategories(r2, template)).not.toContain('CAT');
+            expect(obtenerCategoriasReporte(r2, template)).not.toContain('CAT');
 
             // a=1, b=2, c=1 (fails OR) -> fail
             const r3 = createMockReport({ formData: { a: '1', b: '2', c: '1' } });
-            expect(getReportCategories(r3, template)).not.toContain('CAT');
+            expect(obtenerCategoriasReporte(r3, template)).not.toContain('CAT');
         });
     });
 
@@ -248,7 +248,7 @@ describe('statistics-utils', () => {
                     formData: { tipo: 'x' }
                 }),
             ];
-            const result = calculateMonthlyStats(reports, [template], {}, testMonth, testYear);
+            const result = calcularEstadisticasMensuales(reports, [template], {}, testMonth, testYear);
 
             expect(result.get('5 ATENCIONES AL PÚBLICO')!.get(5)).toBe(1);
             expect(result.get('5.1 ATENCIONES PREHOSPITALARIAS')!.get(5)).toBe(1);
@@ -270,12 +270,12 @@ describe('statistics-utils', () => {
             ];
 
             // 1. Statistical Mode: Jan 5 02:00 -> Logical Day 4
-            const statStats = calculateMonthlyStats(reports, [template], {}, 0, 2026, 'statistical');
+            const statStats = calcularEstadisticasMensuales(reports, [template], {}, 0, 2026, 'statistical');
             expect(statStats.get('1 REPORTES DEL VEN 9-1-1')!.get(4)).toBe(1);
             expect(statStats.get('1 REPORTES DEL VEN 9-1-1')!.get(5)).toBeUndefined();
 
             // 2. Standard Mode: Jan 5 02:00 -> Day 5
-            const standardStats = calculateMonthlyStats(reports, [template], {}, 0, 2026, 'standard');
+            const standardStats = calcularEstadisticasMensuales(reports, [template], {}, 0, 2026, 'standard');
             expect(standardStats.get('1 REPORTES DEL VEN 9-1-1')!.get(5)).toBe(1);
             expect(standardStats.get('1 REPORTES DEL VEN 9-1-1')!.get(4)).toBeUndefined();
         });
@@ -294,7 +294,7 @@ describe('statistics-utils', () => {
                 }),
             ];
 
-            const stats = calculateMonthlyStats(reports, [template], {}, 0, 2026);
+            const stats = calcularEstadisticasMensuales(reports, [template], {}, 0, 2026);
             expect(stats.get('5.1 ATENCIONES PREHOSPITALARIAS')!.get(5)).toBe(1);
             expect(stats.get('5.1 ATENCIONES PREHOSPITALARIAS')!.get(10)).toBeUndefined();
         });
