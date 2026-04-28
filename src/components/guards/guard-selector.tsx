@@ -197,36 +197,36 @@ export function NoGuardBanner({
   if (!isLoaded) return null;
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-6 text-center animate-in fade-in duration-500 gap-8 w-full h-full">
-      <div className="max-w-sm space-y-4">
-        <div className="h-20 w-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto border-2 border-dashed border-amber-500/20">
-          <Lock className="h-9 w-9 text-amber-500/40" />
+    <div className="flex flex-col items-center justify-center py-6 sm:py-16 px-3 text-center animate-in fade-in duration-500 gap-4 sm:gap-8 w-full min-h-0">
+      <div className="max-w-sm space-y-2 sm:space-y-4">
+        <div className="h-14 w-14 sm:h-20 sm:w-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto border-2 border-dashed border-amber-500/20">
+          <Lock className="h-6 w-6 sm:h-9 sm:w-9 text-amber-500/40" />
         </div>
-        <div className="space-y-1.5">
-          <h3 className="text-lg font-bold text-foreground/80 tracking-tight">
+        <div className="space-y-1 sm:space-y-1.5">
+          <h3 className="text-base sm:text-lg font-bold text-foreground/80 tracking-tight">
             Guardia no Iniciada
           </h3>
-          <p className="text-sm text-muted-foreground/60 leading-relaxed">{message}</p>
+          <p className="text-[12px] sm:text-sm text-muted-foreground/60 leading-relaxed">{message}</p>
         </div>
       </div>
-
+ 
       {allowOpenHere && guards.length > 0 && (
-        <div className="w-full max-w-md bg-card border border-muted/60 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-left">
+        <div className="w-full max-w-md bg-card border border-muted/60 rounded-2xl shadow-sm p-4 sm:p-5 space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-left">
             Abrir guardia aquí
           </p>
-
-          <div className="flex flex-col sm:flex-row gap-3">
+ 
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             {/* Guard select */}
-            <div className="flex-1 space-y-1.5">
+            <div className="flex-1 space-y-1 sm:space-y-1.5 text-left">
               <Label
                 htmlFor="no-guard-select"
-                className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
+                className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
               >
                 Guardia
               </Label>
               <Select value={selectedGuardId} onValueChange={setSelectedGuardId}>
-                <SelectTrigger id="no-guard-select" className="h-10 rounded-lg bg-background">
+                <SelectTrigger id="no-guard-select" className="h-9 sm:h-10 rounded-lg bg-background text-xs sm:text-sm">
                   <SelectValue placeholder="Seleccionar..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -238,12 +238,12 @@ export function NoGuardBanner({
                 </SelectContent>
               </Select>
             </div>
-
+ 
             {/* Periodo */}
-            <div className="flex-1 space-y-1.5">
+            <div className="flex-1 space-y-1 sm:space-y-1.5 text-left">
               <Label
                 htmlFor="no-guard-period"
-                className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
+                className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
               >
                 Periodo
               </Label>
@@ -252,23 +252,23 @@ export function NoGuardBanner({
                 value={periodo}
                 onChange={(e) => setPeriodo(e.target.value)}
                 placeholder="DD/MM/YYYY AL DD/MM/YYYY"
-                className="h-10 rounded-lg bg-background"
+                className="h-9 sm:h-10 rounded-lg bg-background text-xs sm:text-sm"
               />
             </div>
           </div>
-
+ 
           <div className="flex items-center gap-2">
             <Button
               onClick={handleOpen}
               disabled={!selectedGuardId}
-              className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm"
+              className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm h-9 sm:h-10 text-xs sm:text-sm"
               size="sm"
             >
               <Play className="h-3.5 w-3.5 fill-current" />
               Abrir Guardia
             </Button>
             {!ordenDelDiaDisabled && (
-              <Button asChild variant="outline" size="sm" className="gap-2">
+              <Button asChild variant="outline" size="sm" className="gap-2 h-9 sm:h-10 text-xs sm:text-sm">
                 <Link to="/orden-del-dia">
                   <Newspaper className="h-3.5 w-3.5" />
                   Orden del Día

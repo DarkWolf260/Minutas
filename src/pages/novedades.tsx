@@ -104,22 +104,22 @@ function SidebarLista({ hook, isMobile }: { hook: any, isMobile: boolean }) {
         idReporteSeleccionado || creandoReporte ? 'hidden sm:flex' : 'flex'
       )}
     >
-      <div className="flex items-center justify-between border-b p-4 min-h-[73px]">
+      <div className="flex items-center justify-between border-b p-3 sm:p-4 min-h-[60px] sm:min-h-[73px]">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-bold tracking-tight">Novedades</h2>
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight">Novedades</h2>
         </div>
         <Button
           size="sm"
           onClick={() => setEsDialogOpenCrear(true)}
           disabled={!guardiaAbierta}
-          className="shadow-sm gap-2"
+          className="shadow-sm gap-2 h-8 sm:h-9 text-xs sm:text-sm"
         >
-          <PlusCircle className="h-4 w-4" />
+          <PlusCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           Nuevo
         </Button>
       </div>
 
-      <div className="p-4 space-y-4 border-b bg-muted/5">
+      <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 border-b bg-muted/5">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -127,7 +127,7 @@ function SidebarLista({ hook, isMobile }: { hook: any, isMobile: boolean }) {
               id="report-search"
               name="report-search"
               placeholder="Buscar reportes..."
-              className="pl-9 bg-background border-none shadow-sm focus-visible:ring-primary/20 rounded-lg"
+              className="pl-9 bg-background border-none shadow-sm focus-visible:ring-primary/20 rounded-lg h-10 text-sm"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />
@@ -153,7 +153,10 @@ function SidebarLista({ hook, isMobile }: { hook: any, isMobile: boolean }) {
       
       <div className="flex-1 min-h-0">
         <ScrollArea className="h-full w-full" type="always">
-          <div className="space-y-1 p-3 pt-3 pb-32 sm:pb-3">
+          <div className={cn(
+            "space-y-1 p-3 pt-3 sm:pb-3",
+            reportesFiltrados.length > 0 ? "pb-32" : "pb-6"
+          )}>
             {reportesFiltrados.map((report: Report) => {
               const horaValue = findValueInFormData(report.formData, 'Hora');
               return (
@@ -200,7 +203,7 @@ function SidebarLista({ hook, isMobile }: { hook: any, isMobile: boolean }) {
               );
             })}
             {reportesFiltrados.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 px-4 text-center animate-in fade-in duration-500">
+              <div className="flex flex-col items-center justify-center py-2 sm:py-12 px-4 text-center animate-in fade-in duration-500 w-full">
                 {!guardiaAbierta && isMobile ? (
                   <NoGuardBanner
                     message="Para registrar novedades primero debes abrir una nueva guardia."

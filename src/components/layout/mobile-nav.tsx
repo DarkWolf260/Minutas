@@ -38,7 +38,7 @@ export function MobileNav() {
   const initials = getInitials(displayName);
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/90 backdrop-blur-md px-5 sm:hidden shadow-sm shadow-black/5">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/90 backdrop-blur-md px-3 sm:hidden shadow-sm shadow-black/5">
       <div className="flex items-center gap-3 font-semibold flex-1">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-background/50 border overflow-hidden shadow-sm shrink-0">
           <img src="/icons/icon-192x192.png" alt="App Icon" className="h-5 w-5 object-contain" />
