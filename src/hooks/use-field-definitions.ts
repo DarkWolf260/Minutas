@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { FieldConfig } from '@/lib/types';
 import { format } from 'date-fns';
-import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
-import { createConfigRepository } from '@/lib/repositories';
+import { useConfigRepo } from './use-config-repo';
 
 const defaultDefinitions: Record<string, FieldConfig> = {
   Municipio: { label: 'Municipio', type: 'predefined', value: '', sectionId: 'default' },
@@ -24,16 +24,14 @@ const defaultDefinitions: Record<string, FieldConfig> = {
 };
 
 export function useFieldDefinitions() {
-  const db = useDatabase();
+  const repo = useConfigRepo();
   const { currentWorkspace } = useWorkspaceManager();
 
   const [definitions, setDefinitions] = useState<Record<string, FieldConfig>>({});
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    if (!db || !currentWorkspace) return;
-
-    const repo = createConfigRepository(db, currentWorkspace);
+    if (!repo || !currentWorkspace) return;
 
     const sub = repo.watchFieldDefinitions().subscribe((data) => {
       if (data.length > 0) {
@@ -68,40 +66,36 @@ export function useFieldDefinitions() {
     });
 
     return () => sub.unsubscribe();
-  }, [db, currentWorkspace]);
+  }, [repo, currentWorkspace]);
 
   const saveDefinitions = useCallback(
     async (newDefinitions: Record<string, FieldConfig>) => {
-      if (!db || !currentWorkspace) return;
-      const repo = createConfigRepository(db, currentWorkspace);
+      if (!repo) return;
       await repo.saveAllFieldDefinitions(newDefinitions);
     },
-    [db, currentWorkspace]
+    [repo]
   );
 
   const updateDefinition = useCallback(
     async (fieldName: string, newConfig: FieldConfig) => {
-      if (!db || !currentWorkspace) return;
-      const repo = createConfigRepository(db, currentWorkspace);
+      if (!repo) return;
       await repo.upsertFieldDefinition(fieldName, newConfig);
     },
-    [db, currentWorkspace]
+    [repo]
   );
 
   const removeDefinition = useCallback(
     async (fieldName: string) => {
-      if (!db || !currentWorkspace) return;
-      const repo = createConfigRepository(db, currentWorkspace);
+      if (!repo) return;
       await repo.removeFieldDefinition(fieldName);
     },
-    [db, currentWorkspace]
+    [repo]
   );
 
   const clearAllDefinitions = useCallback(async () => {
-    if (!db || !currentWorkspace) return;
-    const repo = createConfigRepository(db, currentWorkspace);
+    if (!repo) return;
     await repo.clearAllFieldDefinitions(defaultDefinitions);
-  }, [db, currentWorkspace]);
+  }, [repo]);
 
   return useMemo(
     () => ({

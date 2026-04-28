@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { GlobalTagsManager } from '@/components/shared/global-tags-manager';
+import { AjustesGenerales } from '@/components/shared/ajustes-generales';
 import { useSettings } from '@/hooks/use-settings';
 import { useUnits } from '@/hooks/use-units';
 import { useRoles } from '@/hooks/use-roles';
@@ -40,8 +40,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <ScrollArea className="h-full w-full" type="always">
-      <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-10 py-8 pb-32 sm:pb-16 space-y-10">
+    <ScrollArea className="h-full w-full bg-background" type="always">
+      <div className="max-w-[1700px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-32 sm:pb-10 flex flex-col min-h-screen md:h-full md:overflow-hidden">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Configuración</h1>
           <p className="text-muted-foreground mt-1">
@@ -49,17 +49,17 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start flex-1 min-h-0 mt-8">
           {/* Lado Izquierdo: Ajustes Generales */}
-          <div className="lg:col-span-7">
-            <GlobalTagsManager />
+          <div className="lg:col-span-7 h-full flex flex-col min-h-0">
+            <AjustesGenerales />
           </div>
 
           {/* Lado Derecho: Otros Ajustes */}
-          <div className="lg:col-span-5 space-y-8">
+          <div className="lg:col-span-5 flex flex-col h-full min-h-0">
 
             {/* Tarjeta Consolidada: Otros Ajustes */}
-            <Card className="shadow-lg border-muted/50">
+            <Card className="shadow-lg border-muted/50 flex flex-col flex-1 min-h-0">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Settings2 className="h-5 w-5 text-primary" />
@@ -69,156 +69,156 @@ export default function SettingsPage() {
                   Configuración de módulos, plantillas, sincronización y mantenimiento de datos.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-0">
-                <ScrollArea style={{ height: '480px' }} type="always">
-                  <div className="space-y-2 p-6 pt-0">
+              <CardContent className="p-0 flex-1 min-h-0 flex flex-col">
+                <ScrollArea className="flex-1" type="always">
+                  <div className="space-y-2 p-4 pt-0">
 
-                <Link
-                  to="/settings/modules"
-                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                      <LayoutGrid className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Módulos</p>
-                      <p className="text-xs text-muted-foreground">Activa o desactiva secciones de la aplicación</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </Link>
-
-                <Link
-                  to="/settings/workspaces"
-                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
-                      <Layers className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Áreas de Trabajo</p>
-                      <p className="text-xs text-muted-foreground">Gestiona entornos locales independientes múltiples</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </Link>
-
-                <div
-                  title="Función futura..."
-                  className="flex items-center justify-between p-4 rounded-lg border opacity-50 cursor-not-allowed group bg-muted/20"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600">
-                      <User className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium">Perfil de Usuario</p>
-                        <span className="text-[10px] bg-background border px-1.5 py-0.5 rounded text-muted-foreground font-bold">PRÓXIMAMENTE</span>
+                    <Link
+                      to="/settings/modules"
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                          <LayoutGrid className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Módulos</p>
+                          <p className="text-xs text-muted-foreground">Activa o desactiva secciones de la aplicación</p>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">Administra tu identidad local y firma</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </Link>
 
-                <Link
-                  to="/plantillas"
-                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                      <FileText className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Plantillas de Reporte</p>
-                      <p className="text-xs text-muted-foreground">Crear, editar y gestionar plantillas</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </Link>
+                    <Link
+                      to="/settings/workspaces"
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+                          <Layers className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Áreas de Trabajo</p>
+                          <p className="text-xs text-muted-foreground">Gestiona entornos locales independientes múltiples</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </Link>
 
-                <Link
-                  to="/settings/direcciones"
-                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-                      <MapPin className="h-5 w-5" />
+                    <div
+                      title="Función futura..."
+                      className="flex items-center justify-between p-3 rounded-lg border opacity-50 cursor-not-allowed group bg-muted/20"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600">
+                          <User className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium">Perfil de Usuario</p>
+                            <span className="text-[10px] bg-background border px-1.5 py-0.5 rounded text-muted-foreground font-bold">PRÓXIMAMENTE</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">Administra tu identidad local y firma</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <div>
-                      <p className="font-medium">Gestor de Direcciones</p>
-                      <p className="text-xs text-muted-foreground">Administrar ubicaciones y puntos de interés</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </Link>
 
-                <Link
-                  to="/settings/sync"
-                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-600 group-hover:scale-110 transition-transform">
-                      <Wifi className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Sincronización</p>
-                      <p className="text-xs text-muted-foreground">Enviar reportes entre dispositivos en tiempo real</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </Link>
+                    <Link
+                      to="/plantillas"
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                          <FileText className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Plantillas de Reporte</p>
+                          <p className="text-xs text-muted-foreground">Crear, editar y gestionar plantillas</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </Link>
 
-                <Link
-                  to="/settings/feedback"
-                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
-                      <MessageSquarePlus className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Enviar Comentarios</p>
-                      <p className="text-xs text-muted-foreground">Sugerencias, errores o cualquier opinión</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </Link>
+                    <Link
+                      to="/settings/direcciones"
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+                          <MapPin className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Gestor de Direcciones</p>
+                          <p className="text-xs text-muted-foreground">Administrar ubicaciones y puntos de interés</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </Link>
 
-                <Link
-                  to="/settings/borrar-datos"
-                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center text-destructive group-hover:scale-110 transition-transform">
-                      <AlertTriangle className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-destructive">Borrar datos de la app</p>
-                      <p className="text-xs text-muted-foreground">Acciones irreversibles y limpieza</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-destructive transition-colors" />
-                </Link>
+                    <Link
+                      to="/settings/sync"
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-600 group-hover:scale-110 transition-transform">
+                          <Wifi className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Sincronización</p>
+                          <p className="text-xs text-muted-foreground">Enviar reportes entre dispositivos en tiempo real</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </Link>
 
-                <Link
-                  to="/settings/about"
-                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-slate-500/10 flex items-center justify-center text-slate-600 group-hover:scale-110 transition-transform">
-                      <Info className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">Acerca de</p>
-                      <p className="text-xs text-muted-foreground">Información, versión y créditos</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </Link>
+                    <Link
+                      to="/settings/feedback"
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+                          <MessageSquarePlus className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Enviar Comentarios</p>
+                          <p className="text-xs text-muted-foreground">Sugerencias, errores o cualquier opinión</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </Link>
+
+                    <Link
+                      to="/settings/borrar-datos"
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive group-hover:scale-110 transition-transform">
+                          <AlertTriangle className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-destructive">Borrar datos de la app</p>
+                          <p className="text-xs text-muted-foreground">Acciones irreversibles y limpieza</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-destructive transition-colors" />
+                    </Link>
+
+                    <Link
+                      to="/settings/about"
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-slate-500/10 flex items-center justify-center text-slate-600 group-hover:scale-110 transition-transform">
+                          <Info className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Acerca de</p>
+                          <p className="text-xs text-muted-foreground">Información, versión y créditos</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </Link>
 
                   </div>
                 </ScrollArea>

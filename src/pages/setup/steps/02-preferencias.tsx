@@ -15,6 +15,7 @@ import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useSettings } from '@/hooks/use-settings';
 import { toast } from 'sonner';
 import { SetupStepLayout } from './layout';
+import { AjustesGeneralesForm } from '@/components/shared/ajustes-generales-form';
 
 const OPCIONES_TEMA = [
   { value: 'light' as const, label: 'Claro', icon: Sun, desc: 'Fondo blanco, ideal para luz del día' },
@@ -22,26 +23,11 @@ const OPCIONES_TEMA = [
   { value: 'dark' as const, label: 'Oscuro', icon: Moon, desc: 'Fondo oscuro, más cómodo de noche' },
 ];
 
-const META_CAMPOS_GENERALES: { key: string; label: string; options?: { label: string; value: string }[] }[] = [
-  {
-    key: 'Municipio', label: 'Municipio',
-    options: [
-      { label: '(Ninguno)', value: '' },
-      { label: 'Guanta', value: 'Guanta' },
-      { label: 'Juan Antonio Sotillo', value: 'Juan Antonio Sotillo' },
-      { label: 'Urbaneja', value: 'Urbaneja' },
-    ],
-  },
-  { key: 'Estado', label: 'Estado',  options: [{ label: 'Anzoátegui', value: 'Anzoátegui' }] },
-  { key: 'REDAN',  label: 'REDAN',   options: [{ label: 'Oriente', value: 'Oriente' }] },
-  { key: 'ZOEDAN', label: 'ZOEDAN',  options: [{ label: 'Anzoátegui', value: 'Anzoátegui' }] },
-];
+const META_CAMPOS_KEYS = ['Municipio', 'Estado', 'REDAN', 'ZOEDAN'];
 
 const VALORES_GENERALES_DEFECTO: Record<string, string> = {
   Municipio: '', Estado: 'Anzoátegui', REDAN: 'Oriente', ZOEDAN: 'Anzoátegui',
 };
-
-const CENTINELA_NINGUNO = '__none__';
 
 export function PasoPreferencias({ alSiguiente, alAtras }: { alSiguiente: () => void; alAtras: () => void }) {
   const { theme: tema, setTheme: setTema } = useTheme();
@@ -54,7 +40,7 @@ export function PasoPreferencias({ alSiguiente, alAtras }: { alSiguiente: () => 
     if (!definicionesCargadas) return;
     setValoresLocales((prev) => {
       const mezclado = { ...prev };
-      META_CAMPOS_GENERALES.forEach(({ key }) => {
+      META_CAMPOS_KEYS.forEach((key) => {
         const almacenado = definiciones[key]?.value;
         if (almacenado !== undefined) mezclado[key] = almacenado;
       });
@@ -66,7 +52,7 @@ export function PasoPreferencias({ alSiguiente, alAtras }: { alSiguiente: () => 
     setGuardando(true);
     try {
       const nuevasDefs = { ...definiciones };
-      META_CAMPOS_GENERALES.forEach(({ key }) => {
+      META_CAMPOS_KEYS.forEach((key) => {
         nuevasDefs[key] = {
           ...(nuevasDefs[key] ?? { label: key, type: 'predefined', sectionId: 'default' }),
           value: valoresLocales[key] ?? '',
@@ -131,42 +117,12 @@ export function PasoPreferencias({ alSiguiente, alAtras }: { alSiguiente: () => 
             </div>
           </div>
 
-          <div className="space-y-3">
-            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Datos por Defecto</Label>
-            <div className="grid grid-cols-2 gap-3">
-              {META_CAMPOS_GENERALES.map(({ key, label, options }) => (
-                <div key={key} className="space-y-1">
-                  <Label htmlFor={`gen-${key}`} className="text-[10px] font-bold text-muted-foreground/70">
-                    {label}
-                  </Label>
-                  {options ? (
-                    <Select
-                      value={valoresLocales[key] === '' ? CENTINELA_NINGUNO : (valoresLocales[key] ?? CENTINELA_NINGUNO)}
-                      onValueChange={(v) => setValoresLocales((p) => ({ ...p, [key]: v === CENTINELA_NINGUNO ? '' : v }))}
-                    >
-                      <SelectTrigger id={`gen-${key}`} className="h-11 text-sm w-full">
-                        <SelectValue placeholder="..." />
-                      </SelectTrigger>
-                      <SelectContent className="z-[200]">
-                        {options.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value === '' ? CENTINELA_NINGUNO : opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input
-                      id={`gen-${key}`}
-                      value={valoresLocales[key] ?? ''}
-                      onChange={(e) => setValoresLocales((p) => ({ ...p, [key]: e.target.value }))}
-                      className="h-11 text-sm"
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+            <AjustesGeneralesForm 
+              values={valoresLocales}
+              onChange={(key, val) => setValoresLocales(prev => ({ ...prev, [key]: val }))}
+              definitions={definiciones}
+              fieldKeys={META_CAMPOS_KEYS}
+            />
         </div>
       </div>
     </SetupStepLayout>

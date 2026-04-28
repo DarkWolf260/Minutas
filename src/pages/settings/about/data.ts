@@ -62,9 +62,21 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.3.0';
+export const APP_VERSION = '1.3.1';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.3.1',
+    date: '28/04/2026',
+    changes: [
+      { type: 'mejora', text: 'Mayor Estabilidad del Sistema: Hemos reorganizado internamente la lógica de la Orden del Día y el Reporte Final para que la aplicación sea mucho más robusta y rápida.' },
+      { type: 'mejora', text: 'Navegación más Fluida: Se optimizó el acceso a los datos internos, eliminando esperas innecesarias al abrir o guardar información.' },
+      { type: 'mejora', text: 'Lectura de Reportes Mejorada: Ahora todos los cuadros de texto de los reportes se desplazan suavemente y tienen un diseño uniforme, haciendo que revisar la guardia sea mucho más cómodo.' },
+      { type: 'mejora', text: 'Experiencia Móvil Optimizada: Al generar un reporte en el celular, ahora verás un panel inferior más fácil de manejar y botones de cerrar más claros.' },
+      { type: 'corrección', text: 'Corregidos errores visuales y de carga que aparecían tras realizar mejoras internas en la aplicación.' },
+      { type: 'corrección', text: 'Orden Cronológico Asegurado: Las novedades en el reporte final ahora siempre aparecerán en el orden exacto en que ocurrieron, sin errores de fecha.' },
+    ],
+  },
   {
     version: '1.3.0',
     date: '28/04/2026',
@@ -72,6 +84,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       { type: 'nueva', text: 'Rebranding oficial: La aplicación ha sido renombrada a "Minutas", unificando la identidad en todas las plataformas.' },
       { type: 'nueva', text: 'Sincronización QR Premium: Rediseño total del sistema de vinculación con escaneo de alta precisión y QR siempre visible.' },
       { type: 'nueva', text: 'Catálogo Cloud 2.0: Ahora puedes descargar todas las plantillas de la comunidad con un solo click y ver etiquetas PRO.' },
+      { type: 'mejora', text: 'Refactorización Arquitectónica: Aplicación de principios SOLID en el módulo de Novedades para mejorar la mantenibilidad y escalabilidad del código.' },
       { type: 'mejora', text: 'Experiencia Móvil Refinada: Los diálogos ahora se comportan como paneles inferiores (Sheets) para un uso más cómodo con una sola mano.' },
       { type: 'mejora', text: 'UI Estilizada: Mejoras visuales en cabeceras, botones y tarjetas con un enfoque más moderno y limpio.' },
       { type: 'corrección', text: 'Solucionado el problema de la pantalla negra al escanear QR en dispositivos móviles antiguos.' },

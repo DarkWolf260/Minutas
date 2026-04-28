@@ -23,8 +23,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Trash2, ChevronUp, ChevronDown, Save } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { AjustesGeneralesForm } from './ajustes-generales-form';
 
-export function GlobalTagsManager() {
+export function AjustesGenerales() {
   const { definitions, saveDefinitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
   const { roles, isLoaded: rolesLoaded } = useRoles();
   const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
@@ -140,17 +142,6 @@ export function GlobalTagsManager() {
     return orderedFields.filter((key: string) => definitions[key] && allDefaultFieldKeys.includes(key));
   }, [orderedFields, definitions, allDefaultFieldKeys]);
 
-  const TAG_OPTIONS: Record<string, { label: string; value: string }[]> = {
-    Estado: [{ label: 'Anzoátegui', value: 'Anzoátegui' }],
-    ZOEDAN: [{ label: 'Anzoátegui', value: 'Anzoátegui' }],
-    REDAN: [{ label: 'Oriente', value: 'Oriente' }],
-    Municipio: [
-      { label: '', value: 'none' },
-      { label: 'Guanta', value: 'Guanta' },
-      { label: 'Juan Antonio Sotillo', value: 'Juan Antonio Sotillo' },
-      { label: 'Urbaneja', value: 'Urbaneja' },
-    ],
-  };
 
   const groupedRoles = useMemo(() => {
     if (!rolesLoaded || !deptsLoaded) return {};
@@ -196,60 +187,22 @@ export function GlobalTagsManager() {
   }
 
   return (
-    <Card className="shadow-lg h-full">
+    <Card className="shadow-lg h-full flex flex-col overflow-hidden">
       <CardHeader>
         <CardTitle>Ajustes Generales</CardTitle>
         <CardDescription>
           Define los valores globales que se utilizarán automáticamente en tus reportes.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6 pt-6">
-        <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-            {generalFields.map((key: string) => {
-              const config = definitions[key];
-              if (!config) return null;
-              
-              const options = TAG_OPTIONS[key];
-              
-              return (
-                <div key={key} className="space-y-2">
-                  <Label htmlFor={key} className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    {config.label}
-                  </Label>
-                  
-                  {options ? (
-                    <Select 
-                      value={(!localValues[key] || localValues[key] === '') ? 'none' : localValues[key]} 
-                      onValueChange={(val) => setLocalValues(prev => ({ ...prev, [key]: val === 'none' ? '' : val }))}
-                    >
-                      <SelectTrigger id={key} className="bg-background w-full">
-                        <SelectValue placeholder="Seleccionar..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {options.map(opt => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input
-                      id={key}
-                      value={localValues[key] || ''}
-                      onChange={(e) =>
-                        setLocalValues(prev => ({ ...prev, [key]: e.target.value }))
-                      }
-                      className="bg-background w-full"
-                      disabled={key === 'Hora' || key === 'Fecha'}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      <CardContent className="p-0 flex-1 min-h-0 flex flex-col">
+        <ScrollArea className="flex-1" type="always">
+          <div className="p-6 space-y-6">
+          <AjustesGeneralesForm 
+            values={localValues}
+            onChange={(key, val) => setLocalValues(prev => ({ ...prev, [key]: val }))}
+            definitions={definitions}
+            fieldKeys={generalFields}
+          />
 
         <Separator className="my-2" />
 
@@ -362,13 +315,15 @@ export function GlobalTagsManager() {
           <Button
             onClick={handleSave}
             disabled={isSaving}
-            className="h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-3 sm:py-2 shrink-0 shadow-sm"
+            className="h-9 px-4 shrink-0 shadow-sm font-bold"
             title="Guardar Configuración"
           >
-            <Save className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">{isSaving ? 'Guardando...' : 'Guardar Configuración'}</span>
+            <Save className="h-4 w-4 mr-2" />
+            <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
           </Button>
         </div>
+          </div>
+        </ScrollArea>
       </CardContent>
     </Card>
   );
