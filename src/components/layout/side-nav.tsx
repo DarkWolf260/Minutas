@@ -67,7 +67,7 @@ export function SideNav() {
             className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-xl bg-background/50 border shadow-sm text-lg font-semibold md:h-8 md:w-8 md:text-base overflow-hidden"
           >
             <img src="/icons/icon-192x192.png" alt="App Icon" className="h-6 w-6 object-contain transition-all group-hover:scale-110" />
-            <span className="sr-only">PC Reportes</span>
+            <span className="sr-only">Minutas</span>
           </Link>
 
           {navItems.map((item) => (

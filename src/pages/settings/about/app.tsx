@@ -18,7 +18,7 @@ export default function AboutAppPage() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Aplicación</h1>
-            <p className="text-muted-foreground text-sm">Información sobre PC Reportes y su desarrollo.</p>
+            <p className="text-muted-foreground text-sm">Información sobre Minutas y su desarrollo.</p>
           </div>
         </div>
 
@@ -32,7 +32,7 @@ export default function AboutAppPage() {
                 style={{ imageRendering: 'auto' }}
               />
             </div>
-            <CardTitle className="text-3xl font-black tracking-tighter uppercase">PC Reportes</CardTitle>
+            <CardTitle className="text-3xl font-black tracking-tighter uppercase">Minutas</CardTitle>
             <CardDescription className="font-bold text-primary/70">Versión {APP_VERSION}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-8 pt-8">

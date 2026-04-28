@@ -15,6 +15,8 @@ import {
   Send,
   Inbox,
   LogIn,
+  QrCode,
+  Camera,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +24,13 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,15 +47,25 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useSyncPagina } from '@/hooks/use-sync-pagina';
+import { QRGenerator } from '@/components/sync/qr-generator';
+import { QRScanner } from '@/components/sync/qr-scanner';
+import { useState } from 'react';
 
 export default function SyncPage() {
   const hook = useSyncPagina();
   const { estaConfigurado, esLoginOpen, setEsLoginOpen } = hook;
 
+  const [esQRGeneratorOpen, setEsQRGeneratorOpen] = useState(false);
+  const [esQRScannerOpen, setEsQRScannerOpen] = useState(false);
+
   if (!estaConfigurado) {
     return (
       <div className="flex flex-col h-full bg-background overflow-y-auto">
-        <PantallaConfiguracionSync hook={hook} />
+        <PantallaConfiguracionSync
+          hook={hook}
+          esQRScannerOpen={esQRScannerOpen}
+          setEsQRScannerOpen={setEsQRScannerOpen}
+        />
         <LoginDialog open={esLoginOpen} onOpenChange={setEsLoginOpen} />
       </div>
     );
@@ -55,7 +74,11 @@ export default function SyncPage() {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <ScrollArea className="flex-1">
-        <PantallaEstadoSync hook={hook} />
+        <PantallaEstadoSync
+          hook={hook}
+          esQRGeneratorOpen={esQRGeneratorOpen}
+          setEsQRGeneratorOpen={setEsQRGeneratorOpen}
+        />
       </ScrollArea>
       <ConfirmarReinicioSync hook={hook} />
     </div>
@@ -93,24 +116,24 @@ function CabeceraSync({ usuario, esPrincipal, esSecundario, modoSimple = false }
   );
 }
 
-function PantallaConfiguracionSync({ hook }: { hook: any }) {
-  const { 
-    estaAutenticado, 
+function PantallaConfiguracionSync({ hook, esQRScannerOpen, setEsQRScannerOpen }: { hook: any; esQRScannerOpen: boolean; setEsQRScannerOpen: (v: boolean) => void }) {
+  const {
+    estaAutenticado,
     usuario,
     signOut,
-    setEsLoginOpen, 
-    modo, 
-    setModo, 
-    nombreDispositivo, 
-    setNombreDispositivo, 
-    codigoUnion, 
-    setCodigoUnion, 
-    manejarConfiguracion, 
-    sincronizando 
+    setEsLoginOpen,
+    modo,
+    setModo,
+    nombreDispositivo,
+    setNombreDispositivo,
+    codigoUnion,
+    setCodigoUnion,
+    manejarConfiguracion,
+    sincronizando
   } = hook;
 
   return (
-    <div className="max-w-2xl mx-auto w-full px-4 py-8 space-y-8">
+    <div className="max-w-2xl mx-auto w-full px-4 pt-8 pb-32 space-y-8">
       <CabeceraSync modoSimple={true} />
 
       <div className="space-y-4">
@@ -142,9 +165,9 @@ function PantallaConfiguracionSync({ hook }: { hook: any }) {
                 <p className="text-sm font-bold truncate">{usuario?.email}</p>
                 <p className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Sesión Activa</p>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={signOut}
                 className="h-8 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-destructive"
               >
@@ -207,14 +230,25 @@ function PantallaConfiguracionSync({ hook }: { hook: any }) {
           {modo === 'secondary' && (
             <div className="space-y-2">
               <Label htmlFor="join-code">Código del dispositivo principal</Label>
-              <Input
-                id="join-code"
-                placeholder="Ej. K7X2M9"
-                value={codigoUnion}
-                onChange={(e) => setCodigoUnion(e.target.value.toUpperCase())}
-                maxLength={6}
-                className="font-mono tracking-widest text-center text-lg uppercase"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="join-code"
+                  placeholder="Ej. K7X2M9"
+                  value={codigoUnion}
+                  onChange={(e) => setCodigoUnion(e.target.value.toUpperCase())}
+                  maxLength={6}
+                  className="font-mono tracking-widest text-center text-lg uppercase flex-1"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
+                  onClick={() => setEsQRScannerOpen(true)}
+                  title="Escanear código QR"
+                >
+                  <Camera className="h-5 w-5" />
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground">
                 Encuentra este código en la pantalla de Sincronización del dispositivo principal.
               </p>
@@ -235,15 +269,35 @@ function PantallaConfiguracionSync({ hook }: { hook: any }) {
           </Button>
         </CardContent>
       </Card>
+
+      <Dialog open={esQRScannerOpen} onOpenChange={setEsQRScannerOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Escanear Código QR</DialogTitle>
+            <DialogDescription>
+              Apunta la cámara al código QR que se muestra en el dispositivo principal.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <QRScanner
+              onScan={(data) => {
+                setCodigoUnion(data);
+                setEsQRScannerOpen(false);
+              }}
+              onClose={() => setEsQRScannerOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function PantallaEstadoSync({ hook }: { hook: any }) {
+function PantallaEstadoSync({ hook, esQRGeneratorOpen, setEsQRGeneratorOpen }: { hook: any; esQRGeneratorOpen: boolean; setEsQRGeneratorOpen: (v: boolean) => void }) {
   const { usuario, esPrincipal, esSecundario, configSync, setEsConfirmarReinicioOpen } = hook;
 
   return (
-    <div className="max-w-2xl mx-auto w-full px-4 py-8 space-y-6">
+    <div className="max-w-2xl mx-auto w-full px-4 pt-8 pb-32 space-y-6">
       <CabeceraSync usuario={usuario} esPrincipal={esPrincipal} esSecundario={esSecundario} />
 
       <Card className={cn(
@@ -268,7 +322,13 @@ function PantallaEstadoSync({ hook }: { hook: any }) {
         </CardContent>
       </Card>
 
-      {esPrincipal && <SeccionPrincipalSync hook={hook} />}
+      {esPrincipal && (
+        <SeccionPrincipalSync
+          hook={hook}
+          esQRGeneratorOpen={esQRGeneratorOpen}
+          setEsQRGeneratorOpen={setEsQRGeneratorOpen}
+        />
+      )}
       {esSecundario && <SeccionSecundarioSync />}
 
       <ZonaPeligroSync esPrincipal={esPrincipal} alReiniciar={() => setEsConfirmarReinicioOpen(true)} />
@@ -276,7 +336,7 @@ function PantallaEstadoSync({ hook }: { hook: any }) {
   );
 }
 
-function SeccionPrincipalSync({ hook }: { hook: any }) {
+function SeccionPrincipalSync({ hook, esQRGeneratorOpen, setEsQRGeneratorOpen }: { hook: any; esQRGeneratorOpen: boolean; setEsQRGeneratorOpen: (v: boolean) => void }) {
   const { configSync, manejarCopiarCodigo, setModoImportacion, reportesBandeja, importarDeBandeja, descartarDeBandeja, sincronizando } = hook;
 
   return (
@@ -288,16 +348,35 @@ function SeccionPrincipalSync({ hook }: { hook: any }) {
             Comparte este código con los dispositivos secundarios.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 bg-muted rounded-lg py-3 px-5 flex items-center justify-center">
-              <span className="font-mono text-3xl font-bold tracking-[0.3em] text-primary select-all">
-                {configSync.channelCode}
-              </span>
+        <CardContent className="space-y-6">
+          <div className="flex flex-col items-center gap-6">
+            <div className="w-full flex items-center gap-3">
+              <div 
+                className="flex-1 bg-muted/50 border rounded-2xl py-4 px-6 flex items-center justify-center group hover:bg-muted/80 transition-all cursor-pointer" 
+                onClick={manejarCopiarCodigo}
+              >
+                <span className="font-mono text-4xl font-black tracking-[0.2em] text-primary select-all">
+                  {configSync.channelCode}
+                </span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-16 w-16 rounded-2xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all"
+                onClick={manejarCopiarCodigo} 
+                title="Copiar código"
+              >
+                <Copy className="h-6 w-6" />
+              </Button>
             </div>
-            <Button variant="outline" size="icon" onClick={manejarCopiarCodigo}>
-              <Copy className="h-4 w-4" />
-            </Button>
+
+            <div className="w-full flex flex-col items-center gap-4 bg-white/50 dark:bg-black/20 p-6 rounded-3xl border border-dashed border-primary/30">
+              <QRGenerator value={configSync.channelCode || ''} size={200} />
+              <div className="text-center space-y-1">
+                <p className="text-sm font-bold text-foreground">Escaneo Rápido</p>
+                <p className="text-[11px] text-muted-foreground">Enfoca este código con la cámara de tu móvil</p>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t">
@@ -379,6 +458,28 @@ function SeccionPrincipalSync({ hook }: { hook: any }) {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={esQRGeneratorOpen} onOpenChange={setEsQRGeneratorOpen}>
+        <DialogContent className="sm:max-w-xs text-center">
+          <DialogHeader>
+            <DialogTitle>Código de Sincronización</DialogTitle>
+            <DialogDescription>
+              Escanea este código con el dispositivo secundario para conectarte al canal.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center py-6 gap-6">
+            <QRGenerator value={configSync.channelCode || ''} size={220} />
+            <div className="bg-muted rounded-xl px-6 py-3 border">
+              <span className="font-mono text-2xl font-bold tracking-[0.4em] text-primary">
+                {configSync.channelCode}
+              </span>
+            </div>
+          </div>
+          <Button onClick={() => setEsQRGeneratorOpen(false)} className="w-full">
+            Listo
+          </Button>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -62,9 +62,21 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.2.0';
+export const APP_VERSION = '1.3.0';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.3.0',
+    date: '28/04/2026',
+    changes: [
+      { type: 'nueva', text: 'Rebranding oficial: La aplicación ha sido renombrada a "Minutas", unificando la identidad en todas las plataformas.' },
+      { type: 'nueva', text: 'Sincronización QR Premium: Rediseño total del sistema de vinculación con escaneo de alta precisión y QR siempre visible.' },
+      { type: 'nueva', text: 'Catálogo Cloud 2.0: Ahora puedes descargar todas las plantillas de la comunidad con un solo click y ver etiquetas PRO.' },
+      { type: 'mejora', text: 'Experiencia Móvil Refinada: Los diálogos ahora se comportan como paneles inferiores (Sheets) para un uso más cómodo con una sola mano.' },
+      { type: 'mejora', text: 'UI Estilizada: Mejoras visuales en cabeceras, botones y tarjetas con un enfoque más moderno y limpio.' },
+      { type: 'corrección', text: 'Solucionado el problema de la pantalla negra al escanear QR en dispositivos móviles antiguos.' },
+    ],
+  },
   {
     version: '1.2.0',
     date: '24/04/2026',

@@ -44,7 +44,7 @@ export function MobileNav() {
           <img src="/icons/icon-192x192.png" alt="App Icon" className="h-5 w-5 object-contain" />
         </div>
         <span className="text-2xl font-bold tracking-tight text-foreground truncate">
-          PC Reportes
+          Minutas
         </span>
       </div>
 

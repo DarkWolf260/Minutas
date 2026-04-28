@@ -12,7 +12,7 @@ export default defineConfig({
       includeAssets: ['icons/icon-192x192.png', 'icons/icon-512x512.png', 'screenshots/desktop.png', 'screenshots/mobile.png'],
       manifestFilename: 'manifest.json',
       manifest: {
-        name: 'Minutas - Gestión Operativa',
+        name: 'Minutas',
         short_name: 'Minutas',
         description: 'Sistema de gestión de reportes y novedades operativas',
         theme_color: '#0f172a',
