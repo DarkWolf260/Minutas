@@ -69,8 +69,9 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
 
     if (settings.reportaRoleIds && settings.reportaRoleIds.length > 0) {
       const reportingPersonnel: StaffMember[] = [];
-      settings.reportaRoleIds.forEach((roleId) => {
-        const roleStaff = activeStaff[roleId] || [];
+      settings.reportaRoleIds.forEach((roleName) => {
+        const staffKey = Object.keys(activeStaff).find(k => k.toLowerCase() === roleName.toLowerCase());
+        const roleStaff = staffKey ? (activeStaff[staffKey] || []) : [];
         reportingPersonnel.push(...roleStaff);
       });
       const uniqueReportingIds = Array.from(new Set(reportingPersonnel.map(p => p.id)));

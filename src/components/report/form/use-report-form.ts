@@ -204,27 +204,37 @@ export function useReportForm({
         fieldIds.forEach((fieldId) => {
           const keyLower = fieldId.toLowerCase();
           const role = roles.find((r: any) => r.name.toLowerCase() === keyLower);
+          const isReporta = keyLower === 'reporta';
           const isLeadershipRole = keyLower === 'director' || keyLower === 'jefe de operaciones' || keyLower === 'jefe de los servicios';
-          const currentValue = target[fieldId];
+          
+          // Case-insensitive lookup of existing value in target
+          const existingKey = Object.keys(target).find(k => k.toLowerCase() === keyLower);
+          const currentValue = existingKey ? target[existingKey] : undefined;
 
           const isEmpty = currentValue === undefined || currentValue === null;
-          const isEmptyRoleArray = Array.isArray(currentValue) && currentValue.length === 0 && role && !MANUAL_FIELDS.includes(keyLower);
+          const isEmptyRoleArray = Array.isArray(currentValue) && currentValue.length === 0 && (role || isReporta) && !MANUAL_FIELDS.includes(keyLower);
 
           if (!isEmpty && !isEmptyRoleArray) return;
 
-          if (role && !MANUAL_FIELDS.includes(keyLower)) {
+          if ((role || isReporta) && !MANUAL_FIELDS.includes(keyLower)) {
             let initialStaff: any[] = [];
-            if (activeStaff) {
+            
+            if (isReporta && settings?.reportaRoleIds && activeStaff) {
+              // Special logic for Reporta: find first available person in configured roles
+              for (const roleName of settings.reportaRoleIds) {
+                const staffKey = Object.keys(activeStaff).find(k => k.toLowerCase() === roleName.toLowerCase());
+                const staffList = staffKey ? activeStaff[staffKey] : undefined;
+                if (staffList && staffList.length > 0) {
+                  initialStaff = [rehydrate(staffList[0])];
+                  break;
+                }
+              }
+            } else if (role && activeStaff) {
               const staffKey = Object.keys(activeStaff).find(k => k.toLowerCase() === keyLower);
               const staffList = staffKey ? activeStaff[staffKey] : undefined;
 
               if (staffList && staffList.length > 0) {
-                const isReporta = keyLower === 'reporta';
-                if (isReporta) {
-                  initialStaff = [rehydrate(staffList[0])];
-                } else {
-                  initialStaff = staffList.map((s: any) => rehydrate(s));
-                }
+                initialStaff = staffList.map((s: any) => rehydrate(s));
               }
             }
 
@@ -233,7 +243,7 @@ export function useReportForm({
                 (p) => p.roleId?.toLowerCase() === keyLower || p.cargo?.toLowerCase() === keyLower
               );
               if (globalMatches.length > 0) {
-                initialStaff = globalMatches.map((p) => safeClone(formatStaffMember(p)));
+                initialStaff = globalMatches.map((p) => safeClone(p));
               }
             }
 

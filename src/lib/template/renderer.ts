@@ -648,7 +648,7 @@ function renderSection(
 
 
                     itemContent = itemContent.replace(
-                        new RegExp(`\\{${escapeRegExp(id)}(:[^|}{]+)*(?:\\|[^{}]+?)?\\}(\\*)?`, 'g'),
+                        new RegExp(`\\{${escapeRegExp(id)}(:[^|}{]+)*(?:\\|[^{}]+?)?\\}(\\*)?`, 'gi'),
                         renderValue(val, id, fields, config, { ...data, ...item })
                     );
                 }
