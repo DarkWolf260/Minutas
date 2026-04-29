@@ -96,7 +96,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
               )}
             >
               <Monitor className="h-4 w-4" />
-              <span className="text-[9px] font-bold uppercase">PC</span>
+              <span className="text-[9px] font-bold uppercase">Sistema</span>
             </button>
           </div>
         </div>
