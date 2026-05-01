@@ -30,7 +30,7 @@ export function useSettings() {
 
     const sub = repo.watchSettings().subscribe(async (doc) => {
       if (doc) {
-        setSettings(doc.toJSON().data as AppSettings);
+        setSettings({ ...defaultSettings, ...(doc.toJSON().data as AppSettings) });
       } else {
         try {
           await repo.initSettings(defaultSettings);

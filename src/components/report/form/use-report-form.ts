@@ -41,7 +41,7 @@ export function useReportForm({
   const { guards, isLoaded: guardsLoaded } = useGuards();
   const { settings, isLoaded: settingsLoaded } = useSettings();
   const { units } = useUnits();
-  const { personnel } = usePersonnel();
+  const { personnel, isLoaded: personnelLoaded } = usePersonnel();
 
   // 1. Staff calculation
   const activeGuardStaff = useMemo(() => {
@@ -227,6 +227,19 @@ export function useReportForm({
                 if (staffList && staffList.length > 0) {
                   initialStaff = [rehydrate(staffList[0])];
                   break;
+                }
+              }
+
+              // Fallback for Reporta if not found in active guard
+              if (initialStaff.length === 0) {
+                const globalMatches = personnel.filter(p => 
+                  settings.reportaRoleIds!.some(roleName => 
+                    p.roleId?.toLowerCase() === roleName.toLowerCase() || 
+                    p.cargo?.toLowerCase() === roleName.toLowerCase()
+                  )
+                );
+                if (globalMatches.length > 0) {
+                  initialStaff = [globalMatches[0]];
                 }
               }
             } else if (role && activeStaff) {
@@ -425,6 +438,6 @@ export function useReportForm({
     units,
     settings,
     isFocused,
-    isLoaded: rolesLoaded && guardsLoaded && settingsLoaded
+    isLoaded: rolesLoaded && guardsLoaded && settingsLoaded && personnelLoaded
   };
 }

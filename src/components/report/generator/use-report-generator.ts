@@ -80,6 +80,17 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
         if (firstPerson) {
           dataToInject['Reporta'] = [rehydrate(firstPerson as StaffMember)];
         }
+      } else {
+        // Fallback: search in global personnel if activeStaff didn't yield results
+        const globalMatches = personnel.filter(p => 
+          settings.reportaRoleIds!.some(roleName => 
+            p.roleId?.toLowerCase() === roleName.toLowerCase() || 
+            p.cargo?.toLowerCase() === roleName.toLowerCase()
+          )
+        );
+        if (globalMatches.length > 0) {
+          dataToInject['Reporta'] = [globalMatches[0]];
+        }
       }
     }
 
