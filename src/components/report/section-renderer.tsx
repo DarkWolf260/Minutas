@@ -49,12 +49,15 @@ export function ReportFormField({
     settings,
     disabled
 }: ReportFormFieldProps) {
+    const currentEstatus = useWatch({ control, name: 'Estatus' });
+    const isFinalizado = currentEstatus === 'Finalizado';
+
     return (
         <Controller
             name={path}
             control={control}
             rules={{
-                required: fieldConfig.required ? 'Este campo es obligatorio' : false,
+                required: (isFinalizado && fieldConfig.required) ? 'Este campo es obligatorio' : false,
             }}
             render={({ field, fieldState: { error } }) => (
                 <div className="flex flex-col gap-1 w-full">

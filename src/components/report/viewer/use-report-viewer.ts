@@ -104,8 +104,12 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
 
   const handleSave = async () => {
     if (!formRef.current) return;
-    const formData = formRef.current.getValues();
-    formRef.current.validate();
+    let formData = formRef.current.getValues();
+    if (status === 'Finalizado') {
+      const validData = await formRef.current.validate();
+      if (!validData) return;
+      formData = validData;
+    }
     debouncedSave.cancel();
     await saveLogic(formData);
   };
@@ -116,21 +120,36 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
     let formData: Record<string, any> | null = null;
     
     if (newStatus === 'Finalizado') {
+      // Set Estatus temporarily to trigger required rules
+      const currentFormValues = formRef.current.getValues();
+      currentFormValues.Estatus = 'Finalizado';
+      
+      // We pass the new status in the data temporarily so it re-renders ReportFormField rules
+      // But we can't easily force re-render from outside without state change,
+      // actually `status` state change below will cause re-render of `viewer-content.tsx` -> `ReportForm` -> `FormLayout`.
+      // Let's do it directly:
+      setStatus(newStatus);
+      
+      // Wait for React to render the new status and RHF to update rules
+      await new Promise(resolve => setTimeout(resolve, 150));
+      
       formData = await formRef.current.validate();
-      if (!formData) return;
+      if (!formData) {
+        setStatus('En proceso'); // Revert
+        return;
+      }
       
       const hora = formData['Hora'];
       const timeValidation = validateTimeHlv(hora, true);
       if (!timeValidation.isValid) {
         toast.error(timeValidation.error);
+        setStatus('En proceso'); // Revert
         return;
       }
     } else {
       formData = formRef.current.getValues();
-      formRef.current.validate();
+      setStatus(newStatus);
     }
-
-    setStatus(newStatus);
     debouncedSave.cancel();
 
     if (!report || !template) return;

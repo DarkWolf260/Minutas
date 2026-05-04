@@ -1,0 +1,41 @@
+[
+  {
+    "id": "sec_datos_del_paciente",
+    "label": "DATOS DEL PACIENTE",
+    "isRepeatable": true,
+    "fieldIds": [
+      "Nombre y apellido",
+      "Cédula",
+      "Edad",
+      "IDX",
+      "Dirección"
+    ],
+    "layout": [
+      "Nombre y apellido",
+      "Cédula",
+      "Edad",
+      "IDX",
+      "Dirección"
+    ],
+    "originalContent": "- *NOMBRE Y APELLIDO:* {Nombre y apellido:title:req}\n- *CÉDULA:* {Cédula:req}\n- *EDAD:* {Edad:req}\n- *IDX:* {IDX:req}\n- *DIRECCIÓN:* {Dirección}",
+    "isSeparator": false,
+    "isMapping": false,
+    "isSelfContained": true,
+    "hasStaticContent": true,
+    "singularTitle": "DATOS DEL PACIENTE",
+    "pluralTitle": "DATOS DE LOS PACIENTE",
+    "repeatableItemLabel": "PACIENTE"
+  },
+  {
+    "id": "sec_separator",
+    "label": "",
+    "isRepeatable": false,
+    "fieldIds": [],
+    "layout": [],
+    "originalContent": "",
+    "isSeparator": true,
+    "isMapping": false,
+    "isSelfContained": false,
+    "hasStaticContent": false
+  }
+]
