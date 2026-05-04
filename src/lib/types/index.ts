@@ -207,8 +207,8 @@ export interface StatisticRule {
   operator?: StatisticOperator | null; // Primary condition operator
   condition?: string | null; // Primary condition value
   category?: string | null;
-  conditions?: StatisticRuleCondition[]; // Additional secondary conditions (AND)
-  orConditions?: StatisticRuleCondition[]; // Additional secondary conditions (OR)
+  conditions?: StatisticRuleCondition[] | null; // Additional secondary conditions (AND)
+  orConditions?: StatisticRuleCondition[] | null; // Additional secondary conditions (OR)
 }
 
 export interface Template {

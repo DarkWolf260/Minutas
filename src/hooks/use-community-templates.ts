@@ -25,7 +25,7 @@ export function useCommunityTemplates() {
     setError(null);
     try {
       const { data, error } = await supabase
-        .from('community_templates')
+        .from('templates')
         .select('*')
         .order('name');
 

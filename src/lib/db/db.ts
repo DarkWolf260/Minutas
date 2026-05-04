@@ -340,7 +340,7 @@ const safeDestroy = async (db: any, name: string) => {
  * Serialized getter for the database.
  */
 export const getDatabase = async (workspaceName: string = 'minutasdb'): Promise<MinutasDatabase> => {
-  console.log('--- DB v2_resync Initializing ---');
+  logger.info('--- DB v2_resync Initializing ---');
   const state = getInternalState();
   const dbName = DB_NAME;
 

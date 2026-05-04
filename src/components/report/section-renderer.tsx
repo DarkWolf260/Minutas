@@ -18,6 +18,75 @@ import {
 import { evaluateCondition } from '@/lib/template-parser';
 import { FieldRenderer } from './field-renderer';
 
+export interface ReportFormFieldProps {
+    path: string;
+    control: Control<any>;
+    fieldId: string;
+    fieldConfig: any;
+    roles: StaffRole[];
+    rolesLoaded: boolean;
+    units: string[];
+    activeGuardStaff: StaffMember[];
+    setValue: (
+        name: string,
+        value: FormDataValue,
+        options?: { shouldValidate?: boolean; shouldDirty?: boolean }
+    ) => void;
+    settings: AppSettings | null;
+    disabled?: boolean;
+}
+
+export function ReportFormField({
+    path,
+    control,
+    fieldId,
+    fieldConfig,
+    roles,
+    rolesLoaded,
+    units,
+    activeGuardStaff,
+    setValue,
+    settings,
+    disabled
+}: ReportFormFieldProps) {
+    return (
+        <Controller
+            name={path}
+            control={control}
+            rules={{
+                required: fieldConfig.required ? 'Este campo es obligatorio' : false,
+            }}
+            render={({ field, fieldState: { error } }) => (
+                <div className="flex flex-col gap-1 w-full">
+                    <FieldRenderer
+                        fieldId={fieldId}
+                        fieldConfig={fieldConfig}
+                        roles={roles}
+                        rolesLoaded={rolesLoaded}
+                        units={units}
+                        staffOptions={activeGuardStaff}
+                        setValue={setValue}
+                        settings={settings}
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        name={field.name}
+                        disabled={disabled}
+                        className={cn(error && 'border-destructive')}
+                    />
+                    {error && (
+                        <span className="text-[10px] text-destructive">
+                            {error.message}
+                        </span>
+                    )}
+                </div>
+            )}
+        />
+    );
+}
+
+
 export interface SectionRendererProps {
     section: SectionConfig;
     config: TemplateConfig;
@@ -218,40 +287,18 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                     {fields.map((item, index) => (
                         <div key={item.id} className="flex items-center gap-2">
                             <div className="flex-1">
-                                <Controller
-                                    name={`${fieldNamePrefix}.${index}.${fieldId}`}
+                                <ReportFormField
+                                    path={`${fieldNamePrefix}.${index}.${fieldId}`}
                                     control={control}
-                                    rules={{
-                                        required: fieldConfig.required
-                                            ? 'Este campo es obligatorio'
-                                            : false,
-                                    }}
-                                    render={({ field, fieldState: { error } }) => (
-                                        <div className="flex flex-col gap-1 w-full">
-                                            <FieldRenderer
-                                                fieldId={fieldId}
-                                                fieldConfig={fieldConfig}
-                                                roles={roles}
-                                                rolesLoaded={rolesLoaded}
-                                                units={units}
-                                                staffOptions={activeGuardStaff}
-                                                setValue={setValue}
-                                                settings={settings}
-                                                value={field.value}
-                                                onChange={field.onChange}
-                                                onBlur={field.onBlur}
-                                                ref={field.ref}
-                                                name={field.name}
-                                                disabled={disabled}
-                                                className={cn(error && 'border-destructive')}
-                                            />
-                                            {error && (
-                                                <span className="text-[10px] text-destructive">
-                                                    {error.message}
-                                                </span>
-                                            )}
-                                        </div>
-                                    )}
+                                    fieldId={fieldId}
+                                    fieldConfig={fieldConfig}
+                                    roles={roles}
+                                    rolesLoaded={rolesLoaded}
+                                    units={units}
+                                    activeGuardStaff={activeGuardStaff}
+                                    setValue={setValue}
+                                    settings={settings}
+                                    disabled={disabled}
                                 />
                             </div>
                             {!disabled && (
@@ -390,40 +437,18 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                                                     <span className="text-destructive ml-1">*</span>
                                                 )}
                                             </Label>
-                                            <Controller
-                                                name={path}
+                                            <ReportFormField
+                                                path={path}
                                                 control={control}
-                                                rules={{
-                                                    required: fieldConfig.required
-                                                        ? 'Este campo es obligatorio'
-                                                        : false,
-                                                }}
-                                                render={({ field, fieldState: { error } }) => (
-                                                    <div className="flex flex-col gap-1">
-                                                        <FieldRenderer
-                                                            fieldId={fieldId}
-                                                            fieldConfig={fieldConfig}
-                                                            roles={roles}
-                                                            rolesLoaded={rolesLoaded}
-                                                            units={units}
-                                                            staffOptions={activeGuardStaff}
-                                                            setValue={setValue}
-                                                            settings={settings}
-                                                            value={field.value}
-                                                            onChange={field.onChange}
-                                                            onBlur={field.onBlur}
-                                                            ref={field.ref}
-                                                            name={field.name}
-                                                            disabled={disabled}
-                                                            className={cn(error && 'border-destructive')}
-                                                        />
-                                                        {error && (
-                                                            <span className="text-[10px] text-destructive">
-                                                                {error.message}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                )}
+                                                fieldId={fieldId}
+                                                fieldConfig={fieldConfig}
+                                                roles={roles}
+                                                rolesLoaded={rolesLoaded}
+                                                units={units}
+                                                activeGuardStaff={activeGuardStaff}
+                                                setValue={setValue}
+                                                settings={settings}
+                                                disabled={disabled}
                                             />
                                         </div>
                                     );
@@ -513,40 +538,18 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                                         <span className="text-destructive ml-1">*</span>
                                     )}
                                 </Label>
-                                <Controller
-                                    name={path}
+                                <ReportFormField
+                                    path={path}
                                     control={control}
-                                    rules={{
-                                        required: fieldConfig.required
-                                            ? 'Este campo es obligatorio'
-                                            : false,
-                                    }}
-                                    render={({ field, fieldState: { error } }) => (
-                                        <div className="flex flex-col gap-1">
-                                            <FieldRenderer
-                                                fieldId={fieldId}
-                                                fieldConfig={fieldConfig}
-                                                roles={roles}
-                                                rolesLoaded={rolesLoaded}
-                                                units={units}
-                                                staffOptions={activeGuardStaff}
-                                                setValue={setValue}
-                                                settings={settings}
-                                                value={field.value}
-                                                onChange={field.onChange}
-                                                onBlur={field.onBlur}
-                                                ref={field.ref}
-                                                name={field.name}
-                                                disabled={disabled}
-                                                className={cn(error && 'border-destructive')}
-                                            />
-                                            {error && (
-                                                <span className="text-[10px] text-destructive">
-                                                    {error.message}
-                                                </span>
-                                            )}
-                                        </div>
-                                    )}
+                                    fieldId={fieldId}
+                                    fieldConfig={fieldConfig}
+                                    roles={roles}
+                                    rolesLoaded={rolesLoaded}
+                                    units={units}
+                                    activeGuardStaff={activeGuardStaff}
+                                    setValue={setValue}
+                                    settings={settings}
+                                    disabled={disabled}
                                 />
                             </div>
                         );
@@ -627,40 +630,18 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                                         <span className="text-destructive ml-1">*</span>
                                     )}
                                 </Label>
-                                <Controller
-                                    name={path}
+                                <ReportFormField
+                                    path={path}
                                     control={control}
-                                    rules={{
-                                        required: fieldConfig.required
-                                            ? 'Este campo es obligatorio'
-                                            : false,
-                                    }}
-                                    render={({ field, fieldState: { error } }) => (
-                                        <div className="flex flex-col gap-1">
-                                            <FieldRenderer
-                                                fieldId={fieldId}
-                                                fieldConfig={fieldConfig}
-                                                roles={roles}
-                                                rolesLoaded={rolesLoaded}
-                                                units={units}
-                                                staffOptions={activeGuardStaff}
-                                                setValue={setValue}
-                                                settings={settings}
-                                                value={field.value}
-                                                onChange={field.onChange}
-                                                onBlur={field.onBlur}
-                                                ref={field.ref}
-                                                name={field.name}
-                                                disabled={disabled}
-                                                className={cn(error && 'border-destructive')}
-                                            />
-                                            {error && (
-                                                <span className="text-[10px] text-destructive">
-                                                    {error.message}
-                                                </span>
-                                            )}
-                                        </div>
-                                    )}
+                                    fieldId={fieldId}
+                                    fieldConfig={fieldConfig}
+                                    roles={roles}
+                                    rolesLoaded={rolesLoaded}
+                                    units={units}
+                                    activeGuardStaff={activeGuardStaff}
+                                    setValue={setValue}
+                                    settings={settings}
+                                    disabled={disabled}
                                 />
                             </div>
                         );

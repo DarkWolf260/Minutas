@@ -219,7 +219,7 @@ export function useTemplates() {
         
         try {
           const { data, error } = await supabase
-            .from('community_templates')
+            .from('templates')
             .select('*');
 
           if (error) throw error;
