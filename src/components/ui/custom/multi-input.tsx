@@ -155,20 +155,28 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
           className="w-[var(--radix-popover-trigger-width)] p-0"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <ScrollArea className="w-full" style={{ height: '240px' }} type="always">
+          <ScrollArea 
+            className="w-full" 
+            style={{ 
+              height: filteredOptions.length > 5 ? '240px' : 'auto',
+              maxHeight: '240px'
+            }} 
+            type="always"
+          >
             <div role="listbox" className="p-1">
               {filteredOptions.length > 0 ? (
                 filteredOptions.map((option) => (
                   <Button
                     key={option}
                     variant="ghost"
-                    className="w-full justify-start h-8 px-2 font-normal"
+                    className="w-full justify-start h-auto min-h-9 py-2 px-3 font-normal text-left whitespace-normal break-words"
                     role="option"
                     onClick={() => handleSelectOption(option)}
                   >
                     {option}
                   </Button>
                 ))
+
               ) : (
                 <p className="p-2 text-center text-xs text-muted-foreground">
                   {options.length > 0 && currentValuesSet.size === options.length
@@ -181,7 +189,7 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
                 !currentValuesSet.has(displayValue) && (
                   <Button
                     variant="ghost"
-                    className="w-full justify-start h-8 px-2 font-normal text-primary"
+                    className="w-full justify-start h-auto min-h-9 py-2 px-3 font-normal text-primary text-left whitespace-normal break-words"
                     role="option"
                     onClick={() => handleSelectOption(displayValue)}
                   >

@@ -15,7 +15,7 @@ export function useUploadTemplate() {
       }
 
       const { data, error } = await supabase
-        .from('community_templates')
+        .from('templates')
         .upsert(
           [
             {
