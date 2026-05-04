@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LogIn, Monitor, Smartphone, Camera, Wifi, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,11 +14,11 @@ interface SyncSetupProps {
 }
 
 export const SyncSetup = ({ hook, setEsQRScannerOpen }: SyncSetupProps) => {
+  const navigate = useNavigate();
   const {
     estaAutenticado,
     usuario,
     signOut,
-    setEsLoginOpen,
     modo,
     setModo,
     nombreDispositivo,
@@ -47,7 +48,7 @@ export const SyncSetup = ({ hook, setEsQRScannerOpen }: SyncSetupProps) => {
                   Necesitas una cuenta para habilitar la sincronización en la nube.
                 </p>
               </div>
-              <Button size="sm" onClick={() => setEsLoginOpen(true)} className="bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-600/20">
+              <Button size="sm" onClick={() => navigate('/login?redirect=/settings/sync')} className="bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-600/20">
                 Iniciar sesión
               </Button>
             </CardContent>

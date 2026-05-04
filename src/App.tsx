@@ -14,10 +14,12 @@ import { lazy, Suspense, useState, useEffect } from 'react';
 import { WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OnboardingTour } from '@/components/ui/custom/onboarding-tour';
+import { cn } from '@/lib/utils';
 
 // Setup helpers
 import SetupPage from '@/pages/setup';
 import { SETUP_DONE_KEY, tryGet, trySet, tryRemove } from '@/hooks/use-setup';
+import { AdminRoute } from '@/components/auth/admin-route';
 
 // ─── Lazy-load app pages ──────────────────────────────────────────────────────
 
@@ -42,6 +44,10 @@ const AboutChangelogPage = lazy(() => import('@/pages/settings/about/changelog')
 const AboutTemplatesPage = lazy(() => import('@/pages/settings/about/templates'));
 const OfflinePage = lazy(() => import('@/pages/offline'));
 const NotFoundPage = lazy(() => import('@/pages/not-found'));
+const LoginPage = lazy(() => import('@/pages/login'));
+const RegisterPage = lazy(() => import('@/pages/register'));
+const AdminDashboardPage = lazy(() => import('@/pages/admin'));
+const AdminUsersPage = lazy(() => import('@/pages/admin/users'));
 
 // ─── Shared loader ────────────────────────────────────────────────────────────
 
@@ -60,6 +66,7 @@ const PageLoader = () => (
 function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false
   );
@@ -88,9 +95,9 @@ function AppLayout() {
       className="flex min-h-full w-full flex-col sm:flex-row md:overflow-hidden bg-background overflow-x-hidden"
       suppressHydrationWarning
     >
-      <SideNav />
-      <div className="flex flex-1 flex-col sm:pl-14 md:overflow-hidden relative min-w-0 overflow-x-hidden">
-        <MobileNav />
+      {!isAuthPage && <SideNav />}
+      <div className={cn("flex flex-1 flex-col md:overflow-hidden relative min-w-0 overflow-x-hidden", !isAuthPage && "sm:pl-14")}>
+        {!isAuthPage && <MobileNav />}
 
         {isOffline && location.pathname !== '/offline' && (
           <div className="bg-amber-500 text-white text-[10px] font-bold uppercase tracking-widest py-1.5 px-4 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 sticky top-0 z-20 shadow-sm">
@@ -116,6 +123,8 @@ function AppLayout() {
               >
                 <Routes>
                   <Route path="/" element={<NovedadesPage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
                   <Route path="/settings/direcciones" element={<DireccionesPage />} />
                   <Route path="/estadisticas" element={<EstadisticasPage />} />
                   <Route path="/orden-del-dia" element={<OrdenDelDiaPage />} />
@@ -135,6 +144,16 @@ function AppLayout() {
                   <Route path="/settings/about/changelog" element={<AboutChangelogPage />} />
                   <Route path="/settings/about/templates" element={<AboutTemplatesPage />} />
                   <Route path="/offline" element={<OfflinePage />} />
+                  <Route path="/admin" element={
+                    <AdminRoute>
+                      <AdminDashboardPage />
+                    </AdminRoute>
+                  } />
+                  <Route path="/admin/users" element={
+                    <AdminRoute>
+                      <AdminUsersPage />
+                    </AdminRoute>
+                  } />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </div>
@@ -142,7 +161,7 @@ function AppLayout() {
           </ErrorBoundary>
         </main>
 
-        <BottomNav />
+        {!isAuthPage && <BottomNav />}
       </div>
 
       {showTour && <OnboardingTour onComplete={() => setShowTour(false)} />}

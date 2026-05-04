@@ -16,7 +16,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { LoginDialog } from '@/components/auth/login-dialog';
 import { QRScanner } from '@/components/sync/qr-scanner';
 
 interface SyncModalsProps {
@@ -27,8 +26,6 @@ interface SyncModalsProps {
 
 export const SyncModals = ({ hook, esQRScannerOpen, setEsQRScannerOpen }: SyncModalsProps) => {
   const { 
-    esLoginOpen, 
-    setEsLoginOpen,
     esConfirmarReinicioOpen, 
     setEsConfirmarReinicioOpen, 
     esPrincipal, 
@@ -38,9 +35,6 @@ export const SyncModals = ({ hook, esQRScannerOpen, setEsQRScannerOpen }: SyncMo
 
   return (
     <>
-      {/* Login Dialog */}
-      <LoginDialog open={esLoginOpen} onOpenChange={setEsLoginOpen} />
-
       {/* QR Scanner Dialog */}
       <Dialog open={esQRScannerOpen} onOpenChange={setEsQRScannerOpen}>
         <DialogContent className="sm:max-w-md">

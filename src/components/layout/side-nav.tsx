@@ -21,10 +21,15 @@ import {
   User,
   BarChart2,
   FileText,
+  LogIn,
+  LogOut,
+  ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/layout/notification-bell';
 import { useTheme } from '@/components/providers/theme-provider';
+import { useAuth } from '@/hooks/use-auth';
+import { useAdmin } from '@/hooks/use-admin';
 import { useProfile } from '@/hooks/use-profile';
 import { useSettings } from '@/hooks/use-settings';
 import { getInitials } from '@/lib/utils';
@@ -45,6 +50,8 @@ export function SideNav() {
   const { theme, setTheme } = useTheme();
   const { profile } = useProfile();
   const { settings } = useSettings();
+  const { isAuthenticated, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
 
   const disabledModules = settings.disabledModules || [];
   const navItems = ALL_NAV_ITEMS.filter((item) => !disabledModules.includes(item.moduleId));
@@ -69,6 +76,26 @@ export function SideNav() {
             <img src="/icons/icon-192x192.png" alt="App Icon" className="h-6 w-6 object-contain transition-all group-hover:scale-110" />
             <span className="sr-only">Minutas</span>
           </Link>
+
+          {isAdmin && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  to="/admin"
+                  className={cn(
+                    'flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:h-8 md:w-8',
+                    pathname.startsWith('/admin')
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  )}
+                >
+                  <ShieldAlert className="h-5 w-5" />
+                  <span className="sr-only">Admin Panel</span>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">Panel de Administrador</TooltipContent>
+            </Tooltip>
+          )}
 
           {navItems.map((item) => (
             <Tooltip key={item.href}>
@@ -133,6 +160,24 @@ export function SideNav() {
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Configuración</span>
               </DropdownMenuItem>
+              {isAdmin && (
+                <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer font-medium text-primary focus:text-primary">
+                  <ShieldAlert className="mr-2 h-4 w-4" />
+                  <span>Panel Admin</span>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              {isAuthenticated ? (
+                <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer font-medium text-red-500 focus:text-red-500">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Cerrar Sesión</span>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onClick={() => navigate('/login')} className="cursor-pointer font-medium text-blue-500 focus:text-blue-500">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  <span>Iniciar Sesión</span>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <div className="flex items-center justify-between px-2 py-1.5 text-sm">
                 <span className="text-muted-foreground">Tema</span>

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { useUploadTemplate } from '@/hooks/use-upload-template';
 import { useTemplates } from '@/hooks/use-templates';
@@ -24,9 +25,8 @@ export function usePlantillas() {
   const [plantillaEditando, setPlantillaEditando] = useState<Template | null>(null);
   const [tabActiva, setTabActiva] = useState('editor');
   const [esDialogOpenNube, setEsDialogOpenNube] = useState(false);
-  const [esDialogOpenLogin, setEsDialogOpenLogin] = useState(false);
-  const [plantillaParaSubir, setPlantillaParaSubir] = useState<Template | null>(null);
   const inputArchivoRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const { isAuthenticated: estaAutenticado, user: usuario, signOut: cerrarSesion } = useAuth();
   const { uploadTemplate: subirAPlantillaNube, isUploading: estaSubiendo } = useUploadTemplate();
@@ -92,8 +92,7 @@ export function usePlantillas() {
   const manejarSubirANube = async (e: React.MouseEvent, plantilla: Template) => {
     e.stopPropagation();
     if (!estaAutenticado) {
-      setPlantillaParaSubir(plantilla);
-      setEsDialogOpenLogin(true);
+      navigate('/login?redirect=/plantillas');
       return;
     }
     await subirAPlantillaNube(plantilla);
@@ -144,10 +143,6 @@ export function usePlantillas() {
     setTabActiva,
     esDialogOpenNube,
     setEsDialogOpenNube,
-    esDialogOpenLogin,
-    setEsDialogOpenLogin,
-    plantillaParaSubir,
-    setPlantillaParaSubir,
     inputArchivoRef,
     estaAutenticado,
     usuario,

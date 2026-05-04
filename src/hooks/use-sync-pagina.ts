@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSyncManager } from '@/hooks/use-sync';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
@@ -24,11 +25,11 @@ export function useSyncPagina() {
   const [codigoUnion, setCodigoUnion] = useState('');
   const [modo, setModo] = useState<'primary' | 'secondary'>('primary');
   const [esConfirmarReinicioOpen, setEsConfirmarReinicioOpen] = useState(false);
-  const [esLoginOpen, setEsLoginOpen] = useState(false);
+  const navigate = useNavigate();
 
   const manejarConfiguracion = async () => {
     if (!estaAutenticado) {
-      setEsLoginOpen(true);
+      navigate('/login?redirect=/settings/sync');
       return;
     }
     if (!nombreDispositivo.trim()) {
@@ -70,8 +71,6 @@ export function useSyncPagina() {
     setModo,
     esConfirmarReinicioOpen,
     setEsConfirmarReinicioOpen,
-    esLoginOpen,
-    setEsLoginOpen,
     
     // Acciones
     manejarConfiguracion,
