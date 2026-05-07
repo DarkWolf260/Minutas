@@ -23,7 +23,7 @@ export const PersonnelFormFields = ({ hook, roles, departments }: PersonnelFormF
     name, setName,
     cedula, setCedula,
     rank, setRank,
-    roleId, setRoleId,
+    role_id, setrole_id,
     department, setDepartment,
     status, setStatus,
     sex, setSex,
@@ -90,14 +90,14 @@ export const PersonnelFormFields = ({ hook, roles, departments }: PersonnelFormF
         {/* Cargo Formal */}
         <div className="space-y-2">
           <Label htmlFor="role">Cargo Institucional</Label>
-          <Select value={roleId} onValueChange={setRoleId}>
+          <Select value={role_id} onValueChange={setrole_id}>
             <SelectTrigger id="role" name="role">
               <SelectValue placeholder="Seleccionar cargo..." />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Sin cargo asignado</SelectItem>
               {roles
-                .filter((role) => !role.isStatus)
+                .filter((role) => !role.is_status)
                 .map((role) => (
                   <SelectItem key={role.name} value={role.name}>
                     {role.name}
@@ -158,3 +158,5 @@ export const PersonnelFormFields = ({ hook, roles, departments }: PersonnelFormF
     </div>
   );
 };
+
+

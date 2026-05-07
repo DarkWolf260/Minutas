@@ -1,4 +1,4 @@
-import { ShieldAlert, Users, Settings } from 'lucide-react';
+import { ShieldAlert, Users, Settings, Layers } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 
@@ -42,7 +42,10 @@ export default function AdminDashboardPage() {
         </Card>
 
         {/* System Config Card */}
-        <Card className="hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-amber-500">
+        <Card 
+          className="hover:shadow-md transition-all cursor-pointer border-l-4 border-l-amber-500 hover:scale-[1.02] active:scale-[0.98]"
+          onClick={() => navigate('/admin/config')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Configuración Global
@@ -52,7 +55,26 @@ export default function AdminDashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">Sistema</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Próximamente: Ajustes a nivel de toda la app
+              Nombre de la organización y estados.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Workspaces Management Card */}
+        <Card 
+          className="hover:shadow-md transition-all cursor-pointer border-l-4 border-l-emerald-500 hover:scale-[1.02] active:scale-[0.98]"
+          onClick={() => navigate('/admin/workspaces')}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Gestión de Áreas
+            </CardTitle>
+            <Layers className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">--</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Crear y asignar áreas de trabajo en la nube.
             </p>
           </CardContent>
         </Card>

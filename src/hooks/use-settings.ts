@@ -7,14 +7,16 @@ import { logger } from '@/lib/logger';
 import { createConfigRepository } from '@/lib/repositories';
 
 const defaultSettings: AppSettings = {
-  activeGuardId: '',
-  guardShiftDuration: 24,
-  finalReportStaffSnapshot: {},
-  finalReportStartDate: '',
-  finalReportEndDate: '',
-  finalReportManualNovedades: [],
-  finalReportStatistics: '',
-  reportaRoleIds: [],
+  active_guard_id: '',
+  is_guard_open: false,
+  guard_period: '',
+  guard_shift_duration: 24,
+  final_report_staff_snapshot: {},
+  final_report_start_date: '',
+  final_report_end_date: '',
+  final_report_manual_novedades: [],
+  final_report_statistics: '',
+  reportarole_ids: [],
 };
 
 export function useSettings() {
@@ -32,18 +34,8 @@ export function useSettings() {
       if (doc) {
         setSettings({ ...defaultSettings, ...(doc.toJSON().data as AppSettings) });
       } else {
-        try {
-          await repo.initSettings(defaultSettings);
-        } catch (err: unknown) {
-          const e = err as any;
-          const isConflict = e.code === 'CONFLICT' || e.status === 409;
-          if (!isConflict) {
-            logger.error('Failed to insert default settings', err, {
-              feature: 'Settings',
-              workspaceId: currentWorkspace,
-            });
-          }
-        }
+        // Just use defaults in state, do NOT init in DB to avoid cloud conflicts
+        setSettings(defaultSettings);
       }
       setIsLoaded(true);
     });
@@ -68,3 +60,6 @@ export function useSettings() {
 
   return { settings, saveSettings, isLoaded, clearAllSettings };
 }
+
+
+

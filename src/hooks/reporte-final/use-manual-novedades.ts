@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { generateId } from '@/lib/utils/id';
 import { toast } from 'sonner';
-import { findValueInFormData } from '@/lib/report-sorter';
+import { findValueInform_data } from '@/lib/report-sorter';
 import type { Report } from '@/lib/types';
 
 export interface NovedadManual {
@@ -103,9 +103,9 @@ export function useManualNovedades({ settings, saveSettings, settingsLoaded }: U
   };
 
   const obtenerFechaOrdenamiento = (novedad: Report | NovedadManual | any): Date | null => {
-    if ('templateId' in novedad) {
-      const fechaStr = findValueInFormData(novedad.formData, 'Fecha') as string | undefined;
-      const horaStr = findValueInFormData(novedad.formData, 'Hora') as string | undefined;
+    if ('template_id' in novedad) {
+      const fechaStr = findValueInform_data(novedad.form_data, 'Fecha') as string | undefined;
+      const horaStr = findValueInform_data(novedad.form_data, 'Hora') as string | undefined;
 
       if (fechaStr && horaStr) {
         const timeMatch = horaStr.match(/(\d{2}):(\d{2})/);
@@ -164,3 +164,4 @@ export function useManualNovedades({ settings, saveSettings, settingsLoaded }: U
     manejarEliminarNovedadManual
   };
 }
+

@@ -98,11 +98,11 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
             (t) => t.name.toLowerCase() === td.name.toLowerCase()
           );
           if (nameMatch) {
-            reportData = { ...reportData, templateId: nameMatch.id };
+            reportData = { ...reportData, template_id: nameMatch.id };
           } else {
             await addTemplate({
               ...td,
-              workspaceId: settings.workspaceId ?? td.workspaceId,
+              workspace_id: settings.workspace_id ?? td.workspace_id,
             });
           }
         }
@@ -110,13 +110,13 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
       const report: Report = {
         ...reportData,
-        workspaceId: settings.workspaceId ?? reportData.workspaceId,
+        workspace_id: settings.workspace_id ?? reportData.workspace_id,
       };
       await addReport(report);
       await markReportReceived(syncReport.id);
       setInboxReports((prev) => prev.filter((r) => r.id !== syncReport.id));
     },
-    [addReport, addTemplate, templates, settings.workspaceId]
+    [addReport, addTemplate, templates, settings.workspace_id]
   );
 
   // Stable ref so the Realtime callback always uses the latest importReport
@@ -234,7 +234,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     }
     setIsSyncing(true);
     try {
-      const template = templates.find((t) => t.id === report.templateId);
+      const template = templates.find((t) => t.id === report.template_id);
       await sendReportToChannel(syncConfig.channelId, syncConfig.deviceName || 'Dispositivo Secundario', report, template);
       toast.success('Reporte enviado al dispositivo principal.');
       return true;
@@ -300,3 +300,6 @@ export function useSyncContext(): SyncContextValue {
   if (!ctx) throw new Error('useSyncContext must be used within <SyncProvider>');
   return ctx;
 }
+
+
+

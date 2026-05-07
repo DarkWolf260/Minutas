@@ -9,7 +9,7 @@ export function evaluarCondicion(
   fieldConfig: any,
   originalCondition: string,
   operator: string = '=',
-  formData: any = {},
+  form_data: any = {},
   config?: TemplateConfig
 ): boolean {
   if (item === null || item === undefined || item === '') {
@@ -48,7 +48,7 @@ export function evaluarCondicion(
       for (const matchStr of matchPattern) {
         const fullExpr = matchStr.replace(/[{}]/g, '').trim();
         const keysToMatch = resolverClavesInterpolacion(fullExpr, config);
-        const foundValues = buscarValores(formData, keysToMatch);
+        const foundValues = buscarValores(form_data, keysToMatch);
 
         if (foundValues.length > 0) {
           const newConditions: string[] = [];
@@ -123,3 +123,4 @@ export function evaluarCondicion(
   }
   return isMatch;
 }
+

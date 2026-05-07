@@ -65,23 +65,23 @@ export function validateSemantics(
 
     sections.forEach((section) => {
         if (section.condition) {
-            const { fieldId, value, operator } = section.condition;
+            const { field_id, value, operator } = section.condition;
 
             // Verificar que el campo existe
             // For dotted field IDs (e.g. Director.sex), check if the BASE field exists
             // since dotted fields are derived properties and won't appear as standalone {tags}
-            const baseFieldId = fieldId.includes('.')
-                ? fieldId.slice(0, fieldId.indexOf('.'))
-                : fieldId;
-            if (!fieldNames.has(fieldId) && !fieldNames.has(baseFieldId)) {
+            const basefield_id = field_id.includes('.')
+                ? field_id.slice(0, field_id.indexOf('.'))
+                : field_id;
+            if (!fieldNames.has(field_id) && !fieldNames.has(basefield_id)) {
                 errors.push(
-                    `El condicional hace referencia al campo '{${fieldId}}' que no está definido en la plantilla.`
+                    `El condicional hace referencia al campo '{${field_id}}' que no está definido en la plantilla.`
                 );
                 return;
             }
 
-            const fieldType = fieldTypes.get(fieldId);
-            const options = templateOptions.get(fieldId);
+            const fieldType = fieldTypes.get(field_id);
+            const options = templateOptions.get(field_id);
 
             // Validar si es dropdown
             if (fieldType === 'dropdown' && options) {
@@ -91,7 +91,7 @@ export function validateSemantics(
                     const idx = parseInt(value, 10);
                     if (idx < 0 || idx >= options.length) {
                         errors.push(
-                            `El condicional para '{${fieldId}}' usa índice ${idx}, pero el dropdown solo tiene ${options.length} opciones (índices 0-${options.length - 1}).`
+                            `El condicional para '{${field_id}}' usa índice ${idx}, pero el dropdown solo tiene ${options.length} opciones (índices 0-${options.length - 1}).`
                         );
                     }
                 }
@@ -165,7 +165,7 @@ export function validate(
  * Checks if a section has any fields defined
  */
 export function sectionHasFields(section: SectionConfig): boolean {
-    return section.fieldIds && section.fieldIds.length > 0;
+    return section.field_ids && section.field_ids.length > 0;
 }
 
 /**
@@ -206,3 +206,4 @@ export function isValidOperatorForType(
 
     return true;
 }
+

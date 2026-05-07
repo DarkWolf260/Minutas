@@ -1,11 +1,11 @@
 import { Navigate } from 'react-router-dom';
-import { useAdmin } from '@/hooks/use-admin';
+import { useUserStatus } from '@/hooks/use-user-status';
 import { Loader2 } from 'lucide-react';
 
 export function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { isAdmin, isLoading } = useAdmin();
+  const { isAdmin, loading } = useUserStatus();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

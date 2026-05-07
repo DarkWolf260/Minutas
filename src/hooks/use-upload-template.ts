@@ -22,19 +22,20 @@ export function useUploadTemplate() {
               name: template.name,
               content: template.content,
               description: description || `Plantilla para reportes de ${template.name}`,
-              type: 'normal', // Default for user uploads
-              statisticsCategory: template.statisticsCategory,
-              statisticsSubCategories: template.statisticsSubCategories,
-              statisticsRules: template.statisticsRules,
+              type: 'normal',
+              workspace_id: null, // Global templates
+              statistics_category: template.statistics_category,
+              statistics_sub_categories: template.statistics_sub_categories,
+              statistics_rules: template.statistics_rules,
             },
-          ], 
+          ],
           { onConflict: 'name' }
         )
         .select();
 
       if (error) throw error;
 
-      toast.success(`Plantilla "${template.name}" publicada en la comunidad.`);
+      toast.success(`Plantilla "${template.name}" subida al servidor.`);
       return { data, error: null };
     } catch (err: any) {
       console.error('Detailed Upload error:', {
@@ -44,8 +45,8 @@ export function useUploadTemplate() {
         code: err.code,
         error: err
       });
-      
-      const errorMessage = err.details || err.message || 'Error al publicar la plantilla';
+
+      const errorMessage = err.details || err.message || 'Error al subir la plantilla';
       toast.error(errorMessage);
       return { data: null, error: err };
     } finally {

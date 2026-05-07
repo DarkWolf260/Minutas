@@ -24,7 +24,7 @@ export function parseFieldTag(
     tagContent: string,
     templateOptions: Map<string, SnippetOption[]>
 ): {
-    fieldId: string;
+    field_id: string;
     fieldType: FieldType;
     modifiers: string[];
     isFullWidth: boolean;
@@ -33,10 +33,10 @@ export function parseFieldTag(
     value?: string;
 } {
     const segments = tagContent.split(':').map((s) => s.trim());
-    const fieldId = segments[0] || '';
+    const field_id = segments[0] || '';
     const otherSegments = segments.slice(1);
 
-    let fieldType: FieldType = AUTOMATIC_FIELD_TYPES[fieldId.toLowerCase()] || 'text';
+    let fieldType: FieldType = AUTOMATIC_FIELD_TYPES[field_id.toLowerCase()] || 'text';
     let isFullWidth = false;
     let isRequired = false;
     let defaultValue: string | undefined = undefined;
@@ -69,7 +69,7 @@ export function parseFieldTag(
                         const label = opt.substring(0, eqIdx).trim();
                         const value = opt.substring(eqIdx + 1).trim();
                         if (label) {
-                            return { id: `tpl_opt_${fieldId}_${i}`, label, value };
+                            return { id: `tpl_opt_${field_id}_${i}`, label, value };
                         }
                     }
                     return null;
@@ -77,7 +77,7 @@ export function parseFieldTag(
                 .filter((o): o is SnippetOption => o !== null);
 
             if (options.length > 0) {
-                templateOptions.set(fieldId, options);
+                templateOptions.set(field_id, options);
             }
             return;
         }
@@ -112,7 +112,7 @@ export function parseFieldTag(
         }
     });
 
-    return { fieldId, fieldType, modifiers, isFullWidth, isRequired, defaultValue, value };
+    return { field_id, fieldType, modifiers, isFullWidth, isRequired, defaultValue, value };
 }
 
 /**
@@ -154,35 +154,35 @@ export function parse(tokens: Token[]): TemplateParserResult {
                 // Remove optional trailing * before slicing { and }
                 const rawWithoutStar = token.raw.endsWith('*') ? token.raw.slice(0, -1) : token.raw;
                 const config = parseFieldTag(rawWithoutStar.slice(1, -1), templateOptions);
-                const fieldId = config.fieldId;
-                if (!fieldId) {
+                const field_id = config.field_id;
+                if (!field_id) {
                     idx++;
                     continue;
                 }
 
-                subFieldNames.add(fieldId);
-                fieldNames.add(fieldId);
+                subFieldNames.add(field_id);
+                fieldNames.add(field_id);
 
-                const currentType = fieldTypes.get(fieldId);
+                const currentType = fieldTypes.get(field_id);
                 if (!currentType || (currentType === 'text' && config.fieldType !== 'text')) {
-                    fieldTypes.set(fieldId, config.fieldType);
+                    fieldTypes.set(field_id, config.fieldType);
                 }
-                if (config.modifiers.length > 0) fieldModifiers.set(fieldId, config.modifiers);
-                if (config.isFullWidth) fieldWidths.set(fieldId, true);
-                if (config.isRequired) requiredFields.set(fieldId, true);
-                if (config.defaultValue !== undefined) defaultValues.set(fieldId, config.defaultValue);
-                if (config.value !== undefined) predefinedValues.set(fieldId, config.value);
+                if (config.modifiers.length > 0) fieldModifiers.set(field_id, config.modifiers);
+                if (config.isFullWidth) fieldWidths.set(field_id, true);
+                if (config.isRequired) requiredFields.set(field_id, true);
+                if (config.defaultValue !== undefined) defaultValues.set(field_id, config.defaultValue);
+                if (config.value !== undefined) predefinedValues.set(field_id, config.value);
 
                 if (token.raw.endsWith('}*')) {
-                    const sectionId = generateSectionId(fieldId, [...sections, ...subSections]);
+                    const sectionId = generateSectionId(field_id, [...sections, ...subSections]);
                     const sec: SectionConfig = {
                         id: sectionId,
                         parentId,
-                        label: fieldId,
+                        label: field_id,
                         isRepeatable: true,
-                        fieldIds: [fieldId],
-                        layout: [fieldId],
-                        repeatableItemLabel: fieldId.toUpperCase(),
+                        field_ids: [field_id],
+                        layout: [field_id],
+                        repeatableItemLabel: field_id.toUpperCase(),
                         originalContent: rawWithoutStar,
                     };
 
@@ -197,15 +197,15 @@ export function parse(tokens: Token[]): TemplateParserResult {
                     // mutually exclusive conditionals (e.g., [?{sex}=F]{Director}[/] [?{sex}=M]{Director}[/])
                     // We only prevent duplicates at the same level if they are at the root.
                     if (!parentId) {
-                        if (!globalRenderedFields.has(fieldId)) {
-                            subLayout.push(fieldId);
-                            globalRenderedFields.add(fieldId);
+                        if (!globalRenderedFields.has(field_id)) {
+                            subLayout.push(field_id);
+                            globalRenderedFields.add(field_id);
                         }
                     } else {
                         // Inside a section, always add it to the section's layout.
                         // The section's visibility logic in the form will handle showing only one instance.
-                        subLayout.push(fieldId);
-                        globalRenderedFields.add(fieldId);
+                        subLayout.push(field_id);
+                        globalRenderedFields.add(field_id);
                     }
                 }
                 idx++;
@@ -319,7 +319,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                 }
 
 
-                const baseId = baseLabel || (token.condition ? `cond_${token.condition.fieldId}` : 'section');
+                const baseId = baseLabel || (token.condition ? `cond_${token.condition.field_id}` : 'section');
                 const sectionId = generateSectionId(baseId, [...sections, ...subSections]);
 
                 const innerResult = parseInternal(inner, sectionId);
@@ -327,7 +327,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                 const isMappingConditional = token.condition && token.condition.value === '' && inner.length > 0;
 
                 if (isMappingConditional) {
-                    const fieldId = token.condition!.fieldId;
+                    const field_id = token.condition!.field_id;
                     const options: SnippetOption[] = [];
                     inner.forEach((t, i) => {
                         if (t.type === 'text') {
@@ -339,7 +339,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                                     const val = line.substring(eqIdx + 1).trim();
                                     if (key) {
                                         options.push({
-                                            id: `tpl_opt_${fieldId}_implicit_${i}_${options.length}`,
+                                            id: `tpl_opt_${field_id}_implicit_${i}_${options.length}`,
                                             label: key, // The Key: what the user selects in the dropdown
                                             value: val, // The Value: what goes into the report (long text)
                                         });
@@ -359,15 +359,15 @@ export function parse(tokens: Token[]): TemplateParserResult {
                         }
                     });
                     if (options.length > 0) {
-                        const existing = templateOptions.get(fieldId) || [];
+                        const existing = templateOptions.get(field_id) || [];
                         const merged = [...existing];
                         options.forEach(opt => {
                             if (!merged.some(m => m.label === opt.label)) {
                                 merged.push(opt);
                             }
                         });
-                        templateOptions.set(fieldId, merged);
-                        fieldTypes.set(fieldId, 'dropdown');
+                        templateOptions.set(field_id, merged);
+                        fieldTypes.set(field_id, 'dropdown');
                     }
                 }
 
@@ -379,10 +379,10 @@ export function parse(tokens: Token[]): TemplateParserResult {
                     label: (isSeparator || token.condition) ? '' : (baseLabel || `Sección ${subSections.length + 1}`),
                     isRepeatable,
 
-                    fieldIds: Array.from(innerResult.subFieldNames),
+                    field_ids: Array.from(innerResult.subFieldNames),
                     layout: innerResult.subLayout,
                     condition: token.condition ? {
-                        fieldId: token.condition.fieldId,
+                        field_id: token.condition.field_id,
                         operator: token.condition.operator,
                         value: token.condition.value,
                         conditionMode: token.condition.conditionMode,
@@ -428,10 +428,10 @@ export function parse(tokens: Token[]): TemplateParserResult {
 
     const fieldToConditionMap = new Map<string, string[]>();
     conditionalSections.forEach(condSec => {
-        condSec.fieldIds.forEach(fieldId => {
-            const existing = fieldToConditionMap.get(fieldId) || [];
+        condSec.field_ids.forEach(field_id => {
+            const existing = fieldToConditionMap.get(field_id) || [];
             existing.push(condSec.id);
-            fieldToConditionMap.set(fieldId, existing);
+            fieldToConditionMap.set(field_id, existing);
         });
     });
 
@@ -439,7 +439,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
     sections.forEach(sec => {
         // Mapping sections don't have a visual layout to absorb into
         if (!sec.isMapping) {
-            sec.fieldIds.forEach(id => absorbedItems.add(id));
+            sec.field_ids.forEach(id => absorbedItems.add(id));
             if (sec.layout) sec.layout.forEach(id => absorbedItems.add(id));
         }
     });
@@ -485,3 +485,4 @@ function generateSectionId(base: string, existingSections: SectionConfig[]): str
     }
     return id;
 }
+

@@ -71,8 +71,8 @@ export function RoleSortableList({
         setActiveId(null);
     };
 
-    const visibleRoles = roles.filter((r) => !r.isHidden);
-    const hiddenRoles = roles.filter((r) => r.isHidden);
+    const visibleRoles = roles.filter((r) => !r.is_hidden);
+    const hiddenRoles = roles.filter((r) => r.is_hidden);
 
     return (
         <Card className="shadow-sm border-primary/20 bg-primary/5">
@@ -92,7 +92,7 @@ export function RoleSortableList({
                     <Select
                         value=""
                         onValueChange={(val) => {
-                            onUpdateRole(val, { isHidden: false });
+                            onUpdateRole(val, { is_hidden: false });
                             toast.success(`Cargo "${val}" añadido localmente a la organización.`);
                         }}
                     >
@@ -134,7 +134,7 @@ export function RoleSortableList({
                                     index={idx}
                                     departments={departments}
                                     onRemoveFromList={() => {
-                                        onUpdateRole(role.name, { isHidden: true });
+                                        onUpdateRole(role.name, { is_hidden: true });
                                         toast.info(`Cargo "${role.name}" quitado de la organización.`);
                                     }}
                                 />
@@ -160,9 +160,9 @@ export function RoleSortableList({
                                         <div className="min-w-0">
                                             <p className="text-sm font-bold truncate">{activeRole.name}</p>
                                             <p className="text-[10px] text-muted-foreground uppercase font-mono">
-                                                {(activeRole.departmentScope ?? []).length > 0
+                                                {(activeRole.department_scope ?? []).length > 0
                                                     ? departments.find(
-                                                        (d) => d.id === (activeRole.departmentScope ?? [])[0]
+                                                        (d) => d.id === (activeRole.department_scope ?? [])[0]
                                                     )?.name || 'Varios'
                                                     : 'Global'}
                                             </p>
@@ -183,3 +183,4 @@ export function RoleSortableList({
         </Card>
     );
 }
+

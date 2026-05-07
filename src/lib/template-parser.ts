@@ -1,4 +1,4 @@
-import { TemplateParserResult, SectionConfig, FormDataRecord, FieldConfig, SnippetOption } from '@/lib/types';
+import { TemplateParserResult, SectionConfig, form_dataRecord, FieldConfig, SnippetOption } from '@/lib/types';
 
 import type { ResolutionResult } from './template/renderer';
 
@@ -49,7 +49,7 @@ export function renderContent(
  */
 export function renderFinalReport(
   template: string,
-  data: FormDataRecord,
+  data: form_dataRecord,
   config: { fields: Record<string, FieldConfig>; sections: SectionConfig[]; layout: string[] },
   predefinedValues: Record<string, string>,
   summaryOnly: boolean = false,
@@ -75,7 +75,7 @@ export function renderFinalReport(
  */
 export function renderContentWithSections(
   content: string,
-  data: FormDataRecord,
+  data: form_dataRecord,
   config: { fields: Record<string, FieldConfig>; sections: SectionConfig[]; layout: string[] },
   predefinedValues: Record<string, string>,
   dynamicPredefinedValues: Record<string, string> = {}
@@ -92,3 +92,4 @@ export function renderContentWithSections(
     dynamicPredefinedValues
   );
 }
+

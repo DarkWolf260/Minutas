@@ -3,10 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { MinutasDatabase, getDatabase, removeRxDatabase, getRxStorageDexie } from './db';
+import { startWorkspaceReplication } from './replication';
 import { logger } from '../logger';
 import { DatabaseContext } from './db-context';
 
 import { LoadingScreen } from '@/components/common/loading-screen';
+import { useAuth } from '@/hooks/use-auth';
+import { useCloudWorkspaces } from '@/hooks/use-cloud-workspaces';
 
 interface DatabaseProviderProps {
   children: React.ReactNode;
@@ -21,8 +24,13 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
   const [db, setDb] = useState<MinutasDatabase | null>(null);
   const [currentWorkspace, setCurrentWorkspace] = useState<string>(DEFAULT_WORKSPACE);
   const [workspaces, setWorkspaces] = useState<string[]>([DEFAULT_WORKSPACE]);
+  const [cloudWorkspaces, setCloudWorkspaces] = useState<any[]>([]);
   const [error, setError] = useState<Error | null>(null);
   const [isSwitching, setIsSwitching] = useState(false);
+  const replicationRef = React.useRef<any>(null);
+
+  const { user, isAuthenticated } = useAuth();
+  const { fetchCloudWorkspaces } = useCloudWorkspaces();
 
   // Load initial workspace list and active choice
   useEffect(() => {
@@ -32,12 +40,36 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
     if (savedActive) setCurrentWorkspace(savedActive);
     if (savedList) {
       try {
-        setWorkspaces(JSON.parse(savedList));
+        const localList = JSON.parse(savedList);
+        setWorkspaces(localList);
       } catch (e) {
         console.error('Failed to parse workspaces list', e);
       }
     }
   }, []);
+
+  // Fetch and sync cloud workspaces
+  useEffect(() => {
+    async function syncCloud() {
+      if (!isAuthenticated || !user) {
+        setCloudWorkspaces([]);
+        return;
+      }
+      
+      const cloudList = await fetchCloudWorkspaces();
+      setCloudWorkspaces(cloudList);
+      
+      // Add cloud IDs to the overall list if not present
+      const cloudIds = cloudList.map(ws => ws.id);
+      setWorkspaces(prev => {
+        const combined = Array.from(new Set([...prev, ...cloudIds]));
+        localStorage.setItem(STORAGE_KEY_LIST, JSON.stringify(combined));
+        return combined;
+      });
+    }
+    
+    syncCloud();
+  }, [isAuthenticated, user, fetchCloudWorkspaces]);
 
   useEffect(() => {
     let mounted = true;
@@ -81,6 +113,46 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
       mounted = false;
     };
   }, []); // Only run once on mount
+
+  // NEW: Content Replication Logic
+  useEffect(() => {
+    if (!db || !currentWorkspace || currentWorkspace === DEFAULT_WORKSPACE) {
+      if (replicationRef.current) {
+        replicationRef.current.cancel();
+        replicationRef.current = null;
+      }
+      return;
+    }
+
+    let cancelled = false;
+    async function initReplication() {
+      if (!db) return;
+      
+      // Cancel previous if exists
+      if (replicationRef.current) {
+        replicationRef.current.cancel();
+      }
+
+      logger.info(`Starting cloud replication for content in workspace: ${currentWorkspace}`);
+      const replication = await startWorkspaceReplication(db, currentWorkspace);
+      
+      if (!cancelled) {
+        replicationRef.current = replication;
+      } else if (replication) {
+        replication.cancel();
+      }
+    }
+
+    initReplication();
+
+    return () => {
+      cancelled = true;
+      if (replicationRef.current) {
+        replicationRef.current.cancel();
+        replicationRef.current = null;
+      }
+    };
+  }, [db, currentWorkspace]);
 
   const switchWorkspace = async (name: string) => {
     if (name === currentWorkspace) return;
@@ -136,7 +208,7 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
     try {
       const exportData: any = {
         metadata: {
-          workspaceId: name,
+          workspace_id: name,
           exportDate: new Date().toISOString(),
           app: 'PC Reportes',
           version: '1.0'
@@ -147,7 +219,7 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
       const collectionNames = Object.keys(db.collections);
       for (const colName of collectionNames) {
         const docs = await (db.collections as any)[colName].find({
-          selector: { workspaceId: name }
+          selector: { workspace_id: name }
         }).exec();
         exportData.collections[colName] = docs.map((d: any) => d.toJSON());
       }
@@ -180,11 +252,11 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
         throw new Error('Formato de archivo de respaldo inválido.');
       }
 
-      const workspaceId = importData.metadata.workspaceId;
+      const workspace_id = importData.metadata.workspace_id;
       
       // 1. Ensure workspace is in the list
-      if (!workspaces.includes(workspaceId)) {
-        const newList = [...workspaces, workspaceId];
+      if (!workspaces.includes(workspace_id)) {
+        const newList = [...workspaces, workspace_id];
         setWorkspaces(newList);
         localStorage.setItem(STORAGE_KEY_LIST, JSON.stringify(newList));
       }
@@ -210,7 +282,7 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
           if (colName === 'templates') {
             const existing = await collection.findOne({
               selector: {
-                workspaceId: workspaceId,
+                workspace_id: workspace_id,
                 name: doc.name
               }
             }).exec();
@@ -225,17 +297,17 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
           // 2. Remapping for Template-Dependent Entities
           else if (colName === 'configs' && doc.type === 'template_config') {
             // Remap template_config ID and its name field (which holds the template ID)
-            const mappedTemplateId = idMapping[doc.name];
-            if (mappedTemplateId) {
-              docToUpsert.id = `template_config:${mappedTemplateId}`;
-              docToUpsert.name = mappedTemplateId;
+            const mappedtemplate_id = idMapping[doc.name];
+            if (mappedtemplate_id) {
+              docToUpsert.id = `${workspace_id}:template_config:${mappedtemplate_id}`;
+              docToUpsert.name = mappedtemplate_id;
             }
           }
           else if (colName === 'reports') {
             // Ensure reports point to the correct deduplicated template
-            const mappedTemplateId = idMapping[doc.templateId];
-            if (mappedTemplateId) {
-              docToUpsert.templateId = mappedTemplateId;
+            const mappedtemplate_id = idMapping[doc.template_id];
+            if (mappedtemplate_id) {
+              docToUpsert.template_id = mappedtemplate_id;
             }
           }
 
@@ -244,9 +316,9 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
         }
       }
 
-      logger.info(`Workspace [${workspaceId}] imported successfully`);
+      logger.info(`Workspace [${workspace_id}] imported successfully`);
       // Use switchWorkspace to activate it immediately
-      await switchWorkspace(workspaceId);
+      await switchWorkspace(workspace_id);
     } catch (err) {
       logger.error('Failed to import workspace', err);
       alert('Error al importar el área de trabajo: ' + (err as Error).message);
@@ -295,11 +367,13 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
           </div>
 
           <h2 className="text-2xl font-bold text-foreground mb-3">Sincronización Fallida</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed mb-8">
-            {error.message.includes('DB9') 
-              ? 'Se detectó un conflicto crítico de configuración en el almacenamiento local. Los intentos de recuperación automática han fallado.'
-              : error.message}
-          </p>
+          <div className="max-h-[200px] overflow-y-auto mb-8 px-2 custom-scrollbar">
+            <p className="text-xs text-muted-foreground leading-relaxed break-words text-left font-mono bg-muted/30 p-3 rounded-lg border border-border/50">
+              {error.message.includes('DB9') 
+                ? 'Se detectó un conflicto crítico de configuración en el almacenamiento local. Los intentos de recuperación automática han fallado.'
+                : error.message}
+            </p>
+          </div>
 
           <div className="flex flex-col gap-3">
             <Button 
@@ -338,6 +412,7 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
       db, 
       currentWorkspace, 
       workspaces, 
+      cloudWorkspaces,
       switchWorkspace, 
       deleteWorkspace,
       createWorkspace,
@@ -349,4 +424,8 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
     </DatabaseContext.Provider>
   );
 }
+
+
+
+
 

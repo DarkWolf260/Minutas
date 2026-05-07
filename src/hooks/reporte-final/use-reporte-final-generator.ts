@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { generateId } from '@/lib/utils/id';
-import { findValueInFormData } from '@/lib/report-sorter';
+import { findValueInform_data } from '@/lib/report-sorter';
 import { renderFinalReport } from '@/lib/template-parser';
 import { LEADER_ROLES } from '@/lib/constants/roles';
 import { calcularEstadisticasDia } from '@/lib/estadisticas-utils';
@@ -61,9 +61,9 @@ export function useReporteFinalGenerator({
   const [textoBotonCopiar, setTextoBotonCopiar] = useState('Copiar');
 
   const obtenerFechaOrdenamiento = (novedad: Report | any): Date | null => {
-    if ('templateId' in novedad) {
-      const fechaStr = findValueInFormData(novedad.formData, 'Fecha') as string | undefined;
-      const horaStr = findValueInFormData(novedad.formData, 'Hora') as string | undefined;
+    if ('template_id' in novedad) {
+      const fechaStr = findValueInform_data(novedad.form_data, 'Fecha') as string | undefined;
+      const horaStr = findValueInform_data(novedad.form_data, 'Hora') as string | undefined;
 
       if (fechaStr && horaStr) {
         const timeMatch = horaStr.match(/(\d{2}):(\d{2})/);
@@ -103,16 +103,16 @@ export function useReporteFinalGenerator({
       return;
     }
 
-    const ordenDelDiaDeshabilitado = (settings.disabledModules || []).includes('orden-del-dia');
+    const ordenDelDiaDeshabilitado = (settings.disabled_modules || []).includes('orden-del-dia');
     const borrador = !ordenDelDiaDeshabilitado ? settings.ordenDelDiaDraft : undefined;
 
-    const personalParaReporte = (borrador && borrador.guardId === settings.activeGuardId)
+    const personalParaReporte = (borrador && borrador.guardId === settings.active_guard_id)
       ? borrador.staff
       : activeGuard?.staff;
 
-    const idGuardiaParaReporte = (borrador && borrador.guardId === settings.activeGuardId)
+    const idGuardiaParaReporte = (borrador && borrador.guardId === settings.active_guard_id)
       ? borrador.guardId || ''
-      : (activeGuard?.id || settings.activeGuardId || '');
+      : (activeGuard?.id || settings.active_guard_id || '');
 
     const obtenerNombreLider = (roleName: string) => {
       if (personalParaReporte) {
@@ -205,11 +205,11 @@ export function useReporteFinalGenerator({
       }
 
       const rolesOrdenados = [...roles].sort(
-        (a, b) => (a.hierarchyOrder ?? a.order ?? 0) - (b.hierarchyOrder ?? b.order ?? 0)
+        (a, b) => (a.hierarchy_order ?? a.order ?? 0) - (b.hierarchy_order ?? b.order ?? 0)
       );
 
       rolesOrdenados
-        .filter((r) => !r.isHidden)
+        .filter((r) => !r.is_hidden)
         .forEach((role) => {
           if (
             role.name.toLowerCase() === LEADER_ROLES.DIRECTOR.toLowerCase() ||
@@ -264,10 +264,10 @@ export function useReporteFinalGenerator({
             year: 'numeric',
           }).format(sortDate);
           
-          const horaStr = findValueInFormData(report.formData, 'Hora') as string | undefined;
+          const horaStr = findValueInform_data(report.form_data, 'Hora') as string | undefined;
           const timestampText = `${fechaFormateada} ${horaStr || format(sortDate, 'HH:mm')}`.trim();
-          const template = templates.find((t) => t.id === report.templateId);
-          const config = configs[report.templateId];
+          const template = templates.find((t) => t.id === report.template_id);
+          const config = configs[report.template_id];
 
           let textoContenido = '';
           if (template && config) {
@@ -281,7 +281,7 @@ export function useReporteFinalGenerator({
             };
             textoContenido = renderFinalReport(
               template.content,
-              report.formData || {},
+              report.form_data || {},
               config,
               {},
               true,
@@ -358,14 +358,14 @@ export function useReporteFinalGenerator({
         summary: settings.guardPeriod || `Reporte de Guardia ${activeGuard.id}`,
         content: reporteGenerado,
         guardGroup: activeGuard.id.split(' ')[0] || '',
-        workspaceId: '', 
+        workspace_id: '', 
         statistics: statsObj,
       });
 
       await saveSettings({ 
         isGuardOpen: false,
         guardPeriod: '', 
-        activeGuardId: '',
+        active_guard_id: '',
         finalReportManualNovedades: [], 
         finalReportStatistics: '', 
         ordenDelDiaDraft: undefined, 
@@ -395,3 +395,6 @@ export function useReporteFinalGenerator({
     manejarFinalizarYGuardar
   };
 }
+
+
+

@@ -33,44 +33,44 @@ export function useActiveGuard() {
   const [periodo, setPeriodoState] = useState<string>('');
 
   // Track last-synced values so we don't create infinite loops
-  const lastSynced = useRef<{ activeGuardId?: string; guardPeriod?: string }>({});
+  const lastSynced = useRef<{ active_guard_id?: string; guard_period?: string }>({});
 
   // Sync `periodo` from settings on load / external change
   useEffect(() => {
     if (!settingsLoaded) return;
 
-    const globalPeriod = settings.guardPeriod || '';
-    if (lastSynced.current.guardPeriod === globalPeriod) return;
+    const globalPeriod = settings.guard_period || '';
+    if (lastSynced.current.guard_period === globalPeriod) return;
 
     const effective = globalPeriod || buildFallbackPeriod();
     setPeriodoState(effective);
-    lastSynced.current.guardPeriod = globalPeriod;
-  }, [settingsLoaded, settings.guardPeriod]);
+    lastSynced.current.guard_period = globalPeriod;
+  }, [settingsLoaded, settings.guard_period]);
 
   // Sync `selectedGuardId` from settings on load / external change
   useEffect(() => {
     if (!settingsLoaded || !guardsLoaded) return;
-    const savedId = settings.activeGuardId;
+    const savedId = settings.active_guard_id;
     if (!savedId) return;
-    if (lastSynced.current.activeGuardId === savedId) return;
+    if (lastSynced.current.active_guard_id === savedId) return;
     if (!guards.some((g) => g.id === savedId)) return;
 
     setSelectedGuardIdState(savedId);
-    lastSynced.current.activeGuardId = savedId;
-  }, [settingsLoaded, guardsLoaded, settings.activeGuardId, guards]);
+    lastSynced.current.active_guard_id = savedId;
+  }, [settingsLoaded, guardsLoaded, settings.active_guard_id, guards]);
 
   // ── Actions ──────────────────────────────────────────────────────────────────
 
   /**
    * Change the selected guard in the dropdown.
-   * Also persists `activeGuardId` to settings so all modules see the same selection.
+   * Also persists `active_guard_id` to settings so all modules see the same selection.
    */
   const setSelectedGuardId = useCallback(
     (guardId: string) => {
       if (!guardId) return;
       setSelectedGuardIdState(guardId);
-      lastSynced.current.activeGuardId = guardId;
-      saveSettings({ ...settings, activeGuardId: guardId });
+      lastSynced.current.active_guard_id = guardId;
+      saveSettings({ ...settings, active_guard_id: guardId });
     },
     [settings, saveSettings]
   );
@@ -91,21 +91,21 @@ export function useActiveGuard() {
       const gId = guardId ?? selectedGuardId;
       const p = period ?? periodo;
       if (!gId) return;
-      lastSynced.current.activeGuardId = gId;
-      lastSynced.current.guardPeriod = p;
-      saveSettings({ isGuardOpen: true, activeGuardId: gId, guardPeriod: p });
+      lastSynced.current.active_guard_id = gId;
+      lastSynced.current.guard_period = p;
+      saveSettings({ is_guard_open: true, active_guard_id: gId, guard_period: p });
     },
     [selectedGuardId, periodo, saveSettings]
   );
 
   // ── Derived values ────────────────────────────────────────────────────────────
 
-  const isGuardOpen = settings.isGuardOpen || false;
-  const activeGuardId = settings.activeGuardId || '';
-  const guardPeriod = settings.guardPeriod || '';
+  const isGuardOpen = settings.is_guard_open || false;
+  const active_guard_id = settings.active_guard_id || '';
+  const guard_period = settings.guard_period || '';
 
   // The full guard object for the currently active (open) guard
-  const activeGuard = guards.find((g) => g.id === activeGuardId) ?? null;
+  const activeGuard = guards.find((g) => g.id === active_guard_id) ?? null;
 
   // The full guard object for whatever the user has selected (may differ from active)
   const selectedGuard = guards.find((g) => g.id === selectedGuardId) ?? null;
@@ -128,9 +128,9 @@ export function useActiveGuard() {
 
     // Committed / open guard state (from settings)
     isGuardOpen,
-    activeGuardId,
+    active_guard_id,
     activeGuard,
-    guardPeriod,
+    guard_period,
     openGuard,
 
     // Raw settings access (for modules that need it)

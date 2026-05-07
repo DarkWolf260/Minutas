@@ -48,7 +48,7 @@ export function usePersonnel() {
         const memberWithId: StaffMember = {
           ...newMember,
           id: generateId('personnel'),
-          workspaceId: currentWorkspace,
+          workspace_id: currentWorkspace,
         } as any;
 
         const validatedMember = StaffMemberSchema.parse(memberWithId) as StaffMember;
@@ -57,7 +57,7 @@ export function usePersonnel() {
         logger.info('Personnel added', {
           id: validatedMember.id,
           name: validatedMember.name,
-          workspaceId: currentWorkspace,
+          workspace_id: currentWorkspace,
         });
       } catch (error) {
         logger.error('Failed to add personnel', error);
@@ -83,7 +83,7 @@ export function usePersonnel() {
           return;
         }
         const id = generateId('personnel');
-        newMembers.push({ ...m, id, workspaceId: currentWorkspace } as any);
+        newMembers.push({ ...m, id, workspace_id: currentWorkspace } as any);
         if (m.cedula) existingCedulas.add(m.cedula);
       });
 
@@ -103,7 +103,7 @@ export function usePersonnel() {
       try {
         const repo = createPersonnelRepository(db, currentWorkspace);
         await repo.update(id, updates);
-        logger.info('Personnel updated', { id, updates, workspaceId: currentWorkspace });
+        logger.info('Personnel updated', { id, updates, workspace_id: currentWorkspace });
       } catch (error) {
         logger.error('Failed to update personnel', error);
         const { toast } = await import('sonner');
@@ -153,7 +153,7 @@ export function usePersonnel() {
     if (!db || !currentWorkspace) return;
     const repo = createPersonnelRepository(db, currentWorkspace);
     await repo.clearAll();
-    logger.info('All personnel cleared', { workspaceId: currentWorkspace });
+    logger.info('All personnel cleared', { workspace_id: currentWorkspace });
   }, [db, currentWorkspace]);
 
   return {
@@ -169,3 +169,4 @@ export function usePersonnel() {
     clearAllPersonnel,
   };
 }
+

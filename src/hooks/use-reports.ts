@@ -20,7 +20,7 @@ import { z } from 'zod';
 import type { Report } from '@/lib/types';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
-import { ReportSchema, generateFormDataSchema } from '@/lib/validations/schemas';
+import { ReportSchema, generateform_dataSchema } from '@/lib/validations/schemas';
 import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
 import { useTemplates } from './use-templates';
 import { createReportRepository } from '@/lib/repositories';
@@ -52,7 +52,7 @@ export function useReports() {
 
   const validateReportContent = useCallback(
     (report: Report) => {
-      const reportToValidate = { ...report, workspaceId: currentWorkspace };
+      const reportToValidate = { ...report, workspace_id: currentWorkspace };
 
       let validatedReport: Report;
       try {
@@ -68,18 +68,18 @@ export function useReports() {
         throw err;
       }
 
-      const config = configs[report.templateId];
-      if (config && report.formData) {
+      const config = configs[report.template_id];
+      if (config && report.form_data) {
         try {
-          const dynamicSchema = generateFormDataSchema(config as any);
-          dynamicSchema.parse(report.formData);
+          const dynamicSchema = generateform_dataSchema(config as any);
+          dynamicSchema.parse(report.form_data);
         } catch (err) {
           if (err instanceof z.ZodError) {
             logger.error('Dynamic form validation failed', err, {
               feature: 'Reports',
               issues: err.issues,
-              templateId: report.templateId,
-              formData: report.formData,
+              template_id: report.template_id,
+              form_data: report.form_data,
             });
           } else {
             logger.error('Dynamic form validation failed (non-zod)', err);
@@ -103,13 +103,13 @@ export function useReports() {
         logger.info('Report added', {
           id: validatedReport.id,
           title: validatedReport.title,
-          workspaceId: currentWorkspace,
+          workspace_id: currentWorkspace,
         });
       } catch (error) {
         logger.error('Failed to add report', error, {
           feature: 'Reports',
           reportId: newReport?.id,
-          templateId: newReport?.templateId,
+          template_id: newReport?.template_id,
         });
         toast.error(getUserFriendlyErrorMessage(error));
       }
@@ -126,7 +126,7 @@ export function useReports() {
         await repo.update(validatedReport);
         logger.info('Report updated', {
           id: validatedReport.id,
-          workspaceId: currentWorkspace,
+          workspace_id: currentWorkspace,
         });
       } catch (error) {
         logger.error('Failed to update report', error, {
@@ -176,3 +176,5 @@ export function useReports() {
     ]
   );
 }
+
+

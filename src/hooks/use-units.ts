@@ -17,7 +17,7 @@ export function useUnits() {
       .find({
         selector: {
           type: 'unit',
-          workspaceId: currentWorkspace
+          workspace_id: currentWorkspace
         },
       })
       .$.subscribe((data) => {
@@ -32,12 +32,12 @@ export function useUnits() {
     async (newUnits: string[]) => {
       if (!db || !currentWorkspace) return;
       try {
-        const allDocs = await db.configs.find({ selector: { type: 'unit', workspaceId: currentWorkspace } }).exec();
+        const allDocs = await db.configs.find({ selector: { type: 'unit', workspace_id: currentWorkspace } }).exec();
         await db.configs.bulkRemove(allDocs.map((d) => d.primary));
         if (newUnits.length > 0) {
           const toInsert = newUnits.map((name) => ({
             id: `${currentWorkspace}:unit:${name}`,
-            workspaceId: currentWorkspace,
+            workspace_id: currentWorkspace,
             type: 'unit' as const,
             name,
             data: { name }, // Must be object for configsSchema
@@ -45,7 +45,7 @@ export function useUnits() {
           await db.configs.bulkInsert(toInsert as any);
         }
       } catch (error) {
-        logger.error('Failed to save units', error, { feature: 'Units', workspaceId: currentWorkspace });
+        logger.error('Failed to save units', error, { feature: 'Units', workspace_id: currentWorkspace });
         throw error; // Re-throw to allow UI to catch it
       }
     },
@@ -55,12 +55,13 @@ export function useUnits() {
   const clearAllUnits = useCallback(async () => {
     if (!db || !currentWorkspace) return;
     try {
-      const allDocs = await db.configs.find({ selector: { type: 'unit', workspaceId: currentWorkspace } }).exec();
+      const allDocs = await db.configs.find({ selector: { type: 'unit', workspace_id: currentWorkspace } }).exec();
       await db.configs.bulkRemove(allDocs.map((d) => d.primary));
     } catch (error) {
-      logger.error('Failed to clear units', error, { feature: 'Units', workspaceId: currentWorkspace });
+      logger.error('Failed to clear units', error, { feature: 'Units', workspace_id: currentWorkspace });
     }
   }, [db, currentWorkspace]);
 
   return { units, saveUnits, isLoaded, clearAllUnits };
 }
+

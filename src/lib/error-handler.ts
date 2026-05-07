@@ -26,7 +26,7 @@ interface ErrorContext {
  * logError(new Error('Failed to save'), 'error', {
  *   feature: 'Personnel',
  *   action: 'save',
- *   metadata: { personnelId: '123' }
+ *   metadata: { personnel_id: '123' }
  * });
  * ```
  */
@@ -132,3 +132,4 @@ export function getUserFriendlyErrorMessage(error: unknown): string {
 
   return 'Ocurrió un error inesperado. Por favor, intenta nuevamente o contacta al soporte.';
 }
+

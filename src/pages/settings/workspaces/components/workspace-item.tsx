@@ -9,9 +9,11 @@ interface WorkspaceItemProps {
   onSwitch: () => void;
   onExport: () => void;
   onDelete: () => void;
+  cloudInfo?: any;
 }
 
-export function WorkspaceItem({ name, isActive, onSwitch, onExport, onDelete }: WorkspaceItemProps) {
+export function WorkspaceItem({ name, isActive, onSwitch, onExport, onDelete, cloudInfo }: WorkspaceItemProps) {
+  const isCloud = !!cloudInfo;
   return (
     <div
       className={cn(
@@ -29,12 +31,13 @@ export function WorkspaceItem({ name, isActive, onSwitch, onExport, onDelete }: 
           <Database className="h-4 w-4" />
         </div>
         <div>
-          <p className="text-sm font-medium capitalize">
-            {name.replace(/-/g, ' ')}
-            {name === 'minutasdb' && <span className="ml-2 text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground uppercase tracking-wider">Default</span>}
+          <p className="text-sm font-medium capitalize flex items-center gap-2">
+            {isCloud ? cloudInfo.name : name.replace(/-/g, ' ')}
+            {name === 'minutasdb' && <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground uppercase tracking-wider">Default</span>}
+            {isCloud && <span className="text-[10px] bg-blue-500/10 text-blue-600 px-1.5 py-0.5 rounded border border-blue-500/20 uppercase tracking-wider font-bold">Cloud</span>}
           </p>
           <p className="text-xs text-muted-foreground">
-            {isActive ? 'Área activa' : 'Área local offline'}
+            {isActive ? 'Área activa' : isCloud ? 'Sincronizada con la nube' : 'Área local offline'}
           </p>
         </div>
       </div>
@@ -57,7 +60,7 @@ export function WorkspaceItem({ name, isActive, onSwitch, onExport, onDelete }: 
         >
           <Download className="h-4 w-4" />
         </Button>
-        {name !== 'minutasdb' && (
+        {name !== 'minutasdb' && !isCloud && (
           <Button
             variant="ghost"
             size="icon"

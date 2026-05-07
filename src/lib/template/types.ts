@@ -22,7 +22,7 @@ export type Token =
  * Conditional expression structure
  */
 export interface ConditionalExpression {
-    fieldId: string;
+    field_id: string;
     operator: '=' | '!=' | '>' | '<' | '>=' | '<=';
     value: string;
     /**
@@ -76,3 +76,4 @@ export interface RenderOptions {
     dynamicValues?: Record<string, string>;
     summaryOnly?: boolean;
 }
+

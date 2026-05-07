@@ -59,13 +59,7 @@ export default function LoginPage() {
         <Button 
           variant="ghost" 
           className="text-muted-foreground hover:text-foreground"
-          onClick={() => {
-            if (redirectTo === '/') {
-              navigate(-1);
-            } else {
-              navigate(redirectTo);
-            }
-          }}
+          onClick={() => navigate('/')}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Volver

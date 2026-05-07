@@ -131,7 +131,7 @@ Contenido para opción A
             // Find the conditional section
             const conditionalSection = result.sections.find((s) => s.condition);
             expect(conditionalSection).toBeDefined();
-            expect(conditionalSection?.condition?.fieldId).toBe('tipo');
+            expect(conditionalSection?.condition?.field_id).toBe('tipo');
             expect(conditionalSection?.condition?.operator).toBe('=');
             expect(conditionalSection?.condition?.value).toBe('0');
         });
@@ -305,7 +305,7 @@ Reportado por: {reportante:upper}`;
             // Should create a repeatable section
             const repeatableSection = result.sections.find((s) => s.isRepeatable);
             expect(repeatableSection).toBeDefined();
-            expect(repeatableSection?.fieldIds).toContain('novedades');
+            expect(repeatableSection?.field_ids).toContain('novedades');
         });
 
         it('should parse repeatable sections with labels', () => {
@@ -318,3 +318,4 @@ Reportado por: {reportante:upper}`;
         });
     });
 });
+

@@ -24,7 +24,7 @@ export function useGuardHistory() {
       setReports(
         data.map((d) => {
           const json = d.toJSON();
-          return { ...(json.data as GuardReport), workspaceId: currentWorkspace };
+          return { ...(json.data as GuardReport), workspace_id: currentWorkspace };
         }) as GuardReport[]
       );
       setIsLoaded(true);
@@ -40,7 +40,7 @@ export function useGuardHistory() {
       await repo.saveGuardReport(report);
       logger.info('Guard report saved', {
         reportId: report.id,
-        workspaceId: currentWorkspace,
+        workspace_id: currentWorkspace,
       });
     },
     [db, currentWorkspace]
@@ -64,7 +64,7 @@ export function useGuardHistory() {
     if (!db || !currentWorkspace) return;
     const repo = createHistoryRepository(db, currentWorkspace);
     await repo.clearAllGuardHistory();
-    logger.info('Guard history cleared', { workspaceId: currentWorkspace });
+    logger.info('Guard history cleared', { workspace_id: currentWorkspace });
   }, [db, currentWorkspace]);
 
   return {
@@ -76,3 +76,4 @@ export function useGuardHistory() {
     clearAllGuardHistory,
   };
 }
+

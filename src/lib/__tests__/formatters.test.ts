@@ -16,11 +16,11 @@ import type { StaffMember } from '@/lib/types';
 function createMockStaffMember(overrides: Partial<StaffMember> = {}): StaffMember {
     return {
         id: 'staff-1',
-        workspaceId: 'workspace-1',
+        workspace_id: 'workspace-1',
         name: 'Juan Pérez',
         cedula: '12345678',
         rank: undefined, // Default to no rank to keep existing name-only tests working
-        roleId: 'officer',
+        role_id: 'officer',
         status: 'activo',
         department: 'operations',
         specialties: [],
@@ -163,7 +163,7 @@ describe('formatters', () => {
                 name: 'Fernando Ruiz',
                 cedula: '77777777',
                 rank: 'Capitán',
-                roleId: 'commander',
+                role_id: 'commander',
             });
             const result = formatStaffMember(member, true);
             expect(result).toBe('Capitán Fernando Ruiz (77777777)');
@@ -232,3 +232,5 @@ describe('formatters', () => {
         });
     });
 });
+
+

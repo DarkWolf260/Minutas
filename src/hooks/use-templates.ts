@@ -42,7 +42,7 @@ import { logger } from '@/lib/logger';
 import { stableStringify } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { generateId } from '@/lib/utils/id';
-import { createConfigRepository, createTemplateRepository } from '@/lib/repositories';
+import { createConfigRepository, createTemplateRepository, DbKeys } from '@/lib/repositories';
 import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
 
 
@@ -67,7 +67,7 @@ export function useTemplates() {
     if (!db || !currentWorkspace) return;
 
     const subTemplates = db.templates.find({
-      selector: { workspaceId: currentWorkspace }
+      selector: { workspace_id: currentWorkspace }
     }).$.subscribe(data => {
       const sortedTemplates = (data.map(d => d.toJSON()) as Template[])
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -79,7 +79,7 @@ export function useTemplates() {
       .find({
         selector: { 
           type: 'template_config',
-          workspaceId: currentWorkspace
+          workspace_id: currentWorkspace
         },
       })
       .$.subscribe((data) => {
@@ -175,8 +175,8 @@ export function useTemplates() {
         // Use a small timeout to debounce bulkUpsert if multiple renders happen quickly
         const timeoutId = setTimeout(() => {
           const entries = Object.entries(newConfigs).map(([id, config]) => ({
-            id: `template_config:${id}`,
-            workspaceId: currentWorkspace,
+            id: DbKeys.templateConfig(currentWorkspace, id),
+            workspace_id: currentWorkspace,
             type: 'template_config' as const,
             name: id,
             data: config,
@@ -232,7 +232,7 @@ export function useTemplates() {
           
           // 1. Fetch existing template names in this workspace to avoid duplicates
           const existingTemplates = await db.templates.find({
-            selector: { workspaceId: currentWorkspace }
+            selector: { workspace_id: currentWorkspace }
           }).exec();
           const existingNames = new Set(existingTemplates.map(t => t.name));
 
@@ -241,14 +241,14 @@ export function useTemplates() {
             .filter(ct => !existingNames.has(ct.name))
             .map(ct => ({
               id: generateId('template'),
-              workspaceId: currentWorkspace,
+              workspace_id: currentWorkspace,
               name: ct.name,
               content: ct.content,
               type: ct.type || 'normal',
               isActive: true,
               statisticsCategory: ct.statisticsCategory,
-              statisticsSubCategories: ct.statisticsSubCategories,
-              statisticsRules: ct.statisticsRules,
+              statistics_sub_categories: ct.statistics_sub_categories,
+              statistics_rules: ct.statistics_rules,
             }));
 
           if (newTemplates.length > 0) {
@@ -282,7 +282,7 @@ export function useTemplates() {
     try {
       const validatedTemplate = TemplateSchema.parse({
         ...newTemplate,
-        workspaceId: currentWorkspace,
+        workspace_id: currentWorkspace,
       });
 
       const { sections, layout, fieldNames, fieldTypes, templateOptions, errors } =
@@ -296,7 +296,7 @@ export function useTemplates() {
         logger.info('Template added', {
           id: validatedTemplate.id,
           name: validatedTemplate.name,
-          workspaceId: currentWorkspace,
+          workspace_id: currentWorkspace,
         });
       }
 
@@ -328,17 +328,17 @@ export function useTemplates() {
     }
   };
 
-  const removeTemplate = async (templateId: string) => {
+  const removeTemplate = async (template_id: string) => {
     if (!db || !currentWorkspace) return;
     const repo = createTemplateRepository(db, currentWorkspace);
-    await repo.remove(templateId);
-    logger.info('Template removed', { id: templateId });
+    await repo.remove(template_id);
+    logger.info('Template removed', { id: template_id });
   };
 
-  const updateTemplateConfig = async (templateId: string, config: TemplateConfig) => {
+  const updateTemplateConfig = async (template_id: string, config: TemplateConfig) => {
     if (!db || !currentWorkspace) return;
     const configRepo = createConfigRepository(db, currentWorkspace);
-    await configRepo.upsertTemplateConfig(templateId, config);
+    await configRepo.upsertTemplateConfig(template_id, config);
   };
 
   const updateTemplate = async (updatedTemplate: Template) => {
@@ -346,21 +346,21 @@ export function useTemplates() {
     try {
       const validatedTemplate = TemplateSchema.parse({
         ...updatedTemplate,
-        workspaceId: currentWorkspace,
+        workspace_id: currentWorkspace,
       });
       const repo = createTemplateRepository(db, currentWorkspace);
       await repo.update(validatedTemplate);
-      logger.info('Template updated', { id: validatedTemplate.id, workspaceId: currentWorkspace });
+      logger.info('Template updated', { id: validatedTemplate.id, workspace_id: currentWorkspace });
     } catch (error) {
       logger.error('Failed to update template', error);
       toast.error(getUserFriendlyErrorMessage(error));
     }
   };
 
-  const toggleTemplateActive = useCallback(async (templateId: string) => {
+  const toggleTemplateActive = useCallback(async (template_id: string) => {
     if (!db || !currentWorkspace) return;
     const repo = createTemplateRepository(db, currentWorkspace);
-    await repo.toggle(templateId);
+    await repo.toggle(template_id);
   }, [db, currentWorkspace]);
 
   const clearAllTemplates = useCallback(async () => {
@@ -395,3 +395,6 @@ export function useTemplates() {
     settingsLoaded
   ]);
 }
+
+
+

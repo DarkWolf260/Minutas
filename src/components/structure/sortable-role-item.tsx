@@ -38,8 +38,8 @@ export function SortableRoleItem({
     };
 
     const scopeName =
-        (role.departmentScope ?? []).length > 0
-            ? departments.find((d) => d.id === (role.departmentScope ?? [])[0])?.name ||
+        (role.department_scope ?? []).length > 0
+            ? departments.find((d) => d.id === (role.department_scope ?? [])[0])?.name ||
             'Varios'
             : 'Global';
 
@@ -88,3 +88,4 @@ export function SortableRoleItem({
         </div>
     );
 }
+

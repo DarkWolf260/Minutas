@@ -96,7 +96,7 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
             <PasoModulos
               alSiguiente={() => setPaso(4)}
               alAtras={() => setPaso(2)}
-              alGuardar={(deshabilitados) => saveSettings({ disabledModules: deshabilitados })}
+              alGuardar={(deshabilitados) => saveSettings({ disabled_modules: deshabilitados })}
             />
           )}
           {paso === 4 && (
@@ -140,3 +140,4 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
     </div>
   );
 }
+

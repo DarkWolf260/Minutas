@@ -56,8 +56,8 @@ function generateMockData(
     sections.forEach((section: SectionConfig) => {
         if (section.isRepeatable) {
             const itemData: Record<string, string> = {};
-            section.fieldIds.forEach((fieldId: string) => {
-                itemData[fieldId] = `Dato ${fieldId}`;
+            section.field_ids.forEach((field_id: string) => {
+                itemData[field_id] = `Dato ${field_id}`;
             });
             data[section.id] = [{ ...itemData }, { ...itemData }];
         }
@@ -124,7 +124,7 @@ describe('Template Renderer - Secciones Repetibles', () => {
         expect(parsed.fieldTypes.get('Ubicación')).toBe('textarea');
         expect(parsed.fieldTypes.get('Destino')).toBe('textarea');
         
-        const destinoSection = parsed.sections.find((s: SectionConfig) => s.fieldIds.includes('Destino') && s.isRepeatable);
+        const destinoSection = parsed.sections.find((s: SectionConfig) => s.field_ids.includes('Destino') && s.isRepeatable);
         expect(destinoSection).toBeDefined();
         
         const data: Record<string, unknown> = {
@@ -220,7 +220,7 @@ describe('Template Renderer - Condicionales con Campos', () => {
         console.log('fieldNames:', [...parsed.fieldNames]);
         console.log('layout:', parsed.layout);
         console.log('sections:', JSON.stringify(parsed.sections.map((s: any) => ({
-            id: s.id, condition: s.condition, fieldIds: s.fieldIds, isMapping: s.isMapping
+            id: s.id, condition: s.condition, field_ids: s.field_ids, isMapping: s.isMapping
         })), null, 2));
         console.log('templateOptions ¿Quien informó?:', parsed.templateOptions.get('¿Quien informó?'));
 
@@ -230,6 +230,7 @@ describe('Template Renderer - Condicionales con Campos', () => {
         const condSection = parsed.sections.find((s: any) => s.condition?.value === 'Llamada');
         console.log('condSection:', condSection);
         expect(condSection).toBeDefined();
-        expect(condSection?.fieldIds).toContain('¿Quien informó?');
+        expect(condSection?.field_ids).toContain('¿Quien informó?');
     });
 });
+

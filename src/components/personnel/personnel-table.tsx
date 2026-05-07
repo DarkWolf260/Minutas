@@ -226,8 +226,8 @@ export function PersonnelTable({
                     {member.sex === 'M' ? 'Masc.' : member.sex === 'F' ? 'Fem.' : '-'}
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
-                    {member.roleId && member.roleId !== 'none' ? (
-                      member.roleId
+                    {member.role_id && member.role_id !== 'none' ? (
+                      member.role_id
                     ) : member.cargo ? (
                       member.cargo
                     ) : (
@@ -353,8 +353,8 @@ export function PersonnelTable({
                   <div className="flex flex-col">
                     <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mb-0.5">Cargo</span>
                     <span className="text-sm font-semibold truncate">
-                      {member.roleId && member.roleId !== 'none' ? (
-                        member.roleId
+                      {member.role_id && member.role_id !== 'none' ? (
+                        member.role_id
                       ) : member.cargo ? (
                         member.cargo
                       ) : (
@@ -418,4 +418,5 @@ export function PersonnelTable({
     </div>
   );
 }
+
 

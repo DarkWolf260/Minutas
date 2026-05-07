@@ -64,7 +64,7 @@ export function AjustesGenerales() {
 
   useEffect(() => {
     if (settingsLoaded) {
-      const globalRoles = settings.reportaRoleIds || [];
+      const globalRoles = settings.reportarole_ids || [];
       const currentLastSaved = JSON.stringify(lastSavedReportaRoles.current);
       const incomingGlobal = JSON.stringify(globalRoles);
 
@@ -73,7 +73,7 @@ export function AjustesGenerales() {
         lastSavedReportaRoles.current = globalRoles;
       }
     }
-  }, [settings.reportaRoleIds, settingsLoaded]);
+  }, [settings.reportarole_ids, settingsLoaded]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -92,7 +92,7 @@ export function AjustesGenerales() {
       
       await Promise.all([
         saveDefinitions(newDefinitions),
-        saveSettings({ ...settings, reportaRoleIds: cleanedReportaRoles })
+        saveSettings({ ...settings, reportarole_ids: cleanedReportaRoles })
       ]);
 
       // Update refs to prevent sync loops
@@ -148,20 +148,20 @@ export function AjustesGenerales() {
     
     // Sort roles to ensure consistent order
     const availableRoles = [...roles]
-      .filter(r => !r.isStatus && !localReportaRoles.includes(r.name))
+      .filter(r => !r.is_status && !localReportaRoles.includes(r.name))
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     
     const groups: Record<string, typeof roles> = {};
     
     // 1. Global Roles
-    const globalRoles = availableRoles.filter(r => !r.departmentScope || r.departmentScope.length === 0);
+    const globalRoles = availableRoles.filter(r => !r.department_scope || r.department_scope.length === 0);
     if (globalRoles.length > 0) {
       groups['Cargos Globales'] = globalRoles;
     }
 
     // 2. Department Roles
     departments.forEach(dept => {
-      const deptRoles = availableRoles.filter(r => r.departmentScope?.includes(dept.id));
+      const deptRoles = availableRoles.filter(r => r.department_scope?.includes(dept.id));
       if (deptRoles.length > 0) {
         groups[dept.name] = deptRoles;
       }
@@ -328,3 +328,5 @@ export function AjustesGenerales() {
     </Card>
   );
 }
+
+

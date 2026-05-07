@@ -6,7 +6,7 @@
 
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import type { TemplateParserResult, SectionConfig, FieldConfig, FieldType, SnippetOption, FormDataRecord, FormDataValue } from '@/lib/types';
+import type { TemplateParserResult, SectionConfig, FieldConfig, FieldType, SnippetOption, form_dataRecord, form_dataValue } from '@/lib/types';
 import { formatStaffMember, formatStaffReporta } from '../formatters';
 /** Inline type for semantic resolution results (previously in integration-engine.ts) */
 export interface ResolutionResult {
@@ -55,7 +55,7 @@ export function renderContent(
     config: TemplateParserResult
 ): string {
     if (!content) return '';
-    const localData = (data || {}) as FormDataRecord;
+    const localData = (data || {}) as form_dataRecord;
 
     // First pass: collect all mapping results for fields
     const mappingResults: Record<string, string> = {};
@@ -68,19 +68,19 @@ export function renderContent(
         const condMatch = block.match(/^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(?:(!=|>=|<=|>|<|=)\s*("(.*?)"|(\S+?)))?\s*\]/);
 
         if (condMatch && condMatch[1]) {
-            const condFieldId = condMatch[1].trim();
+            const condfield_id = condMatch[1].trim();
             const operator = condMatch[2];
 
             // Re-use findValueForField for robust case-insensitive lookup
             const actualValue = findValueForField(
-                condFieldId,
+                condfield_id,
                 localData,
                 config.sections || [],
                 {},
                 {}
             );
 
-            const options = config.templateOptions.get(condFieldId);
+            const options = config.templateOptions.get(condfield_id);
 
             if (!operator) {
                 let keyToCompare = actualValue;
@@ -96,7 +96,7 @@ export function renderContent(
                         const key = line.substring(0, eqIdx).trim();
                         const val = line.substring(eqIdx + 1).trim();
                         if (evaluateCondition(keyToCompare, '=', key)) {
-                            mappingResults[condFieldId] = val;
+                            mappingResults[condfield_id] = val;
                             break;
                         }
                     }
@@ -111,14 +111,14 @@ export function renderContent(
     return content.replace(blockRegex, (block) => {
         if (block.startsWith('{')) {
             const tag = block.slice(1, -1);
-            const { fieldId, modifiers } = parseFieldTag(tag, new Map());
+            const { field_id, modifiers } = parseFieldTag(tag, new Map());
 
             // If we have a mapping result for this field, use it
-            let val = mappingResults[fieldId] !== undefined ? mappingResults[fieldId] : localData[fieldId];
+            let val = mappingResults[field_id] !== undefined ? mappingResults[field_id] : localData[field_id];
 
             // If not already mapped, handle standard dropdown value conversion
-            if (mappingResults[fieldId] === undefined) {
-                const options = config.templateOptions.get(fieldId);
+            if (mappingResults[field_id] === undefined) {
+                const options = config.templateOptions.get(field_id);
                 if (options && typeof val === 'string' && /^\d+$/.test(val)) {
                     const idx = parseInt(val, 10);
                     if (options[idx]) val = options[idx].value;
@@ -126,7 +126,7 @@ export function renderContent(
             }
 
             // Unir modificadores de la etiqueta con los modificadores detectados globalmente
-            const globalModifiers = config.fieldModifiers.get(fieldId) || [];
+            const globalModifiers = config.fieldModifiers.get(field_id) || [];
             const allModifiers = [...globalModifiers, ...modifiers];
 
             return applyTextModifier(val, allModifiers);
@@ -138,13 +138,13 @@ export function renderContent(
                 const operator = condMatch[2];
                 if (operator) {
                     // Standard condition
-                    const condFieldId = condMatch[1].trim();
+                    const condfield_id = condMatch[1].trim();
                     const targetValue = condMatch[4] || condMatch[5] || '';
                     const innerContent = condMatch[6];
-                    const actualValue = localData[condFieldId];
+                    const actualValue = localData[condfield_id];
 
                     let valToCompare = actualValue;
-                    const options = config.templateOptions.get(condFieldId);
+                    const options = config.templateOptions.get(condfield_id);
                     if (options && /^\d+$/.test(String(actualValue))) {
                         const idx = parseInt(String(actualValue), 10);
                         const opt = options[idx];
@@ -185,12 +185,12 @@ function isVirtualSection(content: string): boolean {
 /**
  * Resolves a dot-notation property from a resolved field value.
  * e.g. "Director.sex" resolves "Director" first, then reads `.sex` from the first StaffMember.
- * Supported properties: sex, name, cargo, rank, cedula, titulo, roleId, observations, id
+ * Supported properties: sex, name, cargo, rank, cedula, titulo, role_id, observations, id
  */
-function resolvePropertyAccess(fieldId: string, baseValue: FormDataValue): FormDataValue {
-    const dotIndex = fieldId.indexOf('.');
+function resolvePropertyAccess(field_id: string, baseValue: form_dataValue): form_dataValue {
+    const dotIndex = field_id.indexOf('.');
     if (dotIndex === -1) return undefined;
-    const prop = fieldId.slice(dotIndex + 1).trim();
+    const prop = field_id.slice(dotIndex + 1).trim();
     if (!prop) return undefined;
 
     // Array of objects (e.g. StaffMember[]) — read from first element
@@ -198,14 +198,14 @@ function resolvePropertyAccess(fieldId: string, baseValue: FormDataValue): FormD
         const first = baseValue[0] as Record<string, unknown>;
         if (first && typeof first === 'object') {
             const val = first[prop] ?? first[prop.toLowerCase()];
-            return val as FormDataValue;
+            return val as form_dataValue;
         }
     }
     // Plain object
     if (baseValue && typeof baseValue === 'object' && !Array.isArray(baseValue)) {
         const obj = baseValue as Record<string, unknown>;
         const val = obj[prop] ?? obj[prop.toLowerCase()];
-        return val as FormDataValue;
+        return val as form_dataValue;
     }
     return undefined;
 }
@@ -214,46 +214,46 @@ function resolvePropertyAccess(fieldId: string, baseValue: FormDataValue): FormD
  * Helper: Finds value for a field with fallback logic
  */
 function findValueForField(
-    fieldId: string,
-    data: FormDataRecord,
+    field_id: string,
+    data: form_dataRecord,
     sections: SectionConfig[],
     predefinedValues: Record<string, string>,
     dynamicPredefinedValues: Record<string, string>,
-    itemData?: FormDataRecord
-): FormDataValue {
+    itemData?: form_dataRecord
+): form_dataValue {
     // Dot-notation property access: {Director.sex}, {Reporta.cargo}, etc.
-    if (fieldId.includes('.')) {
-        const baseFieldId = fieldId.slice(0, fieldId.indexOf('.'));
-        const baseValue = findValueForField(baseFieldId, data, sections, predefinedValues, dynamicPredefinedValues, itemData);
+    if (field_id.includes('.')) {
+        const basefield_id = field_id.slice(0, field_id.indexOf('.'));
+        const baseValue = findValueForField(basefield_id, data, sections, predefinedValues, dynamicPredefinedValues, itemData);
         // If the base field was found (even as empty array), attempt property resolution
         if (baseValue !== undefined) {
-            return resolvePropertyAccess(fieldId, baseValue);
+            return resolvePropertyAccess(field_id, baseValue);
         }
         return undefined;
     }
 
-    const lowerCaseFieldId = fieldId.toLowerCase();
+    const lowerCasefield_id = field_id.toLowerCase();
 
 
     // 1. Check dynamic predefined values
-    if (dynamicPredefinedValues[fieldId] !== undefined) return dynamicPredefinedValues[fieldId];
+    if (dynamicPredefinedValues[field_id] !== undefined) return dynamicPredefinedValues[field_id];
     const foundKeyInDynamic = Object.keys(dynamicPredefinedValues).find(
-        (k) => k.toLowerCase() === lowerCaseFieldId
+        (k) => k.toLowerCase() === lowerCasefield_id
     );
     if (foundKeyInDynamic) return dynamicPredefinedValues[foundKeyInDynamic];
 
     // 2. Check item data (for repeatable sections)
-    if (itemData && itemData[fieldId] !== undefined) return itemData[fieldId];
+    if (itemData && itemData[field_id] !== undefined) return itemData[field_id];
     if (itemData) {
         const foundKeyInItem = Object.keys(itemData).find(
-            (k) => k.toLowerCase() === lowerCaseFieldId
+            (k) => k.toLowerCase() === lowerCasefield_id
         );
         if (foundKeyInItem) return itemData[foundKeyInItem];
     }
 
     // 3. Check root data
-    if (data[fieldId] !== undefined) return data[fieldId];
-    const foundKeyInRoot = Object.keys(data).find((k) => k.toLowerCase() === lowerCaseFieldId);
+    if (data[field_id] !== undefined) return data[field_id];
+    const foundKeyInRoot = Object.keys(data).find((k) => k.toLowerCase() === lowerCasefield_id);
     if (foundKeyInRoot) return data[foundKeyInRoot];
 
     // 4. Check non-repeatable section data
@@ -261,18 +261,18 @@ function findValueForField(
         const sectionData = data[section.id];
         if (sectionData && typeof sectionData === 'object' && !Array.isArray(sectionData)) {
             const dataObj = sectionData as Record<string, any>;
-            if (dataObj[fieldId] !== undefined) return dataObj[fieldId];
+            if (dataObj[field_id] !== undefined) return dataObj[field_id];
             const foundKeyInSection = Object.keys(dataObj).find(
-                (k) => k.toLowerCase() === lowerCaseFieldId
+                (k) => k.toLowerCase() === lowerCasefield_id
             );
             if (foundKeyInSection) return dataObj[foundKeyInSection];
         }
     }
 
     // 5. Check predefined values
-    if (predefinedValues[fieldId] !== undefined) return predefinedValues[fieldId];
+    if (predefinedValues[field_id] !== undefined) return predefinedValues[field_id];
     const foundKeyInPredefined = Object.keys(predefinedValues).find(
-        (k) => k.toLowerCase() === lowerCaseFieldId
+        (k) => k.toLowerCase() === lowerCasefield_id
     );
     if (foundKeyInPredefined) return predefinedValues[foundKeyInPredefined];
 
@@ -283,21 +283,21 @@ function findValueForField(
  * Helper: Renders a value based on its type and field config
  */
 function renderValue(
-    value: FormDataValue,
-    fieldId: string,
+    value: form_dataValue,
+    field_id: string,
     fields: Record<string, FieldConfig>,
     config: TemplateRenderConfig,
-    data?: FormDataRecord
+    data?: form_dataRecord
 ): string {
     if (value === undefined || value === null) return '';
 
-    const fieldConfig = fields[fieldId];
+    const fieldConfig = fields[field_id];
 
     // Dropdown rendering
     if (fieldConfig?.type === 'dropdown' && typeof value === 'string') {
         const allOptions = [
             ...(fieldConfig.snippetOptions || []),
-            ...(config.templateOptions?.get(fieldId) || []),
+            ...(config.templateOptions?.get(field_id) || []),
         ];
         const selectedOption = allOptions.find((opt: SnippetOption) => opt && opt.label === value);
         if (selectedOption && typeof selectedOption === 'object' && 'value' in selectedOption) {
@@ -342,11 +342,11 @@ function renderValue(
     if (Array.isArray(value)) {
         if (value.length > 0) {
             if (typeof value[0] === 'object' && value[0] !== null && 'name' in value[0]) {
-                const isReporta = fieldId.toLowerCase() === 'reporta';
+                const isReporta = field_id.toLowerCase() === 'reporta';
                 if (isReporta) {
                     return value.map((member) => formatStaffReporta(member as import('@/lib/types').StaffMember)).join(' / ');
                 }
-                const showCedula = fieldId.toLowerCase() === 'analista';
+                const showCedula = field_id.toLowerCase() === 'analista';
                 return value.map((member) => formatStaffMember(member as import('@/lib/types').StaffMember, showCedula)).join(' / ');
             }
         }
@@ -355,19 +355,19 @@ function renderValue(
 
     // Semantic field rendering
     if (fieldConfig?.type === 'semantic') {
-        const result = resolveSemanticConcept(fieldId);
+        const result = resolveSemanticConcept(field_id);
         return String(result.value);
     }
 
     // Apply text modifiers
-    const modifiers = config.fieldModifiers?.get(fieldId) || [];
+    const modifiers = config.fieldModifiers?.get(field_id) || [];
     return applyTextModifier(String(value), modifiers);
 }
 
 /**
  * Helper: Checks if a value has content
  */
-function hasContent(value: FormDataValue): boolean {
+function hasContent(value: form_dataValue): boolean {
     if (value === undefined || value === null) return false;
     if (typeof value === 'string' && value.trim() === '') return false;
     if (Array.isArray(value) && value.length === 0) return false;
@@ -379,16 +379,16 @@ function hasContent(value: FormDataValue): boolean {
  */
 function sectionHasValues(
     section: SectionConfig,
-    data: FormDataRecord,
+    data: form_dataRecord,
     sections: SectionConfig[],
     predefinedValues: Record<string, string>,
     dynamicPredefinedValues: Record<string, string>,
-    dataContext?: FormDataRecord
+    dataContext?: form_dataRecord
 ): boolean {
-    const checkFieldsForContent = (fieldIds: string[], context: FormDataRecord): boolean => {
-        return fieldIds.some((fieldId) => {
+    const checkFieldsForContent = (field_ids: string[], context: form_dataRecord): boolean => {
+        return field_ids.some((field_id) => {
             const value = findValueForField(
-                fieldId,
+                field_id,
                 data,
                 sections,
                 predefinedValues,
@@ -399,25 +399,25 @@ function sectionHasValues(
         });
     };
 
-    const checkSectionRecursive = (s: SectionConfig, context: FormDataRecord): boolean => {
+    const checkSectionRecursive = (s: SectionConfig, context: form_dataRecord): boolean => {
         if (s.hasStaticContent && s.condition) return true;
 
         if (s.isRepeatable) {
-            const sectionData = context[s.id] as FormDataValue[];
+            const sectionData = context[s.id] as form_dataValue[];
             if (!Array.isArray(sectionData) || sectionData.length === 0) return false;
             return sectionData.some(
                 (item) =>
-                    checkFieldsForContent(s.fieldIds, item as FormDataRecord) ||
+                    checkFieldsForContent(s.field_ids, item as form_dataRecord) ||
                     (s.layout || []).some(
                         (id) =>
                             (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) &&
-                            checkSectionRecursive(sections.find((sec) => sec.id === id)!, item as FormDataRecord)
+                            checkSectionRecursive(sections.find((sec) => sec.id === id)!, item as form_dataRecord)
                     )
             );
         } else {
-            const nestedContext = (context[s.id] || context) as FormDataRecord;
+            const nestedContext = (context[s.id] || context) as form_dataRecord;
             return (
-                checkFieldsForContent(s.fieldIds, nestedContext) ||
+                checkFieldsForContent(s.field_ids, nestedContext) ||
                 (s.layout || []).some(
                     (id) =>
                         (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) &&
@@ -427,7 +427,7 @@ function sectionHasValues(
         }
     };
 
-    const context = dataContext || (data[section.id] ? data[section.id] as FormDataRecord : data);
+    const context = dataContext || (data[section.id] ? data[section.id] as form_dataRecord : data);
     return checkSectionRecursive(section, context);
 }
 
@@ -436,13 +436,13 @@ function sectionHasValues(
  */
 function renderSection(
     sectionId: string,
-    data: FormDataRecord,
+    data: form_dataRecord,
     sections: SectionConfig[],
     fields: Record<string, FieldConfig>,
     config: TemplateRenderConfig,
     predefinedValues: Record<string, string>,
     dynamicPredefinedValues: Record<string, string>,
-    currentData: FormDataRecord,
+    currentData: form_dataRecord,
     mappingResults: Record<string, string> = {}
 ): string {
     const section = sections.find((s) => s.id === sectionId);
@@ -451,7 +451,7 @@ function renderSection(
     // Evaluate condition if present
     if (section.condition) {
         let valToCompare = findValueForField(
-            section.condition.fieldId,
+            section.condition.field_id,
             data,
             sections,
             predefinedValues,
@@ -460,7 +460,7 @@ function renderSection(
         );
 
         // Resolve dropdown labels for comparison
-        const options = config.templateOptions?.get(section.condition.fieldId);
+        const options = config.templateOptions?.get(section.condition.field_id);
         if (options && valToCompare !== undefined && valToCompare !== null) {
             const valStr = String(valToCompare);
             const opt = options.find(o =>
@@ -509,9 +509,9 @@ function renderSection(
 
 
 
-    const itemsWithContent = (itemsToProcess as FormDataRecord[]).filter(
-        (item: FormDataRecord) => {
-            const hasFields = section.fieldIds.some((fid: string) =>
+    const itemsWithContent = (itemsToProcess as form_dataRecord[]).filter(
+        (item: form_dataRecord) => {
+            const hasFields = section.field_ids.some((fid: string) =>
                 hasContent(findValueForField(fid, data, sections, predefinedValues, dynamicPredefinedValues, item))
             );
             const hasNestedContent = (section.layout || []).some(
@@ -531,10 +531,10 @@ function renderSection(
     if (itemsWithContent.length === 0) return '';
 
     const renderedItemsArray = itemsWithContent
-        .map((item: FormDataRecord, index: number) => {
+        .map((item: form_dataRecord, index: number) => {
 
             let itemContent = section.originalContent || '';
-            let itemLayout = section.layout && section.layout.length > 0 ? section.layout : section.fieldIds;
+            let itemLayout = section.layout && section.layout.length > 0 ? section.layout : section.field_ids;
 
             itemLayout.forEach((id: string) => {
                 if (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) {
@@ -578,8 +578,8 @@ function renderSection(
                                 const opPart = cond.operator
                                     ? `\\s*${escapeRegExp(cond.operator)}\\s*(?:"${escapeRegExp(cond.value)}"|${escapeRegExp(cond.value)})`
                                     : '';
-                                const escapedFieldId = escapeRegExp(cond.fieldId);
-                                const fieldPart = `(?:\\{\\s*${escapedFieldId}\\s*\\}|${escapedFieldId})`;
+                                const escapedfield_id = escapeRegExp(cond.field_id);
+                                const fieldPart = `(?:\\{\\s*${escapedfield_id}\\s*\\}|${escapedfield_id})`;
                                 const modeSuffix = `(?:\\s*:(?:show|hide))?`;
                                 header = `\\?\\s*${fieldPart}${opPart}${modeSuffix}`;
                             } else if (
@@ -738,7 +738,7 @@ function renderSection(
  */
 export function renderContentWithSections(
     template: string,
-    data: FormDataRecord,
+    data: form_dataRecord,
     config: TemplateRenderConfig,
     predefinedValues: Record<string, string>,
     dynamicPredefinedValues: Record<string, string> = {}
@@ -755,12 +755,12 @@ export function renderContentWithSections(
         const innerContent = mappingMatch[1];
         const condMatch = block.match(/^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(?:(!=|>=|<=|>|<|=)\s*("(.*?)"|(\S+?)))?\s*\]/);
         if (condMatch && condMatch[1]) {
-            const condFieldId = condMatch[1].trim();
+            const condfield_id = condMatch[1].trim();
             const operator = condMatch[2];
-            const actualValue = findValueForField(condFieldId, data, sections, predefinedValues, dynamicPredefinedValues);
+            const actualValue = findValueForField(condfield_id, data, sections, predefinedValues, dynamicPredefinedValues);
             if (!operator) {
                 let keyToCompare = actualValue;
-                const options = config.templateOptions?.get(condFieldId);
+                const options = config.templateOptions?.get(condfield_id);
                 if (options && typeof actualValue === 'string') {
                     const opt = options.find((o) => o.value === actualValue || o.label === actualValue);
                     if (opt) keyToCompare = opt.label;
@@ -772,7 +772,7 @@ export function renderContentWithSections(
                         const key = line.substring(0, eqIdx).trim();
                         const val = line.substring(eqIdx + 1).trim();
                         if (evaluateCondition(keyToCompare, '=', key)) {
-                            mappingResults[condFieldId] = val;
+                            mappingResults[condfield_id] = val;
                             break;
                         }
                     }
@@ -821,8 +821,8 @@ export function renderContentWithSections(
                     ? `\\s*${escapeRegExp(cond.operator)}\\s*(?:"${escapeRegExp(cond.value)}"|${escapeRegExp(cond.value)})`
                     : '';
                 // Field name may appear with or without braces: [?{Campo}=val] or [?Campo=val]
-                const escapedFieldId = escapeRegExp(cond.fieldId);
-                const fieldPart = `(?:\\{\\s*${escapedFieldId}\\s*\\}|${escapedFieldId})`;
+                const escapedfield_id = escapeRegExp(cond.field_id);
+                const fieldPart = `(?:\\{\\s*${escapedfield_id}\\s*\\}|${escapedfield_id})`;
                 // Optional :show/:hide suffix at end of condition header
                 const modeSuffix = `(?:\\s*:(?:show|hide))?`;
                 headerPart = `\\?\\s*${fieldPart}${opPart}${modeSuffix}`;
@@ -876,19 +876,19 @@ export function renderContentWithSections(
     // Regex extended to also handle dotted field names like {Director.sex}.
     finalContent = finalContent.replace(
         /\{([^:{}]+?(?:\.[^:{}]+?)?)(:[^|}{]+)*(?:\|[^{}]+?)?\}/g,
-        (match, fieldId: string) => {
+        (match, field_id: string) => {
             if (match.includes(':semantic')) return match;
-            fieldId = fieldId.trim();
-            const lowerFieldId = fieldId.toLowerCase();
-            const baseVal = findValueForField(fieldId, data, sections, predefinedValues, dynamicPredefinedValues);
+            field_id = field_id.trim();
+            const lowerfield_id = field_id.toLowerCase();
+            const baseVal = findValueForField(field_id, data, sections, predefinedValues, dynamicPredefinedValues);
 
             // Mapping results are only applicable for non-dotted field names
-            const mappingKey = !fieldId.includes('.')
-                ? Object.keys(mappingResults).find(k => k.toLowerCase() === lowerFieldId)
+            const mappingKey = !field_id.includes('.')
+                ? Object.keys(mappingResults).find(k => k.toLowerCase() === lowerfield_id)
                 : undefined;
             const formValue = mappingKey !== undefined ? mappingResults[mappingKey] : baseVal;
 
-            return hasContent(formValue) ? renderValue(formValue, fieldId, fields, config) : '';
+            return hasContent(formValue) ? renderValue(formValue, field_id, fields, config) : '';
         }
     );
 
@@ -916,7 +916,7 @@ export function renderContentWithSections(
  */
 export function renderFinalReport(
     template: string,
-    data: FormDataRecord,
+    data: form_dataRecord,
     config: { fields: Record<string, FieldConfig>; sections: SectionConfig[]; layout: string[] },
     predefinedValues: Record<string, string>,
     summaryOnly: boolean = false,
@@ -1016,3 +1016,5 @@ export function renderFinalReport(
         return 'Error al generar el reporte. La plantilla podría tener un formato incorrecto o faltan datos esenciales.';
     }
 }
+
+

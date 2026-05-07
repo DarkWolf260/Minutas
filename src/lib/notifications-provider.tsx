@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 interface NotificationsContextType {
   notifications: NotificationItem[];
   unreadCount: number;
-  addNotification: (notification: Omit<NotificationItem, 'id' | 'workspaceId' | 'timestamp' | 'read'>) => Promise<void>;
+  addNotification: (notification: Omit<NotificationItem, 'id' | 'workspace_id' | 'timestamp' | 'read'>) => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   clearAll: () => Promise<void>;
@@ -33,7 +33,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
     const sub = db.notifications
       .find({
         selector: {
-          workspaceId: currentWorkspace,
+          workspace_id: currentWorkspace,
         },
         sort: [{ timestamp: 'desc' }],
       })
@@ -48,14 +48,14 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
   }, [db, currentWorkspace]);
 
   const addNotification = useCallback(
-    async (notification: Omit<NotificationItem, 'id' | 'workspaceId' | 'timestamp' | 'read'>) => {
+    async (notification: Omit<NotificationItem, 'id' | 'workspace_id' | 'timestamp' | 'read'>) => {
       if (!db || !currentWorkspace) return;
 
       try {
         const newNotification: NotificationItem = {
           ...notification,
           id: `notif-${Date.now()}-${Math.random().toString(36).slice(-4)}`,
-          workspaceId: currentWorkspace,
+          workspace_id: currentWorkspace,
           timestamp: new Date().toISOString(),
           read: false,
         };
@@ -96,7 +96,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
       const unreadDocs = await db.notifications
         .find({
           selector: {
-            workspaceId: currentWorkspace,
+            workspace_id: currentWorkspace,
             read: false,
           },
         })
@@ -116,7 +116,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
       const allDocs = await db.notifications
         .find({
           selector: {
-            workspaceId: currentWorkspace,
+            workspace_id: currentWorkspace,
           },
         })
         .exec();
@@ -153,3 +153,5 @@ export function useNotifications() {
   }
   return context;
 }
+
+

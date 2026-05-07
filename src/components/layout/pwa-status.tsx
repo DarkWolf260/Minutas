@@ -80,15 +80,16 @@ export function PWAStatus() {
                         <MonitorSmartphone className="h-3.5 w-3.5 animate-bounce" />
                         <span>Instalar PC Reportes</span>
                         <div className="h-4 w-px bg-primary/20 mx-1" />
-                        <button
+                        <span
+                            role="button"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setShowInstallBtn(false);
                             }}
-                            className="hover:bg-primary/20 p-0.5 rounded-full transition-colors"
+                            className="hover:bg-primary/20 p-0.5 rounded-full transition-colors cursor-pointer flex items-center justify-center w-4 h-4"
                         >
                             ×
-                        </button>
+                        </span>
                     </Button>
                 </div>
             )}

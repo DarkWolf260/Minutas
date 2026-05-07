@@ -8,12 +8,12 @@ import type { GuardReport } from '@/lib/types';
 import { DbKeys } from './keys';
 import { safeWrite, silentWrite } from './base.repository';
 
-export function createHistoryRepository(db: MinutasDatabase, workspaceId: string) {
-  const ws = workspaceId;
+export function createHistoryRepository(db: MinutasDatabase, workspace_id: string) {
+  const ws = workspace_id;
 
   const watchGuardHistory = () =>
     db.history.find({
-      selector: { type: 'guard_history', workspaceId: ws },
+      selector: { type: 'guard_history', workspace_id: ws },
       sort: [{ date: 'desc' }],
     }).$;
 
@@ -22,11 +22,11 @@ export function createHistoryRepository(db: MinutasDatabase, workspaceId: string
       () =>
         db.history.upsert({
           id: DbKeys.guardHistory(ws, report.id),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'guard_history',
           date: report.date,
-          personnelId: 'none',
-          data: { ...report, workspaceId: ws },
+          personnel_id: 'none',
+          data: { ...report, workspace_id: ws },
         }),
       {
         feature: 'GuardHistory',
@@ -52,7 +52,7 @@ export function createHistoryRepository(db: MinutasDatabase, workspaceId: string
     silentWrite(
       async () => {
         const allDocs = await db.history
-          .find({ selector: { type: 'guard_history', workspaceId: ws } })
+          .find({ selector: { type: 'guard_history', workspace_id: ws } })
           .exec();
         await db.history.bulkRemove(allDocs.map((d) => d.primary));
       },
@@ -63,3 +63,5 @@ export function createHistoryRepository(db: MinutasDatabase, workspaceId: string
 }
 
 export type HistoryRepository = ReturnType<typeof createHistoryRepository>;
+
+

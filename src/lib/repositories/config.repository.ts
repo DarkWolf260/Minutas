@@ -10,8 +10,8 @@ import type { AppSettings, ReportDraft, FieldConfig, Guard, TemplateConfig } fro
 import { DbKeys } from './keys';
 import { safeWrite, silentWrite } from './base.repository';
 
-export function createConfigRepository(db: MinutasDatabase, workspaceId: string) {
-  const ws = workspaceId;
+export function createConfigRepository(db: MinutasDatabase, workspace_id: string) {
+  const ws = workspace_id;
 
   // ─── Settings ────────────────────────────────────────────────────────────
 
@@ -29,9 +29,9 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
       () =>
         db.configs.upsert({
           id: DbKeys.settings(ws),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'settings',
-          data: { ...current, ...patch, workspaceId: ws },
+          data: { ...current, ...patch },
         }),
       { feature: 'Settings' }
     );
@@ -41,9 +41,9 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
       () =>
         db.configs.upsert({
           id: DbKeys.settings(ws),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'settings',
-          data: { ...defaults, workspaceId: ws },
+          data: { ...defaults },
         }),
       { feature: 'Settings' }
     );
@@ -58,10 +58,10 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
       () =>
         db.configs.upsert({
           id: DbKeys.draft(ws),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'draft',
           name: 'active-draft',
-          data: { ...draft, workspaceId: ws, lastSaved: new Date().toISOString() },
+          data: { ...draft, lastSaved: new Date().toISOString() },
         }),
       { feature: 'Drafts' }
     );
@@ -85,9 +85,9 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
       () =>
         db.configs.upsert({
           id: DbKeys.profile(ws),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'profile',
-          data: { ...current, ...patch, workspaceId: ws },
+          data: { ...current, ...patch },
         }),
       { feature: 'Profile', rethrow: true }
     );
@@ -97,9 +97,9 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
       () =>
         db.configs.upsert({
           id: DbKeys.profile(ws),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'profile',
-          data: { ...defaults, workspaceId: ws },
+          data: { ...defaults },
         }),
       { feature: 'Profile' }
     );
@@ -114,7 +114,7 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
 
   const watchFieldDefinitions = () =>
     db.configs.find({
-      selector: { type: 'field_definition', workspaceId: ws },
+      selector: { type: 'field_definition', workspace_id: ws },
     }).$;
 
   const bulkInitFieldDefinitions = async (
@@ -122,10 +122,10 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
   ) => {
     const entries = Object.entries(defs).map(([name, config]) => ({
       id: DbKeys.fieldDefinition(ws, name),
-      workspaceId: ws,
+      workspace_id: ws,
       type: 'field_definition' as const,
       name,
-      data: { ...config, workspaceId: ws },
+      data: { ...config },
     }));
     return silentWrite(() => db.configs.bulkInsert(entries as any), {
       feature: 'FieldDefinitions',
@@ -138,7 +138,7 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
     silentWrite(
       async () => {
         const allDocs = await db.configs
-          .find({ selector: { type: 'field_definition', workspaceId: ws } })
+          .find({ selector: { type: 'field_definition', workspace_id: ws } })
           .exec();
         const newIds = new Set(Object.keys(defs));
         const toDelete = allDocs.filter(
@@ -149,10 +149,10 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
         }
         const entries = Object.entries(defs).map(([name, config]) => ({
           id: DbKeys.fieldDefinition(ws, name),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'field_definition' as const,
           name,
-          data: { ...config, workspaceId: ws },
+          data: { ...config },
         }));
         await db.configs.bulkUpsert(entries as any);
       },
@@ -164,10 +164,10 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
       () =>
         db.configs.upsert({
           id: DbKeys.fieldDefinition(ws, fieldName),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'field_definition',
           name: fieldName,
-          data: { ...config, workspaceId: ws },
+          data: { ...config },
         } as any),
       { feature: 'FieldDefinitions' }
     );
@@ -186,15 +186,15 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
     silentWrite(
       async () => {
         const allDocs = await db.configs
-          .find({ selector: { type: 'field_definition', workspaceId: ws } })
+          .find({ selector: { type: 'field_definition', workspace_id: ws } })
           .exec();
         await db.configs.bulkRemove(allDocs.map((d) => d.primary));
         const entries = Object.entries(defaults).map(([name, config]) => ({
           id: DbKeys.fieldDefinition(ws, name),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'field_definition' as const,
           name,
-          data: { ...config, workspaceId: ws },
+          data: { ...config },
         }));
         await db.configs.bulkInsert(entries as any);
       },
@@ -205,16 +205,16 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
 
   const watchGuards = () =>
     db.configs.find({
-      selector: { type: 'guard', workspaceId: ws },
+      selector: { type: 'guard', workspace_id: ws },
     }).$;
 
   const bulkInitGuards = async (guards: Guard[]) => {
     const docs = guards.map((g) => ({
       id: DbKeys.guard(ws, g.id),
-      workspaceId: ws,
+      workspace_id: ws,
       type: 'guard' as const,
       name: g.id,
-      data: { ...g, workspaceId: ws },
+      data: { ...g },
     }));
     return silentWrite(() => db.configs.bulkInsert(docs), { feature: 'Guards' });
   };
@@ -223,7 +223,7 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
     silentWrite(
       async () => {
         const existingDocs = await db.configs
-          .find({ selector: { type: 'guard', workspaceId: ws } })
+          .find({ selector: { type: 'guard', workspace_id: ws } })
           .exec();
         const newIds = new Set(guards.map((g) => DbKeys.guard(ws, g.id)));
         const toDelete = existingDocs.filter((doc) => !newIds.has(doc.id));
@@ -231,10 +231,10 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
         if (guards.length > 0) {
           const docs = guards.map((g) => ({
             id: DbKeys.guard(ws, g.id),
-            workspaceId: ws,
+            workspace_id: ws,
             type: 'guard' as const,
             name: g.id,
-            data: { ...g, workspaceId: ws },
+            data: { ...g },
           }));
           await db.configs.bulkUpsert(docs);
         }
@@ -246,15 +246,15 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
     silentWrite(
       async () => {
         const allDocs = await db.configs
-          .find({ selector: { type: 'guard', workspaceId: ws } })
+          .find({ selector: { type: 'guard', workspace_id: ws } })
           .exec();
         await Promise.all(allDocs.map((d) => d.remove()));
         const docs = defaults.map((g) => ({
           id: DbKeys.guard(ws, g.id),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'guard' as const,
           name: g.id,
-          data: { ...g, workspaceId: ws },
+          data: { ...g },
         }));
         await db.configs.bulkInsert(docs);
       },
@@ -265,25 +265,25 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
 
   const watchTemplateConfigs = () =>
     db.configs.find({
-      selector: { type: 'template_config', workspaceId: ws },
+      selector: { type: 'template_config', workspace_id: ws },
     }).$;
 
-  const upsertTemplateConfig = async (templateId: string, config: TemplateConfig) =>
+  const upsertTemplateConfig = async (template_id: string, config: TemplateConfig) =>
     safeWrite(
       () =>
         db.configs.upsert({
-          id: DbKeys.templateConfig(templateId),
-          workspaceId: ws,
+          id: DbKeys.templateConfig(ws, template_id),
+          workspace_id: ws,
           type: 'template_config',
-          name: templateId,
+          name: template_id,
           data: config,
         } as any),
       { feature: 'Templates' }
     );
 
-  const removeTemplateConfig = async (templateId: string) => {
+  const removeTemplateConfig = async (template_id: string) => {
     const doc = await db.configs
-      .findOne(DbKeys.templateConfig(templateId))
+      .findOne(DbKeys.templateConfig(ws, template_id))
       .exec();
     if (doc) await doc.remove();
   };
@@ -292,7 +292,7 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
     silentWrite(
       async () => {
         const allDocs = await db.configs
-          .find({ selector: { type: 'template_config', workspaceId: ws } })
+          .find({ selector: { type: 'template_config', workspace_id: ws } })
           .exec();
         await Promise.all(allDocs.map((d: any) => d.remove()));
       },
@@ -336,3 +336,7 @@ export function createConfigRepository(db: MinutasDatabase, workspaceId: string)
 }
 
 export type ConfigRepository = ReturnType<typeof createConfigRepository>;
+
+
+
+

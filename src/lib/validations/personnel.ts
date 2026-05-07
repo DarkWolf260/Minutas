@@ -50,9 +50,9 @@ export const PersonnelSchema = z.object({
     .optional(),
 });
 
-export type PersonnelFormData = z.infer<typeof PersonnelSchema>;
+export type Personnelform_data = z.infer<typeof PersonnelSchema>;
 
-export type GuardFormData = z.infer<typeof GuardSchema>;
+export type Guardform_data = z.infer<typeof GuardSchema>;
 
 /**
  * CSV Import Row validation (for bulk personnel import)
@@ -80,7 +80,7 @@ export function formatZodError(error: z.ZodError): string {
  */
 export function validatePersonnel(
   data: unknown
-): { success: true; data: PersonnelFormData } | { success: false; error: string } {
+): { success: true; data: Personnelform_data } | { success: false; error: string } {
   const result = PersonnelSchema.safeParse(data);
   if (result.success) {
     return { success: true, data: result.data };
@@ -90,10 +90,11 @@ export function validatePersonnel(
 
 export function validateGuard(
   data: unknown
-): { success: true; data: GuardFormData } | { success: false; error: string } {
+): { success: true; data: Guardform_data } | { success: false; error: string } {
   const result = GuardSchema.safeParse(data);
   if (result.success) {
     return { success: true, data: result.data };
   }
   return { success: false, error: formatZodError(result.error) };
 }
+

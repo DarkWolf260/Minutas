@@ -65,21 +65,21 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
           content: cloudTemplate.content,
           type: cloudTemplate.type || existing.type || 'normal',
           statisticsCategory: cloudTemplate.statisticsCategory || existing.statisticsCategory,
-          statisticsSubCategories: cloudTemplate.statisticsSubCategories || existing.statisticsSubCategories,
-          statisticsRules: cloudTemplate.statisticsRules || existing.statisticsRules,
+          statistics_sub_categories: cloudTemplate.statistics_sub_categories || existing.statistics_sub_categories,
+          statistics_rules: cloudTemplate.statistics_rules || existing.statistics_rules,
         });
         if (!silent) toast.success(`Plantilla "${cloudTemplate.name}" actualizada.`);
       } else {
         const newTemplate: Template = {
           id: generateId('template'),
-          workspaceId: currentWorkspace,
+          workspace_id: currentWorkspace,
           name: cloudTemplate.name,
           content: cloudTemplate.content,
           type: cloudTemplate.type || 'normal',
           isActive: true,
           statisticsCategory: cloudTemplate.statisticsCategory,
-          statisticsSubCategories: cloudTemplate.statisticsSubCategories,
-          statisticsRules: cloudTemplate.statisticsRules,
+          statistics_sub_categories: cloudTemplate.statistics_sub_categories,
+          statistics_rules: cloudTemplate.statistics_rules,
         };
         await addTemplate(newTemplate);
         if (!silent) toast.success(`Plantilla "${cloudTemplate.name}" descargada.`);
@@ -316,3 +316,5 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
     </Dialog>
   );
 }
+
+

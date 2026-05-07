@@ -58,7 +58,7 @@ export function GuardAssignmentPanel({
     const leaderRoles = [LEADER_ROLES.DIRECTOR, LEADER_ROLES.JEFE_OPERACIONES];
     leaderRoles.forEach((roleName) => {
       const member = personnel.find(
-        (p) => p.roleId?.toLowerCase() === roleName.toLowerCase()
+        (p) => p.role_id?.toLowerCase() === roleName.toLowerCase()
       );
       if (member) preStaff[roleName] = [member];
     });
@@ -242,4 +242,5 @@ export function GuardAssignmentPanel({
     </div>
   );
 }
+
 

@@ -28,22 +28,16 @@ export function useRoles() {
         setRoles(
           data.map((d) => {
             const json = d.toJSON();
-            return { ...(json.data as StaffRole), workspaceId: currentWorkspace };
+            return { ...(json.data as StaffRole), workspace_id: currentWorkspace };
           }) as StaffRole[]
         );
         initializedFlag = true;
         setIsLoaded(true);
       } else if (!initializedFlag) {
         initializedFlag = true;
-        try {
-          await repo.bulkInitRoles(DEFAULT_ROLES);
-        } catch (err) {
-          logger.error('Failed to auto-seed default roles', err, {
-            feature: 'Roles',
-            workspaceId: currentWorkspace,
-          });
-          setIsLoaded(true);
-        }
+        // Just use defaults in state, do NOT init in DB to avoid cloud sync conflicts
+        setRoles(DEFAULT_ROLES as StaffRole[]);
+        setIsLoaded(true);
       } else {
         setRoles([]);
         setIsLoaded(true);
@@ -72,3 +66,4 @@ export function useRoles() {
 
   return { roles, saveRoles, isLoaded, clearAllRoles };
 }
+

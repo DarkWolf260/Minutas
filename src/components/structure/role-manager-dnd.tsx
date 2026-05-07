@@ -72,7 +72,7 @@ function SortableRoleItem({
           <div className="flex flex-col items-center mr-1">
             <span className="text-[8px] uppercase font-bold text-muted-foreground leading-none mb-1">Único</span>
             <Switch
-              checked={role.isSingle}
+              checked={role.is_single}
               onCheckedChange={(checked) => onToggleSingle(role.name, checked)}
               aria-label={`Marcar como cargo único para ${role.name}`}
               className="scale-75"
@@ -81,7 +81,7 @@ function SortableRoleItem({
           <div className="flex flex-col items-center mr-1">
             <span className="text-[8px] uppercase font-bold text-muted-foreground leading-none mb-1">Ocultar</span>
             <Switch
-              checked={role.isHidden || false}
+              checked={role.is_hidden || false}
               onCheckedChange={(checked) => onToggleHidden(role.name, checked)}
               aria-label={`Ocultar cargo ${role.name} de reportes`}
               className="scale-75"
@@ -194,8 +194,8 @@ export function RoleManagerDnD({
     ) {
       const newRole: StaffRole = {
         name: newRoleName.trim(),
-        isSingle: false,
-        departmentScope: [DEPARTMENT_IDS.OPERATIONS],
+        is_single: false,
+        department_scope: [DEPARTMENT_IDS.OPERATIONS],
       };
       onRolesChange([...roles, newRole]);
       setNewRoleName('');
@@ -203,7 +203,7 @@ export function RoleManagerDnD({
   };
 
   const handleToggleSingle = (roleName: string, checked: boolean) => {
-    onRolesChange(roles.map((r) => (r.name === roleName ? { ...r, isSingle: checked } : r)));
+    onRolesChange(roles.map((r) => (r.name === roleName ? { ...r, is_single: checked } : r)));
   };
 
   const handleSaveChanges = () => {
@@ -213,7 +213,7 @@ export function RoleManagerDnD({
   };
   
   const handleToggleHidden = (roleName: string, checked: boolean) => {
-    onRolesChange(roles.map((r) => (r.name === roleName ? { ...r, isHidden: checked } : r)));
+    onRolesChange(roles.map((r) => (r.name === roleName ? { ...r, is_hidden: checked } : r)));
   };
 
   const allDepartments = useMemo(() => departments, [departments]);
@@ -227,7 +227,7 @@ export function RoleManagerDnD({
     });
 
     roles.forEach((role) => {
-      const scope = (role.departmentScope ?? [])[0] || 'unassigned';
+      const scope = (role.department_scope ?? [])[0] || 'unassigned';
       const bucket = buckets[scope];
       if (bucket) {
         bucket.push(role);
@@ -291,7 +291,7 @@ export function RoleManagerDnD({
     const newRoles = [...roles];
     newRoles[activeIndex] = {
       ...currentRole,
-      departmentScope: overContainer === 'unassigned' ? [] : [overContainer],
+      department_scope: overContainer === 'unassigned' ? [] : [overContainer],
     };
 
     onRolesChange(newRoles);
@@ -400,7 +400,7 @@ export function RoleManagerDnD({
                 {activeRole.name}
               </span>
               <div className="flex items-center space-x-1 shrink-0 ml-auto">
-                <Switch checked={activeRole.isSingle} />
+                <Switch checked={activeRole.is_single} />
                 <Button
                   variant="ghost"
                   size="icon"
@@ -416,3 +416,4 @@ export function RoleManagerDnD({
     </DndContext>
   );
 }
+

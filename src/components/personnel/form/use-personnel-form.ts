@@ -16,7 +16,7 @@ export function usePersonnelForm({ member, roles, departments, onSave, open }: U
   const [name, setName] = useState('');
   const [cedula, setCedula] = useState('');
   const [rank, setRank] = useState('OPC');
-  const [roleId, setRoleId] = useState('none');
+  const [role_id, setrole_id] = useState('none');
   const [department, setDepartment] = useState('none');
   const [status, setStatus] = useState<PersonnelStatus>('activo');
   const [sex, setSex] = useState<'M' | 'F' | 'none'>('none');
@@ -31,9 +31,9 @@ export function usePersonnelForm({ member, roles, departments, onSave, open }: U
       const matchedRank = RANK_OPTIONS.find(r => normalizeString(r.value) === normalizeString(storedRank));
       setRank(matchedRank?.value || 'OPC');
 
-      const storedRole = member.roleId || member.cargo || '';
+      const storedRole = member.role_id || member.cargo || '';
       const matchedRole = roles.find(r => normalizeString(r.name) === normalizeString(storedRole));
-      setRoleId(matchedRole?.name || 'none');
+      setrole_id(matchedRole?.name || 'none');
 
       const storedDept = member.department || '';
       const matchById = departments.find((d) => d.id === storedDept);
@@ -49,7 +49,7 @@ export function usePersonnelForm({ member, roles, departments, onSave, open }: U
       setName('');
       setCedula('');
       setRank('OPC');
-      setRoleId('none');
+      setrole_id('none');
       setDepartment('none');
       setStatus('activo');
       setSex('none');
@@ -67,8 +67,8 @@ export function usePersonnelForm({ member, roles, departments, onSave, open }: U
       name: name.trim(),
       cedula: cedula || undefined,
       rank,
-      roleId: roleId === 'none' ? undefined : roleId,
-      cargo: roleId === 'none' ? undefined : roleId,
+      role_id: role_id === 'none' ? undefined : role_id,
+      cargo: role_id === 'none' ? undefined : role_id,
       department: department === 'none' ? undefined : department,
       status,
       sex: sex === 'none' ? undefined : sex as 'M' | 'F',
@@ -86,7 +86,7 @@ export function usePersonnelForm({ member, roles, departments, onSave, open }: U
     name, setName,
     cedula, setCedula,
     rank, setRank,
-    roleId, setRoleId,
+    role_id, setrole_id,
     department, setDepartment,
     status, setStatus,
     sex, setSex,
@@ -95,3 +95,4 @@ export function usePersonnelForm({ member, roles, departments, onSave, open }: U
     isEditMode: member !== null
   };
 }
+

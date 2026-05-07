@@ -227,14 +227,14 @@ function extractSectionToken(
     );
 
     if (conditionalMatch) {
-        const [, fieldId, operator, value] = conditionalMatch;
+        const [, field_id, operator, value] = conditionalMatch;
         const cleanValue = value?.trim().replace(/^"|"$/g, '') || '';
 
         return {
             type: 'section_start',
             label: undefined,
             condition: {
-                fieldId: fieldId?.trim() || '',
+                field_id: field_id?.trim() || '',
                 operator: (operator as ConditionalExpression['operator']) || '=',
                 value: cleanValue,
                 conditionMode,
@@ -259,6 +259,7 @@ function extractSectionToken(
         endPos: pos,
     };
 }
+
 
 
 

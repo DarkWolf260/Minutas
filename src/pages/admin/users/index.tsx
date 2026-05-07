@@ -10,7 +10,14 @@ import {
   XCircle, 
   Filter,
   ArrowLeft,
-  MoreVertical
+  MoreVertical,
+  RefreshCw,
+  User,
+  Mail,
+  Calendar,
+  Fingerprint,
+  Clock,
+  ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,16 +32,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export default function AdminUsersPage() {
   const navigate = useNavigate();
-  const { users, loading, toggleAdmin, toggleApproval, deleteUser } = useAdminUsers();
+  const { users, loading, toggleAdmin, toggleApproval, deleteUser, refresh } = useAdminUsers();
   const [search, setSearch] = useState('');
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
   const filteredUsers = users.filter(u => 
-    u.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase()) ||
-    u.cedula_number.includes(search)
+    (u.full_name?.toLowerCase() || '').includes(search.toLowerCase()) ||
+    (u.email?.toLowerCase() || '').includes(search.toLowerCase()) ||
+    (u.cedula_number || '').includes(search)
   );
 
   return (
@@ -72,6 +87,15 @@ export default function AdminUsersPage() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="rounded-xl shrink-0"
+              onClick={() => refresh()}
+              disabled={loading}
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
             <Button variant="outline" size="icon" className="rounded-xl shrink-0">
               <Filter className="h-4 w-4" />
             </Button>
@@ -116,8 +140,8 @@ export default function AdminUsersPage() {
                         <tr key={user.id} className="hover:bg-muted/30 transition-colors group">
                           <td className="px-6 py-4">
                             <div className="flex flex-col">
-                              <span className="font-bold text-foreground tracking-tight">{user.full_name}</span>
-                              <span className="text-xs text-muted-foreground">{user.email}</span>
+                              <span className="font-bold text-foreground tracking-tight">{user.full_name || 'Sin Nombre'}</span>
+                              <span className="text-xs text-muted-foreground">{user.email || 'Sin Email'}</span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
@@ -166,7 +190,11 @@ export default function AdminUsersPage() {
                                   Opciones de Usuario
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="cursor-pointer py-2.5">
+                                <DropdownMenuItem 
+                                  className="cursor-pointer py-2.5"
+                                  onClick={() => setSelectedUser(user)}
+                                >
+                                  <ExternalLink className="mr-2 h-4 w-4" />
                                   Ver Detalles
                                 </DropdownMenuItem>
                                 <DropdownMenuItem 
@@ -189,6 +217,111 @@ export default function AdminUsersPage() {
           </div>
         )}
       </div>
+
+      {/* User Details Modal */}
+      <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
+        <DialogContent className="sm:max-w-md rounded-3xl border-muted/60 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold tracking-tight flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              Detalles del Usuario
+            </DialogTitle>
+            <DialogDescription>
+              Información completa del perfil registrado.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedUser && (
+            <div className="space-y-6 py-4">
+              {/* Header Info */}
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/30 border border-muted/50">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                  <User className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground text-lg leading-tight">
+                    {selectedUser.full_name || 'Sin Nombre'}
+                  </h3>
+                  <Badge variant={selectedUser.is_admin ? "default" : "secondary"} className="mt-1 text-[10px] uppercase font-black tracking-widest">
+                    {selectedUser.is_admin ? 'Administrador' : 'Usuario Estándar'}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Grid Data */}
+              <div className="grid gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Correo Electrónico</p>
+                    <p className="text-sm font-medium">{selectedUser.email || 'No disponible'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
+                    <Fingerprint className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Documento de Identidad</p>
+                    <p className="text-sm font-medium">{selectedUser.cedula_type}-{selectedUser.cedula_number || 'N/A'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
+                    <Clock className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Fecha de Registro</p>
+                    <p className="text-sm font-medium">
+                      {new Date(selectedUser.created_at).toLocaleDateString('es-VE', {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
+                    <Shield className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Estado de Cuenta</p>
+                    <div className="mt-1">
+                      {selectedUser.is_approved ? (
+                        <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 rounded-lg">
+                          Cuenta Verificada
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-amber-600 border-amber-500/30 bg-amber-500/5 rounded-lg">
+                          Pendiente de Aprobación
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t flex justify-end">
+                <Button 
+                  variant="secondary" 
+                  className="rounded-xl font-bold"
+                  onClick={() => setSelectedUser(null)}
+                >
+                  Cerrar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

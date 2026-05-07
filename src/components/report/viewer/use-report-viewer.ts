@@ -26,14 +26,14 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
   const { isSecondary, sendReport: sendToSync, isSyncing: isSendingSyncReport } = useSyncManager();
 
   const template = useMemo(
-    () => (report ? templates.find((t) => t.id === report.templateId) : null),
+    () => (report ? templates.find((t) => t.id === report.template_id) : null),
     [report, templates]
   );
 
   const config = useMemo<TemplateConfig>(
     () =>
       report
-        ? configs[report.templateId] || { fields: {}, sections: [], layout: [] }
+        ? configs[report.template_id] || { fields: {}, sections: [], layout: [] }
         : { fields: {}, sections: [], layout: [] },
     [report, configs]
   );
@@ -41,24 +41,24 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
   const isFinalizado = useMemo(() => status === 'Finalizado', [status]);
 
   const clonedInitialData = useMemo(() => {
-    if (!report?.formData) return undefined;
+    if (!report?.form_data) return undefined;
     try {
-      return JSON.parse(JSON.stringify(report.formData));
+      return JSON.parse(JSON.stringify(report.form_data));
     } catch (e) {
-      return report.formData;
+      return report.form_data;
     }
-  }, [report?.id, report?.formData]);
+  }, [report?.id, report?.form_data]);
 
-  const saveLogic = useCallback(async (formData: Record<string, any>) => {
+  const saveLogic = useCallback(async (form_data: Record<string, any>) => {
     if (!report || !template) return;
 
-    const content = renderFinalReport(template.content, formData, config, { 
+    const content = renderFinalReport(template.content, form_data, config, { 
       Estatus: status,
       Enc: settings.ordenDelDiaDraft?.esJefeEncargado ? '(E)' : ''
     });
-    const newTitle = String(formData.titulo || formData.title || template.name);
+    const newTitle = String(form_data.titulo || form_data.title || template.name);
 
-    const hora = formData['Hora'];
+    const hora = form_data['Hora'];
     const timeValidation = validateTimeHlv(hora, status === 'Finalizado');
     if (!timeValidation.isValid && status === 'Finalizado') {
       toast.error(timeValidation.error);
@@ -69,7 +69,7 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
       ...report,
       title: newTitle,
       content: content,
-      formData: JSON.parse(JSON.stringify(formData)),
+      form_data: JSON.parse(JSON.stringify(form_data)),
       status: status,
       timestamp: new Date().toISOString(),
     };
@@ -78,7 +78,7 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
   }, [report, template, config, status, onSave, settings.ordenDelDiaDraft?.esJefeEncargado]);
 
   const debouncedSave = useMemo(
-    () => debounce((formData: Record<string, any>) => saveLogic(formData), 30000),
+    () => debounce((form_data: Record<string, any>) => saveLogic(form_data), 30000),
     [saveLogic]
   );
 
@@ -104,20 +104,20 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
 
   const handleSave = async () => {
     if (!formRef.current) return;
-    let formData = formRef.current.getValues();
+    let form_data = formRef.current.getValues();
     if (status === 'Finalizado') {
       const validData = await formRef.current.validate();
       if (!validData) return;
-      formData = validData;
+      form_data = validData;
     }
     debouncedSave.cancel();
-    await saveLogic(formData);
+    await saveLogic(form_data);
   };
 
   const handleStatusChange = async (newStatus: 'En proceso' | 'Finalizado') => {
     if (!formRef.current) return;
     
-    let formData: Record<string, any> | null = null;
+    let form_data: Record<string, any> | null = null;
     
     if (newStatus === 'Finalizado') {
       // Set Estatus temporarily to trigger required rules
@@ -133,13 +133,13 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
       // Wait for React to render the new status and RHF to update rules
       await new Promise(resolve => setTimeout(resolve, 150));
       
-      formData = await formRef.current.validate();
-      if (!formData) {
+      form_data = await formRef.current.validate();
+      if (!form_data) {
         setStatus('En proceso'); // Revert
         return;
       }
       
-      const hora = formData['Hora'];
+      const hora = form_data['Hora'];
       const timeValidation = validateTimeHlv(hora, true);
       if (!timeValidation.isValid) {
         toast.error(timeValidation.error);
@@ -147,22 +147,22 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
         return;
       }
     } else {
-      formData = formRef.current.getValues();
+      form_data = formRef.current.getValues();
       setStatus(newStatus);
     }
     debouncedSave.cancel();
 
     if (!report || !template) return;
-    const content = renderFinalReport(template.content, formData, config, { 
+    const content = renderFinalReport(template.content, form_data, config, { 
       Estatus: newStatus,
       Enc: settings.ordenDelDiaDraft?.esJefeEncargado ? '(E)' : ''
     });
-    const newTitle = String(formData.titulo || formData.title || template.name);
+    const newTitle = String(form_data.titulo || form_data.title || template.name);
     const finalReport: Report = {
       ...report,
       title: newTitle,
       content: content,
-      formData: JSON.parse(JSON.stringify(formData)),
+      form_data: JSON.parse(JSON.stringify(form_data)),
       status: newStatus,
       timestamp: new Date().toISOString(),
     };
@@ -179,9 +179,9 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
   };
 
   const handleDataChange = useCallback(
-    (formData: Record<string, any>) => {
+    (form_data: Record<string, any>) => {
       setSaveButtonText('Guardar Cambios');
-      debouncedSave(formData);
+      debouncedSave(form_data);
     },
     [debouncedSave]
   );
@@ -211,3 +211,4 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
     settings
   };
 }
+

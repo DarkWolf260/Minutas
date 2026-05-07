@@ -136,7 +136,7 @@ export function useOrdenDelDia(selectedGuard: string, periodo: string, initialDa
           esJefeEncargado,
           activities: activities.actividades,
           notes: notes.notas,
-          updatedAt: ahoraIso,
+          updated_at: ahoraIso,
         },
       });
     }, 1000);
@@ -157,3 +157,4 @@ export function useOrdenDelDia(selectedGuard: string, periodo: string, initialDa
     collisionDetection: closestCenter
   };
 }
+

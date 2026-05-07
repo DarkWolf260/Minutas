@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { useUploadTemplate } from '@/hooks/use-upload-template';
 import { useTemplates } from '@/hooks/use-templates';
+import { useSyncTemplates } from '@/hooks/use-sync-templates';
 import type { Template } from '@/lib/types';
 import { generateId } from '@/lib/utils/id';
 import { useWorkspaceManager } from '@/lib/db/db-context';
@@ -30,6 +31,7 @@ export function usePlantillas() {
 
   const { isAuthenticated: estaAutenticado, user: usuario, signOut: cerrarSesion } = useAuth();
   const { uploadTemplate: subirAPlantillaNube, isUploading: estaSubiendo } = useUploadTemplate();
+  const { syncFromCloud: sincronizarDesdeNube, isSyncing: estaSincronizando } = useSyncTemplates();
 
   const manejarCambioArchivo = (event: React.ChangeEvent<HTMLInputElement>) => {
     const archivo = event.target.files?.[0];
@@ -49,7 +51,7 @@ export function usePlantillas() {
         } else {
           const nuevaPlantilla: Template = {
             id: generateId('template'),
-            workspaceId: currentWorkspace,
+            workspace_id: currentWorkspace,
             name: nombre,
             content: contenido,
             type: 'normal',
@@ -164,5 +166,8 @@ export function usePlantillas() {
     addTemplate,
     cerrarSesion,
     subirAPlantillaNube,
+    sincronizarDesdeNube,
+    estaSincronizando,
   };
 }
+

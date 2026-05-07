@@ -17,8 +17,9 @@ describe('Locking Issue Reproduction', () => {
         expect(result1.sections[0]!.id).toBe('sec_datos_del_paciente');
         
         // Check field IDs
-        expect(result1.sections[0]!.fieldIds).toContain('Nombre y apellido');
-        expect(result1.sections[0]!.fieldIds).toContain('Edad');
-        expect(result1.sections[0]!.fieldIds).toContain('IDX');
+        expect(result1.sections[0]!.field_ids).toContain('Nombre y apellido');
+        expect(result1.sections[0]!.field_ids).toContain('Edad');
+        expect(result1.sections[0]!.field_ids).toContain('IDX');
     });
 });
+

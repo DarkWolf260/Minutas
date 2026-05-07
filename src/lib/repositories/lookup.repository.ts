@@ -9,37 +9,37 @@ import type { StaffRole, Department, Address } from '@/lib/types';
 import { DbKeys } from './keys';
 import { safeWrite, silentWrite } from './base.repository';
 
-export function createLookupRepository(db: MinutasDatabase, workspaceId: string) {
-  const ws = workspaceId;
+export function createLookupRepository(db: MinutasDatabase, workspace_id: string) {
+  const ws = workspace_id;
 
   // ─── Roles ────────────────────────────────────────────────────────────────
 
   const watchRoles = () =>
     db.lookups.find({
-      selector: { type: 'role', workspaceId: ws },
+      selector: { type: 'role', workspace_id: ws },
       sort: [{ 'data.order': 'asc' }],
     }).$;
 
   const bulkInitRoles = async (roles: StaffRole[]) => {
     const existing = await db.lookups
-      .find({ selector: { type: 'role', workspaceId: ws } })
+      .find({ selector: { type: 'role', workspace_id: ws } })
       .exec();
     if (existing.length > 0) return;
     const docs = roles.map((role) => ({
       id: DbKeys.role(ws, role.name),
-      workspaceId: ws,
+      workspace_id: ws,
       type: 'role' as const,
       name: role.name,
-      data: role,
+      data: { ...role, workspace_id: ws },
     }));
-    return silentWrite(() => db.lookups.bulkInsert(docs), { feature: 'Roles' });
+    return silentWrite(() => db.lookups.bulkInsert(docs as any), { feature: 'Roles' });
   };
 
   const saveRoles = async (roles: StaffRole[]) =>
     silentWrite(
       async () => {
         const allDocs = await db.lookups
-          .find({ selector: { type: 'role', workspaceId: ws } })
+          .find({ selector: { type: 'role', workspace_id: ws } })
           .exec();
         const newIds = new Set(roles.map((r) => DbKeys.role(ws, r.name)));
         const toDelete = allDocs.filter((d) => !newIds.has(d.primary));
@@ -48,10 +48,10 @@ export function createLookupRepository(db: MinutasDatabase, workspaceId: string)
 
         const toUpsert = roles.map((role) => ({
           id: DbKeys.role(ws, role.name),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'role' as const,
           name: role.name,
-          data: { ...role, workspaceId: ws },
+          data: { ...role, workspace_id: ws },
         }));
         await db.lookups.bulkUpsert(toUpsert as any);
       },
@@ -62,15 +62,15 @@ export function createLookupRepository(db: MinutasDatabase, workspaceId: string)
     silentWrite(
       async () => {
         const allDocs = await db.lookups
-          .find({ selector: { type: 'role', workspaceId: ws } })
+          .find({ selector: { type: 'role', workspace_id: ws } })
           .exec();
         await db.lookups.bulkRemove(allDocs.map((d) => d.primary));
         const toInsert = defaults.map((role) => ({
           id: DbKeys.role(ws, role.name),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'role' as const,
           name: role.name,
-          data: { ...role, workspaceId: ws },
+          data: { ...role, workspace_id: ws },
         }));
         await db.lookups.bulkInsert(toInsert as any);
       },
@@ -81,17 +81,17 @@ export function createLookupRepository(db: MinutasDatabase, workspaceId: string)
 
   const watchDepartments = () =>
     db.lookups.find({
-      selector: { type: 'department', workspaceId: ws },
+      selector: { type: 'department', workspace_id: ws },
       sort: [{ 'data.order': 'asc' }],
     }).$;
 
   const bulkInitDepartments = async (depts: Department[]) => {
     const docs = depts.map((dept) => ({
       id: DbKeys.department(ws, dept.id),
-      workspaceId: ws,
+      workspace_id: ws,
       type: 'department' as const,
       name: dept.name,
-      data: { ...dept, workspaceId: ws },
+      data: { ...dept, workspace_id: ws },
     }));
     return silentWrite(() => db.lookups.bulkInsert(docs as any), {
       feature: 'Departments',
@@ -102,7 +102,7 @@ export function createLookupRepository(db: MinutasDatabase, workspaceId: string)
     silentWrite(
       async () => {
         const allDocs = await db.lookups
-          .find({ selector: { type: 'department', workspaceId: ws } })
+          .find({ selector: { type: 'department', workspace_id: ws } })
           .exec();
         const newIds = new Set(depts.map((d) => DbKeys.department(ws, d.id)));
         const toDelete = allDocs.filter((d) => !newIds.has(d.primary));
@@ -111,10 +111,10 @@ export function createLookupRepository(db: MinutasDatabase, workspaceId: string)
 
         const toUpsert = depts.map((dept) => ({
           id: DbKeys.department(ws, dept.id),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'department' as const,
           name: dept.name,
-          data: { ...dept, workspaceId: ws },
+          data: { ...dept, workspace_id: ws },
         }));
         await db.lookups.bulkUpsert(toUpsert as any);
       },
@@ -126,10 +126,10 @@ export function createLookupRepository(db: MinutasDatabase, workspaceId: string)
       () =>
         db.lookups.insert({
           id: DbKeys.department(ws, dept.id),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'department',
           name: dept.name,
-          data: { ...dept, workspaceId: ws },
+          data: { ...dept, workspace_id: ws },
         }),
       { feature: 'Departments' }
     );
@@ -143,7 +143,7 @@ export function createLookupRepository(db: MinutasDatabase, workspaceId: string)
         if (doc)
           await doc.patch({
             name: dept.name,
-            data: { ...dept, workspaceId: ws },
+            data: { ...dept, workspace_id: ws },
           });
       },
       { feature: 'Departments' }
@@ -164,15 +164,15 @@ export function createLookupRepository(db: MinutasDatabase, workspaceId: string)
     silentWrite(
       async () => {
         const allDocs = await db.lookups
-          .find({ selector: { type: 'department', workspaceId: ws } })
+          .find({ selector: { type: 'department', workspace_id: ws } })
           .exec();
         await db.lookups.bulkRemove(allDocs.map((d) => d.primary));
         const toInsert = defaults.map((dept) => ({
           id: DbKeys.department(ws, dept.id),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'department' as const,
           name: dept.name,
-          data: { ...dept, workspaceId: ws },
+          data: { ...dept, workspace_id: ws },
         }));
         await db.lookups.bulkInsert(toInsert as any);
       },
@@ -183,16 +183,16 @@ export function createLookupRepository(db: MinutasDatabase, workspaceId: string)
 
   const watchAddresses = () =>
     db.lookups.find({
-      selector: { type: 'address', workspaceId: ws },
+      selector: { type: 'address', workspace_id: ws },
     }).$;
 
   const bulkInitAddresses = async (addrs: Address[]) => {
     const docs = addrs.map((addr) => ({
       id: DbKeys.address(ws, addr.id),
-      workspaceId: ws,
+      workspace_id: ws,
       type: 'address' as const,
       name: addr.name,
-      data: { ...addr, workspaceId: ws },
+      data: { ...addr, workspace_id: ws },
     }));
     return silentWrite(() => db.lookups.bulkInsert(docs as any), {
       feature: 'Addresses',
@@ -204,10 +204,10 @@ export function createLookupRepository(db: MinutasDatabase, workspaceId: string)
       () =>
         db.lookups.insert({
           id: DbKeys.address(ws, addr.id),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'address',
           name: addr.name,
-          data: { ...addr, workspaceId: ws },
+          data: { ...addr, workspace_id: ws },
         }),
       { feature: 'Addresses' }
     );
@@ -219,7 +219,7 @@ export function createLookupRepository(db: MinutasDatabase, workspaceId: string)
         if (doc)
           await doc.patch({
             name: addr.name,
-            data: { ...addr, workspaceId: ws },
+            data: { ...addr, workspace_id: ws },
           });
       },
       { feature: 'Addresses' }
@@ -238,7 +238,7 @@ export function createLookupRepository(db: MinutasDatabase, workspaceId: string)
     silentWrite(
       async () => {
         const allDocs = await db.lookups
-          .find({ selector: { type: 'address', workspaceId: ws } })
+          .find({ selector: { type: 'address', workspace_id: ws } })
           .exec();
         await db.lookups.bulkRemove(allDocs.map((d) => d.primary));
       },
@@ -270,3 +270,6 @@ export function createLookupRepository(db: MinutasDatabase, workspaceId: string)
 }
 
 export type LookupRepository = ReturnType<typeof createLookupRepository>;
+
+
+

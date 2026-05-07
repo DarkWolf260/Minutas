@@ -61,17 +61,17 @@ export default function SettingsModulesPage() {
   const navigate = useNavigate();
   const { settings, saveSettings, isLoaded } = useSettings();
 
-  const disabledModules: AppModuleId[] = settings.disabledModules || [];
+  const disabled_modules: AppModuleId[] = settings.disabled_modules || [];
 
-  const isEnabled = (id: AppModuleId) => !disabledModules.includes(id);
+  const isEnabled = (id: AppModuleId) => !disabled_modules.includes(id);
   const toggle = (id: AppModuleId) => {
-    const next = disabledModules.includes(id)
-      ? disabledModules.filter((m) => m !== id)
-      : [...disabledModules, id];
-    saveSettings({ disabledModules: next });
+    const next = disabled_modules.includes(id)
+      ? disabled_modules.filter((m) => m !== id)
+      : [...disabled_modules, id];
+    saveSettings({ disabled_modules: next });
   };
   const applyPreset = (preset: AppModuleId[]) =>
-    saveSettings({ disabledModules: preset });
+    saveSettings({ disabled_modules: preset });
 
   return (
     <ScrollArea className="h-full w-full" type="always">
@@ -109,14 +109,14 @@ export default function SettingsModulesPage() {
               onClick={() => applyPreset(PRESET_DESKTOP)}
               className={cn(
                 'flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left',
-                matchesPreset(disabledModules, PRESET_DESKTOP)
+                matchesPreset(disabled_modules, PRESET_DESKTOP)
                   ? 'border-primary bg-primary/5'
                   : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30'
               )}
             >
               <div className={cn(
                 'h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-colors',
-                matchesPreset(disabledModules, PRESET_DESKTOP)
+                matchesPreset(disabled_modules, PRESET_DESKTOP)
                   ? 'bg-primary/10 text-primary'
                   : 'bg-muted text-muted-foreground'
               )}>
@@ -133,14 +133,14 @@ export default function SettingsModulesPage() {
               onClick={() => applyPreset(PRESET_MOBILE)}
               className={cn(
                 'flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left',
-                matchesPreset(disabledModules, PRESET_MOBILE)
+                matchesPreset(disabled_modules, PRESET_MOBILE)
                   ? 'border-primary bg-primary/5'
                   : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30'
               )}
             >
               <div className={cn(
                 'h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-colors',
-                matchesPreset(disabledModules, PRESET_MOBILE)
+                matchesPreset(disabled_modules, PRESET_MOBILE)
                   ? 'bg-primary/10 text-primary'
                   : 'bg-muted text-muted-foreground'
               )}>
@@ -231,3 +231,4 @@ export default function SettingsModulesPage() {
     </ScrollArea>
   );
 }
+

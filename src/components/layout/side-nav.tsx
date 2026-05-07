@@ -53,8 +53,8 @@ export function SideNav() {
   const { isAuthenticated, signOut } = useAuth();
   const { isAdmin } = useAdmin();
 
-  const disabledModules = settings.disabledModules || [];
-  const navItems = ALL_NAV_ITEMS.filter((item) => !disabledModules.includes(item.moduleId));
+  const disabled_modules = settings.disabled_modules || [];
+  const navItems = ALL_NAV_ITEMS.filter((item) => !disabled_modules.includes(item.moduleId));
 
   // Dynamic name logic: Use Analista de CEMUPRAD if a guard is active
   const analyst = settings.isGuardOpen 
@@ -212,4 +212,5 @@ export function SideNav() {
     </TooltipProvider>
   );
 }
+
 

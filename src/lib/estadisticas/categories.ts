@@ -27,16 +27,16 @@ export function obtenerCategoriasReporte(
 
   // 1. Procesar Categoría General y Subcategorías de la Plantilla
   if (template.statisticsCategory) add(template.statisticsCategory);
-  if (Array.isArray(template.statisticsSubCategories)) {
-    template.statisticsSubCategories.forEach(cat => add(cat));
+  if (Array.isArray(template.statistics_sub_categories)) {
+    template.statistics_sub_categories.forEach(cat => add(cat));
   }
 
   // 2. Procesar Reglas Condicionales
-  if (Array.isArray(template.statisticsRules) && template.statisticsRules.length > 0) {
+  if (Array.isArray(template.statistics_rules) && template.statistics_rules.length > 0) {
     const rulesByCat = new Map<string, number>();
 
-    for (const rule of template.statisticsRules) {
-      if (!rule.fieldId) continue;
+    for (const rule of template.statistics_rules) {
+      if (!rule.field_id) continue;
 
       let rawCondition = rule.condition || (rule as any).value || '';
       const originalCondition = rawCondition;
@@ -45,23 +45,23 @@ export function obtenerCategoriasReporte(
       if (typeof rawCondition === 'string' && rawCondition.includes('{') && rawCondition.includes('}')) {
         rawCondition = rawCondition.replace(/\{([^}]+)\}/g, (match, fieldName) => {
           const keysToMatch = resolverClavesInterpolacion(fieldName.trim(), config);
-          const foundValue = buscarValores(report.formData, keysToMatch)[0];
+          const foundValue = buscarValores(report.form_data, keysToMatch)[0];
           return foundValue !== undefined ? String(foundValue) : match;
         });
       }
 
-      const originalFieldId = rule.fieldId || '';
-      const isSequentialPrimary = originalFieldId.endsWith('*');
-      const isFirstOnlyPrimary = originalFieldId.endsWith(' (1)');
-      const baseFieldId = isSequentialPrimary ? originalFieldId.slice(0, -1) : (isFirstOnlyPrimary ? originalFieldId.slice(0, -4) : originalFieldId);
-      const normFieldId = normalizarParaComp(baseFieldId);
+      const originalfield_id = rule.field_id || '';
+      const isSequentialPrimary = originalfield_id.endsWith('*');
+      const isFirstOnlyPrimary = originalfield_id.endsWith(' (1)');
+      const basefield_id = isSequentialPrimary ? originalfield_id.slice(0, -1) : (isFirstOnlyPrimary ? originalfield_id.slice(0, -4) : originalfield_id);
+      const normfield_id = normalizarParaComp(basefield_id);
 
-      // Determinar claves potenciales en formData (IDs o Etiquetas)
-      const targetKeys = new Set<string>([normFieldId]);
+      // Determinar claves potenciales en form_data (IDs o Etiquetas)
+      const targetKeys = new Set<string>([normfield_id]);
       let fieldConfig: any = undefined;
       if (config?.fields) {
         Object.entries(config.fields).forEach(([id, f]) => {
-          if (normalizarParaComp(f.label) === normFieldId || normalizarParaComp(id) === normFieldId) {
+          if (normalizarParaComp(f.label) === normfield_id || normalizarParaComp(id) === normfield_id) {
             targetKeys.add(normalizarParaComp(id));
             targetKeys.add(normalizarParaComp(f.label));
             if (!fieldConfig) fieldConfig = f;
@@ -69,13 +69,13 @@ export function obtenerCategoriasReporte(
         });
       }
 
-      let values = buscarValores(report.formData, targetKeys);
+      let values = buscarValores(report.form_data, targetKeys);
       if (isFirstOnlyPrimary && values.length > 0) {
         const nonEmpty = values.filter(v => v !== '' && v !== null && v !== undefined);
         values = nonEmpty.length > 0 ? [nonEmpty[0]] : [values[0]];
       }
 
-      // Fallback: buscar todos los valores en formData si no se encontró nada por clave
+      // Fallback: buscar todos los valores en form_data si no se encontró nada por clave
       if (values.length === 0) {
         const globalTargetVal = normalizarParaComp(rawCondition);
         const buscarEnTodo = (obj: any): any[] => {
@@ -102,7 +102,7 @@ export function obtenerCategoriasReporte(
           }
           return found;
         };
-        values = buscarEnTodo(report.formData);
+        values = buscarEnTodo(report.form_data);
       }
 
       let matches = 0;
@@ -122,7 +122,7 @@ export function obtenerCategoriasReporte(
           const item = isSequentialPrimary ? items[seqIndex++] : items[i];
 
           // 1. Evaluar Condición Principal
-          const primaryMatch = evaluarCondicion(item, fieldConfig, originalCondition || '', rule.operator || '=', report.formData, config);
+          const primaryMatch = evaluarCondicion(item, fieldConfig, originalCondition || '', rule.operator || '=', report.form_data, config);
           let currentMatchValue = 1;
 
           // 2. Evaluar condiciones OR (Opcionales, pero al menos una debe cumplir si existen)
@@ -130,15 +130,15 @@ export function obtenerCategoriasReporte(
           if (rule.orConditions && rule.orConditions.length > 0) {
             anyOrMatch = false;
             for (const orCond of rule.orConditions) {
-              if (!orCond.fieldId) continue;
+              if (!orCond.field_id) continue;
 
-              const orOriginalId = orCond.fieldId;
+              const orOriginalId = orCond.field_id;
               const isOrSequential = orOriginalId.endsWith('*');
               const isOrFirstOnly = orOriginalId.endsWith(' (1)');
               const orBaseId = isOrSequential ? orOriginalId.slice(0, -1) : (isOrFirstOnly ? orOriginalId.slice(0, -4) : orOriginalId);
               
               const orKeys = resolverClavesInterpolacion(orBaseId, config);
-              let orValues = buscarValores(report.formData || {}, orKeys);
+              let orValues = buscarValores(report.form_data || {}, orKeys);
               if (isOrFirstOnly && orValues.length > 0) {
                 const nonEmpty = orValues.filter(v => v !== '' && v !== null && v !== undefined);
                 orValues = nonEmpty.length > 0 ? [nonEmpty[0]] : [orValues[0]];
@@ -152,7 +152,7 @@ export function obtenerCategoriasReporte(
               for (const oRawVal of orValues) {
                 const oItems = Array.isArray(oRawVal) ? oRawVal : [oRawVal];
                 for (const oItem of oItems) {
-                  if (evaluarCondicion(oItem, config?.fields?.[orBaseId], orConditionStr, orCond.operator || '=', report.formData, config)) {
+                  if (evaluarCondicion(oItem, config?.fields?.[orBaseId], orConditionStr, orCond.operator || '=', report.form_data, config)) {
                     anyOrMatch = true;
                     if (orCond.operator === 'extract_value') {
                       currentMatchValue = tryExtractValue(oItem);
@@ -164,7 +164,7 @@ export function obtenerCategoriasReporte(
               }
               
               if (!anyOrMatch && orValues.length === 0 && (orCond.operator === 'empty' || orCond.operator === '!=' || orCond.operator === 'not_contains')) {
-                if (evaluarCondicion(null, config?.fields?.[orBaseId], orConditionStr, orCond.operator || '=', report.formData, config)) {
+                if (evaluarCondicion(null, config?.fields?.[orBaseId], orConditionStr, orCond.operator || '=', report.form_data, config)) {
                   anyOrMatch = true;
                 }
               }
@@ -178,17 +178,17 @@ export function obtenerCategoriasReporte(
           // 3. Evaluar condiciones AND (Deben cumplir todas si la anterior combinación es verdadera)
           if (isMatch && rule.conditions && rule.conditions.length > 0) {
             for (const secCond of rule.conditions) {
-              if (!secCond.fieldId) continue;
+              if (!secCond.field_id) continue;
               
-              const secOriginalId = secCond.fieldId;
+              const secOriginalId = secCond.field_id;
               const isSecSequential = secOriginalId.endsWith('*');
               const isSecFirstOnly = secOriginalId.endsWith(' (1)');
               const secBaseId = isSecSequential ? secOriginalId.slice(0, -1) : (isSecFirstOnly ? secOriginalId.slice(0, -4) : secOriginalId);
               const normSecBaseId = normalizarParaComp(secBaseId);
 
-              if (isSecSequential && normSecBaseId === normFieldId) {
+              if (isSecSequential && normSecBaseId === normfield_id) {
                 const sItem = items[seqIndex++];
-                if (!evaluarCondicion(sItem, config?.fields?.[secBaseId], secCond.condition || '', secCond.operator || '=', report.formData, config)) {
+                if (!evaluarCondicion(sItem, config?.fields?.[secBaseId], secCond.condition || '', secCond.operator || '=', report.form_data, config)) {
                   isMatch = false;
                   break;
                 }
@@ -196,7 +196,7 @@ export function obtenerCategoriasReporte(
               }
 
               const secKeys = resolverClavesInterpolacion(secBaseId, config);
-              let secValues = buscarValores(report.formData || {}, secKeys);
+              let secValues = buscarValores(report.form_data || {}, secKeys);
               if (isSecFirstOnly && secValues.length > 0) {
                 const nonEmpty = secValues.filter(v => v !== '' && v !== null && v !== undefined);
                 secValues = nonEmpty.length > 0 ? [nonEmpty[0]] : [secValues[0]];
@@ -211,7 +211,7 @@ export function obtenerCategoriasReporte(
               for (const sRawVal of secValues) {
                 const sItems = Array.isArray(sRawVal) ? sRawVal : [sRawVal];
                 for (const sItem of sItems) {
-                  if (evaluarCondicion(sItem, config?.fields?.[secBaseId], secCondition || '', secCond.operator || '=', report.formData, config)) {
+                  if (evaluarCondicion(sItem, config?.fields?.[secBaseId], secCondition || '', secCond.operator || '=', report.form_data, config)) {
                     secMatch = true;
                     break;
                   }
@@ -220,7 +220,7 @@ export function obtenerCategoriasReporte(
               }
 
               if (secValues.length === 0 && (secCond.operator === 'empty' || secCond.operator === '!=' || secCond.operator === 'not_contains')) {
-                  if (evaluarCondicion(null, config?.fields?.[secBaseId], secCondition || '', secCond.operator || '=', report.formData, config)) secMatch = true;
+                  if (evaluarCondicion(null, config?.fields?.[secBaseId], secCondition || '', secCond.operator || '=', report.form_data, config)) secMatch = true;
               }
 
               if (!secMatch) {
@@ -247,12 +247,12 @@ export function obtenerCategoriasReporte(
     config.sections.forEach((section, idx) => {
       if (!section.statisticsCategory) return;
 
-      const sectionData = report.formData?.[section.id] || report.formData?.[`section_${idx}`] ||
-        report.formData?.[`${section.id}_1`] ||
+      const sectionData = report.form_data?.[section.id] || report.form_data?.[`section_${idx}`] ||
+        report.form_data?.[`${section.id}_1`] ||
         (() => {
-          if (!report.formData) return undefined;
-          const key = Object.keys(report.formData).find(k => k.startsWith(section.id + '_'));
-          return key ? report.formData[key] : undefined;
+          if (!report.form_data) return undefined;
+          const key = Object.keys(report.form_data).find(k => k.startsWith(section.id + '_'));
+          return key ? report.form_data[key] : undefined;
         })();
 
       if (section.isRepeatable) {
@@ -273,3 +273,5 @@ export function obtenerCategoriasReporte(
   });
   return result;
 }
+
+

@@ -89,7 +89,7 @@ export function useOrdenDelDiaPersonnel(personnel: StaffMember[], roles: StaffRo
         const nuevoPersonal = { ...prev };
         nuevoPersonal[contenedorActivo!] = (prev[contenedorActivo!] || []).filter((m) => m.id !== idActivo);
 
-        if (rolDestino?.isSingle) {
+        if (rolDestino?.is_single) {
           nuevoPersonal[contenedorSobre!] = [itemActivo];
         } else {
           const miembrosDestinoActualizados = [...(prev[contenedorSobre!] || [])];
@@ -116,3 +116,4 @@ export function useOrdenDelDiaPersonnel(personnel: StaffMember[], roles: StaffRo
     manejarDragEnd
   };
 }
+

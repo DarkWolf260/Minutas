@@ -13,7 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function ProfilePage() {
   const { profile, saveProfile, isLoaded } = useProfile();
-  const [formData, setFormData] = useState({
+  const [form_data, setform_data] = useState({
     name: '',
     cedula: '',
     rank: '',
@@ -24,7 +24,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (isLoaded) {
-      setFormData({
+      setform_data({
         name: profile.name || '',
         cedula: profile.cedula || '',
         rank: profile.rank || '',
@@ -34,14 +34,14 @@ export default function ProfilePage() {
   }, [profile, isLoaded]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setform_data((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
     try {
-      await saveProfile(formData);
+      await saveProfile(form_data);
       toast('Perfil guardado', {
         description: 'Tu información local ha sido actualizada exitosamente.',
       });
@@ -65,7 +65,7 @@ export default function ProfilePage() {
   }
 
   // Generate initials for the avatar placeholder
-  const initials = getInitials(formData.name || 'U');
+  const initials = getInitials(form_data.name || 'U');
 
   return (
     <ScrollArea className="h-full w-full" type="always">
@@ -122,7 +122,7 @@ export default function ProfilePage() {
                     id="name" 
                     name="name" 
                     placeholder="Ej. Juan Pérez" 
-                    value={formData.name}
+                    value={form_data.name}
                     onChange={handleChange}
                     className="pl-10 bg-muted/20"
                   />
@@ -135,7 +135,7 @@ export default function ProfilePage() {
                   id="cedula" 
                   name="cedula" 
                   placeholder="Ej. V-12345678" 
-                  value={formData.cedula}
+                  value={form_data.cedula}
                   onChange={handleChange}
                   className="bg-muted/20"
                 />
@@ -147,7 +147,7 @@ export default function ProfilePage() {
                   id="rank" 
                   name="rank" 
                   placeholder="Ej. Jefe de Servicio, Inspector..." 
-                  value={formData.rank}
+                  value={form_data.rank}
                   onChange={handleChange}
                   className="bg-muted/20"
                 />
@@ -159,7 +159,7 @@ export default function ProfilePage() {
                   id="department" 
                   name="department" 
                   placeholder="Ej. Operaciones, Investigaciones..." 
-                  value={formData.department}
+                  value={form_data.department}
                   onChange={handleChange}
                   className="bg-muted/20"
                 />
@@ -182,3 +182,4 @@ export default function ProfilePage() {
     </ScrollArea>
   );
 }
+

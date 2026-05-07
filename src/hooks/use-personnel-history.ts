@@ -28,13 +28,13 @@ export function usePersonnelHistory() {
 
                 Object.entries(staff).forEach(([roleName, staffList]) => {
                     staffList.forEach((member) => {
-                        if (!member.personnelId && !member.id) return;
+                        if (!member.personnel_id && !member.id) return;
 
-                        const pId = member.personnelId || member.id;
+                        const pId = member.personnel_id || member.id;
                         const assignment: PersonnelAssignment = {
                             id: `${pId}_${date}`,
-                            workspaceId: currentWorkspace,
-                            personnelId: pId,
+                            workspace_id: currentWorkspace,
+                            personnel_id: pId,
                             date,
                             guardId,
                             roleName,
@@ -43,10 +43,10 @@ export function usePersonnelHistory() {
 
                         historyItems.push({
                             id: `${currentWorkspace}:assignment:${pId}:${date}`,
-                            workspaceId: currentWorkspace,
+                            workspace_id: currentWorkspace,
                             type: 'assignment_history' as const,
                             date,
-                            personnelId: pId,
+                            personnel_id: pId,
                             data: assignment
                         });
                     });
@@ -58,13 +58,13 @@ export function usePersonnelHistory() {
                         guardId,
                         date,
                         count: historyItems.length,
-                        workspaceId: currentWorkspace
+                        workspace_id: currentWorkspace
                     });
                 }
             } catch (error) {
                 logger.error('Failed to record personnel assignments', error, {
                     feature: 'PersonnelHistory',
-                    workspaceId: currentWorkspace,
+                    workspace_id: currentWorkspace,
                     metadata: { guardId, date },
                 });
             }
@@ -76,7 +76,7 @@ export function usePersonnelHistory() {
      * Fetches the assignment history for a specific personnel member.
      */
     const getHistory = useCallback(
-        async (personnelId: string) => {
+        async (personnel_id: string) => {
             if (!db || !currentWorkspace) return [];
 
             try {
@@ -84,8 +84,8 @@ export function usePersonnelHistory() {
                     .find({
                         selector: { 
                             type: 'assignment_history',
-                            workspaceId: currentWorkspace,
-                            personnelId 
+                            workspace_id: currentWorkspace,
+                            personnel_id 
                         },
                         sort: [{ date: 'desc' }],
                     })
@@ -93,13 +93,13 @@ export function usePersonnelHistory() {
 
                 return docs.map((d: any) => {
                     const json = d.toJSON();
-                    return { ...(json.data as PersonnelAssignment), workspaceId: currentWorkspace };
+                    return { ...(json.data as PersonnelAssignment), workspace_id: currentWorkspace };
                 }) as PersonnelAssignment[];
             } catch (error) {
                 logger.error('Failed to fetch personnel history', error, {
                     feature: 'PersonnelHistory',
-                    workspaceId: currentWorkspace,
-                    metadata: { personnelId },
+                    workspace_id: currentWorkspace,
+                    metadata: { personnel_id },
                 });
                 return [];
             }
@@ -111,21 +111,21 @@ export function usePersonnelHistory() {
      * Fetches the assignment for a specific personnel member on a specific date.
      */
     const getAssignmentForDate = useCallback(
-        async (personnelId: string, date: string) => {
+        async (personnel_id: string, date: string) => {
             if (!db || !currentWorkspace) return null;
 
             try {
-                const doc = await db.history.findOne(`${currentWorkspace}:assignment:${personnelId}:${date}`).exec();
+                const doc = await db.history.findOne(`${currentWorkspace}:assignment:${personnel_id}:${date}`).exec();
                 if (doc) {
                     const json = doc.toJSON();
-                    return { ...(json.data as PersonnelAssignment), workspaceId: currentWorkspace };
+                    return { ...(json.data as PersonnelAssignment), workspace_id: currentWorkspace };
                 }
                 return null;
             } catch (error) {
                 logger.error('Failed to fetch assignment for date', error, {
                     feature: 'PersonnelHistory',
-                    workspaceId: currentWorkspace,
-                    metadata: { personnelId, date },
+                    workspace_id: currentWorkspace,
+                    metadata: { personnel_id, date },
                 });
                 return null;
             }
@@ -136,11 +136,11 @@ export function usePersonnelHistory() {
     const clearAllPersonnelHistory = useCallback(async () => {
         if (!db || !currentWorkspace) return;
         try {
-            const allDocs = await db.history.find({ selector: { type: 'assignment_history', workspaceId: currentWorkspace } }).exec();
+            const allDocs = await db.history.find({ selector: { type: 'assignment_history', workspace_id: currentWorkspace } }).exec();
             await db.history.bulkRemove(allDocs.map((d) => d.primary));
-            logger.info('Personnel history cleared', { workspaceId: currentWorkspace });
+            logger.info('Personnel history cleared', { workspace_id: currentWorkspace });
         } catch (error) {
-            logger.error('Failed to clear personnel history', error, { feature: 'PersonnelHistory', workspaceId: currentWorkspace });
+            logger.error('Failed to clear personnel history', error, { feature: 'PersonnelHistory', workspace_id: currentWorkspace });
         }
     }, [db, currentWorkspace]);
 
@@ -151,3 +151,5 @@ export function usePersonnelHistory() {
         clearAllPersonnelHistory,
     };
 }
+
+

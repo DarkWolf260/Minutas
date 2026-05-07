@@ -72,7 +72,7 @@ export const FormLayout = ({
         )) || systemTags.includes(id.toLowerCase());
 
         if (isControlled) return;
-        const isAssignedToSection = finalConfig.sections.some((s) => s.fieldIds.includes(id));
+        const isAssignedToSection = finalConfig.sections.some((s) => s.field_ids.includes(id));
         if (!isAssignedToSection) {
           if (!addedTopLevelFields.has(id)) {
             currentFieldChunk.push(id);
@@ -88,7 +88,7 @@ export const FormLayout = ({
 
     const allLayoutFields = new Set<string>();
     finalConfig.layout.forEach((id) => { if (!id.startsWith('section_') && !id.startsWith('sec_') && !id.startsWith('cond_')) allLayoutFields.add(id); });
-    finalConfig.sections.forEach((s) => s.fieldIds.forEach((id) => allLayoutFields.add(id)));
+    finalConfig.sections.forEach((s) => s.field_ids.forEach((id) => allLayoutFields.add(id)));
 
     const systemTags = ['enc', 'pie', 'usuario', 'estatus'];
     const orphanFields = Object.keys(finalConfig.fields).filter(
@@ -116,7 +116,7 @@ export const FormLayout = ({
           }
           const section = sectionsById[chunk];
           if (!section) return null;
-          const condVal = section.condition ? allFormValues?.[section.condition.fieldId] : undefined;
+          const condVal = section.condition ? allFormValues?.[section.condition.field_id] : undefined;
           return (
             <SectionRenderer
               key={section.id}
@@ -141,24 +141,24 @@ export const FormLayout = ({
               key={`chunk-${index}`}
               className="grid grid-cols-1 sm:grid-cols-2 3xl:grid-cols-3 gap-x-4 gap-y-6"
             >
-              {chunk.map((fieldId) => {
-                const fieldConfig = finalConfig.fields[fieldId];
+              {chunk.map((field_id) => {
+                const fieldConfig = finalConfig.fields[field_id];
                 if (!fieldConfig) return null;
 
                 const isFullWidth = fieldConfig.type === 'textarea';
 
                 return (
                   <div
-                    key={fieldId}
+                    key={field_id}
                     className={cn('space-y-2', isFullWidth && 'sm:col-span-2 3xl:col-span-3')}
                   >
-                    <Label htmlFor={fieldId}>{fieldConfig.label || fieldId}</Label>
+                    <Label htmlFor={field_id}>{fieldConfig.label || field_id}</Label>
                     <Controller
-                      name={fieldId}
+                      name={field_id}
                       control={control}
                       render={({ field }) => (
                         <FieldRenderer
-                          fieldId={fieldId}
+                          field_id={field_id}
                           fieldConfig={fieldConfig}
                           roles={roles}
                           rolesLoaded={rolesLoaded}
@@ -183,3 +183,4 @@ export const FormLayout = ({
     </>
   );
 };
+

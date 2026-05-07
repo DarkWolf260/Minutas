@@ -67,13 +67,13 @@ export function TemplateBuilder({
   const previewTemplate = useMemo<Template>(
     () => ({
       id: 'preview',
-      workspaceId: currentWorkspace,
+      workspace_id: currentWorkspace,
       name: templateName || 'Vista Previa',
       content: templateContent,
       type: 'normal',
       isActive: true,
       statisticsCategory: initialTemplate?.statisticsCategory,
-      statisticsRules: initialTemplate?.statisticsRules,
+      statistics_rules: initialTemplate?.statistics_rules,
     }),
     [templateContent, templateName, initialTemplate, currentWorkspace]
   );
@@ -124,7 +124,7 @@ export function TemplateBuilder({
     } else if (onAdd) {
       const newTemplate: Template = {
         id: generateId('template'),
-        workspaceId: currentWorkspace,
+        workspace_id: currentWorkspace,
         name: templateName,
         content: templateContent,
         type: 'normal',
@@ -348,3 +348,5 @@ export function TemplateBuilder({
     </div>
   );
 }
+
+

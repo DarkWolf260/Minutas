@@ -33,20 +33,14 @@ export function useGuards() {
         setGuards(
           data.map((d) => {
             const guardData = d.toJSON().data as Guard;
-            return { ...guardData, workspaceId: currentWorkspace };
+            return { ...guardData, workspace_id: currentWorkspace };
           }) as Guard[]
         );
         initialized = true;
       } else if (!initialized) {
         initialized = true;
-        repo
-          .bulkInitGuards(defaultGuards)
-          .catch((err) =>
-            logger.error('Failed to insert default guards', err, {
-              feature: 'Guards',
-              workspaceId: currentWorkspace,
-            })
-          );
+        // Just use defaults in state, do NOT init in DB to avoid cloud sync conflicts
+        setGuards(defaultGuards);
       } else {
         setGuards([]);
       }
@@ -73,3 +67,4 @@ export function useGuards() {
 
   return { guards, saveGuards, isLoaded, clearAllGuards };
 }
+

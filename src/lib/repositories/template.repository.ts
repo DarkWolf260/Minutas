@@ -11,8 +11,8 @@ import { safeWrite, silentWrite } from './base.repository';
 import { DbKeys } from './keys';
 import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
 
-export function createTemplateRepository(db: MinutasDatabase, workspaceId: string) {
-  const ws = workspaceId;
+export function createTemplateRepository(db: MinutasDatabase, workspace_id: string) {
+  const ws = workspace_id;
 
   const add = async (template: Template) =>
     safeWrite(
@@ -29,33 +29,33 @@ export function createTemplateRepository(db: MinutasDatabase, workspaceId: strin
       async () => {
         const doc = await db.templates.findOne(template.id).exec();
         if (!doc) throw new Error('Plantilla no encontrada.');
-        // RxDB does not allow patching the primary key (id) or workspaceId.
+        // RxDB does not allow patching the primary key (id) or workspace_id.
         // Destructure them out and only patch the mutable fields.
-        const { id, workspaceId, ...patchData } = template;
+        const { id, workspace_id, ...patchData } = template;
         await doc.patch(patchData);
       },
       { feature: 'Templates', rethrow: true }
     );
 
-  const remove = async (templateId: string) =>
+  const remove = async (template_id: string) =>
     safeWrite(
       async () => {
-        const templateDoc = await db.templates.findOne(templateId).exec();
+        const templateDoc = await db.templates.findOne(template_id).exec();
         if (templateDoc) await templateDoc.remove();
         const configDoc = await db.configs
-          .findOne(DbKeys.templateConfig(templateId))
+          .findOne(DbKeys.templateConfig(ws, template_id))
           .exec();
         if (configDoc) await configDoc.remove();
       },
       { feature: 'Templates', successMessage: 'Plantilla eliminada.' }
     );
 
-  const toggle = async (templateId: string) =>
+  const toggle = async (template_id: string) =>
     silentWrite(
       async () => {
-        const doc = await db.templates.findOne(templateId).exec();
+        const doc = await db.templates.findOne(template_id).exec();
         if (doc) {
-          await doc.patch({ isActive: !(doc.toJSON().isActive ?? true) });
+          await doc.patch({ is_active: !(doc.toJSON().is_active ?? true) });
         }
       },
       { feature: 'Templates' }
@@ -68,11 +68,11 @@ export function createTemplateRepository(db: MinutasDatabase, workspaceId: strin
     silentWrite(
       async () => {
         const allTemplates = await db.templates
-          .find({ selector: { workspaceId: ws } })
+          .find({ selector: { workspace_id: ws } })
           .exec();
         await Promise.all(allTemplates.map((d) => d.remove()));
         const allConfigs = await db.configs
-          .find({ selector: { type: 'template_config', workspaceId: ws } })
+          .find({ selector: { type: 'template_config', workspace_id: ws } })
           .exec();
         await Promise.all(allConfigs.map((d: any) => d.remove()));
       },
@@ -83,3 +83,6 @@ export function createTemplateRepository(db: MinutasDatabase, workspaceId: strin
 }
 
 export type TemplateRepository = ReturnType<typeof createTemplateRepository>;
+
+
+

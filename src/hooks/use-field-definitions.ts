@@ -8,19 +8,19 @@ import { logger } from '@/lib/logger';
 import { useConfigRepo } from './use-config-repo';
 
 const defaultDefinitions: Record<string, FieldConfig> = {
-  Municipio: { label: 'Municipio', type: 'predefined', value: '', sectionId: 'default' },
-  Estado: { label: 'Estado', type: 'predefined', value: 'Anzoátegui', sectionId: 'default' },
-  REDAN: { label: 'REDAN', type: 'predefined', value: 'Oriente', sectionId: 'default' },
-  ZOEDAN: { label: 'ZOEDAN', type: 'predefined', value: 'Anzoátegui', sectionId: 'default' },
+  Municipio: { label: 'Municipio', type: 'predefined', value: '', section_id: 'default' },
+  Estado: { label: 'Estado', type: 'predefined', value: 'Anzoátegui', section_id: 'default' },
+  REDAN: { label: 'REDAN', type: 'predefined', value: 'Oriente', section_id: 'default' },
+  ZOEDAN: { label: 'ZOEDAN', type: 'predefined', value: 'Anzoátegui', section_id: 'default' },
   Fecha: {
     label: 'Fecha',
     type: 'date',
     value: format(new Date(), 'yyyy-MM-dd'),
-    sectionId: 'default',
+    section_id: 'default',
   },
-  Hora: { label: 'Hora', type: 'time-hlv', value: '', sectionId: 'default' },
-  Reporta: { label: 'Reporta', type: 'predefined', value: '', sectionId: 'default' },
-  Analista: { label: 'Analista', type: 'predefined', value: '', sectionId: 'default' },
+  Hora: { label: 'Hora', type: 'time-hlv', value: '', section_id: 'default' },
+  Reporta: { label: 'Reporta', type: 'predefined', value: '', section_id: 'default' },
+  Analista: { label: 'Analista', type: 'predefined', value: '', section_id: 'default' },
 };
 
 export function useFieldDefinitions() {
@@ -40,7 +40,7 @@ export function useFieldDefinitions() {
           const item = d.toJSON();
           defMap[item.name || ''] = {
             ...(item.data as FieldConfig),
-            workspaceId: currentWorkspace,
+            workspace_id: currentWorkspace,
           };
         });
 
@@ -53,14 +53,8 @@ export function useFieldDefinitions() {
 
         setDefinitions(defMap);
       } else {
-        repo
-          .bulkInitFieldDefinitions(defaultDefinitions)
-          .catch((err) =>
-            logger.error('Failed to insert default field definitions', err, {
-              feature: 'FieldDefinitions',
-              workspaceId: currentWorkspace,
-            })
-          );
+        // Just use defaults in state, do NOT init in DB to avoid cloud sync conflicts
+        setDefinitions(defaultDefinitions);
       }
       setIsLoaded(true);
     });
@@ -116,3 +110,4 @@ export function useFieldDefinitions() {
     ]
   );
 }
+

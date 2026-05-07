@@ -82,7 +82,7 @@ export function CSVManager({ personnel, roles, departments, onImport }: CSVManag
             name,
             cedula,
             rank,
-            roleId: cargo, // Map CSV "Cargo" to roleId
+            role_id: cargo, // Map CSV "Cargo" to role_id
             department: dept?.id || departmentName,
           });
 
@@ -93,7 +93,7 @@ export function CSVManager({ personnel, roles, departments, onImport }: CSVManag
 
           newMembers.push({
             id: generateId('personnel'),
-            workspaceId: currentWorkspace || '',
+            workspace_id: currentWorkspace || '',
             ...validation.data,
             status: statusValue as any,
           } as StaffMember);
@@ -126,7 +126,7 @@ export function CSVManager({ personnel, roles, departments, onImport }: CSVManag
       p.rank || '',
       p.name,
       p.cedula || '',
-      p.roleId || p.cargo || '', // Mapping institutional role to Cargo column
+      p.role_id || p.cargo || '', // Mapping institutional role to Cargo column
       deptMap.get(p.department || '') || p.department || '',
       statusMap.get(p.status || 'activo') || 'Activo',
     ]);
@@ -169,3 +169,5 @@ export function CSVManager({ personnel, roles, departments, onImport }: CSVManag
     </div>
   );
 }
+
+

@@ -188,23 +188,23 @@ const SearchableCategorySelector = ({
 
 
 const FieldEditor = React.memo(function FieldEditor({
-  fieldId,
+  field_id,
   fieldConfig,
   allFields,
   onConfigChange,
-  siblingFieldIds,
+  siblingfield_ids,
   optionsDefinedInTemplate,
 }: {
-  fieldId: string;
+  field_id: string;
   fieldConfig: FieldConfig;
   allFields: Record<string, FieldConfig>;
-  onConfigChange: (fieldId: string, newConfig: Partial<FieldConfig>) => void;
-  siblingFieldIds: string[];
+  onConfigChange: (field_id: string, newConfig: Partial<FieldConfig>) => void;
+  siblingfield_ids: string[];
   optionsDefinedInTemplate: boolean;
 }) {
   const { definitions } = useFieldDefinitions();
 
-  const globalDefinition = definitions[fieldId];
+  const globalDefinition = definitions[field_id];
   const finalType = fieldConfig.type || globalDefinition?.type || 'text';
 
   return (
@@ -215,18 +215,18 @@ const FieldEditor = React.memo(function FieldEditor({
             <Layers className="h-3.5 w-3.5" />
           </div>
           <div className="flex flex-col min-w-0">
-            <Label className="text-xs font-bold truncate text-foreground/90" title={fieldId}>
-              {fieldConfig.label || fieldId}
+            <Label className="text-xs font-bold truncate text-foreground/90" title={field_id}>
+              {fieldConfig.label || field_id}
             </Label>
-            {fieldConfig.label && fieldConfig.label !== fieldId && (
-              <span className="text-[9px] text-muted-foreground font-mono truncate">{fieldId}</span>
+            {fieldConfig.label && fieldConfig.label !== field_id && (
+              <span className="text-[9px] text-muted-foreground font-mono truncate">{field_id}</span>
             )}
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Select
             value={finalType}
-            onValueChange={(value) => onConfigChange(fieldId, { type: value as FieldType })}
+            onValueChange={(value) => onConfigChange(field_id, { type: value as FieldType })}
           >
             <SelectTrigger className="w-[100px] h-7 text-[10px] bg-muted/20 border-transparent hover:border-muted-foreground/20 transition-all">
               <SelectValue />
@@ -274,7 +274,7 @@ const FieldEditor = React.memo(function FieldEditor({
             <div className="scale-95 origin-top-left">
               <SnippetOptionEditor
                 config={fieldConfig}
-                onUpdate={(newConfig) => onConfigChange(fieldId, newConfig)}
+                onUpdate={(newConfig) => onConfigChange(field_id, newConfig)}
               />
             </div>
           ) : (
@@ -387,19 +387,19 @@ export function TemplateEditor({
     toast.success("Cambios guardados correctamente");
   };
 
-  const handleFieldChange = useCallback((fieldId: string, newConfig: Partial<FieldConfig>) => {
+  const handleFieldChange = useCallback((field_id: string, newConfig: Partial<FieldConfig>) => {
     setLocalConfig((prev) => {
       const updatedFields = { ...prev.fields };
 
-      updatedFields[fieldId] = {
-        ...(updatedFields[fieldId] || { label: fieldId, type: 'text' }),
+      updatedFields[field_id] = {
+        ...(updatedFields[field_id] || { label: field_id, type: 'text' }),
         ...newConfig,
       } as FieldConfig;
 
       if (newConfig.type === 'time-hlv') {
         Object.keys(updatedFields).forEach((fId) => {
           const field = updatedFields[fId];
-          if (field && fId !== fieldId && field.type === 'time-hlv') {
+          if (field && fId !== field_id && field.type === 'time-hlv') {
             updatedFields[fId] = { ...field, type: 'text' };
           }
         });
@@ -425,8 +425,8 @@ export function TemplateEditor({
     const repeatableFields = new Set<string>();
     
     (localConfig.sections || []).forEach(sec => {
-      if (sec.isRepeatable && sec.fieldIds) {
-        sec.fieldIds.forEach(id => repeatableFields.add(id));
+      if (sec.isRepeatable && sec.field_ids) {
+        sec.field_ids.forEach(id => repeatableFields.add(id));
       }
     });
 
@@ -523,8 +523,8 @@ export function TemplateEditor({
                             variant="ghost"
                             className="h-6 text-[10px] text-primary hover:bg-primary/5 px-2 font-bold uppercase tracking-wider"
                             onClick={() => {
-                              const current = localTemplate.statisticsSubCategories || [];
-                              setLocalTemplate(p => ({ ...p, statisticsSubCategories: [...current, ''] }));
+                              const current = localTemplate.statistics_sub_categories || [];
+                              setLocalTemplate(p => ({ ...p, statistics_sub_categories: [...current, ''] }));
                               setHasChanges(true);
                             }}
                           >
@@ -533,15 +533,15 @@ export function TemplateEditor({
                         </div>
                         
                         <div className="space-y-3">
-                          {(localTemplate.statisticsSubCategories || []).map((sub, idx) => (
+                          {(localTemplate.statistics_sub_categories || []).map((sub, idx) => (
                             <div key={idx} className="flex gap-2 items-center">
                               <div className="flex-1">
                                 <SearchableCategorySelector
                                   value={sub || 'none'}
                                   onSelect={(val) => {
-                                    const newList = [...(localTemplate.statisticsSubCategories || [])];
+                                    const newList = [...(localTemplate.statistics_sub_categories || [])];
                                     newList[idx] = val === 'none' ? '' : val;
-                                    setLocalTemplate(p => ({ ...p, statisticsSubCategories: newList }));
+                                    setLocalTemplate(p => ({ ...p, statistics_sub_categories: newList }));
                                     setHasChanges(true);
                                   }}
                                   placeholder="Selecciona sub-categoría..."
@@ -552,8 +552,8 @@ export function TemplateEditor({
                                 variant="ghost"
                                 className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/5 shrink-0"
                                 onClick={() => {
-                                  const newList = (localTemplate.statisticsSubCategories || []).filter((_, i) => i !== idx);
-                                  setLocalTemplate(p => ({ ...p, statisticsSubCategories: newList }));
+                                  const newList = (localTemplate.statistics_sub_categories || []).filter((_, i) => i !== idx);
+                                  setLocalTemplate(p => ({ ...p, statistics_sub_categories: newList }));
                                   setHasChanges(true);
                                 }}
                               >
@@ -574,9 +574,9 @@ export function TemplateEditor({
                       <div className="flex items-center gap-2">
                         <BarChart3 className="h-4 w-4 text-primary" />
                         <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Reglas Condicionales</h3>
-                        {(localTemplate.statisticsRules || []).length > 0 && (
+                        {(localTemplate.statistics_rules || []).length > 0 && (
                           <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[9px] h-4 px-1.5">
-                            {(localTemplate.statisticsRules || []).length}
+                            {(localTemplate.statistics_rules || []).length}
                           </Badge>
                         )}
                       </div>
@@ -585,8 +585,8 @@ export function TemplateEditor({
                         variant="outline"
                         className="h-7 text-[10px] bg-background shrink-0 px-2"
                         onClick={() => {
-                          const newRules = [...(localTemplate.statisticsRules || []), { fieldId: '', operator: '=', condition: '', category: '' }];
-                          setLocalTemplate(p => ({ ...p, statisticsRules: newRules as StatisticRule[] }));
+                          const newRules = [...(localTemplate.statistics_rules || []), { field_id: '', operator: '=', condition: '', category: '' }];
+                          setLocalTemplate(p => ({ ...p, statistics_rules: newRules as StatisticRule[] }));
                           setHasChanges(true);
                         }}
                       >
@@ -595,7 +595,7 @@ export function TemplateEditor({
                     </div>
 
                     <div className="space-y-3">
-                      {(localTemplate.statisticsRules || []).length === 0 && (
+                      {(localTemplate.statistics_rules || []).length === 0 && (
                         <div className="text-center py-6 border-2 border-dashed rounded-lg bg-muted/5">
                           <p className="text-[10px] text-muted-foreground">Sin reglas automáticas.</p>
                         </div>
@@ -605,8 +605,8 @@ export function TemplateEditor({
                           <>
                             <div className="flex gap-2">
                               <Select
-                                value={cond.fieldId || ''}
-                                onValueChange={(val) => onChange('fieldId', val)}
+                                value={cond.field_id || ''}
+                                onValueChange={(val) => onChange('field_id', val)}
                               >
                                 <SelectTrigger className="h-8 text-[10px] flex-1 bg-background border-muted shadow-sm">
                                   <SelectValue placeholder="Campo" />
@@ -637,7 +637,7 @@ export function TemplateEditor({
 
                             {cond.operator !== 'empty' && cond.operator !== 'not_empty' && cond.operator !== 'extract_value' && (
                               (() => {
-                                const fieldConfig = cond.fieldId ? localConfig.fields[cond.fieldId] : undefined;
+                                const fieldConfig = cond.field_id ? localConfig.fields[cond.field_id] : undefined;
                                 const isDropdown = fieldConfig?.type === 'dropdown';
                                 const options = fieldConfig?.snippetOptions || [];
 
@@ -674,11 +674,11 @@ export function TemplateEditor({
                           </>
                         );
 
-                        return (localTemplate.statisticsRules || []).map((rule, idx) => {
+                        return (localTemplate.statistics_rules || []).map((rule, idx) => {
                           const updateRule = (updatedFields: Partial<StatisticRule>) => {
-                            const newRules = [...(localTemplate.statisticsRules || [])];
+                            const newRules = [...(localTemplate.statistics_rules || [])];
                             newRules[idx] = { ...newRules[idx], ...updatedFields };
-                            setLocalTemplate(p => ({ ...p, statisticsRules: newRules }));
+                            setLocalTemplate(p => ({ ...p, statistics_rules: newRules }));
                             setHasChanges(true);
                           };
 
@@ -752,7 +752,7 @@ export function TemplateEditor({
                                     size="sm"
                                     className="h-6 flex-1 text-[10px] border-dashed border-muted-foreground/30 text-muted-foreground hover:text-foreground"
                                     onClick={() => {
-                                      const newSecConditions = [...(rule.conditions || []), { fieldId: '', operator: '=' as const, condition: '' }];
+                                      const newSecConditions = [...(rule.conditions || []), { field_id: '', operator: '=' as const, condition: '' }];
                                       updateRule({ conditions: newSecConditions as any });
                                     }}
                                   >
@@ -763,7 +763,7 @@ export function TemplateEditor({
                                     size="sm"
                                     className="h-6 flex-1 text-[10px] border-dashed border-muted-foreground/30 text-muted-foreground hover:text-foreground"
                                     onClick={() => {
-                                      const newOrConditions = [...(rule.orConditions || []), { fieldId: '', operator: '=' as const, condition: '' }];
+                                      const newOrConditions = [...(rule.orConditions || []), { field_id: '', operator: '=' as const, condition: '' }];
                                       updateRule({ orConditions: newOrConditions as any });
                                     }}
                                   >
@@ -776,10 +776,10 @@ export function TemplateEditor({
                                 value={rule.category || 'none'}
                                 onSelect={(val) => {
                                   const finalVal = val === 'none' ? '' : val;
-                                  const newRules = (localTemplate.statisticsRules || []).map((r, i) =>
+                                  const newRules = (localTemplate.statistics_rules || []).map((r, i) =>
                                     i === idx ? { ...r, category: finalVal } : r
                                   );
-                                  setLocalTemplate(p => ({ ...p, statisticsRules: newRules }));
+                                  setLocalTemplate(p => ({ ...p, statistics_rules: newRules }));
                                   setHasChanges(true);
                                 }}
                                 className="h-8 bg-primary/5 border-dashed border-primary/20 hover:bg-primary/10"
@@ -791,10 +791,10 @@ export function TemplateEditor({
                                 size="icon"
                                 className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10 shrink-0"
                                 onClick={() => {
-                                  const ruleToDuplicate = JSON.parse(JSON.stringify(localTemplate.statisticsRules![idx]));
-                                  const newRules = [...(localTemplate.statisticsRules || [])];
+                                  const ruleToDuplicate = JSON.parse(JSON.stringify(localTemplate.statistics_rules![idx]));
+                                  const newRules = [...(localTemplate.statistics_rules || [])];
                                   newRules.splice(idx + 1, 0, ruleToDuplicate);
-                                  setLocalTemplate(p => ({ ...p, statisticsRules: newRules }));
+                                  setLocalTemplate(p => ({ ...p, statistics_rules: newRules }));
                                   setHasChanges(true);
                                   toast.success("Regla duplicada");
                                 }}
@@ -807,8 +807,8 @@ export function TemplateEditor({
                                 size="icon"
                                 className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
                                 onClick={() => {
-                                  const newRules = (localTemplate.statisticsRules || []).filter((_, i) => i !== idx);
-                                  setLocalTemplate(p => ({ ...p, statisticsRules: newRules }));
+                                  const newRules = (localTemplate.statistics_rules || []).filter((_, i) => i !== idx);
+                                  setLocalTemplate(p => ({ ...p, statistics_rules: newRules }));
                                   setHasChanges(true);
                                 }}
                               >
@@ -854,7 +854,7 @@ export function TemplateEditor({
                         return <div key={`${section.id}-${index}`} className="h-px bg-muted-foreground/20 my-4 w-full" />;
                       }
 
-                      const title = section.label || (section.condition ? `Si ${section.condition.fieldId} ${section.condition.operator} ${section.condition.value || "..."}` : section.id);
+                      const title = section.label || (section.condition ? `Si ${section.condition.field_id} ${section.condition.operator} ${section.condition.value || "..."}` : section.id);
 
                       return (
                         <Card
@@ -911,11 +911,11 @@ export function TemplateEditor({
                                 return (
                                   <FieldEditor
                                     key={`${section.id}-${childId}-${childIdx}`}
-                                    fieldId={childId}
+                                    field_id={childId}
                                     fieldConfig={fieldConfig}
                                     allFields={localConfig.fields}
                                     onConfigChange={handleFieldChange}
-                                    siblingFieldIds={section.fieldIds || []}
+                                    siblingfield_ids={section.field_ids || []}
                                     optionsDefinedInTemplate={optionsDefinedInTemplate.get(childId) || false}
                                   />
                                 );
@@ -933,7 +933,7 @@ export function TemplateEditor({
                     const renderGroupCard = (group: SectionConfig[], groupIndex: number) => {
                       const firstItem = group[0];
                       if (!firstItem) return null;
-                      const commonField = firstItem.condition?.fieldId;
+                      const commonField = firstItem.condition?.field_id;
 
                       return (
                         <Card key={`group-${commonField}-${groupIndex}`} className="border-l-4 border-l-primary/60 shadow-md bg-primary/[0.02] overflow-hidden">
@@ -973,11 +973,11 @@ export function TemplateEditor({
                                       return (
                                         <FieldEditor
                                           key={`${section.id}-${childId}-${childIdx}`}
-                                          fieldId={childId}
+                                          field_id={childId}
                                           fieldConfig={fieldConfig}
                                           allFields={localConfig.fields}
                                           onConfigChange={handleFieldChange}
-                                          siblingFieldIds={section.fieldIds || []}
+                                          siblingfield_ids={section.field_ids || []}
                                           optionsDefinedInTemplate={optionsDefinedInTemplate.get(childId) || false}
                                         />
                                       );
@@ -1004,14 +1004,14 @@ export function TemplateEditor({
                       const section = sectionsById[itemId];
 
                       // Detect groupable consecutive conditional sections
-                      if (section?.condition && section.condition.fieldId) {
+                      if (section?.condition && section.condition.field_id) {
                         const group: SectionConfig[] = [section];
                         let j = i + 1;
                         while (j < layoutItems.length) {
                           const nextId = layoutItems[j];
                           if (!nextId) { j++; continue; }
                           const nextSec = sectionsById[nextId];
-                          if (nextSec?.condition && nextSec.condition.fieldId === section.condition.fieldId) {
+                          if (nextSec?.condition && nextSec.condition.field_id === section.condition.field_id) {
                             group.push(nextSec);
                             j++;
                           } else {
@@ -1038,11 +1038,11 @@ export function TemplateEditor({
                           renderedItems.push(
                             <FieldEditor
                               key={`top-${itemId}-${i}`}
-                              fieldId={itemId}
+                              field_id={itemId}
                               fieldConfig={fieldConfig}
                               allFields={localConfig.fields}
                               onConfigChange={handleFieldChange}
-                              siblingFieldIds={Array.from(addedTopLevelFields)}
+                              siblingfield_ids={Array.from(addedTopLevelFields)}
                               optionsDefinedInTemplate={optionsDefinedInTemplate.get(itemId) || false}
                             />
                           );
@@ -1074,4 +1074,5 @@ export function TemplateEditor({
     </div>
   );
 }
+
 

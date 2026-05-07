@@ -11,8 +11,8 @@ export interface CommunityTemplate {
   type: 'normal' | 'relevante';
   created_at?: string;
   statisticsCategory?: string | null;
-  statisticsSubCategories?: string[] | null;
-  statisticsRules?: any[] | null;
+  statistics_sub_categories?: string[] | null;
+  statistics_rules?: any[] | null;
 }
 
 export function useCommunityTemplates() {
@@ -51,3 +51,4 @@ export function useCommunityTemplates() {
     refetch: fetchTemplates
   };
 }
+

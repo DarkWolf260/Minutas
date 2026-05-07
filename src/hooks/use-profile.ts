@@ -38,18 +38,8 @@ export function useProfile() {
       if (doc) {
         setProfile(doc.toJSON().data as UserProfile);
       } else {
-        try {
-          await repo.initProfile(defaultProfile);
-        } catch (err: unknown) {
-          const e = err as any;
-          const isConflict = e.code === 'CONFLICT' || e.status === 409;
-          if (!isConflict) {
-            logger.error('Failed to insert default profile', err, {
-              feature: 'Profile',
-              workspaceId: currentWorkspace,
-            });
-          }
-        }
+        // Just use defaults in state, do NOT init in DB to avoid cloud sync conflicts
+        setProfile(defaultProfile);
       }
       setIsLoaded(true);
     });
@@ -70,8 +60,9 @@ export function useProfile() {
     if (!db || !currentWorkspace) return;
     const repo = createConfigRepository(db, currentWorkspace);
     await repo.clearProfile();
-    logger.info('User profile cleared', { workspaceId: currentWorkspace });
+    logger.info('User profile cleared', { workspace_id: currentWorkspace });
   }, [db, currentWorkspace]);
 
   return { profile, saveProfile, clearProfile, isLoaded };
 }
+

@@ -26,12 +26,13 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
     manejarClickSubirLocal,
     inputArchivoRef,
     manejarCambioArchivo,
-    setEsDialogOpenNube,
     manejarClickEditarContenido,
     estaAutenticado,
     manejarSubirANube,
     estaSubiendo,
-    manejarClickEliminar
+    manejarClickEliminar,
+    sincronizarDesdeNube,
+    estaSincronizando
   } = hook;
 
   return (
@@ -55,10 +56,11 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
             className="w-full text-xs h-9" 
             size="sm" 
             variant="secondary"
-            onClick={() => setEsDialogOpenNube(true)}
+            onClick={sincronizarDesdeNube}
+            disabled={estaSincronizando}
           >
-            <CloudDownload className="mr-2 h-4 w-4" />
-            Desde Nube
+            <CloudDownload className={cn("mr-2 h-4 w-4", estaSincronizando && "animate-spin")} />
+            Sincronizar
           </Button>
         </div>
         <input

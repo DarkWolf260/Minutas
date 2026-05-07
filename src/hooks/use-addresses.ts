@@ -23,7 +23,7 @@ export function useAddresses() {
         setAddresses(
           data.map((d) => {
             const json = d.toJSON();
-            return { ...(json.data as Address), workspaceId: currentWorkspace };
+            return { ...(json.data as Address), workspace_id: currentWorkspace };
           }) as Address[]
         );
       } else {
@@ -32,7 +32,7 @@ export function useAddresses() {
           if (!isConflict) {
             logger.error('Failed to insert default addresses', err, {
               feature: 'Addresses',
-              workspaceId: currentWorkspace,
+              workspace_id: currentWorkspace,
             });
           }
         });
@@ -78,3 +78,4 @@ export function useAddresses() {
 
   return { addresses, addAddress, updateAddress, removeAddress, clearAllAddresses, isLoaded };
 }
+

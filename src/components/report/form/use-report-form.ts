@@ -6,7 +6,7 @@ import type {
   FieldConfig,
   FieldType,
   StaffMember,
-  FormDataRecord,
+  form_dataRecord,
 } from '@/lib/types';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { parseTemplate } from '@/lib/template-parser';
@@ -23,9 +23,9 @@ interface UseReportFormProps {
   reportId?: string;
   template: Template;
   config: TemplateConfig;
-  initialData?: FormDataRecord;
+  initialData?: form_dataRecord;
   controlledValues?: Record<string, string>;
-  onDataChange?: (formData: FormDataRecord) => void;
+  onDataChange?: (form_data: form_dataRecord) => void;
 }
 
 export function useReportForm({
@@ -45,26 +45,26 @@ export function useReportForm({
 
   // 1. Staff calculation
   const activeGuardStaff = useMemo(() => {
-    if (!settingsLoaded || !guardsLoaded || !settings?.activeGuardId) return [];
+    if (!settingsLoaded || !guardsLoaded || !settings?.active_guard_id) return [];
 
-    const activeStaff = (settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === settings.activeGuardId)
+    const activeStaff = (settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === settings.active_guard_id)
       ? settings.ordenDelDiaDraft.staff
-      : guards.find((g) => g.id === settings.activeGuardId)?.staff;
+      : guards.find((g) => g.id === settings.active_guard_id)?.staff;
 
     if (!activeStaff) return [];
 
-    const staffMap = new Map<string, StaffMember & { roleId?: string }>();
+    const staffMap = new Map<string, StaffMember & { role_id?: string }>();
     Object.entries(activeStaff).forEach(([roleName, staffList]) => {
-      const roleId = roles.find((r: any) => r.name === roleName)?.name;
+      const role_id = roles.find((r: any) => r.name === roleName)?.name;
       staffList.forEach((person) => {
         if (!staffMap.has(person.id)) {
-          staffMap.set(person.id, { ...person, roleId });
+          staffMap.set(person.id, { ...person, role_id });
         }
       });
     });
 
     return Array.from(staffMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [settings?.activeGuardId, settings?.ordenDelDiaDraft, guards, settingsLoaded, guardsLoaded, roles]);
+  }, [settings?.active_guard_id, settings?.ordenDelDiaDraft, guards, settingsLoaded, guardsLoaded, roles]);
 
   // 2. Final Config Merging
   const finalConfig = useMemo(() => {
@@ -96,22 +96,22 @@ export function useReportForm({
         Object.keys(config.fields).find((k) => config.fields[k]?.type === 'time-hlv') || null;
     }
 
-    fieldNames.forEach((fieldId: string) => {
-      const templateFieldConfig = templateConfigFields[fieldId];
-      const globalDef = definitions[fieldId];
-      const typeFromTemplate = fieldTypes.get(fieldId);
+    fieldNames.forEach((field_id: string) => {
+      const templateFieldConfig = templateConfigFields[field_id];
+      const globalDef = definitions[field_id];
+      const typeFromTemplate = fieldTypes.get(field_id);
 
       const mergedConfig = { ...(globalDef || {}), ...(templateFieldConfig || {}) };
       let fieldType: FieldType = 'text';
 
       if (typeFromTemplate && typeFromTemplate !== 'text') {
         fieldType = typeFromTemplate;
-      } else if (fieldId.toLowerCase() === 'fecha') {
+      } else if (field_id.toLowerCase() === 'fecha') {
         fieldType = 'date';
-      } else if (fieldId.toLowerCase() === 'hora') {
-        if (!timeHlvFieldInConfig || timeHlvFieldInConfig === fieldId) {
+      } else if (field_id.toLowerCase() === 'hora') {
+        if (!timeHlvFieldInConfig || timeHlvFieldInConfig === field_id) {
           fieldType = 'time-hlv';
-          if (!timeHlvFieldInConfig) timeHlvFieldInConfig = fieldId;
+          if (!timeHlvFieldInConfig) timeHlvFieldInConfig = field_id;
         } else {
           fieldType = 'text';
         }
@@ -125,35 +125,35 @@ export function useReportForm({
         fieldType = (mergedConfig as any).type;
       }
 
-      newConfig.fields[fieldId] = {
+      newConfig.fields[field_id] = {
         ...mergedConfig,
         type: fieldType,
-        label: (mergedConfig as any).label || fieldId,
+        label: (mergedConfig as any).label || field_id,
       } as FieldConfig;
 
-      if (defaultValues.has(fieldId)) {
-        newConfig.fields[fieldId].defaultValue = defaultValues.get(fieldId);
+      if (defaultValues.has(field_id)) {
+        newConfig.fields[field_id].defaultValue = defaultValues.get(field_id);
       }
 
-      if (templateOptions.has(fieldId)) {
-        newConfig.fields[fieldId].snippetOptions = templateOptions.get(fieldId);
-        if (newConfig.fields[fieldId].type === 'text') {
-          newConfig.fields[fieldId].type = 'dropdown';
+      if (templateOptions.has(field_id)) {
+        newConfig.fields[field_id].snippetOptions = templateOptions.get(field_id);
+        if (newConfig.fields[field_id].type === 'text') {
+          newConfig.fields[field_id].type = 'dropdown';
         }
       }
 
-      if (fieldModifiers.has(fieldId)) {
-        newConfig.fields[fieldId].modifiers = fieldModifiers.get(fieldId) as any;
+      if (fieldModifiers.has(field_id)) {
+        newConfig.fields[field_id].modifiers = fieldModifiers.get(field_id) as any;
       } else if ((mergedConfig as any).modifier) {
-        newConfig.fields[fieldId].modifiers = [(mergedConfig as any).modifier];
+        newConfig.fields[field_id].modifiers = [(mergedConfig as any).modifier];
       }
 
-      if (fieldWidths.has(fieldId)) {
-        newConfig.fields[fieldId].isFullWidth = true;
+      if (fieldWidths.has(field_id)) {
+        newConfig.fields[field_id].isFullWidth = true;
       }
 
-      if (requiredFields.has(fieldId)) {
-        newConfig.fields[fieldId].required = true;
+      if (requiredFields.has(field_id)) {
+        newConfig.fields[field_id].required = true;
       }
     });
 
@@ -176,12 +176,12 @@ export function useReportForm({
 
   // 4. Initial Values Logic
   const getInitialValues = useCallback(
-    (data?: FormDataRecord) => {
-      const initialFormValues: FormDataRecord = data ? JSON.parse(JSON.stringify(data)) : {};
+    (data?: form_dataRecord) => {
+      const initialFormValues: form_dataRecord = data ? JSON.parse(JSON.stringify(data)) : {};
 
-      const activeStaff = (settings?.activeGuardId && settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === settings.activeGuardId)
+      const activeStaff = (settings?.active_guard_id && settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === settings.active_guard_id)
         ? settings.ordenDelDiaDraft.staff
-        : (settings?.activeGuardId ? guards.find((g) => g.id === settings.activeGuardId)?.staff : null);
+        : (settings?.active_guard_id ? guards.find((g) => g.id === settings.active_guard_id)?.staff : null);
 
       const safeClone = <T extends unknown>(v: T): T => {
         if (v === undefined || v === null) return v;
@@ -199,10 +199,10 @@ export function useReportForm({
 
       const MANUAL_FIELDS = ['técnico', 'auxiliar', 'conductor'];
 
-      const applyDefaults = (target: FormDataRecord, fieldIds: string[]) => {
+      const applyDefaults = (target: form_dataRecord, field_ids: string[]) => {
         if (!target) return;
-        fieldIds.forEach((fieldId) => {
-          const keyLower = fieldId.toLowerCase();
+        field_ids.forEach((field_id) => {
+          const keyLower = field_id.toLowerCase();
           const role = roles.find((r: any) => r.name.toLowerCase() === keyLower);
           const isReporta = keyLower === 'reporta';
           const isLeadershipRole = keyLower === 'director' || keyLower === 'jefe de operaciones' || keyLower === 'jefe de los servicios';
@@ -219,9 +219,9 @@ export function useReportForm({
           if ((role || isReporta) && !MANUAL_FIELDS.includes(keyLower)) {
             let initialStaff: any[] = [];
             
-            if (isReporta && settings?.reportaRoleIds && activeStaff) {
+            if (isReporta && settings?.reportarole_ids && activeStaff) {
               // Special logic for Reporta: find first available person in configured roles
-              for (const roleName of settings.reportaRoleIds) {
+              for (const roleName of settings.reportarole_ids) {
                 const staffKey = Object.keys(activeStaff).find(k => k.toLowerCase() === roleName.toLowerCase());
                 const staffList = staffKey ? activeStaff[staffKey] : undefined;
                 if (staffList && staffList.length > 0) {
@@ -233,8 +233,8 @@ export function useReportForm({
               // Fallback for Reporta if not found in active guard
               if (initialStaff.length === 0) {
                 const globalMatches = personnel.filter(p => 
-                  settings.reportaRoleIds!.some(roleName => 
-                    p.roleId?.toLowerCase() === roleName.toLowerCase() || 
+                  settings.reportarole_ids!.some(roleName => 
+                    p.role_id?.toLowerCase() === roleName.toLowerCase() || 
                     p.cargo?.toLowerCase() === roleName.toLowerCase()
                   )
                 );
@@ -253,7 +253,7 @@ export function useReportForm({
 
             if (initialStaff.length === 0 && isLeadershipRole) {
               const globalMatches = personnel.filter(
-                (p) => p.roleId?.toLowerCase() === keyLower || p.cargo?.toLowerCase() === keyLower
+                (p) => p.role_id?.toLowerCase() === keyLower || p.cargo?.toLowerCase() === keyLower
               );
               if (globalMatches.length > 0) {
                 initialStaff = globalMatches.map((p) => safeClone(p));
@@ -261,7 +261,7 @@ export function useReportForm({
             }
 
             if (initialStaff.length > 0) {
-              target[fieldId] = initialStaff;
+              target[field_id] = initialStaff;
               return;
             }
           }
@@ -273,27 +273,27 @@ export function useReportForm({
           );
 
           if (foundKey && predefinedValues[foundKey]) {
-            target[fieldId] = safeClone(predefinedValues[foundKey]);
-          } else if (finalConfig.fields[fieldId]?.defaultValue !== undefined) {
-            target[fieldId] = safeClone(finalConfig.fields[fieldId].defaultValue);
+            target[field_id] = safeClone(predefinedValues[foundKey]);
+          } else if (finalConfig.fields[field_id]?.defaultValue !== undefined) {
+            target[field_id] = safeClone(finalConfig.fields[field_id].defaultValue);
           } else if (role && !MANUAL_FIELDS.includes(keyLower)) {
-            target[fieldId] = [];
+            target[field_id] = [];
           } else if (
             keyLower === 'guardia' ||
             keyLower === 'grupo' ||
             keyLower === 'grupo de guardia' ||
             keyLower === 'guardia de servicio'
           ) {
-            target[fieldId] = settings?.activeGuardId || '';
-          } else if (fieldId === 'Unidad') {
-            target[fieldId] = [];
+            target[field_id] = settings?.active_guard_id || '';
+          } else if (field_id === 'Unidad') {
+            target[field_id] = [];
           } else {
-            target[fieldId] = '';
+            target[field_id] = '';
           }
         });
       };
 
-      const initializeSection = (sectionId: string, target: FormDataRecord, seenIds = new Set<string>()) => {
+      const initializeSection = (sectionId: string, target: form_dataRecord, seenIds = new Set<string>()) => {
         if (seenIds.has(sectionId)) return;
         const section = finalConfig.sections.find((s) => s.id === sectionId);
         if (!section) return;
@@ -303,21 +303,21 @@ export function useReportForm({
           if (!target[section.id] || !Array.isArray(target[section.id])) {
             target[section.id] = [];
           }
-          const sectionData = target[section.id] as FormDataRecord[];
+          const sectionData = target[section.id] as form_dataRecord[];
           if (sectionData.length === 0) {
-            const defaultItem: FormDataRecord = {};
-            applyDefaults(defaultItem, section.fieldIds);
-            (section.layout || section.fieldIds).forEach((id) => {
+            const defaultItem: form_dataRecord = {};
+            applyDefaults(defaultItem, section.field_ids);
+            (section.layout || section.field_ids).forEach((id) => {
               if (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) {
                 initializeSection(id, defaultItem, new Set(seenIds));
               }
             });
             sectionData.push(defaultItem);
           } else {
-            sectionData.forEach((item: FormDataRecord) => {
+            sectionData.forEach((item: form_dataRecord) => {
               if (!item) return;
-              applyDefaults(item, section.fieldIds);
-              (section.layout || section.fieldIds).forEach((id) => {
+              applyDefaults(item, section.field_ids);
+              (section.layout || section.field_ids).forEach((id) => {
                 if (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) {
                   initializeSection(id, item, new Set(seenIds));
                 }
@@ -326,8 +326,8 @@ export function useReportForm({
           }
         } else {
           if (section.id === 'section_separator') return;
-          applyDefaults(target, section.fieldIds);
-          (section.layout || section.fieldIds).forEach((id) => {
+          applyDefaults(target, section.field_ids);
+          (section.layout || section.field_ids).forEach((id) => {
             if (id.startsWith('section_') || id.startsWith('sec_') || id.startsWith('cond_')) {
               initializeSection(id, target, seenIds);
             }
@@ -345,7 +345,7 @@ export function useReportForm({
 
       return initialFormValues;
     },
-    [finalConfig, predefinedValues, roles, guards, settings?.activeGuardId, settings?.ordenDelDiaDraft, personnel, settingsLoaded, guardsLoaded]
+    [finalConfig, predefinedValues, roles, guards, settings?.active_guard_id, settings?.ordenDelDiaDraft, personnel, settingsLoaded, guardsLoaded]
   );
 
   // 5. RHF and Sync logic
@@ -400,8 +400,8 @@ export function useReportForm({
     if (!baseDataLoaded) return;
 
     const currentInitialDataHash = stableStringify(initialData || {});
-    const currentDraftKey = settings?.ordenDelDiaDraft?.updatedAt || 'no-draft';
-    const baseDataState = `${currentInitialDataHash}:${settings?.activeGuardId}:${currentDraftKey}:${roles.length}:${personnel.length}`;
+    const currentDraftKey = settings?.ordenDelDiaDraft?.updated_at || 'no-draft';
+    const baseDataState = `${currentInitialDataHash}:${settings?.active_guard_id}:${currentDraftKey}:${roles.length}:${personnel.length}`;
 
     const baseDataChanged = baseDataState !== lastBaseDataHash.current;
 
@@ -422,7 +422,7 @@ export function useReportForm({
       const formValues = getInitialValues(initialData);
       reset(formValues);
     }
-  }, [reportId, initialData, getInitialValues, reset, methods.formState.isDirty, rolesLoaded, guardsLoaded, settingsLoaded, roles, personnel, settings?.activeGuardId, settings?.ordenDelDiaDraft?.updatedAt, trigger]);
+  }, [reportId, initialData, getInitialValues, reset, methods.formState.isDirty, rolesLoaded, guardsLoaded, settingsLoaded, roles, personnel, settings?.active_guard_id, settings?.ordenDelDiaDraft?.updated_at, trigger]);
 
   return {
     methods,
@@ -441,3 +441,6 @@ export function useReportForm({
     isLoaded: rolesLoaded && guardsLoaded && settingsLoaded && personnelLoaded
   };
 }
+
+
+

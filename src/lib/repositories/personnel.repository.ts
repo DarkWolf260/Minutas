@@ -6,12 +6,12 @@ import type { MinutasDatabase } from '@/lib/db/db';
 import type { StaffMember } from '@/lib/types';
 import { safeWrite, silentWrite } from './base.repository';
 
-export function createPersonnelRepository(db: MinutasDatabase, workspaceId: string) {
-  const ws = workspaceId;
+export function createPersonnelRepository(db: MinutasDatabase, workspace_id: string) {
+  const ws = workspace_id;
 
   const watchAll = () =>
     db.personnel.find({
-      selector: { workspaceId: ws },
+      selector: { workspace_id: ws },
       sort: [{ order: 'asc' }],
     }).$;
 
@@ -52,13 +52,13 @@ export function createPersonnelRepository(db: MinutasDatabase, workspaceId: stri
     silentWrite(
       async () => {
         const existingDocs = await db.personnel
-          .find({ selector: { workspaceId: ws } })
+          .find({ selector: { workspace_id: ws } })
           .exec();
         const existingMap = new Map(existingDocs.map((d) => [d.id, d]));
 
         const preparedPersonnel = newPersonnel.map((p) => ({
           ...p,
-          workspaceId: ws,
+          workspace_id: ws,
         }));
         const newMap = new Map(preparedPersonnel.map((p) => [p.id, p]));
 
@@ -87,7 +87,7 @@ export function createPersonnelRepository(db: MinutasDatabase, workspaceId: stri
     silentWrite(
       async () => {
         const allDocs = await db.personnel
-          .find({ selector: { workspaceId: ws } })
+          .find({ selector: { workspace_id: ws } })
           .exec();
         await Promise.all(allDocs.map((d) => d.remove()));
       },
@@ -98,3 +98,6 @@ export function createPersonnelRepository(db: MinutasDatabase, workspaceId: stri
 }
 
 export type PersonnelRepository = ReturnType<typeof createPersonnelRepository>;
+
+
+

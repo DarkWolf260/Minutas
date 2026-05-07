@@ -6,7 +6,7 @@ import {
     StaffMember,
     AppSettings,
     SnippetOption,
-    FormDataValue,
+    form_dataValue,
 } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -25,7 +25,7 @@ import { CedulaInput } from '@/components/ui/custom/cedula-input';
 import { formatStaffMemberForAutocomplete } from '@/lib/formatters';
 
 interface FieldRendererProps {
-    fieldId: string;
+    field_id: string;
     fieldConfig: FieldConfig;
     roles: StaffRole[];
     rolesLoaded: boolean;
@@ -33,13 +33,13 @@ interface FieldRendererProps {
     staffOptions: StaffMember[];
     setValue: (
         name: string,
-        value: FormDataValue,
+        value: form_dataValue,
         options?: { shouldValidate?: boolean; shouldDirty?: boolean }
     ) => void;
     settings: AppSettings | null;
-    // Props passed from Controller render — typed as `FormDataValue`
-    value: FormDataValue;
-    onChange: (value: FormDataValue) => void;
+    // Props passed from Controller render — typed as `form_dataValue`
+    value: form_dataValue;
+    onChange: (value: form_dataValue) => void;
     onBlur?: () => void;
     disabled?: boolean;
     className?: string;
@@ -50,7 +50,7 @@ export const FieldRenderer = memo(
     React.forwardRef<any, FieldRendererProps>(
         (
             {
-                fieldId,
+                field_id,
                 fieldConfig,
                 roles,
                 rolesLoaded,
@@ -67,22 +67,22 @@ export const FieldRenderer = memo(
             },
             ref
         ) => {
-            const lowerFieldId = fieldId.toLowerCase();
+            const lowerfield_id = field_id.toLowerCase();
             const addressFieldNames = ['ubicación', 'destino'];
 
             // Derived property fields (e.g. "Director.sex") must never render as form inputs.
             // They are resolved at render time from the base field's StaffMember data.
-            if (fieldId.includes('.')) return null;
+            if (field_id.includes('.')) return null;
 
             // System/dynamic fields are injected at render time and must never appear in the form.
             const SYSTEM_TAGS = new Set(['enc', 'pie', 'usuario', 'estatus']);
-            if (SYSTEM_TAGS.has(lowerFieldId)) return null;
+            if (SYSTEM_TAGS.has(lowerfield_id)) return null;
 
             // Check for Reporta field (Analista is discarded)
-            if (lowerFieldId === 'reporta') {
-                const reportaRoleIds = settings?.reportaRoleIds || [];
+            if (lowerfield_id === 'reporta') {
+                const reportarole_ids = settings?.reportarole_ids || [];
                 const reportingStaff = staffOptions.filter(
-                    (staff) => staff.roleId && reportaRoleIds.includes(staff.roleId)
+                    (staff) => staff.role_id && reportarole_ids.includes(staff.role_id)
                 );
 
                 // The value might be an array of StaffMember objects. We need the ID for the Select.
@@ -107,7 +107,7 @@ export const FieldRenderer = memo(
                         value={selectedStaffId || ''}
                         disabled={disabled}
                     >
-                        <SelectTrigger className={className} ref={ref} onBlur={onBlur} id={fieldId}>
+                        <SelectTrigger className={className} ref={ref} onBlur={onBlur} id={field_id}>
                             <SelectValue placeholder="Selecciona el personal..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -129,7 +129,7 @@ export const FieldRenderer = memo(
 
             // If type is explicitly something other than 'text', prioritize the switch
             if (fieldConfig.type && fieldConfig.type !== 'text') {
-                if (fieldConfig.type === 'textarea' && addressFieldNames.includes(lowerFieldId)) {
+                if (fieldConfig.type === 'textarea' && addressFieldNames.includes(lowerfield_id)) {
                     return (
                         <AddressInput
                             value={(typeof value === 'string' ? value : '')}
@@ -141,7 +141,7 @@ export const FieldRenderer = memo(
                             onBlur={onBlur}
                             isTextarea
                             name={name}
-                            id={fieldId}
+                            id={field_id}
                         />
                     );
                 }
@@ -158,7 +158,7 @@ export const FieldRenderer = memo(
                                 rows={1}
                                 ref={ref}
                                 name={name}
-                                id={fieldId}
+                                id={field_id}
                             />
                         );
                     case 'time-hlv':
@@ -171,7 +171,7 @@ export const FieldRenderer = memo(
                                 ref={ref}
                                 onBlur={onBlur}
                                 name={name}
-                                id={fieldId}
+                                id={field_id}
                             />
                         );
                     case 'date':
@@ -184,7 +184,7 @@ export const FieldRenderer = memo(
                                 ref={ref}
                                 onBlur={onBlur}
                                 name={name}
-                                id={fieldId}
+                                id={field_id}
                             />
                         );
                     case 'multi-text':
@@ -200,7 +200,7 @@ export const FieldRenderer = memo(
                                 ref={ref}
                                 onBlur={onBlur}
                                 name={name}
-                                id={fieldId}
+                                id={field_id}
                             />
                         );
                     case 'dropdown': {
@@ -218,7 +218,7 @@ export const FieldRenderer = memo(
                                 value={(typeof value === 'string' ? value : '')}
                                 disabled={disabled}
                             >
-                                <SelectTrigger className={`w-full ${className || ''}`} ref={ref} onBlur={onBlur} id={fieldId}>
+                                <SelectTrigger className={`w-full ${className || ''}`} ref={ref} onBlur={onBlur} id={field_id}>
                                     <SelectValue placeholder="Selecciona una opción..." />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -241,14 +241,14 @@ export const FieldRenderer = memo(
                                 ref={ref}
                                 onBlur={onBlur}
                                 name={name}
-                                id={fieldId}
+                                id={field_id}
                             />
                         );
                 }
             }
 
             // Default or explicitly 'text': use name-based specialization or standard input
-            if (lowerFieldId === 'cédula') {
+            if (lowerfield_id === 'cédula') {
                 return (
                     <CedulaInput
                         value={(typeof value === 'string' ? value : '')}
@@ -258,12 +258,12 @@ export const FieldRenderer = memo(
                         ref={ref}
                         onBlur={onBlur}
                         name={name}
-                        id={fieldId}
+                        id={field_id}
                     />
                 );
             }
 
-            if (addressFieldNames.includes(lowerFieldId)) {
+            if (addressFieldNames.includes(lowerfield_id)) {
                 return (
                     <AddressInput
                         value={(typeof value === 'string' ? value : '')}
@@ -274,12 +274,12 @@ export const FieldRenderer = memo(
                         ref={ref}
                         onBlur={onBlur}
                         name={name}
-                        id={fieldId}
+                        id={field_id}
                     />
                 );
             }
 
-            if (fieldId === 'Unidad') {
+            if (field_id === 'Unidad') {
                 return (
                     <MultiInput
                         value={
@@ -293,13 +293,13 @@ export const FieldRenderer = memo(
                         ref={ref}
                         onBlur={onBlur}
                         name={name}
-                        id={fieldId}
+                        id={field_id}
                     />
                 );
             }
 
             const role = rolesLoaded
-                ? roles.find((r) => r.name.toLowerCase() === lowerFieldId)
+                ? roles.find((r) => r.name.toLowerCase() === lowerfield_id)
                 : null;
 
             if (role) {
@@ -334,18 +334,18 @@ export const FieldRenderer = memo(
                         className={className}
                         options={autocompleteOptions}
                         placeholder="Buscar o añadir..."
-                        isSingle={role.isSingle}
+                        is_single={role.is_single}
                         ref={ref}
                         onBlur={onBlur}
                         name={name}
-                        id={fieldId}
+                        id={field_id}
                     />
                 );
             }
 
             return (
                 <Input
-                    id={fieldId}
+                    id={field_id}
                     name={name}
                     value={(typeof value === 'string' || typeof value === 'number' ? value : '')}
                     onChange={(e) => onChange(e.target.value)}
@@ -359,4 +359,6 @@ export const FieldRenderer = memo(
     )
 );
 FieldRenderer.displayName = 'FieldRenderer';
+
+
 

@@ -57,7 +57,7 @@ export type TemplatesCollection = RxCollection<Template>;
 // Consolidated Types
 export type LookupItem = {
   id: string; // type:originalId
-  workspaceId: string;
+  workspace_id: string;
   type: 'role' | 'department' | 'address';
   name?: string;
   data: any;
@@ -65,7 +65,7 @@ export type LookupItem = {
 
 export type ConfigItem = {
   id: string; // type:originalId or just 'settings'
-  workspaceId: string;
+  workspace_id: string;
   type: 'settings' | 'unit' | 'field_definition' | 'template_config' | 'guard' | 'draft' | 'profile';
   name?: string;
   data: any;
@@ -73,10 +73,10 @@ export type ConfigItem = {
 
 export type HistoryItem = {
   id: string;
-  workspaceId: string;
+  workspace_id: string;
   type: 'guard_history' | 'attendance' | 'assignment_history';
   date: string;
-  personnelId: string;
+  personnel_id: string;
   data: any;
 };
 
@@ -86,7 +86,7 @@ export type HistoryCollection = RxCollection<HistoryItem>;
 
 export type NotificationItem = {
   id: string;
-  workspaceId: string;
+  workspace_id: string;
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
@@ -171,7 +171,7 @@ const ensureDevMode = async () => {
   }
 };
 
-const createDatabase = async (): Promise<MinutasDatabase> => {
+const created_atabase = async (): Promise<MinutasDatabase> => {
   const name = DB_NAME;
   const state = getInternalState();
   
@@ -217,47 +217,161 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
   logger.info(`Central database [${name}] initialized successfully.`);
 
   try {
+    const commonConflictHandler = {
+      isEqual: (a: any, b: any) => {
+        // Deep compare or simple fast check. Usually RxDB checks _rev or handles this,
+        // but we can just say false to force resolution if not identical references
+        return JSON.stringify(a) === JSON.stringify(b);
+      },
+      resolve: (i: any) => {
+        const cleanObj = (obj: any) => {
+          if (!obj) return;
+          // No longer need manual mapping as fields are already snake_case
+          if (obj._modified !== undefined) {
+            delete obj._modified;
+          }
+          if (obj.updated_at !== undefined) {
+            delete obj.updated_at;
+          }
+          if (obj.created_at !== undefined) {
+            delete obj.created_at;
+          }
+          // Quitar valores null para que RxDB no falle en la validación de esquema
+          Object.keys(obj).forEach(key => {
+            if (obj[key] === null) delete obj[key];
+            
+            // Parse JSON strings back to objects if they were stringified for Supabase
+            if (typeof obj[key] === 'string' && (key === 'data' || key === 'form_data' || key === 'statistics_rules' || key === 'statistics_sub_categories')) {
+              try {
+                const parsed = JSON.parse(obj[key]);
+                if (parsed && typeof parsed === 'object') {
+                  obj[key] = parsed;
+                }
+              } catch (e) {
+                // Not JSON, ignore
+              }
+            }
+          });
+        };
+
+        const master = i.realMasterState ? { ...i.realMasterState } : null;
+        cleanObj(master);
+        
+        const local = i.newDocumentState ? { ...i.newDocumentState } : null;
+        cleanObj(local);
+
+        if (import.meta.env.DEV) {
+          console.log(`[Conflict] Resolving for ${master?.id}`, { master, local });
+        }
+
+        // AGGRESSIVE LOCAL WINS
+        // We take everything from local, but we MUST keep the cloud's 'modified'
+        // timestamp exactly as it came to pass the optimistic lock check.
+        const resolved = {
+          ...local,
+          modified: master?.modified || local?.modified || null
+        };
+        
+        return Promise.resolve(resolved);
+      }
+    };
+
+    // Helper to remove legacy fields that are no longer in the schema
+    const stripLegacy = (doc: any) => {
+          delete doc.updated_at;
+          delete doc.created_at;
+          delete doc._modified;
+          return doc;
+    };
+
     const collectionsConfig: Record<string, any> = {
       personnel: { 
         schema: personnelSchema,
+        conflictHandler: commonConflictHandler,
         migrationStrategies: {
           1: (oldData: any) => oldData,
           2: (oldData: any) => ({
             ...oldData,
             order: oldData.order ?? 0
-          })
+          }),
+          3: (oldData: any) => oldData,
+          4: (oldData: any) => oldData,
+          5: (oldData: any) => oldData,
+          6: (oldData: any) => oldData,
+          7: (oldData: any) => stripLegacy(oldData),
+          8: (oldData: any) => stripLegacy(oldData),
+          9: (oldData: any) => {
+            if (oldData['workspaceId']) {
+              oldData['workspace_id'] = oldData['workspaceId'];
+              delete oldData['workspaceId'];
+            }
+            return stripLegacy(oldData);
+          },
+          10: (oldData: any) => {
+            if (oldData._modified) {
+              oldData.modified = oldData._modified;
+              delete oldData._modified;
+            }
+            return oldData;
+          },
+          11: (oldData: any) => oldData
         }
       },
       reports: { 
-        schema: reportsSchema
+        schema: reportsSchema,
+        conflictHandler: commonConflictHandler,
+        migrationStrategies: {
+          1: (oldData: any) => oldData,
+          2: (oldData: any) => oldData,
+          3: (oldData: any) => oldData,
+          4: (oldData: any) => oldData,
+          5: (oldData: any) => stripLegacy(oldData),
+          6: (oldData: any) => stripLegacy(oldData),
+          7: (oldData: any) => {
+            if (oldData['workspaceId']) {
+              oldData['workspace_id'] = oldData['workspaceId'];
+              delete oldData['workspaceId'];
+            }
+            return stripLegacy(oldData);
+          },
+          8: (oldData: any) => {
+            if (oldData._modified) {
+              oldData.modified = oldData._modified;
+              delete oldData._modified;
+            }
+            return oldData;
+          },
+          9: (oldData: any) => oldData
+        }
       },
       templates: { 
         schema: templatesSchema,
+        conflictHandler: commonConflictHandler,
         migrationStrategies: {
           1: (oldData: any) => {
-            const rules = (oldData.statisticsRules || []).map((rule: any) => ({
-              fieldId: rule.fieldId,
+            const rules = (oldData['statisticsRules'] || []).map((rule: any) => ({
+              field_id: rule['fieldId'],
               operator: rule.operator || '=',
               condition: rule.condition || rule.value || '',
               category: rule.category
             }));
             return {
               ...oldData,
-              statisticsSubCategories: oldData.statisticsSubCategories || [],
-              statisticsRules: rules
+              statistics_sub_categories: oldData['statisticsSubCategories'] || [],
+              statistics_rules: rules
             };
           },
           2: (oldData: any) => {
             return {
               ...oldData,
-              statisticsSubCategories: oldData.statisticsSubCategories || [],
-              statisticsRules: oldData.statisticsRules || []
+              statistics_sub_categories: oldData.statistics_sub_categories || [],
+              statistics_rules: oldData.statistics_rules || []
             };
           },
           3: (oldData: any) => {
             return {
               ...oldData,
-              statisticsRules: (oldData.statisticsRules || []).map((rule: any) => {
+              statistics_rules: (oldData.statistics_rules || []).map((rule: any) => {
                 if (!rule) return rule;
                 return {
                   ...rule,
@@ -267,20 +381,116 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
               })
             };
           },
-          4: (oldData: any) => oldData
+          4: (oldData: any) => oldData,
+          5: (oldData: any) => oldData,
+          6: (oldData: any) => oldData,
+          7: (oldData: any) => oldData,
+          8: (oldData: any) => oldData,
+          9: (oldData: any) => stripLegacy(oldData),
+          10: (oldData: any) => stripLegacy(oldData),
+          11: (oldData: any) => {
+            if (oldData['workspaceId']) {
+              oldData['workspace_id'] = oldData['workspaceId'];
+              delete oldData['workspaceId'];
+            }
+            return stripLegacy(oldData);
+          },
+          12: (oldData: any) => {
+            if (oldData._modified) {
+              oldData.modified = oldData._modified;
+              delete oldData._modified;
+            }
+            return oldData;
+          },
+          13: (oldData: any) => oldData
         }
       },
       lookups: { 
-        schema: lookupsSchema
+        schema: lookupsSchema,
+        conflictHandler: commonConflictHandler,
+        migrationStrategies: {
+          1: (oldData: any) => oldData,
+          2: (oldData: any) => oldData,
+          3: (oldData: any) => oldData,
+          4: (oldData: any) => oldData,
+          5: (oldData: any) => stripLegacy(oldData),
+          6: (oldData: any) => stripLegacy(oldData),
+          7: (oldData: any) => {
+            if (oldData['workspaceId']) {
+              oldData['workspace_id'] = oldData['workspaceId'];
+              delete oldData['workspaceId'];
+            }
+            return stripLegacy(oldData);
+          },
+          8: (oldData: any) => {
+            if (oldData._modified) {
+              oldData.modified = oldData._modified;
+              delete oldData._modified;
+            }
+            return oldData;
+          },
+          9: (oldData: any) => oldData
+        }
       },
       configs: { 
-        schema: configsSchema
+        schema: configsSchema,
+        conflictHandler: commonConflictHandler,
+        migrationStrategies: {
+          1: (oldData: any) => oldData,
+          2: (oldData: any) => oldData,
+          3: (oldData: any) => oldData,
+          4: (oldData: any) => oldData,
+          5: (oldData: any) => stripLegacy(oldData),
+          6: (oldData: any) => stripLegacy(oldData),
+          7: (oldData: any) => {
+            if (oldData['workspaceId']) {
+              oldData['workspace_id'] = oldData['workspaceId'];
+              delete oldData['workspaceId'];
+            }
+            return stripLegacy(oldData);
+          },
+          8: (oldData: any) => {
+            if (oldData._modified) {
+              oldData.modified = oldData._modified;
+              delete oldData._modified;
+            }
+            return oldData;
+          },
+          9: (oldData: any) => oldData
+        }
       },
       history: { 
-        schema: historySchema
+        schema: historySchema,
+        conflictHandler: commonConflictHandler,
+        migrationStrategies: {
+          1: (oldData: any) => oldData,
+          2: (oldData: any) => oldData,
+          3: (oldData: any) => oldData,
+          4: (oldData: any) => oldData,
+          5: (oldData: any) => stripLegacy(oldData),
+          6: (oldData: any) => stripLegacy(oldData),
+          7: (oldData: any) => {
+            if (oldData['workspaceId']) {
+              oldData['workspace_id'] = oldData['workspaceId'];
+              delete oldData['workspaceId'];
+            }
+            return stripLegacy(oldData);
+          },
+          8: (oldData: any) => {
+            if (oldData._modified) {
+              oldData.modified = oldData._modified;
+              delete oldData._modified;
+            }
+            return oldData;
+          },
+          9: (oldData: any) => oldData
+        }
       },
       notifications: {
-        schema: notificationsSchema
+        schema: notificationsSchema,
+        migrationStrategies: {
+          1: (oldData: any) => oldData
+        }
       },
     };
 
@@ -298,6 +508,15 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
       }
     }
     
+    // Ensure modified is never undefined in the local database
+    Object.values(database.collections).forEach(col => {
+      col.postCreate((docData: any, rxDoc: any) => {
+        if (docData.modified === undefined) {
+          rxDoc.incrementalPatch({ modified: null });
+        }
+      });
+    });
+
   } catch (err: any) {
     const rxErr = err as any;
     logger.error(`Failed to initialize collections for database [${name}]. Cleaning up...`, {
@@ -368,7 +587,7 @@ export const getDatabase = async (workspaceName: string = 'minutasdb'): Promise<
 
     // Initialize the central database
     try {
-      const db = await createDatabase();
+      const db = await created_atabase();
       state.activeDatabase = db;
       state.activeDatabaseName = dbName;
       return db;
@@ -396,3 +615,8 @@ export const closeDatabase = async () => {
   });
   return state.dbPromiseChain;
 };
+
+
+
+
+

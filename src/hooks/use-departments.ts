@@ -28,7 +28,7 @@ export function useDepartments() {
         setDepartments(
           data.map((d) => {
             const json = d.toJSON();
-            return { ...(json.data as Department), workspaceId: currentWorkspace };
+            return { ...(json.data as Department), workspace_id: currentWorkspace };
           }) as Department[]
         );
         initializedFlag = true;
@@ -40,7 +40,7 @@ export function useDepartments() {
         } catch (err) {
           logger.error('Failed to auto-seed default departments', err, {
             feature: 'Departments',
-            workspaceId: currentWorkspace,
+            workspace_id: currentWorkspace,
           });
           setIsLoaded(true);
         }
@@ -105,3 +105,4 @@ export function useDepartments() {
     saveDepartments,
   };
 }
+

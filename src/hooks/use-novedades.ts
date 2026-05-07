@@ -76,8 +76,8 @@ export function useNovedades() {
     await clearAllReports();
   }, [clearAllReports]);
 
-  const manejarSeleccionarPlantilla = useCallback((templateId: string) => {
-    const plantilla = templates.find((t: Template) => t.id === templateId);
+  const manejarSeleccionarPlantilla = useCallback((template_id: string) => {
+    const plantilla = templates.find((t: Template) => t.id === template_id);
     if (plantilla) {
       generatorRef.current?.cancel();
       setDatosBorradorInicial(undefined);
@@ -130,9 +130,9 @@ export function useNovedades() {
     const preSelectedId = searchParams.get('selected');
 
     if (draft && !preSelectedId && !creandoReporte && !idReporteSeleccionado && !estaNavegandoAtras) {
-      const template = templates.find((t: Template) => t.id === draft.templateId);
+      const template = templates.find((t: Template) => t.id === draft.template_id);
       if (template) {
-        setDatosBorradorInicial(draft.formData);
+        setDatosBorradorInicial(draft.form_data);
         setCreandoReporte(template);
       }
     }
@@ -213,3 +213,4 @@ export function useNovedades() {
     navigate,
   };
 }
+

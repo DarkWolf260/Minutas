@@ -6,19 +6,19 @@ import type { MinutasDatabase } from '@/lib/db/db';
 import type { Report } from '@/lib/types';
 import { safeWrite, silentWrite } from './base.repository';
 
-export function createReportRepository(db: MinutasDatabase, workspaceId: string) {
-  const ws = workspaceId;
+export function createReportRepository(db: MinutasDatabase, workspace_id: string) {
+  const ws = workspace_id;
 
   const watchAll = () =>
     db.reports.find({
-      selector: { workspaceId: ws },
+      selector: { workspace_id: ws },
       sort: [{ timestamp: 'desc' }],
     }).$;
 
   const findAll = () =>
     db.reports
       .find({
-        selector: { workspaceId: ws },
+        selector: { workspace_id: ws },
         sort: [{ timestamp: 'desc' }],
       })
       .exec();
@@ -34,7 +34,7 @@ export function createReportRepository(db: MinutasDatabase, workspaceId: string)
       async () => {
         const doc = await db.reports.findOne(validatedReport.id).exec();
         if (!doc) throw new Error('Reporte no encontrado.');
-        const { id, workspaceId, ...patchData } = validatedReport;
+        const { id, workspace_id, ...patchData } = validatedReport;
         await doc.patch(patchData as Partial<Report>);
       },
       { feature: 'Reports' }
@@ -53,7 +53,7 @@ export function createReportRepository(db: MinutasDatabase, workspaceId: string)
     safeWrite(
       async () => {
         const allDocs = await db.reports
-          .find({ selector: { workspaceId: ws } })
+          .find({ selector: { workspace_id: ws } })
           .exec();
         await Promise.all(allDocs.map((d) => d.remove()));
       },
@@ -64,3 +64,5 @@ export function createReportRepository(db: MinutasDatabase, workspaceId: string)
 }
 
 export type ReportRepository = ReturnType<typeof createReportRepository>;
+
+

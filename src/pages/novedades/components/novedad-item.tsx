@@ -2,7 +2,7 @@ import React from 'react';
 import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Report } from '@/lib/types';
-import { findValueInFormData } from '@/lib/report-sorter';
+import { findValueInform_data } from '@/lib/report-sorter';
 
 interface NovedadItemProps {
   report: Report;
@@ -11,7 +11,7 @@ interface NovedadItemProps {
 }
 
 export const NovedadItem = React.memo(({ report, isSelected, onSelect }: NovedadItemProps) => {
-  const horaValue = findValueInFormData(report.formData, 'Hora');
+  const horaValue = findValueInform_data(report.form_data, 'Hora');
 
   return (
     <button
@@ -59,3 +59,4 @@ export const NovedadItem = React.memo(({ report, isSelected, onSelect }: Novedad
 });
 
 NovedadItem.displayName = 'NovedadItem';
+

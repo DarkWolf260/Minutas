@@ -22,9 +22,9 @@ export function useStats() {
     // Reportes por plantilla
     const reportsByTemplate: Record<string, number> = {};
     reports.forEach((report) => {
-      const templateId = report.templateId;
-      if (templateId) {
-        reportsByTemplate[templateId] = (reportsByTemplate[templateId] || 0) + 1;
+      const template_id = report.template_id;
+      if (template_id) {
+        reportsByTemplate[template_id] = (reportsByTemplate[template_id] || 0) + 1;
       }
     });
 
@@ -118,7 +118,7 @@ export function useStats() {
       .slice(0, 5)
       .map((report) => ({
         ...report,
-        templateName: templates.find((t) => t.id === report.templateId)?.name || 'Sin plantilla',
+        templateName: templates.find((t) => t.id === report.template_id)?.name || 'Sin plantilla',
       }));
 
     return {
@@ -139,3 +139,4 @@ export function useStats() {
 
   return stats;
 }
+
