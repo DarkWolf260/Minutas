@@ -12,6 +12,16 @@ import { CedulaInput } from '@/components/ui/custom/cedula-input';
 import { RANK_OPTIONS, STATUS_OPTIONS, GENDER_OPTIONS } from '@/lib/constants/personnel';
 import type { StaffRole, Department, PersonnelStatus } from '@/lib/types';
 
+import { 
+  Shield, 
+  User, 
+  Briefcase, 
+  Building, 
+  Activity, 
+  ChevronDown 
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
 interface PersonnelFormFieldsProps {
   hook: any;
   roles: StaffRole[];
@@ -35,9 +45,12 @@ export const PersonnelFormFields = ({ hook, roles, departments }: PersonnelFormF
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Jerarquía */}
         <div className="space-y-2">
-          <Label htmlFor="rank">Jerarquía *</Label>
+          <Label htmlFor="rank" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <Shield className="h-3 w-3" />
+            Jerarquía *
+          </Label>
           <Select value={rank} onValueChange={setRank}>
-            <SelectTrigger id="rank" name="rank">
+            <SelectTrigger id="rank" name="rank" className="bg-background/50 backdrop-blur-sm border-muted-foreground/20 hover:border-primary/50 transition-colors">
               <SelectValue placeholder="Seleccionar jerarquía..." />
             </SelectTrigger>
             <SelectContent>
@@ -52,7 +65,10 @@ export const PersonnelFormFields = ({ hook, roles, departments }: PersonnelFormF
 
         {/* Nombre */}
         <div className="space-y-2">
-          <Label htmlFor="name">Nombre y Apellido *</Label>
+          <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <User className="h-3 w-3" />
+            Nombre y Apellido *
+          </Label>
           <Input
             id="name"
             name="name"
@@ -60,24 +76,39 @@ export const PersonnelFormFields = ({ hook, roles, departments }: PersonnelFormF
             onChange={(e) => setName(e.target.value)}
             placeholder="Ej. Juan Pérez"
             autoComplete="name"
+            className="bg-background/50 backdrop-blur-sm border-muted-foreground/20 hover:border-primary/50 transition-colors"
           />
         </div>
 
         {/* Cédula */}
         <div className="space-y-2">
-          <Label htmlFor="cedula">Cédula</Label>
-          <CedulaInput id="cedula" name="cedula" value={cedula} onChange={setCedula} />
+          <Label htmlFor="cedula" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <Activity className="h-3 w-3" />
+            Cédula
+          </Label>
+          <CedulaInput 
+            id="cedula" 
+            name="cedula" 
+            value={cedula} 
+            onChange={setCedula}
+            className="bg-background/50 backdrop-blur-sm border-muted-foreground/20 hover:border-primary/50 transition-colors"
+          />
         </div>
 
         {/* Sexo */}
         <div className="space-y-2">
-          <Label htmlFor="sex">Sexo</Label>
+          <Label htmlFor="sex" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <User className="h-3 w-3" />
+            Sexo
+          </Label>
           <Select value={sex} onValueChange={(v) => setSex(v as 'M' | 'F' | 'none')}>
-            <SelectTrigger id="sex" name="sex">
+            <SelectTrigger id="sex" name="sex" className="bg-background/50 backdrop-blur-sm border-muted-foreground/20 hover:border-primary/50 transition-colors">
               <SelectValue placeholder="Seleccionar sexo..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">No especificado</SelectItem>
+              <SelectItem value="none">
+                <span className="text-muted-foreground italic">No especificado</span>
+              </SelectItem>
               {GENDER_OPTIONS.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
@@ -89,13 +120,18 @@ export const PersonnelFormFields = ({ hook, roles, departments }: PersonnelFormF
 
         {/* Cargo Formal */}
         <div className="space-y-2">
-          <Label htmlFor="role">Cargo Institucional</Label>
+          <Label htmlFor="role" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <Briefcase className="h-3 w-3" />
+            Cargo Institucional
+          </Label>
           <Select value={roleId} onValueChange={setRoleId}>
-            <SelectTrigger id="role" name="role">
+            <SelectTrigger id="role" name="role" className="bg-background/50 backdrop-blur-sm border-muted-foreground/20 hover:border-primary/50 transition-colors">
               <SelectValue placeholder="Seleccionar cargo..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Sin cargo asignado</SelectItem>
+              <SelectItem value="none">
+                <span className="text-muted-foreground italic">Sin cargo asignado</span>
+              </SelectItem>
               {roles
                 .filter((role) => !role.isStatus)
                 .map((role) => (
@@ -109,13 +145,18 @@ export const PersonnelFormFields = ({ hook, roles, departments }: PersonnelFormF
 
         {/* Departamento */}
         <div className="space-y-2">
-          <Label htmlFor="department">Departamento</Label>
+          <Label htmlFor="department" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <Building className="h-3 w-3" />
+            Departamento
+          </Label>
           <Select value={department} onValueChange={setDepartment}>
-            <SelectTrigger id="department" name="department">
+            <SelectTrigger id="department" name="department" className="bg-background/50 backdrop-blur-sm border-muted-foreground/20 hover:border-primary/50 transition-colors">
               <SelectValue placeholder="Seleccionar departamento..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Sin departamento</SelectItem>
+              <SelectItem value="none">
+                <span className="text-muted-foreground italic">Sin departamento</span>
+              </SelectItem>
               {departments.map((dept) => (
                 <SelectItem key={dept.id} value={dept.id}>
                   {dept.name}
@@ -127,9 +168,12 @@ export const PersonnelFormFields = ({ hook, roles, departments }: PersonnelFormF
 
         {/* Estado */}
         <div className="space-y-2">
-          <Label htmlFor="status">Estado</Label>
+          <Label htmlFor="status" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <Activity className="h-3 w-3" />
+            Estado
+          </Label>
           <Select value={status} onValueChange={(v) => setStatus(v as PersonnelStatus)}>
-            <SelectTrigger id="status" name="status">
+            <SelectTrigger id="status" name="status" className="bg-background/50 backdrop-blur-sm border-muted-foreground/20 hover:border-primary/50 transition-colors">
               <SelectValue placeholder="Seleccionar estado..." />
             </SelectTrigger>
             <SelectContent>
@@ -144,7 +188,10 @@ export const PersonnelFormFields = ({ hook, roles, departments }: PersonnelFormF
 
         {/* Título */}
         <div className="space-y-2">
-          <Label htmlFor="titulo">Título Académico <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+          <Label htmlFor="titulo" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <Activity className="h-3 w-3" />
+            Título Académico <span className="text-[10px] opacity-70">(opcional)</span>
+          </Label>
           <Input
             id="titulo"
             name="titulo"
@@ -152,6 +199,7 @@ export const PersonnelFormFields = ({ hook, roles, departments }: PersonnelFormF
             onChange={(e) => setTitulo(e.target.value)}
             placeholder="Ej. Lcdo., T.S.U., etc."
             autoComplete="off"
+            className="bg-background/50 backdrop-blur-sm border-muted-foreground/20 hover:border-primary/50 transition-colors"
           />
         </div>
       </div>
