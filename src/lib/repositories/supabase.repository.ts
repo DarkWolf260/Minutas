@@ -14,6 +14,7 @@ export function createSupabaseWatchAll<T>(
     orderCol?: string; 
     ascending?: boolean;
     filter?: (query: any) => any;
+    select?: string;
   } = {}
 ): Observable<T[]> {
   const { orderCol = 'id', ascending = true, filter } = options;
@@ -23,9 +24,10 @@ export function createSupabaseWatchAll<T>(
 
     const fetchData = async () => {
       try {
+        const selectStr = options.select || '*';
         let query = supabase
           .from(tableName)
-          .select('*')
+          .select(selectStr)
           .eq('workspace_id', workspace_id);
         
         if (filter) query = filter(query);
@@ -34,7 +36,7 @@ export function createSupabaseWatchAll<T>(
         const { data, error } = await query;
         if (error) throw error;
         
-        currentData = data || [];
+        currentData = (data as any) || [];
         subscriber.next(currentData);
       } catch (err) {
         logger.error(`Error fetching supabase data for ${tableName}`, err);
@@ -128,26 +130,28 @@ export const supabaseRepoUtils = {
   upsert: async (tableName: string, item: any) =>
     silentWrite(async () => {
       const sanitized = sanitizeForSupabase(item);
-      const { error } = await supabase.from(tableName).upsert(sanitized);
+      const { error } = await supabase.from(tableName).upsert(sanitized, { onConflict: 'id' });
       if (error) throw error;
     }, { feature: tableName, rethrow: true })
 };
 
 export function createSupabaseWatchOne<T>(
   tableName: string,
-  id: string
+  id: string,
+  options: { select?: string } = {}
 ): Observable<T | null> {
   return new Observable<T | null>((subscriber) => {
     const fetchData = async () => {
       try {
+        const selectStr = options.select || '*';
         const { data, error } = await supabase
           .from(tableName)
-          .select('*')
+          .select(selectStr)
           .eq('id', id)
           .maybeSingle();
         
         if (error) throw error;
-        subscriber.next(data || null);
+        subscriber.next((data as any) || null);
       } catch (err) {
         subscriber.error(err);
       }

@@ -71,8 +71,8 @@ export function TemplateBuilder({
       name: templateName || 'Vista Previa',
       content: templateContent,
       type: 'normal',
-      isActive: true,
-      statisticsCategory: initialTemplate?.statisticsCategory,
+      is_active: true,
+      statistics_category: initialTemplate?.statistics_category,
       statistics_rules: initialTemplate?.statistics_rules,
     }),
     [templateContent, templateName, initialTemplate, currentWorkspace]
@@ -86,7 +86,7 @@ export function TemplateBuilder({
     const fields: Record<string, any> = {};
     if (defaultValues) {
       defaultValues.forEach((value: string, key: string) => {
-        fields[key] = { defaultValue: value };
+        fields[key] = { default_value: value };
       });
     }
 
@@ -128,7 +128,7 @@ export function TemplateBuilder({
         name: templateName,
         content: templateContent,
         type: 'normal',
-        isActive: true,
+        is_active: true,
       };
       onAdd(newTemplate);
       setTemplateName('');

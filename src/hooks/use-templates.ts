@@ -116,7 +116,7 @@ export function useTemplates() {
             const existingSection = (existingConfig.sections || []).find((s: SectionConfig) => s.label === parsedSection.label);
             return {
               ...parsedSection,
-              statisticsCategory: existingSection?.statisticsCategory
+              statistics_category: existingSection?.statistics_category
             };
           }),
           layout: parsed.layout,
@@ -143,7 +143,7 @@ export function useTemplates() {
           }
 
           if (optionsFromTemplate) {
-            baseConfig.snippetOptions = optionsFromTemplate;
+            baseConfig.snippet_options = optionsFromTemplate;
           }
 
           finalConfig.fields[fieldName] = baseConfig;
@@ -208,12 +208,12 @@ export function useTemplates() {
       
       const doBootstrap = async () => {
         setIsBootstrapping(true);
-        const toastId = toast.loading('Sincronizando plantillas de la comunidad...');
+        const toastId = toast.loading('Sincronizando plantillas...');
         
         try {
           const { data, error } = await supabase
             .from('templates')
-            .select('*');
+            .select('id, name, content, type, statistics_category, statistics_sub_categories, statistics_rules');
 
           if (error) throw error;
           if (!data || data.length === 0) {
@@ -238,14 +238,14 @@ export function useTemplates() {
               name: ct.name,
               content: ct.content,
               type: ct.type || 'normal',
-              isActive: true,
-              statisticsCategory: ct.statisticsCategory,
+              is_active: true,
+              statistics_category: ct.statistics_category,
               statistics_sub_categories: ct.statistics_sub_categories,
               statistics_rules: ct.statistics_rules,
             }));
 
           if (newTemplates.length > 0) {
-            logger.info('Inserting unique community templates', { count: newTemplates.length });
+            logger.info('Inserting unique cloud templates', { count: newTemplates.length });
             await db.templates.bulkInsert(newTemplates);
             toast.success(`${newTemplates.length} plantillas sincronizadas automáticamente.`, { id: toastId });
           } else {
@@ -294,7 +294,7 @@ export function useTemplates() {
       }
 
       const templateRepo = createTemplateRepository(db, currentWorkspace, isCloud);
-      await templateRepo.add({ ...validatedTemplate, isActive: errors.length === 0 });
+      await templateRepo.add({ ...validatedTemplate, is_active: errors.length === 0 });
 
       const newConfig: TemplateConfig = { fields: {}, sections, layout };
       fieldNames.forEach((fieldName: string) => {
@@ -309,7 +309,7 @@ export function useTemplates() {
         const optionsFromTemplate = templateOptions.get(fieldName);
         if (optionsFromTemplate) {
           const field = newConfig.fields[fieldName];
-          if (field) field.snippetOptions = optionsFromTemplate;
+          if (field) field.snippet_options = optionsFromTemplate;
         }
       });
 

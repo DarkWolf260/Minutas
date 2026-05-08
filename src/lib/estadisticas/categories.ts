@@ -26,7 +26,7 @@ export function obtenerCategoriasReporte(
   };
 
   // 1. Procesar Categoría General y Subcategorías de la Plantilla
-  if (template.statisticsCategory) add(template.statisticsCategory);
+  if (template.statistics_category) add(template.statistics_category);
   if (Array.isArray(template.statistics_sub_categories)) {
     template.statistics_sub_categories.forEach(cat => add(cat));
   }
@@ -127,9 +127,9 @@ export function obtenerCategoriasReporte(
 
           // 2. Evaluar condiciones OR (Opcionales, pero al menos una debe cumplir si existen)
           let anyOrMatch = true;
-          if (rule.orConditions && rule.orConditions.length > 0) {
+          if (rule.or_conditions && rule.or_conditions.length > 0) {
             anyOrMatch = false;
-            for (const orCond of rule.orConditions) {
+            for (const orCond of rule.or_conditions) {
               if (!orCond.field_id) continue;
 
               const orOriginalId = orCond.field_id;
@@ -245,7 +245,7 @@ export function obtenerCategoriasReporte(
   // 3. Procesar Categorías de Sección
   if (config?.sections) {
     config.sections.forEach((section, idx) => {
-      if (!section.statisticsCategory) return;
+      if (!section.statistics_category) return;
 
       const sectionData = report.form_data?.[section.id] || report.form_data?.[`section_${idx}`] ||
         report.form_data?.[`${section.id}_1`] ||
@@ -255,13 +255,13 @@ export function obtenerCategoriasReporte(
           return key ? report.form_data[key] : undefined;
         })();
 
-      if (section.isRepeatable) {
-        if (Array.isArray(sectionData) && sectionData.length > 0) add(section.statisticsCategory, sectionData.length);
+      if (section.is_repeatable) {
+        if (Array.isArray(sectionData) && sectionData.length > 0) add(section.statistics_category, sectionData.length);
       } else {
         const hasData = sectionData && (Array.isArray(sectionData) ? sectionData.length > 0 : Object.keys(sectionData as object).length > 0);
         const reportSection = report.sections?.find(rs => rs.title === section.label || rs.title === section.id);
         const hasContent = reportSection && reportSection.content && reportSection.content.trim().length > 0;
-        if (hasData || hasContent) add(section.statisticsCategory);
+        if (hasData || hasContent) add(section.statistics_category);
       }
     });
   }

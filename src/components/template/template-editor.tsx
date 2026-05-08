@@ -256,13 +256,13 @@ const FieldEditor = React.memo(function FieldEditor({
           </Badge>
         ))}
 
-        {(fieldConfig.defaultValue !== undefined || fieldConfig.value !== undefined) && (
+        {(fieldConfig.default_value !== undefined || fieldConfig.value !== undefined) && (
           <div className="flex items-start gap-1 text-[11px] bg-muted/40 px-2 py-1.5 rounded border border-muted-foreground/10 text-muted-foreground w-full">
             <span className="font-bold opacity-70 uppercase tracking-tighter shrink-0 mt-0.5 text-[10px]">
               {fieldConfig.value ? 'Texto Inicial:' : 'Default:'}
             </span>
             <span className="italic whitespace-normal break-words leading-normal text-muted-foreground/90">
-              "{fieldConfig.value !== undefined ? fieldConfig.value : fieldConfig.defaultValue}"
+              "{fieldConfig.value !== undefined ? fieldConfig.value : fieldConfig.default_value}"
             </span>
           </div>
         )}
@@ -283,19 +283,19 @@ const FieldEditor = React.memo(function FieldEditor({
                 <Check className="h-2.5 w-2.5 text-green-500" />
                 <span>Opciones definidas en código:</span>
                 <Badge variant="outline" className="h-3.5 text-[8px] px-1 bg-green-50/50 text-green-600 border-green-200">
-                  {fieldConfig.snippetOptions?.length || 0} ítems
+                  {fieldConfig.snippet_options?.length || 0} ítems
                 </Badge>
               </div>
-              {fieldConfig.snippetOptions && fieldConfig.snippetOptions.length > 0 && (
+              {fieldConfig.snippet_options && fieldConfig.snippet_options.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 pl-3 mt-1.5">
-                  {fieldConfig.snippetOptions.slice(0, 6).map((o, idx) => (
+                  {fieldConfig.snippet_options.slice(0, 6).map((o, idx) => (
                     <span key={idx} className="text-[10px] text-foreground/70 bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10 font-medium">
                       {o.label}
                     </span>
                   ))}
-                  {fieldConfig.snippetOptions.length > 6 && (
+                  {fieldConfig.snippet_options.length > 6 && (
                     <span className="text-[10px] text-muted-foreground self-center italic ml-1">
-                      +{fieldConfig.snippetOptions.length - 6} más
+                      +{fieldConfig.snippet_options.length - 6} más
                     </span>
                   )}
                 </div>
@@ -345,10 +345,10 @@ export function TemplateEditor({
         label: name, // Default label
         type: fieldTypes.get(name) || 'text',
         required: requiredFields.has(name),
-        defaultValue: defaultValues.get(name),
+        default_value: defaultValues.get(name),
         value: predefinedValues.get(name),
         modifiers: (fieldModifiers.get(name) || []) as TextModifier[],
-        isFullWidth: fieldWidths.get(name) || false,
+        is_full_width: fieldWidths.get(name) || false,
       };
     });
 
@@ -410,10 +410,10 @@ export function TemplateEditor({
     setHasChanges(true);
   }, []);
 
-  const handleSectionChange = (sectionId: string, updates: Partial<SectionConfig>) => {
+  const handleSectionChange = (section_id: string, updates: Partial<SectionConfig>) => {
     setLocalConfig((prev) => {
       const updatedSections = (prev.sections || []).map((s) =>
-        s.id === sectionId ? { ...s, ...updates } : s
+        s.id === section_id ? { ...s, ...updates } : s
       );
       return { ...prev, sections: updatedSections };
     });
@@ -425,7 +425,7 @@ export function TemplateEditor({
     const repeatableFields = new Set<string>();
     
     (localConfig.sections || []).forEach(sec => {
-      if (sec.isRepeatable && sec.field_ids) {
+      if (sec.is_repeatable && sec.field_ids) {
         sec.field_ids.forEach(id => repeatableFields.add(id));
       }
     });
@@ -506,9 +506,9 @@ export function TemplateEditor({
                           Categoría Estadística (Defecto)
                         </Label>
                         <SearchableCategorySelector
-                          value={localTemplate.statisticsCategory || 'none'}
+                          value={localTemplate.statistics_category || 'none'}
                           onSelect={(val) => {
-                            setLocalTemplate((p) => ({ ...p, statisticsCategory: val === 'none' ? '' : val }));
+                            setLocalTemplate((p) => ({ ...p, statistics_category: val === 'none' ? '' : val }));
                             setHasChanges(true);
                           }}
                         />
@@ -639,7 +639,7 @@ export function TemplateEditor({
                               (() => {
                                 const fieldConfig = cond.field_id ? localConfig.fields[cond.field_id] : undefined;
                                 const isDropdown = fieldConfig?.type === 'dropdown';
-                                const options = fieldConfig?.snippetOptions || [];
+                                const options = fieldConfig?.snippet_options || [];
 
                                 if (isDropdown && options.length > 0) {
                                   return (
@@ -719,7 +719,7 @@ export function TemplateEditor({
                                   </div>
                                 ))}
 
-                                {rule.orConditions?.map((orCond, cIdx) => (
+                                {rule.or_conditions?.map((orCond, cIdx) => (
                                   <div key={cIdx} className="flex flex-col gap-2 w-full mt-2 pt-2 border-t border-muted/30 relative">
                                     <div className="flex items-center justify-between">
                                       <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
@@ -730,18 +730,18 @@ export function TemplateEditor({
                                         size="icon"
                                         className="h-5 w-5 text-muted-foreground hover:text-destructive shrink-0"
                                         onClick={() => {
-                                          const newOrConditions = [...(rule.orConditions || [])];
+                                          const newOrConditions = [...(rule.or_conditions || [])];
                                           newOrConditions.splice(cIdx, 1);
-                                          updateRule({ orConditions: newOrConditions });
+                                          updateRule({ or_conditions: newOrConditions });
                                         }}
                                       >
                                         <Trash2 className="h-3 w-3" />
                                       </Button>
                                     </div>
                                     {renderConditionInputs(orCond, (field, val) => {
-                                      const newOrConditions = [...(rule.orConditions || [])];
+                                      const newOrConditions = [...(rule.or_conditions || [])];
                                       newOrConditions[cIdx] = { ...newOrConditions[cIdx], [field]: val };
-                                      updateRule({ orConditions: newOrConditions });
+                                      updateRule({ or_conditions: newOrConditions });
                                     })}
                                   </div>
                                 ))}
@@ -763,8 +763,8 @@ export function TemplateEditor({
                                     size="sm"
                                     className="h-6 flex-1 text-[10px] border-dashed border-muted-foreground/30 text-muted-foreground hover:text-foreground"
                                     onClick={() => {
-                                      const newOrConditions = [...(rule.orConditions || []), { field_id: '', operator: '=' as const, condition: '' }];
-                                      updateRule({ orConditions: newOrConditions as any });
+                                      const newOrConditions = [...(rule.or_conditions || []), { field_id: '', operator: '=' as const, condition: '' }];
+                                      updateRule({ or_conditions: newOrConditions as any });
                                     }}
                                   >
                                     <Plus className="h-3 w-3 mr-1" /> Condición (O)
@@ -850,7 +850,7 @@ export function TemplateEditor({
                     );
 
                     const renderSectionCard = (section: SectionConfig, index: number) => {
-                      if (section.isSeparator || section.id.includes('separator')) {
+                      if (section.is_separator || section.id.includes('separator')) {
                         return <div key={`${section.id}-${index}`} className="h-px bg-muted-foreground/20 my-4 w-full" />;
                       }
 
@@ -877,7 +877,7 @@ export function TemplateEditor({
                                 <CardTitle className="text-[11px] font-bold uppercase tracking-tight truncate">
                                   {title}
                                 </CardTitle>
-                                {section.isRepeatable && (
+                                {section.is_repeatable && (
                                   <Badge
                                     variant="secondary"
                                     className="text-[9px] h-4 bg-primary/10 text-primary border-primary/20 px-1"
@@ -888,9 +888,9 @@ export function TemplateEditor({
                               </div>
                               <div className="flex items-center gap-2">
                                 <SearchableCategorySelector
-                                  value={section.statisticsCategory || 'none'}
+                                  value={section.statistics_category || 'none'}
                                   onSelect={(val) => {
-                                    handleSectionChange(section.id, { statisticsCategory: val === 'none' ? '' : val });
+                                    handleSectionChange(section.id, { statistics_category: val === 'none' ? '' : val });
                                   }}
                                   className="h-6 w-[180px] bg-muted/50 border-transparent hover:bg-muted transition-colors"
                                   placeholder="Categoría Estadística..."

@@ -56,8 +56,8 @@ export const TemplateSchema = z.object({
     type: z.enum(['normal', 'relevante'], {
         errorMap: () => ({ message: 'Tipo debe ser "normal" o "relevante"' }),
     }),
-    isActive: z.boolean().default(true),
-    statisticsCategory: z.string().nullable().optional(),
+    is_active: z.boolean().default(true),
+    statistics_category: z.string().nullable().optional(),
     statistics_sub_categories: z.array(z.string()).nullable().optional(),
     statistics_rules: z.array(z.object({
         field_id: z.string().nullable().optional(),
@@ -69,7 +69,7 @@ export const TemplateSchema = z.object({
             operator: z.enum(['=', '!=', 'filled', 'empty', 'not_empty', 'contains', 'not_contains', 'starts_with', 'ends_with', 'extract_value', '>', '<', '>=', '<=']).nullable().optional(),
             condition: z.string().nullable().optional(),
         })).nullable().optional(),
-        orConditions: z.array(z.object({
+        or_conditions: z.array(z.object({
             field_id: z.string().nullable().optional(),
             operator: z.enum(['=', '!=', 'filled', 'empty', 'not_empty', 'contains', 'not_contains', 'starts_with', 'ends_with', 'extract_value', '>', '<', '>=', '<=']).nullable().optional(),
             condition: z.string().nullable().optional(),
@@ -160,9 +160,9 @@ export const AppSettingsSchema = z.object({
     workspace_id: z.string().optional(),
     active_guard_id: z.string().optional(),
     guard_shift_duration: z.number().optional(),
-    finalReportStaffSnapshot: z.record(z.array(StaffMemberSchema)).optional(),
-    finalReportStartDate: z.string().optional(),
-    finalReportEndDate: z.string().optional(),
+    final_report_staff_snapshot: z.record(z.array(StaffMemberSchema)).optional(),
+    final_report_start_date: z.string().optional(),
+    final_report_end_date: z.string().optional(),
     reportarole_ids: z.array(z.string()).optional(),
 });
 
@@ -194,10 +194,10 @@ export const FieldConfigSchema = z.object({
     label: z.string(),
     required: z.boolean().optional(),
     value: z.string().optional(),
-    sectionId: z.string().optional(),
-    snippetOptions: z.array(SnippetOptionSchema).optional(),
+    section_id: z.string().optional(),
+    snippet_options: z.array(SnippetOptionSchema).optional(),
     modifiers: z.array(z.enum(['upper', 'lower', 'title'])).optional(),
-    isFullWidth: z.boolean().optional(),
+    is_full_width: z.boolean().optional(),
 });
 
 export type ValidatedFieldConfig = z.infer<typeof FieldConfigSchema>;
@@ -336,7 +336,7 @@ export function generateform_dataSchema(config: { fields: Record<string, FieldCo
 
         const sectionSchema = z.object(sectionShape).passthrough().nullable().optional();
 
-        if (section.isRepeatable) {
+        if (section.is_repeatable) {
             shape[section.id] = z.array(sectionSchema.unwrap ? sectionSchema.unwrap().unwrap() : sectionSchema as any).nullable().optional();
             // Simplified for RxDB compatibility:
             shape[section.id] = z.array(z.any()).nullable().optional();

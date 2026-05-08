@@ -11,8 +11,12 @@ export function createTemplateRepository(db: MinutasDatabase | null, workspace_i
   const TABLE = 'templates';
 
   if (isCloud) {
+    const TEMPLATE_SELECT = 'id, name, content, type, workspace_id, is_active, statistics_category, statistics_sub_categories, statistics_rules';
     return {
-      watchAll: () => createSupabaseWatchAll<Template>(TABLE, ws, { orderCol: 'name' }),
+      watchAll: () => createSupabaseWatchAll<Template>(TABLE, ws, { 
+        orderCol: 'name',
+        select: TEMPLATE_SELECT
+      }),
       add: async (template: Template) => supabaseRepoUtils.add(TABLE, template),
       update: async (template: Template) => {
         const { id, workspace_id, ...patchData } = template;

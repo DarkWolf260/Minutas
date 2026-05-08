@@ -31,7 +31,7 @@ function createMockTemplate(overrides: Partial<Template> = {}): Template {
         name: 'Test Template',
         content: '{Field1}',
         type: 'normal',
-        isActive: true,
+        is_active: true,
         ...overrides,
     };
 }
@@ -63,7 +63,7 @@ describe('statistics-utils', () => {
         it('should return default category when no rules match', () => {
             const report = createMockReport();
             const template = createMockTemplate({
-                statisticsCategory: '1.2 LLAMADAS DE EMERGENCIAS',
+                statistics_category: '1.2 LLAMADAS DE EMERGENCIAS',
             });
             const result = obtenerCategoriasReporte(report, template);
             expect(result).toContain('1.2 LLAMADAS DE EMERGENCIAS');
@@ -74,7 +74,7 @@ describe('statistics-utils', () => {
                 form_data: { tipo: 'hurto' },
             });
             const template = createMockTemplate({
-                statisticsCategory: '5 ATENCIONES AL PÚBLICO',
+                statistics_category: '5 ATENCIONES AL PÚBLICO',
                 statistics_rules: [
                     { field_id: 'tipo', condition: 'hurto', category: '5.1 ATENCIONES PREHOSPITALARIAS' },
                 ],
@@ -102,7 +102,7 @@ describe('statistics-utils', () => {
                 form_data: {},
             });
             const template = createMockTemplate({
-                statisticsCategory: '1 REPORTES DEL VEN 9-1-1',
+                statistics_category: '1 REPORTES DEL VEN 9-1-1',
                 statistics_rules: [
                     { field_id: 'nonexistent', condition: 'value', category: '1.2 LLAMADAS DE EMERGENCIAS' },
                 ],
@@ -126,7 +126,7 @@ describe('statistics-utils', () => {
                     'tipo_aph': { 
                         label: 'Tipo de APH', 
                         type: 'dropdown',
-                        snippetOptions: [
+                        snippet_options: [
                             { id: 'opt-1', value: 'residencia', label: 'Residencia' }
                         ]
                     }
@@ -156,7 +156,7 @@ describe('statistics-utils', () => {
                 form_data: { destiny: 'Guanta' },
             });
             const template = createMockTemplate({
-                statisticsCategory: '6.2 TRASLADOS EXTRAURBANOS',
+                statistics_category: '6.2 TRASLADOS EXTRAURBANOS',
                 statistics_rules: [
                     { field_id: 'destiny', operator: '=', condition: 'Guanta', category: '6.2 TRASLADOS EXTRAURBANOS' },
                 ],
@@ -175,7 +175,7 @@ describe('statistics-utils', () => {
                         operator: '=', 
                         condition: 'emergency', 
                         category: '1.2 LLAMADAS DE EMERGENCIAS',
-                        orConditions: [
+                        or_conditions: [
                             { field_id: 'priority', operator: '=', condition: 'high' },
                             { field_id: 'priority', operator: '=', condition: 'critical' }
                         ]
@@ -207,7 +207,7 @@ describe('statistics-utils', () => {
                         conditions: [
                             { field_id: 'b', operator: '=', condition: '2' }
                         ],
-                        orConditions: [
+                        or_conditions: [
                             { field_id: 'c', operator: '=', condition: '3' },
                             { field_id: 'd', operator: '=', condition: '4' }
                         ]
@@ -236,7 +236,7 @@ describe('statistics-utils', () => {
         it('should accumulate multiple categories for a single report', () => {
             const template = createMockTemplate({
                 id: 't1',
-                statisticsCategory: '5 ATENCIONES AL PÚBLICO',
+                statistics_category: '5 ATENCIONES AL PÚBLICO',
                 statistics_rules: [
                     { field_id: 'tipo', condition: 'x', category: '5.1 ATENCIONES PREHOSPITALARIAS' },
                 ],
@@ -257,7 +257,7 @@ describe('statistics-utils', () => {
         it('should correctly attribute reports based on mode', () => {
             const template = createMockTemplate({ 
                 id: 't1',
-                statisticsCategory: '1 REPORTES DEL VEN 9-1-1'
+                statistics_category: '1 REPORTES DEL VEN 9-1-1'
             });
 
             const reports = [
@@ -283,7 +283,7 @@ describe('statistics-utils', () => {
         it('should prioritize logical date from form_data over timestamp', () => {
             const template = createMockTemplate({ 
                 id: 't1',
-                statisticsCategory: '5.1 ATENCIONES PREHOSPITALARIAS'
+                statistics_category: '5.1 ATENCIONES PREHOSPITALARIAS'
             });
             const reports = [
                 createMockReport({
