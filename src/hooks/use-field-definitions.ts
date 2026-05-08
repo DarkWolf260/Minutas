@@ -37,7 +37,7 @@ export function useFieldDefinitions() {
       if (data.length > 0) {
         const defMap: Record<string, FieldConfig> = {};
         data.forEach((d) => {
-          const item = d.toJSON();
+          const item = d.toJSON ? d.toJSON() : d;
           defMap[item.name || ''] = {
             ...(item.data as FieldConfig),
             workspace_id: currentWorkspace,

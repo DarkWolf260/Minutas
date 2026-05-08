@@ -243,11 +243,11 @@ export interface Address {
   workspace_id?: string;
   name: string;
   street?: string;
-  house_number?: string;
+  houseNumber?: string;
   municipality: string;
   parish: string;
   sector?: string;
-  peace_quadrant: string;
+  peaceQuadrant: string;
   latitude?: string;
   longitude?: string;
   details?: string;

@@ -127,7 +127,7 @@ export async function startWorkspaceReplication(db: MinutasDatabase, workspace_i
   const collectionsToSync: (keyof typeof db.collections)[] = [
     'personnel',
     'reports',
-    // 'templates', // Manual sync only
+    'templates',
     'lookups',
     'configs',
     'history'

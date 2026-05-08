@@ -12,47 +12,47 @@ import { createHistoryRepository } from '@/lib/repositories';
 
 export function useGuardHistory() {
   const db = useDatabase();
-  const { currentWorkspace } = useWorkspaceManager();
+  const { currentWorkspace, isCloud } = useWorkspaceManager();
   const [reports, setReports] = useState<GuardReport[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     if (!db || !currentWorkspace) return;
 
-    const repo = createHistoryRepository(db, currentWorkspace);
+    const repo = createHistoryRepository(db, currentWorkspace, isCloud);
     const sub = repo.watchGuardHistory().subscribe((data) => {
       setReports(
         data.map((d) => {
-          const json = d.toJSON();
-          return { ...(json.data as GuardReport), workspace_id: currentWorkspace };
+          const item = d.toJSON ? d.toJSON() : d;
+          return { ...(item.data as GuardReport), workspace_id: currentWorkspace };
         }) as GuardReport[]
       );
       setIsLoaded(true);
     });
 
     return () => sub.unsubscribe();
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   const saveGuardReport = useCallback(
     async (report: GuardReport) => {
       if (!db || !currentWorkspace) return;
-      const repo = createHistoryRepository(db, currentWorkspace);
+      const repo = createHistoryRepository(db, currentWorkspace, isCloud);
       await repo.saveGuardReport(report);
       logger.info('Guard report saved', {
         reportId: report.id,
         workspace_id: currentWorkspace,
       });
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const deleteGuardReport = useCallback(
     async (id: string) => {
       if (!db || !currentWorkspace) return;
-      const repo = createHistoryRepository(db, currentWorkspace);
+      const repo = createHistoryRepository(db, currentWorkspace, isCloud);
       await repo.deleteGuardReport(id);
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const getGuardReportById = useCallback(
@@ -62,10 +62,10 @@ export function useGuardHistory() {
 
   const clearAllGuardHistory = useCallback(async () => {
     if (!db || !currentWorkspace) return;
-    const repo = createHistoryRepository(db, currentWorkspace);
+    const repo = createHistoryRepository(db, currentWorkspace, isCloud);
     await repo.clearAllGuardHistory();
     logger.info('Guard history cleared', { workspace_id: currentWorkspace });
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   return {
     reports,

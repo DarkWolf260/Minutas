@@ -21,42 +21,42 @@ const defaultSettings: AppSettings = {
 
 export function useSettings() {
   const db = useDatabase();
-  const { currentWorkspace } = useWorkspaceManager();
+  const { currentWorkspace, isCloud } = useWorkspaceManager();
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     if (!db || !currentWorkspace) return;
 
-    const repo = createConfigRepository(db, currentWorkspace);
+    const repo = createConfigRepository(db, currentWorkspace, isCloud);
 
     const sub = repo.watchSettings().subscribe(async (doc) => {
       if (doc) {
-        setSettings({ ...defaultSettings, ...(doc.toJSON().data as AppSettings) });
+        const item = doc.toJSON ? doc.toJSON() : doc;
+        setSettings({ ...defaultSettings, ...(item.data as AppSettings) });
       } else {
-        // Just use defaults in state, do NOT init in DB to avoid cloud conflicts
         setSettings(defaultSettings);
       }
       setIsLoaded(true);
     });
 
     return () => sub.unsubscribe();
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   const saveSettings = useCallback(
     async (newSettings: Partial<AppSettings>) => {
       if (!db || !currentWorkspace) return;
-      const repo = createConfigRepository(db, currentWorkspace);
+      const repo = createConfigRepository(db, currentWorkspace, isCloud);
       await repo.saveSettings(settings, newSettings);
     },
-    [db, currentWorkspace, settings]
+    [db, currentWorkspace, settings, isCloud]
   );
 
   const clearAllSettings = useCallback(async () => {
     if (!db || !currentWorkspace) return;
-    const repo = createConfigRepository(db, currentWorkspace);
+    const repo = createConfigRepository(db, currentWorkspace, isCloud);
     await repo.saveSettings(defaultSettings, {});
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   return { settings, saveSettings, isLoaded, clearAllSettings };
 }

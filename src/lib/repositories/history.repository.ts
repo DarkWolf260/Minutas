@@ -1,21 +1,46 @@
-/**
- * History Repository — Encapsulates all operations on the `history` collection.
- * Currently handles guard history (guard_history type).
- */
-
 import type { MinutasDatabase } from '@/lib/db/db';
 import type { GuardReport } from '@/lib/types';
 import { DbKeys } from './keys';
 import { safeWrite, silentWrite } from './base.repository';
+import { createSupabaseWatchAll, supabaseRepoUtils } from './supabase.repository';
+import { supabase } from '@/lib/supabase';
+import { map } from 'rxjs/operators';
 
-export function createHistoryRepository(db: MinutasDatabase, workspace_id: string) {
+export function createHistoryRepository(db: MinutasDatabase | null, workspace_id: string, isCloud: boolean = false) {
   const ws = workspace_id;
+  const TABLE = 'history';
+
+  if (isCloud) {
+    return {
+      watchGuardHistory: () => createSupabaseWatchAll<any>(TABLE, ws, { 
+        filter: (q) => q.eq('type', 'guard_history'),
+        orderCol: 'date',
+        ascending: false
+      }),
+      saveGuardReport: async (report: GuardReport) =>
+        supabaseRepoUtils.upsert(TABLE, {
+          id: DbKeys.guardHistory(ws, report.id),
+          workspace_id: ws,
+          type: 'guard_history',
+          date: report.date,
+          personnel_id: 'none',
+          data: { ...report, workspace_id: ws },
+        }),
+      deleteGuardReport: (id: string) => supabaseRepoUtils.remove(TABLE, DbKeys.guardHistory(ws, id)),
+      clearAllGuardHistory: () => supabase.from(TABLE).delete().eq('workspace_id', ws).eq('type', 'guard_history')
+    };
+  }
+
+  // RxDB Implementation
+  if (!db) throw new Error('Database not initialized');
 
   const watchGuardHistory = () =>
     db.history.find({
       selector: { type: 'guard_history', workspace_id: ws },
       sort: [{ date: 'desc' }],
-    }).$;
+    }).$.pipe(
+      map(docs => docs.map(d => d.toJSON()))
+    );
 
   const saveGuardReport = async (report: GuardReport) =>
     safeWrite(

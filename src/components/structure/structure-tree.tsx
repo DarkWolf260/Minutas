@@ -764,9 +764,9 @@ function StructureTreeComponent({
               </div>
 
               <div className="divide-y divide-muted/30">
-                {globalRolesWithMembers.map(role => (
+                {globalRolesWithMembers.map((role, idx) => (
                   <RoleRow
-                    key={role.name}
+                    key={role.name || `global-role-${idx}`}
                     role={role}
                     members={role.members}
                     showPersonnel={showPersonnel}
@@ -799,9 +799,9 @@ function StructureTreeComponent({
                   value={expandedItems}
                   onValueChange={setExpandedItems}
                 >
-                  {deptMap.map(dept => (
+                  {deptMap.map((dept, idx) => (
                     <SortableDeptItem
-                      key={dept.id}
+                      key={dept.id || `dept-${idx}`}
                       dept={dept}
                       showPersonnel={showPersonnel}
                       onAddRole={() => openAddRole(dept.id)}

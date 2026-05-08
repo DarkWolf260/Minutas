@@ -8,6 +8,7 @@ export interface DatabaseContextType {
   currentWorkspace: string;
   workspaces: string[];
   cloudWorkspaces: any[];
+  isCloud: boolean;
   switchWorkspace: (name: string) => Promise<void>;
   deleteWorkspace: (name: string) => Promise<void>;
   createWorkspace: (name: string) => Promise<void>;
@@ -34,6 +35,7 @@ export function useWorkspaceManager() {
     currentWorkspace: context.currentWorkspace,
     workspaces: context.workspaces,
     cloudWorkspaces: context.cloudWorkspaces,
+    isCloud: context.isCloud,
     switchWorkspace: context.switchWorkspace,
     deleteWorkspace: context.deleteWorkspace,
     createWorkspace: context.createWorkspace,

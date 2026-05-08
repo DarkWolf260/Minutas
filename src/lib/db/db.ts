@@ -10,7 +10,7 @@ import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
 import { RxDBMigrationSchemaPlugin } from 'rxdb/plugins/migration-schema';
 import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
 
-const DB_NAME = 'central_minutas_main';
+const DB_NAME = 'minutas';
 
 /**
  * Internal state tracking to prevent multiple initialization attempts.
@@ -149,8 +149,8 @@ const getStorage = () => {
   if (!state.storage) {
     // IMPORTANT: For ignoreDuplicate: true to work, we MUST use the exact same storage instance
     // on subsequent calls. Reference: https://rxdb.info/rx-database.html#ignoreduplicate
-    state.storage = wrappedValidateAjvStorage({ 
-      storage: getRxStorageDexie() 
+    state.storage = wrappedValidateAjvStorage({
+      storage: getRxStorageDexie()
     });
   }
   return state.storage;
@@ -159,7 +159,7 @@ const getStorage = () => {
 const ensureDevMode = async () => {
   const state = getInternalState();
   if (state.isDevModePluginAdded) return;
-  
+
   if (import.meta.env.DEV) {
     try {
       const { RxDBDevModePlugin } = await import('rxdb/plugins/dev-mode');
@@ -174,33 +174,33 @@ const ensureDevMode = async () => {
 const created_atabase = async (): Promise<MinutasDatabase> => {
   const name = DB_NAME;
   const state = getInternalState();
-  
+
   // 1. Immediate check
   const existing = state.allDatabases.get(name);
   if (existing && !existing.destroyed) {
     logger.info(`Returning existing database instance (Pre-init check): [${name}]`);
     return existing;
   }
-  
+
   await ensureDevMode();
-  
+
   // 2. Double-check after any potential async/await context switch
   const existingAfterDev = state.allDatabases.get(name);
   if (existingAfterDev && !existingAfterDev.destroyed) {
     logger.info(`Returning existing database instance (Post-dev check): [${name}]`);
     return existingAfterDev;
   }
-  
+
   logger.info(`Creating central database instance: [${name}]`);
   let database: MinutasDatabase;
-  
+
   try {
     database = await createRxDatabase<MinutasDatabaseCollections>({
       name: name,
       storage: getStorage(),
       ignoreDuplicate: import.meta.env.DEV,
     });
-    
+
     // 3. Register IMMEDIATELY in the global tracking
     state.allDatabases.set(name, database);
   } catch (err: any) {
@@ -213,7 +213,7 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
     });
     throw err;
   }
-  
+
   logger.info(`Central database [${name}] initialized successfully.`);
 
   try {
@@ -239,7 +239,7 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
           // Quitar valores null para que RxDB no falle en la validación de esquema
           Object.keys(obj).forEach(key => {
             if (obj[key] === null) delete obj[key];
-            
+
             // Parse JSON strings back to objects if they were stringified for Supabase
             if (typeof obj[key] === 'string' && (key === 'data' || key === 'form_data' || key === 'statistics_rules' || key === 'statistics_sub_categories')) {
               try {
@@ -256,7 +256,7 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
 
         const master = i.realMasterState ? { ...i.realMasterState } : null;
         cleanObj(master);
-        
+
         const local = i.newDocumentState ? { ...i.newDocumentState } : null;
         cleanObj(local);
 
@@ -271,226 +271,40 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
           ...local,
           modified: master?.modified || local?.modified || null
         };
-        
+
         return Promise.resolve(resolved);
       }
     };
 
-    // Helper to remove legacy fields that are no longer in the schema
-    const stripLegacy = (doc: any) => {
-          delete doc.updated_at;
-          delete doc.created_at;
-          delete doc._modified;
-          return doc;
-    };
+
 
     const collectionsConfig: Record<string, any> = {
-      personnel: { 
+      personnel: {
         schema: personnelSchema,
         conflictHandler: commonConflictHandler,
-        migrationStrategies: {
-          1: (oldData: any) => oldData,
-          2: (oldData: any) => ({
-            ...oldData,
-            order: oldData.order ?? 0
-          }),
-          3: (oldData: any) => oldData,
-          4: (oldData: any) => oldData,
-          5: (oldData: any) => oldData,
-          6: (oldData: any) => oldData,
-          7: (oldData: any) => stripLegacy(oldData),
-          8: (oldData: any) => stripLegacy(oldData),
-          9: (oldData: any) => {
-            if (oldData['workspaceId']) {
-              oldData['workspace_id'] = oldData['workspaceId'];
-              delete oldData['workspaceId'];
-            }
-            return stripLegacy(oldData);
-          },
-          10: (oldData: any) => {
-            if (oldData._modified) {
-              oldData.modified = oldData._modified;
-              delete oldData._modified;
-            }
-            return oldData;
-          },
-          11: (oldData: any) => oldData
-        }
       },
-      reports: { 
+      reports: {
         schema: reportsSchema,
         conflictHandler: commonConflictHandler,
-        migrationStrategies: {
-          1: (oldData: any) => oldData,
-          2: (oldData: any) => oldData,
-          3: (oldData: any) => oldData,
-          4: (oldData: any) => oldData,
-          5: (oldData: any) => stripLegacy(oldData),
-          6: (oldData: any) => stripLegacy(oldData),
-          7: (oldData: any) => {
-            if (oldData['workspaceId']) {
-              oldData['workspace_id'] = oldData['workspaceId'];
-              delete oldData['workspaceId'];
-            }
-            return stripLegacy(oldData);
-          },
-          8: (oldData: any) => {
-            if (oldData._modified) {
-              oldData.modified = oldData._modified;
-              delete oldData._modified;
-            }
-            return oldData;
-          },
-          9: (oldData: any) => oldData
-        }
       },
-      templates: { 
+      templates: {
         schema: templatesSchema,
         conflictHandler: commonConflictHandler,
-        migrationStrategies: {
-          1: (oldData: any) => {
-            const rules = (oldData['statisticsRules'] || []).map((rule: any) => ({
-              field_id: rule['fieldId'],
-              operator: rule.operator || '=',
-              condition: rule.condition || rule.value || '',
-              category: rule.category
-            }));
-            return {
-              ...oldData,
-              statistics_sub_categories: oldData['statisticsSubCategories'] || [],
-              statistics_rules: rules
-            };
-          },
-          2: (oldData: any) => {
-            return {
-              ...oldData,
-              statistics_sub_categories: oldData.statistics_sub_categories || [],
-              statistics_rules: oldData.statistics_rules || []
-            };
-          },
-          3: (oldData: any) => {
-            return {
-              ...oldData,
-              statistics_rules: (oldData.statistics_rules || []).map((rule: any) => {
-                if (!rule) return rule;
-                return {
-                  ...rule,
-                  conditions: rule.conditions || [],
-                  orConditions: rule.orConditions || []
-                };
-              })
-            };
-          },
-          4: (oldData: any) => oldData,
-          5: (oldData: any) => oldData,
-          6: (oldData: any) => oldData,
-          7: (oldData: any) => oldData,
-          8: (oldData: any) => oldData,
-          9: (oldData: any) => stripLegacy(oldData),
-          10: (oldData: any) => stripLegacy(oldData),
-          11: (oldData: any) => {
-            if (oldData['workspaceId']) {
-              oldData['workspace_id'] = oldData['workspaceId'];
-              delete oldData['workspaceId'];
-            }
-            return stripLegacy(oldData);
-          },
-          12: (oldData: any) => {
-            if (oldData._modified) {
-              oldData.modified = oldData._modified;
-              delete oldData._modified;
-            }
-            return oldData;
-          },
-          13: (oldData: any) => oldData
-        }
       },
-      lookups: { 
+      lookups: {
         schema: lookupsSchema,
         conflictHandler: commonConflictHandler,
-        migrationStrategies: {
-          1: (oldData: any) => oldData,
-          2: (oldData: any) => oldData,
-          3: (oldData: any) => oldData,
-          4: (oldData: any) => oldData,
-          5: (oldData: any) => stripLegacy(oldData),
-          6: (oldData: any) => stripLegacy(oldData),
-          7: (oldData: any) => {
-            if (oldData['workspaceId']) {
-              oldData['workspace_id'] = oldData['workspaceId'];
-              delete oldData['workspaceId'];
-            }
-            return stripLegacy(oldData);
-          },
-          8: (oldData: any) => {
-            if (oldData._modified) {
-              oldData.modified = oldData._modified;
-              delete oldData._modified;
-            }
-            return oldData;
-          },
-          9: (oldData: any) => oldData
-        }
       },
-      configs: { 
+      configs: {
         schema: configsSchema,
         conflictHandler: commonConflictHandler,
-        migrationStrategies: {
-          1: (oldData: any) => oldData,
-          2: (oldData: any) => oldData,
-          3: (oldData: any) => oldData,
-          4: (oldData: any) => oldData,
-          5: (oldData: any) => stripLegacy(oldData),
-          6: (oldData: any) => stripLegacy(oldData),
-          7: (oldData: any) => {
-            if (oldData['workspaceId']) {
-              oldData['workspace_id'] = oldData['workspaceId'];
-              delete oldData['workspaceId'];
-            }
-            return stripLegacy(oldData);
-          },
-          8: (oldData: any) => {
-            if (oldData._modified) {
-              oldData.modified = oldData._modified;
-              delete oldData._modified;
-            }
-            return oldData;
-          },
-          9: (oldData: any) => oldData
-        }
       },
-      history: { 
+      history: {
         schema: historySchema,
         conflictHandler: commonConflictHandler,
-        migrationStrategies: {
-          1: (oldData: any) => oldData,
-          2: (oldData: any) => oldData,
-          3: (oldData: any) => oldData,
-          4: (oldData: any) => oldData,
-          5: (oldData: any) => stripLegacy(oldData),
-          6: (oldData: any) => stripLegacy(oldData),
-          7: (oldData: any) => {
-            if (oldData['workspaceId']) {
-              oldData['workspace_id'] = oldData['workspaceId'];
-              delete oldData['workspaceId'];
-            }
-            return stripLegacy(oldData);
-          },
-          8: (oldData: any) => {
-            if (oldData._modified) {
-              oldData.modified = oldData._modified;
-              delete oldData._modified;
-            }
-            return oldData;
-          },
-          9: (oldData: any) => oldData
-        }
       },
       notifications: {
         schema: notificationsSchema,
-        migrationStrategies: {
-          1: (oldData: any) => oldData
-        }
       },
     };
 
@@ -507,7 +321,7 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
         throw colErr;
       }
     }
-    
+
     // Ensure modified is never undefined in the local database
     Object.values(database.collections).forEach(col => {
       col.postCreate((docData: any, rxDoc: any) => {
@@ -541,7 +355,7 @@ const safeDestroy = async (db: any, name: string) => {
     return;
   }
   const state = getInternalState();
-  
+
   try {
     if (typeof db.destroy === 'function') {
       logger.info(`Destroying database [${name}] to free up collection slots...`);
@@ -564,7 +378,7 @@ export const getDatabase = async (workspaceName: string = 'minutasdb'): Promise<
   const dbName = DB_NAME;
 
   // Use a promise chain that catches errors to prevent the entire chain from breaking
-  state.dbPromiseChain = state.dbPromiseChain.catch(() => {}).then(async () => {
+  state.dbPromiseChain = state.dbPromiseChain.catch(() => { }).then(async () => {
     // Check if what we want is already active
     if (state.activeDatabase && !(state.activeDatabase as any).destroyed) {
       return state.activeDatabase;
@@ -577,10 +391,10 @@ export const getDatabase = async (workspaceName: string = 'minutasdb'): Promise<
         await safeDestroy(dbInstance, name);
       }
     }
-    
+
     // Safety delay to allow internal RxDB collection registry to update
     await new Promise(resolve => setTimeout(resolve, 50));
-    
+
     // Explicitly reset active state
     state.activeDatabase = null;
     state.activeDatabaseName = null;
@@ -605,7 +419,7 @@ export const getDatabase = async (workspaceName: string = 'minutasdb'): Promise<
  */
 export const closeDatabase = async () => {
   const state = getInternalState();
-  state.dbPromiseChain = state.dbPromiseChain.catch(() => {}).then(async () => {
+  state.dbPromiseChain = state.dbPromiseChain.catch(() => { }).then(async () => {
     const trackedDbs = Array.from(state.allDatabases.entries());
     for (const [dbName, dbInstance] of (trackedDbs as any)) {
       await safeDestroy(dbInstance, dbName);

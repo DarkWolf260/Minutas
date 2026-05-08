@@ -31,6 +31,8 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
 
   const { user, isAuthenticated } = useAuth();
   const { fetchCloudWorkspaces } = useCloudWorkspaces();
+  
+  const isCloud = cloudWorkspaces.some(ws => ws.id === currentWorkspace);
 
   // Load initial workspace list and active choice
   useEffect(() => {
@@ -116,7 +118,7 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
 
   // NEW: Content Replication Logic
   useEffect(() => {
-    if (!db || !currentWorkspace || currentWorkspace === DEFAULT_WORKSPACE) {
+    if (!db || !currentWorkspace || currentWorkspace === DEFAULT_WORKSPACE || isCloud) {
       if (replicationRef.current) {
         replicationRef.current.cancel();
         replicationRef.current = null;
@@ -152,7 +154,7 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
         replicationRef.current = null;
       }
     };
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   const switchWorkspace = async (name: string) => {
     if (name === currentWorkspace) return;
@@ -413,6 +415,7 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
       currentWorkspace, 
       workspaces, 
       cloudWorkspaces,
+      isCloud,
       switchWorkspace, 
       deleteWorkspace,
       createWorkspace,

@@ -51,7 +51,7 @@ const bootstrapLocks: Record<string, boolean> = {};
 
 export function useTemplates() {
   const db = useDatabase();
-  const { currentWorkspace } = useWorkspaceManager();
+  const { currentWorkspace, isCloud } = useWorkspaceManager();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [configs, setConfigs] = useState<Record<string, TemplateConfig>>({});
   const [isTemplatesLoaded, setIsTemplatesLoaded] = useState(false);
@@ -66,37 +66,29 @@ export function useTemplates() {
   useEffect(() => {
     if (!db || !currentWorkspace) return;
 
-    const subTemplates = db.templates.find({
-      selector: { workspace_id: currentWorkspace }
-    }).$.subscribe(data => {
-      const sortedTemplates = (data.map(d => d.toJSON()) as Template[])
-        .sort((a, b) => a.name.localeCompare(b.name));
-      setTemplates(sortedTemplates);
+    const templateRepo = createTemplateRepository(db, currentWorkspace, isCloud);
+    const subTemplates = templateRepo.watchAll().subscribe(data => {
+      setTemplates(data);
       setIsTemplatesLoaded(true);
     });
 
-    const subConfigs = db.configs
-      .find({
-        selector: { 
-          type: 'template_config',
-          workspace_id: currentWorkspace
-        },
-      })
-      .$.subscribe((data) => {
-        const configMap: Record<string, TemplateConfig> = {};
-        data.forEach((d) => {
-          const item = d.toJSON();
-          configMap[item.name || ''] = item.data as TemplateConfig;
-        });
-        setConfigs(configMap);
-        setIsConfigsLoaded(true);
+    const configRepo = createConfigRepository(db, currentWorkspace, isCloud);
+    const subConfigs = configRepo.watchTemplateConfigs().subscribe((data) => {
+      const configMap: Record<string, TemplateConfig> = {};
+      data.forEach((d) => {
+        // Handle both RxDB and Supabase document shapes
+        const item = d.toJSON ? d.toJSON() : d;
+        configMap[item.name || ''] = item.data as TemplateConfig;
       });
+      setConfigs(configMap);
+      setIsConfigsLoaded(true);
+    });
 
     return () => {
       subTemplates.unsubscribe();
       subConfigs.unsubscribe();
     };
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   // Caché de parse para evitar re-parsing innecesario
   const parsedTemplates = useMemo(() => {
@@ -182,7 +174,8 @@ export function useTemplates() {
             data: config,
           }));
 
-          db.configs.bulkUpsert(entries as any).catch((err: any) =>
+          const repo = createConfigRepository(db, currentWorkspace, isCloud);
+          repo.bulkUpsertTemplateConfigs(entries as any).catch((err: any) =>
             logger.error('Failed to sync template configs', err, { feature: 'Templates' })
           );
         }, 100);
@@ -300,7 +293,7 @@ export function useTemplates() {
         });
       }
 
-      const templateRepo = createTemplateRepository(db, currentWorkspace);
+      const templateRepo = createTemplateRepository(db, currentWorkspace, isCloud);
       await templateRepo.add({ ...validatedTemplate, isActive: errors.length === 0 });
 
       const newConfig: TemplateConfig = { fields: {}, sections, layout };
@@ -320,7 +313,7 @@ export function useTemplates() {
         }
       });
 
-      const configRepo = createConfigRepository(db, currentWorkspace);
+      const configRepo = createConfigRepository(db, currentWorkspace, isCloud);
       await configRepo.upsertTemplateConfig(validatedTemplate.id, newConfig);
     } catch (error) {
       logger.error('Error adding template', error);
@@ -330,14 +323,14 @@ export function useTemplates() {
 
   const removeTemplate = async (template_id: string) => {
     if (!db || !currentWorkspace) return;
-    const repo = createTemplateRepository(db, currentWorkspace);
+    const repo = createTemplateRepository(db, currentWorkspace, isCloud);
     await repo.remove(template_id);
     logger.info('Template removed', { id: template_id });
   };
 
   const updateTemplateConfig = async (template_id: string, config: TemplateConfig) => {
     if (!db || !currentWorkspace) return;
-    const configRepo = createConfigRepository(db, currentWorkspace);
+    const configRepo = createConfigRepository(db, currentWorkspace, isCloud);
     await configRepo.upsertTemplateConfig(template_id, config);
   };
 
@@ -348,7 +341,7 @@ export function useTemplates() {
         ...updatedTemplate,
         workspace_id: currentWorkspace,
       });
-      const repo = createTemplateRepository(db, currentWorkspace);
+      const repo = createTemplateRepository(db, currentWorkspace, isCloud);
       await repo.update(validatedTemplate);
       logger.info('Template updated', { id: validatedTemplate.id, workspace_id: currentWorkspace });
     } catch (error) {
@@ -359,17 +352,17 @@ export function useTemplates() {
 
   const toggleTemplateActive = useCallback(async (template_id: string) => {
     if (!db || !currentWorkspace) return;
-    const repo = createTemplateRepository(db, currentWorkspace);
+    const repo = createTemplateRepository(db, currentWorkspace, isCloud);
     await repo.toggle(template_id);
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   const clearAllTemplates = useCallback(async () => {
     if (!db || !currentWorkspace) return;
     // Prevent auto-bootstrap from triggering immediately after manual clear
     bootstrapLocks[currentWorkspace] = true;
-    const repo = createTemplateRepository(db, currentWorkspace);
+    const repo = createTemplateRepository(db, currentWorkspace, isCloud);
     await repo.clearAll();
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   return useMemo(() => ({
     templates,

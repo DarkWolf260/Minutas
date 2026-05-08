@@ -13,7 +13,7 @@ import { createLookupRepository } from '@/lib/repositories';
 
 export function useDepartments() {
   const db = useDatabase();
-  const { currentWorkspace } = useWorkspaceManager();
+  const { currentWorkspace, isCloud } = useWorkspaceManager();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -21,14 +21,17 @@ export function useDepartments() {
     if (!db || !currentWorkspace) return;
     let initializedFlag = false;
 
-    const repo = createLookupRepository(db, currentWorkspace);
+    const repo = createLookupRepository(db, currentWorkspace, isCloud);
 
     const sub = repo.watchDepartments().subscribe(async (data) => {
+      console.log(`[useDepartments] Data received (${isCloud ? 'Cloud' : 'Local'}):`, data);
       if (data.length > 0) {
         setDepartments(
           data.map((d) => {
-            const json = d.toJSON();
-            return { ...(json.data as Department), workspace_id: currentWorkspace };
+            const item = d.toJSON ? d.toJSON() : d;
+            // Handle cases where Supabase might return data as a stringified JSON
+            const rawData = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+            return { ...(rawData as Department), workspace_id: currentWorkspace };
           }) as Department[]
         );
         initializedFlag = true;
@@ -51,49 +54,49 @@ export function useDepartments() {
     });
 
     return () => sub.unsubscribe();
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   const saveDepartments = useCallback(
     async (newDepartments: Department[]) => {
       if (!db || !currentWorkspace) return;
-      const repo = createLookupRepository(db, currentWorkspace);
+      const repo = createLookupRepository(db, currentWorkspace, isCloud);
       await repo.saveDepartments(newDepartments);
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const addDepartment = useCallback(
     async (newDepartment: Department) => {
       if (!db || !currentWorkspace) return;
-      const repo = createLookupRepository(db, currentWorkspace);
+      const repo = createLookupRepository(db, currentWorkspace, isCloud);
       await repo.addDepartment(newDepartment);
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const removeDepartment = useCallback(
     async (departmentId: string) => {
       if (!db || !currentWorkspace) return;
-      const repo = createLookupRepository(db, currentWorkspace);
+      const repo = createLookupRepository(db, currentWorkspace, isCloud);
       await repo.removeDepartment(departmentId);
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const updateDepartment = useCallback(
     async (updatedDepartment: Department) => {
       if (!db || !currentWorkspace) return;
-      const repo = createLookupRepository(db, currentWorkspace);
+      const repo = createLookupRepository(db, currentWorkspace, isCloud);
       await repo.updateDepartment(updatedDepartment);
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const clearAllDepartments = useCallback(async () => {
     if (!db || !currentWorkspace) return;
-    const repo = createLookupRepository(db, currentWorkspace);
+    const repo = createLookupRepository(db, currentWorkspace, isCloud);
     await repo.clearAllDepartments(DEFAULT_DEPARTMENTS);
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   return {
     departments,
