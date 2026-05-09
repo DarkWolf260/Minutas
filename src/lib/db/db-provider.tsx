@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { MinutasDatabase, getDatabase, removeRxDatabase, getRxStorageDexie } from './db';
-import { startWorkspaceReplication } from './replication';
+import { startWorkspaceReplication, triggerCloudSync } from './replication';
 import { logger } from '../logger';
 import { DatabaseContext } from './db-context';
 
@@ -131,6 +131,11 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
         if (res) {
           replicationInstance = res;
           replicationRef.current = res;
+          
+          // Force immediate initial sync from cloud
+          setTimeout(() => {
+            triggerCloudSync();
+          }, 500);
         }
       });
     }

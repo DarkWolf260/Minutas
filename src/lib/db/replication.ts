@@ -4,7 +4,11 @@ import { supabase } from '../supabase';
 import { logger } from '../logger';
 import { stableStringify } from '../utils-pure';
 import { Subject } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, map, tap } from 'rxjs/operators';
+import { RealtimePostgresUpdatePayload } from '@supabase/supabase-js';
+
+// Global subject to trigger all replications at once
+export const globalPullTrigger$ = new Subject<any>();
 
 /**
  * Starts bidirectional replication for a given collection and workspace using custom handlers.
@@ -32,87 +36,104 @@ async function startCollectionReplication(
     collection: collection as any,
     replicationIdentifier: `supabase-custom-v3-${collectionName}-${workspace_id}`,
     pull: {
-      handler: async (lastCheckpoint, batchSize) => {
-        let query = supabase
-          .from(tableName)
-          .select('*')
-          .eq('workspace_id', workspace_id)
-          .order('modified', { ascending: true })
-          .order('id', { ascending: true })
-          .limit(batchSize);
+      handler: async (lastCheckpoint: any, batchSize: number) => {
+        try {
+          let query = supabase
+            .from(tableName)
+            .select('*')
+            .eq('workspace_id', workspace_id)
+            .order('modified', { ascending: true })
+            .order('id', { ascending: true })
+            .limit(batchSize);
 
-        if (lastCheckpoint && lastCheckpoint.modified) {
-          query = query.gte('modified', lastCheckpoint.modified);
+          if (lastCheckpoint && lastCheckpoint.modified) {
+            query = query.gte('modified', lastCheckpoint.modified);
+          }
+
+          const { data, error } = await query;
+
+          if (error) {
+            logger.error(`Pull error in ${collectionName}:`, error);
+            throw error;
+          }
+
+          let rawDocs = data || [];
+          
+          // 3. Robust Filtering: Only include docs NEWER than our last checkpoint
+          if (lastCheckpoint) {
+            rawDocs = rawDocs.filter((d: any) => {
+              const lastMod = lastCheckpoint.modified || '';
+              const docMod = d.modified || '';
+              
+              if (docMod > lastMod) return true;
+              if (docMod === lastMod && d.id > lastCheckpoint.id) return true;
+              
+              return false;
+            });
+          }
+
+          if ((rawDocs?.length || 0) > 0) {
+            logger.debug(`Pulled ${rawDocs.length} rows for ${collectionName}`);
+          }
+          
+          // Defensive documents mapping
+          const documents = (rawDocs || []).map((doc: any) => {
+            if (!doc) return null;
+            const cleanDoc = { ...doc };
+            
+            // Clean NULL values (except 'modified')
+            Object.keys(cleanDoc).forEach(key => {
+              if (cleanDoc[key] === null && key !== 'modified') delete cleanDoc[key];
+            });
+
+            // Ensure 'modified' is never undefined
+            if (cleanDoc.modified === undefined) cleanDoc.modified = null;
+
+            // Parse stringified JSON fields back to objects
+            const jsonFields = ['data', 'form_data', 'statistics_rules', 'statistics_sub_categories'];
+            jsonFields.forEach(field => {
+              if (typeof cleanDoc[field] === 'string') {
+                try { cleanDoc[field] = JSON.parse(cleanDoc[field]); } catch (e) { }
+              }
+            });
+
+            return cleanDoc;
+          }).filter(Boolean);
+
+          const lastDoc = documents.length > 0 ? documents[documents.length - 1] : null;
+          const newCheckpoint = lastDoc 
+            ? { modified: lastDoc.modified, id: lastDoc.id } 
+            : lastCheckpoint || { modified: null, id: '' };
+
+          // CRITICAL: Ensure return is ALWAYS valid and conforms to RxDB expectations
+          return {
+            documents: Array.isArray(documents) ? documents : [],
+            checkpoint: newCheckpoint || (lastCheckpoint ? lastCheckpoint : { modified: null, id: '' })
+          };
+        } catch (err: any) {
+          logger.error(`CRITICAL Exception in pull handler for ${collectionName}:`, err);
+          return {
+            documents: [],
+            checkpoint: lastCheckpoint || { modified: null, id: '' }
+          };
         }
-
-        const { data, error } = await query;
-
-        if (error) {
-          logger.error(`Pull error in ${collectionName}:`, error);
-          throw error;
-        }
-
-        let rawDocs = data || [];
-        
-        if (rawDocs.length > 0) {
-          const firstId = rawDocs[0].id || 'unknown';
-          logger.debug(`Pulled ${rawDocs.length} rows for ${collectionName} (First ID: ${firstId})`);
-        }
-        
-        // Filter out docs we already saw in the last checkpoint
-        if (lastCheckpoint) {
-          rawDocs = rawDocs.filter(d => {
-            const lastMod = lastCheckpoint.modified || '';
-            const docMod = d.modified || '';
-            if (docMod > lastMod) return true;
-            if (docMod === lastMod && d.id > lastCheckpoint.id) return true;
-            return false;
-          });
-        }
-
-        const documents = rawDocs.map((doc: any) => {
-          // Clean NULL values (except 'modified')
-          Object.keys(doc).forEach(key => {
-            if (doc[key] === null && key !== 'modified') delete doc[key];
-          });
-
-          // Ensure 'modified' is never undefined
-          if (doc.modified === undefined) doc.modified = null;
-
-          // Parse stringified JSON fields back to objects
-          const jsonFields = ['data', 'form_data', 'statistics_rules', 'statistics_sub_categories'];
-          jsonFields.forEach(field => {
-            if (typeof doc[field] === 'string') {
-              try { doc[field] = JSON.parse(doc[field]); } catch (e) { }
-            }
-          });
-
-          return doc;
-        });
-
-        const lastDoc = documents[documents.length - 1];
-        const newCheckpoint = lastDoc 
-          ? { modified: lastDoc.modified, id: lastDoc.id } 
-          : lastCheckpoint;
-
-        return {
-          documents,
-          checkpoint: newCheckpoint
-        };
       },
       batchSize: 50,
-      stream$: pullTrigger$.pipe(debounceTime(300))
+      stream$: globalPullTrigger$.pipe(
+        debounceTime(300),
+        map(() => 'RESYNC' as any) // Use official 'RESYNC' command to trigger pull handler
+      )
     },
     push: {
       handler: async (rows) => {
         // 1. Prepare payloads
         const allowedColumns: Record<string, string[]> = {
-          personnel: ['id', 'workspace_id', 'personnel_id', 'name', 'cedula', 'rank', 'cargo', 'titulo', 'role_id', 'status', 'department', 'sex', 'specialties', 'order', 'modified', '_deleted'],
-          reports: ['id', 'workspace_id', 'template_id', 'title', 'timestamp', 'content', 'is_relevant', 'status', 'form_data', 'modified', '_deleted'],
-          templates: ['id', 'workspace_id', 'name', 'content', 'type', 'is_active', 'statistics_category', 'statistics_sub_categories', 'statistics_rules', 'modified', '_deleted'],
-          lookups: ['id', 'workspace_id', 'type', 'name', 'data', 'modified', '_deleted'],
-          configs: ['id', 'workspace_id', 'type', 'name', 'data', 'modified', '_deleted'],
-          history: ['id', 'workspace_id', 'type', 'date', 'personnel_id', 'data', 'modified', '_deleted']
+          personnel: ['id', 'workspace_id', 'personnel_id', 'name', 'cedula', 'rank', 'cargo', 'titulo', 'role_id', 'status', 'department', 'sex', 'specialties', 'order', '_deleted'],
+          reports: ['id', 'workspace_id', 'template_id', 'title', 'timestamp', 'content', 'is_relevant', 'status', 'form_data', '_deleted'],
+          templates: ['id', 'workspace_id', 'name', 'content', 'type', 'is_active', 'statistics_category', 'statistics_sub_categories', 'statistics_rules', '_deleted'],
+          lookups: ['id', 'workspace_id', 'type', 'name', 'data', '_deleted'],
+          configs: ['id', 'workspace_id', 'type', 'name', 'data', '_deleted'],
+          history: ['id', 'workspace_id', 'type', 'date', 'personnel_id', 'data', '_deleted']
         };
 
         const columns = allowedColumns[collectionName] || [];
@@ -125,30 +146,24 @@ async function startCollectionReplication(
             columns.forEach(col => {
             let value = doc[col];
             
-            // Special handling for JSON fields
-            if (value && typeof value === 'object' && ['data', 'form_data', 'statistics_rules', 'statistics_sub_categories'].includes(col)) {
-              value = stableStringify(value);
-            }
-
             // Special handling for Postgres Arrays
             if (col === 'specialties' && Array.isArray(value)) {
               const escape = (str: string) => '"' + str.replace(/"/g, '\\"') + '"';
               value = `{${value.map(escape).join(',')}}`;
             }
 
-            if (value !== undefined) {
-              payload[col] = value;
-            }
+              if (value !== undefined) {
+                payload[col] = value;
+              }
+            });
+            
+            // CRITICAL: Always include a fresh modified timestamp so other devices see this as new
+            payload.modified = new Date().toISOString();
+            
+            return payload;
           });
-          
-          return payload;
-        });
 
         if (payloads.length === 0) return [];
-
-        if (import.meta.env.DEV) {
-          logger.info(`Pushing ${payloads.length} rows to ${collectionName}`, payloads[0]);
-        }
 
         // 2. Execute UPSERT with explicit onConflict
         try {
@@ -222,7 +237,7 @@ async function startCollectionReplication(
       },
       (payload) => {
         logger.info(`Realtime update for ${collectionName}:`, payload.eventType);
-        pullTrigger$.next('RESYNC');
+        globalPullTrigger$.next('RESYNC');
       }
     )
     .subscribe();
@@ -236,6 +251,14 @@ async function startCollectionReplication(
   };
 
   return replicationState;
+}
+
+/**
+ * Manually triggers a full synchronization for all active replications.
+ */
+export function triggerCloudSync() {
+  logger.info('Manual sync triggered by user');
+  globalPullTrigger$.next('MANUAL_SYNC');
 }
 
 /**

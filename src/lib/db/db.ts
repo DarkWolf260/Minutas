@@ -34,6 +34,7 @@ import {
 } from '@/lib/types';
 
 import { stableStringify, areEqual } from '../utils-pure';
+export { stableStringify };
 
 import {
   personnelSchema,

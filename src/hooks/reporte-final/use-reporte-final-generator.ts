@@ -363,12 +363,12 @@ export function useReporteFinalGenerator({
       });
 
       await saveSettings({ 
-        isGuardOpen: false,
-        guardPeriod: '', 
+        is_guard_open: false,
+        guard_period: '', 
         active_guard_id: '',
-        finalReportManualNovedades: [], 
-        finalReportStatistics: '', 
-        ordenDelDiaDraft: undefined, 
+        final_report_manual_novedades: [], 
+        final_report_statistics: '', 
+        orden_del_dia_draft: null, 
       });
 
       await clearAllReports();

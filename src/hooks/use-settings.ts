@@ -5,6 +5,7 @@ import type { AppSettings } from '@/lib/types';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { logger } from '@/lib/logger';
 import { createConfigRepository } from '@/lib/repositories';
+import { stableStringify } from '@/lib/db/db';
 
 const defaultSettings: AppSettings = {
   active_guard_id: '',
@@ -33,7 +34,40 @@ export function useSettings() {
     const sub = repo.watchSettings().subscribe(async (doc) => {
       if (doc) {
         const item = doc.toJSON ? doc.toJSON() : doc;
-        setSettings({ ...defaultSettings, ...(item.data as AppSettings) });
+        let rawData = item.data || {};
+        
+        // 1. Manejo de emergencia: Si la data es un string, parsear
+        if (typeof rawData === 'string') {
+          try { rawData = JSON.parse(rawData); } catch (e) { rawData = {}; }
+        }
+
+        // 2. Manejo de corrupción: Si tiene claves numéricas (spread de string), descartar
+        if (rawData && rawData['0'] !== undefined && rawData['1'] !== undefined) {
+          logger.warn('Detectada corrupción de datos en settings, limpiando...');
+          rawData = {};
+        }
+
+        // 3. Migración: Mapear campos viejos (camelCase) a nuevos (snake_case)
+        const sanitized: AppSettings = { ...defaultSettings };
+        const d = rawData as any;
+
+        sanitized.active_guard_id = d.active_guard_id || d.activeGuardId || '';
+        sanitized.is_guard_open = d.is_guard_open !== undefined ? d.is_guard_open : d.isGuardOpen;
+        sanitized.guard_period = d.guard_period || d.guardPeriod || '';
+        sanitized.orden_del_dia_draft = d.orden_del_dia_draft || d.ordenDelDiaDraft;
+        sanitized.final_report_manual_novedades = d.final_report_manual_novedades || d.finalReportManualNovedades || [];
+        sanitized.disabled_modules = d.disabled_modules || d.disabledModules;
+        sanitized.reportarole_ids = d.reportarole_ids || d.reportaroleIds || [];
+
+        // 4. Comparación Profunda: Solo actualizar si hay un cambio real
+        setSettings(prev => {
+          const prevStr = stableStringify(prev);
+          const nextStr = stableStringify(sanitized);
+          if (prevStr !== nextStr) {
+            return sanitized;
+          }
+          return prev;
+        });
       } else {
         setSettings(defaultSettings);
       }

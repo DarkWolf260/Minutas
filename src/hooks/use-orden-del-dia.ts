@@ -7,6 +7,8 @@ import { useRoles } from '@/hooks/use-roles';
 import { useSettings } from '@/hooks/use-settings';
 import { useGuards } from '@/hooks/use-guards';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+import { stableStringify } from '@/lib/utils-pure';
+import { logger } from '@/lib/logger';
 import type { Staff, StaffMember, StaffRole } from '@/lib/types';
 
 // Sub-hooks
@@ -25,6 +27,7 @@ export function useOrdenDelDia(selectedGuard: string, periodo: string, initialDa
   const [esJefeEncargado, setEsJefeEncargado] = useState(false);
   const [estaInicializado, setEstaInicializado] = useState(false);
   const ultimaGuardiaInicializada = useRef<string | null>(null);
+  const lastUpdateRef = useRef<string>(new Date(0).toISOString());
 
   // 1. Specialized Hooks
   const activities = useOrdenDelDiaActivities(periodo, definiciones);
@@ -52,8 +55,8 @@ export function useOrdenDelDia(selectedGuard: string, periodo: string, initialDa
 
     if (isGuardOpen) {
       if (esNuevaGuardia || personalEstaVacio) {
-        if (settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === selectedGuard) {
-          const borrador = settings.ordenDelDiaDraft;
+        if (settings.orden_del_dia_draft && settings.orden_del_dia_draft.guard_id === selectedGuard) {
+          const borrador = settings.orden_del_dia_draft;
           personnelAssign.setPersonalAsignado(borrador.staff || {});
 
           const actividadesBorrador = borrador.activities || [];
@@ -67,7 +70,12 @@ export function useOrdenDelDia(selectedGuard: string, periodo: string, initialDa
 
           activities.setActividades(actividadesMigradas);
           notes.setNotas(borrador.notes || NOTAS_POR_DEFECTO);
-          setEsJefeEncargado(!!borrador.esJefeEncargado);
+          setEsJefeEncargado(!!borrador.es_jefe_encargado);
+          
+          if (borrador.updated_at) {
+            lastUpdateRef.current = borrador.updated_at;
+          }
+          
           ultimaGuardiaInicializada.current = selectedGuard;
           setEstaInicializado(true);
           return;
@@ -115,7 +123,30 @@ export function useOrdenDelDia(selectedGuard: string, periodo: string, initialDa
       ultimaGuardiaInicializada.current = selectedGuard;
       setEstaInicializado(true);
     }
-  }, [selectedGuard, isGuardOpen, settings.ordenDelDiaDraft, roles, initialData, personnel, periodo, guards, guardiasCargadas, definiciones, definicionesCargadas]);
+  }, [selectedGuard, isGuardOpen, roles, initialData, personnel, periodo, guards, guardiasCargadas, definiciones, definicionesCargadas]); // Removed settings.orden_del_dia_draft dependency from init
+
+  // NEW: Reactive Sync from Cloud
+  useEffect(() => {
+    if (!estaInicializado || !isGuardOpen || !settings.orden_del_dia_draft) return;
+    if (settings.orden_del_dia_draft.guard_id !== selectedGuard) return;
+    
+    const borrador = settings.orden_del_dia_draft;
+    const cloudUpdate = borrador.updated_at || new Date(0).toISOString();
+    
+    // Solo actualizar si la versión de la nube es diferente a la nuestra
+    if (cloudUpdate !== lastUpdateRef.current) {
+      // Solo aplicamos si la nube es realmente más reciente para evitar "reversiones"
+      if (cloudUpdate > lastUpdateRef.current) {
+        const staff = borrador.staff || {};
+        
+        personnelAssign.setPersonalAsignado(staff);
+        activities.setActividades(borrador.activities || []);
+        notes.setNotas(borrador.notes || NOTAS_POR_DEFECTO);
+        setEsJefeEncargado(!!borrador.es_jefe_encargado);
+        lastUpdateRef.current = cloudUpdate;
+      }
+    }
+  }, [settings.orden_del_dia_draft, selectedGuard, isGuardOpen, estaInicializado]);
 
   useEffect(() => {
     if (selectedGuard !== ultimaGuardiaInicializada.current) {
@@ -123,26 +154,43 @@ export function useOrdenDelDia(selectedGuard: string, periodo: string, initialDa
     }
   }, [selectedGuard]);
 
-  // Auto-save
+  // Auto-save with deep equality check
   useEffect(() => {
     if (!selectedGuard || !estaInicializado || !isGuardOpen) return;
 
+    // Comparar estado actual con el último borrador guardado
+    const currentDraft = {
+      guard_id: selectedGuard,
+      staff: personnelAssign.personalAsignado,
+      es_jefe_encargado: esJefeEncargado,
+      activities: activities.actividades,
+      notes: notes.notas,
+    };
+
+    const currentStr = stableStringify(currentDraft);
+    
+    // Omitimos updated_at de la comparación para evitar bucles infinitos
+    const lastSaved = { ...settings.orden_del_dia_draft };
+    delete (lastSaved as any).updated_at;
+    const lastSavedStr = stableStringify(lastSaved);
+
+    // Si son iguales (excluyendo updated_at), no guardar
+    if (currentStr === lastSavedStr) return;
+
     const timer = setTimeout(() => {
       const ahoraIso = new Date().toISOString();
+      lastUpdateRef.current = ahoraIso;
+      
       saveSettings({
-        ordenDelDiaDraft: {
-          guardId: selectedGuard,
-          staff: personnelAssign.personalAsignado,
-          esJefeEncargado,
-          activities: activities.actividades,
-          notes: notes.notas,
+        orden_del_dia_draft: {
+          ...currentDraft,
           updated_at: ahoraIso,
         },
       });
-    }, 1000);
+    }, 2000); // 2s debounce for draft saving
 
     return () => clearTimeout(timer);
-  }, [personnelAssign.personalAsignado, esJefeEncargado, activities.actividades, notes.notas, selectedGuard, saveSettings, estaInicializado, isGuardOpen]);
+  }, [personnelAssign.personalAsignado, esJefeEncargado, activities.actividades, notes.notas, selectedGuard, saveSettings, estaInicializado, isGuardOpen, settings.orden_del_dia_draft]);
 
   return {
     ...activities,

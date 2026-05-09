@@ -5,6 +5,7 @@ import { silentWrite, safeWrite } from './base.repository';
 import { createSupabaseWatchAll, createSupabaseWatchOne, supabaseRepoUtils } from './supabase.repository';
 import { supabase } from '@/lib/supabase';
 import { map } from 'rxjs/operators';
+import { stableStringify } from '@/lib/db/db';
 
 export function createConfigRepository(db: MinutasDatabase | null, workspace_id: string, isCloud: boolean = false) {
   const ws = workspace_id;
@@ -56,13 +57,43 @@ export function createConfigRepository(db: MinutasDatabase | null, workspace_id:
     patch: Partial<AppSettings>
   ) =>
     silentWrite(
-      () =>
-        db.configs.upsert({
+      async () => {
+        const doc = await db.configs.findOne(DbKeys.settings(ws)).exec();
+        const currentData = doc?.toJSON().data || {};
+
+        // 1. Crear el objeto base limpio
+        const merged: any = { ...currentData, ...patch };
+
+        // 2. Eliminar cualquier rastro de corrupción
+        Object.keys(merged).forEach(key => {
+          if (/^\d+$/.test(key)) delete merged[key];
+        });
+
+        // 3. Asegurar consistencia de nombres (Migración Agresiva)
+        if (merged.activeGuardId !== undefined) merged.active_guard_id = merged.activeGuardId;
+        if (merged.isGuardOpen !== undefined) merged.is_guard_open = merged.isGuardOpen;
+        if (merged.guardPeriod !== undefined) merged.guard_period = merged.guardPeriod;
+        if (merged.ordenDelDiaDraft !== undefined) merged.orden_del_dia_draft = merged.ordenDelDiaDraft;
+
+        // Eliminar versiones viejas
+        delete merged.activeGuardId;
+        delete merged.isGuardOpen;
+        delete merged.guardPeriod;
+        delete merged.ordenDelDiaDraft;
+
+        // 4. VERIFICACIÓN DE CAMBIO REAL (Freno al bucle)
+        if (stableStringify(currentData) === stableStringify(merged)) {
+          // No hay cambios reales, no guardar para evitar bucles de replicación
+          return;
+        }
+
+        return db.configs.upsert({
           id: DbKeys.settings(ws),
           workspace_id: ws,
           type: 'settings',
-          data: { ...current, ...patch },
-        }),
+          data: merged,
+        });
+      },
       { feature: 'Settings' }
     );
 
