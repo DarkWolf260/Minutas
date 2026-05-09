@@ -65,18 +65,28 @@ export function createLookupRepository(db: MinutasDatabase | null, workspace_id:
   const clearAllRoles = async (defaults: StaffRole[]) =>
     silentWrite(
       async () => {
+        // 1. Get current roles to identify ones to delete (those not in defaults)
         const allDocs = await db.lookups
           .find({ selector: { type: 'role', workspace_id: ws } })
           .exec();
-        await db.lookups.bulkRemove(allDocs.map((d) => d.primary));
-        const toInsert = defaults.map((role) => ({
+        
+        const newIds = new Set(defaults.map(r => DbKeys.role(ws, r.name)));
+        const toDelete = allDocs.filter(d => !newIds.has(d.primary));
+        
+        if (toDelete.length > 0) {
+          await db.lookups.bulkRemove(toDelete.map(d => d.primary));
+        }
+
+        // 2. Upsert defaults
+        const toUpsert = defaults.map((role) => ({
           id: DbKeys.role(ws, role.name),
           workspace_id: ws,
           type: 'role' as const,
           name: role.name,
           data: { ...role, workspace_id: ws },
         }));
-        await db.lookups.bulkInsert(toInsert as any);
+        
+        await db.lookups.bulkUpsert(toUpsert as any);
       },
       { feature: 'Roles' }
     );
@@ -167,18 +177,28 @@ export function createLookupRepository(db: MinutasDatabase | null, workspace_id:
   const clearAllDepartments = async (defaults: Department[]) =>
     silentWrite(
       async () => {
+        // 1. Get current departments to identify ones to delete
         const allDocs = await db.lookups
           .find({ selector: { type: 'department', workspace_id: ws } })
           .exec();
-        await db.lookups.bulkRemove(allDocs.map((d) => d.primary));
-        const toInsert = defaults.map((dept) => ({
+        
+        const newIds = new Set(defaults.map(d => DbKeys.department(ws, d.id)));
+        const toDelete = allDocs.filter(d => !newIds.has(d.primary));
+        
+        if (toDelete.length > 0) {
+          await db.lookups.bulkRemove(toDelete.map(d => d.primary));
+        }
+
+        // 2. Upsert defaults
+        const toUpsert = defaults.map((dept) => ({
           id: DbKeys.department(ws, dept.id),
           workspace_id: ws,
           type: 'department' as const,
           name: dept.name,
           data: { ...dept, workspace_id: ws },
         }));
-        await db.lookups.bulkInsert(toInsert as any);
+        
+        await db.lookups.bulkUpsert(toUpsert as any);
       },
       { feature: 'Departments' }
     );

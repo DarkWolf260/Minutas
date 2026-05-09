@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { AjustesGenerales } from '@/components/shared/ajustes-generales';
 
 export default function AdminConfigPage() {
   const navigate = useNavigate();
@@ -161,6 +162,9 @@ export default function AdminConfigPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Institutional Values (Ajustes Generales) */}
+          <AjustesGenerales />
 
           {/* More coming soon... */}
           <div className="text-center p-8 border-2 border-dashed rounded-3xl opacity-50">

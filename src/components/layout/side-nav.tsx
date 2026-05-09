@@ -76,16 +76,15 @@ export function SideNav() {
             <img src="/icons/icon-192x192.png" alt="App Icon" className="h-6 w-6 object-contain transition-all group-hover:scale-110" />
             <span className="sr-only">Minutas</span>
           </Link>
-
           {isAdmin && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
                   to="/admin"
                   className={cn(
-                    'flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:h-8 md:w-8',
+                    'flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-300 md:h-9 md:w-9 ring-1 ring-transparent',
                     pathname.startsWith('/admin')
-                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      ? 'bg-primary/10 text-primary ring-primary/20 shadow-[0_0_15px_-3px_rgba(var(--primary),0.3)]'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   )}
                 >
@@ -97,47 +96,54 @@ export function SideNav() {
             </Tooltip>
           )}
 
-          {navItems.map((item) => (
-            <Tooltip key={item.href}>
-              <TooltipTrigger asChild>
-                <Link
-                  to={item.href}
-                  className={cn(
-                    'flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:h-8 md:w-8',
-                    pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                  )}
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span className="sr-only">{item.label}</span>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right">{item.label}</TooltipContent>
-            </Tooltip>
-          ))}
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+            return (
+              <Tooltip key={item.href}>
+                <TooltipTrigger asChild>
+                  <Link
+                    to={item.href}
+                    className={cn(
+                      'flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-300 md:h-9 md:w-9 ring-1 ring-transparent',
+                      isActive
+                        ? 'bg-primary/10 text-primary ring-primary/20 shadow-[0_0_15px_-3px_rgba(var(--primary),0.3)]'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    )}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span className="sr-only">{item.label}</span>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right">{item.label}</TooltipContent>
+              </Tooltip>
+            );
+          })}
         </nav>
-
+        
         <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">
           <NotificationBell />
-
+          
           <DropdownMenu>
             <Tooltip>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-full transition-all overflow-hidden md:h-8 md:w-8 ring-2 ring-transparent focus:outline-none',
-                  pathname.startsWith('/settings') ? 'ring-primary/40 ring-offset-1 ring-offset-background' : 'hover:ring-primary/30'
+                  'flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-300 md:h-9 md:w-9 ring-1 ring-transparent focus:outline-none shadow-[0_0_15px_-5px_rgba(0,0,0,0.1)]',
+                  pathname.startsWith('/settings') 
+                    ? 'bg-primary/10 ring-primary/20 shadow-[0_0_15px_-3px_rgba(var(--primary),0.3)]' 
+                    : 'hover:ring-primary/20 hover:bg-muted/50'
                 )}>
-                  {profile.avatarUrl && !analyst ? (
-                    <img src={profile.avatarUrl} alt="Perfil" className="h-full w-full object-cover" />
-                  ) : (
-                    <div className={cn(
-                      "flex h-full w-full items-center justify-center text-xs font-semibold",
-                      analyst ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
-                    )}>
-                      {initials}
-                    </div>
-                  )}
+                  <div className="h-7 w-7 shrink-0 rounded-full overflow-hidden shadow-sm ring-1 ring-border">
+                    {profile.avatarUrl && !analyst ? (
+                      <img src={profile.avatarUrl} alt="Perfil" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className={cn(
+                        "flex h-full w-full items-center justify-center text-[10px] font-black",
+                        analyst ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
+                      )}>
+                        {initials}
+                      </div>
+                    )}
+                  </div>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
               <TooltipContent side="right">Configuración</TooltipContent>

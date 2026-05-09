@@ -22,7 +22,8 @@ export const personnelSchema = {
         sex: { type: 'string' },
         specialties: { type: 'array', items: { type: 'string' } },
         order: { type: 'number' },
-        modified: { type: ['string', 'null'] }
+        modified: { type: ['string', 'null'] },
+        _deleted: { type: 'boolean' }
     },
     required: ['id', 'workspace_id', 'name'],
     indexes: ['workspace_id']
@@ -43,7 +44,8 @@ export const reportsSchema = {
         is_relevant: { type: 'boolean' },
         status: { type: 'string' },
         form_data: { type: 'object' },
-        modified: { type: ['string', 'null'] }
+        modified: { type: ['string', 'null'] },
+        _deleted: { type: 'boolean' }
     },
     required: ['id', 'workspace_id', 'template_id', 'title', 'timestamp', 'content', 'is_relevant'],
     indexes: ['workspace_id']
@@ -100,7 +102,8 @@ export const templatesSchema = {
                 },
             },
         },
-        modified: { type: ['string', 'null'] }
+        modified: { type: ['string', 'null'] },
+        _deleted: { type: 'boolean' }
     },
     required: ['id', 'workspace_id', 'name', 'content', 'is_active'],
     indexes: ['workspace_id']
@@ -120,7 +123,8 @@ export const lookupsSchema = {
         type: { type: 'string', maxLength: 50 },
         name: { type: 'string' }, // Common field for search/display
         data: { type: 'object' },
-        modified: { type: ['string', 'null'] }
+        modified: { type: ['string', 'null'] },
+        _deleted: { type: 'boolean' }
     },
     required: ['id', 'workspace_id', 'type'],
     indexes: ['workspace_id', 'type']
@@ -140,7 +144,8 @@ export const configsSchema = {
         type: { type: 'string', maxLength: 50 },
         name: { type: 'string' },
         data: { type: 'object' },
-        modified: { type: ['string', 'null'] }
+        modified: { type: ['string', 'null'] },
+        _deleted: { type: 'boolean' }
     },
     required: ['id', 'workspace_id', 'type', 'data'],
     indexes: ['workspace_id', 'type']
@@ -162,7 +167,8 @@ export const historySchema = {
         date: { type: 'string', maxLength: 20 },
         personnel_id: { type: 'string', maxLength: 100 },
         data: { type: 'object' },
-        modified: { type: ['string', 'null'] }
+        modified: { type: ['string', 'null'] },
+        _deleted: { type: 'boolean' }
     },
     required: ['id', 'workspace_id', 'type', 'date', 'personnel_id', 'data'],
     indexes: ['workspace_id', 'type', 'date', 'personnel_id']

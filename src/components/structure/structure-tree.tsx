@@ -520,8 +520,15 @@ function StructureTreeComponent({
   const [confirmDeleteRole, setConfirmDeleteRole] = useState<{ name: string } | null>(null);
 
   // Group roles by department, filtering out personnel statuses (Vacations, etc.) from the tree
+  // A role is "Global" if it has no department_scope OR if its scoped department is missing from localDepts
+  const deptIds = new Set(localDepts.map(d => d.id));
+  
   const globalRoles = localRoles
-    .filter(r => (r.department_scope ?? []).length === 0 && !r.is_status)
+    .filter(r => {
+      const scope = r.department_scope ?? [];
+      const isOrphaned = scope.length > 0 && !scope.some(id => deptIds.has(id));
+      return (scope.length === 0 || isOrphaned) && !r.is_status;
+    })
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   const deptMap = localDepts

@@ -258,10 +258,19 @@ export function createConfigRepository(db: MinutasDatabase | null, workspace_id:
   ) =>
     silentWrite(
       async () => {
+        // 1. Get current to identify ones to delete
         const allDocs = await db.configs
           .find({ selector: { type: 'field_definition', workspace_id: ws } })
           .exec();
-        await db.configs.bulkRemove(allDocs.map((d) => d.primary));
+        
+        const newIds = new Set(Object.keys(defaults).map(name => DbKeys.fieldDefinition(ws, name)));
+        const toDelete = allDocs.filter(d => !newIds.has(d.primary));
+        
+        if (toDelete.length > 0) {
+          await db.configs.bulkRemove(toDelete.map(d => d.primary));
+        }
+
+        // 2. Upsert defaults
         const entries = Object.entries(defaults).map(([name, config]) => ({
           id: DbKeys.fieldDefinition(ws, name),
           workspace_id: ws,
@@ -269,7 +278,7 @@ export function createConfigRepository(db: MinutasDatabase | null, workspace_id:
           name,
           data: { ...config },
         }));
-        await db.configs.bulkInsert(entries as any);
+        await db.configs.bulkUpsert(entries as any);
       },
       { feature: 'FieldDefinitions' }
     );

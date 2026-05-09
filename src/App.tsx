@@ -10,19 +10,19 @@ import { PWAStatus } from '@/components/layout/pwa-status';
 import { DatabaseProvider } from '@/lib/db/db-provider';
 import { NotificationsProvider } from '@/lib/notifications-provider';
 import { SyncProvider } from '@/lib/sync/sync-context';
+import { AuthProvider } from '@/components/providers/auth-provider';
+import { UserProvider, useUser } from '@/components/providers/user-provider';
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OnboardingTour } from '@/components/ui/custom/onboarding-tour';
 import { cn } from '@/lib/utils';
-import { AuthProvider } from '@/components/providers/auth-provider';
 
 // Setup helpers
 import SetupPage from '@/pages/setup';
 import { SETUP_DONE_KEY, tryGet, trySet, tryRemove } from '@/hooks/use-setup';
 import { AdminRoute } from '@/components/auth/admin-route';
 import { ProtectedRoute } from '@/components/auth/protected-route';
-import { useUserStatus } from '@/hooks/use-user-status';
 import { useAuth } from '@/hooks/use-auth';
 import { useGlobalConfig } from '@/hooks/use-global-config';
 import { useWorkspaceManager } from '@/lib/db/db-context';
@@ -65,9 +65,6 @@ const PageLoader = () => (
     <div className="w-24 h-1 bg-muted/50 rounded-full overflow-hidden">
       <div className="h-full bg-primary/30 animate-pulse w-full" />
     </div>
-    <p className="text-[11px] font-bold tracking-[0.2em] text-muted-foreground/50 uppercase">
-      Sincronizando Secciones
-    </p>
   </div>
 );
 
@@ -76,7 +73,7 @@ function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isApproved, isAdmin, loading: statusLoading } = useUserStatus();
+  const { isApproved, isAdmin, loading: statusLoading } = useUser();
   const { config, loading: configLoading } = useGlobalConfig();
   const { isCloud } = useWorkspaceManager();
   
@@ -307,7 +304,8 @@ function Root() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="minutas-theme">
       <AuthProvider>
-        <DatabaseProvider setupMode={!setupDone}>
+        <UserProvider>
+          <DatabaseProvider setupMode={!setupDone}>
           <NotificationsProvider>
             <SyncProvider>
               <TooltipProvider>
@@ -329,7 +327,8 @@ function Root() {
             </SyncProvider>
           </NotificationsProvider>
         </DatabaseProvider>
-      </AuthProvider>
+      </UserProvider>
+    </AuthProvider>
     </ThemeProvider>
   );
 }

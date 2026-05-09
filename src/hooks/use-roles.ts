@@ -34,7 +34,7 @@ export function useRoles() {
         );
         initializedFlag = true;
         setIsLoaded(true);
-      } else if (!initializedFlag && !isCloud) { // ONLY seed defaults if NOT in cloud mode
+      } else if (!initializedFlag && data.length === 0) { // Seed if empty, even in cloud mode
         initializedFlag = true;
         setRoles(DEFAULT_ROLES as StaffRole[]);
         setIsLoaded(true);

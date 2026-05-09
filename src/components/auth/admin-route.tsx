@@ -1,9 +1,9 @@
 import { Navigate } from 'react-router-dom';
-import { useUserStatus } from '@/hooks/use-user-status';
+import { useUser } from '@/components/providers/user-provider';
 import { Loader2 } from 'lucide-react';
 
 export function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { isAdmin, loading } = useUserStatus();
+  const { isAdmin, loading } = useUser();
 
   if (loading) {
     return (

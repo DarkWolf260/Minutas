@@ -12,6 +12,10 @@ import { toast } from 'sonner';
 import { useSettings } from '@/hooks/use-settings';
 import { useDepartments } from '@/hooks/use-departments';
 import { Separator } from '@/components/ui/separator';
+import { useUser } from '@/components/providers/user-provider';
+import { useWorkspaceManager } from '@/lib/db/db-context';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Lock } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -31,6 +35,10 @@ export function AjustesGenerales() {
   const { roles, isLoaded: rolesLoaded } = useRoles();
   const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
   const { departments, isLoaded: deptsLoaded } = useDepartments();
+  const { isAdmin } = useUser();
+  const { isCloud } = useWorkspaceManager();
+
+  const isBlocked = isCloud && !isAdmin;
 
   // Use local state to avoid saving on every keystroke
   const [localValues, setLocalValues] = useState<Record<string, string>>({});
@@ -224,12 +232,22 @@ export function AjustesGenerales() {
       <CardContent className="p-0 flex-1 min-h-0 flex flex-col">
         <ScrollArea className="flex-1" type="always">
           <div className="p-6 space-y-6">
-          <AjustesGeneralesForm 
-            values={localValues}
-            onChange={(key, val) => setLocalValues(prev => ({ ...prev, [key]: val }))}
-            definitions={definitions}
-            fieldKeys={generalFields}
-          />
+            {isBlocked && (
+              <Alert className="bg-amber-500/5 border-amber-500/20 text-amber-600 rounded-2xl mb-2">
+                <Lock className="h-4 w-4" />
+                <AlertDescription className="text-[11px] font-medium ml-2">
+                  Esta área de trabajo está en la nube. Los ajustes generales solo pueden ser modificados por un administrador desde el Panel de Control.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <AjustesGeneralesForm 
+              values={localValues}
+              onChange={(key, val) => setLocalValues(prev => ({ ...prev, [key]: val }))}
+              definitions={definitions}
+              fieldKeys={generalFields}
+              disabled={isBlocked}
+            />
 
         <Separator className="my-2" />
 
@@ -246,9 +264,9 @@ export function AjustesGenerales() {
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Añadir Cargo
               </Label>
-              <Select onValueChange={handleAddReportRole}>
+              <Select onValueChange={handleAddReportRole} disabled={isBlocked}>
                 <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Selecciona un cargo..." />
+                  <SelectValue placeholder={isBlocked ? "Bloqueado por Administración" : "Selecciona un cargo..."} />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(groupedRoles).map(([groupName, groupRoles], idx) => (
@@ -319,6 +337,7 @@ export function AjustesGenerales() {
                             size="icon"
                             className="h-7 w-7 text-destructive hover:bg-destructive/10"
                             onClick={() => handleRemoveReportRole(roleName)}
+                            disabled={isBlocked}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -338,17 +357,19 @@ export function AjustesGenerales() {
           </div>
         </div>
 
-        <div className="flex justify-end pt-2">
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="h-9 px-4 shrink-0 shadow-sm font-bold"
-            title="Guardar Configuración"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
-          </Button>
-        </div>
+          <div className="flex justify-end pt-2">
+            {!isBlocked && (
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="h-9 px-4 shrink-0 shadow-sm font-bold"
+                title="Guardar Configuración"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
+              </Button>
+            )}
+          </div>
           </div>
         </ScrollArea>
       </CardContent>

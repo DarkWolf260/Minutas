@@ -23,8 +23,10 @@ import {
   AlertTriangle,
   ChevronLeft
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useUser } from '@/components/providers/user-provider';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 
 export default function BorrarDatosPage() {
   const { clearAllUnits } = useUnits();
@@ -42,8 +44,15 @@ export default function BorrarDatosPage() {
   const { clearAllPersonnelHistory } = usePersonnelHistory();
   const { clearProfile } = useProfile();
   const isMobile = useIsMobile();
+  const { isAdmin } = useUser();
+  const { isCloud } = useWorkspaceManager();
 
   const [actionToConfirm, setActionToConfirm] = useState<string | null>(null);
+
+  // Prevent access to non-admins in cloud mode
+  if (isCloud && !isAdmin) {
+    return <Navigate to="/settings" replace />;
+  }
 
   const handleConfirmReset = async () => {
     if (!actionToConfirm) return;
@@ -56,17 +65,13 @@ export default function BorrarDatosPage() {
         await clearAllTemplates();
         break;
       case 'staff':
-        // 1. Limpiar datos actuales
+        // 1. Limpiar y restaurar estructura institucional (IPP) por defecto
+        // Estas funciones ya eliminan lo anterior e insertan los valores por defecto
         await clearAllRoles();
         await clearAllDepartments();
         await clearAllGuards();
         await clearAllUnits();
         await clearAllPersonnel();
-
-        // 2. Cargar estructura institucional (IPP) por defecto
-        const { newDepts, newRoles } = getInstitutionalData();
-        await saveDepartments(newDepts);
-        await saveRoles(newRoles);
         break;
       case 'definitions':
         await clearAllDefinitions();

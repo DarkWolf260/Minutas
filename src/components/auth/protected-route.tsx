@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useUserStatus } from '@/hooks/use-user-status';
+import { useUser } from '@/components/providers/user-provider';
 import { useAuth } from '@/hooks/use-auth';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { Loader2, ShieldAlert, LogOut } from 'lucide-react';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, signOut, loading: authLoading } = useAuth();
-  const { isApproved, loading: statusLoading } = useUserStatus();
+  const { isApproved, loading: statusLoading } = useUser();
   const { isCloud } = useWorkspaceManager();
   const location = useLocation();
 

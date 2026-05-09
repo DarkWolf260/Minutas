@@ -6,6 +6,8 @@ import { useUnits } from '@/hooks/use-units';
 import { useRoles } from '@/hooks/use-roles';
 import { useDepartments } from '@/hooks/use-departments';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+import { useUser } from '@/components/providers/user-provider';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import {
   User,
   Layers,
@@ -28,8 +30,11 @@ export default function SettingsPage() {
   const { isLoaded: deptsLoaded } = useDepartments();
   const { isLoaded: settingsLoaded } = useSettings();
   const { isLoaded: definitionsLoaded } = useFieldDefinitions();
+  const { isAdmin } = useUser();
+  const { isCloud } = useWorkspaceManager();
 
   const isLoaded = unitsLoaded && rolesLoaded && deptsLoaded && settingsLoaded && definitionsLoaded;
+  const isDataRestricted = isCloud && !isAdmin;
 
   if (!isLoaded) {
     return (
@@ -199,21 +204,42 @@ export default function SettingsPage() {
                       <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                     </Link>
 
-                    <Link
-                      to="/settings/borrar-datos"
-                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive group-hover:scale-110 transition-transform">
-                          <AlertTriangle className="h-4 w-4" />
+                    {isDataRestricted ? (
+                      <div
+                        className="flex items-center justify-between p-3 rounded-lg border opacity-50 cursor-not-allowed group bg-muted/20"
+                        title="Solo los administradores pueden borrar datos en áreas de la nube"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
+                            <AlertTriangle className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium text-destructive">Borrar datos de la app</p>
+                              <span className="text-[10px] bg-background border px-1.5 py-0.5 rounded text-muted-foreground font-bold uppercase tracking-widest">Bloqueado</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">Acción restringida por administración</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-destructive">Borrar datos de la app</p>
-                          <p className="text-xs text-muted-foreground">Acciones irreversibles y limpieza</p>
-                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
                       </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-destructive transition-colors" />
-                    </Link>
+                    ) : (
+                      <Link
+                        to="/settings/borrar-datos"
+                        className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive group-hover:scale-110 transition-transform">
+                            <AlertTriangle className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-destructive">Borrar datos de la app</p>
+                            <p className="text-xs text-muted-foreground">Acciones irreversibles y limpieza</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-destructive transition-colors" />
+                      </Link>
+                    )}
 
                     <Link
                       to="/settings/about"
