@@ -10,6 +10,7 @@ export function useConfigRepo() {
 
   return useMemo(() => {
     if (!currentWorkspace) return null;
+    if (!db) return null;
     return createConfigRepository(db, currentWorkspace, isCloud);
   }, [db, currentWorkspace, isCloud]);
 }

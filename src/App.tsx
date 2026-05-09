@@ -25,6 +25,7 @@ import { ProtectedRoute } from '@/components/auth/protected-route';
 import { useUserStatus } from '@/hooks/use-user-status';
 import { useAuth } from '@/hooks/use-auth';
 import { useGlobalConfig } from '@/hooks/use-global-config';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 
 // ─── Lazy-load app pages ──────────────────────────────────────────────────────
 
@@ -77,10 +78,12 @@ function AppLayout() {
   const { user } = useAuth();
   const { isApproved, isAdmin, loading: statusLoading } = useUserStatus();
   const { config, loading: configLoading } = useGlobalConfig();
+  const { isCloud } = useWorkspaceManager();
   
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
-  // If user is logged in but not approved, we treat it as an auth-like state for layout purposes (hide navs)
-  const showNav = !isAuthPage && user && isApproved && !statusLoading && (!config.maintenance_mode || isAdmin);
+  // If user is in local mode (!isCloud), navigation is always allowed outside auth pages.
+  // In cloud mode, requires authenticated and approved user.
+  const showNav = !isAuthPage && (!isCloud || (user && isApproved && !statusLoading)) && (!config.maintenance_mode || isAdmin);
   
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false

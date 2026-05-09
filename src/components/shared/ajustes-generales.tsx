@@ -172,15 +172,42 @@ export function AjustesGenerales() {
 
   if (!definitionsLoaded || !rolesLoaded || !settingsLoaded || !deptsLoaded) {
     return (
-      <Card className="max-w-4xl mx-auto shadow-lg">
+      <Card className="shadow-lg h-full flex flex-col overflow-hidden">
         <CardHeader>
-          <Skeleton className="h-8 w-1/2" />
-          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-8 w-1/3" />
+          <Skeleton className="h-4 w-1/2 mt-2" />
         </CardHeader>
-        <CardContent className="space-y-4 pt-6">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
+        <CardContent className="p-6 space-y-8 flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-3">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-3">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-3">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-3">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
+          <Separator />
+          <div className="space-y-4">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-10 w-64" />
+            <div className="space-y-2">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          </div>
+          <div className="flex justify-end pt-4">
+            <Skeleton className="h-10 w-32" />
+          </div>
         </CardContent>
       </Card>
     );

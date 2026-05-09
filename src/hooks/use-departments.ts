@@ -24,11 +24,9 @@ export function useDepartments() {
     const repo = createLookupRepository(db, currentWorkspace, isCloud);
 
     const sub = repo.watchDepartments().subscribe(async (data) => {
-      console.log(`[useDepartments] Data received (${isCloud ? 'Cloud' : 'Local'}):`, data);
       if (data.length > 0) {
         setDepartments(
-          data.map((d) => {
-            const item = d.toJSON ? d.toJSON() : d;
+          data.map((item: any) => {
             // Handle cases where Supabase might return data as a stringified JSON
             const rawData = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
             return { ...(rawData as Department), workspace_id: currentWorkspace };
@@ -36,7 +34,7 @@ export function useDepartments() {
         );
         initializedFlag = true;
         setIsLoaded(true);
-      } else if (!initializedFlag) {
+      } else if (!initializedFlag && !isCloud) { // ONLY seed defaults if NOT in cloud mode
         initializedFlag = true;
         try {
           await repo.bulkInitDepartments(DEFAULT_DEPARTMENTS);
@@ -47,7 +45,7 @@ export function useDepartments() {
           });
           setIsLoaded(true);
         }
-      } else {
+      } else if (!isCloud) {
         setDepartments([]);
         setIsLoaded(true);
       }
@@ -55,6 +53,16 @@ export function useDepartments() {
 
     return () => sub.unsubscribe();
   }, [db, currentWorkspace, isCloud]);
+
+  // Fallback for cloud mode: if no data arrives in 2s, assume empty and stop loading
+  useEffect(() => {
+    if (isCloud && !isLoaded) {
+      const timer = setTimeout(() => {
+        setIsLoaded(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isCloud, isLoaded]);
 
   const saveDepartments = useCallback(
     async (newDepartments: Department[]) => {

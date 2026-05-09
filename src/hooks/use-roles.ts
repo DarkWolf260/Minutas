@@ -24,11 +24,9 @@ export function useRoles() {
     const repo = createLookupRepository(db, currentWorkspace, isCloud);
 
     const sub = repo.watchRoles().subscribe(async (data) => {
-      console.log(`[useRoles] Data received (${isCloud ? 'Cloud' : 'Local'}):`, data);
       if (data.length > 0) {
         setRoles(
-          data.map((d) => {
-            const item = d.toJSON ? d.toJSON() : d;
+          data.map((item: any) => {
             // Handle cases where Supabase might return data as a stringified JSON
             const rawData = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
             return { ...(rawData as StaffRole), workspace_id: currentWorkspace };
@@ -36,11 +34,11 @@ export function useRoles() {
         );
         initializedFlag = true;
         setIsLoaded(true);
-      } else if (!initializedFlag) {
+      } else if (!initializedFlag && !isCloud) { // ONLY seed defaults if NOT in cloud mode
         initializedFlag = true;
         setRoles(DEFAULT_ROLES as StaffRole[]);
         setIsLoaded(true);
-      } else {
+      } else if (!isCloud) {
         setRoles([]);
         setIsLoaded(true);
       }
@@ -48,6 +46,16 @@ export function useRoles() {
 
     return () => sub.unsubscribe();
   }, [db, currentWorkspace, isCloud]);
+
+  // Fallback for cloud mode: if no data arrives in 2s, assume empty and stop loading
+  useEffect(() => {
+    if (isCloud && !isLoaded) {
+      const timer = setTimeout(() => {
+        setIsLoaded(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isCloud, isLoaded]);
 
   const saveRoles = useCallback(
     async (newRoles: StaffRole[]) => {

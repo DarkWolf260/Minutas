@@ -9,23 +9,8 @@ export function createReportRepository(db: MinutasDatabase | null, workspace_id:
   const ws = workspace_id;
   const TABLE = 'reports';
 
-  if (isCloud) {
-    return {
-      watchAll: () => createSupabaseWatchAll<Report>(TABLE, ws, { orderCol: 'timestamp', ascending: false }),
-      findAll: async () => {
-        const { data, error } = await supabase.from(TABLE).select('*').eq('workspace_id', ws).order('timestamp', { ascending: false });
-        if (error) throw error;
-        return data || [];
-      },
-      add: (report: Report) => supabaseRepoUtils.add(TABLE, report),
-      update: async (validatedReport: Report) => {
-        const { id, workspace_id, ...patchData } = validatedReport;
-        return supabaseRepoUtils.update(TABLE, id, patchData);
-      },
-      remove: (reportId: string) => supabaseRepoUtils.remove(TABLE, reportId),
-      clearAll: () => supabaseRepoUtils.clearAll(TABLE, ws)
-    };
-  }
+  // Unified implementation using RxDB
+  // (Replication is handled at the DatabaseProvider level)
 
   // RxDB Implementation
   if (!db) throw new Error('Database not initialized');

@@ -10,37 +10,8 @@ export function createTemplateRepository(db: MinutasDatabase | null, workspace_i
   const ws = workspace_id;
   const TABLE = 'templates';
 
-  if (isCloud) {
-    const TEMPLATE_SELECT = 'id, name, content, type, workspace_id, is_active, statistics_category, statistics_sub_categories, statistics_rules';
-    return {
-      watchAll: () => createSupabaseWatchAll<Template>(TABLE, ws, { 
-        orderCol: 'name',
-        select: TEMPLATE_SELECT
-      }),
-      add: async (template: Template) => supabaseRepoUtils.add(TABLE, template),
-      update: async (template: Template) => {
-        const { id, workspace_id, ...patchData } = template;
-        return supabaseRepoUtils.update(TABLE, id, patchData);
-      },
-      remove: async (template_id: string) => {
-        await supabaseRepoUtils.remove(TABLE, template_id);
-        // Also remove config if it exists in configs table
-        await supabaseRepoUtils.remove('configs', DbKeys.templateConfig(ws, template_id));
-      },
-      toggle: async (template_id: string) => {
-        // This requires a fetch first or a toggle RPC. 
-        // For simplicity, let's just do a direct update if we have the current state, 
-        // but since we don't here, we might need a more complex implementation.
-        // For now, toggle is mostly used in local mode.
-      },
-      bulkAdd: (templates: Template[]) => supabaseRepoUtils.bulkAdd(TABLE, templates),
-      clearAll: async () => {
-        await supabaseRepoUtils.clearAll(TABLE, ws);
-        // Also clear configs
-        const { error } = await (supabaseRepoUtils as any).supabase.from('configs').delete().eq('workspace_id', ws).eq('type', 'template_config');
-      }
-    };
-  }
+  // Unified implementation using RxDB
+  // (Replication is handled at the DatabaseProvider level)
 
   // RxDB Implementation
   if (!db) throw new Error('Database not initialized');

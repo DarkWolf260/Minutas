@@ -118,37 +118,28 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
 
   // NEW: Content Replication Logic
   useEffect(() => {
-    if (!db || !currentWorkspace || currentWorkspace === DEFAULT_WORKSPACE || isCloud) {
-      if (replicationRef.current) {
-        replicationRef.current.cancel();
-        replicationRef.current = null;
-      }
-      return;
-    }
-
     let cancelled = false;
-    async function initReplication() {
-      if (!db) return;
-      
-      // Cancel previous if exists
-      if (replicationRef.current) {
-        replicationRef.current.cancel();
-      }
+    let replicationInstance: { cancel: () => void } | null = null;
 
+    if (db && currentWorkspace && currentWorkspace !== DEFAULT_WORKSPACE) {
       logger.info(`Starting cloud replication for content in workspace: ${currentWorkspace}`);
-      const replication = await startWorkspaceReplication(db, currentWorkspace);
-      
-      if (!cancelled) {
-        replicationRef.current = replication;
-      } else if (replication) {
-        replication.cancel();
-      }
+      startWorkspaceReplication(db, currentWorkspace).then((res) => {
+        if (cancelled) {
+          res?.cancel();
+          return;
+        }
+        if (res) {
+          replicationInstance = res;
+          replicationRef.current = res;
+        }
+      });
     }
-
-    initReplication();
 
     return () => {
       cancelled = true;
+      if (replicationInstance) {
+        replicationInstance.cancel();
+      }
       if (replicationRef.current) {
         replicationRef.current.cancel();
         replicationRef.current = null;

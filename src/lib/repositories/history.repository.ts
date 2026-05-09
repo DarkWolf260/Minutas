@@ -10,26 +10,8 @@ export function createHistoryRepository(db: MinutasDatabase | null, workspace_id
   const ws = workspace_id;
   const TABLE = 'history';
 
-  if (isCloud) {
-    return {
-      watchGuardHistory: () => createSupabaseWatchAll<any>(TABLE, ws, { 
-        filter: (q) => q.eq('type', 'guard_history'),
-        orderCol: 'date',
-        ascending: false
-      }),
-      saveGuardReport: async (report: GuardReport) =>
-        supabaseRepoUtils.upsert(TABLE, {
-          id: DbKeys.guardHistory(ws, report.id),
-          workspace_id: ws,
-          type: 'guard_history',
-          date: report.date,
-          personnel_id: 'none',
-          data: { ...report, workspace_id: ws },
-        }),
-      deleteGuardReport: (id: string) => supabaseRepoUtils.remove(TABLE, DbKeys.guardHistory(ws, id)),
-      clearAllGuardHistory: () => supabase.from(TABLE).delete().eq('workspace_id', ws).eq('type', 'guard_history')
-    };
-  }
+  // Unified implementation using RxDB
+  // (Replication is handled at the DatabaseProvider level)
 
   // RxDB Implementation
   if (!db) throw new Error('Database not initialized');

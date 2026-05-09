@@ -57,7 +57,6 @@ export function createSupabaseWatchAll<T>(
           event: '*', 
           schema: 'public', 
           table: tableName, 
-          filter: `workspace_id=eq.${workspace_id}` 
         },
         () => {
           // On any change, refetch to ensure consistent state and ordering

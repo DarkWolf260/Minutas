@@ -33,6 +33,8 @@ import {
   PersonnelAssignment,
 } from '@/lib/types';
 
+import { stableStringify, areEqual } from '../utils-pure';
+
 import {
   personnelSchema,
   reportsSchema,
@@ -217,51 +219,67 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
   logger.info(`Central database [${name}] initialized successfully.`);
 
   try {
+    const getLogicalState = (obj: any) => {
+      if (!obj) return null;
+      const raw = obj.toJSON ? obj.toJSON() : obj;
+      
+      const recursiveClean = (item: any): any => {
+        if (item === null || item === undefined) return undefined;
+        if (Array.isArray(item)) return item.map(recursiveClean).filter(v => v !== undefined);
+        if (typeof item === 'object') {
+          const cleaned: any = {};
+          Object.keys(item).forEach(k => {
+            // Skip metadata
+            if (['_rev', '_meta', '_deleted', 'modified', '_modified', 'updated_at', 'created_at'].includes(k)) return;
+            
+            let val = item[k];
+            // Normalize JSON strings
+            if (typeof val === 'string' && (k === 'data' || k === 'form_data' || k === 'statistics_rules' || k === 'statistics_sub_categories')) {
+              try { val = JSON.parse(val); } catch (e) {}
+            }
+            
+            const cleanedVal = recursiveClean(val);
+            if (cleanedVal !== undefined) cleaned[k] = cleanedVal;
+          });
+          return Object.keys(cleaned).length > 0 ? cleaned : {};
+        }
+        return item;
+      };
+
+      return recursiveClean(raw);
+    };
+
+    const ensureParsed = (obj: any) => {
+      if (!obj) return obj;
+      const result = { ...obj };
+      const jsonFields = ['data', 'form_data', 'statistics_rules', 'statistics_sub_categories'];
+      jsonFields.forEach(key => {
+        if (typeof result[key] === 'string') {
+          try {
+            const parsed = JSON.parse(result[key]);
+            if (parsed && typeof parsed === 'object') result[key] = parsed;
+          } catch (e) {}
+        }
+      });
+      return result;
+    };
+
     const commonConflictHandler = {
       isEqual: (a: any, b: any) => {
-        // Deep compare or simple fast check. Usually RxDB checks _rev or handles this,
-        // but we can just say false to force resolution if not identical references
-        return JSON.stringify(a) === JSON.stringify(b);
+        const stateA = getLogicalState(a);
+        const stateB = getLogicalState(b);
+        return stableStringify(stateA) === stableStringify(stateB);
       },
       resolve: (i: any) => {
-        const cleanObj = (obj: any) => {
-          if (!obj) return;
-          // No longer need manual mapping as fields are already snake_case
-          if (obj._modified !== undefined) {
-            delete obj._modified;
-          }
-          if (obj.updated_at !== undefined) {
-            delete obj.updated_at;
-          }
-          if (obj.created_at !== undefined) {
-            delete obj.created_at;
-          }
-          // Quitar valores null para que RxDB no falle en la validación de esquema
-          Object.keys(obj).forEach(key => {
-            if (obj[key] === null) delete obj[key];
-
-            // Parse JSON strings back to objects if they were stringified for Supabase
-            if (typeof obj[key] === 'string' && (key === 'data' || key === 'form_data' || key === 'statistics_rules' || key === 'statistics_sub_categories')) {
-              try {
-                const parsed = JSON.parse(obj[key]);
-                if (parsed && typeof parsed === 'object') {
-                  obj[key] = parsed;
-                }
-              } catch (e) {
-                // Not JSON, ignore
-              }
-            }
-          });
-        };
-
-        const master = i.realMasterState ? { ...i.realMasterState } : null;
-        cleanObj(master);
-
-        const local = i.newDocumentState ? { ...i.newDocumentState } : null;
-        cleanObj(local);
+        const master = i.realMasterState;
+        const local = i.newDocumentState;
 
         if (import.meta.env.DEV) {
           console.log(`[Conflict] Resolving for ${master?.id}`, { master, local });
+        }
+
+        if (areEqual(getLogicalState(master), getLogicalState(local))) {
+          return Promise.resolve(ensureParsed(i.realMasterState));
         }
 
         // AGGRESSIVE LOCAL WINS
@@ -272,7 +290,7 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
           modified: master?.modified || local?.modified || null
         };
 
-        return Promise.resolve(resolved);
+        return Promise.resolve(ensureParsed(resolved));
       }
     };
 
@@ -429,8 +447,3 @@ export const closeDatabase = async () => {
   });
   return state.dbPromiseChain;
 };
-
-
-
-
-

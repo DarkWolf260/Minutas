@@ -5,6 +5,7 @@ import { useGlobalConfig } from '@/hooks/use-global-config';
 import { toast } from 'sonner';
 import { Mail, Lock, Loader2, UserPlus, ArrowLeft, IdCard, ShieldX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -12,6 +13,7 @@ export default function RegisterPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { signUp, isAuthenticated } = useAuth();
+  const { isCloud } = useWorkspaceManager();
   const { config, loading: configLoading } = useGlobalConfig();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -22,12 +24,12 @@ export default function RegisterPage() {
   
   const redirectTo = searchParams.get('redirect') || '/';
 
-  // Si ya está autenticado, redirigir automáticamente
+  // Si ya está autenticado o estamos en modo local, redirigir automáticamente
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated || !isCloud) {
       navigate(redirectTo, { replace: true });
     }
-  }, [isAuthenticated, navigate, redirectTo]);
+  }, [isAuthenticated, isCloud, navigate, redirectTo]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
