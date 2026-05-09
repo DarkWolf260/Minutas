@@ -8,6 +8,7 @@
 export const DbKeys = {
   // ─── Config collection ──────────────────────────────────────────────────
   settings: (ws: string) => `${ws}:settings:app`,
+  ordenDelDia: (ws: string) => `${ws}:orden_del_dia:active-draft`,
   draft: (ws: string) => `${ws}:draft:active-draft`,
   profile: (ws: string) => `${ws}:profile:user`,
   fieldDefinition: (ws: string, fieldName: string) => `${ws}:field_definition:${fieldName}`,

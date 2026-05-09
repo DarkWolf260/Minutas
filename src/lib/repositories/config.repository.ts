@@ -167,6 +167,24 @@ export function createConfigRepository(db: MinutasDatabase | null, workspace_id:
     return silentWrite(() => doc.remove(), { feature: 'Profile' });
   };
 
+  const getOrdenDelDia = () =>
+    db.configs.findOne(DbKeys.ordenDelDia(ws)).exec();
+
+  const watchOrdenDelDia = () =>
+    db.configs.findOne(DbKeys.ordenDelDia(ws)).$;
+
+  const saveOrdenDelDia = async (draft: any) =>
+    silentWrite(
+      () =>
+        db.configs.upsert({
+          id: DbKeys.ordenDelDia(ws),
+          workspace_id: ws,
+          type: 'orden_del_dia',
+          data: { ...draft, updated_at: new Date().toISOString() },
+        }),
+      { feature: 'Orden del Día' }
+    );
+
   const watchFieldDefinitions = () =>
     db.configs.find({
       selector: { type: 'field_definition', workspace_id: ws },
@@ -384,6 +402,9 @@ export function createConfigRepository(db: MinutasDatabase | null, workspace_id:
     removeTemplateConfig,
     clearAllTemplateConfigs,
     bulkUpsertTemplateConfigs,
+    getOrdenDelDia,
+    watchOrdenDelDia,
+    saveOrdenDelDia,
   };
 }
 

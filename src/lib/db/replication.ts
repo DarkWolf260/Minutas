@@ -120,7 +120,7 @@ async function startCollectionReplication(
       },
       batchSize: 50,
       stream$: globalPullTrigger$.pipe(
-        debounceTime(300),
+        debounceTime(100),
         map(() => 'RESYNC' as any) // Use official 'RESYNC' command to trigger pull handler
       )
     },

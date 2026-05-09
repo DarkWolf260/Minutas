@@ -69,7 +69,7 @@ export type LookupItem = {
 export type ConfigItem = {
   id: string; // type:originalId or just 'settings'
   workspace_id: string;
-  type: 'settings' | 'unit' | 'field_definition' | 'template_config' | 'guard' | 'draft' | 'profile';
+  type: 'settings' | 'unit' | 'field_definition' | 'template_config' | 'guard' | 'draft' | 'profile' | 'orden_del_dia';
   name?: string;
   data: any;
 };
