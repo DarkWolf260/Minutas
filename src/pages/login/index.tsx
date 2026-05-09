@@ -20,12 +20,12 @@ export default function LoginPage() {
   
   const redirectTo = searchParams.get('redirect') || '/';
 
-  // Si ya está autenticado o estamos en modo local, redirigir automáticamente
+  // Si ya está autenticado, redirigir automáticamente
   useEffect(() => {
-    if (isAuthenticated || !isCloud) {
+    if (isAuthenticated) {
       navigate(redirectTo, { replace: true });
     }
-  }, [isAuthenticated, isCloud, navigate, redirectTo]);
+  }, [isAuthenticated, navigate, redirectTo]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
