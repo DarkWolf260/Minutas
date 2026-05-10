@@ -13,7 +13,7 @@ import { SyncProvider } from '@/lib/sync/sync-context';
 import { AuthProvider } from '@/components/providers/auth-provider';
 import { UserProvider, useUser } from '@/components/providers/user-provider';
 import { lazy, Suspense, useState, useEffect } from 'react';
-import { WifiOff } from 'lucide-react';
+import { WifiOff, Home, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OnboardingTour } from '@/components/ui/custom/onboarding-tour';
 import { cn } from '@/lib/utils';
@@ -29,13 +29,18 @@ import { useWorkspaceManager } from '@/lib/db/db-context';
 
 // ─── Lazy-load app pages ──────────────────────────────────────────────────────
 
-const NovedadesPage = lazy(() => import('@/pages/novedades'));
+import OfflinePage from '@/pages/offline';
+import NotFoundPage from '@/pages/not-found';
+import LoginPage from '@/pages/login';
+
+import NovedadesPage from '@/pages/novedades';
+import OrdenDelDiaPage from '@/pages/orden-del-dia';
+import PersonalPage from '@/pages/personal';
+import PlantillasPage from '@/pages/plantillas';
+import ReporteFinalPage from '@/pages/reporte-final';
+
 const DireccionesPage = lazy(() => import('@/pages/settings/direcciones'));
 const EstadisticasPage = lazy(() => import('@/pages/estadisticas'));
-const OrdenDelDiaPage = lazy(() => import('@/pages/orden-del-dia'));
-const PersonalPage = lazy(() => import('@/pages/personal'));
-const PlantillasPage = lazy(() => import('@/pages/plantillas'));
-const ReporteFinalPage = lazy(() => import('@/pages/reporte-final'));
 const SettingsPage = lazy(() => import('@/pages/settings'));
 const SettingsWorkspacesPage = lazy(() => import('@/pages/settings/workspaces'));
 const SettingsProfilePage = lazy(() => import('@/pages/settings/profile'));
@@ -48,9 +53,6 @@ const AboutAppPage = lazy(() => import('@/pages/settings/about/app'));
 const AboutGuidePage = lazy(() => import('@/pages/settings/about/guide'));
 const AboutChangelogPage = lazy(() => import('@/pages/settings/about/changelog'));
 const AboutTemplatesPage = lazy(() => import('@/pages/settings/about/templates'));
-const OfflinePage = lazy(() => import('@/pages/offline'));
-const NotFoundPage = lazy(() => import('@/pages/not-found'));
-const LoginPage = lazy(() => import('@/pages/login'));
 const RegisterPage = lazy(() => import('@/pages/register'));
 const AdminDashboardPage = lazy(() => import('@/pages/admin'));
 const AdminUsersPage = lazy(() => import('@/pages/admin/users'));
@@ -85,11 +87,20 @@ function AppLayout() {
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false
   );
+  const [showOnlineBar, setShowOnlineBar] = useState(false);
   const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
-    const onOnline = () => setIsOffline(false);
-    const onOffline = () => setIsOffline(true);
+    const onOnline = () => {
+      setIsOffline(false);
+      setShowOnlineBar(true);
+      setTimeout(() => setShowOnlineBar(false), 4000); // Show for 4 seconds
+    };
+    const onOffline = () => {
+      setIsOffline(true);
+      setShowOnlineBar(false);
+    };
+    
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
 
@@ -114,18 +125,17 @@ function AppLayout() {
       <div className={cn("flex flex-1 flex-col md:overflow-hidden relative min-w-0 overflow-x-hidden", showNav && "sm:pl-14")}>
         {showNav && <MobileNav />}
 
-        {isOffline && location.pathname !== '/offline' && (
-          <div className="bg-amber-500 text-white text-[10px] font-bold uppercase tracking-widest py-1.5 px-4 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 sticky top-0 z-20 shadow-sm">
-            <WifiOff className="h-3 w-3" />
-            <span>Modo Sin Conexión — Los cambios se sincronizarán al volver</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-5 px-2 text-[9px] text-white hover:bg-white/20 ml-2 border border-white/30"
-              onClick={() => navigate('/offline')}
-            >
-              Más info
-            </Button>
+        {(isOffline || showOnlineBar) && location.pathname !== '/offline' && (
+          <div className={cn(
+            "text-white text-[10px] font-bold uppercase tracking-widest py-1.5 px-4 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 sticky top-0 z-[50] shadow-md transition-colors",
+            isOffline ? "bg-amber-500" : "bg-emerald-500"
+          )}>
+            {isOffline ? <WifiOff className="h-3 w-3" /> : <RefreshCw className="h-3 w-3 animate-spin-slow" />}
+            <span>
+              {isOffline 
+                ? `Modo Sin Conexión${user ? ' — Los cambios se sincronizarán al volver' : ''}`
+                : `Conexión Restaurada${user ? ' — Sincronizando datos...' : ''}`}
+            </span>
           </div>
         )}
 

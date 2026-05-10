@@ -19,6 +19,12 @@ export function useCloudTemplates() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchTemplates = async () => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setError('Sin conexión a internet');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -39,6 +45,10 @@ export function useCloudTemplates() {
 
   useEffect(() => {
     fetchTemplates();
+
+    const handleOnline = () => fetchTemplates();
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
   }, []);
 
   return {
