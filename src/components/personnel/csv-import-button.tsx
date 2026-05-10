@@ -152,7 +152,7 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                     const rawSex = getCol('sex' as keyof Omit<StaffMember, 'id'>);
 
                     members.push({
-                        workspaceId: currentWorkspace || '',
+                        workspace_id: currentWorkspace || '',
                         name,
                         cedula: getCol('cedula') || undefined,
                         rank: getCol('rank') || undefined,
@@ -200,7 +200,7 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
             p.name,
             p.cedula ?? '',
             p.sex ?? '',
-            p.cargo || p.roleId || '',
+            p.cargo || p.role_id || '',
             p.department ?? '',
             p.status ?? 'activo',
             p.titulo ?? '',
@@ -248,3 +248,5 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
         </div>
     );
 }
+
+

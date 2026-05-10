@@ -25,21 +25,21 @@ import { createPersonnelRepository } from '@/lib/repositories';
 
 export function usePersonnel() {
   const db = useDatabase();
-  const { currentWorkspace } = useWorkspaceManager();
+  const { currentWorkspace, isCloud } = useWorkspaceManager();
   const [personnel, setPersonnel] = useState<StaffMember[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     if (!db || !currentWorkspace) return;
 
-    const repo = createPersonnelRepository(db, currentWorkspace);
+    const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
     const sub = repo.watchAll().subscribe((data) => {
-      setPersonnel(data.map((d) => d.toJSON()) as StaffMember[]);
+      setPersonnel(data);
       setIsLoaded(true);
     });
 
     return () => sub.unsubscribe();
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   const addMember = useCallback(
     async (newMember: Omit<StaffMember, 'id'>) => {
@@ -48,23 +48,23 @@ export function usePersonnel() {
         const memberWithId: StaffMember = {
           ...newMember,
           id: generateId('personnel'),
-          workspaceId: currentWorkspace,
+          workspace_id: currentWorkspace,
         } as any;
 
         const validatedMember = StaffMemberSchema.parse(memberWithId) as StaffMember;
-        const repo = createPersonnelRepository(db, currentWorkspace);
+        const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
         await repo.add(validatedMember);
         logger.info('Personnel added', {
           id: validatedMember.id,
           name: validatedMember.name,
-          workspaceId: currentWorkspace,
+          workspace_id: currentWorkspace,
         });
       } catch (error) {
         logger.error('Failed to add personnel', error);
         throw error;
       }
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const addMembers = useCallback(
@@ -83,27 +83,27 @@ export function usePersonnel() {
           return;
         }
         const id = generateId('personnel');
-        newMembers.push({ ...m, id, workspaceId: currentWorkspace } as any);
+        newMembers.push({ ...m, id, workspace_id: currentWorkspace } as any);
         if (m.cedula) existingCedulas.add(m.cedula);
       });
 
       if (newMembers.length > 0) {
-        const repo = createPersonnelRepository(db, currentWorkspace);
+        const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
         await repo.bulkAdd(newMembers);
       }
 
       return { added: newMembers, skipped: skippedCount };
     },
-    [db, currentWorkspace, personnel]
+    [db, currentWorkspace, personnel, isCloud]
   );
 
   const updateMember = useCallback(
     async (id: string, updates: Partial<StaffMember>) => {
       if (!db || !currentWorkspace) return;
       try {
-        const repo = createPersonnelRepository(db, currentWorkspace);
+        const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
         await repo.update(id, updates);
-        logger.info('Personnel updated', { id, updates, workspaceId: currentWorkspace });
+        logger.info('Personnel updated', { id, updates, workspace_id: currentWorkspace });
       } catch (error) {
         logger.error('Failed to update personnel', error);
         const { toast } = await import('sonner');
@@ -111,34 +111,34 @@ export function usePersonnel() {
         throw error;
       }
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const removeMember = useCallback(
     async (id: string) => {
       if (!db || !currentWorkspace) return;
-      const repo = createPersonnelRepository(db, currentWorkspace);
+      const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
       await repo.remove(id);
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const removeMembers = useCallback(
     async (ids: string[]) => {
       if (!db || !currentWorkspace) return;
-      const repo = createPersonnelRepository(db, currentWorkspace);
+      const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
       await repo.bulkRemove(ids);
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const savePersonnel = useCallback(
     async (newPersonnel: StaffMember[]) => {
       if (!db || !currentWorkspace) return;
-      const repo = createPersonnelRepository(db, currentWorkspace);
+      const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
       await repo.syncAll(newPersonnel);
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const isCedulaDuplicate = useCallback(
@@ -151,9 +151,9 @@ export function usePersonnel() {
 
   const clearAllPersonnel = useCallback(async () => {
     if (!db || !currentWorkspace) return;
-    const repo = createPersonnelRepository(db, currentWorkspace);
+    const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
     await repo.clearAll();
-    logger.info('All personnel cleared', { workspaceId: currentWorkspace });
+    logger.info('All personnel cleared', { workspace_id: currentWorkspace });
   }, [db, currentWorkspace]);
 
   return {
@@ -169,3 +169,4 @@ export function usePersonnel() {
     clearAllPersonnel,
   };
 }
+

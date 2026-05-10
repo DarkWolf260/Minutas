@@ -26,12 +26,14 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
     manejarClickSubirLocal,
     inputArchivoRef,
     manejarCambioArchivo,
-    setEsDialogOpenNube,
     manejarClickEditarContenido,
     estaAutenticado,
+    isAdmin,
     manejarSubirANube,
     estaSubiendo,
-    manejarClickEliminar
+    manejarClickEliminar,
+    sincronizarDesdeNube,
+    estaSincronizando
   } = hook;
 
   return (
@@ -55,10 +57,11 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
             className="w-full text-xs h-9" 
             size="sm" 
             variant="secondary"
-            onClick={() => setEsDialogOpenNube(true)}
+            onClick={sincronizarDesdeNube}
+            disabled={estaSincronizando}
           >
-            <CloudDownload className="mr-2 h-4 w-4" />
-            Desde Nube
+            <CloudDownload className={cn("mr-2 h-4 w-4", estaSincronizando && "animate-spin")} />
+            Sincronizar
           </Button>
         </div>
         <input
@@ -139,16 +142,22 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
                             size="icon"
                             className={cn(
                               "h-7 w-7 transition-colors",
-                              estaAutenticado ? "text-primary hover:bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-background/80"
+                              estaAutenticado && isAdmin ? "text-primary hover:bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-background/80"
                             )}
                             onClick={(e) => manejarSubirANube(e, template)}
-                            disabled={estaSubiendo}
+                            disabled={estaSubiendo || !isAdmin}
                           >
                             <CloudUpload className="h-3.5 w-3.5" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>{estaAutenticado ? 'Subir a la Comunidad' : 'Inicia sesión para subir'}</p>
+                          <p>
+                            {!estaAutenticado 
+                              ? 'Inicia sesión para subir' 
+                              : !isAdmin 
+                                ? 'Solo los administradores pueden subir plantillas' 
+                                : 'Subir a la Comunidad'}
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                       

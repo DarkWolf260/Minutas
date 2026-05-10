@@ -27,7 +27,7 @@ import {
   Download,
   Layers
 } from 'lucide-react';
-import { useCommunityTemplates } from '@/hooks/use-community-templates';
+import { useCloudTemplates } from '@/hooks/use-cloud-templates';
 import { useTemplates } from '@/hooks/use-templates';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { generateId } from '@/lib/utils/id';
@@ -43,7 +43,7 @@ interface CloudTemplatesDialogProps {
 
 export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialogProps) {
   const isMobile = useIsMobile();
-  const { templates: cloudTemplates, loading, error, refetch } = useCommunityTemplates();
+  const { templates: cloudTemplates, loading, error, refetch } = useCloudTemplates();
   const { templates: localTemplates, addTemplate, updateTemplate } = useTemplates();
   const { currentWorkspace } = useWorkspaceManager();
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
@@ -64,22 +64,22 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
           ...existing,
           content: cloudTemplate.content,
           type: cloudTemplate.type || existing.type || 'normal',
-          statisticsCategory: cloudTemplate.statisticsCategory || existing.statisticsCategory,
-          statisticsSubCategories: cloudTemplate.statisticsSubCategories || existing.statisticsSubCategories,
-          statisticsRules: cloudTemplate.statisticsRules || existing.statisticsRules,
+          statistics_category: cloudTemplate.statistics_category || existing.statistics_category,
+          statistics_sub_categories: cloudTemplate.statistics_sub_categories || existing.statistics_sub_categories,
+          statistics_rules: cloudTemplate.statistics_rules || existing.statistics_rules,
         });
         if (!silent) toast.success(`Plantilla "${cloudTemplate.name}" actualizada.`);
       } else {
         const newTemplate: Template = {
           id: generateId('template'),
-          workspaceId: currentWorkspace,
+          workspace_id: currentWorkspace,
           name: cloudTemplate.name,
           content: cloudTemplate.content,
           type: cloudTemplate.type || 'normal',
-          isActive: true,
-          statisticsCategory: cloudTemplate.statisticsCategory,
-          statisticsSubCategories: cloudTemplate.statisticsSubCategories,
-          statisticsRules: cloudTemplate.statisticsRules,
+          is_active: true,
+          statistics_category: cloudTemplate.statistics_category,
+          statistics_sub_categories: cloudTemplate.statistics_sub_categories,
+          statistics_rules: cloudTemplate.statistics_rules,
         };
         await addTemplate(newTemplate);
         if (!silent) toast.success(`Plantilla "${cloudTemplate.name}" descargada.`);
@@ -134,10 +134,10 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
             </div>
             <div className="min-w-0">
               <h3 className="text-xl font-bold tracking-tight truncate">
-                Catálogo Cloud
+                Plantillas Cloud
               </h3>
               <p className="text-xs text-muted-foreground truncate">
-                {cloudTemplates.length} diseños profesionales
+                {cloudTemplates.length} diseños disponibles
               </p>
             </div>
           </div>
@@ -157,7 +157,7 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
         {cloudTemplates.length > 0 && !error && (
           <div className="px-6 py-3 bg-background/50 border-b flex items-center justify-between backdrop-blur-sm sticky top-0 z-10">
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              Comunidad
+              Plantillas
             </span>
             <Button 
               variant="ghost" 
@@ -240,11 +240,6 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
                               </Badge>
                             )}
                           </div>
-                          {template.description && (
-                            <p className="text-[11px] text-muted-foreground line-clamp-2 sm:line-clamp-1 italic leading-tight">
-                              {template.description}
-                            </p>
-                          )}
                           {isDownloaded && (
                             <div className="flex items-center gap-1 text-[10px] text-green-600 font-bold uppercase tracking-tight mt-1">
                               <CheckCircle2 className="h-3 w-3" />
@@ -316,3 +311,5 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
     </Dialog>
   );
 }
+
+

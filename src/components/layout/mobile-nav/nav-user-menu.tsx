@@ -1,6 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { User, Settings, Sun, Moon, Monitor } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { User, Settings, Sun, Moon, Monitor, LogIn, LogOut, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -10,6 +10,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/components/providers/theme-provider';
+import { useAuth } from '@/hooks/use-auth';
+import { useAdmin } from '@/hooks/use-admin';
 
 interface NavUserMenuProps {
   profile: any;
@@ -21,6 +23,9 @@ interface NavUserMenuProps {
 
 export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, initials }: NavUserMenuProps) => {
   const { theme, setTheme } = useTheme();
+  const { isAuthenticated, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
+  const navigate = useNavigate();
 
   return (
     <DropdownMenu>
@@ -61,6 +66,15 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
           </Link>
         </DropdownMenuItem>
 
+        {isAdmin && (
+          <DropdownMenuItem asChild className="py-2.5">
+            <Link to="/admin" className="cursor-pointer flex w-full items-center text-primary focus:text-primary">
+              <ShieldAlert className="mr-3 h-4 w-4" />
+              <span className="text-sm font-medium">Panel Admin</span>
+            </Link>
+          </DropdownMenuItem>
+        )}
+
         <DropdownMenuSeparator />
 
         <div className="px-2 py-3">
@@ -100,6 +114,20 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
             </button>
           </div>
         </div>
+
+        <DropdownMenuSeparator />
+        
+        {isAuthenticated ? (
+          <DropdownMenuItem onClick={() => signOut()} className="py-2.5 cursor-pointer text-red-500 focus:text-red-500 font-medium">
+            <LogOut className="mr-3 h-4 w-4" />
+            <span className="text-sm font-medium">Cerrar Sesión</span>
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem onClick={() => navigate('/login')} className="py-2.5 cursor-pointer font-medium">
+            <LogIn className="mr-3 h-4 w-4" />
+            <span className="text-sm font-medium">Iniciar Sesión</span>
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

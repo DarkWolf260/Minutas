@@ -1,23 +1,21 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { Template } from '@/lib/types';
 import { toast } from 'sonner';
 
-export interface CommunityTemplate {
+export interface CloudTemplate {
   id: string;
   name: string;
   content: string;
-  description?: string;
   type: 'normal' | 'relevante';
   created_at?: string;
-  statisticsCategory?: string | null;
-  statisticsSubCategories?: string[] | null;
-  statisticsRules?: any[] | null;
+  statistics_category?: string | null;
+  statistics_sub_categories?: string[] | null;
+  statistics_rules?: any[] | null;
 }
 
-export function useCommunityTemplates() {
+export function useCloudTemplates() {
   const [loading, setLoading] = useState(false);
-  const [templates, setTemplates] = useState<CommunityTemplate[]>([]);
+  const [templates, setTemplates] = useState<CloudTemplate[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const fetchTemplates = async () => {
@@ -26,15 +24,14 @@ export function useCommunityTemplates() {
     try {
       const { data, error } = await supabase
         .from('templates')
-        .select('*')
+        .select('id, name, content, type, statistics_category, statistics_sub_categories, statistics_rules')
         .order('name');
 
       if (error) throw error;
       setTemplates(data || []);
     } catch (err: any) {
-      console.error('Error fetching community templates:', err);
-      setError(err.message || 'Error al cargar plantillas de la comunidad');
-      // No mostramos toast aquí para no ser intrusivos si falla el primer carga
+      console.error('Error fetching cloud templates:', err);
+      setError(err.message || 'Error al cargar plantillas cloud');
     } finally {
       setLoading(false);
     }
@@ -51,3 +48,4 @@ export function useCommunityTemplates() {
     refetch: fetchTemplates
   };
 }
+

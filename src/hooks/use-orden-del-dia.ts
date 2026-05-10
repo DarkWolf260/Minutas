@@ -7,6 +7,9 @@ import { useRoles } from '@/hooks/use-roles';
 import { useSettings } from '@/hooks/use-settings';
 import { useGuards } from '@/hooks/use-guards';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+import { useOrdenDelDiaDraft } from '@/hooks/use-orden-del-dia-draft';
+import { stableStringify } from '@/lib/utils-pure';
+import { logger } from '@/lib/logger';
 import type { Staff, StaffMember, StaffRole } from '@/lib/types';
 
 // Sub-hooks
@@ -20,11 +23,13 @@ export function useOrdenDelDia(selectedGuard: string, periodo: string, initialDa
   const { roles } = useRoles();
   const { guards, isLoaded: guardiasCargadas } = useGuards();
   const { settings, saveSettings } = useSettings();
+  const { draft: cloudDraft, saveDraft: persistDraft, isLoaded: draftCargado } = useOrdenDelDiaDraft();
   const { definitions: definiciones, isLoaded: definicionesCargadas } = useFieldDefinitions();
 
   const [esJefeEncargado, setEsJefeEncargado] = useState(false);
   const [estaInicializado, setEstaInicializado] = useState(false);
   const ultimaGuardiaInicializada = useRef<string | null>(null);
+  const lastUpdateRef = useRef<string>(new Date(0).toISOString());
 
   // 1. Specialized Hooks
   const activities = useOrdenDelDiaActivities(periodo, definiciones);
@@ -52,8 +57,15 @@ export function useOrdenDelDia(selectedGuard: string, periodo: string, initialDa
 
     if (isGuardOpen) {
       if (esNuevaGuardia || personalEstaVacio) {
-        if (settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === selectedGuard) {
-          const borrador = settings.ordenDelDiaDraft;
+        // PRIORIDAD 1: Nuevo borrador independiente
+        // PRIORIDAD 2: Borrador viejo en settings (Migración)
+        const borrador = (cloudDraft && cloudDraft.guard_id === selectedGuard) 
+          ? cloudDraft 
+          : (settings.orden_del_dia_draft && settings.orden_del_dia_draft.guard_id === selectedGuard)
+            ? settings.orden_del_dia_draft
+            : null;
+
+        if (borrador) {
           personnelAssign.setPersonalAsignado(borrador.staff || {});
 
           const actividadesBorrador = borrador.activities || [];
@@ -67,9 +79,20 @@ export function useOrdenDelDia(selectedGuard: string, periodo: string, initialDa
 
           activities.setActividades(actividadesMigradas);
           notes.setNotas(borrador.notes || NOTAS_POR_DEFECTO);
-          setEsJefeEncargado(!!borrador.esJefeEncargado);
+          setEsJefeEncargado(!!borrador.es_jefe_encargado);
+          
+          if (borrador.updated_at) {
+            lastUpdateRef.current = borrador.updated_at;
+          }
+          
           ultimaGuardiaInicializada.current = selectedGuard;
           setEstaInicializado(true);
+
+          // Si vino de settings, forzamos una migración inmediata al nuevo documento
+          if (!cloudDraft && settings.orden_del_dia_draft) {
+            logger.info('[ORDEN] Migrando borrador de settings a documento independiente...');
+            persistDraft(borrador);
+          }
           return;
         }
       }
@@ -115,7 +138,30 @@ export function useOrdenDelDia(selectedGuard: string, periodo: string, initialDa
       ultimaGuardiaInicializada.current = selectedGuard;
       setEstaInicializado(true);
     }
-  }, [selectedGuard, isGuardOpen, settings.ordenDelDiaDraft, roles, initialData, personnel, periodo, guards, guardiasCargadas, definiciones, definicionesCargadas]);
+  }, [selectedGuard, isGuardOpen, roles, initialData, personnel, periodo, guards, guardiasCargadas, definiciones, definicionesCargadas]); // Removed settings.orden_del_dia_draft dependency from init
+
+  // NEW: Reactive Sync from Cloud (Independent Document)
+  useEffect(() => {
+    if (!estaInicializado || !isGuardOpen || !cloudDraft) return;
+    if (cloudDraft.guard_id !== selectedGuard) return;
+    
+    const borrador = cloudDraft;
+    const cloudUpdate = borrador.updated_at || new Date(0).toISOString();
+    
+    // Solo actualizar si la versión de la nube es diferente a la nuestra
+    if (cloudUpdate !== lastUpdateRef.current) {
+      // Solo aplicamos si la nube es realmente más reciente para evitar "reversiones"
+      if (cloudUpdate > lastUpdateRef.current) {
+        const staff = borrador.staff || {};
+        
+        personnelAssign.setPersonalAsignado(staff);
+        activities.setActividades(borrador.activities || []);
+        notes.setNotas(borrador.notes || NOTAS_POR_DEFECTO);
+        setEsJefeEncargado(!!borrador.es_jefe_encargado);
+        lastUpdateRef.current = cloudUpdate;
+      }
+    }
+  }, [cloudDraft, selectedGuard, isGuardOpen, estaInicializado]);
 
   useEffect(() => {
     if (selectedGuard !== ultimaGuardiaInicializada.current) {
@@ -123,26 +169,46 @@ export function useOrdenDelDia(selectedGuard: string, periodo: string, initialDa
     }
   }, [selectedGuard]);
 
-  // Auto-save
+  // Auto-save with deep equality check
   useEffect(() => {
     if (!selectedGuard || !estaInicializado || !isGuardOpen) return;
 
+    // Comparar estado actual con el último borrador guardado
+    const currentDraft = {
+      guard_id: selectedGuard,
+      staff: personnelAssign.personalAsignado,
+      es_jefe_encargado: esJefeEncargado,
+      activities: activities.actividades,
+      notes: notes.notas,
+    };
+
+    const currentStr = stableStringify(currentDraft);
+    
+    // Omitimos updated_at de la comparación para evitar bucles infinitos
+    const lastSaved = { ...cloudDraft };
+    delete (lastSaved as any).updated_at;
+    const lastSavedStr = stableStringify(lastSaved);
+
+    // Si son iguales (excluyendo updated_at), no guardar
+    if (currentStr === lastSavedStr) return;
+
     const timer = setTimeout(() => {
       const ahoraIso = new Date().toISOString();
-      saveSettings({
-        ordenDelDiaDraft: {
-          guardId: selectedGuard,
-          staff: personnelAssign.personalAsignado,
-          esJefeEncargado,
-          activities: activities.actividades,
-          notes: notes.notas,
-          updatedAt: ahoraIso,
-        },
+      lastUpdateRef.current = ahoraIso;
+      
+      persistDraft({
+        ...currentDraft,
+        updated_at: ahoraIso,
       });
-    }, 1000);
+
+      // Si todavía hay un borrador en settings, lo eliminamos una vez que hemos guardado el nuevo con éxito
+      if (settings.orden_del_dia_draft) {
+        saveSettings({ orden_del_dia_draft: null as any });
+      }
+    }, 500); // 500ms debounce for draft saving
 
     return () => clearTimeout(timer);
-  }, [personnelAssign.personalAsignado, esJefeEncargado, activities.actividades, notes.notas, selectedGuard, saveSettings, estaInicializado, isGuardOpen]);
+  }, [personnelAssign.personalAsignado, esJefeEncargado, activities.actividades, notes.notas, selectedGuard, persistDraft, saveSettings, estaInicializado, isGuardOpen, cloudDraft, settings.orden_del_dia_draft]);
 
   return {
     ...activities,
@@ -157,3 +223,4 @@ export function useOrdenDelDia(selectedGuard: string, periodo: string, initialDa
     collisionDetection: closestCenter
   };
 }
+

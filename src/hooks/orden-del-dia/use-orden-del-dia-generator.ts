@@ -74,7 +74,7 @@ export function useOrdenDelDiaGenerator({
     );
 
     const rolesOrdenadosParaReporte = [...roles]
-      .sort((a, b) => (a.hierarchyOrder ?? a.order ?? 0) - (b.hierarchyOrder ?? b.order ?? 0));
+      .sort((a, b) => (a.hierarchy_order ?? a.order ?? 0) - (b.hierarchy_order ?? b.order ?? 0));
 
     rolesOrdenadosParaReporte.forEach((rol) => {
       const nombreRolBajo = rol.name.toLowerCase();
@@ -128,3 +128,4 @@ export function useOrdenDelDiaGenerator({
     manejarCopiadoAlPortapapeles
   };
 }
+

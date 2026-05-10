@@ -1,7 +1,10 @@
 import { useState, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
+import { useAdmin } from '@/hooks/use-admin';
 import { useUploadTemplate } from '@/hooks/use-upload-template';
 import { useTemplates } from '@/hooks/use-templates';
+import { useSyncTemplates } from '@/hooks/use-sync-templates';
 import type { Template } from '@/lib/types';
 import { generateId } from '@/lib/utils/id';
 import { useWorkspaceManager } from '@/lib/db/db-context';
@@ -24,12 +27,13 @@ export function usePlantillas() {
   const [plantillaEditando, setPlantillaEditando] = useState<Template | null>(null);
   const [tabActiva, setTabActiva] = useState('editor');
   const [esDialogOpenNube, setEsDialogOpenNube] = useState(false);
-  const [esDialogOpenLogin, setEsDialogOpenLogin] = useState(false);
-  const [plantillaParaSubir, setPlantillaParaSubir] = useState<Template | null>(null);
   const inputArchivoRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const { isAuthenticated: estaAutenticado, user: usuario, signOut: cerrarSesion } = useAuth();
+  const { isAdmin } = useAdmin();
   const { uploadTemplate: subirAPlantillaNube, isUploading: estaSubiendo } = useUploadTemplate();
+  const { syncFromCloud: sincronizarDesdeNube, isSyncing: estaSincronizando } = useSyncTemplates();
 
   const manejarCambioArchivo = (event: React.ChangeEvent<HTMLInputElement>) => {
     const archivo = event.target.files?.[0];
@@ -49,7 +53,7 @@ export function usePlantillas() {
         } else {
           const nuevaPlantilla: Template = {
             id: generateId('template'),
-            workspaceId: currentWorkspace,
+            workspace_id: currentWorkspace,
             name: nombre,
             content: contenido,
             type: 'normal',
@@ -92,8 +96,7 @@ export function usePlantillas() {
   const manejarSubirANube = async (e: React.MouseEvent, plantilla: Template) => {
     e.stopPropagation();
     if (!estaAutenticado) {
-      setPlantillaParaSubir(plantilla);
-      setEsDialogOpenLogin(true);
+      navigate('/login?redirect=/plantillas');
       return;
     }
     await subirAPlantillaNube(plantilla);
@@ -144,12 +147,9 @@ export function usePlantillas() {
     setTabActiva,
     esDialogOpenNube,
     setEsDialogOpenNube,
-    esDialogOpenLogin,
-    setEsDialogOpenLogin,
-    plantillaParaSubir,
-    setPlantillaParaSubir,
     inputArchivoRef,
     estaAutenticado,
+    isAdmin,
     usuario,
     estaSubiendo,
     plantillaSeleccionada,
@@ -169,5 +169,8 @@ export function usePlantillas() {
     addTemplate,
     cerrarSesion,
     subirAPlantillaNube,
+    sincronizarDesdeNube,
+    estaSincronizando,
   };
 }
+

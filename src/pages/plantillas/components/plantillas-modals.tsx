@@ -11,7 +11,6 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
-import { LoginDialog } from '@/components/auth/login-dialog';
 import { CloudTemplatesDialog } from '@/components/template/cloud-templates-dialog';
 
 interface PlantillasModalsProps {
@@ -25,11 +24,6 @@ export const PlantillasModals = ({ hook }: PlantillasModalsProps) => {
     manejarConfirmarEliminacion,
     esDialogOpenNube,
     setEsDialogOpenNube,
-    esDialogOpenLogin,
-    setEsDialogOpenLogin,
-    plantillaParaSubir,
-    setPlantillaParaSubir,
-    subirAPlantillaNube,
     esDialogOpenInfo,
     setEsDialogOpenInfo
   } = hook;
@@ -51,17 +45,6 @@ export const PlantillasModals = ({ hook }: PlantillasModalsProps) => {
       <CloudTemplatesDialog 
         open={esDialogOpenNube} 
         onOpenChange={setEsDialogOpenNube} 
-      />
-      
-      <LoginDialog
-        open={esDialogOpenLogin}
-        onOpenChange={setEsDialogOpenLogin}
-        onSuccess={() => {
-          if (plantillaParaSubir) {
-            subirAPlantillaNube(plantillaParaSubir);
-            setPlantillaParaSubir(null);
-          }
-        }}
       />
 
       <Dialog open={esDialogOpenInfo} onOpenChange={setEsDialogOpenInfo}>

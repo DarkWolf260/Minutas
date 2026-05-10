@@ -10,7 +10,7 @@ interface TemplateListProps {
 }
 
 export const TemplateList = ({ templates, onSelect, onNavigateToTemplates }: TemplateListProps) => {
-  const activas = templates.filter(t => t.isActive);
+  const activas = templates.filter(t => t.is_active);
   
   if (activas.length === 0) {
     return (

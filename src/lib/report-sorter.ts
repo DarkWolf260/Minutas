@@ -1,20 +1,20 @@
-import type { Report, FormDataRecord, FormDataValue } from '@/lib/types';
+import type { Report, form_dataRecord, form_dataValue } from '@/lib/types';
 
 /**
- * Finds a value in the report's formData, checking both top-level and nested section data.
+ * Finds a value in the report's form_data, checking both top-level and nested section data.
  * Search is case-insensitive, making it resilient to field name variations.
  * 
  * **Search Order**:
  * 1. Top-level fields (e.g., `{Fecha: "27/01/2026"}`)
  * 2. Nested section fields (e.g., `{Detalles: {Hora: "14:00"}}`)
  * 
- * @param formData - The report's formData object  
+ * @param form_data - The report's form_data object  
  * @param keyToFind - The key to search for (case-insensitive, e.g., "Hora")
  * @returns The found value (any type), or null if not present
  * 
  * @example
  * ```typescript
- * const formData = {
+ * const form_data = {
  *   Fecha: "27/01/2026",
  *   Detalles: {
  *     Hora: "14:00",
@@ -22,10 +22,10 @@ import type { Report, FormDataRecord, FormDataValue } from '@/lib/types';
  *   }
  * };
  * 
- * findValueInFormData(formData, 'Fecha');  // "27/01/2026"
- * findValueInFormData(formData, 'hora');   // "14:00" (case-insensitive)
- * findValueInFormData(formData, 'Lugar'); // "Oficina Principal" (nested)
- * findValueInFormData(formData, 'Missing'); // null
+ * findValueInform_data(form_data, 'Fecha');  // "27/01/2026"
+ * findValueInform_data(form_data, 'hora');   // "14:00" (case-insensitive)
+ * findValueInform_data(form_data, 'Lugar'); // "Oficina Principal" (nested)
+ * findValueInform_data(form_data, 'Missing'); // null
  * ```
  * 
  * @remarks
@@ -34,27 +34,27 @@ import type { Report, FormDataRecord, FormDataValue } from '@/lib/types';
  * - Does not search inside arrays (repeatable sections)
  * - Returns first match found
  */
-export const findValueInFormData = (
-  formData: FormDataRecord | undefined,
+export const findValueInform_data = (
+  form_data: form_dataRecord | undefined,
   keyToFind: string
-): FormDataValue | null => {
-  if (!formData) return null;
+): form_dataValue | null => {
+  if (!form_data) return null;
 
   const lowerKeyToFind = keyToFind.toLowerCase();
 
   // Check top-level fields first
-  for (const key in formData) {
+  for (const key in form_data) {
     if (key.toLowerCase() === lowerKeyToFind) {
-      return formData[key];
+      return form_data[key];
     }
   }
 
   // Check nested section objects. A section object's keys are the section IDs.
-  for (const key in formData) {
-    const value = formData[key];
+  for (const key in form_data) {
+    const value = form_data[key];
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       // Now check the fields within that section object
-      const sectionRecord = value as Record<string, FormDataValue>;
+      const sectionRecord = value as Record<string, form_dataValue>;
       for (const nestedKey in sectionRecord) {
         if (nestedKey.toLowerCase() === lowerKeyToFind) {
           return sectionRecord[nestedKey];
@@ -67,13 +67,13 @@ export const findValueInFormData = (
 };
 
 /**
- * Exports the date and time from a report's formData and returns a Date object.
+ * Exports the date and time from a report's form_data and returns a Date object.
  * @param report The report object.
  * @returns A Date object representing the report's timestamp, or null if not found/invalid.
  */
 export const getReportDateTime = (report: Report): Date | null => {
-  const fechaString = findValueInFormData(report.formData, 'Fecha') as string | undefined;
-  const horaString = findValueInFormData(report.formData, 'Hora') as string | undefined;
+  const fechaString = findValueInform_data(report.form_data, 'Fecha') as string | undefined;
+  const horaString = findValueInform_data(report.form_data, 'Hora') as string | undefined;
 
   if (typeof fechaString !== 'string' || typeof horaString !== 'string') {
     return null;
@@ -121,10 +121,10 @@ export const getReportDateTime = (report: Report): Date | null => {
 };
 
 /**
- * Sorts reports chronologically by date and time extracted from formData.
+ * Sorts reports chronologically by date and time extracted from form_data.
  * 
  * **Sorting Logic**:
- * 1. Uses 'Fecha' and 'Hora' fields from report.formData
+ * 1. Uses 'Fecha' and 'Hora' fields from report.form_data
  * 2. Reports with valid date/time are sorted chronologically
  * 3. Reports without date/time are placed at the end
  * 4. Final fallback: sorts by report ID (creation timestamp)
@@ -136,9 +136,9 @@ export const getReportDateTime = (report: Report): Date | null => {
  * @example
  * ```typescript
  * const reports = [
- *   { id: '3', formData: { Fecha: '27/01/2026', Hora: '14:00' } },
- *   { id: '1', formData: { Fecha: '27/01/2026', Hora: '09:30' } },
- *   { id: '2', formData: { Fecha: '26/01/2026', Hora: '18:00' } }
+ *   { id: '3', form_data: { Fecha: '27/01/2026', Hora: '14:00' } },
+ *   { id: '1', form_data: { Fecha: '27/01/2026', Hora: '09:30' } },
+ *   { id: '2', form_data: { Fecha: '26/01/2026', Hora: '18:00' } }
  * ];
  * 
  * const sorted = sortReports(reports); // Chronological
@@ -189,3 +189,4 @@ export function sortReports<T extends Report>(
     return (idA - idB) * directionMultiplier;
   });
 }
+

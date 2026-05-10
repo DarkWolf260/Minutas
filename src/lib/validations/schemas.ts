@@ -19,12 +19,12 @@ import { PERSONNEL_STATUS } from '@/lib/constants/personnel';
  */
 export const StaffMemberSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
-    workspaceId: z.string().min(1, 'Workspace ID es requerido'),
-    personnelId: z.string().optional(),
+    workspace_id: z.string().min(1, 'Workspace ID es requerido'),
+    personnel_id: z.string().optional(),
     name: z.string().min(1, 'Nombre es requerido').max(200, 'Nombre muy largo'),
     cedula: z.string().optional(),
     rank: z.string().optional(),
-    roleId: z.string().optional(),
+    role_id: z.string().optional(),
     status: z.enum(
         [
             PERSONNEL_STATUS.ACTIVO,
@@ -50,27 +50,27 @@ export type ValidatedStaffMember = z.infer<typeof StaffMemberSchema>;
  */
 export const TemplateSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
-    workspaceId: z.string().min(1, 'Workspace ID es requerido'),
+    workspace_id: z.string().min(1, 'Workspace ID es requerido'),
     name: z.string().min(1, 'Nombre de plantilla es requerido').max(200, 'Nombre muy largo'),
     content: z.string().min(1, 'Contenido de plantilla es requerido'),
     type: z.enum(['normal', 'relevante'], {
         errorMap: () => ({ message: 'Tipo debe ser "normal" o "relevante"' }),
     }),
-    isActive: z.boolean().default(true),
-    statisticsCategory: z.string().nullable().optional(),
-    statisticsSubCategories: z.array(z.string()).nullable().optional(),
-    statisticsRules: z.array(z.object({
-        fieldId: z.string().nullable().optional(),
+    is_active: z.boolean().default(true),
+    statistics_category: z.string().nullable().optional(),
+    statistics_sub_categories: z.array(z.string()).nullable().optional(),
+    statistics_rules: z.array(z.object({
+        field_id: z.string().nullable().optional(),
         operator: z.enum(['=', '!=', 'filled', 'empty', 'not_empty', 'contains', 'not_contains', 'starts_with', 'ends_with', 'extract_value', '>', '<', '>=', '<=']).nullable().optional(),
         condition: z.string().nullable().optional(),
         category: z.string().nullable().optional(),
         conditions: z.array(z.object({
-            fieldId: z.string().nullable().optional(),
+            field_id: z.string().nullable().optional(),
             operator: z.enum(['=', '!=', 'filled', 'empty', 'not_empty', 'contains', 'not_contains', 'starts_with', 'ends_with', 'extract_value', '>', '<', '>=', '<=']).nullable().optional(),
             condition: z.string().nullable().optional(),
         })).nullable().optional(),
-        orConditions: z.array(z.object({
-            fieldId: z.string().nullable().optional(),
+        or_conditions: z.array(z.object({
+            field_id: z.string().nullable().optional(),
             operator: z.enum(['=', '!=', 'filled', 'empty', 'not_empty', 'contains', 'not_contains', 'starts_with', 'ends_with', 'extract_value', '>', '<', '>=', '<=']).nullable().optional(),
             condition: z.string().nullable().optional(),
         })).nullable().optional(),
@@ -84,14 +84,14 @@ export type ValidatedTemplate = z.infer<typeof TemplateSchema>;
  */
 export const ReportSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
-    workspaceId: z.string().min(1, 'Workspace ID es requerido'),
-    templateId: z.string().min(1, 'ID de plantilla es requerido'),
+    workspace_id: z.string().min(1, 'Workspace ID es requerido'),
+    template_id: z.string().min(1, 'ID de plantilla es requerido'),
     title: z.string().min(1, 'Título es requerido').max(500, 'Título muy largo'),
     timestamp: z.string().datetime('Formato de fecha/hora inválido'),
     content: z.string(),
-    isRelevant: z.boolean(),
+    is_relevant: z.boolean(),
     status: z.enum(['En proceso', 'Finalizado']).optional(),
-    formData: z.record(z.unknown()).optional(), // Will be validated dynamically based on template
+    form_data: z.record(z.unknown()).optional(), // Will be validated dynamically based on template
     sections: z
         .array(
             z.object({
@@ -111,7 +111,7 @@ export type ValidatedReport = z.infer<typeof ReportSchema>;
  */
 export const DepartmentSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
-    workspaceId: z.string().min(1, 'Workspace ID es requerido'),
+    workspace_id: z.string().min(1, 'Workspace ID es requerido'),
     name: z.string().min(1, 'Nombre es requerido').max(100, 'Nombre muy largo'),
     staff: z.record(z.array(StaffMemberSchema)).default({}),
 });
@@ -124,7 +124,7 @@ export type ValidatedDepartment = z.infer<typeof DepartmentSchema>;
  */
 export const GuardSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
-    workspaceId: z.string().min(1, 'Workspace ID es requerido'),
+    workspace_id: z.string().min(1, 'Workspace ID es requerido'),
     staff: z.record(z.array(StaffMemberSchema)).default({}),
 });
 
@@ -136,7 +136,7 @@ export type ValidatedGuard = z.infer<typeof GuardSchema>;
  */
 export const AddressSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
-    workspaceId: z.string().min(1, 'Workspace ID es requerido'),
+    workspace_id: z.string().min(1, 'Workspace ID es requerido'),
     name: z.string().min(1, 'Nombre de dirección es requerido').max(200, 'Nombre muy largo'),
     street: z.string().optional(),
     houseNumber: z.string().optional(),
@@ -157,13 +157,13 @@ export type ValidatedAddress = z.infer<typeof AddressSchema>;
  */
 export const AppSettingsSchema = z.object({
     id: z.string().optional(),
-    workspaceId: z.string().optional(),
-    activeGuardId: z.string().optional(),
-    guardShiftDuration: z.number().optional(),
-    finalReportStaffSnapshot: z.record(z.array(StaffMemberSchema)).optional(),
-    finalReportStartDate: z.string().optional(),
-    finalReportEndDate: z.string().optional(),
-    reportaRoleIds: z.array(z.string()).optional(),
+    workspace_id: z.string().optional(),
+    active_guard_id: z.string().optional(),
+    guard_shift_duration: z.number().optional(),
+    final_report_staff_snapshot: z.record(z.array(StaffMemberSchema)).optional(),
+    final_report_start_date: z.string().optional(),
+    final_report_end_date: z.string().optional(),
+    reportarole_ids: z.array(z.string()).optional(),
 });
 
 export type ValidatedAppSettings = z.infer<typeof AppSettingsSchema>;
@@ -194,10 +194,10 @@ export const FieldConfigSchema = z.object({
     label: z.string(),
     required: z.boolean().optional(),
     value: z.string().optional(),
-    sectionId: z.string().optional(),
-    snippetOptions: z.array(SnippetOptionSchema).optional(),
+    section_id: z.string().optional(),
+    snippet_options: z.array(SnippetOptionSchema).optional(),
     modifiers: z.array(z.enum(['upper', 'lower', 'title'])).optional(),
-    isFullWidth: z.boolean().optional(),
+    is_full_width: z.boolean().optional(),
 });
 
 export type ValidatedFieldConfig = z.infer<typeof FieldConfigSchema>;
@@ -248,10 +248,10 @@ export const dateValidator = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de
 /**
  * Helper to create a Zod schema for a single field
  */
-function createFieldZodSchema(fieldId: string, config: FieldConfig) {
+function createFieldZodSchema(field_id: string, config: FieldConfig) {
     let fieldSchema: z.ZodTypeAny;
 
-    const lowerId = (fieldId || '').toLowerCase();
+    const lowerId = (field_id || '').toLowerCase();
     const type: string = config.type || 'text';
 
     // Prioritize explicit type first
@@ -298,23 +298,23 @@ function createFieldZodSchema(fieldId: string, config: FieldConfig) {
  * Generates a dynamic Zod schema for report form data based on template configuration.
  * Handles top-level fields, nested sections, and repeatable blocks.
  */
-export function generateFormDataSchema(config: { fields: Record<string, FieldConfig>; sections?: SectionConfig[]; layout?: string[] }) {
+export function generateform_dataSchema(config: { fields: Record<string, FieldConfig>; sections?: SectionConfig[]; layout?: string[] }) {
     const shape: Record<string, z.ZodTypeAny> = {};
     const fields = config.fields;
     const sections = config.sections || [];
     const layout = config.layout || [];
 
     // 1. Identify nested fields to avoid adding them at root
-    const nestedFieldIds = new Set<string>();
+    const nestedfield_ids = new Set<string>();
     sections.forEach(s => {
-        if (s.fieldIds) {
-            s.fieldIds.forEach((id: string) => nestedFieldIds.add(id));
+        if (s.field_ids) {
+            s.field_ids.forEach((id: string) => nestedfield_ids.add(id));
         }
     });
 
     // 2. Add top-level fields (in layout but not in any section)
     layout.forEach(id => {
-        if (!id.startsWith('section_') && !id.startsWith('sec_') && !id.startsWith('cond_') && !nestedFieldIds.has(id)) {
+        if (!id.startsWith('section_') && !id.startsWith('sec_') && !id.startsWith('cond_') && !nestedfield_ids.has(id)) {
             const fieldConfig = fields[id];
             if (fieldConfig) {
                 shape[id] = createFieldZodSchema(id, fieldConfig);
@@ -325,18 +325,18 @@ export function generateFormDataSchema(config: { fields: Record<string, FieldCon
     // 3. Add sections
     sections.forEach(section => {
         const sectionShape: Record<string, z.ZodTypeAny> = {};
-        if (section.fieldIds) {
-            section.fieldIds.forEach((fieldId: string) => {
-                const fieldConfig = fields[fieldId];
+        if (section.field_ids) {
+            section.field_ids.forEach((field_id: string) => {
+                const fieldConfig = fields[field_id];
                 if (fieldConfig) {
-                    sectionShape[fieldId] = createFieldZodSchema(fieldId, fieldConfig);
+                    sectionShape[field_id] = createFieldZodSchema(field_id, fieldConfig);
                 }
             });
         }
 
         const sectionSchema = z.object(sectionShape).passthrough().nullable().optional();
 
-        if (section.isRepeatable) {
+        if (section.is_repeatable) {
             shape[section.id] = z.array(sectionSchema.unwrap ? sectionSchema.unwrap().unwrap() : sectionSchema as any).nullable().optional();
             // Simplified for RxDB compatibility:
             shape[section.id] = z.array(z.any()).nullable().optional();
@@ -347,3 +347,5 @@ export function generateFormDataSchema(config: { fields: Record<string, FieldCon
 
     return z.object(shape).passthrough();
 }
+
+

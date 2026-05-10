@@ -86,10 +86,10 @@ export function calcularEstadisticasMensuales(
     // Filtrado final por mes/año (basado en la fecha lógica)
     if (statsMonth !== month || statsYear !== year) return;
 
-    const template = templates.find((t) => t.id === report.templateId);
+    const template = templates.find((t) => t.id === report.template_id);
 
     // 1. Procesar todas las categorías para este reporte (General, Sub, Reglas, Secciones)
-    const config = configs[report.templateId];
+    const config = configs[report.template_id];
     const reportCategories = obtenerCategoriasReporte(report, template, config, predefinedValues);
     reportCategories.forEach(category => {
       if (!stats.has(category)) {
@@ -157,8 +157,8 @@ export function calcularEstadisticasDia(
   reports.forEach((report) => {
     if (report.status !== 'Finalizado') return;
     
-    const template = templates.find((t) => t.id === report.templateId);
-    const config = configs[report.templateId];
+    const template = templates.find((t) => t.id === report.template_id);
+    const config = configs[report.template_id];
     const reportCategories = obtenerCategoriasReporte(report, template, config, predefinedValues);
     
     reportCategories.forEach(category => {
@@ -168,3 +168,4 @@ export function calcularEstadisticasDia(
 
   return stats;
 }
+

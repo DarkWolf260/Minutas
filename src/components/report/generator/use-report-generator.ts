@@ -36,13 +36,13 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
     const initialFieldNames = Array.from(parsedTemplate.fieldNames) as string[];
     const newInitialData = initialData ? JSON.parse(JSON.stringify(initialData)) : {};
 
-    if (!settings?.activeGuardId || !guards || !personnel) {
+    if (!settings?.active_guard_id || !guards || !personnel) {
       return { finalInitialData: newInitialData };
     }
 
-    const activeStaff = (settings?.activeGuardId && settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === settings.activeGuardId)
+    const activeStaff = (settings?.active_guard_id && settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === settings.active_guard_id)
       ? settings.ordenDelDiaDraft.staff
-      : guards.find((g) => g.id === settings.activeGuardId)?.staff;
+      : guards.find((g) => g.id === settings.active_guard_id)?.staff;
 
     if (!activeStaff) {
       return { finalInitialData: newInitialData };
@@ -67,9 +67,9 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
       }
     });
 
-    if (settings.reportaRoleIds && settings.reportaRoleIds.length > 0) {
+    if (settings.reportarole_ids && settings.reportarole_ids.length > 0) {
       const reportingPersonnel: StaffMember[] = [];
-      settings.reportaRoleIds.forEach((roleName) => {
+      settings.reportarole_ids.forEach((roleName) => {
         const staffKey = Object.keys(activeStaff).find(k => k.toLowerCase() === roleName.toLowerCase());
         const roleStaff = staffKey ? (activeStaff[staffKey] || []) : [];
         reportingPersonnel.push(...roleStaff);
@@ -83,8 +83,8 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
       } else {
         // Fallback: search in global personnel if activeStaff didn't yield results
         const globalMatches = personnel.filter(p => 
-          settings.reportaRoleIds!.some(roleName => 
-            p.roleId?.toLowerCase() === roleName.toLowerCase() || 
+          settings.reportarole_ids!.some(roleName => 
+            p.role_id?.toLowerCase() === roleName.toLowerCase() || 
             p.cargo?.toLowerCase() === roleName.toLowerCase()
           )
         );
@@ -94,7 +94,7 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
       }
     }
 
-    dataToInject['Guardia'] = settings.activeGuardId;
+    dataToInject['Guardia'] = settings.active_guard_id;
 
     initialFieldNames.forEach((templateFieldKey: string) => {
       const lowerTemplateFieldKey = templateFieldKey.toLowerCase();
@@ -108,18 +108,18 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
     return { finalInitialData: newInitialData };
   }, [template.content, initialData, settings, guards, personnel]);
 
-  const saveDraftLogic = useCallback(async (formData: Record<string, any>) => {
-    if (template && formData) {
+  const saveDraftLogic = useCallback(async (form_data: Record<string, any>) => {
+    if (template && form_data) {
       await saveDraft({
-        templateId: template.id,
-        workspaceId: template.workspaceId,
-        formData
+        template_id: template.id,
+        workspace_id: template.workspace_id,
+        form_data
       });
     }
   }, [template, saveDraft]);
 
   const debouncedSaveDraft = useMemo(
-    () => debounce((formData: Record<string, any>) => saveDraftLogic(formData), 30000),
+    () => debounce((form_data: Record<string, any>) => saveDraftLogic(form_data), 30000),
     [saveDraftLogic]
   );
 
@@ -129,25 +129,25 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
     };
   }, [debouncedSaveDraft]);
 
-  const handleDataChange = useCallback((formData: Record<string, any>) => {
-    debouncedSaveDraft(formData);
+  const handleDataChange = useCallback((form_data: Record<string, any>) => {
+    debouncedSaveDraft(form_data);
   }, [debouncedSaveDraft]);
 
-  const handleCreateReport = async (formData: Record<string, any>, content: string, title: string) => {
+  const handleCreateReport = async (form_data: Record<string, any>, content: string, title: string) => {
     hasCompleted.current = true;
     debouncedSaveDraft.cancel();
     await clearDraft();
 
     const newReport: Report = {
       id: generateId('report'),
-      workspaceId: template.workspaceId,
-      templateId: template.id,
+      workspace_id: template.workspace_id,
+      template_id: template.id,
       title: title,
       timestamp: new Date().toISOString(),
       content: content,
-      isRelevant: template.type === 'relevante',
+      is_relevant: template.type === 'relevante',
       status: 'En proceso',
-      formData: JSON.parse(JSON.stringify(formData)),
+      form_data: JSON.parse(JSON.stringify(form_data)),
     };
 
     onSave(newReport);
@@ -184,3 +184,7 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
     settings
   };
 }
+
+
+
+

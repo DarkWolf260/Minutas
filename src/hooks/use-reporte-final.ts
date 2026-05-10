@@ -6,7 +6,7 @@ import { useActiveGuard } from '@/hooks/use-active-guard';
 import { useRoles } from '@/hooks/use-roles';
 import { useTemplates } from '@/hooks/use-templates';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
-import { findValueInFormData } from '@/lib/report-sorter';
+import { findValueInform_data } from '@/lib/report-sorter';
 
 // Sub-hooks
 import { useManualNovedades } from './reporte-final/use-manual-novedades';
@@ -60,7 +60,7 @@ export function useReporteFinal() {
     return reports.filter((report) => {
       if (report.status !== 'Finalizado') return false;
       if (currentGuardId) {
-        const reportGuard = findValueInFormData(report.formData, 'Guardia');
+        const reportGuard = findValueInform_data(report.form_data, 'Guardia');
         if (reportGuard && String(reportGuard).trim().toUpperCase() !== String(currentGuardId).trim().toUpperCase()) {
           return false;
         }
@@ -126,3 +126,4 @@ export function useReporteFinal() {
     reportesFinalizados
   };
 }
+

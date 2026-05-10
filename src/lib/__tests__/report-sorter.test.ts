@@ -5,76 +5,76 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { findValueInFormData, sortReports } from '../report-sorter';
+import { findValueInform_data, sortReports } from '../report-sorter';
 import type { Report } from '@/lib/types';
 
 // Helper to create mock reports
 function createMockReport(overrides: Partial<Report> = {}): Report {
     return {
         id: `report-${Date.now()}`,
-        workspaceId: 'workspace-1',
-        templateId: 'template-1',
+        workspace_id: 'workspace-1',
+        template_id: 'template-1',
         title: 'Test Report',
         content: 'Test content',
-        isRelevant: true,
+        is_relevant: true,
         timestamp: new Date().toISOString(),
         status: 'Finalizado',
-        formData: {},
+        form_data: {},
         ...overrides,
     };
 }
 
 describe('report-sorter', () => {
-    describe('findValueInFormData', () => {
+    describe('findValueInform_data', () => {
         it('should find top-level field (case-insensitive)', () => {
-            const formData = { Fecha: '2026-01-27', Hora: '14:30' };
-            expect(findValueInFormData(formData, 'Fecha')).toBe('2026-01-27');
-            expect(findValueInFormData(formData, 'fecha')).toBe('2026-01-27');
-            expect(findValueInFormData(formData, 'FECHA')).toBe('2026-01-27');
+            const form_data = { Fecha: '2026-01-27', Hora: '14:30' };
+            expect(findValueInform_data(form_data, 'Fecha')).toBe('2026-01-27');
+            expect(findValueInform_data(form_data, 'fecha')).toBe('2026-01-27');
+            expect(findValueInform_data(form_data, 'FECHA')).toBe('2026-01-27');
         });
 
         it('should find nested field in section', () => {
-            const formData = {
+            const form_data = {
                 section1: {
                     Campo1: 'Valor1',
                     Campo2: 'Valor2',
                 },
             };
-            expect(findValueInFormData(formData, 'Campo1')).toBe('Valor1');
+            expect(findValueInform_data(form_data, 'Campo1')).toBe('Valor1');
         });
 
         it('should prioritize top-level over nested', () => {
-            const formData = {
+            const form_data = {
                 Campo: 'Top',
                 section1: {
                     Campo: 'Nested',
                 },
             };
-            expect(findValueInFormData(formData, 'Campo')).toBe('Top');
+            expect(findValueInform_data(form_data, 'Campo')).toBe('Top');
         });
 
         it('should return null for missing field', () => {
-            const formData = { Fecha: '2026-01-27' };
-            expect(findValueInFormData(formData, 'NoExiste')).toBeNull();
+            const form_data = { Fecha: '2026-01-27' };
+            expect(findValueInform_data(form_data, 'NoExiste')).toBeNull();
         });
 
-        it('should return null for undefined formData', () => {
-            expect(findValueInFormData(undefined, 'Fecha')).toBeNull();
+        it('should return null for undefined form_data', () => {
+            expect(findValueInform_data(undefined, 'Fecha')).toBeNull();
         });
 
-        it('should handle empty formData', () => {
-            expect(findValueInFormData({}, 'Fecha')).toBeNull();
+        it('should handle empty form_data', () => {
+            expect(findValueInform_data({}, 'Fecha')).toBeNull();
         });
 
         it('should not search in arrays', () => {
-            const formData = {
+            const form_data = {
                 items: [{ field: 'value' }],
             };
-            expect(findValueInFormData(formData, 'field')).toBeNull();
+            expect(findValueInform_data(form_data, 'field')).toBeNull();
         });
 
         it('should handle multiple nested levels', () => {
-            const formData = {
+            const form_data = {
                 section1: {
                     subsection: {
                         // This won't be found - only 1 level deep
@@ -83,8 +83,8 @@ describe('report-sorter', () => {
                     ShallowField: 'found',
                 },
             };
-            expect(findValueInFormData(formData, 'ShallowField')).toBe('found');
-            expect(findValueInFormData(formData, 'DeepField')).toBeNull();
+            expect(findValueInform_data(form_data, 'ShallowField')).toBe('found');
+            expect(findValueInform_data(form_data, 'DeepField')).toBeNull();
         });
     });
 
@@ -94,15 +94,15 @@ describe('report-sorter', () => {
                 const reports = [
                     createMockReport({
                         id: '3',
-                        formData: { Fecha: '2026-01-27', Hora: '14:00' },
+                        form_data: { Fecha: '2026-01-27', Hora: '14:00' },
                     }),
                     createMockReport({
                         id: '1',
-                        formData: { Fecha: '2026-01-25', Hora: '10:00' },
+                        form_data: { Fecha: '2026-01-25', Hora: '10:00' },
                     }),
                     createMockReport({
                         id: '2',
-                        formData: { Fecha: '2026-01-26', Hora: '12:00' },
+                        form_data: { Fecha: '2026-01-26', Hora: '12:00' },
                     }),
                 ];
 
@@ -117,15 +117,15 @@ describe('report-sorter', () => {
                 const reports = [
                     createMockReport({
                         id: '1',
-                        formData: { Fecha: '2026-01-25', Hora: '10:00' },
+                        form_data: { Fecha: '2026-01-25', Hora: '10:00' },
                     }),
                     createMockReport({
                         id: '3',
-                        formData: { Fecha: '2026-01-27', Hora: '14:00' },
+                        form_data: { Fecha: '2026-01-27', Hora: '14:00' },
                     }),
                     createMockReport({
                         id: '2',
-                        formData: { Fecha: '2026-01-26', Hora: '12:00' },
+                        form_data: { Fecha: '2026-01-26', Hora: '12:00' },
                     }),
                 ];
 
@@ -140,11 +140,11 @@ describe('report-sorter', () => {
                 const reports = [
                     createMockReport({
                         id: '2',
-                        formData: { Fecha: '2026-01-27', Hora: '14:00' },
+                        form_data: { Fecha: '2026-01-27', Hora: '14:00' },
                     }),
                     createMockReport({
                         id: '1',
-                        formData: { Fecha: '2026-01-25', Hora: '10:00' },
+                        form_data: { Fecha: '2026-01-25', Hora: '10:00' },
                     }),
                 ];
 
@@ -160,15 +160,15 @@ describe('report-sorter', () => {
                 const reports = [
                     createMockReport({
                         id: '3',
-                        formData: { Fecha: '2026-01-27', Hora: '14:00' },
+                        form_data: { Fecha: '2026-01-27', Hora: '14:00' },
                     }),
                     createMockReport({
                         id: '1',
-                        formData: { Fecha: '2026-01-27', Hora: '08:00' },
+                        form_data: { Fecha: '2026-01-27', Hora: '08:00' },
                     }),
                     createMockReport({
                         id: '2',
-                        formData: { Fecha: '2026-01-27', Hora: '12:00' },
+                        form_data: { Fecha: '2026-01-27', Hora: '12:00' },
                     }),
                 ];
 
@@ -186,7 +186,7 @@ describe('report-sorter', () => {
                     createMockReport({ id: '2' }), // No fecha/hora
                     createMockReport({
                         id: '1',
-                        formData: { Fecha: '2026-01-25', Hora: '10:00' },
+                        form_data: { Fecha: '2026-01-25', Hora: '10:00' },
                     }),
                 ];
 
@@ -200,11 +200,11 @@ describe('report-sorter', () => {
                 const reports = [
                     createMockReport({
                         id: '1',
-                        formData: { Hora: '10:00' }, // Missing Fecha
+                        form_data: { Hora: '10:00' }, // Missing Fecha
                     }),
                     createMockReport({
                         id: '2',
-                        formData: { Fecha: '2026-01-25', Hora: '10:00' },
+                        form_data: { Fecha: '2026-01-25', Hora: '10:00' },
                     }),
                 ];
 
@@ -218,11 +218,11 @@ describe('report-sorter', () => {
                 const reports = [
                     createMockReport({
                         id: '1',
-                        formData: { Fecha: '2026-01-25' }, // Missing Hora
+                        form_data: { Fecha: '2026-01-25' }, // Missing Hora
                     }),
                     createMockReport({
                         id: '2',
-                        formData: { Fecha: '2026-01-25', Hora: '10:00' },
+                        form_data: { Fecha: '2026-01-25', Hora: '10:00' },
                     }),
                 ];
 
@@ -236,11 +236,11 @@ describe('report-sorter', () => {
                 const reports = [
                     createMockReport({
                         id: '1',
-                        formData: { Fecha: 'invalid', Hora: '10:00' },
+                        form_data: { Fecha: 'invalid', Hora: '10:00' },
                     }),
                     createMockReport({
                         id: '2',
-                        formData: { Fecha: '2026-01-25', Hora: '10:00' },
+                        form_data: { Fecha: '2026-01-25', Hora: '10:00' },
                     }),
                 ];
 
@@ -254,11 +254,11 @@ describe('report-sorter', () => {
                 const reports = [
                     createMockReport({
                         id: '1',
-                        formData: { Fecha: '2026-01-25', Hora: 'invalid' },
+                        form_data: { Fecha: '2026-01-25', Hora: 'invalid' },
                     }),
                     createMockReport({
                         id: '2',
-                        formData: { Fecha: '2026-01-25', Hora: '10:00' },
+                        form_data: { Fecha: '2026-01-25', Hora: '10:00' },
                     }),
                 ];
 
@@ -272,11 +272,11 @@ describe('report-sorter', () => {
                 const reports = [
                     createMockReport({
                         id: '1',
-                        formData: { Fecha: '2026-01-25', Hora: '25:00' }, // Invalid hour
+                        form_data: { Fecha: '2026-01-25', Hora: '25:00' }, // Invalid hour
                     }),
                     createMockReport({
                         id: '2',
-                        formData: { Fecha: '2026-01-25', Hora: '10:00' },
+                        form_data: { Fecha: '2026-01-25', Hora: '10:00' },
                     }),
                 ];
 
@@ -290,11 +290,11 @@ describe('report-sorter', () => {
                 const reports = [
                     createMockReport({
                         id: '1',
-                        formData: { Fecha: '2026-01-25', Hora: '10:60' }, // Invalid minutes
+                        form_data: { Fecha: '2026-01-25', Hora: '10:60' }, // Invalid minutes
                     }),
                     createMockReport({
                         id: '2',
-                        formData: { Fecha: '2026-01-25', Hora: '10:00' },
+                        form_data: { Fecha: '2026-01-25', Hora: '10:00' },
                     }),
                 ];
 
@@ -308,9 +308,9 @@ describe('report-sorter', () => {
         describe('Fallback to ID Sorting', () => {
             it('should sort by ID when both reports have no date/time', () => {
                 const reports = [
-                    createMockReport({ id: 'report-300', formData: {} }),
-                    createMockReport({ id: 'report-100', formData: {} }),
-                    createMockReport({ id: 'report-200', formData: {} }),
+                    createMockReport({ id: 'report-300', form_data: {} }),
+                    createMockReport({ id: 'report-100', form_data: {} }),
+                    createMockReport({ id: 'report-200', form_data: {} }),
                 ];
 
                 const sorted = sortReports(reports, 'asc');
@@ -322,8 +322,8 @@ describe('report-sorter', () => {
 
             it('should sort by ID in descending order when no dates', () => {
                 const reports = [
-                    createMockReport({ id: 'report-100', formData: {} }),
-                    createMockReport({ id: 'report-300', formData: {} }),
+                    createMockReport({ id: 'report-100', form_data: {} }),
+                    createMockReport({ id: 'report-300', form_data: {} }),
                 ];
 
                 const sorted = sortReports(reports, 'desc');
@@ -336,11 +336,11 @@ describe('report-sorter', () => {
                 const reports = [
                     createMockReport({
                         id: 'report-200',
-                        formData: { Fecha: '2026-01-25', Hora: '10:00' },
+                        form_data: { Fecha: '2026-01-25', Hora: '10:00' },
                     }),
                     createMockReport({
                         id: 'report-100',
-                        formData: { Fecha: '2026-01-25', Hora: '10:00' },
+                        form_data: { Fecha: '2026-01-25', Hora: '10:00' },
                     }),
                 ];
 
@@ -361,7 +361,7 @@ describe('report-sorter', () => {
                 const reports = [
                     createMockReport({
                         id: '1',
-                        formData: { Fecha: '2026-01-25', Hora: '10:00' },
+                        form_data: { Fecha: '2026-01-25', Hora: '10:00' },
                     }),
                 ];
 
@@ -375,11 +375,11 @@ describe('report-sorter', () => {
                 const reports = [
                     createMockReport({
                         id: '2',
-                        formData: { Fecha: '2026-01-27', Hora: '14:00' },
+                        form_data: { Fecha: '2026-01-27', Hora: '14:00' },
                     }),
                     createMockReport({
                         id: '1',
-                        formData: { Fecha: '2026-01-25', Hora: '10:00' },
+                        form_data: { Fecha: '2026-01-25', Hora: '10:00' },
                     }),
                 ];
 
@@ -391,3 +391,5 @@ describe('report-sorter', () => {
         });
     });
 });
+
+

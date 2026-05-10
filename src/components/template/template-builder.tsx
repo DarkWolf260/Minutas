@@ -67,13 +67,13 @@ export function TemplateBuilder({
   const previewTemplate = useMemo<Template>(
     () => ({
       id: 'preview',
-      workspaceId: currentWorkspace,
+      workspace_id: currentWorkspace,
       name: templateName || 'Vista Previa',
       content: templateContent,
       type: 'normal',
-      isActive: true,
-      statisticsCategory: initialTemplate?.statisticsCategory,
-      statisticsRules: initialTemplate?.statisticsRules,
+      is_active: true,
+      statistics_category: initialTemplate?.statistics_category,
+      statistics_rules: initialTemplate?.statistics_rules,
     }),
     [templateContent, templateName, initialTemplate, currentWorkspace]
   );
@@ -86,7 +86,7 @@ export function TemplateBuilder({
     const fields: Record<string, any> = {};
     if (defaultValues) {
       defaultValues.forEach((value: string, key: string) => {
-        fields[key] = { defaultValue: value };
+        fields[key] = { default_value: value };
       });
     }
 
@@ -124,11 +124,11 @@ export function TemplateBuilder({
     } else if (onAdd) {
       const newTemplate: Template = {
         id: generateId('template'),
-        workspaceId: currentWorkspace,
+        workspace_id: currentWorkspace,
         name: templateName,
         content: templateContent,
         type: 'normal',
-        isActive: true,
+        is_active: true,
       };
       onAdd(newTemplate);
       setTemplateName('');
@@ -348,3 +348,5 @@ export function TemplateBuilder({
     </div>
   );
 }
+
+

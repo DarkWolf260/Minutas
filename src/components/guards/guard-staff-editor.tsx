@@ -39,7 +39,7 @@ import { GripVertical } from 'lucide-react';
 interface StaffListEditorProps {
   label: string;
   staffMembers: StaffMember[];
-  isSingle: boolean;
+  is_single: boolean;
   onUpdate: (newMembers: StaffMember[]) => void;
   showObservations?: boolean;
 }
@@ -123,7 +123,7 @@ function SortableStaffItem({
 export const StaffListEditor = React.memo(({ 
   label, 
   staffMembers, 
-  isSingle, 
+  is_single, 
   onUpdate,
   showObservations 
 }: StaffListEditorProps) => {
@@ -139,12 +139,12 @@ export const StaffListEditor = React.memo(({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleAdd = (p: StaffMember) => {
-    if (isSingle) {
+    if (is_single) {
       onUpdate([p]);
     } else {
       // Multi-select logic
-      if (!staffMembers.some((m) => m.id === p.id || m.personnelId === p.id)) {
-        onUpdate([...staffMembers, { ...p, personnelId: p.id }]);
+      if (!staffMembers.some((m) => m.id === p.id || m.personnel_id === p.id)) {
+        onUpdate([...staffMembers, { ...p, personnel_id: p.id }]);
       }
     }
     setOpen(false);
@@ -170,7 +170,7 @@ export const StaffListEditor = React.memo(({
     );
   }, [personnel, searchQuery]);
 
-  const canAdd = !isSingle || (isSingle && staffMembers.length === 0);
+  const canAdd = !is_single || (is_single && staffMembers.length === 0);
 
   return (
     <div className="space-y-2">
@@ -232,7 +232,7 @@ export const StaffListEditor = React.memo(({
                             const customName = searchQuery.trim();
                             const pseudoMember: StaffMember = {
                               id: `custom-${Date.now()}-${customName.replace(/\s+/g, '-').toLowerCase()}`,
-                              workspaceId: '',
+                              workspace_id: '',
                               name: customName,
                             };
                             handleAdd(pseudoMember);
@@ -250,7 +250,7 @@ export const StaffListEditor = React.memo(({
                       <div className="space-y-0.5">
                         {filteredPersonnel.map((p) => {
                           const isSelected = staffMembers.some(
-                            (m) => m.id === p.id || m.personnelId === p.id
+                            (m) => m.id === p.id || m.personnel_id === p.id
                           );
                           return (
                             <Button
@@ -446,7 +446,7 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
 
         if (overContainer) {
           const currentDestMembers = prev[overContainer] || [];
-          if (targetRole?.isSingle) {
+          if (targetRole?.is_single) {
             newStaff[overContainer] = [activeItem];
           } else {
             const updatedDestMembers = [...currentDestMembers];
@@ -513,8 +513,8 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
 
   const availableRoles = useMemo(() => {
     return [...roles]
-      .filter((role) => !role.isHidden)
-      .sort((a, b) => (a.hierarchyOrder ?? a.order ?? 0) - (b.hierarchyOrder ?? b.order ?? 0));
+      .filter((role) => !role.is_hidden)
+      .sort((a, b) => (a.hierarchy_order ?? a.order ?? 0) - (b.hierarchy_order ?? b.order ?? 0));
   }, [roles]);
 
   useImperativeHandle(ref, () => ({
@@ -537,7 +537,7 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
                 key={role.name}
                 label={role.name}
                 staffMembers={staff[role.name] || []}
-                isSingle={role.isSingle}
+                is_single={role.is_single}
                 onUpdate={(members) => handleListUpdate(role.name, members)}
               />
             ))}
@@ -584,3 +584,6 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
 });
 
 GuardStaffEditor.displayName = 'GuardStaffEditor';
+
+
+

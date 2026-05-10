@@ -36,8 +36,8 @@ function generateMockData(
     sections.forEach((section) => {
         if (section.isRepeatable) {
             const itemData: Record<string, string> = {};
-            section.fieldIds.forEach((fieldId) => {
-                itemData[fieldId] = `Dato ${fieldId}`;
+            section.field_ids.forEach((field_id) => {
+                itemData[field_id] = `Dato ${field_id}`;
             });
             data[section.id] = [{ ...itemData }, { ...itemData }];
         }
@@ -108,3 +108,4 @@ describe('Template Preview - Secciones', () => {
         expect(result).toContain('Ejemplo nombre');
     });
 });
+

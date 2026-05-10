@@ -15,9 +15,12 @@ function PersonnelPageContent() {
 
   if (estaCargando) {
     return (
-      <div className="container mx-auto p-8 text-center py-20">
-        <h1 className="text-3xl font-bold mb-2">Personal</h1>
-        <p className="text-muted-foreground animate-pulse">Cargando datos del sistema...</p>
+      <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-28 sm:pb-6 flex flex-col md:flex-1 md:min-h-0 space-y-8">
+        <div className="space-y-2">
+          <div className="h-8 w-48 bg-muted/20 rounded-lg animate-pulse" />
+          <div className="h-4 w-96 bg-muted/20 rounded-lg animate-pulse" />
+        </div>
+        <div className="h-[500px] w-full bg-muted/10 rounded-3xl animate-pulse" />
       </div>
     );
   }

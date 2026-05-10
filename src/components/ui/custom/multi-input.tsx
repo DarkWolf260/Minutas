@@ -15,7 +15,7 @@ interface MultiInputProps {
   options?: string[];
   placeholder?: string;
   disabled?: boolean;
-  isSingle?: boolean;
+  is_single?: boolean;
   className?: string;
   onBlur?: () => void;
   name?: string;
@@ -30,7 +30,7 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
       options = [],
       placeholder,
       disabled,
-      isSingle = false,
+      is_single = false,
       className,
       onBlur,
       name,
@@ -44,7 +44,7 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
 
     const handleAddValue = (newValue: string) => {
       const trimmed = newValue.trim();
-      if (isSingle) {
+      if (is_single) {
         onChange(trimmed);
       } else {
         if (trimmed && !value.includes(trimmed)) {
@@ -57,16 +57,16 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (isSingle) {
+        if (is_single) {
           // For single-value mode, typing updates the value directly via onChange.
-          // inputValue state is never set in isSingle, so calling handleAddValue('')
+          // inputValue state is never set in is_single, so calling handleAddValue('')
           // would clear the field. Just close the popover.
           setOpen(false);
         } else {
           handleAddValue(inputValue);
           setOpen(false);
         }
-      } else if (e.key === 'Backspace' && inputValue === '' && value.length > 0 && !isSingle) {
+      } else if (e.key === 'Backspace' && inputValue === '' && value.length > 0 && !is_single) {
         const lastValue = value[value.length - 1];
         if (lastValue) handleRemoveValue(lastValue);
       }
@@ -82,7 +82,7 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
       internalInputRef.current?.focus();
     };
 
-    const displayValue = isSingle ? (Array.isArray(value) ? value[0] || '' : value) : inputValue;
+    const displayValue = is_single ? (Array.isArray(value) ? value[0] || '' : value) : inputValue;
 
     const currentValuesSet = new Set(value);
 
@@ -107,7 +107,7 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
             )}
             onClick={() => !disabled && internalInputRef.current?.focus()}
           >
-            {!isSingle &&
+            {!is_single &&
               value.map((item) => (
                 <Badge key={item} variant="secondary" className="gap-1.5 pr-1 text-sm">
                   {item}
@@ -131,9 +131,9 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
                 if (typeof ref === 'function') ref(node);
                 else if (ref) (ref as React.MutableRefObject<HTMLInputElement | null>).current = node;
               }}
-              value={isSingle ? (Array.isArray(value) ? value[0] || '' : value || '') : inputValue}
+              value={is_single ? (Array.isArray(value) ? value[0] || '' : value || '') : inputValue}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                if (isSingle) {
+                if (is_single) {
                   onChange(e.target.value);
                 } else {
                   setInputValue(e.target.value);
@@ -204,4 +204,5 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
   }
 );
 MultiInput.displayName = 'MultiInput';
+
 

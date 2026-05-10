@@ -47,8 +47,8 @@ export function StructureManager({
   const patchRoles = (rs: StaffRole[]) => {
     return rs.map(r => {
       const nameLower = (r.name || '').toLowerCase().trim();
-      if (STATUS_ROLE_NAMES.includes(nameLower) && !r.isStatus) {
-        return { ...r, isStatus: true };
+      if (STATUS_ROLE_NAMES.includes(nameLower) && !r.is_status) {
+        return { ...r, is_status: true };
       }
       return r;
     });
@@ -76,10 +76,10 @@ export function StructureManager({
     
     // Also update roles that reference this department
     const updatedRoles = roles.map((r) => {
-      if (!r.departmentScope) return r;
+      if (!r.department_scope) return r;
       return {
         ...r,
-        departmentScope: r.departmentScope.filter((scopeId: string) => scopeId !== id),
+        department_scope: r.department_scope.filter((scopeId: string) => scopeId !== id),
       };
     });
     onRolesChange(updatedRoles);
@@ -93,9 +93,9 @@ export function StructureManager({
     }
     const newRole: StaffRole = {
       name: name,
-      isSingle: false,
-      isHidden: true,
-      departmentScope: deptId ? [deptId] : [],
+      is_single: false,
+      is_hidden: true,
+      department_scope: deptId ? [deptId] : [],
       order: roles.length,
     };
     onRolesChange([...roles, newRole]);
@@ -230,3 +230,4 @@ export function StructureManager({
     </div>
   );
 }
+

@@ -4,27 +4,29 @@
 
 export const personnelSchema = {
     title: 'personnel schema',
-    version: 2,
+    version: 0,
     primaryKey: 'id',
     type: 'object',
     properties: {
         id: { type: 'string', maxLength: 100 },
-        workspaceId: { type: 'string', maxLength: 50 },
-        personnelId: { type: 'string' },
+        workspace_id: { type: 'string', maxLength: 50 },
+        personnel_id: { type: 'string' },
         name: { type: 'string' },
         cedula: { type: 'string' },
         rank: { type: 'string' },
         cargo: { type: 'string' },
         titulo: { type: 'string' },
-        roleId: { type: 'string' },
+        role_id: { type: 'string' },
         status: { type: 'string' },
         department: { type: 'string' },
         sex: { type: 'string' },
         specialties: { type: 'array', items: { type: 'string' } },
         order: { type: 'number' },
+        modified: { type: ['string', 'null'] },
+        _deleted: { type: 'boolean' }
     },
-    required: ['id', 'workspaceId', 'name'],
-    indexes: ['workspaceId']
+    required: ['id', 'workspace_id', 'name'],
+    indexes: ['workspace_id']
 };
 
 export const reportsSchema = {
@@ -34,42 +36,45 @@ export const reportsSchema = {
     type: 'object',
     properties: {
         id: { type: 'string', maxLength: 100 },
-        workspaceId: { type: 'string', maxLength: 50 },
-        templateId: { type: 'string' },
+        workspace_id: { type: 'string', maxLength: 50 },
+        template_id: { type: 'string' },
         title: { type: 'string' },
         timestamp: { type: 'string' },
         content: { type: 'string' },
-        isRelevant: { type: 'boolean' },
+        is_relevant: { type: 'boolean' },
         status: { type: 'string' },
-        formData: { type: 'object' },
+        form_data: { type: 'object' },
+        modified: { type: ['string', 'null'] },
+        _deleted: { type: 'boolean' }
     },
-    required: ['id', 'workspaceId', 'templateId', 'title', 'timestamp', 'content', 'isRelevant'],
-    indexes: ['workspaceId']
+    required: ['id', 'workspace_id', 'template_id', 'title', 'timestamp', 'content', 'is_relevant'],
+    indexes: ['workspace_id']
 };
 
 export const templatesSchema = {
     title: 'templates schema',
-    version: 4,
+    version: 0,
     primaryKey: 'id',
     type: 'object',
     properties: {
         id: { type: 'string', maxLength: 100 },
-        workspaceId: { type: 'string', maxLength: 50 },
+        workspace_id: { type: ['string', 'null'], maxLength: 50 },
         name: { type: 'string' },
+        description: { type: ['string', 'null'] },
         content: { type: 'string' },
         type: { type: 'string' },
-        isActive: { type: 'boolean' },
-        statisticsCategory: { type: ['string', 'null'] },
-        statisticsSubCategories: {
+        is_active: { type: 'boolean' },
+        statistics_category: { type: ['string', 'null'] },
+        statistics_sub_categories: {
             type: ['array', 'null'],
             items: { type: 'string' }
         },
-        statisticsRules: {
+        statistics_rules: {
             type: ['array', 'null'],
             items: {
                 type: ['object', 'null'],
                 properties: {
-                    fieldId: { type: ['string', 'null'] },
+                    field_id: { type: ['string', 'null'] },
                     operator: { type: ['string', 'null'] },
                     condition: { type: ['string', 'null'] },
                     category: { type: ['string', 'null'] },
@@ -78,18 +83,18 @@ export const templatesSchema = {
                         items: {
                             type: 'object',
                             properties: {
-                                fieldId: { type: ['string', 'null'] },
+                                field_id: { type: ['string', 'null'] },
                                 operator: { type: ['string', 'null'] },
                                 condition: { type: ['string', 'null'] },
                             }
                         }
                     },
-                    orConditions: {
+                    or_conditions: {
                         type: ['array', 'null'],
                         items: {
                             type: 'object',
                             properties: {
-                                fieldId: { type: ['string', 'null'] },
+                                field_id: { type: ['string', 'null'] },
                                 operator: { type: ['string', 'null'] },
                                 condition: { type: ['string', 'null'] },
                             }
@@ -98,9 +103,11 @@ export const templatesSchema = {
                 },
             },
         },
+        modified: { type: ['string', 'null'] },
+        _deleted: { type: 'boolean' }
     },
-    required: ['id', 'workspaceId', 'name', 'content', 'isActive'],
-    indexes: ['workspaceId']
+    required: ['id', 'name', 'content', 'is_active'],
+    indexes: []
 };
 
 /**
@@ -113,13 +120,15 @@ export const lookupsSchema = {
     type: 'object',
     properties: {
         id: { type: 'string', maxLength: 150 },
-        workspaceId: { type: 'string', maxLength: 50 },
+        workspace_id: { type: 'string', maxLength: 50 },
         type: { type: 'string', maxLength: 50 },
         name: { type: 'string' }, // Common field for search/display
         data: { type: 'object' },
+        modified: { type: ['string', 'null'] },
+        _deleted: { type: 'boolean' }
     },
-    required: ['id', 'workspaceId', 'type'],
-    indexes: ['workspaceId', 'type']
+    required: ['id', 'workspace_id', 'type'],
+    indexes: ['workspace_id', 'type']
 };
 
 /**
@@ -132,13 +141,15 @@ export const configsSchema = {
     type: 'object',
     properties: {
         id: { type: 'string', maxLength: 150 },
-        workspaceId: { type: 'string', maxLength: 50 },
+        workspace_id: { type: 'string', maxLength: 50 },
         type: { type: 'string', maxLength: 50 },
         name: { type: 'string' },
         data: { type: 'object' },
+        modified: { type: ['string', 'null'] },
+        _deleted: { type: 'boolean' }
     },
-    required: ['id', 'workspaceId', 'type', 'data'],
-    indexes: ['workspaceId', 'type']
+    required: ['id', 'workspace_id', 'type', 'data'],
+    indexes: ['workspace_id', 'type']
 };
 
 /**
@@ -152,14 +163,16 @@ export const historySchema = {
     type: 'object',
     properties: {
         id: { type: 'string', maxLength: 150 },
-        workspaceId: { type: 'string', maxLength: 50 },
+        workspace_id: { type: 'string', maxLength: 50 },
         type: { type: 'string', maxLength: 50 },
         date: { type: 'string', maxLength: 20 },
-        personnelId: { type: 'string', maxLength: 100 },
+        personnel_id: { type: 'string', maxLength: 100 },
         data: { type: 'object' },
+        modified: { type: ['string', 'null'] },
+        _deleted: { type: 'boolean' }
     },
-    required: ['id', 'workspaceId', 'type', 'date', 'personnelId', 'data'],
-    indexes: ['workspaceId', 'type', 'date', 'personnelId']
+    required: ['id', 'workspace_id', 'type', 'date', 'personnel_id', 'data'],
+    indexes: ['workspace_id', 'type', 'date', 'personnel_id']
 };
 
 /**
@@ -172,7 +185,7 @@ export const notificationsSchema = {
     type: 'object',
     properties: {
         id: { type: 'string', maxLength: 100 },
-        workspaceId: { type: 'string', maxLength: 50 },
+        workspace_id: { type: 'string', maxLength: 50 },
         title: { type: 'string' },
         message: { type: 'string' },
         type: { type: 'string', enum: ['info', 'success', 'warning', 'error'] },
@@ -180,6 +193,7 @@ export const notificationsSchema = {
         timestamp: { type: 'string', maxLength: 50 },
         metadata: { type: 'object' },
     },
-    required: ['id', 'workspaceId', 'title', 'message', 'timestamp', 'read'],
-    indexes: ['workspaceId', 'read', 'timestamp']
 };
+
+
+

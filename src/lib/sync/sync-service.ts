@@ -53,7 +53,7 @@ export async function createChannel(name: string): Promise<SyncChannel> {
     code: data.code,
     name: data.name,
     ownerUserId: data.owner_user_id,
-    createdAt: data.created_at,
+    created_at: data.created_at,
   };
 }
 
@@ -80,7 +80,7 @@ export async function joinChannelByCode(code: string): Promise<SyncChannel> {
     code: data.code,
     name: data.name,
     ownerUserId: data.owner_user_id,
-    createdAt: data.created_at,
+    created_at: data.created_at,
   };
 }
 
@@ -223,3 +223,4 @@ function rowToSyncReport(row: any): SyncReport {
     sentAt: row.sent_at,
   };
 }
+

@@ -43,6 +43,15 @@ export function PWAStatus() {
         return () => window.removeEventListener('beforeinstallprompt', handler);
     }, []);
 
+    const [isManualSyncing, setIsManualSyncing] = useState(false);
+
+    const handleManualSync = async () => {
+        const { triggerCloudSync } = await import('@/lib/db/replication');
+        setIsManualSyncing(true);
+        triggerCloudSync();
+        setTimeout(() => setIsManualSyncing(false), 2000);
+    };
+
     if (!isMounted || isSetup) return null;
 
     const close = () => {
@@ -69,6 +78,18 @@ export function PWAStatus() {
             className="fixed bottom-20 sm:bottom-4 right-4 z-[100] flex flex-col items-end gap-2 pointer-events-none"
             suppressHydrationWarning
         >
+            {/* Manual Sync Button */}
+            <div className="pointer-events-auto flex items-center gap-1 group">
+                <Button
+                    size="sm"
+                    onClick={handleManualSync}
+                    disabled={isManualSyncing}
+                    className="h-8 px-4 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl transition-all duration-300 backdrop-blur-xl bg-white/10 dark:bg-black/20 text-foreground/70 border border-white/20 dark:border-white/10 hover:bg-white/20 flex items-center gap-2"
+                >
+                    <RefreshCw className={`h-3.5 w-3.5 ${isManualSyncing ? 'animate-spin' : ''}`} />
+                    <span>{isManualSyncing ? 'Sincronizando...' : 'Sincronizar Nube'}</span>
+                </Button>
+            </div>
             {/* Install Prompt - Only show if available and no update is pending */}
             {deferredPrompt && !needRefresh && showInstallBtn && (
                 <div className="pointer-events-auto flex items-center gap-1 group">
@@ -80,15 +101,16 @@ export function PWAStatus() {
                         <MonitorSmartphone className="h-3.5 w-3.5 animate-bounce" />
                         <span>Instalar PC Reportes</span>
                         <div className="h-4 w-px bg-primary/20 mx-1" />
-                        <button
+                        <span
+                            role="button"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setShowInstallBtn(false);
                             }}
-                            className="hover:bg-primary/20 p-0.5 rounded-full transition-colors"
+                            className="hover:bg-primary/20 p-0.5 rounded-full transition-colors cursor-pointer flex items-center justify-center w-4 h-4"
                         >
                             ×
-                        </button>
+                        </span>
                     </Button>
                 </div>
             )}

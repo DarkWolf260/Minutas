@@ -19,7 +19,7 @@ const defaultGuards: Guard[] = [
 
 export function useGuards() {
   const db = useDatabase();
-  const { currentWorkspace } = useWorkspaceManager();
+  const { currentWorkspace, isCloud } = useWorkspaceManager();
   const [guards, setGuards] = useState<Guard[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -27,26 +27,21 @@ export function useGuards() {
     if (!db || !currentWorkspace) return;
     let initialized = false;
 
-    const repo = createConfigRepository(db, currentWorkspace);
+    const repo = createConfigRepository(db, currentWorkspace, isCloud);
     const sub = repo.watchGuards().subscribe((data) => {
       if (data.length > 0) {
         setGuards(
           data.map((d) => {
-            const guardData = d.toJSON().data as Guard;
-            return { ...guardData, workspaceId: currentWorkspace };
+            const item = d.toJSON ? d.toJSON() : d;
+            const rawData = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+            const guardData = rawData as Guard;
+            return { ...guardData, workspace_id: currentWorkspace };
           }) as Guard[]
         );
         initialized = true;
       } else if (!initialized) {
         initialized = true;
-        repo
-          .bulkInitGuards(defaultGuards)
-          .catch((err) =>
-            logger.error('Failed to insert default guards', err, {
-              feature: 'Guards',
-              workspaceId: currentWorkspace,
-            })
-          );
+        setGuards(defaultGuards);
       } else {
         setGuards([]);
       }
@@ -54,22 +49,23 @@ export function useGuards() {
     });
 
     return () => sub.unsubscribe();
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   const saveGuards = useCallback(
     async (newGuards: Guard[]) => {
       if (!db || !currentWorkspace) return;
-      const repo = createConfigRepository(db, currentWorkspace);
+      const repo = createConfigRepository(db, currentWorkspace, isCloud);
       await repo.saveGuards(newGuards);
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const clearAllGuards = useCallback(async () => {
     if (!db || !currentWorkspace) return;
-    const repo = createConfigRepository(db, currentWorkspace);
+    const repo = createConfigRepository(db, currentWorkspace, isCloud);
     await repo.clearAllGuards(defaultGuards);
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   return { guards, saveGuards, isLoaded, clearAllGuards };
 }
+

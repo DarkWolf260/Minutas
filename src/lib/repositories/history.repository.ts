@@ -1,32 +1,39 @@
-/**
- * History Repository — Encapsulates all operations on the `history` collection.
- * Currently handles guard history (guard_history type).
- */
-
 import type { MinutasDatabase } from '@/lib/db/db';
 import type { GuardReport } from '@/lib/types';
 import { DbKeys } from './keys';
 import { safeWrite, silentWrite } from './base.repository';
+import { createSupabaseWatchAll, supabaseRepoUtils } from './supabase.repository';
+import { supabase } from '@/lib/supabase';
+import { map } from 'rxjs/operators';
 
-export function createHistoryRepository(db: MinutasDatabase, workspaceId: string) {
-  const ws = workspaceId;
+export function createHistoryRepository(db: MinutasDatabase | null, workspace_id: string, isCloud: boolean = false) {
+  const ws = workspace_id;
+  const TABLE = 'history';
+
+  // Unified implementation using RxDB
+  // (Replication is handled at the DatabaseProvider level)
+
+  // RxDB Implementation
+  if (!db) throw new Error('Database not initialized');
 
   const watchGuardHistory = () =>
     db.history.find({
-      selector: { type: 'guard_history', workspaceId: ws },
+      selector: { type: 'guard_history', workspace_id: ws },
       sort: [{ date: 'desc' }],
-    }).$;
+    }).$.pipe(
+      map(docs => docs.map(d => d.toJSON()))
+    );
 
   const saveGuardReport = async (report: GuardReport) =>
     safeWrite(
       () =>
         db.history.upsert({
           id: DbKeys.guardHistory(ws, report.id),
-          workspaceId: ws,
+          workspace_id: ws,
           type: 'guard_history',
           date: report.date,
-          personnelId: 'none',
-          data: { ...report, workspaceId: ws },
+          personnel_id: 'none',
+          data: { ...report, workspace_id: ws },
         }),
       {
         feature: 'GuardHistory',
@@ -52,7 +59,7 @@ export function createHistoryRepository(db: MinutasDatabase, workspaceId: string
     silentWrite(
       async () => {
         const allDocs = await db.history
-          .find({ selector: { type: 'guard_history', workspaceId: ws } })
+          .find({ selector: { type: 'guard_history', workspace_id: ws } })
           .exec();
         await db.history.bulkRemove(allDocs.map((d) => d.primary));
       },
@@ -63,3 +70,5 @@ export function createHistoryRepository(db: MinutasDatabase, workspaceId: string
 }
 
 export type HistoryRepository = ReturnType<typeof createHistoryRepository>;
+
+

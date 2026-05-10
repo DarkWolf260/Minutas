@@ -200,8 +200,8 @@ const RoleRow = React.memo(({
             <Label htmlFor={`single-${role.name}`} className="text-[10px] uppercase font-bold text-muted-foreground/60 hidden sm:block">Único</Label>
             <Switch
               id={`single-${role.name}`}
-              checked={role.isSingle}
-              onCheckedChange={(checked) => onUpdate(role.name, { isSingle: checked })}
+              checked={role.is_single}
+              onCheckedChange={(checked) => onUpdate(role.name, { is_single: checked })}
               className="scale-75 sm:scale-90"
             />
           </div>
@@ -289,8 +289,8 @@ const SortableRoleRow = React.memo(({
             <Label htmlFor={`single-sort-${role.name}`} className="text-[10px] uppercase font-bold text-muted-foreground/60 hidden sm:block">Único</Label>
             <Switch
               id={`single-sort-${role.name}`}
-              checked={role.isSingle}
-              onCheckedChange={(checked) => onUpdate(role.name, { isSingle: checked })}
+              checked={role.is_single}
+              onCheckedChange={(checked) => onUpdate(role.name, { is_single: checked })}
               className="scale-75 sm:scale-90"
             />
           </div>
@@ -520,8 +520,15 @@ function StructureTreeComponent({
   const [confirmDeleteRole, setConfirmDeleteRole] = useState<{ name: string } | null>(null);
 
   // Group roles by department, filtering out personnel statuses (Vacations, etc.) from the tree
+  // A role is "Global" if it has no department_scope OR if its scoped department is missing from localDepts
+  const deptIds = new Set(localDepts.map(d => d.id));
+  
   const globalRoles = localRoles
-    .filter(r => (r.departmentScope ?? []).length === 0 && !r.isStatus)
+    .filter(r => {
+      const scope = r.department_scope ?? [];
+      const isOrphaned = scope.length > 0 && !scope.some(id => deptIds.has(id));
+      return (scope.length === 0 || isOrphaned) && !r.is_status;
+    })
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   const deptMap = localDepts
@@ -529,17 +536,17 @@ function StructureTreeComponent({
     .map(d => ({
       ...d,
       roles: localRoles
-        .filter(r => (r.departmentScope ?? []).includes(d.id) && !r.isStatus)
+        .filter(r => (r.department_scope ?? []).includes(d.id) && !r.is_status)
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
         .map(r => ({
           ...r,
-          members: personnel.filter(p => p.department === d.id && p.roleId === r.name)
+          members: personnel.filter(p => p.department === d.id && p.role_id === r.name)
         }))
     }));
 
   const globalRolesWithMembers = globalRoles.map(r => ({
     ...r,
-    members: personnel.filter(p => (p.department === 'none' || !p.department) && p.roleId === r.name)
+    members: personnel.filter(p => (p.department === 'none' || !p.department) && p.role_id === r.name)
   }));
 
   const handleExpandAll = useCallback(() => {
@@ -619,12 +626,12 @@ function StructureTreeComponent({
         const overMemberId = overId.replace('member-', '');
         const overMember = personnel.find(p => p.id === overMemberId);
         if (overMember) {
-          overRoleName = overMember.roleId || null;
-          newIndex = personnel.filter(p => p.roleId === overRoleName).findIndex(p => p.id === overMemberId);
+          overRoleName = overMember.role_id || null;
+          newIndex = personnel.filter(p => p.role_id === overRoleName).findIndex(p => p.id === overMemberId);
         }
       } else if (overId.startsWith('role-item-')) {
         overRoleName = overId.replace('role-item-', '');
-        newIndex = personnel.filter(p => p.roleId === overRoleName).length;
+        newIndex = personnel.filter(p => p.role_id === overRoleName).length;
       }
 
       if (overRoleName) {
@@ -636,16 +643,16 @@ function StructureTreeComponent({
           if (movedMember) {
             // Update role and department if moved to a role scoped to a department
             const targetRole = roles.find(r => r.name === overRoleName);
-            const targetDeptId = (targetRole?.departmentScope ?? [])[0] || 'none';
+            const targetDeptId = (targetRole?.department_scope ?? [])[0] || 'none';
 
             const updatedMember = {
               ...movedMember,
-              roleId: overRoleName,
+              role_id: overRoleName,
               department: targetDeptId === 'none' ? undefined : targetDeptId
             };
 
             // Re-insert at new position among role members
-            const currentRoleMembers = updatedPersonnel.filter(p => p.roleId === overRoleName);
+            const currentRoleMembers = updatedPersonnel.filter(p => p.role_id === overRoleName);
             const overItem = currentRoleMembers[newIndex] || currentRoleMembers[currentRoleMembers.length - 1];
             const insertGlobalIndex = overItem ? updatedPersonnel.indexOf(overItem) : updatedPersonnel.length;
 
@@ -764,9 +771,9 @@ function StructureTreeComponent({
               </div>
 
               <div className="divide-y divide-muted/30">
-                {globalRolesWithMembers.map(role => (
+                {globalRolesWithMembers.map((role, idx) => (
                   <RoleRow
-                    key={role.name}
+                    key={role.name || `global-role-${idx}`}
                     role={role}
                     members={role.members}
                     showPersonnel={showPersonnel}
@@ -799,9 +806,9 @@ function StructureTreeComponent({
                   value={expandedItems}
                   onValueChange={setExpandedItems}
                 >
-                  {deptMap.map(dept => (
+                  {deptMap.map((dept, idx) => (
                     <SortableDeptItem
-                      key={dept.id}
+                      key={dept.id || `dept-${idx}`}
                       dept={dept}
                       showPersonnel={showPersonnel}
                       onAddRole={() => openAddRole(dept.id)}
@@ -936,4 +943,6 @@ function StructureTreeComponent({
 }
 
 export const StructureTree = StructureTreeComponent;
+
+
 

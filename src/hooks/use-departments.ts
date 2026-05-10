@@ -13,7 +13,7 @@ import { createLookupRepository } from '@/lib/repositories';
 
 export function useDepartments() {
   const db = useDatabase();
-  const { currentWorkspace } = useWorkspaceManager();
+  const { currentWorkspace, isCloud } = useWorkspaceManager();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -21,79 +21,90 @@ export function useDepartments() {
     if (!db || !currentWorkspace) return;
     let initializedFlag = false;
 
-    const repo = createLookupRepository(db, currentWorkspace);
+    const repo = createLookupRepository(db, currentWorkspace, isCloud);
 
     const sub = repo.watchDepartments().subscribe(async (data) => {
       if (data.length > 0) {
         setDepartments(
-          data.map((d) => {
-            const json = d.toJSON();
-            return { ...(json.data as Department), workspaceId: currentWorkspace };
+          data.map((item: any) => {
+            // Handle cases where Supabase might return data as a stringified JSON
+            const rawData = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+            return { ...(rawData as Department), workspace_id: currentWorkspace };
           }) as Department[]
         );
         initializedFlag = true;
         setIsLoaded(true);
-      } else if (!initializedFlag) {
+      } else if (!initializedFlag && data.length === 0) { // Seed if empty, even in cloud mode
         initializedFlag = true;
         try {
           await repo.bulkInitDepartments(DEFAULT_DEPARTMENTS);
         } catch (err) {
           logger.error('Failed to auto-seed default departments', err, {
             feature: 'Departments',
-            workspaceId: currentWorkspace,
+            workspace_id: currentWorkspace,
           });
           setIsLoaded(true);
         }
-      } else {
+      } else if (!isCloud) {
         setDepartments([]);
         setIsLoaded(true);
       }
     });
 
     return () => sub.unsubscribe();
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
+
+  // Fallback for cloud mode: if no data arrives in 2s, assume empty and stop loading
+  useEffect(() => {
+    if (isCloud && !isLoaded) {
+      const timer = setTimeout(() => {
+        setIsLoaded(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isCloud, isLoaded]);
 
   const saveDepartments = useCallback(
     async (newDepartments: Department[]) => {
       if (!db || !currentWorkspace) return;
-      const repo = createLookupRepository(db, currentWorkspace);
+      const repo = createLookupRepository(db, currentWorkspace, isCloud);
       await repo.saveDepartments(newDepartments);
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const addDepartment = useCallback(
     async (newDepartment: Department) => {
       if (!db || !currentWorkspace) return;
-      const repo = createLookupRepository(db, currentWorkspace);
+      const repo = createLookupRepository(db, currentWorkspace, isCloud);
       await repo.addDepartment(newDepartment);
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const removeDepartment = useCallback(
     async (departmentId: string) => {
       if (!db || !currentWorkspace) return;
-      const repo = createLookupRepository(db, currentWorkspace);
+      const repo = createLookupRepository(db, currentWorkspace, isCloud);
       await repo.removeDepartment(departmentId);
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const updateDepartment = useCallback(
     async (updatedDepartment: Department) => {
       if (!db || !currentWorkspace) return;
-      const repo = createLookupRepository(db, currentWorkspace);
+      const repo = createLookupRepository(db, currentWorkspace, isCloud);
       await repo.updateDepartment(updatedDepartment);
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const clearAllDepartments = useCallback(async () => {
     if (!db || !currentWorkspace) return;
-    const repo = createLookupRepository(db, currentWorkspace);
+    const repo = createLookupRepository(db, currentWorkspace, isCloud);
     await repo.clearAllDepartments(DEFAULT_DEPARTMENTS);
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   return {
     departments,
@@ -105,3 +116,4 @@ export function useDepartments() {
     saveDepartments,
   };
 }
+

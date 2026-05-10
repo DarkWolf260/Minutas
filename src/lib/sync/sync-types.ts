@@ -13,7 +13,7 @@ export interface SyncChannel {
   code: string;        // 6-char code shared with secondary devices
   name: string;
   ownerUserId: string;
-  createdAt: string;
+  created_at: string;
 }
 
 export interface SyncReport {
@@ -41,3 +41,4 @@ export const DEFAULT_SYNC_CONFIG: SyncConfig = {
   deviceName: '',
   importMode: 'auto',
 };
+

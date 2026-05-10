@@ -1,24 +1,32 @@
-/**
- * Report Repository — Encapsulates all operations on the `reports` collection.
- */
-
 import type { MinutasDatabase } from '@/lib/db/db';
 import type { Report } from '@/lib/types';
 import { safeWrite, silentWrite } from './base.repository';
+import { createSupabaseWatchAll, supabaseRepoUtils } from './supabase.repository';
+import { map } from 'rxjs/operators';
+import { supabase } from '@/lib/supabase';
 
-export function createReportRepository(db: MinutasDatabase, workspaceId: string) {
-  const ws = workspaceId;
+export function createReportRepository(db: MinutasDatabase | null, workspace_id: string, isCloud: boolean = false) {
+  const ws = workspace_id;
+  const TABLE = 'reports';
+
+  // Unified implementation using RxDB
+  // (Replication is handled at the DatabaseProvider level)
+
+  // RxDB Implementation
+  if (!db) throw new Error('Database not initialized');
 
   const watchAll = () =>
     db.reports.find({
-      selector: { workspaceId: ws },
+      selector: { workspace_id: ws },
       sort: [{ timestamp: 'desc' }],
-    }).$;
+    }).$.pipe(
+      map(docs => docs.map(d => d.toJSON() as Report))
+    );
 
   const findAll = () =>
     db.reports
       .find({
-        selector: { workspaceId: ws },
+        selector: { workspace_id: ws },
         sort: [{ timestamp: 'desc' }],
       })
       .exec();
@@ -34,7 +42,7 @@ export function createReportRepository(db: MinutasDatabase, workspaceId: string)
       async () => {
         const doc = await db.reports.findOne(validatedReport.id).exec();
         if (!doc) throw new Error('Reporte no encontrado.');
-        const { id, workspaceId, ...patchData } = validatedReport;
+        const { id, workspace_id, ...patchData } = validatedReport;
         await doc.patch(patchData as Partial<Report>);
       },
       { feature: 'Reports' }
@@ -53,7 +61,7 @@ export function createReportRepository(db: MinutasDatabase, workspaceId: string)
     safeWrite(
       async () => {
         const allDocs = await db.reports
-          .find({ selector: { workspaceId: ws } })
+          .find({ selector: { workspace_id: ws } })
           .exec();
         await Promise.all(allDocs.map((d) => d.remove()));
       },
@@ -64,3 +72,5 @@ export function createReportRepository(db: MinutasDatabase, workspaceId: string)
 }
 
 export type ReportRepository = ReturnType<typeof createReportRepository>;
+
+

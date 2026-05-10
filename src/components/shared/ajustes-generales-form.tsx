@@ -31,6 +31,7 @@ interface AjustesGeneralesFormProps {
   definitions: any;
   fieldKeys: string[];
   columns?: 1 | 2;
+  disabled?: boolean;
 }
 
 export function AjustesGeneralesForm({ 
@@ -38,7 +39,8 @@ export function AjustesGeneralesForm({
   onChange, 
   definitions, 
   fieldKeys,
-  columns = 2 
+  columns = 2,
+  disabled = false 
 }: AjustesGeneralesFormProps) {
   return (
     <div className={`grid grid-cols-1 ${columns === 2 ? 'md:grid-cols-2' : ''} gap-x-8 gap-y-4`}>
@@ -58,6 +60,7 @@ export function AjustesGeneralesForm({
               <Select 
                 value={(values[key] === '' || !values[key]) ? CENTINELA_NINGUNO : values[key]} 
                 onValueChange={(val) => onChange(key, val === CENTINELA_NINGUNO ? '' : val)}
+                disabled={disabled}
               >
                 <SelectTrigger id={key} className="bg-background w-full">
                   <SelectValue placeholder="Seleccionar..." />
@@ -76,7 +79,7 @@ export function AjustesGeneralesForm({
                 value={values[key] || ''}
                 onChange={(e) => onChange(key, e.target.value)}
                 className="bg-background w-full"
-                disabled={key === 'Hora' || key === 'Fecha'}
+                disabled={disabled || key === 'Hora' || key === 'Fecha'}
               />
             )}
           </div>

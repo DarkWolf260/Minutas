@@ -187,7 +187,7 @@ export function NoGuardBanner({
     isLoaded,
   } = useActiveGuard();
 
-  const ordenDelDiaDisabled = (settings.disabledModules || []).includes('orden-del-dia');
+  const ordenDelDiaDisabled = (settings.disabled_modules || []).includes('orden-del-dia');
 
   const handleOpen = () => {
     openGuard();
@@ -287,3 +287,4 @@ export function NoGuardBanner({
     </div>
   );
 }
+

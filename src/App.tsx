@@ -10,14 +10,22 @@ import { PWAStatus } from '@/components/layout/pwa-status';
 import { DatabaseProvider } from '@/lib/db/db-provider';
 import { NotificationsProvider } from '@/lib/notifications-provider';
 import { SyncProvider } from '@/lib/sync/sync-context';
+import { AuthProvider } from '@/components/providers/auth-provider';
+import { UserProvider, useUser } from '@/components/providers/user-provider';
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OnboardingTour } from '@/components/ui/custom/onboarding-tour';
+import { cn } from '@/lib/utils';
 
 // Setup helpers
 import SetupPage from '@/pages/setup';
 import { SETUP_DONE_KEY, tryGet, trySet, tryRemove } from '@/hooks/use-setup';
+import { AdminRoute } from '@/components/auth/admin-route';
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { useAuth } from '@/hooks/use-auth';
+import { useGlobalConfig } from '@/hooks/use-global-config';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 
 // ─── Lazy-load app pages ──────────────────────────────────────────────────────
 
@@ -42,6 +50,13 @@ const AboutChangelogPage = lazy(() => import('@/pages/settings/about/changelog')
 const AboutTemplatesPage = lazy(() => import('@/pages/settings/about/templates'));
 const OfflinePage = lazy(() => import('@/pages/offline'));
 const NotFoundPage = lazy(() => import('@/pages/not-found'));
+const LoginPage = lazy(() => import('@/pages/login'));
+const RegisterPage = lazy(() => import('@/pages/register'));
+const AdminDashboardPage = lazy(() => import('@/pages/admin'));
+const AdminUsersPage = lazy(() => import('@/pages/admin/users'));
+const AdminConfigPage = lazy(() => import('@/pages/admin/config'));
+const AdminWorkspacesPage = lazy(() => import('@/pages/admin/workspaces'));
+const MaintenancePage = lazy(() => import('@/pages/maintenance'));
 
 // ─── Shared loader ────────────────────────────────────────────────────────────
 
@@ -50,9 +65,6 @@ const PageLoader = () => (
     <div className="w-24 h-1 bg-muted/50 rounded-full overflow-hidden">
       <div className="h-full bg-primary/30 animate-pulse w-full" />
     </div>
-    <p className="text-[11px] font-bold tracking-[0.2em] text-muted-foreground/50 uppercase">
-      Sincronizando Secciones
-    </p>
   </div>
 );
 
@@ -60,6 +72,16 @@ const PageLoader = () => (
 function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isApproved, isAdmin, loading: statusLoading } = useUser();
+  const { config, loading: configLoading } = useGlobalConfig();
+  const { isCloud } = useWorkspaceManager();
+  
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  // If user is in local mode (!isCloud), navigation is always allowed outside auth pages.
+  // In cloud mode, requires authenticated and approved user.
+  const showNav = !isAuthPage && (!isCloud || (user && isApproved && !statusLoading)) && (!config.maintenance_mode || isAdmin);
+  
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false
   );
@@ -88,9 +110,9 @@ function AppLayout() {
       className="flex min-h-full w-full flex-col sm:flex-row md:overflow-hidden bg-background overflow-x-hidden"
       suppressHydrationWarning
     >
-      <SideNav />
-      <div className="flex flex-1 flex-col sm:pl-14 md:overflow-hidden relative min-w-0 overflow-x-hidden">
-        <MobileNav />
+      {showNav && <SideNav />}
+      <div className={cn("flex flex-1 flex-col md:overflow-hidden relative min-w-0 overflow-x-hidden", showNav && "sm:pl-14")}>
+        {showNav && <MobileNav />}
 
         {isOffline && location.pathname !== '/offline' && (
           <div className="bg-amber-500 text-white text-[10px] font-bold uppercase tracking-widest py-1.5 px-4 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 sticky top-0 z-20 shadow-sm">
@@ -108,41 +130,153 @@ function AppLayout() {
         )}
 
         <main className="flex-1 md:overflow-hidden flex flex-col min-h-0 min-w-0 relative bg-muted/30 overflow-x-hidden">
-          <ErrorBoundary name="MainContent">
+          {config.maintenance_mode && !isAdmin && !isAuthPage ? (
             <Suspense fallback={<PageLoader />}>
+              <MaintenancePage />
+            </Suspense>
+          ) : (
+            <ErrorBoundary name="MainContent">
+              <Suspense fallback={<PageLoader />}>
               <div
                 key={location.pathname}
                 className="flex-1 flex flex-col min-h-0 min-w-0 animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out"
               >
                 <Routes>
-                  <Route path="/" element={<NovedadesPage />} />
-                  <Route path="/settings/direcciones" element={<DireccionesPage />} />
-                  <Route path="/estadisticas" element={<EstadisticasPage />} />
-                  <Route path="/orden-del-dia" element={<OrdenDelDiaPage />} />
-                  <Route path="/personal" element={<PersonalPage />} />
-                  <Route path="/plantillas" element={<PlantillasPage />} />
-                  <Route path="/reporte-final" element={<ReporteFinalPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/settings/workspaces" element={<SettingsWorkspacesPage />} />
-                  <Route path="/settings/profile" element={<SettingsProfilePage />} />
-                  <Route path="/settings/borrar-datos" element={<SettingsBorrarDatosPage />} />
-                  <Route path="/settings/sync" element={<SettingsSyncPage />} />
-                  <Route path="/settings/modules" element={<SettingsModulesPage />} />
-                  <Route path="/settings/feedback" element={<SettingsFeedbackPage />} />
-                  <Route path="/settings/about" element={<SettingsAboutPage />} />
-                  <Route path="/settings/about/app" element={<AboutAppPage />} />
-                  <Route path="/settings/about/guide" element={<AboutGuidePage />} />
-                  <Route path="/settings/about/changelog" element={<AboutChangelogPage />} />
-                  <Route path="/settings/about/templates" element={<AboutTemplatesPage />} />
+                  <Route path="/" element={
+                    <ProtectedRoute>
+                      <NovedadesPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/settings/direcciones" element={
+                    <ProtectedRoute>
+                      <DireccionesPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/estadisticas" element={
+                    <ProtectedRoute>
+                      <EstadisticasPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/orden-del-dia" element={
+                    <ProtectedRoute>
+                      <OrdenDelDiaPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/personal" element={
+                    <ProtectedRoute>
+                      <PersonalPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/plantillas" element={
+                    <ProtectedRoute>
+                      <PlantillasPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/reporte-final" element={
+                    <ProtectedRoute>
+                      <ReporteFinalPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings" element={
+                    <ProtectedRoute>
+                      <SettingsPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings/workspaces" element={
+                    <ProtectedRoute>
+                      <SettingsWorkspacesPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings/profile" element={
+                    <ProtectedRoute>
+                      <SettingsProfilePage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings/borrar-datos" element={
+                    <ProtectedRoute>
+                      <SettingsBorrarDatosPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings/sync" element={
+                    <ProtectedRoute>
+                      <SettingsSyncPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings/modules" element={
+                    <ProtectedRoute>
+                      <SettingsModulesPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings/feedback" element={
+                    <ProtectedRoute>
+                      <SettingsFeedbackPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings/about" element={
+                    <ProtectedRoute>
+                      <SettingsAboutPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings/about/app" element={
+                    <ProtectedRoute>
+                      <AboutAppPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings/about/guide" element={
+                    <ProtectedRoute>
+                      <AboutGuidePage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings/about/changelog" element={
+                    <ProtectedRoute>
+                      <AboutChangelogPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings/about/templates" element={
+                    <ProtectedRoute>
+                      <AboutTemplatesPage />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/offline" element={<OfflinePage />} />
+                  <Route path="/admin" element={
+                    <ProtectedRoute>
+                      <AdminRoute>
+                        <AdminDashboardPage />
+                      </AdminRoute>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/users" element={
+                    <ProtectedRoute>
+                      <AdminRoute>
+                        <AdminUsersPage />
+                      </AdminRoute>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/config" element={
+                    <ProtectedRoute>
+                      <AdminRoute>
+                        <AdminConfigPage />
+                      </AdminRoute>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin/workspaces" element={
+                    <ProtectedRoute>
+                      <AdminRoute>
+                        <AdminWorkspacesPage />
+                      </AdminRoute>
+                    </ProtectedRoute>
+                  } />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </div>
             </Suspense>
           </ErrorBoundary>
+          )}
         </main>
 
-        <BottomNav />
+        {showNav && <BottomNav />}
       </div>
 
       {showTour && <OnboardingTour onComplete={() => setShowTour(false)} />}
@@ -169,28 +303,32 @@ function Root() {
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="minutas-theme">
-      <DatabaseProvider setupMode={!setupDone}>
-        <NotificationsProvider>
-          <SyncProvider>
-            <TooltipProvider>
-              {setupDone ? (
-                // ── Normal app shell ─────────────────────────────────────────
-                <Suspense fallback={<PageLoader />}>
-                  <AppLayout />
-                </Suspense>
-              ) : (
-                // ── Full-screen setup wizard (no SideNav, no BottomNav) ──────
-                // SetupPage uses DatabaseProvider hooks internally (workspace, settings)
-                <SetupPage onComplete={handleSetupComplete} />
-              )}
+      <AuthProvider>
+        <UserProvider>
+          <DatabaseProvider setupMode={!setupDone}>
+          <NotificationsProvider>
+            <SyncProvider>
+              <TooltipProvider>
+                {setupDone ? (
+                  // ── Normal app shell ─────────────────────────────────────────
+                  <Suspense fallback={<PageLoader />}>
+                    <AppLayout />
+                  </Suspense>
+                ) : (
+                  // ── Full-screen setup wizard (no SideNav, no BottomNav) ──────
+                  // SetupPage uses DatabaseProvider hooks internally (workspace, settings)
+                  <SetupPage onComplete={handleSetupComplete} />
+                )}
 
-              {/* Global overlays — shown in both modes */}
-              <PWAStatus />
-              <Toaster />
-            </TooltipProvider>
-          </SyncProvider>
-        </NotificationsProvider>
-      </DatabaseProvider>
+                {/* Global overlays — shown in both modes */}
+                <PWAStatus />
+                <Toaster />
+              </TooltipProvider>
+            </SyncProvider>
+          </NotificationsProvider>
+        </DatabaseProvider>
+      </UserProvider>
+    </AuthProvider>
     </ThemeProvider>
   );
 }

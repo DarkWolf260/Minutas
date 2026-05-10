@@ -4,7 +4,7 @@ export type PersonnelStatus = (typeof PERSONNEL_STATUS)[keyof typeof PERSONNEL_S
 export type AttendanceStatus = 'presente' | 'tarde' | 'ausente' | 'permiso';
 
 /** Represents any value that can appear in a form data field */
-export type FormDataValue =
+export type form_dataValue =
   | string
   | number
   | boolean
@@ -12,22 +12,22 @@ export type FormDataValue =
   | undefined
   | StaffMember
   | StaffMember[]
-  | FormDataValue[]
-  | { [key: string]: FormDataValue };
+  | form_dataValue[]
+  | { [key: string]: form_dataValue };
 
 /** Typed record for template form data (replaces Record<string, any>) */
-export type FormDataRecord = Record<string, FormDataValue>;
+export type form_dataRecord = Record<string, form_dataValue>;
 
 export interface StaffMember {
   id: string;
-  workspaceId: string;
-  personnelId?: string; // Link to global personnel list
+  workspace_id: string;
+  personnel_id?: string; // Link to global personnel list
   name: string;
   cedula?: string;
   rank?: string; // Hierarchy / Rank
   cargo?: string; // Job title / Position
   titulo?: string; // Academic title (optional, not shown in table)
-  roleId?: string;
+  role_id?: string;
   status?: PersonnelStatus;
   department?: string;
   specialties?: string[];
@@ -44,14 +44,14 @@ export interface ManualNovedad {
 }
 
 export interface StaffRole {
-  workspaceId?: string;
+  workspace_id?: string;
   name: string;
-  isSingle: boolean; // True for roles that can only have one person
-  departmentScope: string[]; // Array of department IDs, 'OPERATIONS' for guards. Empty array means global.
-  isHidden?: boolean; // If true, this role won't appear in the default Orden del Día / Reports
-  isStatus?: boolean; // If true, this is a personnel status (Reposo, Vacaciones) rather than a fixed position
+  is_single: boolean; // True for roles that can only have one person
+  department_scope: string[]; // Array of department IDs, 'OPERATIONS' for guards. Empty array means global.
+  is_hidden?: boolean; // If true, this role won't appear in the default Orden del Día / Reports
+  is_status?: boolean; // If true, this is a personnel status (Reposo, Vacaciones) rather than a fixed position
   order?: number; // Para el Organigrama
-  hierarchyOrder?: number; // Para la Jerarquía de Reporte
+  hierarchy_order?: number; // Para la Jerarquía de Reporte
 }
 
 // Staff is a record mapping a role name to a list of personnel for that role.
@@ -61,7 +61,7 @@ export interface Staff {
 
 export interface Guard {
   id: string;
-  workspaceId?: string;
+  workspace_id?: string;
   staff: Staff;
 }
 
@@ -76,41 +76,40 @@ export type AppModuleId =
 
 export interface AppSettings {
   id?: string;
-  workspaceId?: string;
-  // This is now managed via global field definitions
-  activeGuardId?: string;
-  isGuardOpen?: boolean;
-  guardPeriod?: string;
-  guardShiftDuration?: number;
-  finalReportManualNovedades?: ManualNovedad[];
-  finalReportStatistics?: string;
-  reportaRoleIds?: string[];
+  workspace_id?: string;
+  active_guard_id?: string;
+  is_guard_open?: boolean;
+  guard_period?: string;
+  guard_shift_duration?: number;
+  final_report_manual_novedades?: ManualNovedad[];
+  final_report_statistics?: string;
+  reportarole_ids?: string[];
   /** Modules explicitly disabled by the user. undefined = all enabled (backwards-compatible). */
-  disabledModules?: AppModuleId[];
-  ordenDelDiaDraft?: {
+  disabled_modules?: AppModuleId[];
+  orden_del_dia_draft?: {
     staff: Staff;
     activities: ManualNovedad[];
     notes: { id: string; content: string }[];
-    esJefeEncargado?: boolean;
-    guardId: string;
-    updatedAt: string;
+    es_jefe_encargado?: boolean;
+    guard_id: string;
+    updated_at: string;
   };
-  finalReportStaffSnapshot?: Staff;
-  finalReportGuardId?: string;
-  finalReportStartDate?: string;
-  finalReportEndDate?: string;
+  final_report_staff_snapshot?: Staff;
+  final_report_guard_id?: string;
+  final_report_start_date?: string;
+  final_report_end_date?: string;
 }
 
 export interface Report {
   id: string;
-  workspaceId: string;
-  templateId: string;
+  workspace_id: string;
+  template_id: string;
   title: string;
   timestamp: string;
   content: string;
-  isRelevant: boolean;
+  is_relevant: boolean;
   status?: 'En proceso' | 'Finalizado';
-  formData?: FormDataRecord;
+  form_data?: form_dataRecord;
   sections?: Array<{
     title: string;
     content: string;
@@ -120,10 +119,10 @@ export interface Report {
 
 export interface GuardReport {
   id: string;
-  workspaceId: string;
+  workspace_id: string;
   date: string; // Date of the report/guard (ISO string)
-  generatedAt: string; // Timestamp of saving (ISO string)
-  guardGroup?: string; // e.g. "Guardia A" or "Guardia B" based on active guard
+  generated_at: string; // Timestamp of saving (ISO string)
+  guard_group?: string; // e.g. "Guardia A" or "Guardia B" based on active guard
   content: string; // The full text content of the report
   summary?: string; // Short summary or title, e.g. "Reporte de Cierre - [Date]"
   statistics?: Record<string, number>; // Persisted aggregated statistics
@@ -149,42 +148,42 @@ export interface SnippetOption {
 }
 
 export interface FieldConfig {
-  workspaceId?: string;
+  workspace_id?: string;
   type: FieldType;
   label: string;
   required?: boolean;
   value?: string;
-  defaultValue?: string;
-  sectionId?: string;
-  snippetOptions?: SnippetOption[];
+  default_value?: string;
+  section_id?: string;
+  snippet_options?: SnippetOption[];
   modifiers?: TextModifier[]; // Transformaciones de texto: upper, lower, title
-  isFullWidth?: boolean;
+  is_full_width?: boolean;
 }
 
 export interface SectionConfig {
   id: string;
-  parentId?: string;
+  parent_id?: string;
   label: string;
 
-  isRepeatable: boolean;
-  fieldIds: string[];
+  is_repeatable: boolean;
+  field_ids: string[];
   layout?: string[];
-  repeatableItemLabel?: string; // This is the `sub` value
-  pluralTitle?: string;
-  singularTitle?: string;
+  repeatable_item_label?: string; // This is the `sub` value
+  plural_title?: string;
+  singular_title?: string;
   condition?: {
-    fieldId: string;
+    field_id: string;
     operator?: '=' | '!=' | '>' | '<' | '>=' | '<=';
     value: string;
     /** 'hide' (default) = oculto hasta cumplirse | 'show' = siempre visible en formulario */
-    conditionMode?: 'show' | 'hide';
+    condition_mode?: 'show' | 'hide';
   };
-  statisticsCategory?: string; // New: Statistics category associated with this section
-  originalContent?: string; // Used for re-parsing conditional blocks
-  isSeparator?: boolean; // True if this section is just a visual separator
-  isMapping?: boolean; // True if this is a mapping conditional [?{Field}] Key=Value [/]
-  isSelfContained?: boolean; // True if this is a self-contained section ["Title" {field}]
-  hasStaticContent?: boolean; // True if the section contains non-whitespace static text
+  statistics_category?: string; // New: Statistics category associated with this section
+  original_content?: string; // Used for re-parsing conditional blocks
+  is_separator?: boolean; // True if this section is just a visual separator
+  is_mapping?: boolean; // True if this is a mapping conditional [?{Field}] Key=Value [/]
+  is_self_contained?: boolean; // True if this is a self-contained section ["Title" {field}]
+  has_static_content?: boolean; // True if the section contains non-whitespace static text
 }
 
 
@@ -197,43 +196,44 @@ export interface TemplateConfig {
 export type StatisticOperator = '=' | '!=' | 'filled' | 'empty' | 'not_empty' | 'contains' | 'not_contains' | 'starts_with' | 'ends_with' | 'extract_value' | '>' | '<' | '>=' | '<=';
 
 export interface StatisticRuleCondition {
-  fieldId?: string | null;
+  field_id?: string | null;
   operator?: StatisticOperator | null;
   condition?: string | null;
 }
 
 export interface StatisticRule {
-  fieldId?: string | null; // Primary condition field
+  field_id?: string | null; // Primary condition field
   operator?: StatisticOperator | null; // Primary condition operator
   condition?: string | null; // Primary condition value
   category?: string | null;
   conditions?: StatisticRuleCondition[] | null; // Additional secondary conditions (AND)
-  orConditions?: StatisticRuleCondition[] | null; // Additional secondary conditions (OR)
+  or_conditions?: StatisticRuleCondition[] | null; // Additional secondary conditions (OR)
 }
 
 export interface Template {
   id: string;
-  workspaceId: string;
+  workspace_id: string | null;
   name: string;
+  description?: string | null;
   content: string;
   type: 'normal' | 'relevante';
-  isActive?: boolean;
-  statisticsCategory?: string | null;
-  statisticsSubCategories?: string[] | null;
-  statisticsRules?: StatisticRule[] | null;
+  is_active?: boolean;
+  statistics_category?: string | null;
+  statistics_sub_categories?: string[] | null;
+  statistics_rules?: StatisticRule[] | null;
 }
 
 export interface ReportDraft {
   id?: string;
-  workspaceId: string;
-  templateId: string;
-  formData: FormDataRecord;
+  workspace_id: string;
+  template_id: string;
+  form_data: form_dataRecord;
   lastSaved?: string;
 }
 
 export interface Department {
   id: string;
-  workspaceId?: string;
+  workspace_id?: string;
   name: string;
   staff: Staff;
   order?: number;
@@ -241,7 +241,7 @@ export interface Department {
 
 export interface Address {
   id: string;
-  workspaceId?: string;
+  workspace_id?: string;
   name: string;
   street?: string;
   houseNumber?: string;
@@ -273,11 +273,14 @@ export interface TemplateParserResult {
   errors: string[];
 }
 export interface PersonnelAssignment {
-  id: string; // personnelId_date
-  workspaceId: string;
-  personnelId: string;
+  id: string; // personnel_id_date
+  workspace_id: string;
+  personnel_id: string;
   date: string; // YYYY-MM-DD
-  guardId: string; // e.g. "A", "B", "C", "D" or departmentId
-  roleName: string;
+  guard_id: string; // e.g. "A", "B", "C", "D" or departmentId
+  role_name: string;
   timestamp: string; // ISO format
 }
+
+
+

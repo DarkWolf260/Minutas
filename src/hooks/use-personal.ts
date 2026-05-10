@@ -66,14 +66,14 @@ export function usePersonal() {
     } else {
       if (data.name) {
         const nuevoMiembro: Omit<StaffMember, 'id'> = {
-          workspaceId: workspaceActual,
+          workspace_id: workspaceActual,
           name: data.name,
           cedula: data.cedula || '',
           rank: data.rank || '',
           department: data.department || '',
           sex: data.sex,
           cargo: data.cargo,
-          roleId: data.roleId,
+          role_id: data.role_id,
           titulo: data.titulo,
         };
         await añadirMiembro(nuevoMiembro);
@@ -148,3 +148,5 @@ export function usePersonal() {
     guardarGuardias,
   };
 }
+
+

@@ -24,8 +24,8 @@ export function BottomNav() {
   const { pathname } = useLocation();
   const { settings } = useSettings();
 
-  const disabledModules = settings.disabledModules || [];
-  const navItems = ALL_NAV_ITEMS.filter((item) => !disabledModules.includes(item.moduleId));
+  const disabled_modules = settings.disabled_modules || [];
+  const navItems = ALL_NAV_ITEMS.filter((item) => !disabled_modules.includes(item.moduleId));
 
   return (
     <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-lg border-t pb-safe">
@@ -62,3 +62,4 @@ export function BottomNav() {
     </nav>
   );
 }
+

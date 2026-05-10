@@ -82,11 +82,11 @@ const SortableRoleItem = React.memo(({
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium leading-none truncate">{role.name}</p>
         <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider font-semibold">
-           {role.departmentScope && role.departmentScope.length > 0 ? "Asignado" : "Global"}
+           {role.department_scope && role.department_scope.length > 0 ? "Asignado" : "Global"}
         </p>
       </div>
 
-      {role.isStatus && (
+      {role.is_status && (
         <Badge variant="outline" className={cn(
           "text-[9px] h-4 font-bold uppercase tracking-widest",
           role.name.toLowerCase() === 'apoyo' 
@@ -97,7 +97,7 @@ const SortableRoleItem = React.memo(({
         </Badge>
       )}
 
-      {role.isSingle && (
+      {role.is_single && (
         <Badge variant="outline" className="text-[9px] h-4 bg-primary/5 text-primary border-primary/20">
           Único
         </Badge>
@@ -162,11 +162,11 @@ export function RoleSorter({ roles, departments, onReorder, onUpdate, onRemove, 
     return localRoles.filter(role => {
       // 1. Personnel statuses are handled separately in some views, but here we want to see them if they are in the hierarchy
       // 2. Global roles (no scope) are always reachable
-      const scope = role.departmentScope ?? [];
+      const scope = role.department_scope ?? [];
       if (scope.length === 0) return true;
       
       // 3. Status roles are also generally considered reachable if they don't have a scope
-      if (role.isStatus && scope.length === 0) return true;
+      if (role.is_status && scope.length === 0) return true;
 
       // 4. Role is reachable if at least one of its departments exists
       return scope.some(deptId => deptIds.has(deptId));
@@ -175,12 +175,12 @@ export function RoleSorter({ roles, departments, onReorder, onUpdate, onRemove, 
 
   const sortedRoles = useMemo(() => {
     return [...reachableRoles]
-      .filter((r: StaffRole) => !r.isHidden)
-      .sort((a, b) => (a.hierarchyOrder ?? a.order ?? 0) - (b.hierarchyOrder ?? b.order ?? 0));
+      .filter((r: StaffRole) => !r.is_hidden)
+      .sort((a, b) => (a.hierarchy_order ?? a.order ?? 0) - (b.hierarchy_order ?? b.order ?? 0));
   }, [reachableRoles]);
 
   const hiddenRoles = useMemo(() => {
-    return reachableRoles.filter((r: StaffRole) => r.isHidden);
+    return reachableRoles.filter((r: StaffRole) => r.is_hidden);
   }, [reachableRoles]);
 
   const activeRole = useMemo(() => {
@@ -197,12 +197,12 @@ export function RoleSorter({ roles, departments, onReorder, onUpdate, onRemove, 
 
       const reorderedVisible = arrayMove(sortedRoles, oldIndex, newIndex);
       
-      // Update the hierarchyOrder for all roles in localRoles
+      // Update the hierarchy_order for all roles in localRoles
       // based on their position in the visible sorted list
       const updatedLocalRoles = localRoles.map(role => {
         const visibleIndex = reorderedVisible.findIndex(vr => vr.name === role.name);
         if (visibleIndex !== -1) {
-          return { ...role, hierarchyOrder: visibleIndex };
+          return { ...role, hierarchy_order: visibleIndex };
         }
         return role;
       });
@@ -278,7 +278,7 @@ export function RoleSorter({ roles, departments, onReorder, onUpdate, onRemove, 
                   <SortableRoleItem 
                     key={role.name} 
                     role={role} 
-                    onRemoveFromHierarchy={(name) => handleUpdateRole(name, { isHidden: true })}
+                    onRemoveFromHierarchy={(name) => handleUpdateRole(name, { is_hidden: true })}
                     onDelete={handleRemoveRole} 
                   />
                 ))}
@@ -313,7 +313,7 @@ export function RoleSorter({ roles, departments, onReorder, onUpdate, onRemove, 
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-primary hover:bg-primary/10"
-                          onClick={() => handleUpdateRole(role.name, { isHidden: false })}
+                          onClick={() => handleUpdateRole(role.name, { is_hidden: false })}
                           title="Restaurar a la jerarquía"
                         >
                           <Plus className="h-4 w-4" />
@@ -349,3 +349,4 @@ export function RoleSorter({ roles, departments, onReorder, onUpdate, onRemove, 
     </div>
   );
 }
+

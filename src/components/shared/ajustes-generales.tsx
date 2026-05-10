@@ -12,6 +12,10 @@ import { toast } from 'sonner';
 import { useSettings } from '@/hooks/use-settings';
 import { useDepartments } from '@/hooks/use-departments';
 import { Separator } from '@/components/ui/separator';
+import { useUser } from '@/components/providers/user-provider';
+import { useWorkspaceManager } from '@/lib/db/db-context';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Lock } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -31,6 +35,10 @@ export function AjustesGenerales() {
   const { roles, isLoaded: rolesLoaded } = useRoles();
   const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
   const { departments, isLoaded: deptsLoaded } = useDepartments();
+  const { isAdmin } = useUser();
+  const { isCloud } = useWorkspaceManager();
+
+  const isBlocked = isCloud && !isAdmin;
 
   // Use local state to avoid saving on every keystroke
   const [localValues, setLocalValues] = useState<Record<string, string>>({});
@@ -64,7 +72,7 @@ export function AjustesGenerales() {
 
   useEffect(() => {
     if (settingsLoaded) {
-      const globalRoles = settings.reportaRoleIds || [];
+      const globalRoles = settings.reportarole_ids || [];
       const currentLastSaved = JSON.stringify(lastSavedReportaRoles.current);
       const incomingGlobal = JSON.stringify(globalRoles);
 
@@ -73,7 +81,7 @@ export function AjustesGenerales() {
         lastSavedReportaRoles.current = globalRoles;
       }
     }
-  }, [settings.reportaRoleIds, settingsLoaded]);
+  }, [settings.reportarole_ids, settingsLoaded]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -92,7 +100,7 @@ export function AjustesGenerales() {
       
       await Promise.all([
         saveDefinitions(newDefinitions),
-        saveSettings({ ...settings, reportaRoleIds: cleanedReportaRoles })
+        saveSettings({ ...settings, reportarole_ids: cleanedReportaRoles })
       ]);
 
       // Update refs to prevent sync loops
@@ -148,20 +156,20 @@ export function AjustesGenerales() {
     
     // Sort roles to ensure consistent order
     const availableRoles = [...roles]
-      .filter(r => !r.isStatus && !localReportaRoles.includes(r.name))
+      .filter(r => !r.is_status && !localReportaRoles.includes(r.name))
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     
     const groups: Record<string, typeof roles> = {};
     
     // 1. Global Roles
-    const globalRoles = availableRoles.filter(r => !r.departmentScope || r.departmentScope.length === 0);
+    const globalRoles = availableRoles.filter(r => !r.department_scope || r.department_scope.length === 0);
     if (globalRoles.length > 0) {
       groups['Cargos Globales'] = globalRoles;
     }
 
     // 2. Department Roles
     departments.forEach(dept => {
-      const deptRoles = availableRoles.filter(r => r.departmentScope?.includes(dept.id));
+      const deptRoles = availableRoles.filter(r => r.department_scope?.includes(dept.id));
       if (deptRoles.length > 0) {
         groups[dept.name] = deptRoles;
       }
@@ -172,15 +180,42 @@ export function AjustesGenerales() {
 
   if (!definitionsLoaded || !rolesLoaded || !settingsLoaded || !deptsLoaded) {
     return (
-      <Card className="max-w-4xl mx-auto shadow-lg">
+      <Card className="shadow-lg h-full flex flex-col overflow-hidden">
         <CardHeader>
-          <Skeleton className="h-8 w-1/2" />
-          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-8 w-1/3" />
+          <Skeleton className="h-4 w-1/2 mt-2" />
         </CardHeader>
-        <CardContent className="space-y-4 pt-6">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
+        <CardContent className="p-6 space-y-8 flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-3">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-3">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-3">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-3">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
+          <Separator />
+          <div className="space-y-4">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-10 w-64" />
+            <div className="space-y-2">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          </div>
+          <div className="flex justify-end pt-4">
+            <Skeleton className="h-10 w-32" />
+          </div>
         </CardContent>
       </Card>
     );
@@ -197,12 +232,22 @@ export function AjustesGenerales() {
       <CardContent className="p-0 flex-1 min-h-0 flex flex-col">
         <ScrollArea className="flex-1" type="always">
           <div className="p-6 space-y-6">
-          <AjustesGeneralesForm 
-            values={localValues}
-            onChange={(key, val) => setLocalValues(prev => ({ ...prev, [key]: val }))}
-            definitions={definitions}
-            fieldKeys={generalFields}
-          />
+            {isBlocked && (
+              <Alert className="bg-amber-500/5 border-amber-500/20 text-amber-600 rounded-2xl mb-2">
+                <Lock className="h-4 w-4" />
+                <AlertDescription className="text-[11px] font-medium ml-2">
+                  Esta área de trabajo está en la nube. Los ajustes generales solo pueden ser modificados por un administrador desde el Panel de Control.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <AjustesGeneralesForm 
+              values={localValues}
+              onChange={(key, val) => setLocalValues(prev => ({ ...prev, [key]: val }))}
+              definitions={definitions}
+              fieldKeys={generalFields}
+              disabled={isBlocked}
+            />
 
         <Separator className="my-2" />
 
@@ -219,9 +264,9 @@ export function AjustesGenerales() {
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Añadir Cargo
               </Label>
-              <Select onValueChange={handleAddReportRole}>
+              <Select onValueChange={handleAddReportRole} disabled={isBlocked}>
                 <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Selecciona un cargo..." />
+                  <SelectValue placeholder={isBlocked ? "Bloqueado por Administración" : "Selecciona un cargo..."} />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(groupedRoles).map(([groupName, groupRoles], idx) => (
@@ -292,6 +337,7 @@ export function AjustesGenerales() {
                             size="icon"
                             className="h-7 w-7 text-destructive hover:bg-destructive/10"
                             onClick={() => handleRemoveReportRole(roleName)}
+                            disabled={isBlocked}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -311,20 +357,24 @@ export function AjustesGenerales() {
           </div>
         </div>
 
-        <div className="flex justify-end pt-2">
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="h-9 px-4 shrink-0 shadow-sm font-bold"
-            title="Guardar Configuración"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
-          </Button>
-        </div>
+          <div className="flex justify-end pt-2">
+            {!isBlocked && (
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="h-9 px-4 shrink-0 shadow-sm font-bold"
+                title="Guardar Configuración"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
+              </Button>
+            )}
+          </div>
           </div>
         </ScrollArea>
       </CardContent>
     </Card>
   );
 }
+
+

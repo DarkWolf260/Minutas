@@ -33,7 +33,7 @@ export const PersonnelFormFields = ({ hook, roles, departments }: PersonnelFormF
     name, setName,
     cedula, setCedula,
     rank, setRank,
-    roleId, setRoleId,
+    role_id, setrole_id,
     department, setDepartment,
     status, setStatus,
     sex, setSex,
@@ -120,12 +120,9 @@ export const PersonnelFormFields = ({ hook, roles, departments }: PersonnelFormF
 
         {/* Cargo Formal */}
         <div className="space-y-2">
-          <Label htmlFor="role" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            <Briefcase className="h-3 w-3" />
-            Cargo Institucional
-          </Label>
-          <Select value={roleId} onValueChange={setRoleId}>
-            <SelectTrigger id="role" name="role" className="bg-background/50 backdrop-blur-sm border-muted-foreground/20 hover:border-primary/50 transition-colors">
+          <Label htmlFor="role">Cargo Institucional</Label>
+          <Select value={role_id} onValueChange={setrole_id}>
+            <SelectTrigger id="role" name="role">
               <SelectValue placeholder="Seleccionar cargo..." />
             </SelectTrigger>
             <SelectContent>
@@ -133,7 +130,7 @@ export const PersonnelFormFields = ({ hook, roles, departments }: PersonnelFormF
                 <span className="text-muted-foreground italic">Sin cargo asignado</span>
               </SelectItem>
               {roles
-                .filter((role) => !role.isStatus)
+                .filter((role) => !role.is_status)
                 .map((role) => (
                   <SelectItem key={role.name} value={role.name}>
                     {role.name}
@@ -206,3 +203,5 @@ export const PersonnelFormFields = ({ hook, roles, departments }: PersonnelFormF
     </div>
   );
 };
+
+

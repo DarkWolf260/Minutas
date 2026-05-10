@@ -8,12 +8,13 @@
 export const DbKeys = {
   // ─── Config collection ──────────────────────────────────────────────────
   settings: (ws: string) => `${ws}:settings:app`,
+  ordenDelDia: (ws: string) => `${ws}:orden_del_dia:active-draft`,
   draft: (ws: string) => `${ws}:draft:active-draft`,
   profile: (ws: string) => `${ws}:profile:user`,
   fieldDefinition: (ws: string, fieldName: string) => `${ws}:field_definition:${fieldName}`,
   guard: (ws: string, guardId: string) => `${ws}:guard:${guardId}`,
   unit: (ws: string, unitId: string) => `${ws}:unit:${unitId}`,
-  templateConfig: (templateId: string) => `template_config:${templateId}`,
+  templateConfig: (ws: string, template_id: string) => `${ws}:template_config:${template_id}`,
 
   // ─── Lookups collection ──────────────────────────────────────────────────
   role: (ws: string, roleName: string) => `${ws}:role:${roleName}`,
@@ -23,3 +24,4 @@ export const DbKeys = {
   // ─── History collection ──────────────────────────────────────────────────
   guardHistory: (ws: string, reportId: string) => `${ws}:ghistory:${reportId}`,
 } as const;
+

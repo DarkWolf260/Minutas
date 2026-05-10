@@ -25,53 +25,45 @@ const defaultProfile: UserProfile = {
 
 export function useProfile() {
   const db = useDatabase();
-  const { currentWorkspace } = useWorkspaceManager();
+  const { currentWorkspace, isCloud } = useWorkspaceManager();
   const [profile, setProfile] = useState<UserProfile>(defaultProfile);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     if (!db || !currentWorkspace) return;
 
-    const repo = createConfigRepository(db, currentWorkspace);
+    const repo = createConfigRepository(db, currentWorkspace, isCloud);
 
     const sub = repo.watchProfile().subscribe(async (doc) => {
       if (doc) {
-        setProfile(doc.toJSON().data as UserProfile);
+        const item = doc.toJSON ? doc.toJSON() : doc;
+        setProfile(item.data as UserProfile);
       } else {
-        try {
-          await repo.initProfile(defaultProfile);
-        } catch (err: unknown) {
-          const e = err as any;
-          const isConflict = e.code === 'CONFLICT' || e.status === 409;
-          if (!isConflict) {
-            logger.error('Failed to insert default profile', err, {
-              feature: 'Profile',
-              workspaceId: currentWorkspace,
-            });
-          }
-        }
+        // Just use defaults in state, do NOT init in DB to avoid cloud sync conflicts
+        setProfile(defaultProfile);
       }
       setIsLoaded(true);
     });
 
     return () => sub.unsubscribe();
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   const saveProfile = useCallback(
     async (newProfile: Partial<UserProfile>) => {
       if (!db || !currentWorkspace) return;
-      const repo = createConfigRepository(db, currentWorkspace);
+      const repo = createConfigRepository(db, currentWorkspace, isCloud);
       await repo.saveProfile(profile, newProfile);
     },
-    [db, currentWorkspace, profile]
+    [db, currentWorkspace, profile, isCloud]
   );
 
   const clearProfile = useCallback(async () => {
     if (!db || !currentWorkspace) return;
-    const repo = createConfigRepository(db, currentWorkspace);
+    const repo = createConfigRepository(db, currentWorkspace, isCloud);
     await repo.clearProfile();
-    logger.info('User profile cleared', { workspaceId: currentWorkspace });
-  }, [db, currentWorkspace]);
+    logger.info('User profile cleared', { workspace_id: currentWorkspace });
+  }, [db, currentWorkspace, isCloud]);
 
   return { profile, saveProfile, clearProfile, isLoaded };
 }
+

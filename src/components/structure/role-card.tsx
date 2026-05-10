@@ -42,8 +42,8 @@ export function RoleCard({
     const filteredRoles = React.useMemo(() => {
         if (selectedDeptId === 'all') return roles;
         return roles.filter((r) => {
-            if (selectedDeptId === 'global') return (r.departmentScope || []).length === 0;
-            return (r.departmentScope || []).includes(selectedDeptId);
+            if (selectedDeptId === 'global') return (r.department_scope || []).length === 0;
+            return (r.department_scope || []).includes(selectedDeptId);
         });
     }, [roles, selectedDeptId]);
 
@@ -127,7 +127,7 @@ export function RoleCard({
                                 </div>
                                 <div className="col-span-4">
                                     <Select
-                                        value={(role.departmentScope ?? [])[0] || 'global'}
+                                        value={(role.department_scope ?? [])[0] || 'global'}
                                         onValueChange={(val) => onAssignDept(role.name, val)}
                                     >
                                         <SelectTrigger className="h-7 text-[11px] bg-background">
@@ -145,9 +145,9 @@ export function RoleCard({
                                 </div>
                                 <div className="col-span-2 flex justify-center">
                                     <Switch
-                                        checked={role.isSingle}
+                                        checked={role.is_single}
                                         onCheckedChange={(checked) =>
-                                            onUpdateRole(role.name, { isSingle: checked })
+                                            onUpdateRole(role.name, { is_single: checked })
                                         }
                                         className="scale-75"
                                     />
@@ -175,3 +175,4 @@ export function RoleCard({
         </Card>
     );
 }
+

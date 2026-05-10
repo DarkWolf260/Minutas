@@ -7,7 +7,7 @@ describe('Template Validation Schema', () => {
         it('should validate a valid template', () => {
             const validTemplate = {
                 id: '550e8400-e29b-41d4-a716-446655440000',
-                workspaceId: 'workspace-1',
+                workspace_id: 'workspace-1',
                 name: 'Test Template',
                 content: 'Test content with {field}',
                 type: 'normal' as const,
@@ -35,7 +35,7 @@ describe('Template Validation Schema', () => {
         it('should validate template type enum', () => {
             const validNormal = {
                 id: '550e8400-e29b-41d4-a716-446655440002',
-                workspaceId: 'workspace-1',
+                workspace_id: 'workspace-1',
                 name: 'Test',
                 content: 'Content',
                 type: 'normal' as const,
@@ -44,7 +44,7 @@ describe('Template Validation Schema', () => {
 
             const validRelevante = {
                 id: '550e8400-e29b-41d4-a716-446655440003',
-                workspaceId: 'workspace-1',
+                workspace_id: 'workspace-1',
                 name: 'Test',
                 content: 'Content',
                 type: 'relevante' as const,
@@ -81,7 +81,7 @@ describe('Template Validation Schema', () => {
         it('should accept optional fields', () => {
             const minimalTemplate = {
                 id: '550e8400-e29b-41d4-a716-446655440006',
-                workspaceId: 'workspace-1',
+                workspace_id: 'workspace-1',
                 name: 'Test',
                 content: 'Content',
                 type: 'normal' as const,
@@ -91,7 +91,7 @@ describe('Template Validation Schema', () => {
             const fullTemplate = {
                 ...minimalTemplate,
                 category: 'Category',
-                statisticsRules: [],
+                statistics_rules: [],
                 isDraft: false,
             };
 
@@ -102,14 +102,14 @@ describe('Template Validation Schema', () => {
         it('should validate statistics rules structure', () => {
             const templateWithRules = {
                 id: '550e8400-e29b-41d4-a716-446655440007',
-                workspaceId: 'workspace-1',
+                workspace_id: 'workspace-1',
                 name: 'Test',
                 content: 'Content',
                 type: 'normal' as const,
                 timestamp: new Date().toISOString(),
-                statisticsRules: [
+                statistics_rules: [
                     {
-                        fieldId: 'incidentType',
+                        field_id: 'incidentType',
                         condition: 'theft',
                         category: '01 - Robos',
                     },
@@ -145,7 +145,7 @@ describe('Template Validation Schema', () => {
 
             const validId = {
                 id: '550e8400-e29b-41d4-a716-446655440000',
-                workspaceId: 'workspace-1',
+                workspace_id: 'workspace-1',
                 name: 'Test',
                 content: 'Content',
                 type: 'normal' as const,
@@ -193,7 +193,7 @@ describe('Template Validation Schema', () => {
         it('should validate a typical incident report template', () => {
             const incidentTemplate = {
                 id: '550e8400-e29b-41d4-a716-446655440008',
-                workspaceId: 'workspace-1',
+                workspace_id: 'workspace-1',
                 name: 'Reporte de Incidente',
                 content: `REPORTE DE INCIDENTE
                 
@@ -209,19 +209,19 @@ Descripción: {descripcion:textarea:full:req}`,
                 type: 'relevante' as const,
                 category: 'Seguridad',
                 timestamp: new Date().toISOString(),
-                statisticsRules: [
+                statistics_rules: [
                     {
-                        fieldId: 'tipo',
+                        field_id: 'tipo',
                         condition: '0',
                         category: '01 - Robos',
                     },
                     {
-                        fieldId: 'tipo',
+                        field_id: 'tipo',
                         condition: '1',
                         category: '02 - Vandalismo',
                     },
                     {
-                        fieldId: 'tipo',
+                        field_id: 'tipo',
                         condition: '2',
                         category: '03 - Accidentes',
                     },
@@ -235,7 +235,7 @@ Descripción: {descripcion:textarea:full:req}`,
         it('should validate a simple note template', () => {
             const noteTemplate = {
                 id: '550e8400-e29b-41d4-a716-446655440009',
-                workspaceId: 'workspace-1',
+                workspace_id: 'workspace-1',
                 name: 'Nota Simple',
                 content: 'Nota: {nota:textarea}',
                 type: 'normal' as const,
@@ -253,7 +253,7 @@ describe('Zod Validation Integration', () => {
         // This test demonstrates TypeScript integration
         const validTemplate = {
             id: '550e8400-e29b-41d4-a716-446655440010',
-            workspaceId: 'workspace-1',
+            workspace_id: 'workspace-1',
             name: 'Test',
             content: 'Content',
             type: 'normal' as const,
@@ -294,3 +294,5 @@ describe('Zod Validation Integration', () => {
         }
     });
 });
+
+

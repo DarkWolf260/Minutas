@@ -10,7 +10,7 @@ import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
 import { RxDBMigrationSchemaPlugin } from 'rxdb/plugins/migration-schema';
 import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
 
-const DB_NAME = 'central_minutas_main';
+const DB_NAME = 'minutas';
 
 /**
  * Internal state tracking to prevent multiple initialization attempts.
@@ -32,6 +32,9 @@ import {
   ReportDraft,
   PersonnelAssignment,
 } from '@/lib/types';
+
+import { stableStringify, areEqual } from '../utils-pure';
+export { stableStringify };
 
 import {
   personnelSchema,
@@ -57,7 +60,7 @@ export type TemplatesCollection = RxCollection<Template>;
 // Consolidated Types
 export type LookupItem = {
   id: string; // type:originalId
-  workspaceId: string;
+  workspace_id: string;
   type: 'role' | 'department' | 'address';
   name?: string;
   data: any;
@@ -65,18 +68,18 @@ export type LookupItem = {
 
 export type ConfigItem = {
   id: string; // type:originalId or just 'settings'
-  workspaceId: string;
-  type: 'settings' | 'unit' | 'field_definition' | 'template_config' | 'guard' | 'draft' | 'profile';
+  workspace_id: string;
+  type: 'settings' | 'unit' | 'field_definition' | 'template_config' | 'guard' | 'draft' | 'profile' | 'orden_del_dia';
   name?: string;
   data: any;
 };
 
 export type HistoryItem = {
   id: string;
-  workspaceId: string;
+  workspace_id: string;
   type: 'guard_history' | 'attendance' | 'assignment_history';
   date: string;
-  personnelId: string;
+  personnel_id: string;
   data: any;
 };
 
@@ -86,7 +89,7 @@ export type HistoryCollection = RxCollection<HistoryItem>;
 
 export type NotificationItem = {
   id: string;
-  workspaceId: string;
+  workspace_id: string;
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
@@ -149,8 +152,8 @@ const getStorage = () => {
   if (!state.storage) {
     // IMPORTANT: For ignoreDuplicate: true to work, we MUST use the exact same storage instance
     // on subsequent calls. Reference: https://rxdb.info/rx-database.html#ignoreduplicate
-    state.storage = wrappedValidateAjvStorage({ 
-      storage: getRxStorageDexie() 
+    state.storage = wrappedValidateAjvStorage({
+      storage: getRxStorageDexie()
     });
   }
   return state.storage;
@@ -159,7 +162,7 @@ const getStorage = () => {
 const ensureDevMode = async () => {
   const state = getInternalState();
   if (state.isDevModePluginAdded) return;
-  
+
   if (import.meta.env.DEV) {
     try {
       const { RxDBDevModePlugin } = await import('rxdb/plugins/dev-mode');
@@ -171,36 +174,36 @@ const ensureDevMode = async () => {
   }
 };
 
-const createDatabase = async (): Promise<MinutasDatabase> => {
+const created_atabase = async (): Promise<MinutasDatabase> => {
   const name = DB_NAME;
   const state = getInternalState();
-  
+
   // 1. Immediate check
   const existing = state.allDatabases.get(name);
   if (existing && !existing.destroyed) {
     logger.info(`Returning existing database instance (Pre-init check): [${name}]`);
     return existing;
   }
-  
+
   await ensureDevMode();
-  
+
   // 2. Double-check after any potential async/await context switch
   const existingAfterDev = state.allDatabases.get(name);
   if (existingAfterDev && !existingAfterDev.destroyed) {
     logger.info(`Returning existing database instance (Post-dev check): [${name}]`);
     return existingAfterDev;
   }
-  
+
   logger.info(`Creating central database instance: [${name}]`);
   let database: MinutasDatabase;
-  
+
   try {
     database = await createRxDatabase<MinutasDatabaseCollections>({
       name: name,
       storage: getStorage(),
       ignoreDuplicate: import.meta.env.DEV,
     });
-    
+
     // 3. Register IMMEDIATELY in the global tracking
     state.allDatabases.set(name, database);
   } catch (err: any) {
@@ -213,74 +216,114 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
     });
     throw err;
   }
-  
+
   logger.info(`Central database [${name}] initialized successfully.`);
 
   try {
+    const getLogicalState = (obj: any) => {
+      if (!obj) return null;
+      const raw = obj.toJSON ? obj.toJSON() : obj;
+      
+      const recursiveClean = (item: any): any => {
+        if (item === null || item === undefined) return undefined;
+        if (Array.isArray(item)) return item.map(recursiveClean).filter(v => v !== undefined);
+        if (typeof item === 'object') {
+          const cleaned: any = {};
+          Object.keys(item).forEach(k => {
+            // Skip metadata
+            if (['_rev', '_meta', '_deleted', 'modified', '_modified', 'updated_at', 'created_at'].includes(k)) return;
+            
+            let val = item[k];
+            // Normalize JSON strings
+            if (typeof val === 'string' && (k === 'data' || k === 'form_data' || k === 'statistics_rules' || k === 'statistics_sub_categories')) {
+              try { val = JSON.parse(val); } catch (e) {}
+            }
+            
+            const cleanedVal = recursiveClean(val);
+            if (cleanedVal !== undefined) cleaned[k] = cleanedVal;
+          });
+          return Object.keys(cleaned).length > 0 ? cleaned : {};
+        }
+        return item;
+      };
+
+      return recursiveClean(raw);
+    };
+
+    const ensureParsed = (obj: any) => {
+      if (!obj) return obj;
+      const result = { ...obj };
+      const jsonFields = ['data', 'form_data', 'statistics_rules', 'statistics_sub_categories'];
+      jsonFields.forEach(key => {
+        if (typeof result[key] === 'string') {
+          try {
+            const parsed = JSON.parse(result[key]);
+            if (parsed && typeof parsed === 'object') result[key] = parsed;
+          } catch (e) {}
+        }
+      });
+      return result;
+    };
+
+    const commonConflictHandler = {
+      isEqual: (a: any, b: any) => {
+        const stateA = getLogicalState(a);
+        const stateB = getLogicalState(b);
+        return stableStringify(stateA) === stableStringify(stateB);
+      },
+      resolve: (i: any) => {
+        const master = i.realMasterState;
+        const local = i.newDocumentState;
+
+        if (import.meta.env.DEV) {
+          console.log(`[Conflict] Resolving for ${master?.id}`, { master, local });
+        }
+
+        if (areEqual(getLogicalState(master), getLogicalState(local))) {
+          return Promise.resolve(ensureParsed(i.realMasterState));
+        }
+
+        // AGGRESSIVE LOCAL WINS
+        // We take everything from local, but we MUST keep the cloud's 'modified'
+        // timestamp exactly as it came to pass the optimistic lock check.
+        const resolved = {
+          ...local,
+          modified: master?.modified || local?.modified || null
+        };
+
+        return Promise.resolve(ensureParsed(resolved));
+      }
+    };
+
+
+
     const collectionsConfig: Record<string, any> = {
-      personnel: { 
+      personnel: {
         schema: personnelSchema,
-        migrationStrategies: {
-          1: (oldData: any) => oldData,
-          2: (oldData: any) => ({
-            ...oldData,
-            order: oldData.order ?? 0
-          })
-        }
+        conflictHandler: commonConflictHandler,
       },
-      reports: { 
-        schema: reportsSchema
+      reports: {
+        schema: reportsSchema,
+        conflictHandler: commonConflictHandler,
       },
-      templates: { 
+      templates: {
         schema: templatesSchema,
-        migrationStrategies: {
-          1: (oldData: any) => {
-            const rules = (oldData.statisticsRules || []).map((rule: any) => ({
-              fieldId: rule.fieldId,
-              operator: rule.operator || '=',
-              condition: rule.condition || rule.value || '',
-              category: rule.category
-            }));
-            return {
-              ...oldData,
-              statisticsSubCategories: oldData.statisticsSubCategories || [],
-              statisticsRules: rules
-            };
-          },
-          2: (oldData: any) => {
-            return {
-              ...oldData,
-              statisticsSubCategories: oldData.statisticsSubCategories || [],
-              statisticsRules: oldData.statisticsRules || []
-            };
-          },
-          3: (oldData: any) => {
-            return {
-              ...oldData,
-              statisticsRules: (oldData.statisticsRules || []).map((rule: any) => {
-                if (!rule) return rule;
-                return {
-                  ...rule,
-                  conditions: rule.conditions || [],
-                  orConditions: rule.orConditions || []
-                };
-              })
-            };
-          },
-          4: (oldData: any) => oldData
-        }
+        conflictHandler: commonConflictHandler,
       },
-      lookups: { 
-        schema: lookupsSchema
+      lookups: {
+        schema: lookupsSchema,
+        conflictHandler: commonConflictHandler,
       },
-      configs: { 
-        schema: configsSchema
+      configs: {
+        schema: configsSchema,
+        conflictHandler: commonConflictHandler,
       },
-      history: { 
-        schema: historySchema
+      history: {
+        schema: historySchema,
+        conflictHandler: commonConflictHandler,
       },
       notifications: {
-        schema: notificationsSchema
+        schema: notificationsSchema,
       },
     };
 
@@ -297,7 +340,16 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
         throw colErr;
       }
     }
-    
+
+    // Ensure modified is never undefined in the local database
+    Object.values(database.collections).forEach(col => {
+      col.postCreate((docData: any, rxDoc: any) => {
+        if (docData.modified === undefined) {
+          rxDoc.incrementalPatch({ modified: null });
+        }
+      });
+    });
+
   } catch (err: any) {
     const rxErr = err as any;
     logger.error(`Failed to initialize collections for database [${name}]. Cleaning up...`, {
@@ -322,7 +374,7 @@ const safeDestroy = async (db: any, name: string) => {
     return;
   }
   const state = getInternalState();
-  
+
   try {
     if (typeof db.destroy === 'function') {
       logger.info(`Destroying database [${name}] to free up collection slots...`);
@@ -345,7 +397,7 @@ export const getDatabase = async (workspaceName: string = 'minutasdb'): Promise<
   const dbName = DB_NAME;
 
   // Use a promise chain that catches errors to prevent the entire chain from breaking
-  state.dbPromiseChain = state.dbPromiseChain.catch(() => {}).then(async () => {
+  state.dbPromiseChain = state.dbPromiseChain.catch(() => { }).then(async () => {
     // Check if what we want is already active
     if (state.activeDatabase && !(state.activeDatabase as any).destroyed) {
       return state.activeDatabase;
@@ -358,17 +410,17 @@ export const getDatabase = async (workspaceName: string = 'minutasdb'): Promise<
         await safeDestroy(dbInstance, name);
       }
     }
-    
+
     // Safety delay to allow internal RxDB collection registry to update
     await new Promise(resolve => setTimeout(resolve, 50));
-    
+
     // Explicitly reset active state
     state.activeDatabase = null;
     state.activeDatabaseName = null;
 
     // Initialize the central database
     try {
-      const db = await createDatabase();
+      const db = await created_atabase();
       state.activeDatabase = db;
       state.activeDatabaseName = dbName;
       return db;
@@ -386,7 +438,7 @@ export const getDatabase = async (workspaceName: string = 'minutasdb'): Promise<
  */
 export const closeDatabase = async () => {
   const state = getInternalState();
-  state.dbPromiseChain = state.dbPromiseChain.catch(() => {}).then(async () => {
+  state.dbPromiseChain = state.dbPromiseChain.catch(() => { }).then(async () => {
     const trackedDbs = Array.from(state.allDatabases.entries());
     for (const [dbName, dbInstance] of (trackedDbs as any)) {
       await safeDestroy(dbInstance, dbName);

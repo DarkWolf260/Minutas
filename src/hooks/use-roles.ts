@@ -13,7 +13,7 @@ import { createLookupRepository } from '@/lib/repositories';
 
 export function useRoles() {
   const db = useDatabase();
-  const { currentWorkspace } = useWorkspaceManager();
+  const { currentWorkspace, isCloud } = useWorkspaceManager();
   const [roles, setRoles] = useState<StaffRole[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -21,54 +21,59 @@ export function useRoles() {
     if (!db || !currentWorkspace) return;
     let initializedFlag = false;
 
-    const repo = createLookupRepository(db, currentWorkspace);
+    const repo = createLookupRepository(db, currentWorkspace, isCloud);
 
     const sub = repo.watchRoles().subscribe(async (data) => {
       if (data.length > 0) {
         setRoles(
-          data.map((d) => {
-            const json = d.toJSON();
-            return { ...(json.data as StaffRole), workspaceId: currentWorkspace };
+          data.map((item: any) => {
+            // Handle cases where Supabase might return data as a stringified JSON
+            const rawData = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+            return { ...(rawData as StaffRole), workspace_id: currentWorkspace };
           }) as StaffRole[]
         );
         initializedFlag = true;
         setIsLoaded(true);
-      } else if (!initializedFlag) {
+      } else if (!initializedFlag && data.length === 0) { // Seed if empty, even in cloud mode
         initializedFlag = true;
-        try {
-          await repo.bulkInitRoles(DEFAULT_ROLES);
-        } catch (err) {
-          logger.error('Failed to auto-seed default roles', err, {
-            feature: 'Roles',
-            workspaceId: currentWorkspace,
-          });
-          setIsLoaded(true);
-        }
-      } else {
+        setRoles(DEFAULT_ROLES as StaffRole[]);
+        setIsLoaded(true);
+      } else if (!isCloud) {
         setRoles([]);
         setIsLoaded(true);
       }
     });
 
     return () => sub.unsubscribe();
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
+
+  // Fallback for cloud mode: if no data arrives in 2s, assume empty and stop loading
+  useEffect(() => {
+    if (isCloud && !isLoaded) {
+      const timer = setTimeout(() => {
+        setIsLoaded(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isCloud, isLoaded]);
 
   const saveRoles = useCallback(
     async (newRoles: StaffRole[]) => {
       if (!db || !currentWorkspace) return;
       // Optimistic update
       setRoles(newRoles);
-      const repo = createLookupRepository(db, currentWorkspace);
+      const repo = createLookupRepository(db, currentWorkspace, isCloud);
       await repo.saveRoles(newRoles);
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, isCloud]
   );
 
   const clearAllRoles = useCallback(async () => {
     if (!db || !currentWorkspace) return;
-    const repo = createLookupRepository(db, currentWorkspace);
+    const repo = createLookupRepository(db, currentWorkspace, isCloud);
     await repo.clearAllRoles(DEFAULT_ROLES);
-  }, [db, currentWorkspace]);
+  }, [db, currentWorkspace, isCloud]);
 
   return { roles, saveRoles, isLoaded, clearAllRoles };
 }
+

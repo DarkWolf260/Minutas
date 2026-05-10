@@ -13,6 +13,7 @@ export default function WorkspacesPage() {
   const {
     currentWorkspace,
     workspaces,
+    cloudWorkspaces,
     switchWorkspace,
     deleteWorkspace,
     createWorkspace,
@@ -45,16 +46,20 @@ export default function WorkspacesPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4">
-              {workspaces.map((workspace: string) => (
-                <WorkspaceItem
-                  key={workspace}
-                  name={workspace}
-                  isActive={currentWorkspace === workspace}
-                  onSwitch={() => switchWorkspace(workspace)}
-                  onExport={() => exportWorkspace(workspace)}
-                  onDelete={() => handleDelete(workspace)}
-                />
-              ))}
+              {workspaces.map((workspace: string) => {
+                const cloudInfo = cloudWorkspaces?.find((cw: any) => cw.id === workspace);
+                return (
+                  <WorkspaceItem
+                    key={workspace}
+                    name={workspace}
+                    isActive={currentWorkspace === workspace}
+                    onSwitch={() => switchWorkspace(workspace)}
+                    onExport={() => exportWorkspace(workspace)}
+                    onDelete={() => handleDelete(workspace)}
+                    cloudInfo={cloudInfo}
+                  />
+                );
+              })}
             </div>
 
             {/* Controles de Acción (SRP) */}

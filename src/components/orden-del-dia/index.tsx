@@ -98,14 +98,14 @@ function SeccionDistribucionPersonal({ hook }: { hook: any }) {
         <ScrollArea className="flex-1 p-4 pt-0" type="always">
           <div className="grid grid-cols-1 gap-4">
             {roles
-              .filter((r: StaffRole) => !r.isHidden)
-              .sort((a: StaffRole, b: StaffRole) => (a.hierarchyOrder ?? a.order ?? 0) - (b.hierarchyOrder ?? b.order ?? 0))
+              .filter((r: StaffRole) => !r.is_hidden)
+              .sort((a: StaffRole, b: StaffRole) => (a.hierarchy_order ?? a.order ?? 0) - (b.hierarchy_order ?? b.order ?? 0))
               .map((role: StaffRole) => (
               <div key={role.name} className="space-y-3">
                 <StaffListEditor
                   label={role.name}
                   staffMembers={personalAsignado[role.name] || []}
-                  isSingle={role.isSingle}
+                  is_single={role.is_single}
                   onUpdate={(members: StaffMember[]) => manejarUpdatePersonalRol(role.name, members)}
                   showObservations={true}
                 />
@@ -232,3 +232,4 @@ function SeccionNotasAdm({ hook }: { hook: any }) {
     </Card>
   );
 }
+

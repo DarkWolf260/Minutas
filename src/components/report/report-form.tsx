@@ -5,7 +5,7 @@ import { FormProvider } from 'react-hook-form';
 import type {
   Template,
   TemplateConfig,
-  FormDataRecord,
+  form_dataRecord,
 } from '@/lib/types';
 import { renderFinalReport } from '@/lib/template-parser';
 import { logger } from '@/lib/logger';
@@ -19,8 +19,8 @@ import { FormLayout } from './form/form-layout';
 export interface ReportFormRef {
   submit: () => void;
   save: () => void;
-  validate: () => Promise<FormDataRecord | null>;
-  getValues: () => FormDataRecord;
+  validate: () => Promise<form_dataRecord | null>;
+  getValues: () => form_dataRecord;
   getRenderedContent: () => string;
 }
 
@@ -28,10 +28,10 @@ export interface ReportFormProps {
   reportId?: string;
   template: Template;
   config: TemplateConfig;
-  initialData?: FormDataRecord;
-  onSubmit: (formData: FormDataRecord, content: string, title: string) => void;
+  initialData?: form_dataRecord;
+  onSubmit: (form_data: form_dataRecord, content: string, title: string) => void;
   disabled?: boolean;
-  onDataChange?: (formData: FormDataRecord) => void;
+  onDataChange?: (form_data: form_dataRecord) => void;
   controlledValues?: Record<string, string>;
 }
 
@@ -65,7 +65,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
 
     const { handleSubmit } = methods;
 
-    const handleFormSubmit = (data: FormDataRecord) => {
+    const handleFormSubmit = (data: form_dataRecord) => {
       const finalContent = renderFinalReport(template.content, data, finalConfig, predefinedValues);
       const title = String(data.titulo || data.title || template.name);
       onSubmit(data, finalContent, title);
@@ -104,18 +104,18 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
               return null;
             }
           }
-          return values as FormDataRecord;
+          return values as form_dataRecord;
         }
         return null;
       },
       getValues: getValues,
       getRenderedContent: () => {
-        const formData = getValues();
+        const form_data = getValues();
         const dynamicPredefinedValues = {
           ...controlledValues,
           Enc: settings.ordenDelDiaDraft?.esJefeEncargado ? '(E)' : ''
         };
-        return renderFinalReport(template.content, formData, finalConfig, predefinedValues, false, dynamicPredefinedValues);
+        return renderFinalReport(template.content, form_data, finalConfig, predefinedValues, false, dynamicPredefinedValues);
       },
     }));
 
@@ -157,3 +157,4 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
 );
 
 ReportForm.displayName = 'ReportForm';
+

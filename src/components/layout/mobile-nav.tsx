@@ -7,12 +7,12 @@ import { NavBrand } from './mobile-nav/nav-brand';
 import { NavUserMenu } from './mobile-nav/nav-user-menu';
 
 export function MobileNav() {
-  const { 
-    profile, 
-    analyst, 
-    displayName, 
-    displayDepartment, 
-    initials 
+  const {
+    profile,
+    analyst,
+    displayName,
+    displayDepartment,
+    initials
   } = useMobileNav();
 
   return (
@@ -23,14 +23,14 @@ export function MobileNav() {
       <div className="flex items-center gap-2">
         {/* Notificaciones */}
         <NotificationBell />
-        
+
         {/* Menú de Usuario (SRP) */}
-        <NavUserMenu 
-          profile={profile} 
-          analyst={analyst} 
-          displayName={displayName} 
-          displayDepartment={displayDepartment} 
-          initials={initials} 
+        <NavUserMenu
+          profile={profile}
+          analyst={analyst}
+          displayName={displayName}
+          displayDepartment={displayDepartment}
+          initials={initials}
         />
       </div>
     </header>

@@ -203,9 +203,9 @@ function extractSectionToken(
     }
 
     // Capture optional * after ] for repeatable sections: [Label]*
-    let isRepeatable = false;
+    let is_repeatable = false;
     if (template[pos] === '*' && !content.trim().startsWith('?')) {
-        isRepeatable = true;
+        is_repeatable = true;
         pos++; // include the * in the token
     }
 
@@ -214,11 +214,11 @@ function extractSectionToken(
 
     // Check if this is a conditional: [?{Field} op value] or [?{Field}] or [?Field op value] or [?Field]
     // Also support optional :show/:hide suffix: [?Field=Value:show]
-    let conditionMode: 'show' | 'hide' | undefined = undefined;
+    let condition_mode: 'show' | 'hide' | undefined = undefined;
     let condContent = content;
     const showHideMatch = content.match(/:(show|hide)\s*$/i);
     if (showHideMatch) {
-        conditionMode = showHideMatch[1]!.toLowerCase() as 'show' | 'hide';
+        condition_mode = showHideMatch[1]!.toLowerCase() as 'show' | 'hide';
         condContent = content.slice(0, content.lastIndexOf(':' + showHideMatch[1]!)).trim();
     }
 
@@ -227,17 +227,17 @@ function extractSectionToken(
     );
 
     if (conditionalMatch) {
-        const [, fieldId, operator, value] = conditionalMatch;
+        const [, field_id, operator, value] = conditionalMatch;
         const cleanValue = value?.trim().replace(/^"|"$/g, '') || '';
 
         return {
             type: 'section_start',
             label: undefined,
             condition: {
-                fieldId: fieldId?.trim() || '',
+                field_id: field_id?.trim() || '',
                 operator: (operator as ConditionalExpression['operator']) || '=',
                 value: cleanValue,
-                conditionMode,
+                condition_mode,
             },
             raw,
             position: startPos,
@@ -253,12 +253,13 @@ function extractSectionToken(
         type: 'section_start',
         label: label || undefined,
         condition: undefined,
-        isRepeatable,
+        is_repeatable,
         raw,
         position: startPos,
         endPos: pos,
     };
 }
+
 
 
 

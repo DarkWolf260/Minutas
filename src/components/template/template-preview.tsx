@@ -27,8 +27,8 @@ function generateMockData(
   // so the content appears in the rendered preview
   sections.forEach((section) => {
     if (section.condition && section.condition.conditionMode === 'show') {
-      const { fieldId, value } = section.condition;
-      data[fieldId] = value;
+      const { field_id, value } = section.condition;
+      data[field_id] = value;
     }
   });
 
@@ -68,12 +68,12 @@ function generateMockData(
   sections.forEach((section) => {
     if (section.isRepeatable) {
       const itemData: Record<string, string> = {};
-      section.fieldIds.forEach((fieldId: string) => {
-        const fieldType = fieldTypes.get(fieldId);
+      section.field_ids.forEach((field_id: string) => {
+        const fieldType = fieldTypes.get(field_id);
         switch (fieldType) {
           case 'text':
           default:
-            itemData[fieldId] = `Dato ${fieldId}`;
+            itemData[field_id] = `Dato ${field_id}`;
         }
       });
       data[section.id] = [{ ...itemData }, { ...itemData }];
@@ -89,7 +89,7 @@ export function TemplatePreview({ templateContent }: TemplatePreviewProps) {
       return {
         errors: [],
         rendered: 'Plantilla vacía. Escriba contenido para ver la vista previa.',
-        showSections: [] as { fieldId: string; value: string }[],
+        showSections: [] as { field_id: string; value: string }[],
       };
     }
 
@@ -102,7 +102,7 @@ export function TemplatePreview({ templateContent }: TemplatePreviewProps) {
     // Collect :show conditional sections for the visual indicator
     const showSections = parsed.sections
       .filter(s => s.condition?.conditionMode === 'show')
-      .map(s => ({ fieldId: s.condition!.fieldId, value: s.condition!.value }));
+      .map(s => ({ field_id: s.condition!.field_id, value: s.condition!.value }));
 
     // Build config from parsed data
     const config: TemplateConfig = {
@@ -176,7 +176,7 @@ export function TemplatePreview({ templateContent }: TemplatePreviewProps) {
                 </div>
                 {result.showSections.map((s, i) => (
                   <span key={i} className="text-[11px] text-muted-foreground font-mono">
-                    <span className="text-foreground font-semibold">{s.fieldId}</span>
+                    <span className="text-foreground font-semibold">{s.field_id}</span>
                     {' = '}
                     <span className="text-foreground font-semibold">{s.value}</span>
                   </span>
@@ -193,3 +193,4 @@ export function TemplatePreview({ templateContent }: TemplatePreviewProps) {
     </Card>
   );
 }
+

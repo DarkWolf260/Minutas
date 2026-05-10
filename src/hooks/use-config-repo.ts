@@ -6,10 +6,11 @@ import { createConfigRepository } from '@/lib/repositories';
 
 export function useConfigRepo() {
   const db = useDatabase();
-  const { currentWorkspace } = useWorkspaceManager();
+  const { currentWorkspace, isCloud } = useWorkspaceManager();
 
   return useMemo(() => {
-    if (!db || !currentWorkspace) return null;
-    return createConfigRepository(db, currentWorkspace);
-  }, [db, currentWorkspace]);
+    if (!currentWorkspace) return null;
+    if (!db) return null;
+    return createConfigRepository(db, currentWorkspace, isCloud);
+  }, [db, currentWorkspace, isCloud]);
 }

@@ -12,8 +12,8 @@ import {
     StaffRole,
     StaffMember,
     AppSettings,
-    FormDataRecord,
-    FormDataValue,
+    form_dataRecord,
+    form_dataValue,
 } from '@/lib/types';
 import { evaluateCondition } from '@/lib/template-parser';
 import { FieldRenderer } from './field-renderer';
@@ -21,7 +21,7 @@ import { FieldRenderer } from './field-renderer';
 export interface ReportFormFieldProps {
     path: string;
     control: Control<any>;
-    fieldId: string;
+    field_id: string;
     fieldConfig: any;
     roles: StaffRole[];
     rolesLoaded: boolean;
@@ -29,7 +29,7 @@ export interface ReportFormFieldProps {
     activeGuardStaff: StaffMember[];
     setValue: (
         name: string,
-        value: FormDataValue,
+        value: form_dataValue,
         options?: { shouldValidate?: boolean; shouldDirty?: boolean }
     ) => void;
     settings: AppSettings | null;
@@ -39,7 +39,7 @@ export interface ReportFormFieldProps {
 export function ReportFormField({
     path,
     control,
-    fieldId,
+    field_id,
     fieldConfig,
     roles,
     rolesLoaded,
@@ -49,17 +49,20 @@ export function ReportFormField({
     settings,
     disabled
 }: ReportFormFieldProps) {
+    const currentEstatus = useWatch({ control, name: 'Estatus' });
+    const isFinalizado = currentEstatus === 'Finalizado';
+
     return (
         <Controller
             name={path}
             control={control}
             rules={{
-                required: fieldConfig.required ? 'Este campo es obligatorio' : false,
+                required: (isFinalizado && fieldConfig.required) ? 'Este campo es obligatorio' : false,
             }}
             render={({ field, fieldState: { error } }) => (
                 <div className="flex flex-col gap-1 w-full">
                     <FieldRenderer
-                        fieldId={fieldId}
+                        field_id={field_id}
                         fieldConfig={fieldConfig}
                         roles={roles}
                         rolesLoaded={rolesLoaded}
@@ -95,18 +98,18 @@ export interface SectionRendererProps {
     roles: StaffRole[];
     rolesLoaded: boolean;
     activeGuardStaff: StaffMember[];
-    predefinedValues: FormDataRecord;
+    predefinedValues: form_dataRecord;
     units: string[];
     setValue: (
         name: string,
-        value: FormDataValue,
+        value: form_dataValue,
         options?: { shouldValidate?: boolean; shouldDirty?: boolean }
     ) => void;
     settings: AppSettings | null;
     isNested?: boolean;
     pathPrefix?: string;
     /** If provided, this value is used directly for condition evaluation instead of internal useWatch */
-    conditionValue?: FormDataValue;
+    conditionValue?: form_dataValue;
     wrapperClassName?: string;
 }
 
@@ -117,18 +120,18 @@ export function SectionRenderer(props: SectionRendererProps) {
 
     // For dotted condition field IDs like "Director.sex", we need to watch
     // the BASE field ("Director") and derive the property at evaluation time.
-    const isDottedCondition = condition ? condition.fieldId.includes('.') : false;
-    const baseConditionFieldId = isDottedCondition && condition
-        ? condition.fieldId.slice(0, condition.fieldId.indexOf('.'))
-        : condition?.fieldId;
+    const isDottedCondition = condition ? condition.field_id.includes('.') : false;
+    const baseConditionfield_id = isDottedCondition && condition
+        ? condition.field_id.slice(0, condition.field_id.indexOf('.'))
+        : condition?.field_id;
     const conditionProp = isDottedCondition && condition
-        ? condition.fieldId.slice(condition.fieldId.indexOf('.') + 1)
+        ? condition.field_id.slice(condition.field_id.indexOf('.') + 1)
         : null;
 
     const watchPath = condition
         ? pathPrefix
-            ? `${pathPrefix}.${baseConditionFieldId}`
-            : (baseConditionFieldId ?? 'dummy_no_condition')
+            ? `${pathPrefix}.${baseConditionfield_id}`
+            : (baseConditionfield_id ?? 'dummy_no_condition')
         : 'dummy_no_condition';
 
     // By not passing a 'control' prop, useWatch automatically attempts to find 
@@ -146,7 +149,7 @@ export function SectionRenderer(props: SectionRendererProps) {
         if (Array.isArray(resolvedWatchValue) && resolvedWatchValue.length > 0) {
             const first = resolvedWatchValue[0];
             if (first && typeof first === 'object') {
-                resolvedWatchValue = (first as Record<string, unknown>)[conditionProp] as FormDataValue ?? undefined;
+                resolvedWatchValue = (first as Record<string, unknown>)[conditionProp] as form_dataValue ?? undefined;
             } else {
                 resolvedWatchValue = undefined;
             }
@@ -163,8 +166,8 @@ export function SectionRenderer(props: SectionRendererProps) {
         // against the value or the label. 'actualValueToEvaluate' might be the label.
 
         // Find fieldConfig case-insensitively since template allows `{Campo}` and `{campo}` interchangeably
-        const fieldConfigKey = Object.keys(config.fields).find(k => k.toLowerCase() === condition.fieldId.toLowerCase());
-        const fieldConfig = fieldConfigKey ? config.fields[fieldConfigKey] : config.fields[condition.fieldId];
+        const fieldConfigKey = Object.keys(config.fields).find(k => k.toLowerCase() === condition.field_id.toLowerCase());
+        const fieldConfig = fieldConfigKey ? config.fields[fieldConfigKey] : config.fields[condition.field_id];
 
         if (fieldConfig?.snippetOptions?.length) {
             const options = fieldConfig.snippetOptions;
@@ -222,7 +225,7 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
         ? `${pathPrefix}.${section.id}`
         : section.id;
 
-    const layoutItems = section.layout && section.layout.length > 0 ? section.layout : section.fieldIds;
+    const layoutItems = section.layout && section.layout.length > 0 ? section.layout : section.field_ids;
     if (layoutItems.length === 0 && !section.label && !section.isSeparator) {
         return null;
     }
@@ -234,29 +237,29 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
 
     const defaultItem = useMemo(
         () =>
-            section.fieldIds.reduce(
-                (acc: FormDataRecord, fieldId: string) => ({
+            section.field_ids.reduce(
+                (acc: form_dataRecord, field_id: string) => ({
                     ...acc,
-                    [fieldId]: predefinedValues.hasOwnProperty(fieldId)
-                        ? JSON.parse(JSON.stringify(predefinedValues[fieldId]))
+                    [field_id]: predefinedValues.hasOwnProperty(field_id)
+                        ? JSON.parse(JSON.stringify(predefinedValues[field_id]))
                         : '',
                 }),
                 {}
             ),
-        [section.fieldIds, predefinedValues]
+        [section.field_ids, predefinedValues]
     );
 
     // Simplified UI for single-field repeatable sections
-    if (section.fieldIds.length === 1) {
-        const fieldId = section.fieldIds[0];
-        if (!fieldId) return null;
-        const fieldConfig = (config.fields || {})[fieldId];
+    if (section.field_ids.length === 1) {
+        const field_id = section.field_ids[0];
+        if (!field_id) return null;
+        const fieldConfig = (config.fields || {})[field_id];
         if (!fieldConfig) return null;
 
         const isFullWidth =
             fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
 
-        const defaultSingleFieldItem: FormDataRecord = { [fieldId]: '' };
+        const defaultSingleFieldItem: form_dataRecord = { [field_id]: '' };
 
         return (
             <div
@@ -288,9 +291,9 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                         <div key={item.id} className="flex items-center gap-2">
                             <div className="flex-1">
                                 <ReportFormField
-                                    path={`${fieldNamePrefix}.${index}.${fieldId}`}
+                                    path={`${fieldNamePrefix}.${index}.${field_id}`}
                                     control={control}
-                                    fieldId={fieldId}
+                                    field_id={field_id}
                                     fieldConfig={fieldConfig}
                                     roles={roles}
                                     rolesLoaded={rolesLoaded}
@@ -328,7 +331,7 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
         );
     }
 
-    const isFullWidth = section.fieldIds.some((fid: string) => {
+    const isFullWidth = section.field_ids.some((fid: string) => {
         const fc = config.fields[fid];
         return fc?.type === 'textarea' || fc?.isFullWidth;
     });
@@ -373,22 +376,22 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                             )}
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
-                            {(section.layout && section.layout.length > 0 ? section.layout : section.fieldIds).map(
-                                (fieldId: string, fIdx: number) => {
+                            {(section.layout && section.layout.length > 0 ? section.layout : section.field_ids).map(
+                                (field_id: string, fIdx: number) => {
                                     if (
-                                        fieldId.startsWith('section_') ||
-                                        fieldId.startsWith('sec_') ||
-                                        fieldId.startsWith('cond_')
+                                        field_id.startsWith('section_') ||
+                                        field_id.startsWith('sec_') ||
+                                        field_id.startsWith('cond_')
                                     ) {
                                         // This is a nested section, render it.
                                         const nestedSection = config.sections.find(
-                                            (s: SectionConfig) => s.id === fieldId
+                                            (s: SectionConfig) => s.id === field_id
                                         );
                                         if (!nestedSection) return null;
 
                                         return (
                                             <div
-                                                key={`${fieldId}-${fIdx}`}
+                                                key={`${field_id}-${fIdx}`}
                                                 className="sm:col-span-2 3xl:col-span-3"
                                             >
                                                 <SectionRenderer
@@ -411,28 +414,28 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                                     }
 
                                     // Skip derived property fields (e.g. "Director.sex")
-                                    if (fieldId.includes('.')) return null;
+                                    if (field_id.includes('.')) return null;
 
                                     // Skip system/dynamic fields (enc, pie, usuario, estatus)
                                     const SYSTEM_TAGS = new Set(['enc', 'pie', 'usuario', 'estatus']);
-                                    if (SYSTEM_TAGS.has(fieldId.toLowerCase())) return null;
+                                    if (SYSTEM_TAGS.has(field_id.toLowerCase())) return null;
 
-                                    const fieldConfig = (config.fields || {})[fieldId];
+                                    const fieldConfig = (config.fields || {})[field_id];
                                     if (!fieldConfig) return null;
                                     const isFullWidth =
                                         fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
-                                    const path = `${fieldNamePrefix}.${index}.${fieldId}`;
+                                    const path = `${fieldNamePrefix}.${index}.${field_id}`;
 
                                     return (
                                         <div
-                                            key={fieldId}
+                                            key={field_id}
                                             className={cn(
                                                 'space-y-2',
                                                 isFullWidth && 'sm:col-span-2'
                                             )}
                                         >
                                             <Label htmlFor={path}>
-                                                {fieldConfig?.label || fieldId}
+                                                {fieldConfig?.label || field_id}
                                                 {fieldConfig.required && (
                                                     <span className="text-destructive ml-1">*</span>
                                                 )}
@@ -440,7 +443,7 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                                             <ReportFormField
                                                 path={path}
                                                 control={control}
-                                                fieldId={fieldId}
+                                                field_id={field_id}
                                                 fieldConfig={fieldConfig}
                                                 roles={roles}
                                                 rolesLoaded={rolesLoaded}
@@ -492,12 +495,12 @@ function SingleSectionRenderer(props: SectionRendererProps) {
 
     const fieldNamePrefix = pathPrefix;
 
-    const layoutItems = section.layout && section.layout.length > 0 ? section.layout : section.fieldIds;
+    const layoutItems = section.layout && section.layout.length > 0 ? section.layout : section.field_ids;
     if (layoutItems.length === 0 && !section.label && !section.isSeparator) {
         return null;
     }
 
-    if (section.fieldIds.length === 0 && section.label) {
+    if (section.field_ids.length === 0 && section.label) {
         return (
             <div className={cn(!isNested && 'pt-4', props.wrapperClassName)}>
                 <h3 className="text-lg font-semibold">{section.label}</h3>
@@ -522,18 +525,18 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                 {layoutItems
                     .filter((fid: string) => !fid.includes('.'))
                     .filter((fid: string) => !['enc', 'pie', 'usuario', 'estatus'].includes(fid.toLowerCase()))
-                    .map((fieldId: string, fIdx: number) => {
-                        const fieldConfig = (config.fields || {})[fieldId];
+                    .map((field_id: string, fIdx: number) => {
+                        const fieldConfig = (config.fields || {})[field_id];
                         if (!fieldConfig) return null;
                         const isFullWidth = fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
-                        const path = fieldNamePrefix ? `${fieldNamePrefix}.${fieldId}` : fieldId;
+                        const path = fieldNamePrefix ? `${fieldNamePrefix}.${field_id}` : field_id;
                         return (
                             <div
-                                key={`${fieldId}-${fIdx}`}
+                                key={`${field_id}-${fIdx}`}
                                 className={cn('space-y-2', isFullWidth && 'sm:col-span-2 3xl:col-span-3')}
                             >
                                 <Label htmlFor={path}>
-                                    {fieldConfig?.label || fieldId}
+                                    {fieldConfig?.label || field_id}
                                     {fieldConfig.required && (
                                         <span className="text-destructive ml-1">*</span>
                                     )}
@@ -541,7 +544,7 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                                 <ReportFormField
                                     path={path}
                                     control={control}
-                                    fieldId={fieldId}
+                                    field_id={field_id}
                                     fieldConfig={fieldConfig}
                                     roles={roles}
                                     rolesLoaded={rolesLoaded}
@@ -564,16 +567,16 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                 <h3 className="text-lg font-semibold">{section.label}</h3>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 3xl:grid-cols-3 gap-x-4 gap-y-6">
-                {(section.layout && section.layout.length > 0 ? section.layout : section.fieldIds).map(
-                    (fieldId: string, fIdx: number) => {
+                {(section.layout && section.layout.length > 0 ? section.layout : section.field_ids).map(
+                    (field_id: string, fIdx: number) => {
                         if (
-                            fieldId.startsWith('section_') ||
-                            fieldId.startsWith('sec_') ||
-                            fieldId.startsWith('cond_')
+                            field_id.startsWith('section_') ||
+                            field_id.startsWith('sec_') ||
+                            field_id.startsWith('cond_')
                         ) {
                             // Nested section
                             const nestedSection = config.sections.find(
-                                (s: SectionConfig) => s.id === fieldId
+                                (s: SectionConfig) => s.id === field_id
                             );
                             if (!nestedSection) return null;
                             // Transparent conditionals (no label, with condition) render their
@@ -583,7 +586,7 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                                 !!nestedSection.condition && !nestedSection.label;
                             return (
                                 <SectionRenderer
-                                    key={`${fieldId}-${fIdx}`}
+                                    key={`${field_id}-${fIdx}`}
                                     section={nestedSection}
                                     config={config}
                                     control={control}
@@ -604,28 +607,28 @@ function SingleSectionRenderer(props: SectionRendererProps) {
 
                         // Skip derived property fields (e.g. "Director.sex") —
                         // they are read-only properties resolved at render time, not user form fields.
-                        if (fieldId.includes('.')) return null;
+                        if (field_id.includes('.')) return null;
 
                         // Skip system/dynamic fields (enc, pie, usuario, estatus)
                         const SYSTEM_TAGS = new Set(['enc', 'pie', 'usuario', 'estatus']);
-                        if (SYSTEM_TAGS.has(fieldId.toLowerCase())) return null;
+                        if (SYSTEM_TAGS.has(field_id.toLowerCase())) return null;
 
-                        const fieldConfig = (config.fields || {})[fieldId];
+                        const fieldConfig = (config.fields || {})[field_id];
                         if (!fieldConfig) return null;
                         const isFullWidth =
                             fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
-                        const path = fieldNamePrefix ? `${fieldNamePrefix}.${fieldId}` : fieldId;
+                        const path = fieldNamePrefix ? `${fieldNamePrefix}.${field_id}` : field_id;
 
                         return (
                             <div
-                                key={`${fieldId}-${fIdx}`}
+                                key={`${field_id}-${fIdx}`}
                                 className={cn(
                                     'space-y-2',
                                     isFullWidth && 'sm:col-span-2 3xl:col-span-3'
                                 )}
                             >
                                 <Label htmlFor={path}>
-                                    {fieldConfig?.label || fieldId}
+                                    {fieldConfig?.label || field_id}
                                     {fieldConfig.required && (
                                         <span className="text-destructive ml-1">*</span>
                                     )}
@@ -633,7 +636,7 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                                 <ReportFormField
                                     path={path}
                                     control={control}
-                                    fieldId={fieldId}
+                                    field_id={field_id}
                                     fieldConfig={fieldConfig}
                                     roles={roles}
                                     rolesLoaded={rolesLoaded}
@@ -651,3 +654,5 @@ function SingleSectionRenderer(props: SectionRendererProps) {
         </div>
     );
 }
+
+

@@ -12,12 +12,12 @@ import type { Report, Template, TemplateConfig } from '@/lib/types';
 function createMockReport(overrides: Partial<Report> = {}): Report {
     return {
         id: 'report-1',
-        workspaceId: 'workspace-1',
-        templateId: 'template-1',
+        workspace_id: 'workspace-1',
+        template_id: 'template-1',
         title: 'Test Report',
         content: 'Test content',
-        isRelevant: true,
-        formData: {},
+        is_relevant: true,
+        form_data: {},
         status: 'Finalizado',
         timestamp: new Date(2026, 0, 15, 10, 30).toISOString(), // Jan 15, 2026
         ...overrides,
@@ -27,11 +27,11 @@ function createMockReport(overrides: Partial<Report> = {}): Report {
 function createMockTemplate(overrides: Partial<Template> = {}): Template {
     return {
         id: 'template-1',
-        workspaceId: 'workspace-1',
+        workspace_id: 'workspace-1',
         name: 'Test Template',
         content: '{Field1}',
         type: 'normal',
-        isActive: true,
+        is_active: true,
         ...overrides,
     };
 }
@@ -63,7 +63,7 @@ describe('statistics-utils', () => {
         it('should return default category when no rules match', () => {
             const report = createMockReport();
             const template = createMockTemplate({
-                statisticsCategory: '1.2 LLAMADAS DE EMERGENCIAS',
+                statistics_category: '1.2 LLAMADAS DE EMERGENCIAS',
             });
             const result = obtenerCategoriasReporte(report, template);
             expect(result).toContain('1.2 LLAMADAS DE EMERGENCIAS');
@@ -71,12 +71,12 @@ describe('statistics-utils', () => {
 
         it('should include both default category and matching rules', () => {
             const report = createMockReport({
-                formData: { tipo: 'hurto' },
+                form_data: { tipo: 'hurto' },
             });
             const template = createMockTemplate({
-                statisticsCategory: '5 ATENCIONES AL PÚBLICO',
-                statisticsRules: [
-                    { fieldId: 'tipo', condition: 'hurto', category: '5.1 ATENCIONES PREHOSPITALARIAS' },
+                statistics_category: '5 ATENCIONES AL PÚBLICO',
+                statistics_rules: [
+                    { field_id: 'tipo', condition: 'hurto', category: '5.1 ATENCIONES PREHOSPITALARIAS' },
                 ],
             });
             const result = obtenerCategoriasReporte(report, template);
@@ -86,25 +86,25 @@ describe('statistics-utils', () => {
 
         it('should match conditional rule case-insensitively', () => {
             const report = createMockReport({
-                formData: { tipo: 'HURTO' },
+                form_data: { tipo: 'HURTO' },
             });
             const template = createMockTemplate({
-                statisticsRules: [
-                    { fieldId: 'tipo', condition: 'hurto', category: '1.2 LLAMADAS DE EMERGENCIAS' },
+                statistics_rules: [
+                    { field_id: 'tipo', condition: 'hurto', category: '1.2 LLAMADAS DE EMERGENCIAS' },
                 ],
             });
             const result = obtenerCategoriasReporte(report, template);
             expect(result).toContain('1.2 LLAMADAS DE EMERGENCIAS');
         });
 
-        it('should handle missing formData field gracefully', () => {
+        it('should handle missing form_data field gracefully', () => {
             const report = createMockReport({
-                formData: {},
+                form_data: {},
             });
             const template = createMockTemplate({
-                statisticsCategory: '1 REPORTES DEL VEN 9-1-1',
-                statisticsRules: [
-                    { fieldId: 'nonexistent', condition: 'value', category: '1.2 LLAMADAS DE EMERGENCIAS' },
+                statistics_category: '1 REPORTES DEL VEN 9-1-1',
+                statistics_rules: [
+                    { field_id: 'nonexistent', condition: 'value', category: '1.2 LLAMADAS DE EMERGENCIAS' },
                 ],
             });
             const result = obtenerCategoriasReporte(report, template);
@@ -114,11 +114,11 @@ describe('statistics-utils', () => {
 
         it('should resolve dropdown labels correctly for rules', () => {
             const report = createMockReport({
-                formData: { tipo_aph: 'residencia' },
+                form_data: { tipo_aph: 'residencia' },
             });
             const template = createMockTemplate({
-                statisticsRules: [
-                    { fieldId: 'Tipo de APH', operator: '=', condition: 'Residencia', category: '5.3 EN RESIDENCIA' },
+                statistics_rules: [
+                    { field_id: 'Tipo de APH', operator: '=', condition: 'Residencia', category: '5.3 EN RESIDENCIA' },
                 ],
             });
             const config = createMockConfig({
@@ -126,7 +126,7 @@ describe('statistics-utils', () => {
                     'tipo_aph': { 
                         label: 'Tipo de APH', 
                         type: 'dropdown',
-                        snippetOptions: [
+                        snippet_options: [
                             { id: 'opt-1', value: 'residencia', label: 'Residencia' }
                         ]
                     }
@@ -138,12 +138,12 @@ describe('statistics-utils', () => {
 
         it('should handle multi-value fields correctly', () => {
             const report = createMockReport({
-                formData: { symptoms: ['fever', 'cough'] },
+                form_data: { symptoms: ['fever', 'cough'] },
             });
             const template = createMockTemplate({
-                statisticsRules: [
-                    { fieldId: 'symptoms', operator: '=', condition: 'fever', category: '5.1 ATENCIONES PREHOSPITALARIAS' },
-                    { fieldId: 'symptoms', operator: '=', condition: 'cough', category: '5.2 EN TRASLADOS' },
+                statistics_rules: [
+                    { field_id: 'symptoms', operator: '=', condition: 'fever', category: '5.1 ATENCIONES PREHOSPITALARIAS' },
+                    { field_id: 'symptoms', operator: '=', condition: 'cough', category: '5.2 EN TRASLADOS' },
                 ],
             });
             const result = obtenerCategoriasReporte(report, template);
@@ -153,12 +153,12 @@ describe('statistics-utils', () => {
 
         it('should not double count when rule and general category are the same', () => {
             const report = createMockReport({
-                formData: { destiny: 'Guanta' },
+                form_data: { destiny: 'Guanta' },
             });
             const template = createMockTemplate({
-                statisticsCategory: '6.2 TRASLADOS EXTRAURBANOS',
-                statisticsRules: [
-                    { fieldId: 'destiny', operator: '=', condition: 'Guanta', category: '6.2 TRASLADOS EXTRAURBANOS' },
+                statistics_category: '6.2 TRASLADOS EXTRAURBANOS',
+                statistics_rules: [
+                    { field_id: 'destiny', operator: '=', condition: 'Guanta', category: '6.2 TRASLADOS EXTRAURBANOS' },
                 ],
             });
             const result = obtenerCategoriasReporte(report, template);
@@ -169,62 +169,62 @@ describe('statistics-utils', () => {
 
         it('should handle orConditions (at least one must match)', () => {
             const template = createMockTemplate({
-                statisticsRules: [
+                statistics_rules: [
                     { 
-                        fieldId: 'type', 
+                        field_id: 'type', 
                         operator: '=', 
                         condition: 'emergency', 
                         category: '1.2 LLAMADAS DE EMERGENCIAS',
-                        orConditions: [
-                            { fieldId: 'priority', operator: '=', condition: 'high' },
-                            { fieldId: 'priority', operator: '=', condition: 'critical' }
+                        or_conditions: [
+                            { field_id: 'priority', operator: '=', condition: 'high' },
+                            { field_id: 'priority', operator: '=', condition: 'critical' }
                         ]
                     },
                 ],
             });
 
             // Matches primary but none of the OR conditions -> fail
-            const report1 = createMockReport({ formData: { type: 'emergency', priority: 'low' } });
+            const report1 = createMockReport({ form_data: { type: 'emergency', priority: 'low' } });
             expect(obtenerCategoriasReporte(report1, template)).not.toContain('1.2 LLAMADAS DE EMERGENCIAS');
 
             // Matches primary and one of the OR conditions -> success
-            const report2 = createMockReport({ formData: { type: 'emergency', priority: 'high' } });
+            const report2 = createMockReport({ form_data: { type: 'emergency', priority: 'high' } });
             expect(obtenerCategoriasReporte(report2, template)).toContain('1.2 LLAMADAS DE EMERGENCIAS');
 
             // Matches primary and another OR condition -> success
-            const report3 = createMockReport({ formData: { type: 'emergency', priority: 'critical' } });
+            const report3 = createMockReport({ form_data: { type: 'emergency', priority: 'critical' } });
             expect(obtenerCategoriasReporte(report3, template)).toContain('1.2 LLAMADAS DE EMERGENCIAS');
         });
 
         it('should handle complex rules with both conditions (AND) and orConditions (OR)', () => {
             const template = createMockTemplate({
-                statisticsRules: [
+                statistics_rules: [
                     { 
-                        fieldId: 'a', 
+                        field_id: 'a', 
                         operator: '=', 
                         condition: '1', 
                         category: 'CAT',
                         conditions: [
-                            { fieldId: 'b', operator: '=', condition: '2' }
+                            { field_id: 'b', operator: '=', condition: '2' }
                         ],
-                        orConditions: [
-                            { fieldId: 'c', operator: '=', condition: '3' },
-                            { fieldId: 'd', operator: '=', condition: '4' }
+                        or_conditions: [
+                            { field_id: 'c', operator: '=', condition: '3' },
+                            { field_id: 'd', operator: '=', condition: '4' }
                         ]
                     },
                 ],
             });
 
             // a=1, b=2, c=3 (matches primary, AND, and one OR) -> success
-            const r1 = createMockReport({ formData: { a: '1', b: '2', c: '3' } });
+            const r1 = createMockReport({ form_data: { a: '1', b: '2', c: '3' } });
             expect(obtenerCategoriasReporte(r1, template)).toContain('CAT');
 
             // a=1, b=1, c=3 (fails AND) -> fail
-            const r2 = createMockReport({ formData: { a: '1', b: '1', c: '3' } });
+            const r2 = createMockReport({ form_data: { a: '1', b: '1', c: '3' } });
             expect(obtenerCategoriasReporte(r2, template)).not.toContain('CAT');
 
             // a=1, b=2, c=1 (fails OR) -> fail
-            const r3 = createMockReport({ formData: { a: '1', b: '2', c: '1' } });
+            const r3 = createMockReport({ form_data: { a: '1', b: '2', c: '1' } });
             expect(obtenerCategoriasReporte(r3, template)).not.toContain('CAT');
         });
     });
@@ -236,16 +236,16 @@ describe('statistics-utils', () => {
         it('should accumulate multiple categories for a single report', () => {
             const template = createMockTemplate({
                 id: 't1',
-                statisticsCategory: '5 ATENCIONES AL PÚBLICO',
-                statisticsRules: [
-                    { fieldId: 'tipo', condition: 'x', category: '5.1 ATENCIONES PREHOSPITALARIAS' },
+                statistics_category: '5 ATENCIONES AL PÚBLICO',
+                statistics_rules: [
+                    { field_id: 'tipo', condition: 'x', category: '5.1 ATENCIONES PREHOSPITALARIAS' },
                 ],
             });
             const reports = [
                 createMockReport({
-                    templateId: 't1',
+                    template_id: 't1',
                     timestamp: new Date(2026, 0, 5, 10, 0).toISOString(), // 10:00 -> Day 5
-                    formData: { tipo: 'x' }
+                    form_data: { tipo: 'x' }
                 }),
             ];
             const result = calcularEstadisticasMensuales(reports, [template], {}, testMonth, testYear);
@@ -257,14 +257,14 @@ describe('statistics-utils', () => {
         it('should correctly attribute reports based on mode', () => {
             const template = createMockTemplate({ 
                 id: 't1',
-                statisticsCategory: '1 REPORTES DEL VEN 9-1-1'
+                statistics_category: '1 REPORTES DEL VEN 9-1-1'
             });
 
             const reports = [
                 // Jan 5, 02:00
                 createMockReport({
                     id: 'r1',
-                    templateId: 't1',
+                    template_id: 't1',
                     timestamp: new Date(2026, 0, 5, 2, 0).toISOString(),
                 }),
             ];
@@ -280,17 +280,17 @@ describe('statistics-utils', () => {
             expect(standardStats.get('1 REPORTES DEL VEN 9-1-1')!.get(4)).toBeUndefined();
         });
 
-        it('should prioritize logical date from formData over timestamp', () => {
+        it('should prioritize logical date from form_data over timestamp', () => {
             const template = createMockTemplate({ 
                 id: 't1',
-                statisticsCategory: '5.1 ATENCIONES PREHOSPITALARIAS'
+                statistics_category: '5.1 ATENCIONES PREHOSPITALARIAS'
             });
             const reports = [
                 createMockReport({
                     id: 'r1',
-                    templateId: 't1',
+                    template_id: 't1',
                     timestamp: new Date(2026, 0, 10, 10, 0).toISOString(), // Jan 10
-                    formData: { fecha: '05/01/2026', hora: '12:00' } // Jan 5
+                    form_data: { fecha: '05/01/2026', hora: '12:00' } // Jan 5
                 }),
             ];
 
@@ -300,3 +300,6 @@ describe('statistics-utils', () => {
         });
     });
 });
+
+
+
