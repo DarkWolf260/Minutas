@@ -16,7 +16,7 @@ import {
   PasoDone 
 } from './steps';
 
-const TOTAL_PUNTOS = 9;
+const TOTAL_PUNTOS = 8;
 
 function PuntosProgreso({ actual, total }: { actual: number; total: number }) {
   return (
@@ -40,17 +40,15 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
     paso, 
     setPaso, 
     nombreWorkspace, 
-    workspaces, 
     roles, 
     setRoles, 
     departamentos, 
     setDepartamentos, 
     finalizar, 
-    manejarContinuarWorkspace, 
     saveSettings 
   } = hook;
 
-  const mostrarProgreso = paso >= 1 && paso <= 8;
+  const mostrarProgreso = paso >= 1 && paso <= 7;
   const progresoActual = paso - 1;
 
   return (
@@ -64,7 +62,7 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
                 Paso {paso} de {TOTAL_PUNTOS}
               </span>
             </div>
-            {paso < 9 && (
+            {paso < 8 && (
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -80,28 +78,31 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
         <div className="flex-1 min-h-0">
           {paso === 0 && <PasoBienvenida alSiguiente={() => setPaso(1)} />}
           {paso === 1 && (
-            <PasoAreaTrabajo
-              workspacesExistentes={workspaces}
-              alSiguiente={manejarContinuarWorkspace}
-              alAtras={() => setPaso(0)}
+            <PasoPreferencias 
+              alSiguiente={() => setPaso(2)} 
+              alAtras={() => setPaso(0)} 
             />
           )}
           {paso === 2 && (
-            <PasoPreferencias 
-              alSiguiente={() => setPaso(3)} 
-              alAtras={() => setPaso(1)} 
-            />
-          )}
-          {paso === 3 && (
             <PasoModulos
-              alSiguiente={() => setPaso(4)}
-              alAtras={() => setPaso(2)}
+              alSiguiente={() => setPaso(3)}
+              alAtras={() => setPaso(1)}
               alGuardar={(deshabilitados) => saveSettings({ disabled_modules: deshabilitados })}
             />
           )}
-          {paso === 4 && (
+          {paso === 3 && (
             <PasoEstructura 
-              alSiguiente={() => setPaso(5)} 
+              alSiguiente={() => setPaso(4)} 
+              alAtras={() => setPaso(2)}
+              roles={roles}
+              setRoles={setRoles}
+              departamentos={departamentos}
+              setDepartamentos={setDepartamentos}
+            />
+          )}
+          {paso === 4 && (
+            <PasoJerarquia
+              alSiguiente={() => setPaso(5)}
               alAtras={() => setPaso(3)}
               roles={roles}
               setRoles={setRoles}
@@ -110,31 +111,21 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
             />
           )}
           {paso === 5 && (
-            <PasoJerarquia
-              alSiguiente={() => setPaso(6)}
+            <PasoPlantillas
+              alSiguiente={() => { localStorage.setItem('minutas-template-bootstrap-ok', 'true'); setPaso(6); }}
               alAtras={() => setPaso(4)}
-              roles={roles}
-              setRoles={setRoles}
-              departamentos={departamentos}
-              setDepartamentos={setDepartamentos}
+              alOmitir={() => setPaso(6)}
             />
           )}
           {paso === 6 && (
-            <PasoPlantillas
-              alSiguiente={() => { localStorage.setItem('minutas-template-bootstrap-ok', 'true'); setPaso(7); }}
-              alAtras={() => setPaso(5)}
-              alOmitir={() => setPaso(7)}
-            />
-          )}
-          {paso === 7 && (
             <PasoPrimeraVez
-              alPrimero={() => setPaso(8)}
+              alPrimero={() => setPaso(7)}
               alRegresar={() => finalizar(false, false)}
-              alAtras={() => setPaso(6)}
+              alAtras={() => setPaso(5)}
             />
           )}
-          {paso === 8 && <PasoGuia alSiguiente={() => finalizar(false, true)} />}
-          {paso === 9 && <PasoDone nombreWorkspace={nombreWorkspace} alFinalizar={() => onComplete(false)} />}
+          {paso === 7 && <PasoGuia alSiguiente={() => finalizar(false, true)} />}
+          {paso === 8 && <PasoDone nombreWorkspace={nombreWorkspace} alFinalizar={() => onComplete(false)} />}
         </div>
       </div>
     </div>

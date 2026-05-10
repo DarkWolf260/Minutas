@@ -40,9 +40,15 @@ async function startCollectionReplication(
         try {
           let query = supabase
             .from(tableName)
-            .select('*')
-            .eq('workspace_id', workspace_id)
-            .order('modified', { ascending: true })
+            .select('*');
+
+          // For templates, we pull EVERYTHING (Global Repository)
+          // For others, we filter by workspace_id
+          if (collectionName !== 'templates') {
+            query = query.eq('workspace_id', workspace_id);
+          }
+          
+          query = query.order('modified', { ascending: true })
             .order('id', { ascending: true })
             .limit(batchSize);
 
@@ -81,9 +87,11 @@ async function startCollectionReplication(
             if (!doc) return null;
             const cleanDoc = { ...doc };
             
-            // Clean NULL values (except 'modified')
+            // Clean NULL values (except 'modified' and 'workspace_id' for templates)
             Object.keys(cleanDoc).forEach(key => {
-              if (cleanDoc[key] === null && key !== 'modified') delete cleanDoc[key];
+              if (cleanDoc[key] === null && key !== 'modified' && (collectionName !== 'templates' || key !== 'workspace_id')) {
+                delete cleanDoc[key];
+              }
             });
 
             // Ensure 'modified' is never undefined
@@ -130,7 +138,7 @@ async function startCollectionReplication(
         const allowedColumns: Record<string, string[]> = {
           personnel: ['id', 'workspace_id', 'personnel_id', 'name', 'cedula', 'rank', 'cargo', 'titulo', 'role_id', 'status', 'department', 'sex', 'specialties', 'order', '_deleted'],
           reports: ['id', 'workspace_id', 'template_id', 'title', 'timestamp', 'content', 'is_relevant', 'status', 'form_data', '_deleted'],
-          templates: ['id', 'workspace_id', 'name', 'content', 'type', 'is_active', 'statistics_category', 'statistics_sub_categories', 'statistics_rules', '_deleted'],
+          templates: ['id', 'workspace_id', 'name', 'content', 'description', 'type', 'is_active', 'statistics_category', 'statistics_sub_categories', 'statistics_rules', '_deleted'],
           lookups: ['id', 'workspace_id', 'type', 'name', 'data', '_deleted'],
           configs: ['id', 'workspace_id', 'type', 'name', 'data', '_deleted'],
           history: ['id', 'workspace_id', 'type', 'date', 'personnel_id', 'data', '_deleted']
@@ -139,7 +147,10 @@ async function startCollectionReplication(
         const columns = allowedColumns[collectionName] || [];
         const payloads = rows
           .map(row => row.newDocumentState)
-          .filter(doc => doc.workspace_id === workspace_id) // ONLY push records for THIS workspace
+          .filter(doc => {
+            if (collectionName === 'templates' && doc.workspace_id === null) return true;
+            return doc.workspace_id === workspace_id;
+          }) // Push records for THIS workspace or global templates
           .map(doc => {
             const payload: any = {};
             
@@ -233,7 +244,7 @@ async function startCollectionReplication(
         event: '*',
         schema: 'public',
         table: tableName,
-        filter: `workspace_id=eq.${workspace_id}`
+        filter: collectionName === 'templates' ? undefined : `workspace_id=eq.${workspace_id}`
       },
       (payload) => {
         logger.info(`Realtime update for ${collectionName}:`, payload.eventType);
@@ -265,25 +276,22 @@ export function triggerCloudSync() {
  * Main function to orchestrate replication for all relevant collections.
  */
 export async function startWorkspaceReplication(db: MinutasDatabase, workspace_id: string) {
-  if (!workspace_id || workspace_id === 'minutasdb') {
-    logger.info('Skipping replication for local-only workspace');
-    return null;
+  // If it's a local-only workspace, we ONLY sync templates (Community Repository)
+  const isLocalOnly = !workspace_id || workspace_id === 'minutasdb';
+
+  const collectionsToSync: (keyof typeof db.collections)[] = isLocalOnly 
+    ? ['templates'] 
+    : ['personnel', 'reports', 'templates', 'lookups', 'configs', 'history'];
+
+  if (isLocalOnly) {
+    logger.info('Starting community-only replication for local workspace');
   }
 
-  const collectionsToSync: (keyof typeof db.collections)[] = [
-    'personnel',
-    'reports',
-    'templates',
-    'lookups',
-    'configs',
-    'history'
-  ];
-
   const states = await Promise.all(
-    collectionsToSync.map(col => startCollectionReplication(db, col, workspace_id))
+    collectionsToSync.map(col => startCollectionReplication(db, col, workspace_id || 'minutasdb'))
   );
 
   return {
-    cancel: () => states.forEach(s => s.cancel())
+    cancel: () => states.forEach(s => s && (s as any).cancel ? (s as any).cancel() : null)
   };
 }

@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
+import { useAdmin } from '@/hooks/use-admin';
 import { useUploadTemplate } from '@/hooks/use-upload-template';
 import { useTemplates } from '@/hooks/use-templates';
 import { useSyncTemplates } from '@/hooks/use-sync-templates';
@@ -30,6 +31,7 @@ export function usePlantillas() {
   const navigate = useNavigate();
 
   const { isAuthenticated: estaAutenticado, user: usuario, signOut: cerrarSesion } = useAuth();
+  const { isAdmin } = useAdmin();
   const { uploadTemplate: subirAPlantillaNube, isUploading: estaSubiendo } = useUploadTemplate();
   const { syncFromCloud: sincronizarDesdeNube, isSyncing: estaSincronizando } = useSyncTemplates();
 
@@ -147,6 +149,7 @@ export function usePlantillas() {
     setEsDialogOpenNube,
     inputArchivoRef,
     estaAutenticado,
+    isAdmin,
     usuario,
     estaSubiendo,
     plantillaSeleccionada,

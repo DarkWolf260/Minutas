@@ -58,8 +58,9 @@ export const templatesSchema = {
     type: 'object',
     properties: {
         id: { type: 'string', maxLength: 100 },
-        workspace_id: { type: 'string', maxLength: 50 },
+        workspace_id: { type: ['string', 'null'], maxLength: 50 },
         name: { type: 'string' },
+        description: { type: ['string', 'null'] },
         content: { type: 'string' },
         type: { type: 'string' },
         is_active: { type: 'boolean' },
@@ -105,8 +106,8 @@ export const templatesSchema = {
         modified: { type: ['string', 'null'] },
         _deleted: { type: 'boolean' }
     },
-    required: ['id', 'workspace_id', 'name', 'content', 'is_active'],
-    indexes: ['workspace_id']
+    required: ['id', 'name', 'content', 'is_active'],
+    indexes: []
 };
 
 /**

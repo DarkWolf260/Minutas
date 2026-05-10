@@ -212,8 +212,9 @@ export interface StatisticRule {
 
 export interface Template {
   id: string;
-  workspace_id: string;
+  workspace_id: string | null;
   name: string;
+  description?: string | null;
   content: string;
   type: 'normal' | 'relevante';
   is_active?: boolean;

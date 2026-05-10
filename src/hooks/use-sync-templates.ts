@@ -10,7 +10,8 @@ export function useSyncTemplates() {
   const { currentWorkspace } = useWorkspaceManager();
 
   const syncFromCloud = async () => {
-    if (!db || !currentWorkspace) return;
+    if (!db) return;
+    
     setIsSyncing(true);
     
     try {
@@ -31,16 +32,22 @@ export function useSyncTemplates() {
 
       if (cError) throw cError;
 
-      logger.info(`Downloaded ${cloudTemplates?.length} templates and ${cloudConfigs?.length} configs from cloud.`);
+      const templateCount = cloudTemplates?.length || 0;
+      const configCount = cloudConfigs?.length || 0;
+
+      logger.info(`Downloaded ${templateCount} templates and ${configCount} configs from cloud.`);
+
+      if (templateCount === 0) {
+        toast.info('No se encontraron plantillas nuevas en la nube.');
+        return;
+      }
 
       // 3. Upsert templates locally
-      // We assign the current workspace_id so they appear in the current UI,
-      // but they are "synced" copies of the global ones.
       if (cloudTemplates) {
         for (const t of cloudTemplates) {
-          // Destructure to only get what RxDB expects (VD2 Fix)
+          // Destructure to only get what RxDB expects (Now including description)
           const { 
-            id, name, content, type, is_active, 
+            id, name, content, type, is_active, description, workspace_id,
             statistics_category, statistics_rules, statistics_sub_categories 
           } = t;
           
@@ -48,9 +55,10 @@ export function useSyncTemplates() {
             id,
             name,
             content,
+            description,
             type: type || 'normal',
             is_active: is_active !== undefined ? is_active : true,
-            workspace_id: currentWorkspace,
+            workspace_id: workspace_id || null, // Keep NULL if global
             statistics_category,
             // Parse JSON fields if they came as strings
             statistics_rules: typeof statistics_rules === 'string' ? JSON.parse(statistics_rules) : statistics_rules,
@@ -62,18 +70,18 @@ export function useSyncTemplates() {
       // 4. Upsert configs locally
       if (cloudConfigs) {
         for (const c of cloudConfigs) {
-          const { id, type, name, data } = c;
+          const { id, type, name, data, workspace_id } = c;
           await db.configs.upsert({
             id,
             type,
             name,
-            workspace_id: currentWorkspace,
+            workspace_id: workspace_id || currentWorkspace || 'minutasdb',
             data: typeof data === 'string' ? JSON.parse(data) : data,
           });
         }
       }
 
-      toast.success('Plantillas sincronizadas con la nube correctamente.');
+      toast.success(`Se sincronizaron ${templateCount} plantillas correctamente.`);
     } catch (err: any) {
       logger.error('Failed to sync templates from cloud', err);
       toast.error('Error al sincronizar plantillas: ' + err.message);

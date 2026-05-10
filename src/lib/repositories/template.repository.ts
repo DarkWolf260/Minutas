@@ -18,7 +18,12 @@ export function createTemplateRepository(db: MinutasDatabase | null, workspace_i
 
   const watchAll = () =>
     db.templates.find({
-      selector: { workspace_id: ws },
+      selector: {
+        $or: [
+          { workspace_id: ws },
+          { workspace_id: null }
+        ]
+      },
     }).$.pipe(
       map(docs => docs.map(d => d.toJSON() as Template).sort((a, b) => a.name.localeCompare(b.name)))
     );
