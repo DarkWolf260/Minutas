@@ -1,10 +1,22 @@
-import React from 'react';
-import { Hammer, HardHat, RefreshCw } from 'lucide-react';
+import { Hammer, HardHat, RefreshCw, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 export default function MaintenancePage() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background relative overflow-hidden p-6">
+      {/* Volver button */}
+      <div className="absolute top-6 left-6 z-20">
+        <Button 
+          variant="ghost" 
+          className="text-muted-foreground hover:text-foreground"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Volver
+        </Button>
+      </div>
       {/* Background decoration */}
       <div className="absolute inset-0 bg-grid-white/[0.02] bg-[length:32px_32px]" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
@@ -39,6 +51,15 @@ export default function MaintenancePage() {
             <RefreshCw className="mr-2 h-4 w-4" />
             Verificar Estado
           </Button>
+
+          <div className="pt-2">
+            <button
+              onClick={() => window.location.href = '/login'}
+              className="text-[10px] text-muted-foreground/40 hover:text-primary uppercase font-bold tracking-widest transition-colors"
+            >
+              Acceso Administrativo
+            </button>
+          </div>
         </div>
       </div>
     </div>

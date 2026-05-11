@@ -2,17 +2,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
-import { Mail, Lock, Loader2, LogIn, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Loader2, LogIn, ArrowLeft, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useGlobalConfig } from '@/hooks/use-global-config';
 
 export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { signIn, isAuthenticated } = useAuth();
   const { isCloud } = useWorkspaceManager();
+  const { config } = useGlobalConfig();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [email, setEmail] = useState('');
@@ -69,7 +71,7 @@ export default function LoginPage() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 w-full max-w-md p-6">
+      <div className="relative z-10 w-full max-w-md p-6 mt-12">
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 ring-1 ring-primary/20 shadow-[0_0_40px_-10px_rgba(var(--primary),0.5)]">
             <img src="/icons/icon-192x192.png" alt="Minutas Logo" className="h-10 w-10 object-contain" />
@@ -79,6 +81,15 @@ export default function LoginPage() {
             Sincroniza tus datos y accede a la comunidad
           </p>
         </div>
+
+        {config.maintenance_mode && (
+          <div className="mb-4 flex justify-center">
+            <div className="px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[11px] font-bold text-amber-600 uppercase tracking-widest flex items-center gap-2 shadow-sm backdrop-blur-sm animate-in fade-in zoom-in duration-300">
+              <ShieldAlert className="h-3.5 w-3.5 animate-pulse" />
+              Modo Mantenimiento Activo
+            </div>
+          </div>
+        )}
 
         <div className="bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl">
           <h2 className="text-xl font-bold mb-6 text-left">Iniciar Sesión</h2>
