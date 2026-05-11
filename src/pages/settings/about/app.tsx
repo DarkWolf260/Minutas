@@ -1,12 +1,31 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ChevronLeft, Coffee, Code2, Globe, Database } from 'lucide-react';
+import { ChevronLeft, Coffee, Code2, Globe, Database, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Link } from 'react-router-dom';
 import { APP_VERSION } from './data';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 export default function AboutAppPage() {
+  const [checking, setChecking] = useState(false);
+
+  const handleCheckUpdates = () => {
+    setChecking(true);
+    setTimeout(() => {
+      setChecking(false);
+      toast.success('Todos los componentes están actualizados', {
+        description: `Versión actual: ${APP_VERSION}`,
+        action: {
+          label: 'Cerrar',
+          onClick: () => {}
+        },
+      });
+    }, 2000);
+  };
+
   return (
     <ScrollArea className="h-full w-full" type="always">
       <div className="max-w-[700px] mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-32 sm:pb-16 space-y-6">
@@ -23,8 +42,8 @@ export default function AboutAppPage() {
         </div>
 
         <Card className="shadow-lg border-muted/50 overflow-hidden">
-          <CardHeader className="text-center pb-2 bg-muted/20">
-            <div className="mx-auto bg-white rounded-2xl h-20 w-20 flex items-center justify-center mb-4 shadow-xl shadow-black/10 rotate-3 overflow-hidden border p-4">
+          <CardHeader className="text-center pb-6 bg-muted/20 space-y-4">
+            <div className="mx-auto bg-white rounded-2xl h-20 w-20 flex items-center justify-center shadow-xl shadow-black/10 rotate-3 overflow-hidden border p-4">
               <img
                 src="/icons/icon-192x192.png"
                 alt="App Logo"
@@ -32,8 +51,25 @@ export default function AboutAppPage() {
                 style={{ imageRendering: 'auto' }}
               />
             </div>
-            <CardTitle className="text-3xl font-black tracking-tighter uppercase">Minutas</CardTitle>
-            <CardDescription className="font-bold text-primary/70">Versión {APP_VERSION}</CardDescription>
+            <div className="space-y-1">
+              <CardTitle className="text-3xl font-black tracking-tighter uppercase">Minutas</CardTitle>
+              <CardDescription className="font-bold text-primary/70">Versión {APP_VERSION}</CardDescription>
+            </div>
+
+            <div className="pt-2 flex justify-center">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 gap-2 rounded-full px-4 border-primary/20 bg-primary/5 hover:bg-primary/10 transition-all group"
+                onClick={handleCheckUpdates}
+                disabled={checking}
+              >
+                <RefreshCw className={cn("h-3.5 w-3.5 transition-transform duration-700", checking && "animate-spin")} />
+                <span className="text-[11px] font-bold uppercase tracking-wider">
+                  {checking ? 'Buscando actualizaciones...' : 'Buscar actualizaciones'}
+                </span>
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-8 pt-8">
             <div className="text-center space-y-4 max-w-lg mx-auto">

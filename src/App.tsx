@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 // Setup helpers
 import SetupPage from '@/pages/setup';
 import { SETUP_DONE_KEY, tryGet, trySet, tryRemove } from '@/hooks/use-setup';
+import { APP_VERSION } from '@/pages/settings/about/data';
 import { AdminRoute } from '@/components/auth/admin-route';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { useAuth } from '@/hooks/use-auth';
@@ -290,6 +291,13 @@ function AppLayout() {
       </div>
 
       {showTour && <OnboardingTour onComplete={() => setShowTour(false)} />}
+      
+      {/* Desktop Version Indicator */}
+      <div className="hidden sm:block fixed bottom-4 right-4 z-[40] pointer-events-none select-none opacity-20 hover:opacity-100 transition-opacity">
+        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">
+          v{APP_VERSION}
+        </span>
+      </div>
     </div>
   );
 }
