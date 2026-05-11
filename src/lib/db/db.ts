@@ -230,8 +230,8 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
         if (typeof item === 'object') {
           const cleaned: any = {};
           Object.keys(item).forEach(k => {
-            // Skip metadata
-            if (['_rev', '_meta', '_deleted', 'modified', '_modified', 'updated_at', 'created_at'].includes(k)) return;
+            // Skip internal metadata but KEEP _deleted so sync knows when something is removed
+            if (['_rev', '_meta', 'modified', '_modified', 'updated_at', 'created_at'].includes(k)) return;
             
             let val = item[k];
             // Normalize JSON strings

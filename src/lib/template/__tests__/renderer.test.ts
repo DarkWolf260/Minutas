@@ -17,7 +17,7 @@ function buildConfig(templateContent: string): TemplateConfig {
             label: name,
         };
         const opts = parsed.templateOptions.get(name);
-        if (opts) config.fields[name].snippetOptions = opts;
+        if (opts) config.fields[name].snippet_options = opts;
     });
     return config;
 }
@@ -53,13 +53,16 @@ function generateMockData(
                 data[fieldName] = `Ejemplo ${fieldName}`;
         }
     });
+    console.log('DEBUG: generateMockData sections count:', sections.length);
     sections.forEach((section: SectionConfig) => {
-        if (section.isRepeatable) {
+        console.log(`DEBUG: Checking section ${section.id}, is_repeatable: ${section.is_repeatable}`);
+        if (section.is_repeatable) {
             const itemData: Record<string, string> = {};
             section.field_ids.forEach((field_id: string) => {
                 itemData[field_id] = `Dato ${field_id}`;
             });
             data[section.id] = [{ ...itemData }, { ...itemData }];
+            console.log(`DEBUG: Added repeatable data for ${section.id}`);
         }
     });
     return data;
@@ -124,7 +127,7 @@ describe('Template Renderer - Secciones Repetibles', () => {
         expect(parsed.fieldTypes.get('Ubicación')).toBe('textarea');
         expect(parsed.fieldTypes.get('Destino')).toBe('textarea');
         
-        const destinoSection = parsed.sections.find((s: SectionConfig) => s.field_ids.includes('Destino') && s.isRepeatable);
+        const destinoSection = parsed.sections.find((s: SectionConfig) => s.field_ids.includes('Destino') && s.is_repeatable);
         expect(destinoSection).toBeDefined();
         
         const data: Record<string, unknown> = {
@@ -220,7 +223,7 @@ describe('Template Renderer - Condicionales con Campos', () => {
         console.log('fieldNames:', [...parsed.fieldNames]);
         console.log('layout:', parsed.layout);
         console.log('sections:', JSON.stringify(parsed.sections.map((s: any) => ({
-            id: s.id, condition: s.condition, field_ids: s.field_ids, isMapping: s.isMapping
+            id: s.id, condition: s.condition, field_ids: s.field_ids, is_mapping: s.is_mapping
         })), null, 2));
         console.log('templateOptions ¿Quien informó?:', parsed.templateOptions.get('¿Quien informó?'));
 

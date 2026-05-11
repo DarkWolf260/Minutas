@@ -184,6 +184,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                         layout: [field_id],
                         repeatable_item_label: field_id.toUpperCase(),
                         original_content: rawWithoutStar,
+                        is_virtual: true,
                     };
 
 
@@ -417,6 +418,13 @@ export function parse(tokens: Token[]): TemplateParserResult {
     layout.push(...finalResult.subLayout);
 
     finalResult.subFieldNames.forEach(fn => fieldNames.add(fn));
+
+    // Ensure fields used in conditions are also tracked in fieldNames
+    sections.forEach(sec => {
+        if (sec.condition) {
+            fieldNames.add(sec.condition.field_id);
+        }
+    });
     // NOTE: Reconciliation of mapping conditional values was removed because 
     // it caused a mismatch between form data (labels) and condition targets.
     // We now compare against the literal label as specified in the template.
@@ -444,10 +452,19 @@ export function parse(tokens: Token[]): TemplateParserResult {
         }
     });
 
+    console.log('DEBUG: Initial layout:', Array.from(layout));
+    console.log('DEBUG: absorbedItems:', Array.from(absorbedItems));
+
     // Also update global layout
     const updatedLayout = layout.flatMap(fid => fieldToConditionMap.get(fid) || [fid])
         .filter((val, idx, self) => self.indexOf(val) === idx)
-        .filter(val => !absorbedItems.has(val));
+        .filter(val => {
+            const isAbsorbed = absorbedItems.has(val);
+            if (isAbsorbed) console.log(`DEBUG: Removing ${val} from layout because it is absorbed`);
+            return !isAbsorbed;
+        });
+    
+    console.log('DEBUG: Final layout:', updatedLayout);
 
     return {
         sections,

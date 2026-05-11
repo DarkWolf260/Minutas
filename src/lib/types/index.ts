@@ -184,6 +184,7 @@ export interface SectionConfig {
   is_mapping?: boolean; // True if this is a mapping conditional [?{Field}] Key=Value [/]
   is_self_contained?: boolean; // True if this is a self-contained section ["Title" {field}]
   has_static_content?: boolean; // True if the section contains non-whitespace static text
+  is_virtual?: boolean; // True if this is a virtual section created from {field}*
 }
 
 

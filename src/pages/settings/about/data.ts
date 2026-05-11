@@ -62,9 +62,19 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.3.1';
+export const APP_VERSION = '1.3.2';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.3.2',
+    date: '11/05/2026',
+    changes: [
+      { type: 'mejora', text: 'Migración de Datos Estabilizada: Se corrigieron los errores de desajuste de esquema en la base de datos local para una persistencia más confiable.' },
+      { type: 'corrección', text: 'Setup Wizard: Corregido el error de pantalla en blanco al finalizar o saltar la configuración inicial, asegurando el acceso inmediato a la app.' },
+      { type: 'mejora', text: 'Motor de Plantillas Refinado: Mejoras significativas en el renderizado de secciones anidadas y lógica condicional para reportes más complejos.' },
+      { type: 'corrección', text: 'Estabilidad del Código: Resolución de conflictos de tipado y errores en la suite de pruebas tras la estandarización a snake_case.' },
+    ],
+  },
   {
     version: '1.3.1',
     date: '28/04/2026',

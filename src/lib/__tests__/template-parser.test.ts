@@ -303,7 +303,7 @@ Reportado por: {reportante:upper}`;
             expect(result.errors).toHaveLength(0);
             expect(result.fieldNames).toContain('novedades');
             // Should create a repeatable section
-            const repeatableSection = result.sections.find((s) => s.isRepeatable);
+            const repeatableSection = result.sections.find((s) => s.is_repeatable);
             expect(repeatableSection).toBeDefined();
             expect(repeatableSection?.field_ids).toContain('novedades');
         });
@@ -313,7 +313,7 @@ Reportado por: {reportante:upper}`;
             const result = parseTemplate(template);
 
             expect(result.errors).toHaveLength(0);
-            const repeatableSection = result.sections.find((s) => s.isRepeatable);
+            const repeatableSection = result.sections.find((s) => s.is_repeatable);
             expect(repeatableSection).toBeDefined();
         });
     });

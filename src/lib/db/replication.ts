@@ -87,12 +87,15 @@ async function startCollectionReplication(
             if (!doc) return null;
             const cleanDoc = { ...doc };
             
-            // Clean NULL values (except 'modified' and 'workspace_id' for templates)
+            // Clean NULL values (except 'modified', 'workspace_id' for templates, and '_deleted')
             Object.keys(cleanDoc).forEach(key => {
-              if (cleanDoc[key] === null && key !== 'modified' && (collectionName !== 'templates' || key !== 'workspace_id')) {
+              if (cleanDoc[key] === null && key !== 'modified' && key !== '_deleted' && (collectionName !== 'templates' || key !== 'workspace_id')) {
                 delete cleanDoc[key];
               }
             });
+
+            // Ensure '_deleted' is always a boolean and never undefined/null for RxDB
+            cleanDoc._deleted = !!cleanDoc._deleted;
 
             // Ensure 'modified' is never undefined
             if (cleanDoc.modified === undefined) cleanDoc.modified = null;
@@ -155,21 +158,32 @@ async function startCollectionReplication(
             const payload: any = {};
             
             columns.forEach(col => {
-            let value = doc[col];
-            
-            // Special handling for Postgres Arrays
-            if (col === 'specialties' && Array.isArray(value)) {
-              const escape = (str: string) => '"' + str.replace(/"/g, '\\"') + '"';
-              value = `{${value.map(escape).join(',')}}`;
-            }
+              let value = doc[col];
+              
+              // Special handling for Postgres Arrays
+              if (col === 'specialties' && Array.isArray(value)) {
+                const escape = (str: string) => '"' + str.replace(/"/g, '\\"') + '"';
+                value = `{${value.map(escape).join(',')}}`;
+              }
 
               if (value !== undefined) {
                 payload[col] = value;
               }
             });
+
+            // CRITICAL: Explicitly ensure _deleted is handled
+            if (doc._deleted === true) {
+              payload._deleted = true;
+            } else if (payload._deleted === undefined) {
+              payload._deleted = false;
+            }
             
             // CRITICAL: Always include a fresh modified timestamp so other devices see this as new
             payload.modified = new Date().toISOString();
+            
+            if (payload._deleted) {
+              logger.info(`Pushing DELETION for ${collectionName}: ${payload.id}`);
+            }
             
             return payload;
           });

@@ -56,7 +56,6 @@ export function evaluateCondition(
     const val = coerceForComparison(fieldValue);
     const target = coerceForComparison(targetValue);
 
-
     switch (operator) {
         case '=':
         case '==':
