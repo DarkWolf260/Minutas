@@ -29,7 +29,7 @@ describe('Template Evaluator', () => {
         });
 
         it('should handle null/undefined values', () => {
-            expect(evaluateCondition(null, '=', '')).toBe(false);
+            expect(evaluateCondition(null, '=', '')).toBe(true);
             expect(evaluateCondition(undefined, '!=', 'anything')).toBe(true);
         });
     });

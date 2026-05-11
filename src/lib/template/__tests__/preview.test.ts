@@ -34,7 +34,7 @@ function generateMockData(
     });
 
     sections.forEach((section) => {
-        if (section.isRepeatable) {
+        if (section.is_repeatable) {
             const itemData: Record<string, string> = {};
             section.field_ids.forEach((field_id) => {
                 itemData[field_id] = `Dato ${field_id}`;
@@ -64,7 +64,7 @@ function previewRender(templateContent: string): string {
             label: fieldName,
         };
         const options = parsed.templateOptions.get(fieldName);
-        if (options) config.fields[fieldName].snippetOptions = options;
+        if (options) config.fields[fieldName].snippet_options = options;
     });
 
     const { data, predefinedValues } = generateMockData(

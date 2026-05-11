@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderFinalReport } from '../renderer';
 import { parseTemplate } from '../../template-parser';
-import type { SectionConfig, FieldConfig } from '../types';
+import type { SectionConfig, FieldConfig } from '@/lib/types';
 
 describe('Nested Sections in Conditional Blocks', () => {
     it('should correctly handle the user reported case', () => {
@@ -16,7 +16,7 @@ describe('Nested Sections in Conditional Blocks', () => {
         };
         const renderConfig = { 
             fields: { 
-                Field1: { id: 'Field1', type: 'text' } as FieldConfig 
+                Field1: { type: 'text', label: 'Field1' } as FieldConfig 
             }, 
             sections: [] as SectionConfig[], 
             layout: [] as string[] 
@@ -34,10 +34,10 @@ describe('Nested Sections in Conditional Blocks', () => {
         const renderConfig = {
             fields: {
                 Status: {
-                    id: 'Status',
                     type: 'dropdown',
-                    templateOptions: [
-                        { value: '1', label: 'Done' }
+                    label: 'Status',
+                    snippet_options: [
+                        { id: '1', value: '1', label: 'Done' }
                     ]
                 } as FieldConfig
             },

@@ -1,7 +1,8 @@
 /**
  * Test: secciones auto-contenidas dentro de bloque condicional :show se renderizan correctamente
  */
-import { parseTemplate, renderFinalReport } from '../../template-parser';
+import { renderFinalReport } from '../renderer';
+import { parseTemplate } from '../../template-parser';
 
 const TEMPLATE = `[?Estatus=Finalizado:show]
 ["Comisiones en sitio"- *COMISIONES EN SITIO:*
@@ -30,7 +31,7 @@ test('self-contained nested sections inside :show conditional render when condit
         sections: config.sections,
         layout: config.layout,
         fields: {},
-    }, {});
+    }, {}, false, {}, parseTemplate, () => {});
 
     console.log('Rendered:\n', rendered);
 
@@ -59,7 +60,7 @@ test('self-contained nested sections inside a :show conditional are hidden from 
         sections: config.sections,
         layout: config.layout,
         fields: {},
-    }, {});
+    }, {}, false, {}, parseTemplate, () => {});
 
     console.log('Rendered (condition NOT met):\n', rendered);
 

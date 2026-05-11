@@ -2,8 +2,8 @@
   {
     "id": "sec_datos_del_paciente",
     "label": "DATOS DEL PACIENTE",
-    "isRepeatable": true,
-    "fieldIds": [
+    "is_repeatable": true,
+    "field_ids": [
       "Nombre y apellido",
       "Cédula",
       "Edad",
@@ -17,25 +17,25 @@
       "IDX",
       "Dirección"
     ],
-    "originalContent": "- *NOMBRE Y APELLIDO:* {Nombre y apellido:title:req}\n- *CÉDULA:* {Cédula:req}\n- *EDAD:* {Edad:req}\n- *IDX:* {IDX:req}\n- *DIRECCIÓN:* {Dirección}",
-    "isSeparator": false,
-    "isMapping": false,
-    "isSelfContained": true,
-    "hasStaticContent": true,
-    "singularTitle": "DATOS DEL PACIENTE",
-    "pluralTitle": "DATOS DE LOS PACIENTE",
-    "repeatableItemLabel": "PACIENTE"
+    "original_content": "- *NOMBRE Y APELLIDO:* {Nombre y apellido:title:req}\n- *CÉDULA:* {Cédula:req}\n- *EDAD:* {Edad:req}\n- *IDX:* {IDX:req}\n- *DIRECCIÓN:* {Dirección}",
+    "is_separator": false,
+    "is_mapping": false,
+    "is_self_contained": true,
+    "has_static_content": true,
+    "singular_title": "DATOS DEL PACIENTE",
+    "plural_title": "DATOS DE LOS PACIENTE",
+    "repeatable_item_label": "PACIENTE"
   },
   {
     "id": "sec_separator",
     "label": "",
-    "isRepeatable": false,
-    "fieldIds": [],
+    "is_repeatable": false,
+    "field_ids": [],
     "layout": [],
-    "originalContent": "",
-    "isSeparator": true,
-    "isMapping": false,
-    "isSelfContained": false,
-    "hasStaticContent": false
+    "original_content": "",
+    "is_separator": true,
+    "is_mapping": false,
+    "is_self_contained": false,
+    "has_static_content": false
   }
 ]

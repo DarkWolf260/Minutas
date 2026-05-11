@@ -96,7 +96,7 @@ export function useSetup(onComplete: (goToTemplates?: boolean) => void) {
       marcarCompletado();
       if (irAPlantillas) trySet('minutas-template-bootstrap-ok', 'true');
       if (triggerTour) trySet('minutas-trigger-tour', 'true');
-      setPasoEstado(9); // Pantalla final
+      setPasoEstado(8); // Pantalla final (PasoDone)
     }
   };
 
