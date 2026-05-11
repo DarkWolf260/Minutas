@@ -13,7 +13,7 @@ import { SyncProvider } from '@/lib/sync/sync-context';
 import { AuthProvider } from '@/components/providers/auth-provider';
 import { UserProvider, useUser } from '@/components/providers/user-provider';
 import { lazy, Suspense, useState, useEffect } from 'react';
-import { WifiOff, Home, RefreshCw } from 'lucide-react';
+import { WifiOff, Home, RefreshCw, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OnboardingTour } from '@/components/ui/custom/onboarding-tour';
 import { cn } from '@/lib/utils';
@@ -140,8 +140,15 @@ function AppLayout() {
           </div>
         )}
 
+        {config.maintenance_mode && isAdmin && (
+          <div className="bg-amber-600 text-white text-[10px] font-bold uppercase tracking-widest py-1.5 px-4 flex items-center justify-center gap-2 sticky top-0 z-[49] shadow-inner">
+            <ShieldAlert className="h-3 w-3" />
+            <span>Aviso: El Modo Mantenimiento está ACTIVO para usuarios generales</span>
+          </div>
+        )}
+
         <main className="flex-1 md:overflow-hidden flex flex-col min-h-0 min-w-0 relative bg-muted/30 overflow-x-hidden">
-          {config.maintenance_mode && !isAdmin && !isAuthPage ? (
+          {config.maintenance_mode && !isAdmin && location.pathname !== '/login' ? (
             <Suspense fallback={<PageLoader />}>
               <MaintenancePage />
             </Suspense>
