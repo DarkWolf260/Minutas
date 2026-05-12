@@ -186,6 +186,11 @@ function isVirtualSection(content: string): boolean {
  * Helper: Generates a regex to match a section block in the template
  */
 function getSectionRegex(section: SectionConfig): RegExp {
+    if (section.full_raw) {
+        const escaped = escapeRegExp(section.full_raw).replace(/\n/g, '\\r?\\n');
+        return new RegExp(escaped, 'g');
+    }
+
     const isVirtual = section.is_virtual;
     const bodyContent = section.original_content || '';
     const isRepeatable = section.is_repeatable;
@@ -317,7 +322,7 @@ function findValueForField(
     if (foundKeyInRoot) return data[foundKeyInRoot];
 
     // 4. Check non-repeatable section data
-    for (const section of sections.filter((s) => !s.isRepeatable && s.id in data)) {
+    for (const section of sections.filter((s) => !s.is_repeatable && s.id in data)) {
         const sectionData = data[section.id];
         if (sectionData && typeof sectionData === 'object' && !Array.isArray(sectionData)) {
             const dataObj = sectionData as Record<string, any>;
@@ -356,7 +361,7 @@ function renderValue(
     // Dropdown rendering
     if (fieldConfig?.type === 'dropdown' && typeof value === 'string') {
         const allOptions = [
-            ...(fieldConfig.snippetOptions || []),
+            ...(fieldConfig.snippet_options || []),
             ...(config.templateOptions?.get(field_id) || []),
         ];
         const selectedOption = allOptions.find((opt: SnippetOption) => opt && opt.label === value);
@@ -643,7 +648,6 @@ function renderSection(
                     const mappingKey = Object.keys(mappingResults).find(k => k.toLowerCase() === lowerId);
                     const val = mappingKey !== undefined ? mappingResults[mappingKey] : baseVal;
 
-
                     itemContent = itemContent.replace(
                         new RegExp(`\\{${escapeRegExp(id)}(:[^|}{]+)*(?:\\|[^{}]+?)?\\}(\\*)?`, 'gi'),
                         renderValue(val, id, fields, config, { ...data, ...item })
@@ -784,7 +788,6 @@ export function renderContentWithSections(
 
     topLevelSections.forEach((section: SectionConfig) => {
         const sectionRegex = getSectionRegex(section);
-
         const rendered = renderSection(
             section.id,
             data,

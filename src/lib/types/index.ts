@@ -180,6 +180,7 @@ export interface SectionConfig {
   };
   statistics_category?: string; // New: Statistics category associated with this section
   original_content?: string; // Used for re-parsing conditional blocks
+  full_raw?: string; // The entire raw text of the section including delimiters [ ... ]
   is_separator?: boolean; // True if this section is just a visual separator
   is_mapping?: boolean; // True if this is a mapping conditional [?{Field}] Key=Value [/]
   is_self_contained?: boolean; // True if this is a self-contained section ["Title" {field}]
