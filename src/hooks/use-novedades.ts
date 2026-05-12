@@ -129,7 +129,7 @@ export function useNovedades() {
     if (!estaMontado || !draftCargado) return;
     const preSelectedId = searchParams.get('selected');
 
-    if (draft && !preSelectedId && !creandoReporte && !idReporteSeleccionado && !estaNavegandoAtras) {
+    if (draft && guardiaAbierta && !preSelectedId && !creandoReporte && !idReporteSeleccionado && !estaNavegandoAtras) {
       const template = templates.find((t: Template) => t.id === draft.template_id);
       if (template) {
         setDatosBorradorInicial(draft.form_data);

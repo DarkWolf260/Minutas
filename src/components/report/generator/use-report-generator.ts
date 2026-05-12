@@ -4,6 +4,7 @@ import { useDrafts } from '@/hooks/use-drafts';
 import { debounce } from '@/lib/utils';
 import { generateId } from '@/lib/utils/id';
 import { useSettings } from '@/hooks/use-settings';
+import { useOrdenDelDiaDraft } from '@/hooks/use-orden-del-dia-draft';
 import { useGuards } from '@/hooks/use-guards';
 import { usePersonnel } from '@/hooks/use-personnel';
 import { parseTemplate } from '@/lib/template-parser';
@@ -27,6 +28,7 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
   const [copyButtonText, setCopyButtonText] = useState('Copiar');
   
   const { settings } = useSettings();
+  const { draft: cloudDraft } = useOrdenDelDiaDraft();
   const { guards } = useGuards();
   const { personnel } = usePersonnel();
 
@@ -40,9 +42,11 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
       return { finalInitialData: newInitialData };
     }
 
-    const activeStaff = (settings?.active_guard_id && settings.orden_del_dia_draft && settings.orden_del_dia_draft.guard_id === settings.active_guard_id)
-      ? settings.orden_del_dia_draft.staff
-      : guards.find((g) => g.id === settings.active_guard_id)?.staff;
+    const activeStaff = (cloudDraft && cloudDraft.guard_id === settings.active_guard_id)
+      ? cloudDraft.staff
+      : (settings?.active_guard_id && settings.orden_del_dia_draft && settings.orden_del_dia_draft.guard_id === settings.active_guard_id)
+        ? settings.orden_del_dia_draft.staff
+        : guards.find((g) => g.id === settings.active_guard_id)?.staff;
 
     if (!activeStaff) {
       return { finalInitialData: newInitialData };

@@ -15,9 +15,10 @@ export interface ReportViewerProps {
   report: Report | null;
   onSave: (report: Report) => void;
   onDelete: (id: string) => void;
+  onClose?: () => void;
 }
 
-export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
+export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewerProps) {
   const isMobile = useIsMobile();
   const hook = useReportViewer({ report, onSave });
 
@@ -59,6 +60,7 @@ export function ReportViewer({ report, onSave, onDelete }: ReportViewerProps) {
         onDelete={() => onDelete(report.id)}
         onPreview={handlePreviewClick}
         onSave={handleSave}
+        onClose={onClose}
         saveButtonText={saveButtonText}
         isFinalizado={isFinalizado}
         isSecondary={isSecondary}

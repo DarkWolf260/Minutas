@@ -3,20 +3,18 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 export interface GlobalConfig {
-  system_name: string;
-  org_name: string;
   maintenance_mode: boolean;
   allow_registration: boolean;
+  app_version: string;
 }
 
 const BOOLEAN_KEYS = ['maintenance_mode', 'allow_registration'];
 
 export function useGlobalConfig() {
   const [config, setConfig] = useState<GlobalConfig>({
-    system_name: 'Minutas Cloud',
-    org_name: 'Municipalidad',
     maintenance_mode: false,
-    allow_registration: true
+    allow_registration: true,
+    app_version: 'v1.3.4-cloud'
   });
   const [loading, setLoading] = useState(true);
 
