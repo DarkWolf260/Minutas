@@ -15,21 +15,21 @@ interface SnippetOptionEditorProps {
 
 export const SnippetOptionEditor = ({ config, onUpdate }: SnippetOptionEditorProps) => {
   const handleOptionChange = (optionId: string, part: 'label' | 'value', text: string) => {
-    const newOptions = (config.snippetOptions || []).map((opt) =>
+    const newOptions = (config.snippet_options || []).map((opt) =>
       opt.id === optionId ? { ...opt, [part]: text } : opt
     );
-    onUpdate({ ...config, snippetOptions: newOptions });
+    onUpdate({ ...config, snippet_options: newOptions });
   };
 
   const handleAddOption = () => {
     const newOption: SnippetOption = { id: generateId('opt'), label: '', value: '' };
-    const newOptions = [...(config.snippetOptions || []), newOption];
-    onUpdate({ ...config, snippetOptions: newOptions });
+    const newOptions = [...(config.snippet_options || []), newOption];
+    onUpdate({ ...config, snippet_options: newOptions });
   };
 
   const handleRemoveOption = (optionId: string) => {
-    const newOptions = (config.snippetOptions || []).filter((opt) => opt.id !== optionId);
-    onUpdate({ ...config, snippetOptions: newOptions });
+    const newOptions = (config.snippet_options || []).filter((opt) => opt.id !== optionId);
+    onUpdate({ ...config, snippet_options: newOptions });
   };
 
   return (
@@ -49,7 +49,7 @@ export const SnippetOptionEditor = ({ config, onUpdate }: SnippetOptionEditorPro
         </Button>
       </div>
       <div className="space-y-1.5 pt-1">
-        {(config.snippetOptions || []).map((option) => (
+        {(config.snippet_options || []).map((option) => (
           <div
             key={option.id}
             className="p-2 bg-background rounded-md border flex flex-col gap-1.5 group relative"
@@ -80,7 +80,7 @@ export const SnippetOptionEditor = ({ config, onUpdate }: SnippetOptionEditorPro
           </div>
         ))}
       </div>
-      {(!config.snippetOptions || config.snippetOptions.length === 0) && (
+      {(!config.snippet_options || config.snippet_options.length === 0) && (
         <p className="text-[10px] text-muted-foreground italic text-center py-1">
           Sin opciones definidas.
         </p>

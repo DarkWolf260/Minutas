@@ -51,7 +51,7 @@ export const ViewerContent = ({
               onDataChange={onDataChange}
               controlledValues={{ 
                 Estatus: status,
-                Enc: settings.ordenDelDiaDraft?.esJefeEncargado ? '(E)' : ''
+                Enc: settings.orden_del_dia_draft?.es_jefe_encargado ? '(E)' : ''
               }}
             />
           </CardContent>

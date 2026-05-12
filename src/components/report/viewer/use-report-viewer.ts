@@ -54,7 +54,7 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
 
     const content = renderFinalReport(template.content, form_data, config, { 
       Estatus: status,
-      Enc: settings.ordenDelDiaDraft?.esJefeEncargado ? '(E)' : ''
+      Enc: settings.orden_del_dia_draft?.es_jefe_encargado ? '(E)' : ''
     });
     const newTitle = String(form_data.titulo || form_data.title || template.name);
 
@@ -75,7 +75,7 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
     };
     await onSave(finalReport);
     setSaveButtonText('Guardado');
-  }, [report, template, config, status, onSave, settings.ordenDelDiaDraft?.esJefeEncargado]);
+  }, [report, template, config, status, onSave, settings.orden_del_dia_draft?.es_jefe_encargado]);
 
   const debouncedSave = useMemo(
     () => debounce((form_data: Record<string, any>) => saveLogic(form_data), 30000),
@@ -155,7 +155,7 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
     if (!report || !template) return;
     const content = renderFinalReport(template.content, form_data, config, { 
       Estatus: newStatus,
-      Enc: settings.ordenDelDiaDraft?.esJefeEncargado ? '(E)' : ''
+      Enc: settings.orden_del_dia_draft?.es_jefe_encargado ? '(E)' : ''
     });
     const newTitle = String(form_data.titulo || form_data.title || template.name);
     const finalReport: Report = {

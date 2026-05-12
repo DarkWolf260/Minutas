@@ -71,7 +71,7 @@ export const FormLayout = ({
           (k) => k.toLowerCase() === id.toLowerCase()
         )) || systemTags.includes(id.toLowerCase());
 
-        if (isControlled) return;
+        if (isControlled || id.includes('.')) return;
         const isAssignedToSection = finalConfig.sections.some((s) => s.field_ids.includes(id));
         if (!isAssignedToSection) {
           if (!addedTopLevelFields.has(id)) {
@@ -96,8 +96,9 @@ export const FormLayout = ({
         const isControlled = (controlledValues && Object.keys(controlledValues).some(
           (k) => k.toLowerCase() === id.toLowerCase()
         )) || systemTags.includes(id.toLowerCase());
+        const isDerived = id.includes('.');
 
-        return !allLayoutFields.has(id) && finalConfig.fields[id] && !isControlled;
+        return !allLayoutFields.has(id) && finalConfig.fields[id] && !isControlled && !isDerived;
       }
     );
     if (orphanFields.length > 0) {
@@ -106,6 +107,10 @@ export const FormLayout = ({
 
     return chunks;
   }, [finalConfig, controlledValues]);
+
+  if (!control || !control.register) {
+    return null;
+  }
 
   return (
     <>

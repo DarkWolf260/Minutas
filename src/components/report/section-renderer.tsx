@@ -49,6 +49,10 @@ export function ReportFormField({
     settings,
     disabled
 }: ReportFormFieldProps) {
+    if (!control || !control.register) {
+        return null;
+    }
+
     const currentEstatus = useWatch({ control, name: 'Estatus' });
     const isFinalizado = currentEstatus === 'Finalizado';
 
@@ -114,9 +118,14 @@ export interface SectionRendererProps {
 }
 
 export function SectionRenderer(props: SectionRendererProps) {
-    const { section, config, pathPrefix = '', conditionValue } = props;
+    const { section, config, control, pathPrefix = '', conditionValue } = props;
+    
+    if (!control || !control.register) {
+        return null;
+    }
+
     const condition = section.condition;
-    const conditionMode = condition?.conditionMode || 'hide';
+    const condition_mode = condition?.condition_mode || 'hide';
 
     // For dotted condition field IDs like "Director.sex", we need to watch
     // the BASE field ("Director") and derive the property at evaluation time.
@@ -134,10 +143,10 @@ export function SectionRenderer(props: SectionRendererProps) {
             : (baseConditionfield_id ?? 'dummy_no_condition')
         : 'dummy_no_condition';
 
-    // By not passing a 'control' prop, useWatch automatically attempts to find 
-    // the FormProvider context we set up in report-form.tsx. This correctly
-    // tracks dynamic field registrations nested inside conditions.
+    // By passing the 'control' prop explicitly, we avoid potential context mismatches
+    // during rapid re-renders or when components are rendered in different trees.
     const watchedFieldValue = useWatch({
+        control,
         name: watchPath,
         disabled: !condition
     });
@@ -169,8 +178,8 @@ export function SectionRenderer(props: SectionRendererProps) {
         const fieldConfigKey = Object.keys(config.fields).find(k => k.toLowerCase() === condition.field_id.toLowerCase());
         const fieldConfig = fieldConfigKey ? config.fields[fieldConfigKey] : config.fields[condition.field_id];
 
-        if (fieldConfig?.snippetOptions?.length) {
-            const options = fieldConfig.snippetOptions;
+        if (fieldConfig?.snippet_options?.length) {
+            const options = fieldConfig.snippet_options;
             const targetValue = condition.value;
             const matchedOpt = options.find(
                 (opt: any) => opt.value === targetValue || opt.label === targetValue
@@ -190,12 +199,12 @@ export function SectionRenderer(props: SectionRendererProps) {
         );
 
         // hide mode (default): fields disappear from form when condition not met
-        if (!conditionMet && conditionMode === 'hide') {
+        if (!conditionMet && condition_mode === 'hide') {
             return null;
         }
     }
 
-    const inner = section.isRepeatable
+    const inner = section.is_repeatable
         ? <RepeatableSectionRenderer {...props} />
         : <SingleSectionRenderer {...props} />;
 
@@ -221,12 +230,16 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
         pathPrefix = '',
     } = props;
 
+    if (!control || !control.register) {
+        return null;
+    }
+
     const fieldNamePrefix = pathPrefix
         ? `${pathPrefix}.${section.id}`
         : section.id;
 
     const layoutItems = section.layout && section.layout.length > 0 ? section.layout : section.field_ids;
-    if (layoutItems.length === 0 && !section.label && !section.isSeparator) {
+    if (layoutItems.length === 0 && !section.label && !section.is_separator) {
         return null;
     }
 
@@ -257,7 +270,7 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
         if (!fieldConfig) return null;
 
         const isFullWidth =
-            fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
+            fieldConfig.type === 'textarea' || fieldConfig.is_full_width;
 
         const defaultSingleFieldItem: form_dataRecord = { [field_id]: '' };
 
@@ -333,7 +346,7 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
 
     const isFullWidth = section.field_ids.some((fid: string) => {
         const fc = config.fields[fid];
-        return fc?.type === 'textarea' || fc?.isFullWidth;
+        return fc?.type === 'textarea' || fc?.is_full_width;
     });
 
     // Simplified UI for multi-field repeatable sections
@@ -357,8 +370,8 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                     >
                         <div className="flex items-center justify-between">
                             <h4 className="font-medium">
-                                {section.repeatableItemLabel
-                                    ? `${section.repeatableItemLabel} #${String(
+                                {section.repeatable_item_label
+                                    ? `${section.repeatable_item_label} #${String(
                                         index + 1
                                     ).padStart(2, '0')}`
                                     : `${section.label} #${String(index + 1).padStart(2, '0')}`}
@@ -423,7 +436,7 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                                     const fieldConfig = (config.fields || {})[field_id];
                                     if (!fieldConfig) return null;
                                     const isFullWidth =
-                                        fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
+                                        fieldConfig.type === 'textarea' || fieldConfig.is_full_width;
                                     const path = `${fieldNamePrefix}.${index}.${field_id}`;
 
                                     return (
@@ -469,7 +482,7 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                     className="mt-4"
                 >
                     <PlusCircle className="mr-2 h-4 w-4" /> Añadir{' '}
-                    {section.repeatableItemLabel || section.label}
+                    {section.repeatable_item_label || section.label}
                 </Button>
             )}
         </div>
@@ -493,10 +506,14 @@ function SingleSectionRenderer(props: SectionRendererProps) {
         pathPrefix = '',
     } = props;
 
+    if (!control || !control.register) {
+        return null;
+    }
+
     const fieldNamePrefix = pathPrefix;
 
     const layoutItems = section.layout && section.layout.length > 0 ? section.layout : section.field_ids;
-    if (layoutItems.length === 0 && !section.label && !section.isSeparator) {
+    if (layoutItems.length === 0 && !section.label && !section.is_separator) {
         return null;
     }
 
@@ -508,7 +525,7 @@ function SingleSectionRenderer(props: SectionRendererProps) {
         );
     }
 
-    if (section.isSeparator) {
+    if (section.is_separator) {
         return (
             <div className={cn("py-6 sm:col-span-2 3xl:col-span-3", props.wrapperClassName)}>
                 <Separator className="bg-border" />
@@ -528,7 +545,7 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                     .map((field_id: string, fIdx: number) => {
                         const fieldConfig = (config.fields || {})[field_id];
                         if (!fieldConfig) return null;
-                        const isFullWidth = fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
+                        const isFullWidth = fieldConfig.type === 'textarea' || fieldConfig.is_full_width;
                         const path = fieldNamePrefix ? `${fieldNamePrefix}.${field_id}` : field_id;
                         return (
                             <div
@@ -616,7 +633,7 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                         const fieldConfig = (config.fields || {})[field_id];
                         if (!fieldConfig) return null;
                         const isFullWidth =
-                            fieldConfig.type === 'textarea' || fieldConfig.isFullWidth;
+                            fieldConfig.type === 'textarea' || fieldConfig.is_full_width;
                         const path = fieldNamePrefix ? `${fieldNamePrefix}.${field_id}` : field_id;
 
                         return (

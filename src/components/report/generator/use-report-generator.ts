@@ -40,8 +40,8 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
       return { finalInitialData: newInitialData };
     }
 
-    const activeStaff = (settings?.active_guard_id && settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === settings.active_guard_id)
-      ? settings.ordenDelDiaDraft.staff
+    const activeStaff = (settings?.active_guard_id && settings.orden_del_dia_draft && settings.orden_del_dia_draft.guard_id === settings.active_guard_id)
+      ? settings.orden_del_dia_draft.staff
       : guards.find((g) => g.id === settings.active_guard_id)?.staff;
 
     if (!activeStaff) {
@@ -112,7 +112,7 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
     if (template && form_data) {
       await saveDraft({
         template_id: template.id,
-        workspace_id: template.workspace_id,
+        workspace_id: template.workspace_id || '',
         form_data
       });
     }
@@ -140,7 +140,7 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
 
     const newReport: Report = {
       id: generateId('report'),
-      workspace_id: template.workspace_id,
+      workspace_id: template.workspace_id || '',
       template_id: template.id,
       title: title,
       timestamp: new Date().toISOString(),

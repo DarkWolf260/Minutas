@@ -205,7 +205,7 @@ export const FieldRenderer = memo(
                         );
                     case 'dropdown': {
                         const handleSelect = (selectedLabel: string) => {
-                            const selectedOption = (fieldConfig.snippetOptions || []).find(
+                            const selectedOption = (fieldConfig.snippet_options || []).find(
                                 (opt: SnippetOption) => opt.label === selectedLabel
                             );
                             if (selectedOption) {
@@ -222,7 +222,7 @@ export const FieldRenderer = memo(
                                     <SelectValue placeholder="Selecciona una opción..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {(fieldConfig.snippetOptions || []).map((option) => (
+                                    {(fieldConfig.snippet_options || []).map((option) => (
                                         <SelectItem key={option.id} value={option.label}>
                                             {option.label}
                                         </SelectItem>

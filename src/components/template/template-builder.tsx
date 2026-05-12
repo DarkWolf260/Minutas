@@ -63,24 +63,33 @@ export function TemplateBuilder({
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Debounce template content for the form preview to prevent rapid remounts
+  const [debouncedContent, setDebouncedContent] = useState(templateContent);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedContent(templateContent);
+    }, 500); // 500ms debounce
+    return () => clearTimeout(timer);
+  }, [templateContent]);
+
   // Creates a temporary template object for the preview
   const previewTemplate = useMemo<Template>(
     () => ({
       id: 'preview',
       workspace_id: currentWorkspace,
       name: templateName || 'Vista Previa',
-      content: templateContent,
+      content: debouncedContent,
       type: 'normal',
       is_active: true,
       statistics_category: initialTemplate?.statistics_category,
       statistics_rules: initialTemplate?.statistics_rules,
     }),
-    [templateContent, templateName, initialTemplate, currentWorkspace]
+    [debouncedContent, templateName, initialTemplate, currentWorkspace]
   );
 
   // Creates a temporary config for the preview
   const previewConfig = useMemo<TemplateConfig>(() => {
-    const { sections, layout, defaultValues } = parseTemplate(templateContent);
+    const { sections, layout, defaultValues } = parseTemplate(debouncedContent);
 
     // Populate preview config fields with default values
     const fields: Record<string, any> = {};
@@ -95,8 +104,7 @@ export function TemplateBuilder({
       layout,
       fields,
     };
-  }, [templateContent]);
-
+  }, [debouncedContent]);
 
   const handleSave = () => {
     if (!templateName.trim()) {
@@ -296,7 +304,6 @@ export function TemplateBuilder({
                   </CardHeader>
                   <CardContent className="pt-6">
                     <ReportForm
-                      key={`preview-${templateContent.length}-${previewStatus}`}
                       ref={formRef}
                       template={previewTemplate}
                       config={previewConfig}
