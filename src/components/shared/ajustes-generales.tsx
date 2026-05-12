@@ -36,7 +36,7 @@ export function AjustesGenerales() {
   const { settings, saveSettings, isLoaded: settingsLoaded } = useSettings();
   const { departments, isLoaded: deptsLoaded } = useDepartments();
   const { isAdmin } = useUser();
-  const { isCloud } = useWorkspaceManager();
+  const { isCloud, currentWorkspace } = useWorkspaceManager();
 
   const isBlocked = isCloud && !isAdmin;
 
@@ -223,11 +223,23 @@ export function AjustesGenerales() {
 
   return (
     <Card className="shadow-lg h-full flex flex-col overflow-hidden">
-      <CardHeader>
-        <CardTitle>Ajustes Generales</CardTitle>
-        <CardDescription>
-          Define los valores globales que se utilizarán automáticamente en tus reportes.
-        </CardDescription>
+      <CardHeader className="relative">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Ajustes Generales</CardTitle>
+            <CardDescription>
+              Define los valores globales que se utilizarán automáticamente en tus reportes.
+            </CardDescription>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-2 py-0.5 bg-muted rounded-full">
+              Área de Trabajo
+            </span>
+            <span className="text-sm font-bold text-primary truncate max-w-[200px]">
+              {currentWorkspace}
+            </span>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="p-0 flex-1 min-h-0 flex flex-col">
         <ScrollArea className="flex-1" type="always">

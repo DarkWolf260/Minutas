@@ -80,9 +80,13 @@ export const FieldRenderer = memo(
 
             // Check for Reporta field (Analista is discarded)
             if (lowerfield_id === 'reporta') {
-                const reportarole_ids = settings?.reportarole_ids || [];
+                const reportarole_ids = (settings?.reportarole_ids || []).map(id => id.trim().toLowerCase());
                 const reportingStaff = staffOptions.filter(
-                    (staff) => staff.role_id && reportarole_ids.includes(staff.role_id)
+                    (staff) => {
+                        if (!staff.role_id) return false;
+                        const staffRoleLower = staff.role_id.trim().toLowerCase();
+                        return reportarole_ids.includes(staffRoleLower);
+                    }
                 );
 
                 // The value might be an array of StaffMember objects. We need the ID for the Select.

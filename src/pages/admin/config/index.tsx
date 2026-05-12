@@ -3,21 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { useGlobalConfig } from '@/hooks/use-global-config';
 import { 
   ArrowLeft, 
-  Settings, 
   Globe, 
   ShieldAlert, 
-  UserPlus, 
-  Save,
-  Building2,
-  Monitor
+  UserPlus 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { AjustesGenerales } from '@/components/shared/ajustes-generales';
+import { AppVersionManager } from './components/app-version-manager';
 
 export default function AdminConfigPage() {
   const navigate = useNavigate();
@@ -67,52 +63,7 @@ export default function AdminConfigPage() {
       <div className="flex-1 overflow-auto p-4 md:p-8 space-y-6">
         <div className="max-w-4xl mx-auto grid gap-6">
           
-          {/* General App Info */}
-          <Card className="rounded-3xl border-muted/60 shadow-sm overflow-hidden">
-            <CardHeader className="bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Monitor className="h-5 w-5 text-primary" />
-                <div>
-                  <CardTitle className="text-lg">Información de la Aplicación</CardTitle>
-                  <CardDescription>Branding y nombres principales del sistema.</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="system-name">Nombre del Sistema</Label>
-                  <div className="flex gap-2">
-                    <Input 
-                      id="system-name" 
-                      defaultValue={config.system_name}
-                      placeholder="Ej: Minutas Cloud"
-                      className="rounded-xl"
-                      onBlur={(e) => {
-                        if (e.target.value !== config.system_name) {
-                          updateConfig('system_name', e.target.value);
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="org-name">Organización / Municipio</Label>
-                  <Input 
-                    id="org-name" 
-                    defaultValue={config.org_name}
-                    placeholder="Ej: Alcaldía de Chacao"
-                    className="rounded-xl"
-                    onBlur={(e) => {
-                      if (e.target.value !== config.org_name) {
-                        updateConfig('org_name', e.target.value);
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <AppVersionManager />
 
           {/* Access and Security */}
           <Card className="rounded-3xl border-muted/60 shadow-sm overflow-hidden">

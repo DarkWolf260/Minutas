@@ -19,7 +19,8 @@ export const NovedadMainContent = ({ hook }: NovedadMainContentProps) => {
     updateReport,
     setReporteAEliminar,
     generatorRef,
-    idReporteSeleccionado
+    idReporteSeleccionado,
+    manejarSeleccionarReporte
   } = hook;
 
   return (
@@ -41,6 +42,7 @@ export const NovedadMainContent = ({ hook }: NovedadMainContentProps) => {
             report={reporteSeleccionado}
             onSave={updateReport}
             onDelete={(id: string) => setReporteAEliminar(id)}
+            onClose={() => manejarSeleccionarReporte(null)}
           />
         </div>
       ) : (

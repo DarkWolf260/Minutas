@@ -94,7 +94,11 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
     return (
       <div className="flex flex-col h-full w-full overflow-hidden relative" id="report-generator-root">
         {!hideHeader && (
-          <GeneratorHeader onPreview={handlePreviewClick} onSave={handleSaveClick} />
+          <GeneratorHeader 
+            onPreview={handlePreviewClick} 
+            onSave={handleSaveClick} 
+            onDiscard={onCancel}
+          />
         )}
 
         {!hideHeader ? (
@@ -105,6 +109,9 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
           <div className="flex-1 w-full bg-transparent">
             {formContent}
             <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-muted/20">
+              <Button variant="ghost" onClick={onCancel} className="text-muted-foreground hover:text-destructive">
+                Descartar
+              </Button>
               <Button variant="outline" onClick={handlePreviewClick} className="shadow-sm">
                 <Eye className="h-4 w-4 mr-2" />
                 Vista Previa

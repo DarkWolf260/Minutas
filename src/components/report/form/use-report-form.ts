@@ -17,6 +17,7 @@ import { useGuards } from '@/hooks/use-guards';
 import { useUnits } from '@/hooks/use-units';
 import { useSettings } from '@/hooks/use-settings';
 import { usePersonnel } from '@/hooks/use-personnel';
+import { useOrdenDelDiaDraft } from '@/hooks/use-orden-del-dia-draft';
 import { formatStaffMember } from '@/lib/formatters';
 
 interface UseReportFormProps {
@@ -41,21 +42,27 @@ export function useReportForm({
   const { guards, isLoaded: guardsLoaded } = useGuards();
   const { settings, isLoaded: settingsLoaded } = useSettings();
   const { units } = useUnits();
+  const { draft: cloudDraft, isLoaded: draftLoaded } = useOrdenDelDiaDraft();
   const { personnel, isLoaded: personnelLoaded } = usePersonnel();
 
   // 1. Staff calculation
   const activeGuardStaff = useMemo(() => {
-    if (!settingsLoaded || !guardsLoaded || !settings?.active_guard_id) return [];
+    if (!settingsLoaded || !guardsLoaded || !draftLoaded || !settings?.active_guard_id) return [];
 
-    const activeStaff = (settings.orden_del_dia_draft && settings.orden_del_dia_draft.guard_id === settings.active_guard_id)
-      ? settings.orden_del_dia_draft.staff
-      : guards.find((g) => g.id === settings.active_guard_id)?.staff;
+    // Prioridad 1: Borrador independiente (solo si coincide con la guardia activa)
+    // Prioridad 2: Borrador en settings (solo si coincide)
+    // Prioridad 3: Plantilla de la guardia
+    const activeStaff = (cloudDraft && cloudDraft.guard_id === settings.active_guard_id)
+      ? cloudDraft.staff
+      : (settings?.orden_del_dia_draft && settings.orden_del_dia_draft.guard_id === settings.active_guard_id)
+        ? settings.orden_del_dia_draft.staff
+        : guards.find((g) => g.id === settings.active_guard_id)?.staff;
 
     if (!activeStaff) return [];
 
     const staffMap = new Map<string, StaffMember & { role_id?: string }>();
     Object.entries(activeStaff as Record<string, any[]>).forEach(([roleName, staffList]) => {
-      const role_id = roles.find((r: any) => r.name === roleName)?.name;
+      const role_id = roles.find((r: any) => r.name.trim().toLowerCase() === roleName.trim().toLowerCase())?.name || roleName;
       (staffList as any[]).forEach((person: any) => {
         if (!staffMap.has(person.id)) {
           staffMap.set(person.id, { ...person, role_id });
@@ -64,7 +71,7 @@ export function useReportForm({
     });
 
     return Array.from(staffMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [settings?.active_guard_id, settings?.orden_del_dia_draft, guards, settingsLoaded, guardsLoaded, roles]);
+  }, [settings?.active_guard_id, settings?.orden_del_dia_draft, cloudDraft, guards, settingsLoaded, guardsLoaded, draftLoaded, roles]);
 
   // 2. Template Parsing (Memoized separately)
   const parsedTemplate = useMemo(() => {
@@ -185,9 +192,11 @@ export function useReportForm({
     (data?: form_dataRecord) => {
       const initialFormValues: form_dataRecord = data ? JSON.parse(JSON.stringify(data)) : {};
 
-      const activeStaff = (settings?.active_guard_id && settings.orden_del_dia_draft && settings.orden_del_dia_draft.guard_id === settings.active_guard_id)
-        ? settings.orden_del_dia_draft.staff
-        : (settings?.active_guard_id ? guards.find((g) => g.id === settings.active_guard_id)?.staff : null);
+      const activeStaff = (cloudDraft && cloudDraft.guard_id === settings?.active_guard_id)
+        ? cloudDraft.staff
+        : (settings?.active_guard_id && settings.orden_del_dia_draft && settings.orden_del_dia_draft.guard_id === settings.active_guard_id)
+          ? settings.orden_del_dia_draft.staff
+          : (settings?.active_guard_id ? guards.find((g) => g.id === settings.active_guard_id)?.staff : null);
 
       const safeClone = <T extends unknown>(v: T): T => {
         if (v === undefined || v === null) return v;
@@ -406,8 +415,11 @@ export function useReportForm({
     if (!baseDataLoaded) return;
 
     const currentInitialDataHash = stableStringify(initialData || {});
-    const currentDraftKey = settings?.orden_del_dia_draft?.updated_at || 'no-draft';
-    const baseDataState = `${currentInitialDataHash}:${settings?.active_guard_id}:${currentDraftKey}:${roles.length}:${personnel.length}`;
+    // Usamos el updated_at del borrador independiente como clave de cambio, o el de settings como fallback
+    const currentDraftKey = cloudDraft?.updated_at || settings?.orden_del_dia_draft?.updated_at || 'no-draft';
+    
+    // Optimizamos la clave: solo reseteamos si cambia la guardia activa, el borrador o la data inicial
+    const baseDataState = `${currentInitialDataHash}:${settings?.active_guard_id}:${currentDraftKey}`;
 
     const baseDataChanged = baseDataState !== lastBaseDataHash.current;
 
@@ -436,7 +448,7 @@ export function useReportForm({
       const formValues = getInitialValues(initialData);
       reset(formValues);
     }
-  }, [reportId, initialData, getInitialValues, reset, methods.formState.isDirty, rolesLoaded, guardsLoaded, settingsLoaded, roles, personnel, settings?.active_guard_id, settings?.orden_del_dia_draft?.updated_at, trigger]);
+  }, [reportId, initialData, getInitialValues, reset, methods.formState.isDirty, rolesLoaded, guardsLoaded, settingsLoaded, settings?.active_guard_id, settings?.orden_del_dia_draft?.updated_at, cloudDraft, trigger]);
 
   return {
     methods,

@@ -1,5 +1,4 @@
-import React from 'react';
-import { Trash2, Eye, Save, CheckIcon, Send } from 'lucide-react';
+import { Trash2, Eye, Save, CheckIcon, Send, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -15,6 +14,7 @@ interface ViewerHeaderProps {
   onDelete: () => void;
   onPreview: () => void;
   onSave: () => void;
+  onClose?: () => void;
   saveButtonText: string;
   isFinalizado: boolean;
   isSecondary: boolean;
@@ -28,6 +28,7 @@ export const ViewerHeader = ({
   onDelete,
   onPreview,
   onSave,
+  onClose,
   saveButtonText,
   isFinalizado,
   isSecondary,
@@ -37,11 +38,23 @@ export const ViewerHeader = ({
   return (
     <header className="flex-none flex items-center justify-between border-b p-4 bg-background z-20 shadow-sm min-h-[73px]">
       <div className="flex items-center gap-2">
+        {onClose && (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground h-9 w-9 mr-1"
+            title="Cerrar reporte"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"
-          className="text-destructive hover:bg-destructive/10"
+          className="text-destructive hover:bg-destructive/10 h-9 w-9"
           onClick={onDelete}
+          title="Eliminar reporte"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
