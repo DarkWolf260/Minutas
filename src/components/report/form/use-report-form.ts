@@ -47,16 +47,16 @@ export function useReportForm({
   const activeGuardStaff = useMemo(() => {
     if (!settingsLoaded || !guardsLoaded || !settings?.active_guard_id) return [];
 
-    const activeStaff = (settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === settings.active_guard_id)
-      ? settings.ordenDelDiaDraft.staff
+    const activeStaff = (settings.orden_del_dia_draft && settings.orden_del_dia_draft.guard_id === settings.active_guard_id)
+      ? settings.orden_del_dia_draft.staff
       : guards.find((g) => g.id === settings.active_guard_id)?.staff;
 
     if (!activeStaff) return [];
 
     const staffMap = new Map<string, StaffMember & { role_id?: string }>();
-    Object.entries(activeStaff).forEach(([roleName, staffList]) => {
+    Object.entries(activeStaff as Record<string, any[]>).forEach(([roleName, staffList]) => {
       const role_id = roles.find((r: any) => r.name === roleName)?.name;
-      staffList.forEach((person) => {
+      (staffList as any[]).forEach((person: any) => {
         if (!staffMap.has(person.id)) {
           staffMap.set(person.id, { ...person, role_id });
         }
@@ -64,11 +64,17 @@ export function useReportForm({
     });
 
     return Array.from(staffMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [settings?.active_guard_id, settings?.ordenDelDiaDraft, guards, settingsLoaded, guardsLoaded, roles]);
+  }, [settings?.active_guard_id, settings?.orden_del_dia_draft, guards, settingsLoaded, guardsLoaded, roles]);
 
-  // 2. Final Config Merging
+  // 2. Template Parsing (Memoized separately)
+  const parsedTemplate = useMemo(() => {
+    if (!template?.content) return null;
+    return parseTemplate(template.content);
+  }, [template?.content]);
+
+  // 3. Final Config Merging
   const finalConfig = useMemo(() => {
-    if (!config || !template) return { fields: {}, sections: [], layout: [] };
+    if (!config || !template || !parsedTemplate) return { fields: {}, sections: [], layout: [] };
 
     const {
       sections,
@@ -80,7 +86,7 @@ export function useReportForm({
       fieldWidths,
       requiredFields,
       defaultValues,
-    } = parseTemplate(template.content);
+    } = parsedTemplate;
 
     const newConfig: TemplateConfig = {
       fields: {},
@@ -132,11 +138,11 @@ export function useReportForm({
       } as FieldConfig;
 
       if (defaultValues.has(field_id)) {
-        newConfig.fields[field_id].defaultValue = defaultValues.get(field_id);
+        newConfig.fields[field_id].default_value = defaultValues.get(field_id);
       }
 
       if (templateOptions.has(field_id)) {
-        newConfig.fields[field_id].snippetOptions = templateOptions.get(field_id);
+        newConfig.fields[field_id].snippet_options = templateOptions.get(field_id);
         if (newConfig.fields[field_id].type === 'text') {
           newConfig.fields[field_id].type = 'dropdown';
         }
@@ -149,7 +155,7 @@ export function useReportForm({
       }
 
       if (fieldWidths.has(field_id)) {
-        newConfig.fields[field_id].isFullWidth = true;
+        newConfig.fields[field_id].is_full_width = true;
       }
 
       if (requiredFields.has(field_id)) {
@@ -158,7 +164,7 @@ export function useReportForm({
     });
 
     return newConfig;
-  }, [config, template, definitions]);
+  }, [config, template, definitions, parsedTemplate]);
 
   // 3. Predefined Values
   const predefinedValues: Record<string, string> = useMemo(() => {
@@ -179,8 +185,8 @@ export function useReportForm({
     (data?: form_dataRecord) => {
       const initialFormValues: form_dataRecord = data ? JSON.parse(JSON.stringify(data)) : {};
 
-      const activeStaff = (settings?.active_guard_id && settings.ordenDelDiaDraft && settings.ordenDelDiaDraft.guardId === settings.active_guard_id)
-        ? settings.ordenDelDiaDraft.staff
+      const activeStaff = (settings?.active_guard_id && settings.orden_del_dia_draft && settings.orden_del_dia_draft.guard_id === settings.active_guard_id)
+        ? settings.orden_del_dia_draft.staff
         : (settings?.active_guard_id ? guards.find((g) => g.id === settings.active_guard_id)?.staff : null);
 
       const safeClone = <T extends unknown>(v: T): T => {
@@ -274,8 +280,8 @@ export function useReportForm({
 
           if (foundKey && predefinedValues[foundKey]) {
             target[field_id] = safeClone(predefinedValues[foundKey]);
-          } else if (finalConfig.fields[field_id]?.defaultValue !== undefined) {
-            target[field_id] = safeClone(finalConfig.fields[field_id].defaultValue);
+          } else if (finalConfig.fields[field_id]?.default_value !== undefined) {
+            target[field_id] = safeClone(finalConfig.fields[field_id].default_value);
           } else if (role && !MANUAL_FIELDS.includes(keyLower)) {
             target[field_id] = [];
           } else if (
@@ -299,7 +305,7 @@ export function useReportForm({
         if (!section) return;
         seenIds.add(sectionId);
 
-        if (section.isRepeatable) {
+        if (section.is_repeatable) {
           if (!target[section.id] || !Array.isArray(target[section.id])) {
             target[section.id] = [];
           }
@@ -345,7 +351,7 @@ export function useReportForm({
 
       return initialFormValues;
     },
-    [finalConfig, predefinedValues, roles, guards, settings?.active_guard_id, settings?.ordenDelDiaDraft, personnel, settingsLoaded, guardsLoaded]
+    [finalConfig, predefinedValues, roles, guards, settings?.active_guard_id, settings?.orden_del_dia_draft, personnel, settingsLoaded, guardsLoaded]
   );
 
   // 5. RHF and Sync logic
@@ -400,7 +406,7 @@ export function useReportForm({
     if (!baseDataLoaded) return;
 
     const currentInitialDataHash = stableStringify(initialData || {});
-    const currentDraftKey = settings?.ordenDelDiaDraft?.updated_at || 'no-draft';
+    const currentDraftKey = settings?.orden_del_dia_draft?.updated_at || 'no-draft';
     const baseDataState = `${currentInitialDataHash}:${settings?.active_guard_id}:${currentDraftKey}:${roles.length}:${personnel.length}`;
 
     const baseDataChanged = baseDataState !== lastBaseDataHash.current;
@@ -418,11 +424,19 @@ export function useReportForm({
     }
 
     if (baseDataChanged && !methods.formState.isDirty && !isFocused.current) {
+      logger.info('Resetting form due to base data change', {
+        feature: 'useReportForm',
+        metadata: {
+          reportId,
+          prevHash: lastBaseDataHash.current,
+          newHash: baseDataState
+        }
+      });
       lastBaseDataHash.current = baseDataState;
       const formValues = getInitialValues(initialData);
       reset(formValues);
     }
-  }, [reportId, initialData, getInitialValues, reset, methods.formState.isDirty, rolesLoaded, guardsLoaded, settingsLoaded, roles, personnel, settings?.active_guard_id, settings?.ordenDelDiaDraft?.updated_at, trigger]);
+  }, [reportId, initialData, getInitialValues, reset, methods.formState.isDirty, rolesLoaded, guardsLoaded, settingsLoaded, roles, personnel, settings?.active_guard_id, settings?.orden_del_dia_draft?.updated_at, trigger]);
 
   return {
     methods,

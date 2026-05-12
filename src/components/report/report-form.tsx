@@ -113,7 +113,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
         const form_data = getValues();
         const dynamicPredefinedValues = {
           ...controlledValues,
-          Enc: settings.ordenDelDiaDraft?.esJefeEncargado ? '(E)' : ''
+          Enc: settings.orden_del_dia_draft?.es_jefe_encargado ? '(E)' : ''
         };
         return renderFinalReport(template.content, form_data, finalConfig, predefinedValues, false, dynamicPredefinedValues);
       },
