@@ -184,6 +184,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                         layout: [field_id],
                         repeatable_item_label: field_id.toUpperCase(),
                         original_content: rawWithoutStar,
+                        full_raw: token.raw,
                         is_virtual: true,
                     };
 
@@ -242,17 +243,20 @@ export function parse(tokens: Token[]): TemplateParserResult {
                         inner = [];
                     } else {
                         if (originalLabel.startsWith('"')) {
-                            // ["Title" ...static text... {field}]
-                            // Take EVERYTHING after the closing title quote so
-                            // static text like "Campo1: " is preserved in originalContent.
                             const closingQuoteIdx = originalLabel.indexOf('"', 1);
-                            const bodyStart = closingQuoteIdx !== -1 ? closingQuoteIdx + 1 : 0;
-                            inner = tokenize(originalLabel.slice(bodyStart));
+                            if (closingQuoteIdx !== -1) {
+                                // Extract the title from between the quotes
+                                baseLabel = originalLabel.slice(1, closingQuoteIdx).trim();
+                                // Body is everything after the closing quote
+                                const bodyStart = closingQuoteIdx + 1;
+                                inner = tokenize(originalLabel.slice(bodyStart));
+                            } else {
+                                baseLabel = originalLabel.slice(1).trim();
+                                inner = [];
+                            }
                         } else {
                             // No quotes: derive label from before the first {
-                            // Special case: label may start with singular/plural/sub attributes
-                            // In that case we capture EVERYTHING after the last attribute as body
-                            // so that static text like "- *NOMBRE:* " before {field} is preserved.
+                            // ... (rest of the attribute match logic)
                             const attrPattern = /^((?:singular\s*=\s*"[^"]*"\s*|plural\s*=\s*"[^"]*"\s*|sub\s*=\s*"[^"]*"\s*)+)/i;
                             const attrMatch = originalLabel.match(attrPattern);
                             if (attrMatch) {
@@ -280,17 +284,14 @@ export function parse(tokens: Token[]): TemplateParserResult {
                         }
 
                         if (currentToken.type === 'section_start') {
-                            // Self-contained sections (those with { in their label, or separators [""])
-                            // don't emit a matching [/], so they must NOT increment depth.
-                            // Failing to account for this causes depth to grow and outer tokens
-                            // (fields after the [/]) to be swallowed into the conditional's inner list.
                             const rawLabel = currentToken.label || '';
                             const isSep = rawLabel.trim() === '""';
                             const hasBrace = rawLabel.includes('{');
                             const isSelfContainedInner = (hasBrace && !currentToken.condition) || isSep;
                             if (!isSelfContainedInner) depth++;
+                        } else if (currentToken.type === 'section_end') {
+                            depth--;
                         }
-                        if (currentToken.type === 'section_end') depth--;
 
                         if (depth > 0) {
                             inner.push(currentToken);
@@ -389,6 +390,12 @@ export function parse(tokens: Token[]): TemplateParserResult {
                         condition_mode: token.condition.condition_mode,
                     } : undefined,
                     original_content: inner.map(t => t.raw).join(''),
+                    full_raw: (() => {
+                        if (isSelfContained) return token.raw;
+                        const lastToken = idx > 0 ? tokenList[idx - 1] : undefined;
+                        const closingRaw = (lastToken?.type === 'section_end') ? lastToken.raw : '';
+                        return [token.raw, ...inner.map(t => t.raw), closingRaw].join('');
+                    })(),
                     is_separator: is_separator,
                     is_mapping: isMappingConditional || false,
                     is_self_contained: isSelfContained && !is_separator,
