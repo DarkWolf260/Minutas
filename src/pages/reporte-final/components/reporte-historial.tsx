@@ -69,7 +69,14 @@ export function ReporteHistorial({ hook }: ReporteHistorialProps) {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Clock className="h-3.5 w-3.5" />
-                    <span>{format(new Date(report.generatedAt), 'HH:mm')}</span>
+                    <span>
+                      {(() => {
+                        const dateVal = report.generated_at || (report as any).generatedAt || report.date;
+                        if (!dateVal) return '--:--';
+                        const d = new Date(dateVal);
+                        return isNaN(d.getTime()) ? '--:--' : format(d, 'HH:mm');
+                      })()}
+                    </span>
                   </div>
                 </div>
               </CardContent>

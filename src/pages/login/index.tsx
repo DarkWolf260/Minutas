@@ -15,11 +15,11 @@ export default function LoginPage() {
   const { signIn, isAuthenticated } = useAuth();
   const { isCloud } = useWorkspaceManager();
   const { config } = useGlobalConfig();
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
+
   const redirectTo = searchParams.get('redirect') || '/';
 
   // Si ya está autenticado, redirigir automáticamente
@@ -60,8 +60,8 @@ export default function LoginPage() {
 
       {/* Volver button */}
       <div className="absolute top-6 left-6 z-20">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className="text-muted-foreground hover:text-foreground"
           onClick={() => navigate('/')}
         >
@@ -128,9 +128,9 @@ export default function LoginPage() {
                 />
               </div>
             </div>
-            <Button 
-              type="submit" 
-              className="w-full h-11 rounded-xl font-bold mt-4 shadow-lg shadow-primary/20" 
+            <Button
+              type="submit"
+              className="w-full h-11 rounded-xl font-bold mt-4 shadow-lg shadow-primary/20"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -142,7 +142,7 @@ export default function LoginPage() {
                 </span>
               )}
             </Button>
-            
+
             <div className="text-center pt-2">
               <button
                 type="button"

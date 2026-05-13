@@ -13,10 +13,33 @@ import {
 } from './template/renderer';
 import { validateSyntax, validateSemantics } from './template/validator';
 
+// Cache for parsed templates to avoid redundant work
+const parseCache = new Map<string, TemplateParserResult>();
+
 /**
  * Parsea una plantilla completa y devuelve su configuración y errores
  */
 export function parseTemplate(templateContent: string): TemplateParserResult {
+  if (!templateContent) {
+    return {
+      sections: [],
+      layout: [],
+      fieldNames: new Set(),
+      fieldTypes: new Map(),
+      templateOptions: new Map(),
+      fieldModifiers: new Map(),
+      fieldWidths: new Map(),
+      requiredFields: new Map(),
+      defaultValues: new Map(),
+      predefinedValues: new Map(),
+      errors: [],
+    };
+  }
+
+  // Check cache first
+  const cached = parseCache.get(templateContent);
+  if (cached) return cached;
+
   const tokens = tokenize(templateContent);
   const result = parse(tokens);
 
@@ -24,10 +47,16 @@ export function parseTemplate(templateContent: string): TemplateParserResult {
   const syntaxErrors = validateSyntax(templateContent);
   const semanticErrors = validateSemantics(result.sections, result.fieldNames, result.fieldTypes, result.templateOptions);
 
-  return {
+  const finalResult = {
     ...result,
     errors: [...syntaxErrors, ...semanticErrors],
   };
+
+  // Store in cache (limit size if necessary, but templates are usually few)
+  if (parseCache.size > 100) parseCache.clear();
+  parseCache.set(templateContent, finalResult);
+
+  return finalResult;
 }
 
 // Re-export from new evaluator module for backwards compatibility

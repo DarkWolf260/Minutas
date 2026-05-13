@@ -459,19 +459,10 @@ export function parse(tokens: Token[]): TemplateParserResult {
         }
     });
 
-    console.log('DEBUG: Initial layout:', Array.from(layout));
-    console.log('DEBUG: absorbedItems:', Array.from(absorbedItems));
-
     // Also update global layout
     const updatedLayout = layout.flatMap(fid => fieldToConditionMap.get(fid) || [fid])
         .filter((val, idx, self) => self.indexOf(val) === idx)
-        .filter(val => {
-            const isAbsorbed = absorbedItems.has(val);
-            if (isAbsorbed) console.log(`DEBUG: Removing ${val} from layout because it is absorbed`);
-            return !isAbsorbed;
-        });
-    
-    console.log('DEBUG: Final layout:', updatedLayout);
+        .filter(val => !absorbedItems.has(val));
 
     return {
         sections,

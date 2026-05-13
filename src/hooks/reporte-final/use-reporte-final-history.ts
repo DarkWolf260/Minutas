@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useGuardHistory } from '@/hooks/use-guard-history';
 import { toast } from 'sonner';
 
@@ -67,14 +67,27 @@ export function useReporteFinalHistory() {
   };
 
   const reportesGuardadosOrdenados = useMemo(() => {
-    return [...reportesGuardados].sort(
-      (a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime()
-    );
+    return [...reportesGuardados].sort((a, b) => {
+      const dateA = new Date(a.generated_at || (a as any).generatedAt || a.date).getTime();
+      const dateB = new Date(b.generated_at || (b as any).generatedAt || b.date).getTime();
+      
+      const timeA = isNaN(dateA) ? 0 : dateA;
+      const timeB = isNaN(dateB) ? 0 : dateB;
+      
+      return timeB - timeA;
+    });
   }, [reportesGuardados]);
 
   const reporteGuardadoSeleccionado = useMemo(() => 
     reportesGuardados.find((r) => r.id === idReporteSeleccionado),
   [reportesGuardados, idReporteSeleccionado]);
+
+  const manejarCopiarReporte = useCallback(() => {
+    if (reporteGuardadoSeleccionado?.content) {
+      navigator.clipboard.writeText(reporteGuardadoSeleccionado.content);
+      toast.success('Reporte copiado al portapapeles');
+    }
+  }, [reporteGuardadoSeleccionado]);
 
   return {
     reportesGuardados,
@@ -91,6 +104,7 @@ export function useReporteFinalHistory() {
     manejarEliminarReporteGuardado,
     manejarConfirmarEliminacionHistorial,
     manejarCorregirFechasHistorial,
+    manejarCopiarReporte,
     saveGuardReport
   };
 }

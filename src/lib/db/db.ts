@@ -223,7 +223,7 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
     const getLogicalState = (obj: any) => {
       if (!obj) return null;
       const raw = obj.toJSON ? obj.toJSON() : obj;
-      
+
       const recursiveClean = (item: any): any => {
         if (item === null || item === undefined) return undefined;
         if (Array.isArray(item)) return item.map(recursiveClean).filter(v => v !== undefined);
@@ -232,13 +232,13 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
           Object.keys(item).forEach(k => {
             // Skip internal metadata but KEEP _deleted so sync knows when something is removed
             if (['_rev', '_meta', 'modified', '_modified', 'updated_at', 'created_at'].includes(k)) return;
-            
+
             let val = item[k];
             // Normalize JSON strings
             if (typeof val === 'string' && (k === 'data' || k === 'form_data' || k === 'statistics_rules' || k === 'statistics_sub_categories')) {
-              try { val = JSON.parse(val); } catch (e) {}
+              try { val = JSON.parse(val); } catch (e) { }
             }
-            
+
             const cleanedVal = recursiveClean(val);
             if (cleanedVal !== undefined) cleaned[k] = cleanedVal;
           });
@@ -259,7 +259,7 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
           try {
             const parsed = JSON.parse(result[key]);
             if (parsed && typeof parsed === 'object') result[key] = parsed;
-          } catch (e) {}
+          } catch (e) { }
         }
       });
       return result;
