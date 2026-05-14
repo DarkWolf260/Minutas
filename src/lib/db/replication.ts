@@ -4,7 +4,7 @@ import { supabase, callWithTokenRefresh } from '../supabase';
 import { logger } from '../logger';
 import { stableStringify } from '../utils-pure';
 import { Subject } from 'rxjs';
-import { debounceTime, map, tap } from 'rxjs/operators';
+import { debounceTime, map, tap } from 'rxjs';
 import { RealtimePostgresUpdatePayload } from '@supabase/supabase-js';
 
 // Global subject to trigger all replications at once
@@ -245,12 +245,14 @@ async function startCollectionReplication(
     retryTime: 5000,
   });
 
-  replicationState.error$.subscribe(err => {
-    logger.error(`Replication error in ${collectionName}:`, {
-      message: err.message,
-      code: (err as any).code,
-      details: (err as any).errors || (err as any).innerError || err
-    });
+  replicationState.error$.subscribe({
+    error: (err) => {
+      logger.error(`Replication error in ${collectionName}:`, {
+        message: err.message,
+        code: (err as any).code,
+        details: (err as any).errors || (err as any).innerError || err
+      });
+    }
   });
 
   // REALTIME SUBSCRIPTION

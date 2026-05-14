@@ -1,5 +1,5 @@
 
-import { normalizeCategory, getReportCategories, normalizeForComp } from './src/lib/statistics-utils';
+import { obtenerCategoriasReporte } from '@/lib/estadisticas-utils';
 
 const mockReport = {
   id: 'r1',
@@ -35,12 +35,5 @@ const mockConfig = {
 };
 
 console.log('Testing categories extraction...');
-const categories = getReportCategories(mockReport as any, mockTemplate as any, mockConfig as any);
+const categories = obtenerCategoriasReporte(mockReport as any, mockTemplate as any, mockConfig as any);
 console.log('Resulting categories:', categories);
-
-// Expected for 'Tipo de APH': both 5.3 and 5.5 should appear.
-// Current logic (known bug): only 5.3 will appear because it only takes the first item of the array ['Residencia', 'Vía pública'].
-
-// Expected for 'Destino': only 'Barcelona' matches '!= Guanta'.
-// Current logic: findAllValues finds both 'Barcelona' and 'Guanta' in the array 'pacientes'.
-// Loop runs for each. Match for Barcelona. Correct.

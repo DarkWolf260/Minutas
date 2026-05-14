@@ -26,7 +26,7 @@ function generateMockData(
   // For :show conditional sections, satisfy their condition in mock data
   // so the content appears in the rendered preview
   sections.forEach((section) => {
-    if (section.condition && section.condition.conditionMode === 'show') {
+    if (section.condition && section.condition.condition_mode === 'show') {
       const { field_id, value } = section.condition;
       data[field_id] = value;
     }
@@ -66,7 +66,7 @@ function generateMockData(
 
   // Generate mock data for repeatable sections
   sections.forEach((section) => {
-    if (section.isRepeatable) {
+    if (section.is_repeatable) {
       const itemData: Record<string, string> = {};
       section.field_ids.forEach((field_id: string) => {
         const fieldType = fieldTypes.get(field_id);
@@ -101,7 +101,7 @@ export function TemplatePreview({ templateContent }: TemplatePreviewProps) {
 
     // Collect :show conditional sections for the visual indicator
     const showSections = parsed.sections
-      .filter(s => s.condition?.conditionMode === 'show')
+      .filter(s => s.condition?.condition_mode === 'show')
       .map(s => ({ field_id: s.condition!.field_id, value: s.condition!.value }));
 
     // Build config from parsed data
@@ -118,7 +118,7 @@ export function TemplatePreview({ templateContent }: TemplatePreviewProps) {
       };
       const options = parsed.templateOptions.get(fieldName);
       if (options) {
-        config.fields[fieldName].snippetOptions = options;
+        config.fields[fieldName].snippet_options = options;
       }
     });
 

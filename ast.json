@@ -18,6 +18,7 @@
       "Dirección"
     ],
     "original_content": "- *NOMBRE Y APELLIDO:* {Nombre y apellido:title:req}\n- *CÉDULA:* {Cédula:req}\n- *EDAD:* {Edad:req}\n- *IDX:* {IDX:req}\n- *DIRECCIÓN:* {Dirección}",
+    "full_raw": "[singular=\"DATOS DEL PACIENTE\" plural=\"DATOS DE LOS PACIENTE\" sub=\"PACIENTE\"\n- *NOMBRE Y APELLIDO:* {Nombre y apellido:title:req}\n- *CÉDULA:* {Cédula:req}\n- *EDAD:* {Edad:req}\n- *IDX:* {IDX:req}\n- *DIRECCIÓN:* {Dirección}]",
     "is_separator": false,
     "is_mapping": false,
     "is_self_contained": true,
@@ -33,6 +34,7 @@
     "field_ids": [],
     "layout": [],
     "original_content": "",
+    "full_raw": "[\"\"]",
     "is_separator": true,
     "is_mapping": false,
     "is_self_contained": false,

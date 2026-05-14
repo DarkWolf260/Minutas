@@ -98,10 +98,10 @@ export function PersonnelHistoryDialog({ member, isOpen, onClose }: PersonnelHis
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className="font-mono text-[9px] py-0 h-4 px-1">
-                                                    {entry.guardId}
+                                                    {entry.guard_id}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-[11px] text-right text-muted-foreground">{entry.roleName}</TableCell>
+                                            <TableCell className="text-[11px] text-right text-muted-foreground">{entry.role_name}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>

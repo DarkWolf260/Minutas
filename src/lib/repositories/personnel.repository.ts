@@ -2,7 +2,7 @@ import type { MinutasDatabase } from '@/lib/db/db';
 import type { StaffMember } from '@/lib/types';
 import { silentWrite } from './base.repository';
 import { createSupabaseWatchAll, supabaseRepoUtils } from './supabase.repository';
-import { map } from 'rxjs/operators';
+import { map } from 'rxjs';
 
 export function createPersonnelRepository(db: MinutasDatabase | null, workspace_id: string, isCloud: boolean = false) {
   const ws = workspace_id;
@@ -19,7 +19,7 @@ export function createPersonnelRepository(db: MinutasDatabase | null, workspace_
       selector: { workspace_id: ws },
       sort: [{ order: 'asc' }],
     }).$.pipe(
-      map(docs => docs.map(d => d.toJSON() as StaffMember))
+      map(docs => docs.map(d => (typeof d.toJSON === 'function' ? d.toJSON() : d) as StaffMember))
     );
 
   const add = async (member: StaffMember) =>

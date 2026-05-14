@@ -3,7 +3,7 @@ import type { StaffRole, Department, Address } from '@/lib/types';
 import { DbKeys } from './keys';
 import { silentWrite } from './base.repository';
 import { createSupabaseWatchAll, supabaseRepoUtils } from './supabase.repository';
-import { map } from 'rxjs/operators';
+import { map } from 'rxjs';
 import { supabase } from '@/lib/supabase';
 
 export function createLookupRepository(db: MinutasDatabase | null, workspace_id: string, isCloud: boolean = false) {
@@ -21,7 +21,7 @@ export function createLookupRepository(db: MinutasDatabase | null, workspace_id:
       selector: { type: 'role', workspace_id: ws },
       sort: [{ 'data.order': 'asc' }],
     }).$.pipe(
-      map(docs => docs.map(d => d.toJSON()))
+      map(docs => docs.map(d => (typeof d.toJSON === 'function' ? d.toJSON() : d) as any))
     );
 
   const bulkInitRoles = async (roles: StaffRole[]) => {
@@ -96,7 +96,7 @@ export function createLookupRepository(db: MinutasDatabase | null, workspace_id:
       selector: { type: 'department', workspace_id: ws },
       sort: [{ 'data.order': 'asc' }],
     }).$.pipe(
-      map(docs => docs.map(d => d.toJSON()))
+      map(docs => docs.map(d => (typeof d.toJSON === 'function' ? d.toJSON() : d) as any))
     );
 
   const bulkInitDepartments = async (depts: Department[]) => {
@@ -207,7 +207,7 @@ export function createLookupRepository(db: MinutasDatabase | null, workspace_id:
     db.lookups.find({
       selector: { type: 'address', workspace_id: ws },
     }).$.pipe(
-      map(docs => docs.map(d => d.toJSON()))
+      map(docs => docs.map(d => (typeof d.toJSON === 'function' ? d.toJSON() : d) as any))
     );
 
   const bulkInitAddresses = async (addrs: Address[]) => {

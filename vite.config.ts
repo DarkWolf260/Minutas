@@ -125,9 +125,6 @@ export default defineConfig({
             ) {
               return '@vendor-react';
             }
-            if (id.includes('rxdb') || id.includes('rxjs')) {
-              return '@db';
-            }
             if (id.includes('leaflet') || id.includes('react-leaflet')) {
               return '@map';
             }

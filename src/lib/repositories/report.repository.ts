@@ -2,7 +2,7 @@ import type { MinutasDatabase } from '@/lib/db/db';
 import type { Report } from '@/lib/types';
 import { safeWrite, silentWrite } from './base.repository';
 import { createSupabaseWatchAll, supabaseRepoUtils } from './supabase.repository';
-import { map } from 'rxjs/operators';
+import { map } from 'rxjs';
 import { supabase } from '@/lib/supabase';
 
 export function createReportRepository(db: MinutasDatabase | null, workspace_id: string, isCloud: boolean = false) {
@@ -20,7 +20,7 @@ export function createReportRepository(db: MinutasDatabase | null, workspace_id:
       selector: { workspace_id: ws },
       sort: [{ timestamp: 'desc' }],
     }).$.pipe(
-      map(docs => docs.map(d => d.toJSON() as Report))
+      map(docs => docs.map(d => (typeof d.toJSON === 'function' ? d.toJSON() : d) as Report))
     );
 
   const findAll = () =>

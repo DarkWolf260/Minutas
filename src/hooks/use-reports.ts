@@ -36,9 +36,11 @@ export function useReports() {
     if (!db || !currentWorkspace) return;
 
     const repo = createReportRepository(db, currentWorkspace, isCloud);
-    const sub = repo.watchAll().subscribe((data) => {
-      setReports(data);
-      setIsLoaded(true);
+    const sub = repo.watchAll().subscribe({
+      next: (data) => {
+        setReports(data);
+        setIsLoaded(true);
+      }
     });
 
     return () => sub.unsubscribe();
