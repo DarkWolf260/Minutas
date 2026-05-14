@@ -1,18 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalConfig } from '@/hooks/use-global-config';
-import { 
-  ArrowLeft, 
-  Globe, 
-  ShieldAlert, 
-  UserPlus 
+import {
+  ArrowLeft,
+  Globe,
+  ShieldAlert,
+  UserPlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { AjustesGenerales } from '@/components/shared/ajustes-generales';
 
 export default function AdminConfigPage() {
   const navigate = useNavigate();
@@ -37,13 +36,13 @@ export default function AdminConfigPage() {
     <div className="flex-1 flex flex-col min-h-0 bg-background relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 right-0 -mr-32 -mt-32 w-96 h-96 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
-      
+
       {/* Header */}
       <div className="p-4 md:p-8 border-b bg-card/30 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => navigate('/admin')}
             className="rounded-full"
           >
@@ -61,7 +60,7 @@ export default function AdminConfigPage() {
       {/* Content */}
       <div className="flex-1 overflow-auto p-4 md:p-8 space-y-6">
         <div className="max-w-4xl mx-auto grid gap-6">
-          
+
           {/* Access and Security */}
           <Card className="rounded-3xl border-muted/60 shadow-sm overflow-hidden">
             <CardHeader className="bg-muted/30">
@@ -84,12 +83,12 @@ export default function AdminConfigPage() {
                     Habilita o deshabilita el formulario de registro para nuevos usuarios.
                   </p>
                 </div>
-                <Switch 
+                <Switch
                   checked={config.allow_registration}
                   onCheckedChange={(checked) => updateConfig('allow_registration', checked)}
                 />
               </div>
-              
+
               <Separator />
 
               <div className="flex items-center justify-between">
@@ -102,7 +101,7 @@ export default function AdminConfigPage() {
                     Muestra un mensaje de mantenimiento y restringe el uso de la app.
                   </p>
                 </div>
-                <Switch 
+                <Switch
                   checked={config.maintenance_mode}
                   onCheckedChange={(checked) => updateConfig('maintenance_mode', checked)}
                   className="data-[state=checked]:bg-amber-500"
@@ -111,8 +110,6 @@ export default function AdminConfigPage() {
             </CardContent>
           </Card>
 
-          {/* Institutional Values (Ajustes Generales) */}
-          <AjustesGenerales />
 
           {/* More coming soon... */}
           <div className="text-center p-8 border-2 border-dashed rounded-3xl opacity-50">

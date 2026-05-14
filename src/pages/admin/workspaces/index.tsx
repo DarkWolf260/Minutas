@@ -15,12 +15,21 @@ import {
   Loader2,
   Database,
   Calendar,
-  MapPin
+  MapPin,
+  Save,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { AjustesGeneralesForm } from '@/components/shared/ajustes-generales-form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { DbKeys } from '@/lib/repositories';
 import { useCloudWorkspaces } from '@/hooks/use-cloud-workspaces';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
@@ -36,6 +45,16 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -44,11 +63,11 @@ import {
 } from '@/components/ui/select';
 
 export default function AdminWorkspacesPage() {
-  const { 
-    workspaces, 
-    loading: fetchLoading, 
-    createCloudWorkspace, 
-    deleteCloudWorkspace 
+  const {
+    workspaces,
+    loading: fetchLoading,
+    createCloudWorkspace,
+    deleteCloudWorkspace
   } = useCloudWorkspaces();
   const [states, setStates] = useState<any[]>([]);
   const [municipalities, setMunicipalities] = useState<any[]>([]);
@@ -64,18 +83,119 @@ export default function AdminWorkspacesPage() {
   const [configWorkspace, setConfigWorkspace] = useState<any>(null);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isUpdatingUser, setIsUpdatingUser] = useState<string | null>(null);
+  
+  // Settings management state
+  const [activeTab, setActiveTab] = useState('personal');
+  const [wsDefinitions, setWsDefinitions] = useState<Record<string, any>>({});
+  const [wsConfig, setWsConfig] = useState<any>({ reportarole_ids: [] });
+  const [allRoles, setAllRoles] = useState<any[]>([]);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // Delete confirmation state
+  const [wsToDelete, setWsToDelete] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     const loadMetadata = async () => {
-      const [statesData, usersData] = await Promise.all([
+      const [statesData, usersData, rolesData] = await Promise.all([
         supabase.from('states').select('*').order('name'),
-        supabase.from('profiles').select('id, full_name, email, allowed_workspaces, is_admin').order('full_name')
+        supabase.from('profiles').select('id, full_name, email, allowed_workspaces, is_admin').order('full_name'),
+        supabase.from('roles').select('*').order('order')
       ]);
       if (statesData.data) setStates(statesData.data);
       if (usersData.data) setAllUsers(usersData.data);
+      if (rolesData.data) setAllRoles(rolesData.data);
     };
     loadMetadata();
   }, []);
+
+  // Fetch workspace settings when config dialog opens
+  useEffect(() => {
+    if (isConfigOpen && configWorkspace) {
+      const loadSettings = async () => {
+        setIsLoadingSettings(true);
+        try {
+          const [defData, confData] = await Promise.all([
+            supabase.from('configs').select('*').eq('workspace_id', configWorkspace.id).eq('type', 'field_definition'),
+            supabase.from('configs').select('data').eq('id', DbKeys.settings(configWorkspace.id)).maybeSingle()
+          ]);
+
+          const defs: Record<string, any> = {};
+          if (defData.data && defData.data.length > 0) {
+            defData.data.forEach(d => {
+              defs[d.name] = d.data;
+            });
+          } else {
+            // Default initial values
+            defs['Municipio'] = { label: 'Municipio', type: 'predefined', value: configWorkspace.municipio || '', section_id: 'default' };
+            defs['Estado'] = { label: 'Estado', type: 'predefined', value: configWorkspace.estado || 'Anzoátegui', section_id: 'default' };
+            defs['REDAN'] = { label: 'REDAN', type: 'predefined', value: 'Oriente', section_id: 'default' };
+            defs['ZOEDAN'] = { label: 'ZOEDAN', type: 'predefined', value: 'Anzoátegui', section_id: 'default' };
+          }
+          setWsDefinitions(defs);
+
+          if (confData.data && confData.data.data) {
+            const rawData = confData.data.data;
+            const reportarole_ids = rawData.reportarole_ids || rawData.reportaroleIds || [];
+            setWsConfig({ ...rawData, reportarole_ids });
+          } else {
+            setWsConfig({ reportarole_ids: [] });
+          }
+        } catch (err) {
+          console.error('Error loading settings:', err);
+        } finally {
+          setIsLoadingSettings(false);
+        }
+      };
+      loadSettings();
+    } else {
+      setActiveTab('personal');
+    }
+  }, [isConfigOpen, configWorkspace]);
+
+  const handleSaveSettings = async () => {
+    if (!configWorkspace) return;
+    setIsSavingSettings(true);
+    try {
+      // 1. Save definitions
+      const defPromises = Object.entries(wsDefinitions).map(([name, data]) => 
+        supabase.from('configs').upsert({
+          id: DbKeys.fieldDefinition(configWorkspace.id, name),
+          workspace_id: configWorkspace.id,
+          type: 'field_definition',
+          name,
+          data
+        }, { onConflict: 'id' })
+      );
+
+      // 2. Save config
+      const configPromise = supabase.from('configs').upsert({
+        id: DbKeys.settings(configWorkspace.id),
+        workspace_id: configWorkspace.id,
+        type: 'settings',
+        data: wsConfig
+      }, { onConflict: 'id' });
+
+      await Promise.all([...defPromises, configPromise]);
+
+      // 3. Sync with workspaces table for Name/Estado/Municipio
+      const muni = wsDefinitions['Municipio']?.value;
+      const estado = wsDefinitions['Estado']?.value;
+      const wsName = configWorkspace.name; // Keep tracking if we want to allow name edit
+      
+      await supabase.from('workspaces').update({
+        name: configWorkspace.name, // In case it was edited in local state
+        municipio: muni || configWorkspace.municipio,
+        estado: estado || configWorkspace.estado
+      }).eq('id', configWorkspace.id);
+      
+      toast.success('Configuración y tabla maestra actualizadas');
+    } catch (err: any) {
+      toast.error('Error al guardar: ' + err.message);
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
 
   useEffect(() => {
     if (selectedState) {
@@ -113,9 +233,9 @@ export default function AdminWorkspacesPage() {
 
     setIsCreating(true);
     const success = await createCloudWorkspace(
-      newWorkspaceName, 
-      stateName || selectedState, 
-      muniName || selectedMunicipality, 
+      newWorkspaceName,
+      stateName || selectedState,
+      muniName || selectedMunicipality,
       customId.toUpperCase().trim()
     );
 
@@ -127,9 +247,10 @@ export default function AdminWorkspacesPage() {
     setIsCreating(false);
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`¿Estás seguro de eliminar el área "${name}"?`)) return;
-    await deleteCloudWorkspace(id, name);
+  const handleDelete = async () => {
+    if (!wsToDelete) return;
+    await deleteCloudWorkspace(wsToDelete.id, wsToDelete.name);
+    setWsToDelete(null);
   };
 
   const toggleUserAccess = async (user: any, workspace_id: string) => {
@@ -318,10 +439,10 @@ export default function AdminWorkspacesPage() {
                       </div>
                       <CardTitle className="text-lg font-bold tracking-tight capitalize">{ws.name}</CardTitle>
                     </div>
-                    <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 flex gap-1 translate-x-2 group-hover:translate-x-0">
-                      <Button 
-                        variant="secondary" 
-                        size="icon" 
+                    <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 md:translate-x-2 md:group-hover:translate-x-0">
+                      <Button
+                        variant="secondary"
+                        size="icon"
                         className="h-8 w-8 rounded-lg bg-background/50 backdrop-blur-md border shadow-sm hover:bg-primary hover:text-primary-foreground"
                         onClick={() => {
                           setConfigWorkspace(ws);
@@ -330,11 +451,11 @@ export default function AdminWorkspacesPage() {
                       >
                         <Settings className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => handleDelete(ws.id, ws.name)}
+                        onClick={() => setWsToDelete({ id: ws.id, name: ws.name })}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -353,7 +474,7 @@ export default function AdminWorkspacesPage() {
                       <p className="text-[11px] font-bold truncate">{ws.estado} • {ws.municipio}</p>
                     </div>
                   </div>
-                  
+
                   <div className="pt-4 border-t border-primary/5 flex items-center justify-between">
                     <div className="flex -space-x-2">
                       {allUsers.filter((u: any) => u.allowed_workspaces?.includes(ws.id)).slice(0, 4).map((u: any) => (
@@ -394,85 +515,266 @@ export default function AdminWorkspacesPage() {
             <DialogDescription className="text-sm">Gestión de accesos y personal autorizado.</DialogDescription>
           </DialogHeader>
 
-          <div className="py-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
-            {/* Info del Área */}
-            <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-muted/60">
-              <div className="space-y-1">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground/70">Área Seleccionada</p>
-                <p className="text-lg font-bold">{configWorkspace?.name}</p>
-                <p className="text-xs text-muted-foreground">{configWorkspace?.municipio}, {configWorkspace?.estado}</p>
-              </div>
-              <div className="bg-muted px-3 py-1 rounded font-mono text-xs font-bold border">
-                {configWorkspace?.id}
-              </div>
-            </div>
-
-            {/* Listado de Usuarios */}
-            <div className="space-y-4">
-              <h3 className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 rounded-xl h-10 p-1 bg-muted/50 border border-muted/60">
+              <TabsTrigger value="personal" className="rounded-lg font-bold text-xs uppercase tracking-wider">
                 Personal Autorizado
-              </h3>
+              </TabsTrigger>
+              <TabsTrigger value="ajustes" className="rounded-lg font-bold text-xs uppercase tracking-wider">
+                Ajustes Generales
+              </TabsTrigger>
+            </TabsList>
 
-              <div className="grid gap-2">
-                {allUsers.map((user: any) => {
-                  const hasAccess = user.allowed_workspaces?.includes(configWorkspace?.id);
-                  const isLoading = isUpdatingUser === user.id;
+            <div className="py-6 min-h-[400px]">
+              <TabsContent value="personal" className="space-y-6 mt-0">
+                {/* Listado de Usuarios */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between px-1">
+                    <h3 className="text-[10px] uppercase font-bold text-muted-foreground/70">
+                      Gestionar Accesos
+                    </h3>
+                    <Badge variant="outline" className="text-[9px] font-bold">
+                      {allUsers.filter(u => u.allowed_workspaces?.includes(configWorkspace?.id)).length} Autorizados
+                    </Badge>
+                  </div>
 
-                  return (
-                    <div
-                      key={user.id}
-                      className={cn(
-                        "flex items-center justify-between p-3 rounded-lg border transition-all",
-                        hasAccess
-                          ? "bg-primary/5 border-primary/20 shadow-sm"
-                          : "bg-background border-muted/60"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={cn(
-                          "h-8 w-8 rounded flex items-center justify-center transition-colors shadow-sm border",
-                          hasAccess ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                        )}>
-                          {user.is_admin ? <ShieldCheck className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                  <div className="grid gap-2 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
+                    {allUsers.map((user: any) => {
+                      const hasAccess = user.allowed_workspaces?.includes(configWorkspace?.id);
+                      const isLoading = isUpdatingUser === user.id;
+
+                      return (
+                        <div
+                          key={user.id}
+                          className={cn(
+                            "flex items-center justify-between p-3 rounded-lg border transition-all",
+                            hasAccess
+                              ? "bg-primary/5 border-primary/20 shadow-sm"
+                              : "bg-background border-muted/60"
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={cn(
+                              "h-8 w-8 rounded flex items-center justify-center transition-colors shadow-sm border",
+                              hasAccess ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                            )}>
+                              {user.is_admin ? <ShieldCheck className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-bold leading-none truncate">{user.full_name}</p>
+                              <p className="text-[10px] text-muted-foreground mt-1 truncate">{user.email}</p>
+                            </div>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            variant={hasAccess ? "destructive" : "secondary"}
+                            className="h-8 w-8 rounded-lg p-0 shrink-0"
+                            disabled={isLoading || user.is_admin}
+                            onClick={() => toggleUserAccess(user, configWorkspace.id)}
+                          >
+                            {isLoading ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : hasAccess ? (
+                              <UserMinus className="h-4 w-4" />
+                            ) : (
+                              <UserPlus className="h-4 w-4" />
+                            )}
+                          </Button>
                         </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="ajustes" className="space-y-0 mt-0">
+                {isLoadingSettings ? (
+                  <div className="flex flex-col items-center justify-center py-20 gap-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary/30" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">Cargando Ajustes...</p>
+                  </div>
+                ) : (
+                  <ScrollArea className="h-[50vh]" type="always">
+                    <div className="p-1 space-y-8 pb-10">
+                      {/* Valores Institucionales */}
+                      <div className="space-y-4">
                         <div>
-                          <p className="text-sm font-bold leading-none">{user.full_name}</p>
-                          <p className="text-[10px] text-muted-foreground mt-1">{user.email}</p>
+                          <h3 className="text-lg font-bold tracking-tight">Valores Institucionales</h3>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Define los valores que se utilizarán automáticamente en los reportes de esta área.
+                          </p>
                         </div>
+                        
+                        <AjustesGeneralesForm
+                          values={Object.fromEntries(Object.entries(wsDefinitions).map(([k, v]) => [k, v.value]))}
+                          onChange={(key, val) => setWsDefinitions(prev => ({
+                            ...prev,
+                            [key]: { ...(prev[key] || { label: key, type: 'predefined', section_id: 'default' }), value: val }
+                          }))}
+                          definitions={wsDefinitions}
+                          fieldKeys={['Municipio', 'Estado', 'REDAN', 'ZOEDAN']}
+                          columns={2}
+                        />
                       </div>
 
-                      <Button
-                        size="sm"
-                        variant={hasAccess ? "destructive" : "secondary"}
-                        className="h-8 w-8 rounded-lg p-0"
-                        disabled={isLoading || user.is_admin}
-                        onClick={() => toggleUserAccess(user, configWorkspace.id)}
-                      >
-                        {isLoading ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : hasAccess ? (
-                          <UserMinus className="h-4 w-4" />
-                        ) : (
-                          <UserPlus className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+                      <Separator />
 
-          <DialogFooter>
+                      {/* Personal que Reporta */}
+                      <div className="space-y-6">
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-semibold">Personal que Reporta</h4>
+                          <p className="text-xs text-muted-foreground">
+                            Gestiona los cargos que se usarán para rellenar la etiqueta [Reporta] en esta área.
+                          </p>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="space-y-2 max-w-sm">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                              Añadir Cargo
+                            </Label>
+                            <Select onValueChange={(roleName) => {
+                              if (roleName && !wsConfig.reportarole_ids?.includes(roleName)) {
+                                setWsConfig((prev: any) => ({
+                                  ...prev,
+                                  reportarole_ids: [...(prev.reportarole_ids || []), roleName]
+                                }));
+                              }
+                            }}>
+                              <SelectTrigger className="h-9">
+                                <SelectValue placeholder="Selecciona un cargo..." />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-[300px] z-[200]">
+                                {allRoles.filter(r => !wsConfig.reportarole_ids?.includes(r.name)).map(role => (
+                                  <SelectItem key={role.id} value={role.name}>{role.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                              Cargos Seleccionados (Prioridad)
+                            </Label>
+                            <div className="space-y-2 rounded-xl border border-dashed p-3 bg-muted/5 min-h-[100px]">
+                              {wsConfig.reportarole_ids && wsConfig.reportarole_ids.length > 0 ? (
+                                wsConfig.reportarole_ids.map((roleName: string, index: number) => (
+                                  <div key={roleName} className="flex items-center justify-between p-2 rounded-lg bg-background border shadow-sm">
+                                    <div className="flex items-center gap-3">
+                                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                                        {index + 1}
+                                      </span>
+                                      <span className="text-xs font-medium">{roleName}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7"
+                                        disabled={index === 0}
+                                        onClick={() => {
+                                          const newRoles = [...wsConfig.reportarole_ids];
+                                          [newRoles[index], newRoles[index - 1]] = [newRoles[index - 1], newRoles[index]];
+                                          setWsConfig((prev: any) => ({ ...prev, reportarole_ids: newRoles }));
+                                        }}
+                                      >
+                                        <ChevronUp className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7"
+                                        disabled={index === wsConfig.reportarole_ids.length - 1}
+                                        onClick={() => {
+                                          const newRoles = [...wsConfig.reportarole_ids];
+                                          [newRoles[index], newRoles[index + 1]] = [newRoles[index + 1], newRoles[index]];
+                                          setWsConfig((prev: any) => ({ ...prev, reportarole_ids: newRoles }));
+                                        }}
+                                      >
+                                        <ChevronDown className="h-4 w-4" />
+                                      </Button>
+                                      <Separator orientation="vertical" className="h-4 mx-1" />
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                                        onClick={() => {
+                                          setWsConfig((prev: any) => ({
+                                            ...prev,
+                                            reportarole_ids: prev.reportarole_ids.filter((r: string) => r !== roleName)
+                                          }));
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="py-8 text-center text-xs text-muted-foreground italic">
+                                  No hay cargos seleccionados.
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </ScrollArea>
+                )}
+              </TabsContent>
+            </div>
+          </Tabs>
+
+          <DialogFooter className="border-t pt-4 mt-2">
             <Button
-              className="w-full font-bold"
+              variant="outline"
+              className="font-bold rounded-xl"
               onClick={() => setIsConfigOpen(false)}
             >
-              Finalizar Configuración
+              Cerrar
             </Button>
+            {activeTab === 'ajustes' && (
+              <Button
+                className="font-bold rounded-xl gap-2 shadow-lg shadow-primary/20"
+                onClick={handleSaveSettings}
+                disabled={isSavingSettings || isLoadingSettings}
+              >
+                {isSavingSettings ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Guardar Ajustes
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* DIÁLOGO DE ELIMINACIÓN (PREMIUM) */}
+      <AlertDialog open={!!wsToDelete} onOpenChange={(open) => !open && setWsToDelete(null)}>
+        <AlertDialogContent className="rounded-2xl border-muted/60 shadow-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold flex items-center gap-3 text-destructive">
+              <div className="h-10 w-10 rounded-xl bg-destructive/10 flex items-center justify-center">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              ¿Eliminar Área de Trabajo?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm pt-2">
+              Estás a punto de eliminar <span className="font-bold text-foreground">"{wsToDelete?.name}"</span>. 
+              Esta acción es irreversible y eliminará toda la configuración asociada en la nube.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 gap-2">
+            <AlertDialogCancel className="rounded-xl font-bold border-muted/60">Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              className="rounded-xl font-bold bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-lg shadow-destructive/20"
+            >
+              Confirmar Eliminación
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

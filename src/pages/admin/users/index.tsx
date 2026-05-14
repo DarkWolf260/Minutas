@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useAdminUsers, AdminUser } from '@/hooks/use-admin-users';
-import { 
-  Search, 
-  UserPlus, 
-  Shield, 
-  ShieldAlert, 
-  Trash2, 
-  CheckCircle2, 
-  XCircle, 
+import {
+  Search,
+  UserPlus,
+  Shield,
+  ShieldAlert,
+  Trash2,
+  CheckCircle2,
+  XCircle,
   Filter,
   ArrowLeft,
   MoreVertical,
@@ -46,7 +46,7 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState('');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
-  const filteredUsers = users.filter(u => 
+  const filteredUsers = users.filter(u =>
     (u.full_name?.toLowerCase() || '').includes(search.toLowerCase()) ||
     (u.email?.toLowerCase() || '').includes(search.toLowerCase()) ||
     (u.cedula_number || '').includes(search)
@@ -56,14 +56,14 @@ export default function AdminUsersPage() {
     <div className="flex-1 flex flex-col min-h-0 bg-background relative overflow-hidden">
       {/* Decorative background */}
       <div className="absolute top-0 right-0 -mr-32 -mt-32 w-96 h-96 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
-      
+
       {/* Header */}
       <div className="p-4 md:p-8 border-b bg-card/30 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => navigate('/admin')}
               className="rounded-full"
             >
@@ -76,20 +76,20 @@ export default function AdminUsersPage() {
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <div className="relative w-full md:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Buscar por nombre o cédula..." 
+              <Input
+                placeholder="Buscar por nombre o cédula..."
                 className="pl-10 h-10 rounded-xl bg-background/50 border-muted"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Button 
-              variant="outline" 
-              size="icon" 
+            <Button
+              variant="outline"
+              size="icon"
               className="rounded-xl shrink-0"
               onClick={() => refresh()}
               disabled={loading}
@@ -151,7 +151,7 @@ export default function AdminUsersPage() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex justify-center">
-                              <button 
+                              <button
                                 onClick={() => toggleApproval(user.id)}
                                 className="flex items-center gap-2 group/btn"
                               >
@@ -171,7 +171,7 @@ export default function AdminUsersPage() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex justify-center">
-                              <Switch 
+                              <Switch
                                 checked={user.is_admin}
                                 onCheckedChange={() => toggleAdmin(user.id)}
                                 className="data-[state=checked]:bg-primary"
@@ -190,14 +190,14 @@ export default function AdminUsersPage() {
                                   Opciones de Usuario
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   className="cursor-pointer py-2.5"
                                   onClick={() => setSelectedUser(user)}
                                 >
                                   <ExternalLink className="mr-2 h-4 w-4" />
                                   Ver Detalles
                                 </DropdownMenuItem>
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   className="cursor-pointer py-2.5 text-red-500 focus:text-red-500 focus:bg-red-50"
                                   onClick={() => deleteUser(user.id)}
                                 >
@@ -310,8 +310,8 @@ export default function AdminUsersPage() {
               </div>
 
               <div className="pt-4 border-t flex justify-end">
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   className="rounded-xl font-bold"
                   onClick={() => setSelectedUser(null)}
                 >
