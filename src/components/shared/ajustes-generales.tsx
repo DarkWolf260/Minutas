@@ -56,7 +56,7 @@ export function AjustesGenerales() {
       Object.keys(definitions).forEach(key => {
         const globalValue = definitions[key]?.value || '';
         values[key] = globalValue;
-        
+
         // Only consider it an "outside change" if it's different from what we last saved
         if (lastSavedValues.current[key] === undefined || lastSavedValues.current[key] !== globalValue) {
           hasChangesFromOutside = true;
@@ -97,7 +97,7 @@ export function AjustesGenerales() {
       // 2. Perform all saves
       const existingRoleNames = new Set(roles.map(r => r.name));
       const cleanedReportaRoles = localReportaRoles.filter(role => existingRoleNames.has(role));
-      
+
       await Promise.all([
         saveDefinitions(newDefinitions),
         saveSettings({ ...settings, reportarole_ids: cleanedReportaRoles })
@@ -153,14 +153,14 @@ export function AjustesGenerales() {
 
   const groupedRoles = useMemo(() => {
     if (!rolesLoaded || !deptsLoaded) return {};
-    
+
     // Sort roles to ensure consistent order
     const availableRoles = [...roles]
       .filter(r => !r.is_status && !localReportaRoles.includes(r.name))
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    
+
     const groups: Record<string, typeof roles> = {};
-    
+
     // 1. Global Roles
     const globalRoles = availableRoles.filter(r => !r.department_scope || r.department_scope.length === 0);
     if (globalRoles.length > 0) {
@@ -222,16 +222,16 @@ export function AjustesGenerales() {
   }
 
   return (
-    <Card className="shadow-lg h-full flex flex-col overflow-hidden">
+    <Card className="shadow-lg border-muted/50 h-full flex flex-col overflow-hidden">
       <CardHeader className="relative">
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Ajustes Generales</CardTitle>
-            <CardDescription>
+            <CardDescription className="mt-1">
               Define los valores globales que se utilizarán automáticamente en tus reportes.
             </CardDescription>
           </div>
-          <div className="flex flex-col items-end gap-1">
+          <div className="hidden sm:flex flex-col items-end gap-1">
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-2 py-0.5 bg-muted rounded-full">
               Área de Trabajo
             </span>
@@ -253,7 +253,7 @@ export function AjustesGenerales() {
               </Alert>
             )}
 
-            <AjustesGeneralesForm 
+            <AjustesGeneralesForm
               values={localValues}
               onChange={(key, val) => setLocalValues(prev => ({ ...prev, [key]: val }))}
               definitions={definitions}
@@ -261,127 +261,127 @@ export function AjustesGenerales() {
               disabled={isBlocked}
             />
 
-        <Separator className="my-2" />
+            <Separator className="my-2" />
 
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <h4 className="text-sm font-semibold">Personal que Reporta</h4>
-            <p className="text-xs text-muted-foreground">
-              Gestiona los cargos que se usarán para rellenar la etiqueta [Reporta].
-            </p>
-          </div>
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <h4 className="text-sm font-semibold">Personal que Reporta</h4>
+                <p className="text-xs text-muted-foreground">
+                  Gestiona los cargos que se usarán para rellenar la etiqueta [Reporta].
+                </p>
+              </div>
 
-          <div className="space-y-4">
-            <div className="space-y-2 max-w-sm">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Añadir Cargo
-              </Label>
-              <Select onValueChange={handleAddReportRole} disabled={isBlocked}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder={isBlocked ? "Bloqueado por Administración" : "Selecciona un cargo..."} />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(groupedRoles).map(([groupName, groupRoles], idx) => (
-                    <SelectGroup key={groupName}>
-                      {idx > 0 && <SelectSeparator />}
-                      <SelectLabel className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 bg-muted/20">
-                        {groupName}
-                      </SelectLabel>
-                      {groupRoles.map((role) => (
-                        <SelectItem key={role.name} value={role.name} className="pl-4">
-                          {role.name}
-                        </SelectItem>
+              <div className="space-y-4">
+                <div className="space-y-2 max-w-sm">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Añadir Cargo
+                  </Label>
+                  <Select onValueChange={handleAddReportRole} disabled={isBlocked}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder={isBlocked ? "Bloqueado por Administración" : "Selecciona un cargo..."} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(groupedRoles).map(([groupName, groupRoles], idx) => (
+                        <SelectGroup key={groupName}>
+                          {idx > 0 && <SelectSeparator />}
+                          <SelectLabel className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 bg-muted/20">
+                            {groupName}
+                          </SelectLabel>
+                          {groupRoles.map((role) => (
+                            <SelectItem key={role.name} value={role.name} className="pl-4">
+                              {role.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
                       ))}
-                    </SelectGroup>
-                  ))}
-                  {Object.keys(groupedRoles).length === 0 && (
-                    <div className="p-4 text-center text-xs text-muted-foreground">
-                      No hay cargos disponibles
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+                      {Object.keys(groupedRoles).length === 0 && (
+                        <div className="p-4 text-center text-xs text-muted-foreground">
+                          No hay cargos disponibles
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Cargos Seleccionados (Prioridad)
-              </Label>
-              <div className="space-y-2 rounded-md border p-2 bg-muted/5 min-h-[50px]">
-                {(() => {
-                  const existingRoleNames = new Set(roles.map(r => r.name));
-                  const validRoles = localReportaRoles.filter(role => existingRoleNames.has(role));
-                  
-                  if (validRoles.length > 0) {
-                    return validRoles.map((roleName, index) => (
-                      <div
-                        key={roleName}
-                        className="flex items-center justify-between rounded-md p-2 bg-background border shadow-sm transition-all"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
-                            {index + 1}
-                          </span>
-                          <span className="text-sm font-medium">{roleName}</span>
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Cargos Seleccionados (Prioridad)
+                  </Label>
+                  <div className="space-y-2 rounded-md border p-2 bg-muted/5 min-h-[50px]">
+                    {(() => {
+                      const existingRoleNames = new Set(roles.map(r => r.name));
+                      const validRoles = localReportaRoles.filter(role => existingRoleNames.has(role));
+
+                      if (validRoles.length > 0) {
+                        return validRoles.map((roleName, index) => (
+                          <div
+                            key={roleName}
+                            className="flex items-center justify-between rounded-md p-2 bg-background border shadow-sm transition-all"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                                {index + 1}
+                              </span>
+                              <span className="text-sm font-medium">{roleName}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => handleMoveReportRole(index, 'up')}
+                                disabled={index === 0}
+                              >
+                                <ChevronUp className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => handleMoveReportRole(index, 'down')}
+                                disabled={index === validRoles.length - 1}
+                              >
+                                <ChevronDown className="h-4 w-4" />
+                              </Button>
+                              <Separator orientation="vertical" className="h-4 mx-1" />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                                onClick={() => handleRemoveReportRole(roleName)}
+                                disabled={isBlocked}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ));
+                      }
+
+                      return (
+                        <div className="py-4 text-center text-[11px] text-muted-foreground italic">
+                          No has seleccionado ningún cargo válido.
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => handleMoveReportRole(index, 'up')}
-                            disabled={index === 0}
-                          >
-                            <ChevronUp className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => handleMoveReportRole(index, 'down')}
-                            disabled={index === validRoles.length - 1}
-                          >
-                            <ChevronDown className="h-4 w-4" />
-                          </Button>
-                          <Separator orientation="vertical" className="h-4 mx-1" />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                            onClick={() => handleRemoveReportRole(roleName)}
-                            disabled={isBlocked}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ));
-                  }
-                  
-                  return (
-                    <div className="py-4 text-center text-[11px] text-muted-foreground italic">
-                      No has seleccionado ningún cargo válido.
-                    </div>
-                  );
-                })()}
+                      );
+                    })()}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-          <div className="flex justify-end pt-2">
-            {!isBlocked && (
-              <Button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="h-9 px-4 shrink-0 shadow-sm font-bold"
-                title="Guardar Configuración"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
-              </Button>
-            )}
-          </div>
+            <div className="flex justify-end pt-2">
+              {!isBlocked && (
+                <Button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="h-9 px-4 shrink-0 shadow-sm font-bold"
+                  title="Guardar Configuración"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
+                </Button>
+              )}
+            </div>
           </div>
         </ScrollArea>
       </CardContent>

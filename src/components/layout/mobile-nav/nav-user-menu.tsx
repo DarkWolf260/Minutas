@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Settings, Sun, Moon, Monitor, LogIn, LogOut, ShieldAlert } from 'lucide-react';
+import { User, Settings, Sun, Moon, Monitor, LogIn, LogOut, ShieldAlert, Eclipse } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -81,7 +81,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
           <div className="flex items-center justify-between px-2 mb-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Apariencia</span>
           </div>
-          <div className="grid grid-cols-3 gap-1 bg-muted/30 p-1 rounded-xl border">
+          <div className="grid grid-cols-4 gap-1 bg-muted/30 p-1 rounded-xl border">
             <button
               onClick={() => setTheme('light')}
               className={cn(
@@ -93,6 +93,16 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
               <span className="text-[9px] font-bold uppercase">Claro</span>
             </button>
             <button
+              onClick={() => setTheme('facebook')}
+              className={cn(
+                "flex flex-col items-center gap-1 py-2 rounded-lg transition-all",
+                theme === 'facebook' ? 'bg-background shadow-sm text-[#2D88FF] ring-1 ring-[#2D88FF]/10' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Eclipse className="h-4 w-4" />
+              <span className="text-[9px] font-bold uppercase">Gris</span>
+            </button>
+            <button
               onClick={() => setTheme('dark')}
               className={cn(
                 "flex flex-col items-center gap-1 py-2 rounded-lg transition-all",
@@ -100,7 +110,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
               )}
             >
               <Moon className="h-4 w-4" />
-              <span className="text-[9px] font-bold uppercase">Oscuro</span>
+              <span className="text-[9px] font-bold uppercase">OLED</span>
             </button>
             <button
               onClick={() => setTheme('system')}
@@ -110,7 +120,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
               )}
             >
               <Monitor className="h-4 w-4" />
-              <span className="text-[9px] font-bold uppercase">Sistema</span>
+              <span className="text-[9px] font-bold uppercase">Auto</span>
             </button>
           </div>
         </div>

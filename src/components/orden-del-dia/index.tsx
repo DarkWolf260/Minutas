@@ -82,7 +82,7 @@ function SeccionDistribucionPersonal({ hook }: { hook: any }) {
   } = hook;
 
   return (
-    <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/60 min-h-[400px] h-auto">
+    <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/50 min-h-[400px] h-auto">
       <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
         <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
           <GripVertical className="h-3.5 w-3.5 text-primary" />
@@ -164,7 +164,7 @@ function SeccionActividadesDia({ hook }: { hook: any }) {
   } = hook;
 
   return (
-    <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/60 min-h-[400px] h-auto">
+    <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/50 min-h-[400px] h-auto">
       <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -214,7 +214,7 @@ function SeccionNotasAdm({ hook }: { hook: any }) {
   } = hook;
 
   return (
-    <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/60 min-h-[400px] h-auto">
+    <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/50 min-h-[400px] h-auto">
       <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

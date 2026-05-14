@@ -68,7 +68,7 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
       </Alert>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 md:min-h-0">
-        <Card className="flex flex-col border-2 shadow-sm hover:border-primary/20 transition-all duration-300 md:min-h-0">
+        <Card className="flex flex-col border-muted/50 shadow-sm hover:border-primary/20 transition-all duration-300 md:min-h-0">
           <CardHeader className="pb-3 border-b bg-muted/30">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -96,7 +96,7 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
               <Label htmlFor="stats" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                 Contenido Estadístico
               </Label>
-              <ScrollArea className="flex-1 md:min-h-0 min-h-[300px] rounded-xl border-2 bg-background focus-within:ring-2 focus-within:ring-orange-500/30 transition-all">
+              <ScrollArea className="flex-1 md:min-h-0 min-h-[300px] rounded-xl border-muted/50 bg-background focus-within:ring-2 focus-within:ring-orange-500/30 transition-all">
                 <Textarea
                   id="stats"
                   placeholder="Las estadísticas se generarán automáticamente al presionar 'Actualizar'..."
@@ -115,7 +115,7 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col border-2 shadow-sm hover:border-primary/20 transition-all duration-300 md:min-h-0">
+        <Card className="flex flex-col border-muted/50 shadow-sm hover:border-primary/20 transition-all duration-300 md:min-h-0">
           <CardHeader className="pb-3 border-b bg-muted/30">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600">
@@ -128,7 +128,7 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
             </div>
           </CardHeader>
           <CardContent className="pt-6 flex-1 flex flex-col gap-6 md:min-h-0">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-muted/40 rounded-xl border-2 border-primary/5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-muted/40 rounded-xl border border-muted/50">
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Fecha</Label>
                 <DatePicker
@@ -148,7 +148,7 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
                 <div className="flex gap-2">
                   <Textarea
                     placeholder="Ej: Se inicia la guardia preventiva..."
-                    className="h-10 min-h-[40px] py-2 resize-none border-2 focus-visible:ring-primary/30"
+                    className="h-10 min-h-[40px] py-2 resize-none border border-muted/50 focus-visible:ring-primary/30"
                     value={nuevaNovedadTexto}
                     onChange={(e) => setNuevaNovedadTexto(e.target.value)}
                   />
@@ -177,7 +177,7 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
                 {novedadesManualesOrdenadas.map((novedad: NovedadManual) => (
                   <div
                     key={novedad.id}
-                    className={`group flex items-start gap-4 p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${idEditandoManual === novedad.id ? 'border-primary bg-primary/5 ring-2 ring-primary/20' : 'border-muted hover:border-muted-foreground/30 bg-background'}`}
+                    className={`group flex items-start gap-4 p-3 rounded-xl border border-muted/50 transition-all duration-200 hover:shadow-md ${idEditandoManual === novedad.id ? 'border-primary bg-primary/5 ring-2 ring-primary/20' : 'border-muted hover:border-muted-foreground/30 bg-background'}`}
                   >
                     <div className="flex flex-col items-center gap-1 shrink-0 pt-1">
                       <Badge variant="outline" className="text-[9px] font-bold px-1.5 py-0 border-primary/30 text-primary bg-primary/5">
@@ -211,7 +211,7 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
                   </div>
                 ))}
                 {novedadesManualesOrdenadas.length === 0 && (
-                  <div className="text-center py-12 border-2 border-dashed rounded-2xl bg-muted/10">
+                  <div className="text-center py-12 border-muted/50 border-dashed rounded-2xl bg-muted/10">
                     <History className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
                     <p className="text-sm text-muted-foreground font-medium">No hay novedades manuales agregadas.</p>
                   </div>

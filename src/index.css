@@ -80,17 +80,15 @@
   }
 
   .dark {
+    /* DEFAULT (Desktop / OLED Friendly / Deep Obsidian) */
     --background: 240 10% 2%;
-    /* Deep Obsidian (#050505) */
     --foreground: 0 0% 98%;
     --card: 240 10% 4.5%;
-    /* Subtle elevation */
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 2%;
     --popover-foreground: 0 0% 98%;
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 0 0% 100%;
-    /* Pure White for contrast */
     --secondary: 240 3.7% 12%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 12%;
@@ -101,10 +99,8 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 3.7% 14%;
     --input: 240 3.7% 10%;
-    /* Slightly darker inputs for depth */
     --ring: 240 4.9% 83.9%;
     --radius: 1rem;
-    /* rounded-2xl feel */
     --success: 142 70.6% 45.3%;
     --success-foreground: 144 61.2% 91.2%;
 
@@ -116,6 +112,41 @@
     --sidebar-accent-foreground: 240 5% 95%;
     --sidebar-border: 240 3.7% 14%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .facebook {
+    /* FACEBOOK MODE (Grayish / Non-OLED) */
+    --background: 210 4% 10%; /* Facebook BG (#18191A) */
+    --foreground: 225 13% 91%; /* Facebook Text (#E4E6EB) */
+    --card: 210 4% 15%; /* Facebook Surface (#242526) */
+    --card-foreground: 225 13% 91%;
+    --popover: 210 4% 15%;
+    --popover-foreground: 225 13% 91%;
+    --primary: 214 100% 59%; /* Facebook Blue (#2D88FF) */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 2% 23%; /* Facebook Hover (#3A3B3C) */
+    --secondary-foreground: 225 13% 91%;
+    --muted: 210 2% 23%;
+    --muted-foreground: 225 4% 71%; /* Facebook Muted Text (#B0B3B8) */
+    --accent: 210 2% 23%;
+    --accent-foreground: 225 13% 91%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 4% 25%; /* Facebook Border (#3E4042) */
+    --input: 210 4% 20%;
+    --ring: 214 100% 59%;
+    --radius: 0.8rem;
+    --success: 142 70.6% 45.3%;
+    --success-foreground: 144 61.2% 91.2%;
+
+    --sidebar-background: 210 4% 10%;
+    --sidebar-foreground: 225 4% 71%;
+    --sidebar-primary: 214 100% 59%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 2% 23%;
+    --sidebar-accent-foreground: 225 13% 91%;
+    --sidebar-border: 210 4% 25%;
+    --sidebar-ring: 214 100% 59%;
   }
 
   * {

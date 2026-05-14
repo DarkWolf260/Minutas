@@ -33,7 +33,7 @@ export const GuardConfigCard = ({
   manejarAbrirGuardia
 }: GuardConfigCardProps) => {
   return (
-    <Card className="md:col-span-12 shadow-sm border-muted/60 overflow-hidden">
+    <Card className="md:col-span-12 shadow-sm border-muted/50 overflow-hidden">
       <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
         <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
           <Lock className="h-3.5 w-3.5 text-primary" />
