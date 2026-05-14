@@ -4,7 +4,7 @@ import { safeWrite, silentWrite } from './base.repository';
 import { DbKeys } from './keys';
 import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
 import { createSupabaseWatchAll, supabaseRepoUtils } from './supabase.repository';
-import { map } from 'rxjs/operators';
+import { map } from 'rxjs';
 
 export function createTemplateRepository(db: MinutasDatabase | null, workspace_id: string, isCloud: boolean = false) {
   const ws = workspace_id;
@@ -25,7 +25,7 @@ export function createTemplateRepository(db: MinutasDatabase | null, workspace_i
         ]
       },
     }).$.pipe(
-      map(docs => docs.map(d => d.toJSON() as Template).sort((a, b) => a.name.localeCompare(b.name)))
+      map(docs => docs.map(d => (typeof d.toJSON === 'function' ? d.toJSON() : d) as Template).sort((a, b) => a.name.localeCompare(b.name)))
     );
 
   const add = async (template: Template) =>
@@ -43,7 +43,7 @@ export function createTemplateRepository(db: MinutasDatabase | null, workspace_i
       async () => {
         const doc = await db.templates.findOne(template.id).exec();
         if (!doc) throw new Error('Plantilla no encontrada.');
-        const { id, workspace_id, ...patchData } = template;
+        const { id, workspace_id, _rev, ...patchData } = template as any;
         await doc.patch(patchData);
       },
       { feature: 'Templates', rethrow: true }

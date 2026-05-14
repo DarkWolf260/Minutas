@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { generateId } from '@/lib/utils/id';
@@ -25,7 +25,8 @@ interface UseReporteFinalGeneratorProps {
   setEstadisticasLocal: (stats: string) => void;
 }
 
-const formatearMiembroPersonalParaReporte = (member: StaffMember): string => {
+const formatearMiembroPersonalParaReporte = (member: StaffMember | string): string => {
+  if (typeof member === 'string') return member;
   const parts: string[] = [];
   if (member.rank && member.rank !== 'Sin jerarquía') parts.push(member.rank);
   if (member.titulo) parts.push(member.titulo);
@@ -96,7 +97,7 @@ export function useReporteFinalGenerator({
     }
   };
 
-  const manejarGenerarReporte = () => {
+  const manejarGenerarReporte = useCallback(() => {
     if (reportesFinalizados.length === 0 && !estadisticasLocal.trim() && novedadesManuales.length === 0) {
       setReporteGenerado('No hay novedades finalizadas ni estadísticas para reportar.');
       setEsDialogOpenResultado(true);
@@ -221,10 +222,13 @@ export function useReporteFinalGenerator({
           );
           const staffList = staffKey ? (personalParaReporte as any)[staffKey] : undefined;
           
-          if (staffList && staffList.length > 0 && staffList.some((s: any) => s.name.trim() !== '')) {
+          if (staffList && staffList.length > 0 && staffList.some((s: any) => {
+            const name = typeof s === 'string' ? s : s?.name;
+            return name && name.trim() !== '';
+          })) {
             const names = staffList
-              .map((member: any) => formatearMiembroPersonalParaReporte(member))
-              .join(' / ');
+                .map((member: any) => formatearMiembroPersonalParaReporte(member))
+                .join(' / ');
             
             const esJefeServicios = role.name.toLowerCase() === 'jefe de los servicios';
             const displayRole = esJefeServicios && !ordenDelDiaDeshabilitado && settings.ordenDelDiaDraft?.esJefeEncargado
@@ -316,13 +320,23 @@ export function useReporteFinalGenerator({
     setReporteGenerado(partesReporteFinal.join('\n').trim());
     setEsDialogOpenResultado(true);
     setTextoBotonCopiar('Copiar');
-  };
+  }, [
+    reportesFinalizados, 
+    novedadesManuales, 
+    estadisticasLocal, 
+    settings, 
+    activeGuard, 
+    configuracionesGlobales, 
+    roles, 
+    templates, 
+    configs
+  ]);
 
-  const manejarCopiarAlPortapapeles = () => {
+  const manejarCopiarAlPortapapeles = useCallback(() => {
     navigator.clipboard.writeText(reporteGenerado);
     setTextoBotonCopiar('¡Copiado!');
     setTimeout(() => setTextoBotonCopiar('Copiar'), 2000);
-  };
+  }, [reporteGenerado]);
 
   const manejarFinalizarYGuardar = async () => {
     if (!reporteGenerado || !activeGuard) {
@@ -354,7 +368,7 @@ export function useReporteFinalGenerator({
       await saveGuardReport({
         id: reportId,
         date: isoDate20,
-        generatedAt: fullIsoDate,
+        generated_at: fullIsoDate,
         summary: settings.guardPeriod || `Reporte de Guardia ${activeGuard.id}`,
         content: reporteGenerado,
         guardGroup: activeGuard.id.split(' ')[0] || '',

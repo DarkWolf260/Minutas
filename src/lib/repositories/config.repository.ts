@@ -4,7 +4,7 @@ import { DbKeys } from './keys';
 import { silentWrite, safeWrite } from './base.repository';
 import { createSupabaseWatchAll, createSupabaseWatchOne, supabaseRepoUtils } from './supabase.repository';
 import { supabase } from '@/lib/supabase';
-import { map } from 'rxjs/operators';
+import { map } from 'rxjs';
 import { stableStringify } from '@/lib/db/db';
 
 export function createConfigRepository(db: MinutasDatabase | null, workspace_id: string, isCloud: boolean = false) {

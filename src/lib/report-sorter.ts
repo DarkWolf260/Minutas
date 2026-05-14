@@ -104,7 +104,7 @@ export const getReportDateTime = (report: Report): Date | null => {
     const parts = fechaString.split('/');
     if (parts.length === 3) {
       // DD/MM/YYYY -> YYYY-MM-DD
-      date = new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}T00:00:00`);
+      date = new Date(`${parts[2]!}-${parts[1]!.padStart(2, '0')}-${parts[0]!.padStart(2, '0')}T00:00:00`);
     } else {
       date = new Date(`${fechaString}T00:00:00`);
     }

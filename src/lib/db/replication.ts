@@ -1,10 +1,10 @@
 import { replicateRxCollection } from 'rxdb/plugins/replication';
 import { MinutasDatabase } from './db';
-import { supabase } from '../supabase';
+import { supabase, callWithTokenRefresh } from '../supabase';
 import { logger } from '../logger';
 import { stableStringify } from '../utils-pure';
 import { Subject } from 'rxjs';
-import { debounceTime, map, tap } from 'rxjs/operators';
+import { debounceTime, map, tap } from 'rxjs';
 import { RealtimePostgresUpdatePayload } from '@supabase/supabase-js';
 
 // Global subject to trigger all replications at once
@@ -56,7 +56,7 @@ async function startCollectionReplication(
             query = query.gte('modified', lastCheckpoint.modified);
           }
 
-          const { data, error } = await query;
+          const { data, error } = await callWithTokenRefresh(() => query);
 
           if (error) {
             logger.error(`Pull error in ${collectionName}:`, error);
@@ -192,11 +192,13 @@ async function startCollectionReplication(
 
         // 2. Execute UPSERT with explicit onConflict
         try {
-          const { error } = await supabase
-            .from(tableName)
-            .upsert(payloads, { 
-              onConflict: 'id'
-            });
+          const { error } = await callWithTokenRefresh(() => 
+            supabase
+              .from(tableName)
+              .upsert(payloads, { 
+                onConflict: 'id'
+              })
+          );
 
           if (error) {
             // If it's a conflict (409) or unique violation (23505), handle it gracefully
@@ -204,10 +206,12 @@ async function startCollectionReplication(
               logger.warn(`Push conflict in ${collectionName} for ${payloads.length} rows. Fetching master state...`);
               
               // Fetch the current state from the cloud to return as conflict
-              const { data: masterDocs } = await supabase
-                .from(tableName)
-                .select('*')
-                .in('id', payloads.map(p => p.id));
+              const { data: masterDocs } = await callWithTokenRefresh(() => 
+                supabase
+                  .from(tableName)
+                  .select('*')
+                  .in('id', payloads.map(p => p.id))
+              );
               
               if (masterDocs && masterDocs.length > 0) {
                 // Return the master documents as conflicts
@@ -241,12 +245,14 @@ async function startCollectionReplication(
     retryTime: 5000,
   });
 
-  replicationState.error$.subscribe(err => {
-    logger.error(`Replication error in ${collectionName}:`, {
-      message: err.message,
-      code: (err as any).code,
-      details: (err as any).errors || (err as any).innerError || err
-    });
+  replicationState.error$.subscribe({
+    error: (err) => {
+      logger.error(`Replication error in ${collectionName}:`, {
+        message: err.message,
+        code: (err as any).code,
+        details: (err as any).errors || (err as any).innerError || err
+      });
+    }
   });
 
   // REALTIME SUBSCRIPTION

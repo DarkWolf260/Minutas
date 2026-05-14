@@ -182,69 +182,77 @@ function isVirtualSection(content: string): boolean {
     return trimmed.startsWith('{') && trimmed.endsWith('}');
 }
 
+// Cache for section regexes to avoid repeated RegExp creation
+const sectionRegexCache = new Map<string, RegExp>();
+
 /**
  * Helper: Generates a regex to match a section block in the template
  */
 function getSectionRegex(section: SectionConfig): RegExp {
+    // Stable key for caching: section ID + repeatable flag + self-contained flag
+    const cacheKey = `${section.id}_${section.is_repeatable}_${section.is_self_contained}_${section.full_raw?.length || 0}`;
+    const cached = sectionRegexCache.get(cacheKey);
+    if (cached) return cached;
+
+    let regex: RegExp;
     if (section.full_raw) {
         const escaped = escapeRegExp(section.full_raw).replace(/\n/g, '\\r?\\n');
-        return new RegExp(escaped, 'g');
-    }
+        regex = new RegExp(escaped, 'g');
+    } else {
+        const isVirtual = section.is_virtual;
+        const bodyContent = section.original_content || '';
+        const isRepeatable = section.is_repeatable;
 
-    const isVirtual = section.is_virtual;
-    const bodyContent = section.original_content || '';
-    const isRepeatable = section.is_repeatable;
+        // Use a pattern that handles both CRLF and LF for cross-platform stability
+        const escapedBody = escapeRegExp(bodyContent).replace(/\n/g, '\\r?\\n');
 
-    // Use a pattern that handles both CRLF and LF for cross-platform stability
-    const escapedBody = escapeRegExp(bodyContent).replace(/\n/g, '\\r?\\n');
+        if (isVirtual) {
+            regex = new RegExp(`${escapedBody}\\*`, 'g');
+        } else if (section.is_self_contained) {
+            let labelPart = '';
+            if (section.singular_title || section.plural_title || section.repeatable_item_label) {
+                const attrList = [];
+                if (section.singular_title) attrList.push(`singular\\s*=\\s*"${escapeRegExp(section.singular_title)}"`);
+                if (section.plural_title) attrList.push(`plural\\s*=\\s*"${escapeRegExp(section.plural_title)}"`);
+                if (section.repeatable_item_label) attrList.push(`sub\\s*=\\s*"${escapeRegExp(section.repeatable_item_label)}"`);
+                labelPart = attrList.map(a => `${a}\\s*`).join('');
+            } else if (section.label) {
+                const escaped = escapeRegExp(section.label);
+                labelPart = `(?:"${escaped}"|${escaped})`;
+            }
+            const pattern = `\\[\\s*${labelPart}[^\\]]*\\]${isRepeatable ? '\\*?' : ''}`;
+            regex = new RegExp(pattern, 'gs');
+        } else {
+            // Normal or Conditional Section
+            let headerPart = '';
+            if (section.condition) {
+                const cond = section.condition;
+                const opPart = cond.operator
+                    ? `\\s*${escapeRegExp(cond.operator)}\\s*(?:"${escapeRegExp(cond.value)}"|${escapeRegExp(cond.value)})`
+                    : '';
+                const escapedfield_id = escapeRegExp(cond.field_id);
+                const fieldPart = `(?:\\{\\s*${escapedfield_id}\\s*\\}|${escapedfield_id})`;
+                const modeSuffix = `(?:\\s*:(?:show|hide))?`;
+                headerPart = `\\?\\s*${fieldPart}${opPart}${modeSuffix}`;
+            } else if (section.singular_title || section.plural_title || section.repeatable_item_label) {
+                headerPart += section.singular_title ? `singular="${escapeRegExp(section.singular_title)}"\\s*` : '';
+                headerPart += section.plural_title ? `plural="${escapeRegExp(section.plural_title)}"\\s*` : '';
+                headerPart += section.repeatable_item_label ? `sub="${escapeRegExp(section.repeatable_item_label)}"\\s*` : '';
+            } else if (section.label && section.label !== 'separator') {
+                const escaped = escapeRegExp(section.label);
+                headerPart = `(?:"${escaped}"[^\\]]*|${escaped})\\s*`;
+            } else if (section.is_separator || section.label === 'separator') {
+                headerPart = '""';
+            }
 
-    if (isVirtual) {
-        return new RegExp(`${escapedBody}\\*`, 'g');
-    }
-
-    if (section.is_self_contained) {
-        let labelPart = '';
-        if (section.singular_title || section.plural_title || section.repeatable_item_label) {
-            const attrList = [];
-            if (section.singular_title) attrList.push(`singular\\s*=\\s*"${escapeRegExp(section.singular_title)}"`);
-            if (section.plural_title) attrList.push(`plural\\s*=\\s*"${escapeRegExp(section.plural_title)}"`);
-            if (section.repeatable_item_label) attrList.push(`sub\\s*=\\s*"${escapeRegExp(section.repeatable_item_label)}"`);
-            labelPart = attrList.map(a => `${a}\\s*`).join('');
-        } else if (section.label) {
-            const escaped = escapeRegExp(section.label);
-            labelPart = `(?:"${escaped}"|${escaped})`;
+            const pattern = `\\[\\s*${headerPart}\\s*\\]${isRepeatable ? '\\*?' : ''}${escapedBody}\\[\\/\\s*\\]`;
+            regex = new RegExp(pattern, 'gs');
         }
-        // Use a more lenient pattern for self-contained sections: [ \s* labelBody \s* ]
-        // Instead of matching the exact body content (which can be tricky with newlines),
-        // we match everything until the closing bracket that contains all the required fields.
-        const pattern = `\\[\\s*${labelPart}[^\\]]*\\]${isRepeatable ? '\\*?' : ''}`;
-        return new RegExp(pattern, 'gs');
     }
 
-    // Normal or Conditional Section
-    let headerPart = '';
-    if (section.condition) {
-        const cond = section.condition;
-        const opPart = cond.operator
-            ? `\\s*${escapeRegExp(cond.operator)}\\s*(?:"${escapeRegExp(cond.value)}"|${escapeRegExp(cond.value)})`
-            : '';
-        const escapedfield_id = escapeRegExp(cond.field_id);
-        const fieldPart = `(?:\\{\\s*${escapedfield_id}\\s*\\}|${escapedfield_id})`;
-        const modeSuffix = `(?:\\s*:(?:show|hide))?`;
-        headerPart = `\\?\\s*${fieldPart}${opPart}${modeSuffix}`;
-    } else if (section.singular_title || section.plural_title || section.repeatable_item_label) {
-        headerPart += section.singular_title ? `singular="${escapeRegExp(section.singular_title)}"\\s*` : '';
-        headerPart += section.plural_title ? `plural="${escapeRegExp(section.plural_title)}"\\s*` : '';
-        headerPart += section.repeatable_item_label ? `sub="${escapeRegExp(section.repeatable_item_label)}"\\s*` : '';
-    } else if (section.label && section.label !== 'separator') {
-        const escaped = escapeRegExp(section.label);
-        headerPart = `(?:"${escaped}"[^\\]]*|${escaped})\\s*`;
-    } else if (section.is_separator || section.label === 'separator') {
-        headerPart = '""';
-    }
-
-    const pattern = `\\[\\s*${headerPart}\\s*\\]${isRepeatable ? '\\*?' : ''}${escapedBody}\\[\\/\\s*\\]`;
-    return new RegExp(pattern, 'gs');
+    if (sectionRegexCache.size > 500) sectionRegexCache.clear();
+    sectionRegexCache.set(cacheKey, regex);
+    return regex;
 }
 
 /**

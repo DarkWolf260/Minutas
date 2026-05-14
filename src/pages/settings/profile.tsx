@@ -94,7 +94,7 @@ export default function ProfilePage() {
           {/* Avatar floating over banner */}
           <div className="flex justify-between items-end mb-8 -mt-12">
             <div className="flex items-end gap-5 rounded-full ring-4 ring-background bg-background">
-              <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center text-4xl font-semibold text-primary overflow-hidden shadow-inner">
+              <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center text-4xl font-semibold text-primary overflow-hidden shadow-inner border border-primary/20">
                 {profile.avatarUrl ? (
                   <img src={profile.avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
                 ) : (

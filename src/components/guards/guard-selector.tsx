@@ -13,9 +13,10 @@
 
 import { Play, CheckCircle2, Lock, Newspaper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/custom/date-picker';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { formatDateToPeriod, parsePeriodToDate } from '@/lib/formatters';
 import {
   Select,
   SelectContent,
@@ -112,13 +113,15 @@ export function GuardSelector({
             >
               Periodo de Operaciones
             </Label>
-            <Input
+            <DatePicker
               id="guard-selector-period"
-              value={periodo}
-              onChange={(e) => setPeriodo(e.target.value)}
+              value={parsePeriodToDate(periodo)}
+              onChange={(newDateStr) => {
+                const date = new Date(newDateStr + 'T12:00:00'); // Use noon to avoid timezone issues
+                setPeriodo(formatDateToPeriod(date));
+              }}
               disabled={isGuardOpen}
               className={`h-10 rounded-lg shadow-sm ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}
-              placeholder="Ej: 28/03/2026 AL 29/03/2026"
             />
           </div>
         )}
@@ -247,11 +250,13 @@ export function NoGuardBanner({
               >
                 Periodo
               </Label>
-              <Input
+              <DatePicker
                 id="no-guard-period"
-                value={periodo}
-                onChange={(e) => setPeriodo(e.target.value)}
-                placeholder="DD/MM/YYYY AL DD/MM/YYYY"
+                value={parsePeriodToDate(periodo)}
+                onChange={(newDateStr) => {
+                  const date = new Date(newDateStr + 'T12:00:00'); // Use noon to avoid timezone issues
+                  setPeriodo(formatDateToPeriod(date));
+                }}
                 className="h-9 sm:h-10 rounded-lg bg-background text-xs sm:text-sm"
               />
             </div>

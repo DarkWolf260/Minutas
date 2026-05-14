@@ -62,7 +62,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        globPatterns: ['**/*.{js,css,html,png}'],
         navigateFallback: 'index.html',
         runtimeCaching: [
           {
@@ -124,9 +124,6 @@ export default defineConfig({
               id.includes('react-router-dom')
             ) {
               return '@vendor-react';
-            }
-            if (id.includes('rxdb') || id.includes('rxjs')) {
-              return '@db';
             }
             if (id.includes('leaflet') || id.includes('react-leaflet')) {
               return '@map';

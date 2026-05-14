@@ -62,9 +62,9 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
 
             <div className="flex-1 min-h-0 mt-2 border rounded-md bg-muted/50 overflow-hidden">
               <ScrollArea className="h-[60vh] w-full" type="always">
-                <div className="p-6 font-mono text-xs leading-relaxed whitespace-pre-wrap select-text">
+                <pre className="p-6 font-mono text-xs leading-relaxed whitespace-pre-wrap select-text break-words">
                   {reporteGenerado}
-                </div>
+                </pre>
               </ScrollArea>
             </div>
 
@@ -111,9 +111,9 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
 
             <div className="flex-1 min-h-0 mt-2 border rounded-md bg-muted/50 overflow-hidden">
               <ScrollArea className="h-[50vh] w-full" type="always">
-                <div className="p-6 font-mono text-sm leading-relaxed whitespace-pre-wrap select-text">
+                <pre className="p-6 font-mono text-sm leading-relaxed whitespace-pre-wrap select-text break-words">
                   {reporteGenerado}
-                </div>
+                </pre>
               </ScrollArea>
             </div>
 
@@ -164,9 +164,9 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
 
             <div className="flex-1 min-h-0 mt-2 border rounded-md bg-muted/50 overflow-hidden">
               <ScrollArea className="h-[60vh] w-full" type="always">
-                <div className="p-6 font-mono text-xs leading-relaxed whitespace-pre-wrap select-text">
+                <pre className="p-6 font-mono text-xs leading-relaxed whitespace-pre-wrap select-text break-words">
                   {reporteGuardadoSeleccionado?.content}
-                </div>
+                </pre>
               </ScrollArea>
             </div>
 
@@ -207,9 +207,9 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
 
             <div className="flex-1 min-h-0 mt-2 border rounded-md bg-muted/50 overflow-hidden">
               <ScrollArea className="h-[60vh] w-full" type="always">
-                <div className="p-6 font-mono text-xs leading-relaxed whitespace-pre-wrap select-text">
+                <pre className="p-6 font-mono text-xs leading-relaxed whitespace-pre-wrap select-text break-words">
                   {reporteGuardadoSeleccionado?.content}
-                </div>
+                </pre>
               </ScrollArea>
             </div>
 

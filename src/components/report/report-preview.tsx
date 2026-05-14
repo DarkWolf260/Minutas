@@ -44,16 +44,16 @@ export function ReportPreview({
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[95vh] rounded-t-xl flex flex-col p-6">
+        <SheetContent side="bottom" className="h-[95vh] rounded-t-xl flex flex-col p-6" hideClose>
           <SheetHeader className="text-left">
             <SheetTitle>{title}</SheetTitle>
             <SheetDescription>Revisa el reporte generado.</SheetDescription>
           </SheetHeader>
           <div className="flex-1 min-h-0 mt-4 border rounded-md bg-muted/50 overflow-hidden">
             <ScrollArea className="h-full w-full" type="always">
-              <div className="p-4 font-mono text-sm whitespace-pre-wrap leading-relaxed">
+              <pre className="p-4 font-mono text-sm whitespace-pre-wrap leading-relaxed break-words">
                 {content}
-              </div>
+              </pre>
             </ScrollArea>
           </div>
           <SheetFooter className="mt-4 flex-row gap-2">
@@ -78,9 +78,9 @@ export function ReportPreview({
         </DialogHeader>
         <div className="flex-1 min-h-0 border rounded-md bg-muted/50 overflow-hidden">
           <ScrollArea className="h-full w-full" type="always">
-            <div className="p-6 font-mono text-sm whitespace-pre-wrap leading-relaxed">
+            <pre className="p-6 font-mono text-sm whitespace-pre-wrap leading-relaxed break-words">
               {content}
-            </div>
+            </pre>
           </ScrollArea>
         </div>
         <DialogFooter className="mt-auto pt-6">

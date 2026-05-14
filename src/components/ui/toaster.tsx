@@ -2,13 +2,16 @@
 
 import { Toaster as Sonner } from 'sonner';
 import { useTheme } from '@/components/providers/theme-provider';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function Toaster() {
   const { theme = 'system' } = useTheme();
+  const isMobile = useIsMobile();
 
   return (
     <Sonner
       theme={theme as 'light' | 'dark' | 'system'}
+      position={isMobile ? 'top-center' : 'bottom-right'}
       className="toaster group"
       toastOptions={{
         classNames: {

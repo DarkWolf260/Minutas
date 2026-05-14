@@ -36,8 +36,8 @@ export function usePersonnelHistory() {
                             workspace_id: currentWorkspace,
                             personnel_id: pId,
                             date,
-                            guardId,
-                            roleName,
+                            guard_id: guardId,
+                            role_name: roleName,
                             timestamp,
                         };
 

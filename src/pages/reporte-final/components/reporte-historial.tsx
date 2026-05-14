@@ -35,7 +35,7 @@ export function ReporteHistorial({ hook }: ReporteHistorialProps) {
           {reportesGuardadosOrdenados.map((report: any) => (
             <Card
               key={report.id}
-              className="group cursor-pointer hover:border-primary/40 hover:shadow-xl transition-all duration-300 rounded-2xl border-2 overflow-hidden bg-background relative"
+              className="group cursor-pointer hover:border-primary/40 hover:shadow-xl transition-all duration-300 rounded-2xl border border-muted/50 overflow-hidden bg-background relative"
               onClick={() => manejarVerReporteGuardado(report.id)}
             >
               <div className="absolute top-0 right-0 p-2 z-10">
@@ -69,7 +69,14 @@ export function ReporteHistorial({ hook }: ReporteHistorialProps) {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Clock className="h-3.5 w-3.5" />
-                    <span>{format(new Date(report.generatedAt), 'HH:mm')}</span>
+                    <span>
+                      {(() => {
+                        const dateVal = report.generated_at || (report as any).generatedAt || report.date;
+                        if (!dateVal) return '--:--';
+                        const d = new Date(dateVal);
+                        return isNaN(d.getTime()) ? '--:--' : format(d, 'HH:mm');
+                      })()}
+                    </span>
                   </div>
                 </div>
               </CardContent>

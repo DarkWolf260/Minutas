@@ -20,14 +20,16 @@ export function useGuardHistory() {
     if (!db || !currentWorkspace) return;
 
     const repo = createHistoryRepository(db, currentWorkspace, isCloud);
-    const sub = repo.watchGuardHistory().subscribe((data) => {
-      setReports(
-        data.map((d) => {
-          const item = d.toJSON ? d.toJSON() : d;
-          return { ...(item.data as GuardReport), workspace_id: currentWorkspace };
-        }) as GuardReport[]
-      );
-      setIsLoaded(true);
+    const sub = repo.watchGuardHistory().subscribe({
+      next: (data) => {
+        setReports(
+          data.map((item: any) => ({
+            ...(item.data as GuardReport),
+            workspace_id: currentWorkspace,
+          }))
+        );
+        setIsLoaded(true);
+      }
     });
 
     return () => sub.unsubscribe();

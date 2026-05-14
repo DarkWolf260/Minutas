@@ -53,11 +53,13 @@ export function formatStaffMemberForAutocomplete(member: StaffMember, withCedula
  * @returns Formatted string for template display
  */
 export function formatStaffMember(
-  member: StaffMember, 
+  member: StaffMember | string, 
   showCedula: boolean = false,
   showObservation: boolean = false
 ): string {
   if (!member) return '';
+
+  if (typeof member === 'string') return member;
 
   const fullName = buildFullStaffName(member);
 
@@ -81,8 +83,9 @@ export function formatStaffMember(
  * @param member - Staff member object
  * @returns Formatted string: "Analista de CEMUPRAD OPC I Rubén Rojas V-28.702.206"
  */
-export function formatStaffReporta(member: StaffMember): string {
+export function formatStaffReporta(member: StaffMember | string): string {
   if (!member) return '';
+  if (typeof member === 'string') return member;
   
   const parts: string[] = [];
   
@@ -92,4 +95,37 @@ export function formatStaffReporta(member: StaffMember): string {
   if (member.cedula) parts.push(member.cedula);
   
   return parts.filter(Boolean).join(' ');
+}
+
+/**
+ * Formats a date into the standard period string: "DD/MM/YYYY AL DD/MM/YYYY"
+ * where the second date is the next day.
+ * 
+ * @param date - The start date
+ * @returns Formatted period string
+ */
+export function formatDateToPeriod(date: Date): string {
+  const tomorrow = new Date(date);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const fmt = (d: Date) =>
+    `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+  return `${fmt(date)} AL ${fmt(tomorrow)}`;
+}
+
+/**
+ * Extracts the first date from a period string and returns it in "YYYY-MM-DD" format.
+ * If invalid, returns today in "YYYY-MM-DD" format.
+ * 
+ * @param period - The period string (e.g., "DD/MM/YYYY AL DD/MM/YYYY")
+ * @returns Date string in "YYYY-MM-DD" format
+ */
+export function parsePeriodToDate(period: string): string {
+  if (!period) return new Date().toISOString().split('T')[0]!;
+  
+  const match = period.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if (match) {
+    const [_, d, m, y] = match;
+    return `${y}-${m}-${d}`;
+  }
+  return new Date().toISOString().split('T')[0]!;
 }

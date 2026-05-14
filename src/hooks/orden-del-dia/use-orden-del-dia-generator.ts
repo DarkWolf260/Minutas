@@ -81,7 +81,10 @@ export function useOrdenDelDiaGenerator({
       if (nombreRolBajo === 'director' || nombreRolBajo === 'jefe de operaciones') return;
 
       const listaPersonal = personalAsignado[rol.name];
-      if (listaPersonal && listaPersonal.length > 0 && listaPersonal.some((p) => p.name.trim() !== '')) {
+      if (listaPersonal && listaPersonal.length > 0 && listaPersonal.some((p) => {
+        const name = typeof p === 'string' ? p : p?.name;
+        return name && name.trim() !== '';
+      })) {
         const esJefeServicios = nombreRolBajo === 'jefe de los servicios';
         const rolAMostrar = esJefeServicios && esJefeEncargado ? `${rol.name.toUpperCase()} (E)` : rol.name.toUpperCase();
         partesReporte.push(``, `*${rolAMostrar}*`, listaPersonal.map(m => formatStaffMember(m, false, true)).join('\n'));

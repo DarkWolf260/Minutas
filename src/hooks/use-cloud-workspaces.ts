@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, callWithTokenRefresh } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 
@@ -21,11 +21,13 @@ export function useCloudWorkspaces() {
     try {
       setLoading(true);
       
-      const { data: profile, error: pError } = await supabase
-        .from('profiles')
-        .select('is_admin, allowed_workspaces')
-        .eq('id', user.id)
-        .single();
+      const { data: profile, error: pError } = await callWithTokenRefresh<any>(() => 
+        supabase
+          .from('profiles')
+          .select('is_admin, allowed_workspaces')
+          .eq('id', user.id)
+          .single()
+      );
 
       if (pError) throw pError;
 
@@ -42,7 +44,7 @@ export function useCloudWorkspaces() {
         query = query.in('id', profile.allowed_workspaces);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await callWithTokenRefresh<any[]>(() => query);
       if (error) throw error;
       
       const formatted = (data || []).map(ws => ({
@@ -91,16 +93,18 @@ export function useCloudWorkspaces() {
     if (!user) return null;
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('workspaces')
-        .insert({ 
-          id: customId,
-          name, 
-          estado: stateId, 
-          municipio: muniId 
-        })
-        .select()
-        .single();
+      const { data, error } = await callWithTokenRefresh<any>(() => 
+        supabase
+          .from('workspaces')
+          .insert({ 
+            id: customId,
+            name, 
+            estado: stateId, 
+            municipio: muniId 
+          })
+          .select()
+          .single()
+      );
 
       if (error) throw error;
       toast.success(`Área "${name}" creada en la nube`);
@@ -116,10 +120,12 @@ export function useCloudWorkspaces() {
   const deleteCloudWorkspace = async (id: string, name: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase
-        .from('workspaces')
-        .delete()
-        .eq('id', id);
+      const { error } = await callWithTokenRefresh<any>(() => 
+        supabase
+          .from('workspaces')
+          .delete()
+          .eq('id', id)
+      );
 
       if (error) throw error;
       toast.success(`Área "${name}" eliminada`);

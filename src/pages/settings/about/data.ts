@@ -62,9 +62,19 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.3.2';
+export const APP_VERSION = '1.4.0';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.4.0',
+    date: '13/05/2026',
+    changes: [
+      { type: 'nueva', text: 'Selector de Fecha Inteligente: Se implementó un selector de calendario en la Orden del Día que genera automáticamente el rango de guardia (DD/MM/YYYY AL DD/MM/YYYY).' },
+      { type: 'mejora', text: 'Estética del Calendario Refinada: Nuevo diseño de selección con bordes redondeados (rounded-xl) y alineación corregida en flechas de navegación para evitar solapamientos.' },
+      { type: 'mejora', text: 'Estandarización de Versiones: Se centralizó el control de versión en el módulo "Acerca de", eliminando la gestión redundante desde el panel de administración para mayor coherencia.' },
+      { type: 'mejora', text: 'Visibilidad de Sistema: El indicador de versión en la esquina inferior ahora es más legible con fondo desenfocado y mayor contraste en modo claro.' },
+    ],
+  },
   {
     version: '1.3.2',
     date: '11/05/2026',
@@ -171,7 +181,7 @@ export const CHANGELOG: ChangelogEntry[] = [
 ];
 
 export const CHANGE_TYPE_CONFIG: Record<ChangeType, { label: string; icon: typeof Sparkles; className: string }> = {
-  nueva:      { label: 'Nueva',      icon: Sparkles, className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
-  mejora:     { label: 'Mejora',     icon: Zap,      className: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
-  corrección: { label: 'Corrección', icon: Bug,      className: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+  nueva: { label: 'Nueva', icon: Sparkles, className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+  mejora: { label: 'Mejora', icon: Zap, className: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+  corrección: { label: 'Corrección', icon: Bug, className: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
 };

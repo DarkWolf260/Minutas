@@ -14,11 +14,11 @@ import { OrdenEmptyState } from './orden-del-dia/components/orden-empty-state';
 
 export default function OrdenDelDiaPage() {
   const hook = useOrdenDelDiaPagina();
-  const { 
-    estaCargado, 
-    idGuardiaSeleccionada, 
+  const {
+    estaCargado,
+    idGuardiaSeleccionada,
     setIdGuardiaSeleccionada,
-    formRef, 
+    formRef,
     manejarGenerarOrden,
     guardiaAbierta,
     guardias,
@@ -42,15 +42,15 @@ export default function OrdenDelDiaPage() {
       <div className="flex-1 flex flex-col md:h-full md:overflow-hidden">
         <div className="p-4 sm:p-6 lg:p-10 w-full max-w-[1700px] mx-auto md:h-full flex flex-col gap-6 min-h-0 pb-32 sm:pb-0">
           {/* Cabecera (SRP) */}
-          <OrdenHeader 
-            guardiaAbierta={guardiaAbierta} 
-            idGuardiaSeleccionada={idGuardiaSeleccionada} 
-            manejarGenerarOrden={manejarGenerarOrden} 
+          <OrdenHeader
+            guardiaAbierta={guardiaAbierta}
+            idGuardiaSeleccionada={idGuardiaSeleccionada}
+            manejarGenerarOrden={manejarGenerarOrden}
           />
 
           {/* Configuración (OCP) */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 shrink-0">
-            <GuardConfigCard 
+            <GuardConfigCard
               idGuardiaSeleccionada={idGuardiaSeleccionada}
               setIdGuardiaSeleccionada={setIdGuardiaSeleccionada}
               guardiaAbierta={guardiaAbierta}

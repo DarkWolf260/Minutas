@@ -24,6 +24,7 @@ import {
   LogIn,
   LogOut,
   ShieldAlert,
+  Eclipse,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/layout/notification-bell';
@@ -196,9 +197,16 @@ export function SideNav() {
                     <Sun className="h-3.5 w-3.5" />
                   </button>
                   <button
+                    onClick={() => setTheme('facebook')}
+                    className={cn("p-1.5 rounded-sm transition-colors", theme === 'facebook' ? 'bg-background shadow-sm text-[#2D88FF]' : 'text-muted-foreground hover:text-foreground')}
+                    title="Modo Gris"
+                  >
+                    <Eclipse className="h-3.5 w-3.5" />
+                  </button>
+                  <button
                     onClick={() => setTheme('dark')}
                     className={cn("p-1.5 rounded-sm transition-colors", theme === 'dark' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
-                    title="Oscuro"
+                    title="Modo OLED"
                   >
                     <Moon className="h-3.5 w-3.5" />
                   </button>

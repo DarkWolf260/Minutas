@@ -82,7 +82,7 @@ function SeccionDistribucionPersonal({ hook }: { hook: any }) {
   } = hook;
 
   return (
-    <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/60 min-h-[400px] h-auto">
+    <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/50 min-h-[400px] h-auto">
       <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
         <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
           <GripVertical className="h-3.5 w-3.5 text-primary" />
@@ -130,7 +130,15 @@ function SeccionDistribucionPersonal({ hook }: { hook: any }) {
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold text-sm text-foreground/90 truncate">{miembroActivoDnd.name}</p>
+                  <p className="font-bold text-sm text-foreground/90 truncate">
+                    {miembroActivoDnd.rank && miembroActivoDnd.rank !== 'Sin jerarquía' && (
+                      <span className="mr-1.5">{miembroActivoDnd.rank}</span>
+                    )}
+                    {miembroActivoDnd.titulo && (
+                      <span className="mr-1.5">{miembroActivoDnd.titulo}</span>
+                    )}
+                    {miembroActivoDnd.name}
+                  </p>
                   <p className="text-[10px] font-mono text-muted-foreground/70 uppercase tracking-tighter">{miembroActivoDnd.cedula || 'SIN CÉDULA'}</p>
                 </div>
               </div>
@@ -156,7 +164,7 @@ function SeccionActividadesDia({ hook }: { hook: any }) {
   } = hook;
 
   return (
-    <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/60 min-h-[400px] h-auto">
+    <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/50 min-h-[400px] h-auto">
       <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -206,7 +214,7 @@ function SeccionNotasAdm({ hook }: { hook: any }) {
   } = hook;
 
   return (
-    <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/60 min-h-[400px] h-auto">
+    <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/50 min-h-[400px] h-auto">
       <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

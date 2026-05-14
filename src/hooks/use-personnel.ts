@@ -33,9 +33,11 @@ export function usePersonnel() {
     if (!db || !currentWorkspace) return;
 
     const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
-    const sub = repo.watchAll().subscribe((data) => {
-      setPersonnel(data);
-      setIsLoaded(true);
+    const sub = repo.watchAll().subscribe({
+      next: (data) => {
+        setPersonnel(data);
+        setIsLoaded(true);
+      }
     });
 
     return () => sub.unsubscribe();

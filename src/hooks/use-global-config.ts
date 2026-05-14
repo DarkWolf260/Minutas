@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, callWithTokenRefresh } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 export interface GlobalConfig {
   maintenance_mode: boolean;
   allow_registration: boolean;
-  app_version: string;
 }
 
 const BOOLEAN_KEYS = ['maintenance_mode', 'allow_registration'];
@@ -14,16 +13,17 @@ export function useGlobalConfig() {
   const [config, setConfig] = useState<GlobalConfig>({
     maintenance_mode: false,
     allow_registration: true,
-    app_version: 'v1.3.4-cloud'
   });
   const [loading, setLoading] = useState(true);
 
   const fetchConfig = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('global_config')
-        .select('key, value');
+      const { data, error } = await callWithTokenRefresh<any[]>(() => 
+        supabase
+          .from('global_config')
+          .select('key, value')
+      );
 
       if (error) throw error;
 
@@ -89,13 +89,15 @@ export function useGlobalConfig() {
       // Optimistic update
       setConfig(prev => ({ ...prev, [key]: value }));
 
-      const { error } = await supabase
-        .from('global_config')
-        .upsert({ 
-          key, 
-          value, 
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'key' });
+      const { error } = await callWithTokenRefresh<any>(() => 
+        supabase
+          .from('global_config')
+          .upsert({ 
+            key, 
+            value, 
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'key' })
+      );
 
       if (error) throw error;
       

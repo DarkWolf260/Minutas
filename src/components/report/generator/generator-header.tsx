@@ -16,7 +16,7 @@ export const GeneratorHeader = ({ onPreview, onSave, onDiscard }: GeneratorHeade
             variant="ghost" 
             size="icon" 
             onClick={onDiscard}
-            className="text-muted-foreground hover:text-foreground h-9 w-9"
+            className="hidden sm:flex text-muted-foreground hover:text-foreground h-9 w-9"
             title="Cerrar y descartar"
           >
             <X className="h-5 w-5" />

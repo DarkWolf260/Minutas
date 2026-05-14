@@ -300,8 +300,8 @@ function AppLayout() {
       {showTour && <OnboardingTour onComplete={() => setShowTour(false)} />}
       
       {/* Desktop Version Indicator */}
-      <div className="hidden sm:block fixed bottom-4 right-4 z-[40] pointer-events-none select-none opacity-20 hover:opacity-100 transition-opacity">
-        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">
+      <div className="hidden sm:block fixed bottom-4 right-4 z-[40] pointer-events-none select-none opacity-80 hover:opacity-100 transition-opacity">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-foreground bg-background/90 px-2 py-1 rounded-full border border-border backdrop-blur-md shadow-md">
           v{APP_VERSION}
         </span>
       </div>

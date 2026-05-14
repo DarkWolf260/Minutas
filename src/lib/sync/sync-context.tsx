@@ -297,7 +297,26 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
 
 export function useSyncContext(): SyncContextValue {
   const ctx = useContext(SyncContext);
-  if (!ctx) throw new Error('useSyncContext must be used within <SyncProvider>');
+  if (!ctx) {
+    // Return a safe dummy value to prevent crashes during HMR or complex unmounts
+    // while still logging a warning for developers.
+    console.warn('[Sync] useSyncContext was called outside of SyncProvider. Returning fallback state.');
+    return {
+      syncConfig: DEFAULT_SYNC_CONFIG,
+      inboxReports: [],
+      isSyncing: false,
+      isConfigured: false,
+      isPrimary: false,
+      isSecondary: false,
+      setupAsPrimary: async () => null,
+      setupAsSecondary: async () => null,
+      sendReport: async () => false,
+      importFromInbox: async () => {},
+      discardFromInbox: async () => {},
+      resetSync: async () => {},
+      setImportMode: () => {},
+    };
+  }
   return ctx;
 }
 

@@ -4,7 +4,7 @@ import { DbKeys } from './keys';
 import { safeWrite, silentWrite } from './base.repository';
 import { createSupabaseWatchAll, supabaseRepoUtils } from './supabase.repository';
 import { supabase } from '@/lib/supabase';
-import { map } from 'rxjs/operators';
+import { map } from 'rxjs';
 
 export function createHistoryRepository(db: MinutasDatabase | null, workspace_id: string, isCloud: boolean = false) {
   const ws = workspace_id;
@@ -21,7 +21,7 @@ export function createHistoryRepository(db: MinutasDatabase | null, workspace_id
       selector: { type: 'guard_history', workspace_id: ws },
       sort: [{ date: 'desc' }],
     }).$.pipe(
-      map(docs => docs.map(d => d.toJSON()))
+      map(docs => docs.map(d => (typeof d.toJSON === 'function' ? d.toJSON() : d) as any))
     );
 
   const saveGuardReport = async (report: GuardReport) =>

@@ -75,8 +75,8 @@ function SortableStaffItem({
     >
       <div className="flex items-center justify-between gap-4">
         {/* Left Side: Drag, Name/Cedula and Observation (on desktop) */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 min-w-0 flex-1">
-          <div className="flex items-center gap-3 min-w-[200px] shrink-0">
+        <div className="flex flex-col gap-3 min-w-0 flex-1">
+          <div className="flex items-center gap-3">
             <div
               {...attributes}
               {...listeners}
@@ -85,21 +85,29 @@ function SortableStaffItem({
               <GripVertical className="h-4 w-4" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-bold text-sm text-foreground/90 truncate">{member.name}</p>
+              <p className="font-bold text-sm text-foreground/90 truncate">
+                {member.rank && member.rank !== 'Sin jerarquía' && (
+                  <span className="mr-1.5">{member.rank}</span>
+                )}
+                {member.titulo && (
+                  <span className="mr-1.5">{member.titulo}</span>
+                )}
+                {member.name}
+              </p>
               <p className="text-[10px] font-mono text-muted-foreground/70 tracking-tighter uppercase">
                 {member.cedula || 'SIN CÉDULA'}
               </p>
             </div>
           </div>
 
-          {/* Observation Input - Inline on desktop, below on mobile */}
+          {/* Observation Input - Always below name */}
           {onUpdateMember && (
-            <div className="flex-1 w-full sm:max-w-md pl-7 sm:pl-0">
+            <div className="w-full pl-10 pr-2">
               <Input
-                placeholder="Observación (ej. Comisión...)"
+                placeholder="Observación..."
                 value={member.observation || ''}
                 onChange={(e) => onUpdateMember({ ...member, observation: e.target.value })}
-                className="h-8 sm:h-7 text-[11px] bg-background/50 border-dashed focus-visible:ring-1 focus-visible:ring-primary/30 w-full"
+                className="h-7 text-[11px] bg-background/50 border-dashed focus-visible:ring-1 focus-visible:ring-primary/30 w-full"
               />
             </div>
           )}
@@ -120,12 +128,12 @@ function SortableStaffItem({
   );
 }
 
-export const StaffListEditor = React.memo(({ 
-  label, 
-  staffMembers, 
-  is_single, 
+export const StaffListEditor = React.memo(({
+  label,
+  staffMembers,
+  is_single,
   onUpdate,
-  showObservations 
+  showObservations
 }: StaffListEditorProps) => {
   const { setNodeRef } = useDroppable({
     id: label,
@@ -264,7 +272,15 @@ export const StaffListEditor = React.memo(({
                               onClick={() => handleAdd(p)}
                             >
                               <div className="flex flex-col items-start min-w-0 flex-1">
-                                <span className="font-bold w-full">{p.name}</span>
+                                <span className="font-bold w-full">
+                                  {p.rank && p.rank !== 'Sin jerarquía' && (
+                                    <span className="mr-1.5">{p.rank}</span>
+                                  )}
+                                  {p.titulo && (
+                                    <span className="mr-1.5">{p.titulo}</span>
+                                  )}
+                                  {p.name}
+                                </span>
                                 <span className="text-[10px] opacity-60 font-mono tracking-tighter">
                                   {p.cedula || 'SIN CÉDULA'}
                                 </span>
@@ -303,10 +319,10 @@ export const StaffListEditor = React.memo(({
             >
               <div className="divide-y divide-muted/50">
                 {staffMembers.map((member) => (
-                  <SortableStaffItem 
-                    key={member.id} 
-                    member={member} 
-                    onRemove={handleRemove} 
+                  <SortableStaffItem
+                    key={member.id}
+                    member={member}
+                    onRemove={handleRemove}
                     onUpdateMember={showObservations ? handleUpdateMember : undefined}
                   />
                 ))}
@@ -465,21 +481,21 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
 
   const performSave = async (showNotification = true) => {
     const currentStaff = staffRef.current;
-    
+
     // Simple check to avoid saving if no changes were made since last guard load
     // or since last save. (Deep check might be overkill, but let's at least check if it's different from initial)
     const hasChanges = JSON.stringify(currentStaff) !== JSON.stringify(initialStaffRef.current);
-    
+
     if (!hasChanges) return;
 
     onUpdate({ ...guard, staff: currentStaff });
     // Record history for the current date
     const today = format(new Date(), 'yyyy-MM-dd');
     await recordAssignments(guard.id, currentStaff, today);
-    
+
     // Update initialStaffRef to current state after saving
     initialStaffRef.current = currentStaff;
-    
+
     if (showNotification) {
       onSave();
     }
@@ -496,7 +512,7 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
     };
 
     window.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     return () => {
       window.removeEventListener('visibilitychange', handleVisibilityChange);
       // Silent save on unmount
@@ -568,6 +584,12 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-sm text-foreground/90 truncate">
+                    {activeMember?.rank && activeMember.rank !== 'Sin jerarquía' && (
+                      <span className="mr-1.5">{activeMember.rank}</span>
+                    )}
+                    {activeMember?.titulo && (
+                      <span className="mr-1.5">{activeMember.titulo}</span>
+                    )}
                     {activeMember?.name}
                   </p>
                   <p className="text-[10px] font-mono text-muted-foreground/70 tracking-tighter uppercase">

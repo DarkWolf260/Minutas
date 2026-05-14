@@ -18,20 +18,21 @@ export function useAddresses() {
 
     const repo = createLookupRepository(db, currentWorkspace, isCloud);
 
-    const sub = repo.watchAddresses().subscribe((data) => {
-      if (data.length > 0) {
-        setAddresses(
-          data.map((d) => {
-            const item = d.toJSON ? d.toJSON() : d;
-            const rawData = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
-            return { ...(rawData as Address), workspace_id: currentWorkspace };
-          }) as Address[]
-        );
-      } else {
-        // Just use defaults in state, do NOT init in DB to avoid cloud conflicts
-        setAddresses(DEFAULT_ADDRESSES as Address[]);
+    const sub = repo.watchAddresses().subscribe({
+      next: (data) => {
+        if (data.length > 0) {
+          setAddresses(
+            data.map((item: any) => {
+              const rawData = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+              return { ...(rawData as Address), workspace_id: currentWorkspace };
+            })
+          );
+        } else {
+          // Just use defaults in state, do NOT init in DB to avoid cloud conflicts
+          setAddresses(DEFAULT_ADDRESSES as Address[]);
+        }
+        setIsLoaded(true);
       }
-      setIsLoaded(true);
     });
 
     return () => sub.unsubscribe();

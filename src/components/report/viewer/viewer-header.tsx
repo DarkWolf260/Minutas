@@ -43,7 +43,7 @@ export const ViewerHeader = ({
             variant="ghost" 
             size="icon" 
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground h-9 w-9 mr-1"
+            className="hidden sm:flex text-muted-foreground hover:text-foreground h-9 w-9 mr-1"
             title="Cerrar reporte"
           >
             <X className="h-5 w-5" />
