@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { supabase } from '@/lib/supabase';
+import { supabase, callWithTokenRefresh } from '@/lib/supabase';
 
 interface UserStatus {
   isAdmin: boolean;
@@ -31,11 +31,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('is_admin, is_approved')
-        .eq('id', user.id)
-        .single();
+      const { data, error } = await callWithTokenRefresh<any>(() => 
+        supabase
+          .from('profiles')
+          .select('is_admin, is_approved')
+          .eq('id', user.id)
+          .single()
+      );
 
       if (error) {
         if (error.code === 'PGRST116') { // Not found
@@ -48,6 +50,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         throw error;
+      }
+
+      if (!data) {
+        throw new Error('No profile data returned');
       }
 
       setStatus({

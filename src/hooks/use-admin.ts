@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { supabase } from '@/lib/supabase';
+import { supabase, callWithTokenRefresh } from '@/lib/supabase';
 
 export function useAdmin() {
   const { user, loading: authLoading } = useAuth();
@@ -16,11 +16,13 @@ export function useAdmin() {
       }
 
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', user.id)
-          .single();
+        const { data, error } = await callWithTokenRefresh<any>(() => 
+          supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single()
+        );
 
         if (error) throw error;
         setIsAdmin(data?.is_admin || false);

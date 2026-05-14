@@ -29,7 +29,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex h-9 w-9 items-center justify-center rounded-full transition-all overflow-hidden ring-2 ring-transparent focus:outline-none ml-1 shadow-sm">
+      <DropdownMenuTrigger className="flex h-9 w-9 items-center justify-center rounded-full transition-all overflow-hidden ring-2 ring-border/80 focus:outline-none ml-1 shadow-sm">
         {profile.avatarUrl && !analyst ? (
           <img src={profile.avatarUrl} alt="Perfil" className="h-full w-full object-cover" />
         ) : (
@@ -42,7 +42,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
         )}
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-64 mt-1 rounded-xl shadow-xl border-muted/60">
+      <DropdownMenuContent align="end" className="w-64 mt-1 rounded-xl shadow-xl border-border">
         <div className="flex flex-col space-y-1 p-3">
           <p className="text-sm font-bold leading-none truncate tracking-tight">{displayName}</p>
           <p className="text-[10px] leading-none text-muted-foreground truncate uppercase font-bold tracking-wider mt-1">

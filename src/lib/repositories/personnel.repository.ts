@@ -36,7 +36,8 @@ export function createPersonnelRepository(db: MinutasDatabase | null, workspace_
       async () => {
         const doc = await db.personnel.findOne(id).exec();
         if (!doc) throw new Error('Miembro del personal no encontrado.');
-        await doc.patch(updates);
+        const { id: _, workspace_id: __, _rev, ...patchData } = updates as any;
+        await doc.patch(patchData);
       },
       { feature: 'Personnel', rethrow: true }
     );
@@ -80,7 +81,10 @@ export function createPersonnelRepository(db: MinutasDatabase | null, workspace_
 
         if (toRemove.length > 0) await Promise.all(toRemove.map((d) => d.remove()));
         if (toUpdate.length > 0)
-          await Promise.all(toUpdate.map(({ doc, data }) => doc.patch(data)));
+          await Promise.all(toUpdate.map(({ doc, data }) => {
+            const { _rev, ...patchData } = data as any;
+            return doc.patch(patchData);
+          }));
         if (toInsert.length > 0) await db.personnel.bulkInsert(toInsert);
       },
       { feature: 'Personnel' }

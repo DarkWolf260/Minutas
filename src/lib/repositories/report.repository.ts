@@ -42,7 +42,7 @@ export function createReportRepository(db: MinutasDatabase | null, workspace_id:
       async () => {
         const doc = await db.reports.findOne(validatedReport.id).exec();
         if (!doc) throw new Error('Reporte no encontrado.');
-        const { id, workspace_id, ...patchData } = validatedReport;
+        const { id, workspace_id, _rev, ...patchData } = validatedReport as any;
         await doc.patch(patchData as Partial<Report>);
       },
       { feature: 'Reports' }

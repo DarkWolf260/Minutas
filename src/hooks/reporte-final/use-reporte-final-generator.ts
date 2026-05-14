@@ -25,7 +25,8 @@ interface UseReporteFinalGeneratorProps {
   setEstadisticasLocal: (stats: string) => void;
 }
 
-const formatearMiembroPersonalParaReporte = (member: StaffMember): string => {
+const formatearMiembroPersonalParaReporte = (member: StaffMember | string): string => {
+  if (typeof member === 'string') return member;
   const parts: string[] = [];
   if (member.rank && member.rank !== 'Sin jerarquía') parts.push(member.rank);
   if (member.titulo) parts.push(member.titulo);
@@ -221,7 +222,10 @@ export function useReporteFinalGenerator({
           );
           const staffList = staffKey ? (personalParaReporte as any)[staffKey] : undefined;
           
-          if (staffList && staffList.length > 0 && staffList.some((s: any) => s.name.trim() !== '')) {
+          if (staffList && staffList.length > 0 && staffList.some((s: any) => {
+            const name = typeof s === 'string' ? s : s?.name;
+            return name && name.trim() !== '';
+          })) {
             const names = staffList
                 .map((member: any) => formatearMiembroPersonalParaReporte(member))
                 .join(' / ');

@@ -43,7 +43,7 @@ export function createTemplateRepository(db: MinutasDatabase | null, workspace_i
       async () => {
         const doc = await db.templates.findOne(template.id).exec();
         if (!doc) throw new Error('Plantilla no encontrada.');
-        const { id, workspace_id, ...patchData } = template;
+        const { id, workspace_id, _rev, ...patchData } = template as any;
         await doc.patch(patchData);
       },
       { feature: 'Templates', rethrow: true }

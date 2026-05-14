@@ -130,7 +130,15 @@ function SeccionDistribucionPersonal({ hook }: { hook: any }) {
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold text-sm text-foreground/90 truncate">{miembroActivoDnd.name}</p>
+                  <p className="font-bold text-sm text-foreground/90 truncate">
+                    {miembroActivoDnd.rank && miembroActivoDnd.rank !== 'Sin jerarquía' && (
+                      <span className="mr-1.5">{miembroActivoDnd.rank}</span>
+                    )}
+                    {miembroActivoDnd.titulo && (
+                      <span className="mr-1.5">{miembroActivoDnd.titulo}</span>
+                    )}
+                    {miembroActivoDnd.name}
+                  </p>
                   <p className="text-[10px] font-mono text-muted-foreground/70 uppercase tracking-tighter">{miembroActivoDnd.cedula || 'SIN CÉDULA'}</p>
                 </div>
               </div>

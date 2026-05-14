@@ -14,7 +14,8 @@ import type { Staff, StaffMember, StaffRole } from '@/lib/types';
 
 // Sub-hooks
 import { useOrdenDelDiaActivities } from './orden-del-dia/use-orden-del-dia-activities';
-import { useOrdenDelDiaNotes, NOTAS_POR_DEFECTO } from './orden-del-dia/use-orden-del-dia-notes';
+import { useOrdenDelDiaNotes, NOTAS_POR_DEFECTO, Nota } from './orden-del-dia/use-orden-del-dia-notes';
+export type { Nota };
 import { useOrdenDelDiaPersonnel } from './orden-del-dia/use-orden-del-dia-personnel';
 import { useOrdenDelDiaGenerator } from './orden-del-dia/use-orden-del-dia-generator';
 

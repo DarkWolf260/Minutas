@@ -1,7 +1,8 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/custom/date-picker';
+import { formatDateToPeriod, parsePeriodToDate } from '@/lib/formatters';
 import {
   Select,
   SelectContent,
@@ -71,13 +72,15 @@ export const GuardConfigCard = ({
           >
             Periodo de Operaciones
           </Label>
-          <Input
+          <DatePicker
             id="periodo"
-            value={periodo}
-            onChange={(e) => setPeriodo(e.target.value)}
+            value={parsePeriodToDate(periodo)}
+            onChange={(newDateStr) => {
+              const date = new Date(newDateStr + 'T12:00:00'); // Use noon to avoid timezone issues
+              setPeriodo(formatDateToPeriod(date));
+            }}
             disabled={guardiaAbierta}
             className={`h-10 rounded-lg shadow-sm ${guardiaAbierta ? 'bg-muted opacity-80' : 'bg-background'}`}
-            placeholder="Ej: 28/03/2026 AL 29/03/2026"
           />
         </div>
         {!guardiaAbierta && (

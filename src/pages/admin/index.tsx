@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAdminUsers } from '@/hooks/use-admin-users';
 import { useCloudWorkspaces } from '@/hooks/use-cloud-workspaces';
 import { useGlobalConfig } from '@/hooks/use-global-config';
+import { APP_VERSION } from '@/pages/settings/about/data';
 import { cn } from '@/lib/utils';
 
 export default function AdminDashboardPage() {
@@ -70,7 +71,7 @@ export default function AdminDashboardPage() {
           <div className="flex gap-4 items-center">
             <div className="hidden sm:flex flex-col items-end">
               <span className="text-[10px] font-bold uppercase text-muted-foreground/60 tracking-tighter">Versión del Sistema</span>
-              <span className="text-sm font-mono font-bold">{config.app_version}</span>
+              <span className="text-sm font-mono font-bold">v{APP_VERSION}</span>
             </div>
             <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg shadow-primary/20 text-white">
               <Settings className="h-8 w-8 animate-spin-slow" />

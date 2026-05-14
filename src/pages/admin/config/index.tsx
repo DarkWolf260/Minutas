@@ -13,7 +13,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { AjustesGenerales } from '@/components/shared/ajustes-generales';
-import { AppVersionManager } from './components/app-version-manager';
 
 export default function AdminConfigPage() {
   const navigate = useNavigate();
@@ -63,8 +62,6 @@ export default function AdminConfigPage() {
       <div className="flex-1 overflow-auto p-4 md:p-8 space-y-6">
         <div className="max-w-4xl mx-auto grid gap-6">
           
-          <AppVersionManager />
-
           {/* Access and Security */}
           <Card className="rounded-3xl border-muted/60 shadow-sm overflow-hidden">
             <CardHeader className="bg-muted/30">
