@@ -278,7 +278,7 @@ export function useReporteFinalGenerator({
             const valoresPredefinidosDinamicos = {
               ...configuracionesGlobales,
               Guardia: idGuardiaParaReporte,
-              Estatus: report.status || 'En proceso',
+              Estatus: (report.status?.trim().toLowerCase() === 'finalizado') ? 'Finalizado' : 'En proceso',
               Enc: !ordenDelDiaDeshabilitado && settings.ordenDelDiaDraft?.esJefeEncargado ? '(E)' : '',
               [LEADER_ROLES.DIRECTOR]: director,
               [LEADER_ROLES.JEFE_OPERACIONES]: jefeDeOperaciones,
@@ -338,6 +338,14 @@ export function useReporteFinalGenerator({
     setTimeout(() => setTextoBotonCopiar('Copiar'), 2000);
   }, [reporteGenerado]);
 
+  const manejarExportarWord = useCallback(async () => {
+    if (!reporteGenerado) return;
+    const { exportReportToWord } = await import('@/lib/export-word');
+    const filename = `Reporte de Cierre - ${format(new Date(), 'dd.MM.yyyy')}`;
+    await exportReportToWord(reporteGenerado, filename);
+    toast.success('Reporte exportado a Word con éxito');
+  }, [reporteGenerado, activeGuard]);
+
   const manejarFinalizarYGuardar = async () => {
     if (!reporteGenerado || !activeGuard) {
       toast.error('No hay contenido de reporte o guardia activa para finalizar.');
@@ -371,7 +379,7 @@ export function useReporteFinalGenerator({
         generated_at: fullIsoDate,
         summary: settings.guardPeriod || `Reporte de Guardia ${activeGuard.id}`,
         content: reporteGenerado,
-        guardGroup: activeGuard.id.split(' ')[0] || '',
+        guard_group: activeGuard.id.split(' ')[0] || '',
         workspace_id: '', 
         statistics: statsObj,
       });
@@ -406,6 +414,7 @@ export function useReporteFinalGenerator({
     textoBotonCopiar,
     manejarGenerarReporte,
     manejarCopiarAlPortapapeles,
+    manejarExportarWord,
     manejarFinalizarYGuardar
   };
 }

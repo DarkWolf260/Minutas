@@ -113,7 +113,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
-    chunkSizeWarningLimit: 800,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -125,17 +125,11 @@ export default defineConfig({
             ) {
               return '@vendor-react';
             }
-            if (id.includes('leaflet') || id.includes('react-leaflet')) {
-              return '@map';
-            }
             if (id.includes('lucide-react')) {
               return '@icons';
             }
             if (id.includes('@radix-ui')) {
               return '@ui';
-            }
-            if (id.includes('date-fns')) {
-              return '@utils';
             }
           }
         },

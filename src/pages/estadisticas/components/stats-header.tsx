@@ -15,10 +15,10 @@ interface StatsHeaderProps {
 }
 
 export const StatsHeader = ({ hook }: StatsHeaderProps) => {
-  const { 
-    mes, setMes, anio, setAnio, modo, setModo, 
-    aniosDisponibles, nombresMeses, 
-    manejarMesAnterior, manejarMesSiguiente 
+  const {
+    mes, setMes, anio, setAnio, modo, setModo,
+    aniosDisponibles, nombresMeses,
+    manejarMesAnterior, manejarMesSiguiente
   } = hook;
 
   return (

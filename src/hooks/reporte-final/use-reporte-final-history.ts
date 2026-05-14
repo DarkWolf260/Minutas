@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useGuardHistory } from '@/hooks/use-guard-history';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 export function useReporteFinalHistory() {
   const { reports: reportesGuardados, isLoaded: historialLoaded, saveGuardReport, deleteGuardReport } = useGuardHistory();
@@ -89,6 +90,15 @@ export function useReporteFinalHistory() {
     }
   }, [reporteGuardadoSeleccionado]);
 
+  const manejarExportarWordHistorial = useCallback(async () => {
+    if (!reporteGuardadoSeleccionado?.content) return;
+    const { exportReportToWord } = await import('@/lib/export-word');
+    const dateStr = format(new Date(reporteGuardadoSeleccionado.date), 'dd.MM.yyyy');
+    const filename = `Reporte de Cierre - ${dateStr}`;
+    await exportReportToWord(reporteGuardadoSeleccionado.content, filename);
+    toast.success('Reporte exportado a Word con éxito');
+  }, [reporteGuardadoSeleccionado]);
+
   return {
     reportesGuardados,
     historialLoaded,
@@ -105,6 +115,7 @@ export function useReporteFinalHistory() {
     manejarConfirmarEliminacionHistorial,
     manejarCorregirFechasHistorial,
     manejarCopiarReporte,
+    manejarExportarWordHistorial,
     saveGuardReport
   };
 }

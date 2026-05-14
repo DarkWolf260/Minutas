@@ -20,7 +20,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText, X, ClipboardCheck, History, Save } from 'lucide-react';
+import { FileText, X, ClipboardCheck, History, Save, FileDown } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
 import { format } from 'date-fns';
@@ -47,7 +47,9 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
     manejarFinalizarYGuardar,
     esDialogOpenConfirmarEliminar,
     setEsDialogOpenConfirmarEliminar,
-    manejarConfirmarEliminacionHistorial
+    manejarConfirmarEliminacionHistorial,
+    manejarExportarWord,
+    manejarExportarWordHistorial
   } = hook;
 
   return (
@@ -83,6 +85,14 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
               >
                 <Save className="h-4 w-4 mr-2" />
                 Finalizar y Archivar
+              </Button>
+              <Button
+                variant="outline"
+                onClick={manejarExportarWord}
+                className="w-full h-12 font-bold rounded-xl border-2"
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Exportar a Word
               </Button>
               <SheetClose asChild>
                 <Button type="button" variant="secondary" className="w-full h-11 font-bold">
@@ -137,6 +147,14 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
                   <Save className="h-4 w-4 mr-2" />
                   Finalizar y Archivar
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={manejarExportarWord}
+                  className="flex-1 sm:flex-none h-11 px-8 font-bold border-2 rounded-xl"
+                >
+                  <FileDown className="h-4 w-4 mr-2" />
+                  Exportar Word
+                </Button>
                 <DialogClose asChild>
                   <Button type="button" variant="secondary" className="h-11 px-8 font-bold">
                     Cerrar
@@ -170,13 +188,21 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
               </ScrollArea>
             </div>
 
-            <SheetFooter className="pt-4 border-t">
+            <SheetFooter className="pt-4 border-t flex flex-col gap-3">
               <Button
                 onClick={manejarCopiarReporte}
                 className="w-full h-12 font-bold rounded-xl"
               >
                 <ClipboardCheck className="h-4 w-4 mr-2" />
                 {textoBotonCopiar}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={manejarExportarWordHistorial}
+                className="w-full h-12 font-bold rounded-xl border-2"
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Exportar a Word
               </Button>
             </SheetFooter>
           </SheetContent>
@@ -213,13 +239,21 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
               </ScrollArea>
             </div>
 
-            <DialogFooter className="pt-4 border-t">
+            <DialogFooter className="pt-4 border-t flex items-center gap-3">
               <Button
                 onClick={manejarCopiarReporte}
                 className="h-11 px-8 font-bold rounded-xl shadow-lg shadow-primary/10"
               >
                 <ClipboardCheck className="h-4 w-4 mr-2" />
                 {textoBotonCopiar}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={manejarExportarWordHistorial}
+                className="h-11 px-8 font-bold border-2 rounded-xl"
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Exportar Word
               </Button>
             </DialogFooter>
           </DialogContent>
