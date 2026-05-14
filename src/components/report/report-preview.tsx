@@ -44,7 +44,7 @@ export function ReportPreview({
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[95vh] rounded-t-xl flex flex-col p-6">
+        <SheetContent side="bottom" className="h-[95vh] rounded-t-xl flex flex-col p-6" hideClose>
           <SheetHeader className="text-left">
             <SheetTitle>{title}</SheetTitle>
             <SheetDescription>Revisa el reporte generado.</SheetDescription>
