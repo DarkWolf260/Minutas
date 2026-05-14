@@ -40,7 +40,6 @@ export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewer
     handleStatusChange,
     handlePreviewClick,
     handleDataChange,
-    handleExportWord,
     isSecondary,
     sendToSync,
     isSendingSyncReport,
@@ -67,7 +66,6 @@ export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewer
         isSecondary={isSecondary}
         sendToSync={() => sendToSync(report)}
         isSendingSyncReport={isSendingSyncReport}
-        onExportWord={handleExportWord}
       />
 
       {/* Contenido Principal y Formulario */}
