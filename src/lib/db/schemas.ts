@@ -44,6 +44,17 @@ export const reportsSchema = {
         is_relevant: { type: 'boolean' },
         status: { type: 'string' },
         form_data: { type: 'object' },
+        sections: { 
+            type: 'array', 
+            items: { 
+                type: 'object',
+                properties: {
+                    title: { type: 'string' },
+                    content: { type: 'string' },
+                    fields: { type: 'object' }
+                }
+            }
+        },
         modified: { type: ['string', 'null'] },
         _deleted: { type: 'boolean' }
     },

@@ -112,7 +112,7 @@ export function useEstadisticas() {
     estadisticas,
     arregloDias,
     estaTodoCargado,
-    
+
     // Handlers
     manejarMesAnterior,
     manejarMesSiguiente,

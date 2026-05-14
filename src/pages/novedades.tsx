@@ -70,6 +70,9 @@ function NovedadesPageContent() {
         templates={hook.templates}
         manejarSeleccionarPlantilla={hook.manejarSeleccionarPlantilla}
         navigate={hook.navigate}
+        isConfirmExportOpen={hook.isConfirmExportOpen}
+        setIsConfirmExportOpen={hook.setIsConfirmExportOpen}
+        ejecutarExportacionWord={hook.ejecutarExportacionWord}
       />
     </>
   );

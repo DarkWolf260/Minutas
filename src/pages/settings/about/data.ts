@@ -62,9 +62,20 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.4.0';
+export const APP_VERSION = '1.5.0';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.5.0',
+    date: '14/05/2026',
+    changes: [
+      { type: 'nueva', text: 'Exportación Masiva a Word: Se implementó el sistema oficial de generación de documentos (.docx) para consolidar todas las novedades en un solo archivo profesional.' },
+      { type: 'nueva', text: 'Confirmación de Seguridad: Añadido diálogo de confirmación antes de exportar para evitar descargas accidentales y mejorar la experiencia de usuario.' },
+      { type: 'mejora', text: 'Sincronización Automática: Los reportes finalizados en dispositivos secundarios se suben instantáneamente a la nube para asegurar su disponibilidad inmediata.' },
+      { type: 'mejora', text: 'Soporte de Secciones: Habilitada la persistencia y sincronización del campo "sections", garantizando que el contenido estructurado llegue íntegro a Supabase.' },
+      { type: 'corrección', text: 'Estabilidad de Datos: Resueltos problemas de desajuste de esquema y optimizada la lectura de configuraciones globales (Estatus, Encargado, etc).' },
+    ],
+  },
   {
     version: '1.4.0',
     date: '13/05/2026',

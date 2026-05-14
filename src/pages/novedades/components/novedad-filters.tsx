@@ -1,5 +1,4 @@
-import React from 'react';
-import { Search, ArrowDownWideNarrow, ArrowUpNarrowWide } from 'lucide-react';
+import { Search, ArrowDownWideNarrow, ArrowUpWideNarrow, FileDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -9,13 +8,15 @@ interface NovedadFiltersProps {
   setBusqueda: (val: string) => void;
   ordenamiento: 'asc' | 'desc';
   setOrdenamiento: (val: 'asc' | 'desc') => void;
+  manejarExportarTodasWord: () => void;
 }
 
 export const NovedadFilters = ({ 
   busqueda, 
   setBusqueda, 
   ordenamiento, 
-  setOrdenamiento 
+  setOrdenamiento,
+  manejarExportarTodasWord
 }: NovedadFiltersProps) => {
   return (
     <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 border-b bg-muted/5">
@@ -44,8 +45,17 @@ export const NovedadFilters = ({
           {ordenamiento === 'desc' ? (
             <ArrowDownWideNarrow className="h-4 w-4 animate-in fade-in zoom-in duration-300" />
           ) : (
-            <ArrowUpNarrowWide className="h-4 w-4 animate-in fade-in zoom-in duration-300" />
+            <ArrowUpWideNarrow className="h-4 w-4 animate-in fade-in zoom-in duration-300" />
           )}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={manejarExportarTodasWord}
+          className="h-9 w-9 shrink-0 rounded-lg border bg-background shadow-sm hover:bg-muted text-primary border-primary/20 bg-primary/5 transition-all duration-300"
+          title="Exportar todas las novedades a Word"
+        >
+          <FileDown className="h-4 w-4" />
         </Button>
       </div>
     </div>

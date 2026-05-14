@@ -23,7 +23,8 @@ export const NovedadSidebar = ({ hook, isMobile }: NovedadSidebarProps) => {
     ordenamiento,
     setOrdenamiento,
     reportesFiltrados,
-    manejarSeleccionarReporte
+    manejarSeleccionarReporte,
+    manejarExportarTodasWord
   } = hook;
 
   return (
@@ -52,6 +53,7 @@ export const NovedadSidebar = ({ hook, isMobile }: NovedadSidebarProps) => {
         setBusqueda={setBusqueda}
         ordenamiento={ordenamiento}
         setOrdenamiento={setOrdenamiento}
+        manejarExportarTodasWord={manejarExportarTodasWord}
       />
       
       <div className="flex-1 min-h-0">

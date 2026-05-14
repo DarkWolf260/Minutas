@@ -1,19 +1,26 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useReports } from '@/hooks/use-reports';
+import { toast } from 'sonner';
 import { useTemplates } from '@/hooks/use-templates';
 import { useDrafts } from '@/hooks/use-drafts';
 import { useActiveGuard } from '@/hooks/use-active-guard';
 import { sortReports } from '@/lib/report-sorter';
 import { normalizeString } from '@/lib/utils';
-import type { Report, Template } from '@/lib/types';
+import { renderFinalReport } from '@/lib/template-parser';
+import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+import { useRoles } from '@/hooks/use-roles';
+import { LEADER_ROLES } from '@/lib/constants/roles';
+import type { Report, Template, StaffMember } from '@/lib/types';
 import type { ReportGeneratorRef } from '@/components/report/report-generator';
 
 export function useNovedades() {
   const { reports, addReport, updateReport, removeReport, clearAllReports } = useReports();
   const { templates, configs } = useTemplates();
   const { draft, clearDraft, isLoaded: draftCargado } = useDrafts();
-  const { isGuardOpen: guardiaAbierta } = useActiveGuard();
+  const { isGuardOpen: guardiaAbierta, settings, activeGuard } = useActiveGuard();
+  const { definitions } = useFieldDefinitions();
+  const { roles } = useRoles();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const generatorRef = useRef<ReportGeneratorRef>(null);
@@ -27,6 +34,7 @@ export function useNovedades() {
   const [datosBorradorInicial, setDatosBorradorInicial] = useState<Record<string, any> | undefined>(undefined);
   const [estaNavegandoAtras, setEstaNavegandoAtras] = useState(false);
   const [ordenamiento, setOrdenamiento] = useState<'asc' | 'desc'>('desc');
+  const [isConfirmExportOpen, setIsConfirmExportOpen] = useState(false);
   const manualSelectionRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -209,6 +217,122 @@ export function useNovedades() {
     manejarGuardarNuevoReporte,
     manejarCancelarCreacion,
     manejarSeleccionarReporte,
+    isConfirmExportOpen,
+    setIsConfirmExportOpen,
+    manejarExportarTodasWord: useCallback(async () => {
+      if (reportesFiltrados.length === 0) {
+        toast.info('No hay novedades para exportar');
+        return;
+      }
+      setIsConfirmExportOpen(true);
+    }, [reportesFiltrados.length]),
+
+    ejecutarExportacionWord: useCallback(async () => {
+      const { exportReportToWord } = await import('@/lib/export-word');
+      const { format } = await import('date-fns');
+
+      // 1. Preparar Configuraciones Globales (Director, Municipio, etc)
+      const settingsMap: Record<string, string> = {};
+      Object.keys(definitions).forEach((key) => {
+        if (definitions[key]?.value) {
+          settingsMap[key] = definitions[key]!.value!;
+        }
+      });
+
+      const configuracionesGlobales = Object.values(configs).reduce(
+        (acc: any, config: any) => {
+          Object.keys(config.fields).forEach((fieldName) => {
+            const field = config.fields[fieldName];
+            if (field && field.type === 'predefined' && field.value) {
+              acc[fieldName] = field.value;
+            }
+          });
+          return acc;
+        },
+        settingsMap
+      );
+
+      // 2. Obtener Líderes
+      const ordenDelDiaDeshabilitado = (settings.disabled_modules || []).includes('orden-del-dia');
+      const borrador = !ordenDelDiaDeshabilitado ? settings.orden_del_dia_draft : undefined;
+      const personalParaReporte = (borrador && borrador.guard_id === settings.active_guard_id)
+        ? borrador.staff
+        : activeGuard?.staff;
+
+      const formatearMiembro = (member: StaffMember | string): string => {
+        if (typeof member === 'string') return member;
+        const parts: string[] = [];
+        if (member.rank && member.rank !== 'Sin jerarquía') parts.push(member.rank);
+        if (member.titulo) parts.push(member.titulo);
+        parts.push(member.name);
+        return parts.filter(Boolean).join(' ').trim();
+      };
+
+      const obtenerNombreLider = (roleName: string) => {
+        if (personalParaReporte) {
+          const key = Object.keys(personalParaReporte).find(
+            (k) => k.toLowerCase() === roleName.toLowerCase()
+          );
+          if (key) {
+            const members = (personalParaReporte as any)[key];
+            const firstMember = members ? members[0] : undefined;
+            if (firstMember) return formatearMiembro(firstMember).trim();
+          }
+        }
+        return '';
+      };
+
+      const director = obtenerNombreLider(LEADER_ROLES.DIRECTOR);
+      const jefeDeOperaciones = obtenerNombreLider(LEADER_ROLES.JEFE_OPERACIONES);
+      const idGuardiaParaReporte = (borrador && borrador.guard_id === settings.active_guard_id)
+        ? borrador.guard_id || ''
+        : (activeGuard?.id || settings.active_guard_id || '');
+      
+      // Generamos el contenido estructurado con colores y numeración
+      const lineasParaWord: any[] = [];
+      
+      reportesFiltrados.forEach((r, index) => {
+        const esFinalizado = r.status?.trim().toLowerCase() === 'finalizado';
+        const colorEstado = esFinalizado ? '4EA72E' : 'FFFF00';
+        
+        lineasParaWord.push({
+          text: `MINUTA ${index + 1}`,
+          color: colorEstado,
+          bold: true,
+          isSeparator: true,
+          alignment: 'CENTER',
+          pageBreakBefore: index > 0
+        });
+        
+        lineasParaWord.push({ text: '' });
+        
+        const template = templates.find(t => t.id === r.template_id);
+        const config = configs[r.template_id];
+        const borradorObj = (borrador as any);
+        const esJefeEncargado = borradorObj?.es_jefe_encargado ?? borradorObj?.esJefeEncargado ?? settings.orden_del_dia_draft?.es_jefe_encargado ?? (settings as any).ordenDelDiaDraft?.esJefeEncargado;
+
+        const contentToUse = (template && config) 
+          ? renderFinalReport(template.content, r.form_data || {}, config, {}, false, { 
+              ...configuracionesGlobales,
+              Guardia: idGuardiaParaReporte,
+              Estatus: esFinalizado ? 'Finalizado' : 'En proceso',
+              Enc: !ordenDelDiaDeshabilitado && esJefeEncargado ? '(E)' : '',
+              [LEADER_ROLES.DIRECTOR]: director,
+              [LEADER_ROLES.JEFE_OPERACIONES]: jefeDeOperaciones,
+            })
+          : r.content;
+        
+        contentToUse.split('\n').forEach((line: string) => {
+          lineasParaWord.push({ text: line });
+        });
+        
+        lineasParaWord.push({ text: '' });
+      });
+      
+      const filename = `Minutas ${format(new Date(), 'dd.MM.yyyy')}`;
+      await exportReportToWord(lineasParaWord, filename);
+      toast.success('Todas las novedades han sido exportadas a Word');
+    }, [reportesFiltrados, templates, configs, definitions, settings, activeGuard]),
     updateReport,
     navigate,
   };

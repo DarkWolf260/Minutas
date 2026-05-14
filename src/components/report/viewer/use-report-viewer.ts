@@ -52,9 +52,12 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
   const saveLogic = useCallback(async (form_data: Record<string, any>) => {
     if (!report || !template) return;
 
-    const content = renderFinalReport(template.content, form_data, config, { 
+    const borradorObj = (settings.orden_del_dia_draft as any) || (settings as any).ordenDelDiaDraft;
+    const esJefeEncargado = borradorObj?.es_jefe_encargado ?? borradorObj?.esJefeEncargado;
+
+    const content = renderFinalReport(template.content, form_data, config, {}, false, { 
       Estatus: status,
-      Enc: settings.orden_del_dia_draft?.es_jefe_encargado ? '(E)' : ''
+      Enc: esJefeEncargado ? '(E)' : ''
     });
     const newTitle = String(form_data.titulo || form_data.title || template.name);
 
@@ -75,7 +78,7 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
     };
     await onSave(finalReport);
     setSaveButtonText('Guardado');
-  }, [report, template, config, status, onSave, settings.orden_del_dia_draft?.es_jefe_encargado]);
+  }, [report, template, config, status, onSave, settings.orden_del_dia_draft, (settings as any).ordenDelDiaDraft]);
 
   const debouncedSave = useMemo(
     () => debounce((form_data: Record<string, any>) => saveLogic(form_data), 30000),
@@ -124,10 +127,6 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
       const currentFormValues = formRef.current.getValues();
       currentFormValues.Estatus = 'Finalizado';
       
-      // We pass the new status in the data temporarily so it re-renders ReportFormField rules
-      // But we can't easily force re-render from outside without state change,
-      // actually `status` state change below will cause re-render of `viewer-content.tsx` -> `ReportForm` -> `FormLayout`.
-      // Let's do it directly:
       setStatus(newStatus);
       
       // Wait for React to render the new status and RHF to update rules
@@ -153,9 +152,13 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
     debouncedSave.cancel();
 
     if (!report || !template) return;
-    const content = renderFinalReport(template.content, form_data, config, { 
+    
+    const borradorObj = (settings.orden_del_dia_draft as any) || (settings as any).ordenDelDiaDraft;
+    const esJefeEncargado = borradorObj?.es_jefe_encargado ?? borradorObj?.esJefeEncargado;
+
+    const content = renderFinalReport(template.content, form_data, config, {}, false, { 
       Estatus: newStatus,
-      Enc: settings.orden_del_dia_draft?.es_jefe_encargado ? '(E)' : ''
+      Enc: esJefeEncargado ? '(E)' : ''
     });
     const newTitle = String(form_data.titulo || form_data.title || template.name);
     const finalReport: Report = {
@@ -167,6 +170,17 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
       timestamp: new Date().toISOString(),
     };
     await onSave(finalReport);
+
+    // Auto-sync if secondary device to ensure immediate update in cloud/primary
+    if (isSecondary && newStatus === 'Finalizado') {
+      try {
+        await sendToSync(finalReport);
+        toast.success('Reporte finalizado y enviado al sistema principal');
+      } catch (err) {
+        console.error('Failed to auto-sync finalized report', err);
+      }
+    }
+
     setSaveButtonText('Guardado');
   };
 
@@ -211,4 +225,3 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
     settings
   };
 }
-

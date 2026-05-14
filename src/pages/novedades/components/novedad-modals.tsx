@@ -29,6 +29,9 @@ interface NovedadModalsProps {
   templates: any[];
   manejarSeleccionarPlantilla: (id: string) => void;
   navigate: (path: string) => void;
+  isConfirmExportOpen: boolean;
+  setIsConfirmExportOpen: (val: boolean) => void;
+  ejecutarExportacionWord: () => void;
 }
 
 export const NovedadModals = React.memo(({
@@ -42,12 +45,25 @@ export const NovedadModals = React.memo(({
   setEsDialogOpenCrear,
   templates,
   manejarSeleccionarPlantilla,
-  navigate
+  navigate,
+  isConfirmExportOpen,
+  setIsConfirmExportOpen,
+  ejecutarExportacionWord
 }: NovedadModalsProps) => {
   if (!estaMontado) return null;
 
   return (
     <>
+      <ConfirmDialog
+        open={isConfirmExportOpen}
+        onOpenChange={setIsConfirmExportOpen}
+        onConfirm={ejecutarExportacionWord}
+        title="Confirmar Exportación"
+        message="¿Estás seguro de que deseas exportar todas las novedades filtradas a un documento Word?"
+        confirmText="Exportar"
+        cancelText="Cancelar"
+      />
+
       <ConfirmDialog
         open={!!reporteAEliminar}
         onOpenChange={(open) => !open && setReporteAEliminar(null)}
