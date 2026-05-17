@@ -5,8 +5,9 @@ import { toast } from 'sonner';
 import { useTemplates } from '@/hooks/use-templates';
 import { useDrafts } from '@/hooks/use-drafts';
 import { useActiveGuard } from '@/hooks/use-active-guard';
-import { sortReports } from '@/lib/report-sorter';
+import { sortReports, findValueInform_data } from '@/lib/report-sorter';
 import { normalizeString } from '@/lib/utils';
+import { useOrdenDelDiaDraft } from '@/hooks/use-orden-del-dia-draft';
 import { renderFinalReport } from '@/lib/template-parser';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useRoles } from '@/hooks/use-roles';
@@ -21,6 +22,7 @@ export function useNovedades() {
   const { isGuardOpen: guardiaAbierta, settings, activeGuard } = useActiveGuard();
   const { definitions } = useFieldDefinitions();
   const { roles } = useRoles();
+  const { draft: cloudDraft } = useOrdenDelDiaDraft();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const generatorRef = useRef<ReportGeneratorRef>(null);
@@ -252,9 +254,10 @@ export function useNovedades() {
         settingsMap
       );
 
-      // 2. Obtener Líderes
       const ordenDelDiaDeshabilitado = (settings.disabled_modules || []).includes('orden-del-dia');
-      const borrador = !ordenDelDiaDeshabilitado ? settings.orden_del_dia_draft : undefined;
+      const borrador = !ordenDelDiaDeshabilitado 
+        ? ((cloudDraft && cloudDraft.guard_id === settings.active_guard_id) ? cloudDraft : settings.orden_del_dia_draft)
+        : undefined;
       const personalParaReporte = (borrador && borrador.guard_id === settings.active_guard_id)
         ? borrador.staff
         : activeGuard?.staff;
@@ -268,30 +271,67 @@ export function useNovedades() {
         return parts.filter(Boolean).join(' ').trim();
       };
 
-      const obtenerNombreLider = (roleName: string) => {
+      const obtenerObjetoLider = (roleName: string) => {
         if (personalParaReporte) {
           const key = Object.keys(personalParaReporte).find(
             (k) => k.toLowerCase() === roleName.toLowerCase()
           );
           if (key) {
             const members = (personalParaReporte as any)[key];
-            const firstMember = members ? members[0] : undefined;
-            if (firstMember) return formatearMiembro(firstMember).trim();
+            return members ? members[0] : undefined;
           }
         }
-        return '';
+        return undefined;
       };
 
-      const director = obtenerNombreLider(LEADER_ROLES.DIRECTOR);
-      const jefeDeOperaciones = obtenerNombreLider(LEADER_ROLES.JEFE_OPERACIONES);
+      const directorObj = obtenerObjetoLider(LEADER_ROLES.DIRECTOR);
+      const jefeOpsObj = obtenerObjetoLider(LEADER_ROLES.JEFE_OPERACIONES);
+
+      const director = directorObj ? formatearMiembro(directorObj).trim() : '';
+      const jefeDeOperaciones = jefeOpsObj ? formatearMiembro(jefeOpsObj).trim() : '';
+
       const idGuardiaParaReporte = (borrador && borrador.guard_id === settings.active_guard_id)
         ? borrador.guard_id || ''
         : (activeGuard?.id || settings.active_guard_id || '');
       
-      // Generamos el contenido estructurado con colores y numeración
+      const obtenerFechaOrdenamiento = (novedad: Report): Date | null => {
+        const fechaStr = findValueInform_data(novedad.form_data, 'Fecha') as string | undefined;
+        const horaStr = findValueInform_data(novedad.form_data, 'Hora') as string | undefined;
+
+        if (fechaStr && horaStr) {
+          const timeMatch = horaStr.match(/(\d{2}):(\d{2})/);
+          if (timeMatch) {
+            const hours = parseInt(timeMatch[1]!, 10);
+            const minutes = parseInt(timeMatch[2]!, 10);
+            
+            let sortDate: Date;
+            const dateMatch = fechaStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+            if (dateMatch) {
+              const [_, d, m, y] = dateMatch;
+              sortDate = new Date(parseInt(y!, 10), parseInt(m!, 10) - 1, parseInt(d!, 10));
+            } else {
+              sortDate = new Date(`${fechaStr}T00:00:00`);
+            }
+
+            if (!isNaN(sortDate.getTime())) {
+              sortDate.setHours(hours, minutes, 0, 0);
+              return sortDate;
+            }
+          }
+        }
+        return new Date(novedad.timestamp);
+      };
+
+      const reportesParaExportar = [...reportesFiltrados].sort((a, b) => {
+        const dateA = obtenerFechaOrdenamiento(a);
+        const dateB = obtenerFechaOrdenamiento(b);
+        if (dateA && dateB) return dateA.getTime() - dateB.getTime();
+        return 0;
+      });
+      
       const lineasParaWord: any[] = [];
       
-      reportesFiltrados.forEach((r, index) => {
+      reportesParaExportar.forEach((r, index) => {
         const esFinalizado = r.status?.trim().toLowerCase() === 'finalizado';
         const colorEstado = esFinalizado ? '4EA72E' : 'FFFF00';
         
@@ -311,16 +351,26 @@ export function useNovedades() {
         const borradorObj = (borrador as any);
         const esJefeEncargado = borradorObj?.es_jefe_encargado ?? borradorObj?.esJefeEncargado ?? settings.orden_del_dia_draft?.es_jefe_encargado ?? (settings as any).ordenDelDiaDraft?.esJefeEncargado;
 
-        const contentToUse = (template && config) 
+        const rendered = (template && config) 
           ? renderFinalReport(template.content, r.form_data || {}, config, {}, false, { 
               ...configuracionesGlobales,
               Guardia: idGuardiaParaReporte,
               Estatus: esFinalizado ? 'Finalizado' : 'En proceso',
               Enc: !ordenDelDiaDeshabilitado && esJefeEncargado ? '(E)' : '',
-              [LEADER_ROLES.DIRECTOR]: director,
-              [LEADER_ROLES.JEFE_OPERACIONES]: jefeDeOperaciones,
+              [LEADER_ROLES.DIRECTOR]: { 
+                name: director, 
+                sex: directorObj?.sex || '',
+                toString() { return this.name; }
+              } as any,
+              [LEADER_ROLES.JEFE_OPERACIONES]: {
+                name: jefeDeOperaciones,
+                sex: jefeOpsObj?.sex || '',
+                toString() { return this.name; }
+              } as any,
             })
-          : r.content;
+          : '';
+        
+        const contentToUse = rendered || r.content || 'Minuta sin contenido disponible';
         
         contentToUse.split('\n').forEach((line: string) => {
           lineasParaWord.push({ text: line });

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,12 +13,16 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { NovedadManual } from '@/hooks/reporte-final/use-manual-novedades';
+import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
 
 interface ReporteGenerarProps {
   hook: any;
 }
 
 export function ReporteGenerar({ hook }: ReporteGenerarProps) {
+  const [esDialogOpenEliminar, setEsDialogOpenEliminar] = useState(false);
+  const [idParaEliminar, setIdParaEliminar] = useState<string | null>(null);
+
   const {
     estaCargado,
     reportesFinalizados,
@@ -203,7 +207,10 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => manejarEliminarNovedadManual(novedad.id)}
+                        onClick={() => {
+                          setIdParaEliminar(novedad.id);
+                          setEsDialogOpenEliminar(true);
+                        }}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -221,6 +228,19 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={esDialogOpenEliminar}
+        onOpenChange={setEsDialogOpenEliminar}
+        title="¿Eliminar novedad manual?"
+        message="Esta acción no se puede deshacer. La novedad se eliminará permanentemente."
+        onConfirm={() => {
+          if (idParaEliminar) {
+            manejarEliminarNovedadManual(idParaEliminar);
+            setIdParaEliminar(null);
+          }
+        }}
+      />
     </div>
   );
 }

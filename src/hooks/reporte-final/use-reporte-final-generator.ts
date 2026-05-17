@@ -71,15 +71,21 @@ export function useReporteFinalGenerator({
       if (fechaStr && horaStr) {
         const timeMatch = horaStr.match(/(\d{2}):(\d{2})/);
         if (timeMatch) {
-          const mappedValues = timeMatch.slice(1).map(Number);
-          const hours = mappedValues[0];
-          const minutes = mappedValues[1];
-          if (hours !== undefined && minutes !== undefined && !isNaN(hours) && !isNaN(minutes)) {
-            const sortDate = new Date(`${fechaStr}T00:00:00`);
-            if (!isNaN(sortDate.getTime())) {
-              sortDate.setHours(hours, minutes);
-              return sortDate;
-            }
+          const hours = parseInt(timeMatch[1]!, 10);
+          const minutes = parseInt(timeMatch[2]!, 10);
+          
+          let sortDate: Date;
+          const dateMatch = fechaStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+          if (dateMatch) {
+            const [_, d, m, y] = dateMatch;
+            sortDate = new Date(parseInt(y!, 10), parseInt(m!, 10) - 1, parseInt(d!, 10));
+          } else {
+            sortDate = new Date(`${fechaStr}T00:00:00`);
+          }
+
+          if (!isNaN(sortDate.getTime())) {
+            sortDate.setHours(hours, minutes, 0, 0);
+            return sortDate;
           }
         }
       }

@@ -127,22 +127,11 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
               </ScrollArea>
             </div>
 
-            <DialogFooter className="p-6 bg-muted/30 border-t flex flex-col sm:flex-row gap-4 items-center">
-              <div className="flex-1 text-xs text-muted-foreground font-medium hidden sm:block">
-                Este contenido está formateado para ser compartido directamente en plataformas de mensajería.
-              </div>
-              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <Button
-                  variant="outline"
-                  onClick={manejarCopiarAlPortapapeles}
-                  className="flex-1 sm:flex-none h-11 px-8 font-bold border-2 rounded-xl"
-                >
-                  <ClipboardCheck className="h-4 w-4 mr-2" />
-                  {textoBotonCopiar}
-                </Button>
+            <DialogFooter className="p-6 bg-muted/30 border-t flex items-center justify-end gap-3">
+              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
                 <Button
                   onClick={() => setEsDialogOpenConfirmarGuardar(true)}
-                  className="flex-1 sm:flex-none h-11 px-8 font-bold shadow-lg shadow-primary/20 rounded-xl"
+                  className="flex-1 sm:flex-none h-11 px-6 font-bold shadow-lg shadow-primary/20 rounded-xl"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   Finalizar y Archivar
@@ -150,13 +139,21 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
                 <Button
                   variant="outline"
                   onClick={manejarExportarWord}
-                  className="flex-1 sm:flex-none h-11 px-8 font-bold border-2 rounded-xl"
+                  className="flex-1 sm:flex-none h-11 px-6 font-bold border-2 rounded-xl"
                 >
                   <FileDown className="h-4 w-4 mr-2" />
                   Exportar Word
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={manejarCopiarAlPortapapeles}
+                  className="flex-1 sm:flex-none h-11 px-6 font-bold border-2 rounded-xl"
+                >
+                  <ClipboardCheck className="h-4 w-4 mr-2" />
+                  {textoBotonCopiar}
+                </Button>
                 <DialogClose asChild>
-                  <Button type="button" variant="secondary" className="h-11 px-8 font-bold">
+                  <Button type="button" variant="secondary" className="h-11 px-6 font-bold rounded-xl">
                     Cerrar
                   </Button>
                 </DialogClose>
