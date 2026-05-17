@@ -1,12 +1,19 @@
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import path from 'path';
 import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    react(),
+    react({
+      // @ts-expect-error: @vitejs/plugin-react v5 supports babel option but types might be resolving incorrectly in the IDE.
+      babel: {
+        plugins: [
+          ['babel-plugin-react-compiler', { target: '19' }],
+        ],
+      },
+    }),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icons/icon-192x192.png', 'icons/icon-512x512.png', 'screenshots/desktop.png', 'screenshots/mobile.png'],
