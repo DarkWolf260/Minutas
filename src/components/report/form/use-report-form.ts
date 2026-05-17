@@ -271,7 +271,8 @@ export function useReportForm({
                 (p) => p.role_id?.toLowerCase() === keyLower || p.cargo?.toLowerCase() === keyLower
               );
               if (globalMatches.length > 0) {
-                initialStaff = globalMatches.map((p) => safeClone(p));
+                // Solo tomamos el primero para evitar cargar todos en la vista previa
+                initialStaff = [safeClone(globalMatches[0])];
               }
             }
 
@@ -422,7 +423,7 @@ export function useReportForm({
       return;
     }
 
-    const baseDataLoaded = rolesLoaded && guardsLoaded && settingsLoaded;
+    const baseDataLoaded = rolesLoaded && guardsLoaded && settingsLoaded && personnelLoaded;
     if (!baseDataLoaded) return;
 
     const currentInitialDataHash = stableStringify(initialData || {});
@@ -430,8 +431,8 @@ export function useReportForm({
     const currentDraftKey = cloudDraft?.updated_at || settings?.orden_del_dia_draft?.updated_at || 'no-draft';
     
     const currentTemplateHash = stableStringify(template.content);
-    // Optimizamos la clave: solo reseteamos si cambia la guardia activa, el borrador, la data inicial o la plantilla
-    const baseDataState = `${currentInitialDataHash}:${settings?.active_guard_id}:${currentDraftKey}:${currentTemplateHash}`;
+    // Optimizamos la clave: solo reseteamos si cambia la guardia activa, el borrador, la data inicial, la plantilla o el personal
+    const baseDataState = `${currentInitialDataHash}:${settings?.active_guard_id}:${currentDraftKey}:${currentTemplateHash}:${personnel.length}`;
 
     const baseDataChanged = baseDataState !== lastBaseDataHash.current;
 
