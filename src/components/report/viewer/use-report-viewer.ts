@@ -61,8 +61,12 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
     });
     const newTitle = String(form_data.titulo || form_data.title || template.name);
 
-    const hora = form_data['Hora'];
-    const timeValidation = validateTimeHlv(hora, status === 'Finalizado');
+    const timeHlvFieldId = Object.keys(config.fields).find(id => config.fields[id]?.type === 'time-hlv') || 'Hora';
+    const timeHlvField = config.fields[timeHlvFieldId];
+    const allowSingle = (timeHlvField?.modifiers as unknown as string[])?.includes('single') || false;
+
+    const hora = form_data[timeHlvFieldId];
+    const timeValidation = validateTimeHlv(hora, status === 'Finalizado', allowSingle);
     if (!timeValidation.isValid && status === 'Finalizado') {
       toast.error(timeValidation.error);
       return;
@@ -138,8 +142,12 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
         return;
       }
       
-      const hora = form_data['Hora'];
-      const timeValidation = validateTimeHlv(hora, true);
+      const timeHlvFieldId = Object.keys(config.fields).find(id => config.fields[id]?.type === 'time-hlv') || 'Hora';
+      const timeHlvField = config.fields[timeHlvFieldId];
+      const allowSingle = (timeHlvField?.modifiers as unknown as string[])?.includes('single') || false;
+
+      const hora = form_data[timeHlvFieldId];
+      const timeValidation = validateTimeHlv(hora, true, allowSingle);
       if (!timeValidation.isValid) {
         toast.error(timeValidation.error);
         setStatus('En proceso'); // Revert

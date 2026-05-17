@@ -54,7 +54,7 @@ export function parseFieldTag(
         'cedula',
         'semantic',
     ]);
-    const VALID_TEXT_MODS = new Set(['upper', 'lower', 'title']);
+    const VALID_TEXT_MODS = new Set(['upper', 'lower', 'title', 'single']);
 
     otherSegments.forEach((segment) => {
         const dropdownMatch = segment.match(/^dropdown\((.+)\)$/);

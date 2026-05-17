@@ -110,7 +110,7 @@ export function getInitials(name: string): string {
  * Validates a Time HLV string.
  * Checks for missing digits (dashes) and enforces range format for finalized reports.
  */
-export function validateTimeHlv(value: any, isFinalizado: boolean = false): { isValid: boolean; error: string | null } {
+export function validateTimeHlv(value: any, isFinalizado: boolean = false, allowSingle: boolean = false): { isValid: boolean; error: string | null } {
   const time = String(value || '').trim();
   const digits = time.replace(/\D/g, ''); // Extract only digits
   
@@ -132,7 +132,7 @@ export function validateTimeHlv(value: any, isFinalizado: boolean = false): { is
   }
 
   // 2. Check for range if finalized (must have 8 digits)
-  if (isFinalizado && digits.length < 8) {
+  if (isFinalizado && !allowSingle && digits.length < 8) {
     return { isValid: false, error: 'Para finalizar un reporte, la hora debe ser un rango (ej: 11:11 HLV - 11:11 HLV).' };
   }
 
