@@ -411,21 +411,8 @@ export function useReportForm({
       lastBaseDataHash.current = '';
     }
 
-    const baseDataLoaded = rolesLoaded && guardsLoaded && settingsLoaded;
-    if (!baseDataLoaded) return;
-
-    const currentInitialDataHash = stableStringify(initialData || {});
-    // Usamos el updated_at del borrador independiente como clave de cambio, o el de settings como fallback
-    const currentDraftKey = cloudDraft?.updated_at || settings?.orden_del_dia_draft?.updated_at || 'no-draft';
-    
-    // Optimizamos la clave: solo reseteamos si cambia la guardia activa, el borrador o la data inicial
-    const baseDataState = `${currentInitialDataHash}:${settings?.active_guard_id}:${currentDraftKey}`;
-
-    const baseDataChanged = baseDataState !== lastBaseDataHash.current;
-
     if (!hasInitialized.current) {
       lastPropReportId.current = reportId;
-      lastBaseDataHash.current = baseDataState;
       hasInitialized.current = true;
       const formValues = getInitialValues(initialData);
       reset(formValues);
@@ -435,8 +422,21 @@ export function useReportForm({
       return;
     }
 
-    if (baseDataChanged && !methods.formState.isDirty && !isFocused.current) {
-      logger.info('Resetting form due to base data change', {
+    const baseDataLoaded = rolesLoaded && guardsLoaded && settingsLoaded;
+    if (!baseDataLoaded) return;
+
+    const currentInitialDataHash = stableStringify(initialData || {});
+    // Usamos el updated_at del borrador independiente como clave de cambio, o el de settings como fallback
+    const currentDraftKey = cloudDraft?.updated_at || settings?.orden_del_dia_draft?.updated_at || 'no-draft';
+    
+    const currentTemplateHash = stableStringify(template.content);
+    // Optimizamos la clave: solo reseteamos si cambia la guardia activa, el borrador, la data inicial o la plantilla
+    const baseDataState = `${currentInitialDataHash}:${settings?.active_guard_id}:${currentDraftKey}:${currentTemplateHash}`;
+
+    const baseDataChanged = baseDataState !== lastBaseDataHash.current;
+
+    if (baseDataChanged && (!methods.formState.isDirty || template.id === 'preview') && !isFocused.current) {
+      logger.info('Resetting form due to base data or template change', {
         feature: 'useReportForm',
         metadata: {
           reportId,
