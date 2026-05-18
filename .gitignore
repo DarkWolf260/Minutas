@@ -9,7 +9,10 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-
+/whatsapp-bot/node_modules
+/whatsapp-bot/session_data
+/whatsapp-bot/session
+/whatsapp-bot/.wwebjs_*
 # testing
 /coverage
 

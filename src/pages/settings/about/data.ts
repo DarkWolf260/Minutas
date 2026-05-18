@@ -62,9 +62,21 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.5.0';
+export const APP_VERSION = '1.6.0';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.6.0',
+    date: '17/05/2026',
+    changes: [
+      { type: 'nueva', text: 'Integración con WhatsApp: Sistema de envío automático de reportes a través de un bot local de WhatsApp Web.' },
+      { type: 'nueva', text: 'Soporte Multi-Chat: Posibilidad de seleccionar hasta 5 chats o grupos destino para el envío simultáneo de reportes.' },
+      { type: 'nueva', text: 'Control de Límites: Diálogo de advertencia personalizado para evitar exceder el límite de 5 chats y proteger la cuenta de bloqueos.' },
+      { type: 'nueva', text: 'Script de Inicio Rápido: Archivo iniciar-bot.bat para ejecutar el bot de WhatsApp con un solo doble clic en Windows.' },
+      { type: 'nueva', text: 'Diseño del Módulo de WhatsApp completo con avatares, barra de búsqueda, estados animados y estética premium.' },
+      { type: 'nueva', text: 'Botón de Enviar con el logo oficial de WhatsApp.' },
+    ],
+  },
   {
     version: '1.5.0',
     date: '14/05/2026',

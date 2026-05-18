@@ -74,18 +74,20 @@ export type AppModuleId =
   | 'estadisticas'
   | 'plantillas';
 
-export interface AppSettings {
-  id?: string;
-  workspace_id?: string;
-  active_guard_id?: string;
-  is_guard_open?: boolean;
-  guard_period?: string;
-  guard_shift_duration?: number;
-  final_report_manual_novedades?: ManualNovedad[];
-  final_report_statistics?: string;
-  reportarole_ids?: string[];
-  /** Modules explicitly disabled by the user. undefined = all enabled (backwards-compatible). */
-  disabled_modules?: AppModuleId[];
+  export interface AppSettings {
+    id?: string;
+    workspace_id?: string;
+    active_guard_id?: string;
+    is_guard_open?: boolean;
+    guard_period?: string;
+    guard_shift_duration?: number;
+    final_report_manual_novedades?: ManualNovedad[];
+    final_report_statistics?: string;
+    reportarole_ids?: string[];
+    /** Modules explicitly disabled by the user. undefined = all enabled (backwards-compatible). */
+    disabled_modules?: AppModuleId[];
+    whatsapp_default_chat_ids?: string[];
+    whatsapp_local_url?: string;
   orden_del_dia_draft?: {
     staff: Staff;
     activities: ManualNovedad[];

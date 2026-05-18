@@ -14,6 +14,7 @@ import { SyncSetup } from './sync/components/sync-setup';
 import { SyncQRDisplay } from './sync/components/sync-qr-display';
 import { SyncInbox } from './sync/components/sync-inbox';
 import { SyncModals } from './sync/components/sync-modals';
+import { SyncWhatsApp } from './sync/components/sync-whatsapp';
 
 export default function SyncPage() {
   const hook = useSyncPagina();
@@ -24,8 +25,11 @@ export default function SyncPage() {
   // Vista de configuración (SRP)
   if (!estaConfigurado) {
     return (
-      <div className="flex flex-col h-full bg-background overflow-y-auto">
+      <div className="flex flex-col h-full bg-background overflow-y-auto px-4 pb-32">
         <SyncSetup hook={hook} setEsQRScannerOpen={setEsQRScannerOpen} />
+        <div className="max-w-2xl mx-auto w-full mt-3">
+          <SyncWhatsApp />
+        </div>
         <SyncModals 
           hook={hook} 
           esQRScannerOpen={esQRScannerOpen} 
@@ -107,6 +111,9 @@ export default function SyncPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Módulo de WhatsApp */}
+          <SyncWhatsApp />
 
           {/* Zona de Peligro */}
           <div className="pt-8 border-t space-y-4">

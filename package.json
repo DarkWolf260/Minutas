@@ -18,7 +18,8 @@
     "test:coverage": "vitest --coverage",
     "docs:generate": "typedoc",
     "caddy": "caddy run --config Caddyfile",
-    "caddy:reload": "caddy reload --config Caddyfile"
+    "caddy:reload": "caddy reload --config Caddyfile",
+    "bot": "cd whatsapp-bot && npm start"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
