@@ -167,6 +167,13 @@ export function SectionRenderer(props: SectionRendererProps) {
         }
     }
 
+    // Fallback for 'sex' property when empty or undefined (e.g. when the field is cleared)
+    if (isDottedCondition && conditionProp === 'sex') {
+        if (resolvedWatchValue === undefined || resolvedWatchValue === null || resolvedWatchValue === '') {
+            resolvedWatchValue = 'M';
+        }
+    }
+
     let actualValueToEvaluate = resolvedWatchValue;
 
     let conditionMet = true;
