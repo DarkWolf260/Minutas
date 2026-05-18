@@ -1,4 +1,3 @@
-
 import React, { memo } from 'react';
 import {
     FieldConfig,
@@ -23,6 +22,18 @@ import {
 import { AddressInput } from '@/components/ui/custom/address-input';
 import { CedulaInput } from '@/components/ui/custom/cedula-input';
 import { formatStaffMemberForAutocomplete } from '@/lib/formatters';
+import { useReports } from '@/hooks/use-reports';
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
+import { createReportRepository } from '@/lib/repositories';
+import { useTemplates } from '@/hooks/use-templates';
+import { useActiveGuard } from '@/hooks/use-active-guard';
+import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+import { calcularEstadisticasDia, formatearEstadisticasDia } from '@/lib/estadisticas-utils';
+import { findValueInform_data } from '@/lib/report-sorter';
+import { useMemo } from 'react';
+import { toast } from 'sonner';
+import { Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface FieldRendererProps {
     field_id: string;
@@ -45,6 +56,134 @@ interface FieldRendererProps {
     className?: string;
     name: string; // The full path name from react-hook-form
 }
+
+interface EstadisticasFieldProps {
+    value: form_dataValue;
+    onChange: (value: form_dataValue) => void;
+    disabled?: boolean;
+    className?: string;
+}
+
+const EstadisticasField = ({ value, onChange, disabled, className }: EstadisticasFieldProps) => {
+    const db = useDatabase();
+    const { currentWorkspace, isCloud } = useWorkspaceManager();
+    const { activeGuard } = useActiveGuard();
+    const { definitions } = useFieldDefinitions();
+
+    const handleCalculate = async () => {
+        if (!db || !currentWorkspace) {
+            toast.error('Base de datos no disponible.');
+            return;
+        }
+
+        toast.loading('Calculando estadísticas...', { id: 'calc-stats' });
+
+        try {
+            const repo = createReportRepository(db, currentWorkspace, isCloud);
+            const allReports = await repo.findAll();
+
+            // Filter reports
+            const currentGuardId = activeGuard?.id;
+            const reportesFinalizados = allReports.filter((report) => {
+                if (report.status !== 'Finalizado') return false;
+                if (currentGuardId) {
+                    const reportGuard = findValueInform_data(report.form_data, 'Guardia');
+                    if (reportGuard && String(reportGuard).trim().toUpperCase() !== String(currentGuardId).trim().toUpperCase()) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            if (reportesFinalizados.length === 0) {
+                toast.error('No hay reportes finalizados para calcular estadísticas.', { id: 'calc-stats' });
+                return;
+            }
+
+            // Fetch templates and configs directly from DB to avoid reactive hooks
+            const templatesDocs = await db.configs.find({
+                selector: {
+                    workspace_id: currentWorkspace,
+                    type: 'template' as any
+                }
+            }).exec();
+            const templates = templatesDocs.map(doc => doc.toJSON());
+
+            const configsDocs = await db.configs.find({
+                selector: {
+                    workspace_id: currentWorkspace,
+                    type: 'template_config'
+                }
+            }).exec();
+            const configs = configsDocs.map(doc => doc.toJSON());
+
+            // Build configs map as in useTemplates
+            const configsMap = configs.reduce((acc: any, config: any) => {
+                acc[config.template_id] = config;
+                return acc;
+            }, {});
+
+            // Build configuracionesGlobales
+            const settingsMap: Record<string, string> = {};
+            Object.keys(definitions).forEach((key) => {
+                if (definitions[key]?.value) {
+                    settingsMap[key] = definitions[key]!.value!;
+                }
+            });
+
+            const configuracionesGlobales = Object.values(configsMap).reduce(
+                (acc: any, config: any) => {
+                    Object.keys(config.fields).forEach((fieldName) => {
+                        const field = config.fields[fieldName];
+                        if (field && field.type === 'predefined' && field.value) {
+                            acc[fieldName] = field.value;
+                        }
+                    });
+                    return acc;
+                },
+                settingsMap
+            );
+
+            const dayStats = calcularEstadisticasDia(reportesFinalizados, templates as any, configsMap, configuracionesGlobales as any);
+            const formateado = formatearEstadisticasDia(dayStats);
+
+            if (formateado) {
+                onChange(formateado);
+                toast.success('Estadísticas calculadas correctamente.', { id: 'calc-stats' });
+            } else {
+                toast.info('No se encontraron categorías estadísticas en los reportes de hoy.', { id: 'calc-stats' });
+            }
+        } catch (error) {
+            console.error('Error calculating stats:', error);
+            toast.error('Error al calcular estadísticas.', { id: 'calc-stats' });
+        }
+    };
+
+    return (
+        <div className="relative">
+            <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCalculate}
+                disabled={disabled}
+                className="absolute -top-8 right-0 h-7 text-xs font-bold gap-1.5 border-orange-700 text-orange-700 hover:bg-gray-300 hover:text-orange-700 hover:border-orange-700 transition-colors"
+                title="Calcular estadísticas del día"
+            >
+                <Clock className="h-3.5 w-3.5 mr-1" />
+                Actualizar
+            </Button>
+            <Textarea
+                value={String(value || '')}
+                onChange={(e) => onChange(e.target.value)}
+                disabled={disabled}
+                placeholder="Las estadísticas se generarán al presionar el botón..."
+                rows={8}
+                className={`min-h-[160px] ${className || ''}`}
+            />
+        </div>
+    );
+};
 
 export const FieldRenderer = memo(
     React.forwardRef<any, FieldRendererProps>(
@@ -69,6 +208,10 @@ export const FieldRenderer = memo(
         ) => {
             const lowerfield_id = field_id.toLowerCase();
             const addressFieldNames = ['ubicación', 'destino'];
+
+            if (lowerfield_id === 'estadísticas' || lowerfield_id === 'estadisticas' || fieldConfig.label.toLowerCase() === 'estadísticas') {
+                return <EstadisticasField value={value} onChange={onChange} disabled={disabled} className={className} />;
+            }
 
             // Derived property fields (e.g. "Director.sex") must never render as form inputs.
             // They are resolved at render time from the base field's StaffMember data.

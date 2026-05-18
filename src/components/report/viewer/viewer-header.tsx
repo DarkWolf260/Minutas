@@ -1,4 +1,4 @@
-import { Trash2, Eye, Save, CheckIcon, Send, X, MessageSquare } from 'lucide-react';
+import { Trash2, Eye, Save, CheckIcon, Send, X, MessageSquare, ChevronDown, Clock, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -7,6 +7,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Calendar } from '@/components/ui/calendar';
+import { useState } from 'react';
+import { useScheduledMessages } from '@/hooks/use-scheduled-messages';
 
 interface ViewerHeaderProps {
   status: 'En proceso' | 'Finalizado';
@@ -21,6 +37,7 @@ interface ViewerHeaderProps {
   sendToSync: () => void;
   isSendingSyncReport: boolean;
   onWhatsAppSend?: () => void;
+  onWhatsAppSchedule?: (date: Date) => void;
   isWhatsAppAvailable?: boolean;
   isSendingWhatsApp?: boolean;
 }
@@ -38,9 +55,28 @@ export const ViewerHeader = ({
   sendToSync,
   isSendingSyncReport,
   onWhatsAppSend,
+  onWhatsAppSchedule,
   isWhatsAppAvailable,
   isSendingWhatsApp
 }: ViewerHeaderProps) => {
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
+  const [isListDialogOpen, setIsListDialogOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedTime, setSelectedTime] = useState("12:00");
+  
+  const { scheduledMessages, cancelMessage } = useScheduledMessages();
+
+  const handleScheduleConfirm = () => {
+    if (!selectedDate || !onWhatsAppSchedule) return;
+    
+    const [hours, minutes] = selectedTime.split(':').map(Number);
+    const dateToSchedule = new Date(selectedDate);
+    dateToSchedule.setHours(hours ?? 12, minutes ?? 0, 0, 0);
+    
+    onWhatsAppSchedule(dateToSchedule);
+    setIsScheduleDialogOpen(false);
+  };
+
   return (
     <header className="flex-none flex items-center justify-between border-b p-4 bg-background z-20 shadow-sm min-h-[73px]">
       <div className="flex items-center gap-2">
@@ -69,19 +105,43 @@ export const ViewerHeader = ({
           <span className="hidden sm:inline">Vista Previa</span>
         </Button>
         {isWhatsAppAvailable && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onWhatsAppSend}
-            disabled={isSendingWhatsApp}
-            className="bg-background shadow-sm text-green-600 border-green-500/30 hover:bg-green-500/10"
-            title="Enviar por WhatsApp"
-          >
-            <span className="hidden sm:inline">Enviar</span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="currentColor" className="h-3.5 w-3.5 sm:ml-0">
-              <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.6-16.1-37.7-17.9-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-5.5-2.8-23.4-8.6-44.5-27.5-16.4-14.6-27.5-32.7-30.7-38.2-3.2-5.5-.3-8.5 2.5-11.2 2.5-2.6 5.5-6.5 8.3-9.8 2.8-3.2 3.7-5.5 5.5-9.2 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 13.2 5.7 23.5 9.2 31.5 11.7 13.3 4.2 25.4 3.6 35 2.2 10.7-1.6 32.6-13.3 37.2-26.2 4.6-12.9 4.6-24 3.2-26.2-1.3-2.2-5-3.3-10.5-6.1z" />
-            </svg>
-          </Button>
+          <div className="flex items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onWhatsAppSend}
+              disabled={isSendingWhatsApp}
+              className="bg-background shadow-sm text-green-600 border-green-500/30 hover:bg-green-500/10 rounded-r-none h-9"
+              title="Enviar por WhatsApp"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 sm:mr-2">
+                <path d="M12.004 2C6.48 2 2 6.48 2 12c0 1.73.44 3.4 1.28 4.88L2.05 22l5.26-1.38C8.73 21.43 10.35 21.87 12 21.87c5.52 0 10-4.48 10-10S17.52 2 12.004 2zm0 18c-1.5 0-2.95-.38-4.23-1.1l-.3-.17-3.15.83.84-3.07-.19-.31c-.78-1.25-1.2-2.7-1.2-4.18 0-4.41 3.59-8 8-8s8 3.59 8 8-3.59 8-8 8zm4.56-6.32c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.15.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.23.25-.39.08-.15.04-.29-.02-.41-.06-.12-.56-1.35-.77-1.85-.2-.5-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.88.86-.88 2.1s.9 2.43 1.02 2.6c.12.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.59.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.1-.23-.16-.48-.29z" />
+              </svg>
+              <span className="hidden sm:inline">Enviar</span>
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-background shadow-sm text-green-600 border-green-500/30 hover:bg-green-500/10 rounded-l-none px-2 border-l-0 h-9"
+                  title="Opciones de programación"
+                >
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsScheduleDialogOpen(true)}>
+                  <Clock className="mr-2 h-4 w-4" />
+                  <span>Programar Envío</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsListDialogOpen(true)}>
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  <span>Ver Programados</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
       </div>
 
@@ -124,6 +184,108 @@ export const ViewerHeader = ({
           <span className="hidden sm:inline">{saveButtonText}</span>
         </Button>
       </div>
+
+      {/* Diálogo para Programar */}
+      <Dialog open={isScheduleDialogOpen} onOpenChange={setIsScheduleDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Programar Envío de WhatsApp</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium">Fecha</label>
+              <input
+                type="date"
+                value={selectedDate ? selectedDate.toISOString().split('T')[0] : ''}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    const [year, month, day] = e.target.value.split('-').map(Number);
+                    if (year !== undefined && month !== undefined && day !== undefined) {
+                      const date = new Date();
+                      date.setFullYear(year, month - 1, day);
+                      setSelectedDate(date);
+                    }
+                  } else {
+                    setSelectedDate(undefined);
+                  }
+                }}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium">Hora</label>
+              <input
+                type="time"
+                value={selectedTime}
+                onChange={(e) => setSelectedTime(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsScheduleDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleScheduleConfirm} disabled={!selectedDate}>
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo para Listar/Cancelar */}
+      <Dialog open={isListDialogOpen} onOpenChange={setIsListDialogOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Mensajes Programados</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {scheduledMessages.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No hay mensajes programados.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {scheduledMessages.map((msg) => (
+                  <div key={msg.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">
+                          {msg.title || 'Sin título'}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(msg.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <span className={`text-xs font-bold ${
+                        msg.status === 'pending' ? 'text-amber-500' : 
+                        msg.status === 'sent' ? 'text-emerald-500' : 'text-destructive'
+                      }`}>
+                        {msg.status === 'pending' ? 'Pendiente' : 
+                         msg.status === 'sent' ? 'Enviado' : 'Fallido'}
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:bg-destructive/10"
+                      onClick={() => cancelMessage(msg.id)}
+                      title="Cancelar mensaje"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setIsListDialogOpen(false)}>
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 };

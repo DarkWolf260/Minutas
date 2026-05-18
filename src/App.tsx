@@ -12,6 +12,7 @@ import { NotificationsProvider } from '@/lib/notifications-provider';
 import { SyncProvider } from '@/lib/sync/sync-context';
 import { AuthProvider } from '@/components/providers/auth-provider';
 import { UserProvider, useUser } from '@/components/providers/user-provider';
+import { ScheduledMessagesWorker } from '@/components/scheduled-messages-worker';
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { WifiOff, Home, RefreshCw, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -337,6 +338,7 @@ function Root() {
                 {setupDone ? (
                   // ── Normal app shell ─────────────────────────────────────────
                   <Suspense fallback={<PageLoader />}>
+                    <ScheduledMessagesWorker />
                     <AppLayout />
                   </Suspense>
                 ) : (
