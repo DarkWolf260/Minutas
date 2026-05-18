@@ -1,5 +1,18 @@
 # Historial de Cambios - Minutas
 
+## [1.6.5] - 2026-05-18
+
+### Añadido
+- **Programación de Mensajes de WhatsApp**: Ahora se pueden programar reportes para ser enviados automáticamente a una hora específica.
+- **Barra de Búsqueda de Plantillas**: Se añadió un buscador en la lista de selección de plantillas al crear una nueva novedad.
+- **Botón de Estadísticas en Formulario**: El campo "Estadísticas" incluye un botón para calcular el resumen numérico del día automáticamente.
+
+### Cambiado
+- **Optimización de Rendimiento**: Se eliminó el lag al escribir en el campo de estadísticas mediante consultas imperativas.
+- **Simplificación de Mensajes Programados**: Se reemplazó el calendario completo por un selector nativo y se redujo la lista a título y hora.
+
+---
+
 ## [1.6.0] - 2026-05-17
 
 ### Añadido

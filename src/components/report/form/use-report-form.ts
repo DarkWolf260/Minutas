@@ -257,12 +257,14 @@ export function useReportForm({
                   initialStaff = [globalMatches[0]];
                 }
               }
-            } else if (role && activeStaff) {
+            } else if ((role || isLeadershipRole) && activeStaff) {
               const staffKey = Object.keys(activeStaff).find(k => k.toLowerCase() === keyLower);
               const staffList = staffKey ? activeStaff[staffKey] : undefined;
 
-              if (staffList && staffList.length > 0) {
+              if (Array.isArray(staffList) && staffList.length > 0) {
                 initialStaff = staffList.map((s: any) => rehydrate(s));
+              } else if (typeof (staffList as any) === 'string' && (staffList as any).trim() !== '') {
+                initialStaff = [staffList as any];
               }
             }
 

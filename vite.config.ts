@@ -7,7 +7,6 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   plugins: [
     react({
-      // @ts-expect-error: @vitejs/plugin-react v5 supports babel option but types might be resolving incorrectly in the IDE.
       babel: {
         plugins: [
           ['babel-plugin-react-compiler', { target: '19' }],

@@ -268,10 +268,18 @@ function resolvePropertyAccess(field_id: string, baseValue: form_dataValue): for
 
     // Array of objects (e.g. StaffMember[]) — read from first element
     if (Array.isArray(baseValue) && baseValue.length > 0) {
-        const first = baseValue[0] as Record<string, unknown>;
+        const first = baseValue[0];
         if (first && typeof first === 'object') {
-            const val = first[prop] ?? first[prop.toLowerCase()];
+            const val = (first as Record<string, unknown>)[prop] ?? (first as Record<string, unknown>)[prop.toLowerCase()];
             return val as form_dataValue;
+        }
+        // Fallback for string elements in array: if requesting 'name', return the string itself
+        if (typeof first === 'string' && prop.toLowerCase() === 'name') {
+            return first;
+        }
+        // Fallback for string elements in array: if requesting 'sex', default to 'M'
+        if (typeof first === 'string' && prop.toLowerCase() === 'sex') {
+            return 'M';
         }
     }
     // Plain object
@@ -280,6 +288,16 @@ function resolvePropertyAccess(field_id: string, baseValue: form_dataValue): for
         const val = obj[prop] ?? obj[prop.toLowerCase()];
         return val as form_dataValue;
     }
+
+    // Fallback for string values: if requesting 'name', return the string itself
+    if (typeof baseValue === 'string' && prop.toLowerCase() === 'name') {
+        return baseValue;
+    }
+    // Fallback for string values: if requesting 'sex', default to 'M'
+    if (typeof baseValue === 'string' && prop.toLowerCase() === 'sex') {
+        return 'M';
+    }
+
     return undefined;
 }
 

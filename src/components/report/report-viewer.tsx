@@ -5,6 +5,7 @@ import type { Report } from '@/lib/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ReportPreview } from './report-preview';
 import { useWhatsAppBot } from '@/hooks/use-whatsapp-bot';
+import { useScheduledMessages } from '@/hooks/use-scheduled-messages';
 import { toast } from 'sonner';
 
 // Componentes extraídos (SOLID)
@@ -49,6 +50,7 @@ export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewer
   } = hook;
 
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
+  const { scheduleMessage } = useScheduledMessages();
   const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
 
   const handleWhatsAppSend = async () => {
@@ -82,6 +84,30 @@ export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewer
     }
   };
 
+  const handleWhatsAppSchedule = async (scheduledTime: Date) => {
+    if (!report || !formRef.current) return;
+    const content = formRef.current.getRenderedContent();
+    const chatIds = settings?.whatsapp_default_chat_ids || [];
+    
+    if (chatIds.length === 0) {
+      toast.error('No has configurado grupos destino.', { 
+        description: 'Ve a Configuración > Sincronización para seleccionar al menos un chat.' 
+      });
+      return;
+    }
+
+    try {
+      for (const chatId of chatIds) {
+        await scheduleMessage(chatId, content, scheduledTime, report.title);
+      }
+      toast.success(`Mensaje programado para ${scheduledTime.toLocaleString()}`);
+    } catch (error: any) {
+      toast.error('Error al programar mensaje', { 
+        description: error.message || 'No se pudo guardar la programación' 
+      });
+    }
+  };
+
   // Estados Excepcionales (SRP)
   if (!report) return <ViewerEmpty />;
   if (!isLoaded) return <ViewerLoading />;
@@ -103,6 +129,7 @@ export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewer
         sendToSync={() => sendToSync(report)}
         isSendingSyncReport={isSendingSyncReport}
         onWhatsAppSend={handleWhatsAppSend}
+        onWhatsAppSchedule={handleWhatsAppSchedule}
         isWhatsAppAvailable={bot.isAvailable && bot.status.isReady}
         isSendingWhatsApp={isSendingWhatsApp}
       />

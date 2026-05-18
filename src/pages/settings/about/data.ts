@@ -62,9 +62,19 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.6.0';
+export const APP_VERSION = '1.6.5';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.6.5',
+    date: '18/05/2026',
+    changes: [
+      { type: 'nueva', text: 'Programación de Mensajes de WhatsApp: Ahora se pueden programar reportes para ser enviados automáticamente a una hora específica.' },
+      { type: 'nueva', text: 'Barra de Búsqueda de Plantillas: Se añadió un buscador en la lista de selección de plantillas al crear una nueva novedad.' },
+      { type: 'nueva', text: 'Botón de Estadísticas en Formulario: Ahora el campo "Estadísticas" incluye un botón para calcular el resumen numérico del día automáticamente.' },
+      { type: 'mejora', text: 'Optimización de Rendimiento: Se eliminó el lag al escribir en el campo de estadísticas mediante consultas imperativas en lugar de hooks reactivos.' },
+    ],
+  },
   {
     version: '1.6.0',
     date: '17/05/2026',
