@@ -238,6 +238,7 @@ function extractSectionToken(
                 operator: (operator as ConditionalExpression['operator']) || '=',
                 value: cleanValue,
                 condition_mode,
+                is_implicit: !operator,
             },
             raw,
             position: startPos,

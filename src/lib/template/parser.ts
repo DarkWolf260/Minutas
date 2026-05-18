@@ -326,7 +326,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
 
                 const innerResult = parseInternal(inner, sectionId);
 
-                const isMappingConditional = token.condition && token.condition.value === '' && inner.length > 0;
+                const isMappingConditional = token.condition && token.condition.is_implicit && inner.length > 0;
 
                 if (isMappingConditional) {
                     const field_id = token.condition!.field_id;
