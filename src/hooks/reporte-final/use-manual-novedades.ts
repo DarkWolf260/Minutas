@@ -23,13 +23,18 @@ export function useManualNovedades({ settings, saveSettings, settingsLoaded }: U
   const [nuevaNovedadHora, setNuevaNovedadHora] = useState('');
   const [nuevaNovedadTexto, setNuevaNovedadTexto] = useState('');
 
-  const novedadesManuales = useMemo(() => settings.finalReportManualNovedades || [], [settings.finalReportManualNovedades]);
+  const novedadesManuales = useMemo(() => settings.final_report_manual_novedades || [], [settings.final_report_manual_novedades]);
 
   // Default novelties initialization
   useEffect(() => {
     if (!settingsLoaded) return;
-    if (settings.finalReportManualNovedades && settings.finalReportManualNovedades.length > 0) return;
+    
+    console.log('useManualNovedades: settings.final_report_manual_novedades=', settings.final_report_manual_novedades);
+    
+    if (settings.final_report_manual_novedades && settings.final_report_manual_novedades.length > 0) return;
 
+    console.log('useManualNovedades: Adding default novelties');
+    
     const startDate = new Date();
     startDate.setHours(8, 0, 0, 0);
 
@@ -51,16 +56,19 @@ export function useManualNovedades({ settings, saveSettings, settingsLoaded }: U
     };
 
     saveSettings({
-      finalReportManualNovedades: [novedadInicioDefecto, novedadFinDefecto]
+      final_report_manual_novedades: [novedadInicioDefecto, novedadFinDefecto]
     });
-  }, [settingsLoaded, settings.finalReportManualNovedades?.length, saveSettings]);
+  }, [settingsLoaded, settings.final_report_manual_novedades?.length, saveSettings]);
 
   const manejarAgregarNovedadManual = () => {
-    if (!nuevaNovedadHora || !nuevaNovedadTexto) return;
+    if (!nuevaNovedadHora || !nuevaNovedadTexto) {
+      toast.error('Por favor completa la hora y la descripción de la novedad.');
+      return;
+    }
 
     if (idEditandoManual) {
       saveSettings({
-        finalReportManualNovedades: novedadesManuales.map((n: NovedadManual) => 
+        final_report_manual_novedades: novedadesManuales.map((n: NovedadManual) => 
           n.id === idEditandoManual 
             ? { ...n, date: nuevaNovedadFecha.toISOString(), time: nuevaNovedadHora, text: nuevaNovedadTexto }
             : n
@@ -76,7 +84,7 @@ export function useManualNovedades({ settings, saveSettings, settingsLoaded }: U
         text: nuevaNovedadTexto,
       };
       saveSettings({
-        finalReportManualNovedades: [...novedadesManuales, nuevaNovedad]
+        final_report_manual_novedades: [...novedadesManuales, nuevaNovedad]
       });
     }
     setNuevaNovedadHora('');
@@ -98,7 +106,7 @@ export function useManualNovedades({ settings, saveSettings, settingsLoaded }: U
 
   const manejarEliminarNovedadManual = (idParaEliminar: string) => {
     saveSettings({
-      finalReportManualNovedades: novedadesManuales.filter((n: NovedadManual) => n.id !== idParaEliminar)
+      final_report_manual_novedades: novedadesManuales.filter((n: NovedadManual) => n.id !== idParaEliminar)
     });
   };
 

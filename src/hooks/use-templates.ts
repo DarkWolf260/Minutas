@@ -146,6 +146,11 @@ export function useTemplates() {
             baseConfig.snippet_options = optionsFromTemplate;
           }
 
+          const modifiersFromTemplate = parsed.fieldModifiers.get(fieldName);
+          if (modifiersFromTemplate) {
+            baseConfig.modifiers = modifiersFromTemplate;
+          }
+
           finalConfig.fields[fieldName] = baseConfig;
         });
 
@@ -278,7 +283,7 @@ export function useTemplates() {
         workspace_id: currentWorkspace,
       });
 
-      const { sections, layout, fieldNames, fieldTypes, templateOptions, errors } =
+      const { sections, layout, fieldNames, fieldTypes, templateOptions, fieldModifiers, errors } =
         parseTemplate(validatedTemplate.content);
 
       if (errors.length > 0) {
@@ -310,6 +315,11 @@ export function useTemplates() {
         if (optionsFromTemplate) {
           const field = newConfig.fields[fieldName];
           if (field) field.snippet_options = optionsFromTemplate;
+        }
+        const modifiersFromTemplate = fieldModifiers.get(fieldName);
+        if (modifiersFromTemplate) {
+          const field = newConfig.fields[fieldName];
+          if (field) field.modifiers = modifiersFromTemplate as any;
         }
       });
 

@@ -48,6 +48,7 @@ Los segmentos están separados por `:`. El orden de los segmentos después del n
 | `upper` | Convierte a MAYÚSCULAS al renderizar |
 | `lower` | Convierte a minúsculas al renderizar |
 | `title` | Convierte a Título (primera letra de cada palabra en mayúscula) |
+| `single` | Permite finalizar el reporte con una sola hora (sin rango) para campos `time-hlv` |
 
 #### Dropdown con opciones inline
 

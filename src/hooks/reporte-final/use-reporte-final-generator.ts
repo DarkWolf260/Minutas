@@ -7,6 +7,7 @@ import { renderFinalReport } from '@/lib/template-parser';
 import { LEADER_ROLES } from '@/lib/constants/roles';
 import { calcularEstadisticasDia } from '@/lib/estadisticas-utils';
 import type { StaffMember, Report } from '@/lib/types';
+import { useOrdenDelDiaDraft } from '@/hooks/use-orden-del-dia-draft';
 
 interface UseReporteFinalGeneratorProps {
   reportesFinalizados: any[];
@@ -56,6 +57,7 @@ export function useReporteFinalGenerator({
   setTabActiva,
   setEstadisticasLocal
 }: UseReporteFinalGeneratorProps) {
+  const { draft: cloudDraft } = useOrdenDelDiaDraft();
   const [reporteGenerado, setReporteGenerado] = useState('');
   const [esDialogOpenResultado, setEsDialogOpenResultado] = useState(false);
   const [esDialogOpenConfirmarGuardar, setEsDialogOpenConfirmarGuardar] = useState(false);
@@ -69,15 +71,21 @@ export function useReporteFinalGenerator({
       if (fechaStr && horaStr) {
         const timeMatch = horaStr.match(/(\d{2}):(\d{2})/);
         if (timeMatch) {
-          const mappedValues = timeMatch.slice(1).map(Number);
-          const hours = mappedValues[0];
-          const minutes = mappedValues[1];
-          if (hours !== undefined && minutes !== undefined && !isNaN(hours) && !isNaN(minutes)) {
-            const sortDate = new Date(`${fechaStr}T00:00:00`);
-            if (!isNaN(sortDate.getTime())) {
-              sortDate.setHours(hours, minutes);
-              return sortDate;
-            }
+          const hours = parseInt(timeMatch[1]!, 10);
+          const minutes = parseInt(timeMatch[2]!, 10);
+          
+          let sortDate: Date;
+          const dateMatch = fechaStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+          if (dateMatch) {
+            const [_, d, m, y] = dateMatch;
+            sortDate = new Date(parseInt(y!, 10), parseInt(m!, 10) - 1, parseInt(d!, 10));
+          } else {
+            sortDate = new Date(`${fechaStr}T00:00:00`);
+          }
+
+          if (!isNaN(sortDate.getTime())) {
+            sortDate.setHours(hours, minutes, 0, 0);
+            return sortDate;
           }
         }
       }
@@ -105,14 +113,16 @@ export function useReporteFinalGenerator({
     }
 
     const ordenDelDiaDeshabilitado = (settings.disabled_modules || []).includes('orden-del-dia');
-    const borrador = !ordenDelDiaDeshabilitado ? settings.ordenDelDiaDraft : undefined;
+    const borrador = !ordenDelDiaDeshabilitado 
+      ? ((cloudDraft && cloudDraft.guard_id === settings.active_guard_id) ? cloudDraft : (settings.orden_del_dia_draft || settings.ordenDelDiaDraft))
+      : undefined;
 
-    const personalParaReporte = (borrador && borrador.guardId === settings.active_guard_id)
+    const personalParaReporte = (borrador && (borrador.guard_id ?? borrador.guardId) === settings.active_guard_id)
       ? borrador.staff
       : activeGuard?.staff;
 
-    const idGuardiaParaReporte = (borrador && borrador.guardId === settings.active_guard_id)
-      ? borrador.guardId || ''
+    const idGuardiaParaReporte = (borrador && (borrador.guard_id ?? borrador.guardId) === settings.active_guard_id)
+      ? (borrador.guard_id ?? borrador.guardId) || ''
       : (activeGuard?.id || settings.active_guard_id || '');
 
     const obtenerNombreLider = (roleName: string) => {
@@ -231,7 +241,7 @@ export function useReporteFinalGenerator({
                 .join(' / ');
             
             const esJefeServicios = role.name.toLowerCase() === 'jefe de los servicios';
-            const displayRole = esJefeServicios && !ordenDelDiaDeshabilitado && settings.ordenDelDiaDraft?.esJefeEncargado
+            const displayRole = esJefeServicios && !ordenDelDiaDeshabilitado && (borrador?.es_jefe_encargado ?? borrador?.esJefeEncargado)
               ? `${role.name.toUpperCase()} (E)`
               : role.name.toUpperCase();
 
@@ -279,7 +289,7 @@ export function useReporteFinalGenerator({
               ...configuracionesGlobales,
               Guardia: idGuardiaParaReporte,
               Estatus: (report.status?.trim().toLowerCase() === 'finalizado') ? 'Finalizado' : 'En proceso',
-              Enc: !ordenDelDiaDeshabilitado && settings.ordenDelDiaDraft?.esJefeEncargado ? '(E)' : '',
+              Enc: !ordenDelDiaDeshabilitado && (borrador?.es_jefe_encargado ?? borrador?.esJefeEncargado) ? '(E)' : '',
               [LEADER_ROLES.DIRECTOR]: director,
               [LEADER_ROLES.JEFE_OPERACIONES]: jefeDeOperaciones,
             };
@@ -329,7 +339,8 @@ export function useReporteFinalGenerator({
     configuracionesGlobales, 
     roles, 
     templates, 
-    configs
+    configs,
+    cloudDraft
   ]);
 
   const manejarCopiarAlPortapapeles = useCallback(() => {

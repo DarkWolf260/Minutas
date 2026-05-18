@@ -196,7 +196,7 @@ export const FieldConfigSchema = z.object({
     value: z.string().optional(),
     section_id: z.string().optional(),
     snippet_options: z.array(SnippetOptionSchema).optional(),
-    modifiers: z.array(z.enum(['upper', 'lower', 'title'])).optional(),
+    modifiers: z.array(z.enum(['upper', 'lower', 'title', 'single'])).optional(),
     is_full_width: z.boolean().optional(),
 });
 
