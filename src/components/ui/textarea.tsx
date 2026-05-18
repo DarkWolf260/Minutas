@@ -39,8 +39,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           className={cn(textareaStyles, className)}
           ref={internalRef}
           autoComplete="off"
-          autoCorrect="off"
-          spellCheck="false"
+          spellCheck={true}
           style={style}
           {...rest}
         />
@@ -60,8 +59,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
             className={textareaStyles}
             ref={internalRef}
             autoComplete="off"
-            autoCorrect="off"
-            spellCheck="false"
+            spellCheck={true}
             style={{ ...style, height: 'auto' }}
             {...rest}
           />
