@@ -385,7 +385,8 @@ export function useReportForm({
         if (dataHash !== lastDataHash.current) {
           lastDataHash.current = dataHash;
           const timer = setTimeout(() => {
-            onDataChange(currentValues);
+            // Clone the values to prevent RxDB from deeply freezing RHF's internal state
+            onDataChange(JSON.parse(JSON.stringify(currentValues)));
           }, 1000);
           return () => clearTimeout(timer);
         }

@@ -1,5 +1,17 @@
 # Historial de Cambios - Minutas
 
+## [1.6.0] - 2026-05-17
+
+### Añadido
+- **Integración con WhatsApp**: Sistema de envío automático de reportes a través de un bot local de WhatsApp Web.
+- **Soporte Multi-Chat**: Posibilidad de seleccionar hasta 5 chats o grupos destino para el envío simultáneo de reportes.
+- **Control de Límites**: Diálogo de advertencia personalizado para evitar exceder el límite de 5 chats y proteger la cuenta de bloqueos.
+- **Script de Inicio Rápido**: Archivo `iniciar-bot.bat` para ejecutar el bot de WhatsApp con un solo doble clic en Windows.
+- **Diseño Premium**: Módulo de WhatsApp con avatares, barra de búsqueda y estados animados.
+- **Botón de Enviar**: Integración del logo oficial de WhatsApp en el botón de acción.
+
+---
+
 ## [1.5.0] - 2026-05-14
 
 ### Añadido

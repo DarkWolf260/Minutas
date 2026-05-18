@@ -58,6 +58,8 @@ export function useSettings() {
         sanitized.final_report_manual_novedades = d.final_report_manual_novedades || d.finalReportManualNovedades || [];
         sanitized.disabled_modules = d.disabled_modules || d.disabledModules;
         sanitized.reportarole_ids = d.reportarole_ids || d.reportaroleIds || [];
+        sanitized.whatsapp_default_chat_ids = d.whatsapp_default_chat_ids || d.whatsappDefaultChatIds || [];
+        sanitized.whatsapp_local_url = d.whatsapp_local_url || d.whatsappLocalUrl || '';
 
         // 4. Comparación Profunda: Solo actualizar si hay un cambio real
         setSettings(prev => {

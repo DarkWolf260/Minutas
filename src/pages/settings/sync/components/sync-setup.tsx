@@ -30,7 +30,7 @@ export const SyncSetup = ({ hook, setEsQRScannerOpen }: SyncSetupProps) => {
   } = hook;
 
   return (
-    <div className="max-w-2xl mx-auto w-full px-4 pt-8 pb-32 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-2xl mx-auto w-full px-4 pt-8 pb-4 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <SyncHeader modoSimple={true} />
 
       {/* Autenticación (SRP) */}
