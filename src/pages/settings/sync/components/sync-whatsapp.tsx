@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, MessageSquare, AlertTriangle, Loader2, Users, User, Search, Check } from 'lucide-react';
@@ -11,13 +11,16 @@ import { useSettings } from '@/hooks/use-settings';
 
 export function SyncWhatsApp() {
   const { settings, saveSettings } = useSettings();
+  const [localUrl, setLocalUrl] = useState('http://localhost:3001');
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
   const [searchQuery, setSearchQuery] = useState('');
   const [showLimitAlert, setShowLimitAlert] = useState(false);
 
-  if (!bot.isAvailable) {
-    return null; // Ocultamos el módulo si no hay bot corriendo localmente.
-  }
+  useEffect(() => {
+    if (settings?.whatsapp_local_url) {
+      setLocalUrl(settings.whatsapp_local_url);
+    }
+  }, [settings?.whatsapp_local_url]);
 
   const handleToggleGroup = async (groupId: string) => {
     if (!settings) return;
@@ -63,6 +66,34 @@ export function SyncWhatsApp() {
       </CardHeader>
       
       <CardContent className="pt-5 space-y-4">
+        {/* Configuración de URL */}
+        <div className="space-y-2 pb-2 border-b border-dashed border-emerald-500/10">
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            URL del Bot de WhatsApp
+          </label>
+          <div className="flex gap-2">
+            <Input
+              placeholder="http://localhost:3001"
+              value={localUrl}
+              onChange={(e) => setLocalUrl(e.target.value)}
+              className="bg-background/50 focus-visible:ring-emerald-500/30 border-muted/40 h-8 text-sm"
+            />
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={async () => {
+                await saveSettings({ whatsapp_local_url: localUrl });
+              }}
+              className="border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 h-8"
+            >
+              Conectar
+            </Button>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Usa <code>http://localhost:3001</code> si corre en esta máquina, o la IP (ej: <code>http://192.168.1.50:3001</code>) si corre en otra.
+          </p>
+        </div>
+
         {bot.isLoading ? (
           <div className="flex flex-col items-center justify-center py-6 text-sm text-muted-foreground gap-3">
             <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
