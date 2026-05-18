@@ -14,10 +14,11 @@ interface TemplateListProps {
 export const TemplateList = ({ templates, onSelect, onNavigateToTemplates }: TemplateListProps) => {
   const [search, setSearch] = useState('');
   
-  const activas = templates.filter(t => t.is_active);
+  const activas = React.useMemo(() => templates.filter(t => t.is_active), [templates]);
   
-  const filteredTemplates = activas.filter(t => 
-    t.name.toLowerCase().includes(search.toLowerCase())
+  const filteredTemplates = React.useMemo(() => 
+    activas.filter(t => t.name.toLowerCase().includes(search.toLowerCase())),
+    [activas, search]
   );
   
   if (activas.length === 0) {
