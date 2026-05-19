@@ -1,0 +1,18 @@
+[
+  {
+    "id": "ANZ-GUA:scheduled_message:a6d1d28d-1329-44a0-a992-7dab81474a08",
+    "chatId": "176158268219589@lid",
+    "message": "*PROTECCIÓN CIVIL MUNICIPIO GUANTA* 🚨\n\n- *REPORTE DEL ESTADO DEL TIEMPO:* ⛅\n- *FECHA:* 19/Mayo/2026\n- *HORA:* \n\n- *DESCRIPCIÓN:* Cielo despejado\n\n- *NOVEDAD:* Sin novedades para la hora.\n\n- *REPORTA:* \n\n*SOLO QUEREMOS SALVAR VIDAS* 🚨🚑",
+    "scheduledTime": "2026-05-19T22:38:00.000Z",
+    "title": "Reporte del estado del tiempo",
+    "status": "sent"
+  },
+  {
+    "id": "ANZ-GUA:scheduled_message:739da2e8-2b0d-448d-b513-0d4ea3ccc3d3",
+    "chatId": "176158268219589@lid",
+    "message": "*PROTECCIÓN CIVIL MUNICIPIO GUANTA* 🚨\n\n- *REPORTE DEL ESTADO DEL TIEMPO:* ⛅\n- *FECHA:* 19/Mayo/2026\n- *HORA:* \n\n- *DESCRIPCIÓN:* Cielo despejado\n\n- *NOVEDAD:* Sin novedades para la hora.\n\n- *REPORTA:* \n\n*SOLO QUEREMOS SALVAR VIDAS* 🚨🚑",
+    "scheduledTime": "2026-05-19T22:45:00.000Z",
+    "title": "Reporte del estado del tiempo",
+    "status": "pending"
+  }
+]
