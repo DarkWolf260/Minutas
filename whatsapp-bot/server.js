@@ -123,6 +123,97 @@ app.post('/api/whatsapp/send', async (req, res) => {
   }
 });
 
+// === SISTEMA DE PROGRAMACIÓN EN SEGUNDO PLANO ===
+const fs = require('fs');
+const path = require('path');
+const SCHEDULE_FILE = path.join(__dirname, 'scheduled_messages.json');
+
+function getScheduledMessages() {
+  if (!fs.existsSync(SCHEDULE_FILE)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(SCHEDULE_FILE, 'utf8'));
+  } catch (e) {
+    console.error('Error leyendo scheduled_messages.json:', e);
+    return [];
+  }
+}
+
+function saveScheduledMessages(messages) {
+  try {
+    fs.writeFileSync(SCHEDULE_FILE, JSON.stringify(messages, null, 2));
+  } catch (e) {
+    console.error('Error guardando scheduled_messages.json:', e);
+  }
+}
+
+// Bucle en segundo plano para procesar mensajes programados
+setInterval(async () => {
+  if (!isReady) return;
+  const messages = getScheduledMessages();
+  const now = new Date();
+  let updated = false;
+
+  for (const msg of messages) {
+    if (msg.status === 'pending' && new Date(msg.scheduledTime) <= now) {
+      try {
+        console.log(`[Programado] Enviando mensaje ${msg.id} a ${msg.chatId}...`);
+        await client.sendMessage(msg.chatId, msg.message);
+        msg.status = 'sent';
+        console.log(`[Programado] Mensaje ${msg.id} enviado exitosamente.`);
+      } catch (error) {
+        console.error(`[Programado] Error enviando mensaje ${msg.id}:`, error);
+        msg.status = 'failed';
+        msg.error = error.toString();
+      }
+      updated = true;
+    }
+  }
+
+  if (updated) {
+    saveScheduledMessages(messages);
+  }
+}, 30000); // Revisa cada 30 segundos
+
+// Endpoints del sistema de programación
+app.post('/api/whatsapp/schedule', (req, res) => {
+  const { id, chatId, message, scheduledTime, title } = req.body;
+  if (!id || !chatId || !message || !scheduledTime) {
+    return res.status(400).json({ error: 'Faltan parámetros requeridos para programar' });
+  }
+
+  const messages = getScheduledMessages();
+  const existingIndex = messages.findIndex(m => m.id === id);
+  const newMsg = { id, chatId, message, scheduledTime, title, status: 'pending' };
+  
+  if (existingIndex >= 0) {
+    messages[existingIndex] = newMsg; // Actualiza existente
+  } else {
+    messages.push(newMsg); // Nuevo
+  }
+  
+  saveScheduledMessages(messages);
+  res.json({ success: true, message: 'Mensaje programado en el servidor' });
+});
+
+app.delete('/api/whatsapp/schedule/:id', (req, res) => {
+  const { id } = req.params;
+  let messages = getScheduledMessages();
+  const initialLength = messages.length;
+  messages = messages.filter(m => m.id !== id);
+  
+  if (messages.length !== initialLength) {
+    saveScheduledMessages(messages);
+    res.json({ success: true, message: 'Programación cancelada en el servidor' });
+  } else {
+    res.json({ success: false, message: 'No se encontró la programación en el servidor' });
+  }
+});
+
+app.get('/api/whatsapp/scheduled', (req, res) => {
+  res.json(getScheduledMessages());
+});
+// ===============================================
+
 app.listen(port, () => {
   console.log(`\nIniciando servidor de WhatsApp Bot en puerto ${port}...`);
 });
