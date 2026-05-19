@@ -71,79 +71,94 @@ export function useScheduledMessages() {
         data,
       });
 
+      // Enviar al backend Node para que lo programe en segundo plano
+      try {
+        await fetch(`${localUrl}/api/whatsapp/schedule`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            id, 
+            chatId, 
+            message, 
+            scheduledTime: data.scheduledTime, 
+            title 
+          }),
+        });
+      } catch (error) {
+        logger.error('Failed to schedule message in background server', error);
+      }
+
       logger.info(`Message scheduled for ${scheduledTime.toISOString()}`);
       return id;
     },
-    [db, currentWorkspace]
+    [db, currentWorkspace, localUrl]
   );
 
   // Function to cancel/delete a scheduled message
   const cancelMessage = useCallback(
     async (id: string) => {
       if (!db) return;
+      
+      // Cancelar en el backend Node
+      try {
+        await fetch(`${localUrl}/api/whatsapp/schedule/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+      } catch (error) {
+        logger.error(`Failed to cancel scheduled message ${id} in background server`, error);
+      }
+
       const doc = await db.configs.findOne(id).exec();
       if (doc) {
         await doc.remove();
         logger.info(`Scheduled message ${id} cancelled`);
       }
     },
-    [db]
+    [db, localUrl]
   );
 
-  // Background worker to check and send messages
+  // Background worker to sync statuses from Node bot
   useEffect(() => {
     if (!db || !currentWorkspace) return;
 
-    const checkAndSendMessages = async () => {
-      const now = new Date();
-      
-      // Filter pending messages that are due
-      const dueMessages = scheduledMessages.filter((msg) => {
-        return msg.status === 'pending' && new Date(msg.scheduledTime) <= now;
-      });
+    const syncStatuses = async () => {
+      try {
+        const response = await fetch(`${localUrl}/api/whatsapp/scheduled`);
+        if (!response.ok) return;
 
-      for (const msg of dueMessages) {
-        logger.info(`Sending scheduled message ${msg.id}...`);
-        
-        try {
-          const response = await fetch(`${localUrl}/api/whatsapp/send`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chatId: msg.chatId, message: msg.message }),
-          });
+        const serverMessages: any[] = await response.json();
+        const serverMap = new Map(serverMessages.map(m => [m.id, m]));
 
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to send message');
-          }
-
-          // Update status to sent
-          const doc = await db.configs.findOne(msg.id).exec();
-          if (doc) {
-            await doc.incrementalPatch({
-              data: { ...msg, status: 'sent' }
-            });
-          }
-          logger.info(`Scheduled message ${msg.id} sent successfully.`);
-        } catch (error) {
-          logger.error(`Failed to send scheduled message ${msg.id}`, error);
-          
-          // Update status to failed
-          const doc = await db.configs.findOne(msg.id).exec();
-          if (doc) {
-            await doc.incrementalPatch({
-              data: { ...msg, status: 'failed', error: (error as Error).message }
-            });
+        // Check if any local message has changed status in the backend
+        for (const msg of scheduledMessages) {
+          if (msg.status === 'pending') {
+            const serverMsg = serverMap.get(msg.id);
+            if (serverMsg && serverMsg.status !== 'pending') {
+              // Status changed (sent or failed), update local DB
+              const doc = await db.configs.findOne(msg.id).exec();
+              if (doc) {
+                await doc.incrementalPatch({
+                  data: { 
+                    ...msg, 
+                    status: serverMsg.status, 
+                    error: serverMsg.error 
+                  }
+                });
+                logger.info(`Synced status for ${msg.id} to ${serverMsg.status}`);
+              }
+            }
           }
         }
+      } catch (error) {
+        // Silently fail if bot is offline
       }
     };
 
-    // Check every 30 seconds
-    const interval = setInterval(checkAndSendMessages, 30000);
+    // Check every 10 seconds to sync statuses quickly
+    const interval = setInterval(syncStatuses, 10000);
     
-    // Also run immediately on mount or when messages change
-    checkAndSendMessages();
+    // Initial sync
+    syncStatuses();
 
     return () => clearInterval(interval);
   }, [db, currentWorkspace, scheduledMessages, localUrl]);
