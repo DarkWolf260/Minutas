@@ -63,16 +63,18 @@ export const ViewerHeader = ({
   const [isListDialogOpen, setIsListDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState("12:00");
-  
+
   const { scheduledMessages, cancelMessage } = useScheduledMessages();
+
+  const pendingCount = scheduledMessages.filter(m => m.status === 'pending').length;
 
   const handleScheduleConfirm = () => {
     if (!selectedDate || !onWhatsAppSchedule) return;
-    
+
     const [hours, minutes] = selectedTime.split(':').map(Number);
     const dateToSchedule = new Date(selectedDate);
     dateToSchedule.setHours(hours ?? 12, minutes ?? 0, 0, 0);
-    
+
     onWhatsAppSchedule(dateToSchedule);
     setIsScheduleDialogOpen(false);
   };
@@ -135,9 +137,16 @@ export const ViewerHeader = ({
                   <Clock className="mr-2 h-4 w-4" />
                   <span>Programar Envío</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setIsListDialogOpen(true)}>
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  <span>Ver Programados</span>
+                <DropdownMenuItem onClick={() => setIsListDialogOpen(true)} className="justify-between">
+                  <div className="flex items-center">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    <span>Ver Programados</span>
+                  </div>
+                  {pendingCount > 0 && (
+                    <span className="ml-2 bg-amber-500/20 text-amber-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                      {pendingCount}
+                    </span>
+                  )}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -246,36 +255,69 @@ export const ViewerHeader = ({
               </p>
             ) : (
               <div className="space-y-4">
-                {scheduledMessages.map((msg) => (
-                  <div key={msg.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">
-                          {msg.title || 'Sin título'}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(msg.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {Object.values(
+                  scheduledMessages.reduce((acc, msg) => {
+                    const key = `${msg.title}-${msg.scheduledTime}`;
+                    if (!acc[key]) {
+                      acc[key] = {
+                        ...msg,
+                        ids: [msg.id],
+                        uniqueChats: new Set([msg.chatId]),
+                        chatCount: 1,
+                        allSent: msg.status === 'sent',
+                        anyFailed: msg.status === 'failed',
+                        anyPending: msg.status === 'pending'
+                      };
+                    } else {
+                      acc[key].ids.push(msg.id);
+                      acc[key].uniqueChats.add(msg.chatId);
+                      acc[key].chatCount = acc[key].uniqueChats.size;
+                      if (msg.status === 'sent') acc[key].allSent = acc[key].allSent && true;
+                      else acc[key].allSent = false;
+                      if (msg.status === 'failed') acc[key].anyFailed = true;
+                      if (msg.status === 'pending') acc[key].anyPending = true;
+                    }
+                    return acc;
+                  }, {} as Record<string, any>)
+                ).map((group: any) => {
+                  const status = group.anyPending ? 'pending' : (group.anyFailed ? 'failed' : 'sent');
+                  return (
+                    <div key={group.ids[0]} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">
+                            {group.title || 'Sin título'}
+                          </span>
+                          {group.chatCount > 1 && (
+                            <span className="text-[10px] bg-muted-foreground/10 text-muted-foreground px-1.5 py-0.5 rounded-full font-medium">
+                              {group.chatCount} chats
+                            </span>
+                          )}
+                          <span className="text-xs text-muted-foreground ml-1">
+                            {new Date(group.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <span className={`text-xs font-bold ${status === 'pending' ? 'text-amber-500' :
+                            status === 'sent' ? 'text-emerald-500' : 'text-destructive'
+                          }`}>
+                          {status === 'pending' ? 'Pendiente' :
+                            status === 'sent' ? 'Enviado' : 'Fallido'}
                         </span>
                       </div>
-                      <span className={`text-xs font-bold ${
-                        msg.status === 'pending' ? 'text-amber-500' : 
-                        msg.status === 'sent' ? 'text-emerald-500' : 'text-destructive'
-                      }`}>
-                        {msg.status === 'pending' ? 'Pendiente' : 
-                         msg.status === 'sent' ? 'Enviado' : 'Fallido'}
-                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          group.ids.forEach((id: string) => cancelMessage(id));
+                        }}
+                        title="Cancelar mensaje"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:bg-destructive/10"
-                      onClick={() => cancelMessage(msg.id)}
-                      title="Cancelar mensaje"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>

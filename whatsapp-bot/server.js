@@ -8,7 +8,7 @@ const port = 3001;
 
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'POST', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with']
 }));
 app.use((req, res, next) => {
@@ -150,6 +150,12 @@ function saveScheduledMessages(messages) {
 setInterval(async () => {
   if (!isReady) return;
   const messages = getScheduledMessages();
+  const pendingCount = messages.filter(m => m.status === 'pending').length;
+  
+  if (pendingCount > 0) {
+    console.log(`[Programado] Revisando cola: ${pendingCount} mensaje(s) pendiente(s)`);
+  }
+
   const now = new Date();
   let updated = false;
 
@@ -172,7 +178,7 @@ setInterval(async () => {
   if (updated) {
     saveScheduledMessages(messages);
   }
-}, 30000); // Revisa cada 30 segundos
+}, 20000); // Revisa cada 20 segundos
 
 // Endpoints del sistema de programación
 app.post('/api/whatsapp/schedule', (req, res) => {
@@ -192,6 +198,8 @@ app.post('/api/whatsapp/schedule', (req, res) => {
   }
   
   saveScheduledMessages(messages);
+  const pendingCount = messages.filter(m => m.status === 'pending').length;
+  console.log(`\n[Programado] Mensaje programado añadido/actualizado. Total pendientes: ${pendingCount}`);
   res.json({ success: true, message: 'Mensaje programado en el servidor' });
 });
 
@@ -203,6 +211,8 @@ app.delete('/api/whatsapp/schedule/:id', (req, res) => {
   
   if (messages.length !== initialLength) {
     saveScheduledMessages(messages);
+    const pendingCount = messages.filter(m => m.status === 'pending').length;
+    console.log(`\n[Programado] Mensaje cancelado. Total pendientes: ${pendingCount}`);
     res.json({ success: true, message: 'Programación cancelada en el servidor' });
   } else {
     res.json({ success: false, message: 'No se encontró la programación en el servidor' });

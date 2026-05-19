@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { useSettings } from '@/hooks/use-settings';
 import { DbKeys } from '@/lib/repositories/keys';
@@ -20,6 +20,7 @@ export function useScheduledMessages() {
   const { settings } = useSettings();
   const [scheduledMessages, setScheduledMessages] = useState<ScheduledMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const deletingIds = useRef<Set<string>>(new Set());
 
   const localUrl = settings?.whatsapp_local_url || 'http://localhost:3001';
 
@@ -53,6 +54,10 @@ export function useScheduledMessages() {
   const scheduleMessage = useCallback(
     async (chatId: string, message: string, scheduledTime: Date, title: string) => {
       if (!db || !currentWorkspace) throw new Error('Database not initialized');
+
+      if (scheduledTime < new Date()) {
+        throw new Error('No puedes programar un mensaje para una fecha u hora en el pasado.');
+      }
 
       const id = DbKeys.scheduledMessage(currentWorkspace, crypto.randomUUID());
       
@@ -99,19 +104,25 @@ export function useScheduledMessages() {
     async (id: string) => {
       if (!db) return;
       
-      // Cancelar en el backend Node
+      deletingIds.current.add(id);
+      
       try {
-        await fetch(`${localUrl}/api/whatsapp/schedule/${encodeURIComponent(id)}`, {
-          method: 'DELETE',
-        });
-      } catch (error) {
-        logger.error(`Failed to cancel scheduled message ${id} in background server`, error);
-      }
+        const doc = await db.configs.findOne(id).exec();
+        if (doc) {
+          await doc.remove();
+          logger.info(`Scheduled message ${id} cancelled locally`);
+        }
 
-      const doc = await db.configs.findOne(id).exec();
-      if (doc) {
-        await doc.remove();
-        logger.info(`Scheduled message ${id} cancelled`);
+        // Cancelar en el backend Node
+        try {
+          await fetch(`${localUrl}/api/whatsapp/schedule/${encodeURIComponent(id)}`, {
+            method: 'DELETE',
+          });
+        } catch (error) {
+          logger.error(`Failed to cancel scheduled message ${id} in background server`, error);
+        }
+      } finally {
+        deletingIds.current.delete(id);
       }
     },
     [db, localUrl]
@@ -129,9 +140,28 @@ export function useScheduledMessages() {
         const serverMessages: any[] = await response.json();
         const serverMap = new Map(serverMessages.map(m => [m.id, m]));
 
+        // Consultar directamente a la base de datos local para tener el estado absoluto y evitar retrasos de React
+        const docs = await db.configs.find({
+          selector: {
+            type: 'scheduled_message' as any,
+            workspace_id: currentWorkspace,
+          },
+        }).exec();
+
+        const currentMessages = docs.map((doc) => {
+          const json = doc.toJSON();
+          return {
+            id: json.id,
+            ...json.data,
+          } as ScheduledMessage;
+        });
+
         // Check if any local message has changed status in the backend
         // or if it's missing from the backend and needs to be pushed
-        for (const msg of scheduledMessages) {
+        for (const msg of currentMessages) {
+          if (deletingIds.current.has(msg.id)) {
+            continue;
+          }
           if (msg.status === 'pending') {
             const serverMsg = serverMap.get(msg.id);
             
