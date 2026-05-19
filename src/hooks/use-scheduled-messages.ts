@@ -130,21 +130,46 @@ export function useScheduledMessages() {
         const serverMap = new Map(serverMessages.map(m => [m.id, m]));
 
         // Check if any local message has changed status in the backend
+        // or if it's missing from the backend and needs to be pushed
         for (const msg of scheduledMessages) {
           if (msg.status === 'pending') {
             const serverMsg = serverMap.get(msg.id);
-            if (serverMsg && serverMsg.status !== 'pending') {
-              // Status changed (sent or failed), update local DB
-              const doc = await db.configs.findOne(msg.id).exec();
-              if (doc) {
-                await doc.incrementalPatch({
-                  data: { 
-                    ...msg, 
-                    status: serverMsg.status, 
-                    error: serverMsg.error 
-                  }
+            
+            if (serverMsg) {
+              if (serverMsg.status !== 'pending') {
+                // Status changed (sent or failed), update local DB
+                const doc = await db.configs.findOne(msg.id).exec();
+                if (doc) {
+                  await doc.incrementalPatch({
+                    data: { 
+                      ...msg, 
+                      status: serverMsg.status, 
+                      error: serverMsg.error 
+                    }
+                  });
+                  logger.info(`Synced status for ${msg.id} to ${serverMsg.status}`);
+                }
+              }
+            } else {
+              // Message is pending locally but MISSING on the server
+              // This happens if it was scheduled before the backend update,
+              // or if the server restarted and lost its JSON file.
+              // Push it to the backend!
+              try {
+                await fetch(`${localUrl}/api/whatsapp/schedule`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ 
+                    id: msg.id, 
+                    chatId: msg.chatId, 
+                    message: msg.message, 
+                    scheduledTime: msg.scheduledTime, 
+                    title: msg.title 
+                  }),
                 });
-                logger.info(`Synced status for ${msg.id} to ${serverMsg.status}`);
+                logger.info(`Pushed missing pending message ${msg.id} to background server`);
+              } catch (err) {
+                logger.error(`Failed to push missing message ${msg.id} to server`, err);
               }
             }
           }
