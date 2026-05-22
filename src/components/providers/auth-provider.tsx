@@ -28,10 +28,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Listen for changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      if (event === 'SIGNED_OUT' && typeof window !== 'undefined') {
+        sessionStorage.removeItem('workspace-prompted-this-session');
+      }
     });
 
     return () => {
@@ -48,7 +52,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       supabase.auth.signInWithPassword({ email, password }),
     signUp: (email: string, password: string, options?: any) => 
       supabase.auth.signUp({ email, password, options }),
-    signOut: () => supabase.auth.signOut(),
+    signOut: () => {
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('workspace-prompted-this-session');
+      }
+      return supabase.auth.signOut();
+    },
   };
 
   return (

@@ -2,23 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Download, MonitorSmartphone } from 'lucide-react';
-import { useRegisterSW } from 'virtual:pwa-register/react';
+import { usePwa } from '@/components/providers/pwa-provider';
 import { Button } from '@/components/ui/button';
 import { SETUP_DONE_KEY, tryGet } from '@/hooks/use-setup';
 
 export function PWAStatus() {
     const {
-        offlineReady: [offlineReady, setOfflineReady],
-        needRefresh: [needRefresh, setNeedRefresh],
+        offlineReady,
+        setOfflineReady,
+        needRefresh,
+        setNeedRefresh,
         updateServiceWorker,
-    } = useRegisterSW({
-        onRegistered(r) {
-            console.log('SW Registered: ' + r);
-        },
-        onRegisterError(error) {
-            console.error('SW registration error', error);
-        },
-    });
+    } = usePwa();
 
     const [isMounted, setIsMounted] = useState(false);
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);

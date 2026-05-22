@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { ErrorBoundary } from '@/components/common/error-boundary';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { PWAStatus } from '@/components/layout/pwa-status';
+import { PwaProvider } from '@/components/providers/pwa-provider';
 import { DatabaseProvider } from '@/lib/db/db-provider';
 import { NotificationsProvider } from '@/lib/notifications-provider';
 import { SyncProvider } from '@/lib/sync/sync-context';
@@ -329,33 +330,35 @@ function Root() {
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="minutas-theme">
-      <AuthProvider>
-        <UserProvider>
-          <DatabaseProvider setupMode={!setupDone}>
-          <NotificationsProvider>
-            <SyncProvider>
-              <TooltipProvider>
-                {setupDone ? (
-                  // ── Normal app shell ─────────────────────────────────────────
-                  <Suspense fallback={<PageLoader />}>
-                    <ScheduledMessagesWorker />
-                    <AppLayout />
-                  </Suspense>
-                ) : (
-                  // ── Full-screen setup wizard (no SideNav, no BottomNav) ──────
-                  // SetupPage uses DatabaseProvider hooks internally (workspace, settings)
-                  <SetupPage onComplete={handleSetupComplete} />
-                )}
+      <PwaProvider>
+        <AuthProvider>
+          <UserProvider>
+            <DatabaseProvider setupMode={!setupDone}>
+            <NotificationsProvider>
+              <SyncProvider>
+                <TooltipProvider>
+                  {setupDone ? (
+                    // ── Normal app shell ─────────────────────────────────────────
+                    <Suspense fallback={<PageLoader />}>
+                      <ScheduledMessagesWorker />
+                      <AppLayout />
+                    </Suspense>
+                  ) : (
+                    // ── Full-screen setup wizard (no SideNav, no BottomNav) ──────
+                    // SetupPage uses DatabaseProvider hooks internally (workspace, settings)
+                    <SetupPage onComplete={handleSetupComplete} />
+                  )}
 
-                {/* Global overlays — shown in both modes */}
-                <PWAStatus />
-                <Toaster />
-              </TooltipProvider>
-            </SyncProvider>
-          </NotificationsProvider>
-        </DatabaseProvider>
-      </UserProvider>
-    </AuthProvider>
+                  {/* Global overlays — shown in both modes */}
+                  <PWAStatus />
+                  <Toaster />
+                </TooltipProvider>
+              </SyncProvider>
+            </NotificationsProvider>
+          </DatabaseProvider>
+        </UserProvider>
+      </AuthProvider>
+      </PwaProvider>
     </ThemeProvider>
   );
 }

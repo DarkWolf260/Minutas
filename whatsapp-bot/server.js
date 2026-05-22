@@ -6,15 +6,20 @@ const qrcode = require('qrcode-terminal');
 const app = express();
 const port = 3001;
 
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with']
-}));
+// Middleware para CORS y Private Network Access (PNA) para preflight OPTIONS
 app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-requested-with');
   res.setHeader('Access-Control-Allow-Private-Network', 'true');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
   next();
 });
+
+app.use(cors());
 app.use(express.json());
 
 let isReady = false;
@@ -127,6 +132,14 @@ app.post('/api/whatsapp/send', async (req, res) => {
 const fs = require('fs');
 const path = require('path');
 const SCHEDULE_FILE = path.join(__dirname, 'scheduled_messages.json');
+
+// Descartar la cola de mensajes programados al iniciar el bot
+try {
+  fs.writeFileSync(SCHEDULE_FILE, JSON.stringify([], null, 2));
+  console.log('[Programado] Se ha descartado la cola de mensajes programados al iniciar el bot.');
+} catch (e) {
+  console.error('Error al descartar la cola de mensajes al iniciar:', e);
+}
 
 function getScheduledMessages() {
   if (!fs.existsSync(SCHEDULE_FILE)) return [];

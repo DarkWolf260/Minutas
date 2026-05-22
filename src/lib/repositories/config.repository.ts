@@ -74,12 +74,14 @@ export function createConfigRepository(db: MinutasDatabase | null, workspace_id:
         if (merged.isGuardOpen !== undefined) merged.is_guard_open = merged.isGuardOpen;
         if (merged.guardPeriod !== undefined) merged.guard_period = merged.guardPeriod;
         if (merged.ordenDelDiaDraft !== undefined) merged.orden_del_dia_draft = merged.ordenDelDiaDraft;
+        if (merged.finalReportStatistics !== undefined) merged.final_report_statistics = merged.finalReportStatistics;
 
         // Eliminar versiones viejas
         delete merged.activeGuardId;
         delete merged.isGuardOpen;
         delete merged.guardPeriod;
         delete merged.ordenDelDiaDraft;
+        delete merged.finalReportStatistics;
 
         // 4. VERIFICACIÓN DE CAMBIO REAL (Freno al bucle)
         if (stableStringify(currentData) === stableStringify(merged)) {

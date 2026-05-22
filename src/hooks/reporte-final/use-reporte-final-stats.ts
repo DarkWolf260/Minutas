@@ -36,16 +36,16 @@ export function useReporteFinalStats({
 
   // Sync from settings on initial load
   useEffect(() => {
-    if (settingsLoaded && settings.finalReportStatistics !== ultimaEstadisticaGuardada.current) {
-      setEstadisticasLocal(settings.finalReportStatistics || '');
-      ultimaEstadisticaGuardada.current = settings.finalReportStatistics;
+    if (settingsLoaded && settings.final_report_statistics !== ultimaEstadisticaGuardada.current) {
+      setEstadisticasLocal(settings.final_report_statistics || '');
+      ultimaEstadisticaGuardada.current = settings.final_report_statistics;
     }
-  }, [settingsLoaded, settings.finalReportStatistics]);
+  }, [settingsLoaded, settings.final_report_statistics]);
 
   const guardarEstadisticasDebounced = useMemo(
     () => debounce((value: string) => {
       if (!puedeAutoGuardar) return;
-      saveSettings({ finalReportStatistics: value });
+      saveSettings({ final_report_statistics: value });
       ultimaEstadisticaGuardada.current = value;
     }, 500),
     [saveSettings, puedeAutoGuardar]
