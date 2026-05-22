@@ -8,22 +8,35 @@ import { APP_VERSION } from './data';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { usePwa } from '@/components/providers/pwa-provider';
 
 export default function AboutAppPage() {
-  const [checking, setChecking] = useState(false);
+  const { checkForUpdates, checkingForUpdates, updateServiceWorker } = usePwa();
 
-  const handleCheckUpdates = () => {
-    setChecking(true);
-    setTimeout(() => {
-      setChecking(false);
-      toast.success('Todos los componentes están actualizados', {
-        description: `Versión actual: ${APP_VERSION}`,
-        action: {
-          label: 'Cerrar',
-          onClick: () => {}
-        },
+  const handleCheckUpdates = async () => {
+    try {
+      const updateFound = await checkForUpdates();
+      if (updateFound) {
+        toast.success('¡Nueva versión encontrada!', {
+          description: 'Descargando y actualizando aplicación...',
+        });
+        // Trigger immediate service worker skipWaiting/reload
+        await updateServiceWorker(true);
+      } else {
+        toast.success('Todos los componentes están actualizados', {
+          description: `Versión actual: ${APP_VERSION}`,
+          action: {
+            label: 'Cerrar',
+            onClick: () => {}
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Error al comprobar actualizaciones:', error);
+      toast.error('No se pudo comprobar si hay actualizaciones', {
+        description: 'Por favor, comprueba tu conexión a internet e inténtalo de nuevo.',
       });
-    }, 2000);
+    }
   };
 
   return (
@@ -62,11 +75,11 @@ export default function AboutAppPage() {
                 size="sm" 
                 className="h-8 gap-2 rounded-full px-4 border-primary/20 bg-primary/5 hover:bg-primary/10 transition-all group"
                 onClick={handleCheckUpdates}
-                disabled={checking}
+                disabled={checkingForUpdates}
               >
-                <RefreshCw className={cn("h-3.5 w-3.5 transition-transform duration-700", checking && "animate-spin")} />
+                <RefreshCw className={cn("h-3.5 w-3.5 transition-transform duration-700", checkingForUpdates && "animate-spin")} />
                 <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {checking ? 'Buscando actualizaciones...' : 'Buscar actualizaciones'}
+                  {checkingForUpdates ? 'Buscando actualizaciones...' : 'Buscar actualizaciones'}
                 </span>
               </Button>
             </div>

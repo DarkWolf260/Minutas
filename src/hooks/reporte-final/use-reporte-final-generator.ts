@@ -146,8 +146,8 @@ export function useReporteFinalGenerator({
     const municipio = buscarInsensible(configuracionesGlobales, 'Municipio');
 
     const rangoFechasTexto = (() => {
-      if (settings.guardPeriod) {
-        const periodStr = settings.guardPeriod.toUpperCase().trim();
+      if (settings.guard_period) {
+        const periodStr = settings.guard_period.toUpperCase().trim();
         if (periodStr.includes(' AL ')) {
           const parts = periodStr.split(' AL ');
           const formatearParteFecha = (part: string) => {
@@ -367,8 +367,8 @@ export function useReporteFinalGenerator({
       const reportId = generateId();
       const now = new Date();
       let archiveDate = now;
-      if (settings.guardPeriod) {
-        const parts = settings.guardPeriod.split(/ AL | - | – | a /i).map((p: string) => p.trim());
+      if (settings.guard_period) {
+        const parts = settings.guard_period.split(/ AL /i).map((p: string) => p.trim());
         const firstPart = parts[0];
         const match = firstPart?.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
         if (match) {
@@ -388,7 +388,7 @@ export function useReporteFinalGenerator({
         id: reportId,
         date: isoDate20,
         generated_at: fullIsoDate,
-        summary: settings.guardPeriod || `Reporte de Guardia ${activeGuard.id}`,
+        summary: settings.guard_period || `Reporte de Guardia ${activeGuard.id}`,
         content: reporteGenerado,
         guard_group: activeGuard.id.split(' ')[0] || '',
         workspace_id: '', 

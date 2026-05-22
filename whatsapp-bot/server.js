@@ -128,6 +128,14 @@ const fs = require('fs');
 const path = require('path');
 const SCHEDULE_FILE = path.join(__dirname, 'scheduled_messages.json');
 
+// Descartar la cola de mensajes programados al iniciar el bot
+try {
+  fs.writeFileSync(SCHEDULE_FILE, JSON.stringify([], null, 2));
+  console.log('[Programado] Se ha descartado la cola de mensajes programados al iniciar el bot.');
+} catch (e) {
+  console.error('Error al descartar la cola de mensajes al iniciar:', e);
+}
+
 function getScheduledMessages() {
   if (!fs.existsSync(SCHEDULE_FILE)) return [];
   try {
