@@ -14,6 +14,13 @@ export interface ScheduledMessage {
   error?: string;
 }
 
+// Module-level cache to share offline status across all instances of this hook and prevent console ERR_CONNECTION_REFUSED spam.
+let globalIsOffline = false;
+let lastCheckTime = 0;
+let consecutiveFailures = 0;
+let currentPollingInterval = 10000; // Start at 10s
+let lastCheckedUrl = '';
+
 export function useScheduledMessages() {
   const db = useDatabase();
   const { currentWorkspace } = useWorkspaceManager();
@@ -128,16 +135,43 @@ export function useScheduledMessages() {
     [db, localUrl]
   );
 
-  // Background worker to sync statuses from Node bot
+  // Background worker to sync statuses from Node bot with exponential backoff if offline
   useEffect(() => {
     if (!db || !currentWorkspace) return;
 
+    let timeoutId: NodeJS.Timeout;
+
+    // Reset backoff if URL changed
+    if (localUrl !== lastCheckedUrl) {
+      globalIsOffline = false;
+      consecutiveFailures = 0;
+      currentPollingInterval = 10000;
+      lastCheckedUrl = localUrl;
+    }
+
     const syncStatuses = async () => {
+      const now = Date.now();
+
+      // If offline cache is valid, skip request and reschedule to avoid console ERR_CONNECTION_REFUSED spam.
+      if (globalIsOffline && now < lastCheckTime + currentPollingInterval) {
+        timeoutId = setTimeout(syncStatuses, currentPollingInterval);
+        return;
+      }
+
       try {
         const response = await fetch(`${localUrl}/api/whatsapp/scheduled`);
-        if (!response.ok) return;
+        if (!response.ok) {
+          throw new Error('Server returned non-ok status');
+        }
 
         const serverMessages: any[] = await response.json();
+        
+        // Reset backoff on successful connection
+        globalIsOffline = false;
+        lastCheckTime = now;
+        consecutiveFailures = 0;
+        currentPollingInterval = 10000;
+
         const serverMap = new Map(serverMessages.map(m => [m.id, m]));
 
         // Consultar directamente a la base de datos local para tener el estado absoluto y evitar retrasos de React
@@ -182,8 +216,6 @@ export function useScheduledMessages() {
               }
             } else {
               // Message is pending locally but MISSING on the server
-              // This happens if it was scheduled before the backend update,
-              // or if the server restarted and lost its JSON file.
               // Push it to the backend!
               try {
                 await fetch(`${localUrl}/api/whatsapp/schedule`, {
@@ -205,18 +237,33 @@ export function useScheduledMessages() {
           }
         }
       } catch (error) {
-        // Silently fail if bot is offline
+        // Increment failure count and back off exponentially to avoid flooding the console
+        globalIsOffline = true;
+        lastCheckTime = now;
+        consecutiveFailures++;
+        
+        if (consecutiveFailures === 1) {
+          currentPollingInterval = 30000; // 30s
+        } else if (consecutiveFailures === 2) {
+          currentPollingInterval = 60000; // 1m
+        } else if (consecutiveFailures === 3) {
+          currentPollingInterval = 120000; // 2m
+        } else {
+          currentPollingInterval = 300000; // 5m max
+        }
+        
+        logger.debug(`[WhatsApp Sync] Server is offline (consecutive failures: ${consecutiveFailures}). Backing off sync to ${currentPollingInterval / 1000}s`);
+      } finally {
+        // Schedule next sync dynamically based on the current interval
+        timeoutId = setTimeout(syncStatuses, currentPollingInterval);
       }
     };
 
-    // Check every 10 seconds to sync statuses quickly
-    const interval = setInterval(syncStatuses, 10000);
-    
     // Initial sync
     syncStatuses();
 
-    return () => clearInterval(interval);
-  }, [db, currentWorkspace, scheduledMessages, localUrl]);
+    return () => clearTimeout(timeoutId);
+  }, [db, currentWorkspace, localUrl]);
 
   return {
     scheduledMessages,

@@ -84,9 +84,16 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
     setSaveButtonText('Guardado');
   }, [report, template, config, status, onSave, settings.orden_del_dia_draft, (settings as any).ordenDelDiaDraft]);
 
+  // Use a ref to always execute the latest saveLogic inside debouncedSave without recreating it,
+  // preventing premature flushes and race conditions when status or other dependencies change.
+  const saveLogicRef = useRef(saveLogic);
+  useEffect(() => {
+    saveLogicRef.current = saveLogic;
+  }, [saveLogic]);
+
   const debouncedSave = useMemo(
-    () => debounce((form_data: Record<string, any>) => saveLogic(form_data), 30000),
-    [saveLogic]
+    () => debounce((form_data: Record<string, any>) => saveLogicRef.current(form_data), 30000),
+    []
   );
 
   useEffect(() => {
