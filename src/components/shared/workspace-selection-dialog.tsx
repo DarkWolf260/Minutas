@@ -28,14 +28,18 @@ export function WorkspaceSelectionDialog() {
 
   useEffect(() => {
     const skip = localStorage.getItem('skip-workspace-selection') === 'true';
+    const sessionPrompted = typeof window !== 'undefined' && sessionStorage.getItem('workspace-prompted-this-session') === 'true';
     
     // Solo mostrar si está autenticado, tiene más de 1 workspace, 
     // no ha saltado la opción y no hemos preguntado en esta sesión.
-    if (!skip && isAuthenticated && workspaces.length > 1 && !hasPrompted) {
+    if (!skip && isAuthenticated && workspaces.length > 1 && !hasPrompted && !sessionPrompted) {
       // Esperar un momento para que la app cargue visualmente
       const timer = setTimeout(() => {
         setOpen(true);
         setHasPrompted(true);
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('workspace-prompted-this-session', 'true');
+        }
       }, 1000);
       return () => clearTimeout(timer);
     }
