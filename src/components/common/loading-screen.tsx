@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
 import { cn } from '@/lib/utils';
+import { APP_VERSION } from '@/pages/settings/about/data';
 
 
 interface LoadingScreenProps {
@@ -34,7 +34,7 @@ export function LoadingScreen({ message, isOverlay = false }: LoadingScreenProps
 
       {!isOverlay && (
         <p className="absolute bottom-10 text-[10px] uppercase tracking-[0.3em] text-muted-foreground/40 font-bold">
-          PC Reportes • v0.1.0
+          Minutas • v{APP_VERSION}
         </p>
       )}
     </div>
