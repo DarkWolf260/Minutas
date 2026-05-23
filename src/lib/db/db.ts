@@ -315,6 +315,20 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
       templates: {
         schema: templatesSchema,
         conflictHandler: commonConflictHandler,
+        migrationStrategies: {
+          1: function (oldDoc: any) {
+            oldDoc.statistics_rules = oldDoc.statistics_rules || [];
+            if (Array.isArray(oldDoc.statistics_rules)) {
+              oldDoc.statistics_rules = oldDoc.statistics_rules.map((rule: any) => {
+                if (rule && rule.category && !rule.categories) {
+                  rule.categories = [rule.category];
+                }
+                return rule;
+              });
+            }
+            return oldDoc;
+          }
+        }
       },
       lookups: {
         schema: lookupsSchema,

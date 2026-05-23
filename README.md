@@ -92,6 +92,13 @@ Detalles extensos: {DetallesCompletos} ...
 ### 7. Separadores
 Usa `[""]` para insertar una línea divisoria visual en el formulario sin crear una nueva sección de datos.
 
+### 8. Reglas Estadísticas y Etiquetas Especiales (`*` y ` (1)`)
+La aplicación cuenta con un motor de mapeo automático de estadísticas basado en reglas condicionales. Para campos que pertenecen a **secciones repetibles**, el editor ofrece dos etiquetas especiales:
+* **Asterisco (`Campo*`)**: Evalúa secuencialmente **todos** los registros agregados por el usuario en esa lista repetible. Incrementará las estadísticas por cada fila individual que cumpla la condición.
+* **Paréntesis Uno (`Campo (1)`)**: Evalúa únicamente la **primera** fila no vacía ingresada en la lista repetible. Ideal para métricas a nivel general de reporte (ej. saber si hubo detenidos sin duplicar el contador por cada persona detenida).
+
+Para obtener más información y ver ejemplos detallados sobre el funcionamiento y diseño de este motor de reglas, consulta la [Guía de Reglas Estadísticas y Etiquetas Especiales](file:///c:/Users/Dark/Documents/GitHub/Minutas/docs/statistics-rules-guide.md).
+
 ---
 
 ## 🛠️ Tecnologías

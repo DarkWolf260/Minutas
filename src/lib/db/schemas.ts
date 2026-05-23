@@ -64,7 +64,7 @@ export const reportsSchema = {
 
 export const templatesSchema = {
     title: 'templates schema',
-    version: 0,
+    version: 1,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -89,6 +89,10 @@ export const templatesSchema = {
                     operator: { type: ['string', 'null'] },
                     condition: { type: ['string', 'null'] },
                     category: { type: ['string', 'null'] },
+                    categories: {
+                        type: ['array', 'null'],
+                        items: { type: 'string' }
+                    },
                     conditions: {
                         type: ['array', 'null'],
                         items: {

@@ -62,9 +62,16 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.7.0';
+export const APP_VERSION = '1.7.1';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.7.1',
+    date: '22/05/2026',
+    changes: [
+      { type: 'mejora', text: 'Cálculo Inteligente de Traslados: El sistema ahora analiza de forma automática cada tramo de tu viaje (destino por destino) a partir de tu ubicación para determinar con total precisión si son urbanos o extraurbanos, omitiendo de forma limpia las filas vacías.' },
+    ],
+  },
   {
     version: '1.7.0',
     date: '22/05/2026',

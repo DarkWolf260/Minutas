@@ -2,6 +2,46 @@ import type { Report, Template, TemplateConfig } from '@/lib/types';
 import { normalizarParaComp, normalizarCategoria, resolverClavesInterpolacion, buscarValores } from './utils';
 import { evaluarCondicion } from './evaluator';
 
+function obtenerBaseIdYVirtual(field_id: string): { baseId: string; isVirtual: boolean } {
+  const norm = normalizarParaComp(field_id);
+  if (norm.endsWith('origen')) {
+    let baseId = field_id;
+    if (field_id.toLowerCase().endsWith('-origen')) {
+      baseId = field_id.slice(0, -7);
+    } else if (field_id.toLowerCase().endsWith('origen')) {
+      baseId = field_id.slice(0, -6);
+    }
+    return { baseId, isVirtual: true };
+  }
+  return { baseId: field_id, isVirtual: false };
+}
+
+function obtenerValoresConSoporteVirtual(form_data: any, field_id: string, config?: TemplateConfig): any[] {
+  const { baseId, isVirtual } = obtenerBaseIdYVirtual(field_id);
+  
+  if (isVirtual) {
+    const baseKeys = resolverClavesInterpolacion(baseId, config);
+    const baseValues = buscarValores(form_data || {}, baseKeys).flat(Infinity);
+    
+    const ubiKeys = resolverClavesInterpolacion('Ubicación', config);
+    const ubiValues = buscarValores(form_data || {}, ubiKeys).flat(Infinity);
+    const startVal = ubiValues.length > 0 ? ubiValues[0] : '';
+    
+    const origenValues: any[] = [];
+    for (let i = 0; i < baseValues.length; i++) {
+      if (i === 0) {
+        origenValues.push(startVal);
+      } else {
+        origenValues.push(baseValues[i - 1]);
+      }
+    }
+    return origenValues;
+  }
+  
+  const targetKeys = resolverClavesInterpolacion(field_id, config);
+  return buscarValores(form_data || {}, targetKeys);
+}
+
 /**
  * Resuelve las categorías estadísticas para un reporte basándose en las reglas de su plantilla.
  */
@@ -35,13 +75,30 @@ export function obtenerCategoriasReporte(
   if (Array.isArray(template.statistics_rules) && template.statistics_rules.length > 0) {
     const rulesByCat = new Map<string, number>();
 
+    if (import.meta.env.DEV) {
+      console.log(`[STATS DEBUG] === Evaluando reporte "${report.title}" (ID: ${report.id}) con plantilla "${template.name}" ===`);
+      console.log(`[STATS DEBUG] predefinedValues:`, predefinedValues);
+      console.log(`[STATS DEBUG] form_data:`, report.form_data);
+    }
+
     for (const rule of template.statistics_rules) {
       if (!rule.field_id) continue;
 
       let rawCondition = rule.condition || (rule as any).value || '';
+
+      // 1. Primero interpolar con predefinedValues si existen (para soportar variables globales como {Municipio})
+      if (typeof rawCondition === 'string' && rawCondition.includes('{') && rawCondition.includes('}')) {
+        rawCondition = rawCondition.replace(/\{([^}]+)\}/g, (match, fieldName) => {
+          const key = fieldName.trim().toLowerCase();
+          const foundKey = Object.keys(predefinedValues).find(k => k.toLowerCase() === key);
+          const val = foundKey !== undefined ? predefinedValues[foundKey] : undefined;
+          return typeof val === 'string' ? val : match;
+        });
+      }
+
       const originalCondition = rawCondition;
 
-      // Interpolación de reserva global
+      // 2. Interpolación de reserva global con form_data
       if (typeof rawCondition === 'string' && rawCondition.includes('{') && rawCondition.includes('}')) {
         rawCondition = rawCondition.replace(/\{([^}]+)\}/g, (match, fieldName) => {
           const keysToMatch = resolverClavesInterpolacion(fieldName.trim(), config);
@@ -54,7 +111,9 @@ export function obtenerCategoriasReporte(
       const isSequentialPrimary = originalfield_id.endsWith('*');
       const isFirstOnlyPrimary = originalfield_id.endsWith(' (1)');
       const basefield_id = isSequentialPrimary ? originalfield_id.slice(0, -1) : (isFirstOnlyPrimary ? originalfield_id.slice(0, -4) : originalfield_id);
-      const normfield_id = normalizarParaComp(basefield_id);
+      
+      const { baseId: realPrimaryBaseId, isVirtual: isPrimaryVirtual } = obtenerBaseIdYVirtual(basefield_id);
+      const normfield_id = normalizarParaComp(realPrimaryBaseId);
 
       // Determinar claves potenciales en form_data (IDs o Etiquetas)
       const targetKeys = new Set<string>([normfield_id]);
@@ -69,14 +128,14 @@ export function obtenerCategoriasReporte(
         });
       }
 
-      let values = buscarValores(report.form_data, targetKeys);
+      let values = obtenerValoresConSoporteVirtual(report.form_data, basefield_id, config);
       if (isFirstOnlyPrimary && values.length > 0) {
         const nonEmpty = values.filter(v => v !== '' && v !== null && v !== undefined);
         values = nonEmpty.length > 0 ? [nonEmpty[0]] : [values[0]];
       }
 
-      // Fallback: buscar todos los valores en form_data si no se encontró nada por clave
-      if (values.length === 0) {
+      // Fallback: buscar todos los valores en form_data si no se encontró nada por clave y no es campo virtual
+      if (values.length === 0 && !isPrimaryVirtual) {
         const globalTargetVal = normalizarParaComp(rawCondition);
         const buscarEnTodo = (obj: any): any[] => {
           let found: any[] = [];
@@ -114,15 +173,51 @@ export function obtenerCategoriasReporte(
       
       const iterationList = isSequentialPrimary && values.length > 0 ? [values.flat(Infinity)] : values;
 
+      // Detectar si es el campo de destinos repetibles (ej: Destino*)
+      const isRouteDestinations = normalizarParaComp(basefield_id) === 'destino' && isSequentialPrimary;
+
       for (const rawVal of iterationList) {
-        const items = Array.isArray(rawVal) ? rawVal : [rawVal];
+        const items = (Array.isArray(rawVal) ? rawVal : [rawVal]).filter(v => v !== '' && v !== null && v !== undefined);
+        const startIdx = isRouteDestinations ? 1 : 0;
 
-        for (let i = 0; i < items.length; i++) {
-          let seqIndex = i;
-          const item = isSequentialPrimary ? items[seqIndex++] : items[i];
+        for (let i = startIdx; i < items.length; i++) {
+          const item = items[i];
 
-          // 1. Evaluar Condición Principal
-          const primaryMatch = evaluarCondicion(item, fieldConfig, originalCondition || '', rule.operator || '=', report.form_data, config);
+          // 1. Primero resolver {Destino*} (o el campo secuencial actual) secuencialmente si corresponde
+          let legCondition = originalCondition;
+          if (isSequentialPrimary && typeof legCondition === 'string' && legCondition.includes('{') && legCondition.includes('}')) {
+            const placeholder = `{${basefield_id}*}`;
+            if (normalizarParaComp(legCondition).includes(normalizarParaComp(placeholder))) {
+              let prevValue = '';
+              if (i === 0) {
+                const ubiKeys = resolverClavesInterpolacion('Ubicación', config);
+                const ubiValues = buscarValores(report.form_data || {}, ubiKeys).flat(Infinity);
+                prevValue = ubiValues.length > 0 ? String(ubiValues[0]) : '';
+              } else {
+                prevValue = String(items[i - 1]);
+              }
+              const regex = new RegExp(`\\{${basefield_id}\\*\\}`, 'i');
+              legCondition = legCondition.replace(regex, prevValue);
+            }
+          }
+
+          // 2. Evaluar Condición Principal
+          let primaryMatch = evaluarCondicion(item, fieldConfig, legCondition || '', rule.operator || '=', report.form_data, config);
+          
+          if (isRouteDestinations && i > 0) {
+            const prevMatch = evaluarCondicion(items[i - 1], fieldConfig, legCondition || '', rule.operator || '=', report.form_data, config);
+            const isNegative = ['!=', 'empty', 'not_contains'].includes(rule.operator || '=');
+            if (isNegative) {
+              primaryMatch = primaryMatch || prevMatch;
+            } else {
+              primaryMatch = primaryMatch && prevMatch;
+            }
+
+            if (import.meta.env.DEV) {
+              console.log(`[STATS DEBUG] Evaluando tramo de ruta secuencial (Leg ${i}): "${items[i - 1]}" -> "${item}" contra "${legCondition}" (${rule.operator}). Resultado: ${primaryMatch}`);
+            }
+          }
+
           let currentMatchValue = 1;
 
           // 2. Evaluar condiciones OR (Opcionales, pero al menos una debe cumplir si existen)
@@ -137,34 +232,68 @@ export function obtenerCategoriasReporte(
               const isOrFirstOnly = orOriginalId.endsWith(' (1)');
               const orBaseId = isOrSequential ? orOriginalId.slice(0, -1) : (isOrFirstOnly ? orOriginalId.slice(0, -4) : orOriginalId);
               
-              const orKeys = resolverClavesInterpolacion(orBaseId, config);
-              let orValues = buscarValores(report.form_data || {}, orKeys);
+              const { baseId: realOrBaseId } = obtenerBaseIdYVirtual(orBaseId);
+              let orValues = obtenerValoresConSoporteVirtual(report.form_data, orBaseId, config);
               if (isOrFirstOnly && orValues.length > 0) {
                 const nonEmpty = orValues.filter(v => v !== '' && v !== null && v !== undefined);
                 orValues = nonEmpty.length > 0 ? [nonEmpty[0]] : [orValues[0]];
               }
 
               let orConditionStr = orCond.condition || '';
-              if (orConditionStr.includes('{')) {
-                orConditionStr = orConditionStr.replace(/\{(\w+)\}/g, (_, key) => predefinedValues[key] || `{${key}}`);
+              if (typeof orConditionStr === 'string' && orConditionStr.includes('{') && orConditionStr.includes('}')) {
+                // Primero resolver {Destino*} secuencial si corresponde
+                const placeholder = `{${orBaseId}*}`;
+                if (isOrSequential && normalizarParaComp(orConditionStr).includes(normalizarParaComp(placeholder))) {
+                  let prevValue = '';
+                  if (i === 0) {
+                    const ubiKeys = resolverClavesInterpolacion('Ubicación', config);
+                    const ubiValues = buscarValores(report.form_data || {}, ubiKeys).flat(Infinity);
+                    prevValue = ubiValues.length > 0 ? String(ubiValues[0]) : '';
+                  } else {
+                    prevValue = String(orValues[i - 1]);
+                  }
+                  const regex = new RegExp(`\\{${orBaseId}\\*\\}`, 'i');
+                  orConditionStr = orConditionStr.replace(regex, prevValue);
+                }
+
+                // Resolver otras variables de predefinedValues
+                orConditionStr = orConditionStr.replace(/\{([^}]+)\}/g, (match, fieldName) => {
+                  const key = fieldName.trim().toLowerCase();
+                  const foundKey = Object.keys(predefinedValues).find(k => k.toLowerCase() === key);
+                  const val = foundKey !== undefined ? predefinedValues[foundKey] : undefined;
+                  return typeof val === 'string' ? val : match;
+                });
               }
 
-              for (const oRawVal of orValues) {
-                const oItems = Array.isArray(oRawVal) ? oRawVal : [oRawVal];
-                for (const oItem of oItems) {
-                  if (evaluarCondicion(oItem, config?.fields?.[orBaseId], orConditionStr, orCond.operator || '=', report.form_data, config)) {
-                    anyOrMatch = true;
-                    if (orCond.operator === 'extract_value') {
-                      currentMatchValue = tryExtractValue(oItem);
-                    }
-                    break;
+              let orMatch = false;
+              if (isOrSequential && orValues.length === items.length) {
+                const oItem = orValues[i];
+                if (evaluarCondicion(oItem, config?.fields?.[realOrBaseId], orConditionStr, orCond.operator || '=', report.form_data, config)) {
+                  orMatch = true;
+                  if (orCond.operator === 'extract_value') {
+                    currentMatchValue = tryExtractValue(oItem);
                   }
                 }
-                if (anyOrMatch) break;
+              } else {
+                for (const oRawVal of orValues) {
+                  const oItems = Array.isArray(oRawVal) ? oRawVal : [oRawVal];
+                  for (const oItem of oItems) {
+                    if (evaluarCondicion(oItem, config?.fields?.[realOrBaseId], orConditionStr, orCond.operator || '=', report.form_data, config)) {
+                      orMatch = true;
+                      if (orCond.operator === 'extract_value') {
+                        currentMatchValue = tryExtractValue(oItem);
+                      }
+                      break;
+                    }
+                  }
+                  if (orMatch) break;
+                }
               }
+
+              if (orMatch) anyOrMatch = true;
               
               if (!anyOrMatch && orValues.length === 0 && (orCond.operator === 'empty' || orCond.operator === '!=' || orCond.operator === 'not_contains')) {
-                if (evaluarCondicion(null, config?.fields?.[orBaseId], orConditionStr, orCond.operator || '=', report.form_data, config)) {
+                if (evaluarCondicion(null, config?.fields?.[realOrBaseId], orConditionStr, orCond.operator || '=', report.form_data, config)) {
                   anyOrMatch = true;
                 }
               }
@@ -173,7 +302,9 @@ export function obtenerCategoriasReporte(
             }
           }
 
-          let isMatch = primaryMatch && anyOrMatch;
+          let isMatch = (rule.or_conditions && rule.or_conditions.length > 0)
+            ? (primaryMatch || anyOrMatch)
+            : primaryMatch;
 
           // 3. Evaluar condiciones AND (Deben cumplir todas si la anterior combinación es verdadera)
           if (isMatch && rule.conditions && rule.conditions.length > 0) {
@@ -184,43 +315,61 @@ export function obtenerCategoriasReporte(
               const isSecSequential = secOriginalId.endsWith('*');
               const isSecFirstOnly = secOriginalId.endsWith(' (1)');
               const secBaseId = isSecSequential ? secOriginalId.slice(0, -1) : (isSecFirstOnly ? secOriginalId.slice(0, -4) : secOriginalId);
-              const normSecBaseId = normalizarParaComp(secBaseId);
 
-              if (isSecSequential && normSecBaseId === normfield_id) {
-                const sItem = items[seqIndex++];
-                if (!evaluarCondicion(sItem, config?.fields?.[secBaseId], secCond.condition || '', secCond.operator || '=', report.form_data, config)) {
-                  isMatch = false;
-                  break;
-                }
-                continue;
-              }
-
-              const secKeys = resolverClavesInterpolacion(secBaseId, config);
-              let secValues = buscarValores(report.form_data || {}, secKeys);
+              const { baseId: realSecBaseId } = obtenerBaseIdYVirtual(secBaseId);
+              let secValues = obtenerValoresConSoporteVirtual(report.form_data, secBaseId, config);
               if (isSecFirstOnly && secValues.length > 0) {
                 const nonEmpty = secValues.filter(v => v !== '' && v !== null && v !== undefined);
                 secValues = nonEmpty.length > 0 ? [nonEmpty[0]] : [secValues[0]];
               }
               
-              let secCondition = secCond.condition;
-              if (secCondition?.includes('{')) {
-                secCondition = secCondition.replace(/\{(\w+)\}/g, (_, k) => predefinedValues[k] || `{${k}}`);
+              let secCondition = secCond.condition || '';
+              if (typeof secCondition === 'string' && secCondition.includes('{') && secCondition.includes('}')) {
+                // Primero resolver {Destino*} secuencial si corresponde
+                const placeholder = `{${secBaseId}*}`;
+                if (isSecSequential && normalizarParaComp(secCondition).includes(normalizarParaComp(placeholder))) {
+                  let prevValue = '';
+                  if (i === 0) {
+                    const ubiKeys = resolverClavesInterpolacion('Ubicación', config);
+                    const ubiValues = buscarValores(report.form_data || {}, ubiKeys).flat(Infinity);
+                    prevValue = ubiValues.length > 0 ? String(ubiValues[0]) : '';
+                  } else {
+                    prevValue = String(secValues[i - 1]);
+                  }
+                  const regex = new RegExp(`\\{${secBaseId}\\*\\}`, 'i');
+                  secCondition = secCondition.replace(regex, prevValue);
+                }
+
+                // Resolver otras variables de predefinedValues
+                secCondition = secCondition.replace(/\{([^}]+)\}/g, (match, fieldName) => {
+                  const key = fieldName.trim().toLowerCase();
+                  const foundKey = Object.keys(predefinedValues).find(k => k.toLowerCase() === key);
+                  const val = foundKey !== undefined ? predefinedValues[foundKey] : undefined;
+                  return typeof val === 'string' ? val : match;
+                });
               }
 
               let secMatch = false;
-              for (const sRawVal of secValues) {
-                const sItems = Array.isArray(sRawVal) ? sRawVal : [sRawVal];
-                for (const sItem of sItems) {
-                  if (evaluarCondicion(sItem, config?.fields?.[secBaseId], secCondition || '', secCond.operator || '=', report.form_data, config)) {
-                    secMatch = true;
-                    break;
-                  }
+              if (isSecSequential && secValues.length === items.length) {
+                const sItem = secValues[i];
+                if (evaluarCondicion(sItem, config?.fields?.[realSecBaseId], secCondition || '', secCond.operator || '=', report.form_data, config)) {
+                  secMatch = true;
                 }
-                if (secMatch) break;
+              } else {
+                for (const sRawVal of secValues) {
+                  const sItems = Array.isArray(sRawVal) ? sRawVal : [sRawVal];
+                  for (const sItem of sItems) {
+                    if (evaluarCondicion(sItem, config?.fields?.[realSecBaseId], secCondition || '', secCond.operator || '=', report.form_data, config)) {
+                      secMatch = true;
+                      break;
+                    }
+                  }
+                  if (secMatch) break;
+                }
               }
 
               if (secValues.length === 0 && (secCond.operator === 'empty' || secCond.operator === '!=' || secCond.operator === 'not_contains')) {
-                  if (evaluarCondicion(null, config?.fields?.[secBaseId], secCondition || '', secCond.operator || '=', report.form_data, config)) secMatch = true;
+                  if (evaluarCondicion(null, config?.fields?.[realSecBaseId], secCondition || '', secCond.operator || '=', report.form_data, config)) secMatch = true;
               }
 
               if (!secMatch) {
@@ -234,9 +383,27 @@ export function obtenerCategoriasReporte(
         }
       }
 
-      if (matches > 0 && rule.category) {
-        const normRuleCat = normalizarCategoria(rule.category);
-        rulesByCat.set(normRuleCat, (rulesByCat.get(normRuleCat) || 0) + matches);
+      const ruleCategories: string[] = [];
+      if (rule.category) {
+        ruleCategories.push(rule.category);
+      }
+      if (Array.isArray(rule.categories)) {
+        rule.categories.forEach(cat => {
+          if (cat && !ruleCategories.includes(cat)) {
+            ruleCategories.push(cat);
+          }
+        });
+      }
+
+      if (import.meta.env.DEV) {
+        console.log(`[STATS DEBUG] Regla para campo "${rule.field_id}" (${rule.operator} "${rule.condition}") -> Matches found: ${matches}. Categorías:`, ruleCategories);
+      }
+
+      if (matches > 0 && ruleCategories.length > 0) {
+        ruleCategories.forEach(cat => {
+          const normRuleCat = normalizarCategoria(cat);
+          rulesByCat.set(normRuleCat, (rulesByCat.get(normRuleCat) || 0) + matches);
+        });
       }
     }
     rulesByCat.forEach((m, cat) => add(cat, m));

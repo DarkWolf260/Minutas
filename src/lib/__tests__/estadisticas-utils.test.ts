@@ -183,49 +183,247 @@ describe('statistics-utils', () => {
                 ],
             });
 
-            // Matches primary but none of the OR conditions -> fail
+            // Matches primary but none of the OR conditions -> success (because of OR)
             const report1 = createMockReport({ form_data: { type: 'emergency', priority: 'low' } });
-            expect(obtenerCategoriasReporte(report1, template)).not.toContain('1.2 LLAMADAS DE EMERGENCIAS');
+            expect(obtenerCategoriasReporte(report1, template)).toContain('1.2 LLAMADAS DE EMERGENCIAS');
 
-            // Matches primary and one of the OR conditions -> success
-            const report2 = createMockReport({ form_data: { type: 'emergency', priority: 'high' } });
+            // Matches one of the OR conditions but not primary -> success (because of OR)
+            const report2 = createMockReport({ form_data: { type: 'inquiry', priority: 'high' } });
             expect(obtenerCategoriasReporte(report2, template)).toContain('1.2 LLAMADAS DE EMERGENCIAS');
 
-            // Matches primary and another OR condition -> success
-            const report3 = createMockReport({ form_data: { type: 'emergency', priority: 'critical' } });
-            expect(obtenerCategoriasReporte(report3, template)).toContain('1.2 LLAMADAS DE EMERGENCIAS');
+            // Matches neither -> fail
+            const report3 = createMockReport({ form_data: { type: 'inquiry', priority: 'low' } });
+            expect(obtenerCategoriasReporte(report3, template)).not.toContain('1.2 LLAMADAS DE EMERGENCIAS');
         });
 
         it('should handle complex rules with both conditions (AND) and orConditions (OR)', () => {
             const template = createMockTemplate({
                 statistics_rules: [
                     { 
-                        field_id: 'a', 
+                        field_id: 'c', 
                         operator: '=', 
-                        condition: '1', 
+                        condition: '3', 
                         category: 'CAT',
-                        conditions: [
-                            { field_id: 'b', operator: '=', condition: '2' }
-                        ],
                         or_conditions: [
-                            { field_id: 'c', operator: '=', condition: '3' },
                             { field_id: 'd', operator: '=', condition: '4' }
+                        ],
+                        conditions: [
+                            { field_id: 'a', operator: '=', condition: '1' },
+                            { field_id: 'b', operator: '=', condition: '2' }
                         ]
                     },
                 ],
             });
 
-            // a=1, b=2, c=3 (matches primary, AND, and one OR) -> success
-            const r1 = createMockReport({ form_data: { a: '1', b: '2', c: '3' } });
+            // c=3, d=1, a=1, b=2 (matches primary, fails OR but primary is true, matches both ANDs) -> success
+            const r1 = createMockReport({ form_data: { c: '3', d: '1', a: '1', b: '2' } });
             expect(obtenerCategoriasReporte(r1, template)).toContain('CAT');
 
-            // a=1, b=1, c=3 (fails AND) -> fail
-            const r2 = createMockReport({ form_data: { a: '1', b: '1', c: '3' } });
-            expect(obtenerCategoriasReporte(r2, template)).not.toContain('CAT');
+            // c=1, d=4, a=1, b=2 (fails primary, matches OR, matches both ANDs) -> success
+            const r2 = createMockReport({ form_data: { c: '1', d: '4', a: '1', b: '2' } });
+            expect(obtenerCategoriasReporte(r2, template)).toContain('CAT');
 
-            // a=1, b=2, c=1 (fails OR) -> fail
-            const r3 = createMockReport({ form_data: { a: '1', b: '2', c: '1' } });
+            // c=3, d=1, a=1, b=1 (matches primary, fails one AND) -> fail
+            const r3 = createMockReport({ form_data: { c: '3', d: '1', a: '1', b: '1' } });
             expect(obtenerCategoriasReporte(r3, template)).not.toContain('CAT');
+
+            // c=1, d=1, a=1, b=2 (fails both primary and OR) -> fail
+            const r4 = createMockReport({ form_data: { c: '1', d: '1', a: '1', b: '2' } });
+            expect(obtenerCategoriasReporte(r4, template)).not.toContain('CAT');
+        });
+
+        it('should resolve predefinedValues (such as {Municipio}) in primary condition, AND, and OR conditions', () => {
+            const template = createMockTemplate({
+                statistics_rules: [
+                    {
+                        field_id: 'Ubicación',
+                        operator: 'not_contains',
+                        condition: '{Municipio}',
+                        category: '6.2 TRASLADOS EXTRAURBANOS',
+                        or_conditions: [
+                            { field_id: 'Destino (1)', operator: 'not_contains', condition: '{Municipio}' }
+                        ]
+                    }
+                ]
+            });
+
+            // If Ubicación is 'Sotillo' and Municipio is 'Guanta', it should match extraurban.
+            const report = createMockReport({
+                form_data: {
+                    'Ubicación': 'Municipio Juan Antonio Sotillo, parroquia Puerto La Cruz',
+                    'section_1': [
+                        { 'Destino': 'Municipio Juan Antonio Sotillo, parroquia Puerto La Cruz' }
+                    ]
+                }
+            });
+
+            const config = createMockConfig({
+                fields: {
+                    'Ubicación': { label: 'Ubicación', type: 'text' },
+                    'Destino': { label: 'Destino', type: 'text' }
+                }
+            });
+
+            const predefinedValues = { 'municipio': 'Guanta' };
+
+            const result = obtenerCategoriasReporte(report, template, config, predefinedValues);
+            expect(result).toContain('6.2 TRASLADOS EXTRAURBANOS');
+        });
+
+        it('should resolve predefinedValues in the primary condition when there are no OR conditions', () => {
+            const template = createMockTemplate({
+                statistics_rules: [
+                    {
+                        field_id: 'Ubicación',
+                        operator: 'not_contains',
+                        condition: '{Municipio}',
+                        category: '6.2 TRASLADOS EXTRAURBANOS'
+                    }
+                ]
+            });
+
+            // Ubicación contains 'Municipio' but does not contain 'Guanta'
+            const report = createMockReport({
+                form_data: {
+                    'Ubicación': 'Municipio Juan Antonio Sotillo, parroquia Puerto La Cruz'
+                }
+            });
+
+            const config = createMockConfig({
+                fields: {
+                    'Ubicación': { label: 'Ubicación', type: 'text' }
+                }
+            });
+
+            const predefinedValues = { 'municipio': 'Guanta' };
+
+            const result = obtenerCategoriasReporte(report, template, config, predefinedValues);
+            expect(result).toContain('6.2 TRASLADOS EXTRAURBANOS');
+        });
+
+        it('should correctly evaluate sequential route legs using Destino* compared directly to {Destino*}', () => {
+            const template = createMockTemplate({
+                statistics_rules: [
+                    {
+                        field_id: 'Destino*',
+                        operator: '!=',
+                        condition: '{Destino*}',
+                        category: '6.2 TRASLADOS EXTRAURBANOS'
+                    }
+                ]
+            });
+
+            // Ubicación = Sotillo
+            // Destinos: [ Sotillo, Guanta ]
+            // Segments:
+            // 1. Sotillo -> Sotillo (matching, so not != -> no match)
+            // 2. Sotillo -> Guanta (Sotillo != Guanta -> matches extraurban!)
+            const report = createMockReport({
+                form_data: {
+                    'Ubicación': 'Sotillo',
+                    'section_1': [
+                        { 'Destino': 'Sotillo' },
+                        { 'Destino': 'Guanta' }
+                    ]
+                }
+            });
+
+            const config = createMockConfig({
+                fields: {
+                    'Ubicación': { label: 'Ubicación', type: 'text' },
+                    'Destino': { label: 'Destino', type: 'text' }
+                }
+            });
+
+            const result = obtenerCategoriasReporte(report, template, config);
+            expect(result.filter(c => c === '6.2 TRASLADOS EXTRAURBANOS').length).toBe(1);
+        });
+
+        it('should evaluate sequential route legs using Destino* compared to {Municipio} with positive operator (=)', () => {
+            const template = createMockTemplate({
+                statistics_rules: [
+                    {
+                        field_id: 'Destino*',
+                        operator: '=',
+                        condition: '{Municipio}',
+                        category: '6.1 TRASLADOS URBANOS'
+                    }
+                ]
+            });
+
+            // Ubicación = Bolívar
+            // Destinos: [ Bolívar, Sotillo, Bolívar, Bolívar ]
+            // Legs evaluated (startIdx = 1):
+            // Leg 1: Bolívar -> Sotillo (Bolívar == Bolívar && Sotillo == Bolívar -> False)
+            // Leg 2: Sotillo -> Bolívar (Sotillo == Bolívar && Bolívar == Bolívar -> False)
+            // Leg 3: Bolívar -> Bolívar (Bolívar == Bolívar && Bolívar == Bolívar -> True -> 1 match!)
+            const report = createMockReport({
+                form_data: {
+                    'Ubicación': 'Bolívar',
+                    'section_1': [
+                        { 'Destino': 'Bolívar' },
+                        { 'Destino': 'Sotillo' },
+                        { 'Destino': 'Bolívar' },
+                        { 'Destino': 'Bolívar' }
+                    ]
+                }
+            });
+
+            const config = createMockConfig({
+                fields: {
+                    'Ubicación': { label: 'Ubicación', type: 'text' },
+                    'Destino': { label: 'Destino', type: 'text' }
+                }
+            });
+
+            const predefinedValues = { 'municipio': 'Bolívar' };
+
+            const result = obtenerCategoriasReporte(report, template, config, predefinedValues);
+            expect(result.filter(c => c === '6.1 TRASLADOS URBANOS').length).toBe(1);
+        });
+
+        it('should evaluate sequential route legs using Destino* compared to {Municipio} with negative operator (!=)', () => {
+            const template = createMockTemplate({
+                statistics_rules: [
+                    {
+                        field_id: 'Destino*',
+                        operator: '!=',
+                        condition: '{Municipio}',
+                        category: '6.2 TRASLADOS EXTRAURBANOS'
+                    }
+                ]
+            });
+
+            // Ubicación = Bolívar
+            // Destinos: [ Bolívar, Sotillo, Bolívar, Bolívar ]
+            // Legs evaluated (startIdx = 1):
+            // Leg 1: Bolívar -> Sotillo (Bolívar != Bolívar || Sotillo != Bolívar -> True -> Match 1)
+            // Leg 2: Sotillo -> Bolívar (Sotillo != Bolívar || Bolívar != Bolívar -> True -> Match 2)
+            // Leg 3: Bolívar -> Bolívar (Bolívar != Bolívar || Bolívar != Bolívar -> False)
+            // Expected matches: 2
+            const report = createMockReport({
+                form_data: {
+                    'Ubicación': 'Bolívar',
+                    'section_1': [
+                        { 'Destino': 'Bolívar' },
+                        { 'Destino': 'Sotillo' },
+                        { 'Destino': 'Bolívar' },
+                        { 'Destino': 'Bolívar' }
+                    ]
+                }
+            });
+
+            const config = createMockConfig({
+                fields: {
+                    'Ubicación': { label: 'Ubicación', type: 'text' },
+                    'Destino': { label: 'Destino', type: 'text' }
+                }
+            });
+
+            const predefinedValues = { 'municipio': 'Bolívar' };
+
+            const result = obtenerCategoriasReporte(report, template, config, predefinedValues);
+            expect(result.filter(c => c === '6.2 TRASLADOS EXTRAURBANOS').length).toBe(2);
         });
     });
 
@@ -300,6 +498,3 @@ describe('statistics-utils', () => {
         });
     });
 });
-
-
-
