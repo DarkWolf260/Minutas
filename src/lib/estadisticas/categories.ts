@@ -1,6 +1,7 @@
-import type { Report, Template, TemplateConfig } from '@/lib/types';
+import type { Report, Template, TemplateConfig, Address } from '@/lib/types';
 import { normalizarParaComp, normalizarCategoria, resolverClavesInterpolacion, buscarValores } from './utils';
 import { evaluarCondicion } from './evaluator';
+import { resolverCategoriaTraslado } from './transfer-type-resolver';
 
 function obtenerBaseIdYVirtual(field_id: string): { baseId: string; isVirtual: boolean } {
   const norm = normalizarParaComp(field_id);
@@ -42,6 +43,58 @@ function obtenerValoresConSoporteVirtual(form_data: any, field_id: string, confi
   return buscarValores(form_data || {}, targetKeys);
 }
 
+interface TransferPoint {
+  value: string;
+  type?: string;
+}
+
+function findPointsWithTypes(
+  obj: any,
+  ubiKeys: Set<string>,
+  destKeys: Set<string>,
+  origenPoints: TransferPoint[],
+  destinoPoints: TransferPoint[],
+  rootObj?: any
+) {
+  if (!obj || typeof obj !== 'object') return;
+
+  if (Array.isArray(obj)) {
+    obj.forEach((item) => findPointsWithTypes(item, ubiKeys, destKeys, origenPoints, destinoPoints, rootObj));
+    return;
+  }
+
+  const root = rootObj || obj;
+
+  for (const key in obj) {
+    const normKey = normalizarParaComp(key);
+    const val = obj[key];
+
+    if (ubiKeys.has(normKey)) {
+      if (val && typeof val === 'string') {
+        const typeValueKey = Object.keys(obj).find(k => normalizarParaComp(k) === `${normKey}tipo`);
+        let manualType = typeValueKey ? obj[typeValueKey] : undefined;
+        if (!manualType && root) {
+          const rootTypeValueKey = Object.keys(root).find(k => normalizarParaComp(k) === `${normKey}tipo` || normalizarParaComp(k) === 'ubicaciontipo');
+          manualType = rootTypeValueKey ? root[rootTypeValueKey] : undefined;
+        }
+        origenPoints.push({ value: val, type: manualType });
+      }
+    } else if (destKeys.has(normKey)) {
+      if (val && typeof val === 'string') {
+        const typeValueKey = Object.keys(obj).find(k => normalizarParaComp(k) === `${normKey}tipo`);
+        let manualType = typeValueKey ? obj[typeValueKey] : undefined;
+        if (!manualType && root) {
+          const rootTypeValueKey = Object.keys(root).find(k => normalizarParaComp(k) === `${normKey}tipo` || normalizarParaComp(k) === 'destinotipo');
+          manualType = rootTypeValueKey ? root[rootTypeValueKey] : undefined;
+        }
+        destinoPoints.push({ value: val, type: manualType });
+      }
+    } else if (typeof val === 'object') {
+      findPointsWithTypes(val, ubiKeys, destKeys, origenPoints, destinoPoints, root);
+    }
+  }
+}
+
 /**
  * Resuelve las categorías estadísticas para un reporte basándose en las reglas de su plantilla.
  */
@@ -49,7 +102,8 @@ export function obtenerCategoriasReporte(
   report: Report,
   template?: Template,
   config?: TemplateConfig,
-  predefinedValues: Record<string, string> = {}
+  predefinedValues: Record<string, string> = {},
+  addresses: Address[] = []
 ): string[] {
   if (!template) return [];
 
@@ -431,6 +485,42 @@ export function obtenerCategoriasReporte(
         if (hasData || hasContent) add(section.statistics_category);
       }
     });
+  }
+
+  if (report.form_data) {
+    const ubiKeys = resolverClavesInterpolacion('Ubicación', config);
+    const destKeys = resolverClavesInterpolacion('Destino', config);
+    const origenPoints: TransferPoint[] = [];
+    const destinoPoints: TransferPoint[] = [];
+
+    findPointsWithTypes(report.form_data, ubiKeys, destKeys, origenPoints, destinoPoints);
+
+    if (origenPoints.length > 0 && destinoPoints.length > 0) {
+      const transferCounts = new Map<string, number>();
+      const allPoints = [origenPoints[0]!, ...destinoPoints];
+      for (let i = 0; i < allPoints.length - 1; i++) {
+        const origen = allPoints[i]!;
+        const destino = allPoints[i + 1]!;
+        if (!origen.value || !destino.value) continue;
+
+        const categoria = resolverCategoriaTraslado(
+          origen.value,
+          destino.value,
+          origen.type,
+          destino.type,
+          addresses
+        );
+
+        if (categoria) {
+          const normCat = normalizarCategoria(categoria);
+          transferCounts.set(normCat, (transferCounts.get(normCat) || 0) + 1);
+          if (import.meta.env.DEV) {
+            console.log(`[STATS DEBUG] Tipo traslado Tramo ${i}: "${origen.value}" (${origen.type}) -> "${destino.value}" (${destino.type}) => ${categoria}`);
+          }
+        }
+      }
+      transferCounts.forEach((count, cat) => add(cat, count));
+    }
   }
 
   // Aplanar conteos en el array final

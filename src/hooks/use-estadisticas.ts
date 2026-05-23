@@ -3,6 +3,7 @@ import { useReports } from '@/hooks/use-reports';
 import { useTemplates } from '@/hooks/use-templates';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useGuardHistory } from '@/hooks/use-guard-history';
+import { useAddresses } from '@/hooks/use-addresses';
 import { calcularEstadisticasMensuales } from '@/lib/estadisticas-utils';
 
 export type ModoEstadistica = 'standard' | 'statistical';
@@ -12,6 +13,7 @@ export function useEstadisticas() {
   const { reports: reportesGuardados, isLoaded: historialCargado } = useGuardHistory();
   const { templates, configs, isLoaded: plantillasCargadas } = useTemplates();
   const { definitions, isLoaded: definicionesCargadas } = useFieldDefinitions();
+  const { addresses, isLoaded: direccionesCargadas } = useAddresses();
 
   const [anio, setAnio] = useState(new Date().getFullYear());
   const [mes, setMes] = useState(new Date().getMonth()); // 0-11
@@ -47,7 +49,7 @@ export function useEstadisticas() {
   ];
 
   const estadisticas = useMemo(() => {
-    if (!reportesCargados || !plantillasCargadas || !definicionesCargadas || !historialCargado) return null;
+    if (!reportesCargados || !plantillasCargadas || !definicionesCargadas || !historialCargado || !direccionesCargadas) return null;
     return calcularEstadisticasMensuales(
       reports,
       templates,
@@ -56,7 +58,8 @@ export function useEstadisticas() {
       anio,
       modo,
       configuracionesGlobales,
-      reportesGuardados
+      reportesGuardados,
+      addresses
     );
   }, [
     reports,
@@ -70,6 +73,8 @@ export function useEstadisticas() {
     historialCargado,
     plantillasCargadas,
     definicionesCargadas,
+    direccionesCargadas,
+    addresses,
     configuracionesGlobales
   ]);
 

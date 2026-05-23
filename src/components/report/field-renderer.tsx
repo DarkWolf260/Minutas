@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
 import {
     FieldConfig,
     StaffRole,
@@ -208,6 +209,12 @@ export const FieldRenderer = memo(
         ) => {
             const lowerfield_id = field_id.toLowerCase();
             const addressFieldNames = ['ubicación', 'destino'];
+            const formContext = useFormContext();
+            const tipoPath = `${name}_tipo`;
+            const watchedTypeValue = useWatch({
+                control: formContext?.control,
+                name: tipoPath
+            });
 
             if (lowerfield_id === 'estadísticas' || lowerfield_id === 'estadisticas' || fieldConfig.label.toLowerCase() === 'estadísticas') {
                 return <EstadisticasField value={value} onChange={onChange} disabled={disabled} className={className} />;
@@ -277,10 +284,13 @@ export const FieldRenderer = memo(
             // If type is explicitly something other than 'text', prioritize the switch
             if (fieldConfig.type && fieldConfig.type !== 'text') {
                 if (fieldConfig.type === 'textarea' && addressFieldNames.includes(lowerfield_id)) {
+                    const tipoPath = `${name}_tipo`;
                     return (
                         <AddressInput
                             value={(typeof value === 'string' ? value : '')}
                             onChange={onChange}
+                            onTypeChange={(tipo) => setValue(tipoPath, tipo)}
+                            typeValue={String(watchedTypeValue ?? '')}
                             disabled={disabled}
                             className={className}
                             placeholder="Selecciona o escribe una dirección..."
@@ -411,10 +421,13 @@ export const FieldRenderer = memo(
             }
 
             if (addressFieldNames.includes(lowerfield_id)) {
+                const tipoPath = `${name}_tipo`;
                 return (
                     <AddressInput
                         value={(typeof value === 'string' ? value : '')}
                         onChange={onChange}
+                        onTypeChange={(tipo) => setValue(tipoPath, tipo)}
+                        typeValue={String(watchedTypeValue ?? '')}
                         disabled={disabled}
                         className={className}
                         placeholder="Selecciona o escribe una dirección..."
