@@ -4,7 +4,6 @@ import React from 'react';
 import { ChevronLeft, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { TemplateEditor } from '@/components/template/template-editor';
@@ -21,9 +20,6 @@ export default function PlantillasPage() {
   const { 
     tabActiva, 
     setTabActiva, 
-    estaAutenticado, 
-    usuario, 
-    cerrarSesion, 
     idPlantillaSeleccionada,
     setIdPlantillaSeleccionada,
     plantillaSeleccionada,
@@ -35,36 +31,32 @@ export default function PlantillasPage() {
   } = hook;
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden">
+    <div className="flex flex-col min-h-screen md:h-full bg-background overflow-y-auto md:overflow-hidden relative">
       <Tabs
         value={tabActiva}
         onValueChange={setTabActiva}
-        className="flex-1 flex flex-col min-h-0"
+        className="flex-1 flex flex-col md:overflow-hidden"
       >
-        {/* Cabecera (SRP) */}
-        <PlantillasHeader 
-          estaAutenticado={estaAutenticado} 
-          usuario={usuario} 
-          cerrarSesion={cerrarSesion} 
-        />
+        <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-32 sm:pb-10 flex flex-col md:flex-1 md:min-h-0">
+          {/* Cabecera (SRP) */}
+          <PlantillasHeader />
 
-        <TabsContent
-          value="editor"
-          className="flex-1 h-full min-h-0 m-0 p-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
-        >
-          <div className="flex flex-1 min-h-0 overflow-hidden h-full sm:p-4 sm:pt-0 gap-6">
+          <TabsContent
+            value="editor"
+            className="mt-0 focus-visible:outline-none ring-offset-background data-[state=active]:flex data-[state=active]:flex-col sm:data-[state=active]:flex-row md:data-[state=active]:flex-1 md:min-h-0 bg-transparent animate-in fade-in slide-in-from-left-4 duration-500 ease-in-out gap-6"
+          >
             {/* Sidebar (SRP) */}
             <PlantillasSidebar hook={hook} />
 
             <main
               className={cn(
-                'flex-1 h-full min-h-0 min-w-0 relative',
+                'flex-1 min-h-[400px] md:h-full min-w-0 relative',
                 !idPlantillaSeleccionada ? 'hidden sm:block' : 'block'
               )}
             >
               {/* Cabecera Móvil */}
               {idPlantillaSeleccionada && (
-                <div className="sm:hidden border-b p-4 bg-card flex items-center justify-between h-16 shrink-0">
+                <div className="sm:hidden border-b p-4 bg-card flex items-center justify-between h-16 shrink-0 rounded-t-lg">
                   <Button variant="ghost" size="sm" onClick={() => setIdPlantillaSeleccionada(null)}>
                     <ChevronLeft className="mr-2 h-4 w-4" />
                     Volver
@@ -74,27 +66,23 @@ export default function PlantillasPage() {
               )}
               
               {plantillaSeleccionada ? (
-                <div className="absolute inset-0 p-4 sm:p-0">
-                   <ScrollArea className="h-full w-full" type="always">
-                      <div className="p-1">
-                        <TemplateEditor
-                          key={plantillaSeleccionada.id}
-                          template={plantillaSeleccionada}
-                          config={
-                            (hook.configs[plantillaSeleccionada.id] || {
-                              fields: {},
-                              sections: [],
-                              layout: [],
-                            }) as any
-                          }
-                          onConfigChange={(config) => hook.updateTemplateConfig(plantillaSeleccionada.id, config)}
-                          onTemplateChange={hook.updateTemplate}
-                        />
-                      </div>
-                   </ScrollArea>
+                <div className="h-full">
+                  <TemplateEditor
+                    key={plantillaSeleccionada.id}
+                    template={plantillaSeleccionada}
+                    config={
+                      (hook.configs[plantillaSeleccionada.id] || {
+                        fields: {},
+                        sections: [],
+                        layout: [],
+                      }) as any
+                    }
+                    onConfigChange={(config) => hook.updateTemplateConfig(plantillaSeleccionada.id, config)}
+                    onTemplateChange={hook.updateTemplate}
+                  />
                 </div>
               ) : (
-                <Card className="h-full flex items-center justify-center sm:rounded-lg border-2 border-dashed">
+                <Card className="h-full min-h-[400px] flex items-center justify-center sm:rounded-lg border-2 border-dashed">
                   <CardContent className="text-center space-y-4 p-12">
                     <div className="h-20 w-20 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
                       <FileText className="h-10 w-10 text-muted-foreground/30" />
@@ -109,25 +97,21 @@ export default function PlantillasPage() {
                 </Card>
               )}
             </main>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent
-          value="builder"
-          className="flex-1 min-h-0 m-0 p-0 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col animate-in fade-in duration-300"
-        >
-          <div className="flex-1 relative overflow-hidden">
-            <div className="absolute inset-0 px-4 sm:px-6 lg:px-10 pb-32">
-              <TemplateBuilder
-                onOpenInfoDialog={() => setEsDialogOpenInfo(true)}
-                initialTemplate={plantillaEditando}
-                onUpdate={manejarActualizarContenidoPlantilla}
-                onAdd={addTemplate}
-                onCancel={manejarCancelarEdicion}
-              />
-            </div>
-          </div>
-        </TabsContent>
+          <TabsContent
+            value="builder"
+            className="mt-0 focus-visible:outline-none ring-offset-background data-[state=active]:flex data-[state=active]:flex-col md:data-[state=active]:flex-1 md:min-h-0 bg-transparent animate-in fade-in slide-in-from-right-4 duration-500 ease-in-out"
+          >
+            <TemplateBuilder
+              onOpenInfoDialog={() => setEsDialogOpenInfo(true)}
+              initialTemplate={plantillaEditando}
+              onUpdate={manejarActualizarContenidoPlantilla}
+              onAdd={addTemplate}
+              onCancel={manejarCancelarEdicion}
+            />
+          </TabsContent>
+        </div>
       </Tabs>
 
       {/* Capa de Modales (SRP) */}

@@ -62,9 +62,26 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.6.5';
+export const APP_VERSION = '1.7.1';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.7.1',
+    date: '22/05/2026',
+    changes: [
+      { type: 'mejora', text: 'Cálculo Inteligente de Traslados: El sistema ahora analiza de forma automática cada tramo de tu viaje (destino por destino) a partir de tu ubicación para determinar con total precisión si son urbanos o extraurbanos, omitiendo de forma limpia las filas vacías.' },
+    ],
+  },
+  {
+    version: '1.7.0',
+    date: '22/05/2026',
+    changes: [
+      { type: 'nueva', text: 'Actualización Manual PWA en Tiempo Real: Conectado el botón \'Buscar actualizaciones\' en Configuración para comprobar y descargar inmediatamente nuevos despliegues en Vercel con feedback y toasts interactivos.' },
+      { type: 'mejora', text: 'Consulta Inteligente de Área de Trabajo: Reducción drástica de pantallas emergentes molestas al refrescar la página, recordando la elección previa por pestaña (con sessionStorage) y solicitándola únicamente al iniciar sesión.' },
+      { type: 'corrección', text: 'Reducción de Spam en Consola: Mitigado el spam persistente de errores de conexión (`ERR_CONNECTION_REFUSED`) del Bot de WhatsApp cuando está offline mediante una caché modular de estado y algoritmo de retroceso exponencial.' },
+      { type: 'corrección', text: 'Condición de Carrera en Guardado: Resuelto el error donde los reportes marcados como \'Finalizados\' a veces se revertían a \'En proceso\', estabilizando la lógica de guardado automático en el visor de novedades.' },
+    ],
+  },
   {
     version: '1.6.5',
     date: '18/05/2026',

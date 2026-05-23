@@ -64,6 +64,7 @@ export const TemplateSchema = z.object({
         operator: z.enum(['=', '!=', 'filled', 'empty', 'not_empty', 'contains', 'not_contains', 'starts_with', 'ends_with', 'extract_value', '>', '<', '>=', '<=']).nullable().optional(),
         condition: z.string().nullable().optional(),
         category: z.string().nullable().optional(),
+        categories: z.array(z.string()).nullable().optional(),
         conditions: z.array(z.object({
             field_id: z.string().nullable().optional(),
             operator: z.enum(['=', '!=', 'filled', 'empty', 'not_empty', 'contains', 'not_contains', 'starts_with', 'ends_with', 'extract_value', '>', '<', '>=', '<=']).nullable().optional(),
