@@ -248,6 +248,7 @@ export interface Address {
   id: string;
   workspace_id?: string;
   name: string;
+  locationType?: string;
   street?: string;
   houseNumber?: string;
   municipality: string;

@@ -56,6 +56,29 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDirecciones } from '@/hooks/use-direcciones';
 
+const LOCATION_TYPE_CONFIG: Record<string, { label: string; className: string }> = {
+  centro_asistencial: {
+    label: 'Centro Asistencial',
+    className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25',
+  },
+  residencia: {
+    label: 'Residencia',
+    className: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/25',
+  },
+  lugar_publico: {
+    label: 'Lugar Público',
+    className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25',
+  },
+  institucion_comercio: {
+    label: 'Institución / Comercio',
+    className: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/25',
+  },
+  sede: {
+    label: 'Sede',
+    className: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/25',
+  },
+};
+
 const AddressMap = lazy(() => import('@/components/shared/address-map').then((mod) => ({ default: mod.AddressMap })));
 
 export default function DireccionesPage() {
@@ -228,13 +251,27 @@ function ListaDirecciones({ hook }: { hook: any }) {
                   >
                     <CardHeader className="p-4 bg-muted/10 group-hover:bg-muted/20 transition-colors">
                       <div className="flex justify-between items-start gap-3">
-                        <CardTitle className="flex items-start gap-2.5 text-base font-bold tracking-tight leading-snug">
-                          <MapPin className={cn(
-                            "h-4 w-4 mt-0.5 shrink-0 transition-colors",
-                            seleccionadaParaMapa?.id === direccion.id ? "text-primary" : "text-muted-foreground/70"
-                          )} />
-                          <span className="flex-1">{direccion.name}</span>
-                        </CardTitle>
+                        <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                          <CardTitle className="flex items-start gap-2.5 text-base font-bold tracking-tight leading-snug">
+                            <MapPin className={cn(
+                              "h-4 w-4 mt-0.5 shrink-0 transition-colors",
+                              seleccionadaParaMapa?.id === direccion.id ? "text-primary" : "text-muted-foreground/70"
+                            )} />
+                            <span className="flex-1">{direccion.name}</span>
+                          </CardTitle>
+                          {direccion.locationType && (() => {
+                            const typeConfig = LOCATION_TYPE_CONFIG[direccion.locationType!];
+                            if (!typeConfig) return null;
+                            return (
+                              <span className={cn(
+                                'ml-6 inline-flex self-start items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase transition-all duration-200',
+                                typeConfig.className
+                              )}>
+                                {typeConfig.label}
+                              </span>
+                            );
+                          })()}
+                        </div>
                         {direccion.latitude && direccion.longitude && (
                           <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] mt-1.5 shrink-0" title="Coordenadas disponibles" />
                         )}
