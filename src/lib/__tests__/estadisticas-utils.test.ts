@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { obtenerCategoriasReporte, calcularEstadisticasMensuales } from '../estadisticas-utils';
-import type { Report, Template, TemplateConfig } from '@/lib/types';
+import type { Report, Template, TemplateConfig, Address } from '@/lib/types';
 
 // Mock data factories
 function createMockReport(overrides: Partial<Report> = {}): Report {
@@ -424,6 +424,129 @@ describe('statistics-utils', () => {
 
             const result = obtenerCategoriasReporte(report, template, config, predefinedValues);
             expect(result.filter(c => c === '6.2 TRASLADOS EXTRAURBANOS').length).toBe(2);
+        });
+
+        describe('Automatic Transfer Category Inference (6.3-6.10)', () => {
+            const mockAddresses: Address[] = [
+                {
+                    id: 'addr-hospital',
+                    workspace_id: 'workspace-1',
+                    name: 'Hospital Central',
+                    municipality: 'Bolívar',
+                    parish: 'El Carmen',
+                    sector: 'Centro',
+                    street: 'Av. Principal',
+                    houseNumber: '12',
+                    peaceQuadrant: 'QP-01',
+                    locationType: 'centro_asistencial'
+                },
+                {
+                    id: 'addr-casa',
+                    workspace_id: 'workspace-1',
+                    name: 'Casa Familia Perez',
+                    municipality: 'Bolívar',
+                    parish: 'El Carmen',
+                    sector: 'Barrio Lindo',
+                    street: 'Calle 3',
+                    houseNumber: '45',
+                    peaceQuadrant: 'QP-02',
+                    locationType: 'residencia'
+                }
+            ];
+
+            it('should infer 6.4 when transferring from hospital to residence using directory lookup', () => {
+                const template = createMockTemplate();
+                const report = createMockReport({
+                    form_data: {
+                        'Ubicación': 'Municipio Bolívar, parroquia El Carmen, sector Centro, calle Av. Principal 12, Hospital Central, Cuadrante de Paz QP-01',
+                        'section_1': [
+                            { 'Destino': 'Municipio Bolívar, parroquia El Carmen, sector Barrio Lindo, calle Calle 3 45, Casa Familia Perez, Cuadrante de Paz QP-02' }
+                        ]
+                    }
+                });
+
+                const config = createMockConfig({
+                    fields: {
+                        'Ubicación': { label: 'Ubicación', type: 'text' },
+                        'Destino': { label: 'Destino', type: 'text' }
+                    }
+                });
+
+                const result = obtenerCategoriasReporte(report, template, config, {}, mockAddresses);
+                expect(result).toContain('6.4 DE CENTROS ASISTENCIALES A RESIDENCIAS');
+            });
+
+            it('should infer 6.6 when using manually entered type fallback in form_data', () => {
+                const template = createMockTemplate();
+                const report = createMockReport({
+                    form_data: {
+                        'Ubicación': 'Calle Cualquiera',
+                        'ubicacion_tipo': 'lugar_publico',
+                        'section_1': [
+                            { 'Destino': 'Hospital Desconocido' }
+                        ],
+                        'destino_tipo': 'centro_asistencial'
+                    }
+                });
+
+                const config = createMockConfig({
+                    fields: {
+                        'Ubicación': { label: 'Ubicación', type: 'text' },
+                        'Destino': { label: 'Destino', type: 'text' }
+                    }
+                });
+
+                const result = obtenerCategoriasReporte(report, template, config, {}, []);
+                expect(result).toContain('6.6 DE VÍA A CENTROS ASISTENCIALES');
+            });
+
+            it('should evaluate multi-leg route segments individually', () => {
+                const template = createMockTemplate();
+                const report = createMockReport({
+                    form_data: {
+                        'Ubicación': 'Municipio Bolívar, parroquia El Carmen, sector Centro, calle Av. Principal 12, Hospital Central, Cuadrante de Paz QP-01',
+                        'section_1': [
+                            { 'Destino': 'Municipio Bolívar, parroquia El Carmen, sector Centro, calle Av. Principal 12, Hospital Central, Cuadrante de Paz QP-01' },
+                            { 'Destino': 'Municipio Bolívar, parroquia El Carmen, sector Barrio Lindo, calle Calle 3 45, Casa Familia Perez, Cuadrante de Paz QP-02' }
+                        ]
+                    }
+                });
+
+                const config = createMockConfig({
+                    fields: {
+                        'Ubicación': { label: 'Ubicación', type: 'text' },
+                        'Destino': { label: 'Destino', type: 'text' }
+                    }
+                });
+
+                const result = obtenerCategoriasReporte(report, template, config, {}, mockAddresses);
+                expect(result).toContain('6.3 DE CENTROS ASISTENCIALES A CENTROS ASISTENCIALES');
+                expect(result).toContain('6.4 DE CENTROS ASISTENCIALES A RESIDENCIAS');
+            });
+
+            it('should count multiple legs of the same category multiple times', () => {
+                const template = createMockTemplate();
+                const report = createMockReport({
+                    form_data: {
+                        'Ubicación': 'Municipio Bolívar, parroquia El Carmen, sector Centro, calle Av. Principal 12, Hospital Central, Cuadrante de Paz QP-01',
+                        'section_1': [
+                            { 'Destino': 'Municipio Bolívar, parroquia El Carmen, sector Centro, calle Av. Principal 12, Hospital Central, Cuadrante de Paz QP-01' },
+                            { 'Destino': 'Municipio Bolívar, parroquia El Carmen, sector Centro, calle Av. Principal 12, Hospital Central, Cuadrante de Paz QP-01' }
+                        ]
+                    }
+                });
+
+                const config = createMockConfig({
+                    fields: {
+                        'Ubicación': { label: 'Ubicación', type: 'text' },
+                        'Destino': { label: 'Destino', type: 'text' }
+                    }
+                });
+
+                const result = obtenerCategoriasReporte(report, template, config, {}, mockAddresses);
+                const count63 = result.filter(c => c === '6.3 DE CENTROS ASISTENCIALES A CENTROS ASISTENCIALES').length;
+                expect(count63).toBe(2);
+            });
         });
     });
 

@@ -1,6 +1,6 @@
 import { DEFAULT_STATISTICS_CATEGORIES } from '@/lib/constants/statistics';
 import { getReportDateTime } from '@/lib/report-sorter';
-import type { Report, Template, TemplateConfig, GuardReport } from '@/lib/types';
+import type { Report, Template, TemplateConfig, GuardReport, Address } from '@/lib/types';
 import { obtenerCategoriasReporte } from './categories';
 
 /**
@@ -20,7 +20,8 @@ export function calcularEstadisticasMensuales(
   year: number,
   mode: 'standard' | 'statistical' = 'statistical',
   predefinedValues: Record<string, string> = {},
-  savedReports: GuardReport[] = []
+  savedReports: GuardReport[] = [],
+  addresses: Address[] = []
 ): MonthlyStats {
   const stats: MonthlyStats = new Map();
 
@@ -90,7 +91,7 @@ export function calcularEstadisticasMensuales(
 
     // 1. Procesar todas las categorías para este reporte (General, Sub, Reglas, Secciones)
     const config = configs[report.template_id];
-    const reportCategories = obtenerCategoriasReporte(report, template, config, predefinedValues);
+    const reportCategories = obtenerCategoriasReporte(report, template, config, predefinedValues, addresses);
     reportCategories.forEach(category => {
       if (!stats.has(category)) {
         stats.set(category, new Map());
@@ -150,7 +151,8 @@ export function calcularEstadisticasDia(
   reports: Report[],
   templates: Template[],
   configs: Record<string, TemplateConfig>,
-  predefinedValues: Record<string, string> = {}
+  predefinedValues: Record<string, string> = {},
+  addresses: Address[] = []
 ): Map<string, number> {
   const stats = new Map<string, number>();
 
@@ -159,7 +161,7 @@ export function calcularEstadisticasDia(
     
     const template = templates.find((t) => t.id === report.template_id);
     const config = configs[report.template_id];
-    const reportCategories = obtenerCategoriasReporte(report, template, config, predefinedValues);
+    const reportCategories = obtenerCategoriasReporte(report, template, config, predefinedValues, addresses);
     
     reportCategories.forEach(category => {
       stats.set(category, (stats.get(category) || 0) + 1);

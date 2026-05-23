@@ -23,6 +23,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { Address } from '@/lib/types';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -56,9 +63,18 @@ interface AddressFormDialogProps {
   initialCoords?: { lat: string; lng: string } | null;
 }
 
+export const LOCATION_TYPES = [
+  { value: 'centro_asistencial', label: 'Centro Asistencial' },
+  { value: 'residencia', label: 'Residencia' },
+  { value: 'lugar_publico', label: 'Lugar Público' },
+  { value: 'institucion_comercio', label: 'Institución / Comercio' },
+  { value: 'sede', label: 'Sede' },
+] as const;
+
 const addressSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, { message: 'El nombre es requerido.' }),
+  locationType: z.string().optional(),
   street: z.string().optional(),
   houseNumber: z.string().optional(),
   municipality: z.string().min(1, { message: 'El municipio es requerido.' }),
@@ -82,6 +98,7 @@ export function AddressFormDialog({
     resolver: zodResolver(addressSchema),
     defaultValues: {
       name: '',
+      locationType: '',
       street: '',
       houseNumber: '',
       municipality: '',
@@ -97,11 +114,15 @@ export function AddressFormDialog({
   useEffect(() => {
     if (isOpen) {
       if (address) {
-        form.reset(address);
+        form.reset({
+          ...address,
+          locationType: address.locationType || '',
+        });
       } else {
         form.reset({
           id: undefined,
           name: '',
+          locationType: '',
           street: '',
           houseNumber: '',
           municipality: '',
@@ -152,6 +173,30 @@ export function AddressFormDialog({
                         {...field}
                       />
                     </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="locationType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold">Tipo de Ubicación</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-background border-2 border-muted/50 focus:border-primary/50 transition-all h-10 rounded-xl px-4">
+                          <SelectValue placeholder="Seleccione el tipo de ubicación" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="backdrop-blur-xl">
+                        {LOCATION_TYPES.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage className="text-[10px]" />
                   </FormItem>
                 )}
