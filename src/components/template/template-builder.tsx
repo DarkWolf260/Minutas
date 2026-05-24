@@ -83,6 +83,8 @@ export function TemplateBuilder({
       is_active: true,
       statistics_category: initialTemplate?.statistics_category,
       statistics_rules: initialTemplate?.statistics_rules,
+      disable_main_stat_on_apoyo: initialTemplate?.disable_main_stat_on_apoyo,
+      disabled_sub_categories_on_apoyo: initialTemplate?.disabled_sub_categories_on_apoyo,
     }),
     [debouncedContent, templateName, initialTemplate, currentWorkspace]
   );
@@ -311,7 +313,7 @@ export function TemplateBuilder({
                       disabled={false}
                       controlledValues={{
                         Estatus: previewStatus,
-                        Enc: '(E)' // Default preview value for Chief Encargado
+                        Enc: '(E)', // Default preview value for Chief Encargado
                       }}
                     />
                   </CardContent>

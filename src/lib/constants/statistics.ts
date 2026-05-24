@@ -69,6 +69,7 @@ export const STATISTICS_SECTIONS: StatisticsSection[] = [
       { code: '7.8', label: 'EVENTOS EN LUGAR PUBLICO Y / O PRIVADO' },
       { code: '8', label: 'APOYO A OTRAS INSTITUCIONES' },
       { code: '8.1', label: 'APOYOS SOCIALES' },
+      { code: '8.2', label: 'APOYOS INSTITUCIONALES' },
       { code: '9', label: 'FUMIGACIONES' },
       { code: '9.1', label: 'INSTITUCIONES PÚBLICAS' },
       { code: '9.2', label: 'EMPRESAS PRIVADAS' },

@@ -95,7 +95,7 @@ function SeccionDistribucionPersonal({ hook }: { hook: any }) {
         onDragStart={manejarDragStart} 
         onDragEnd={manejarDragEnd}
       >
-        <ScrollArea className="flex-1 p-4 pt-0" type="always">
+        <ScrollArea className="flex-1 p-4 pt-4" type="always">
           <div className="grid grid-cols-1 gap-4">
             {roles
               .filter((r: StaffRole) => !r.is_hidden)

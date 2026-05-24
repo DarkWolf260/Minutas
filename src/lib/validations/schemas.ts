@@ -65,6 +65,9 @@ export const TemplateSchema = z.object({
         condition: z.string().nullable().optional(),
         category: z.string().nullable().optional(),
         categories: z.array(z.string()).nullable().optional(),
+        disable_on_apoyo: z.boolean().nullable().optional(),
+        disable_main_stat_on_apoyo: z.boolean().nullable().optional(),
+        disabled_sub_categories_on_apoyo: z.array(z.string()).nullable().optional(),
         conditions: z.array(z.object({
             field_id: z.string().nullable().optional(),
             operator: z.enum(['=', '!=', 'filled', 'empty', 'not_empty', 'contains', 'not_contains', 'starts_with', 'ends_with', 'extract_value', '>', '<', '>=', '<=']).nullable().optional(),

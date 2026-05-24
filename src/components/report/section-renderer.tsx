@@ -454,12 +454,14 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                                                 isFullWidth && 'sm:col-span-2'
                                             )}
                                         >
-                                            <Label htmlFor={path}>
-                                                {fieldConfig?.label || field_id}
-                                                {fieldConfig.required && (
-                                                    <span className="text-destructive ml-1">*</span>
-                                                )}
-                                            </Label>
+                                            {field_id.toLowerCase() !== 'apoyo_ins' && field_id.toLowerCase() !== 'apoyo_institucional' && (
+                                                <Label htmlFor={path}>
+                                                    {fieldConfig?.label || field_id}
+                                                    {fieldConfig.required && (
+                                                        <span className="text-destructive ml-1">*</span>
+                                                    )}
+                                                </Label>
+                                            )}
                                             <ReportFormField
                                                 path={path}
                                                 control={control}

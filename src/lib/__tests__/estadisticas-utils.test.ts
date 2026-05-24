@@ -548,6 +548,93 @@ describe('statistics-utils', () => {
                 expect(count63).toBe(2);
             });
         });
+
+        describe('Apoyo institucional filtering', () => {
+            it('should discard everything except 8.2 APOYOS INSTITUCIONALES when all individual toggles are enabled', () => {
+                const report = createMockReport({
+                    content: 'Some text (Apoyo institucional) here',
+                    form_data: { tipo: 'hurto' }
+                });
+                const template = createMockTemplate({
+                    statistics_category: '5 ATENCIONES AL PÚBLICO',
+                    statistics_sub_categories: ['8.1 APOYOS SOCIALES'],
+                    statistics_rules: [
+                        { field_id: 'tipo', condition: 'hurto', category: '5.1 ATENCIONES PREHOSPITALARIAS', disable_on_apoyo: true },
+                    ],
+                    disable_main_stat_on_apoyo: true,
+                    disabled_sub_categories_on_apoyo: ['8.1 APOYOS SOCIALES']
+                });
+                
+                const result = obtenerCategoriasReporte(report, template);
+                
+                expect(result).toEqual(['8.2 APOYOS INSTITUCIONALES']);
+            });
+
+            it('should discard main category but keep subcategories and rules when they are individually enabled', () => {
+                const report = createMockReport({
+                    content: 'Some text (Apoyo institucional) here',
+                    form_data: { tipo: 'hurto' }
+                });
+                const template = createMockTemplate({
+                    statistics_category: '5 ATENCIONES AL PÚBLICO',
+                    statistics_sub_categories: ['8.1 APOYOS SOCIALES'],
+                    statistics_rules: [
+                        { field_id: 'tipo', condition: 'hurto', category: '5.1 ATENCIONES PREHOSPITALARIAS', disable_on_apoyo: false },
+                    ],
+                    disable_main_stat_on_apoyo: true,
+                    disabled_sub_categories_on_apoyo: []
+                });
+                
+                const result = obtenerCategoriasReporte(report, template);
+                
+                expect(result).not.toContain('5 ATENCIONES AL PÚBLICO');
+                expect(result).toContain('8.1 APOYOS SOCIALES');
+                expect(result).toContain('5.1 ATENCIONES PREHOSPITALARIAS');
+                expect(result).toContain('8.2 APOYOS INSTITUCIONALES');
+            });
+
+            it('should keep main category but discard subcategories and rules when they are individually disabled', () => {
+                const report = createMockReport({
+                    content: 'Some text (Apoyo institucional) here',
+                    form_data: { tipo: 'hurto' }
+                });
+                const template = createMockTemplate({
+                    statistics_category: '5 ATENCIONES AL PÚBLICO',
+                    statistics_sub_categories: ['8.1 APOYOS SOCIALES'],
+                    statistics_rules: [
+                        { field_id: 'tipo', condition: 'hurto', category: '5.1 ATENCIONES PREHOSPITALARIAS', disable_on_apoyo: true },
+                    ],
+                    disable_main_stat_on_apoyo: false,
+                    disabled_sub_categories_on_apoyo: ['8.1 APOYOS SOCIALES']
+                });
+                
+                const result = obtenerCategoriasReporte(report, template);
+                
+                expect(result).toContain('5 ATENCIONES AL PÚBLICO');
+                expect(result).not.toContain('8.1 APOYOS SOCIALES');
+                expect(result).not.toContain('5.1 ATENCIONES PREHOSPITALARIAS');
+                expect(result).toContain('8.2 APOYOS INSTITUCIONALES');
+            });
+
+            it('should load support deactivation options from __meta__ rule in statistics_rules', () => {
+                const report = createMockReport({
+                    content: 'Some text (Apoyo institucional) here',
+                    form_data: { tipo: 'hurto' }
+                });
+                const template = createMockTemplate({
+                    statistics_category: '5 ATENCIONES AL PÚBLICO',
+                    statistics_sub_categories: ['8.1 APOYOS SOCIALES'],
+                    statistics_rules: [
+                        { field_id: 'tipo', condition: 'hurto', category: '5.1 ATENCIONES PREHOSPITALARIAS', disable_on_apoyo: true },
+                        { field_id: '__meta__', disable_main_stat_on_apoyo: true, disabled_sub_categories_on_apoyo: ['8.1 APOYOS SOCIALES'] } as any
+                    ]
+                });
+                
+                const result = obtenerCategoriasReporte(report, template);
+                
+                expect(result).toEqual(['8.2 APOYOS INSTITUCIONALES']);
+            });
+        });
     });
 
     describe('calculateMonthlyStats', () => {

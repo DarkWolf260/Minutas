@@ -62,9 +62,19 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.7.1';
+export const APP_VERSION = '1.7.5';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.7.5',
+    date: '24/05/2026',
+    changes: [
+      { type: 'nueva', text: 'Nuevo Botón de "Apoyo Institucional" en los Reportes: Ahora puedes marcar un reporte como apoyo directamente desde el formulario. Esto colocará el texto "(Apoyo institucional)" de forma automática en la minuta, sumará 1 punto a la estadística de apoyos institucionales y aplicará las reglas de descarte configuradas.' },
+      { type: 'nueva', text: 'Control de Estadísticas Flexible: Añadidos selectores en el editor de plantillas para decidir con total precisión qué estadísticas ignorar cuando el Apoyo Institucional está activo. Puedes apagar la estadística principal, subcategorías individuales ("Omitir Apoyo") o decidir regla por regla cuál ignorar ("Omitir por Apoyo").' },
+      { type: 'mejora', text: 'Sincronización en la Nube Transparente: Guardado automático de todas tus preferencias de exclusión de estadísticas directamente en la plantilla, permitiendo que tus configuraciones se guarden al instante y se sincronicen perfectamente en todos tus dispositivos y computadoras.' },
+      { type: 'mejora', text: 'Diseño de Interfaz Premium: Renovación del estilo visual en el editor de plantillas y en el formulario de reportes con una hermosa píldora naranja translúcida y transiciones fluidas.' },
+    ],
+  },
   {
     version: '1.7.1',
     date: '22/05/2026',

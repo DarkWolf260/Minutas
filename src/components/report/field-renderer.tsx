@@ -1,5 +1,6 @@
 import React, { memo, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
+import { cn } from '@/lib/utils';
 import {
     FieldConfig,
     StaffRole,
@@ -12,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { TimeHlvInput } from '@/components/ui/custom/time-hlv-input';
 import { DatePicker } from '@/components/ui/custom/date-picker';
+import { Switch } from '@/components/ui/switch';
 import { MultiInput } from '@/components/ui/custom/multi-input';
 import {
     Select,
@@ -371,6 +373,35 @@ export const FieldRenderer = memo(
 
             if (lowerfield_id === 'estadísticas' || lowerfield_id === 'estadisticas' || fieldConfig.label.toLowerCase() === 'estadísticas') {
                 return <EstadisticasField value={value} onChange={onChange} disabled={disabled} className={className} />;
+            }
+
+            if (lowerfield_id === 'apoyo_ins' || lowerfield_id === 'apoyo_institucional' || fieldConfig.label.toLowerCase() === 'apoyo_ins' || fieldConfig.label.toLowerCase() === 'apoyo institucional') {
+                const isActive = value === '(Apoyo institucional)';
+                return (
+                    <div className={cn(
+                        "flex items-center justify-between px-4 py-2.5 rounded-xl border transition-all duration-300 max-w-sm",
+                        isActive 
+                            ? "bg-orange-500/5 border-orange-500/20 text-orange-600 dark:text-orange-400" 
+                            : "bg-muted/10 border-muted text-muted-foreground"
+                    )}>
+                        <span className={cn(
+                            "text-xs font-bold uppercase tracking-tight transition-colors duration-300",
+                            isActive ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground/80"
+                        )}>
+                            Apoyo institucional
+                        </span>
+                        <Switch
+                            id={field_id}
+                            checked={isActive}
+                            onCheckedChange={(checked) => onChange(checked ? '(Apoyo institucional)' : '')}
+                            disabled={disabled}
+                            className={cn(
+                                "data-[state=checked]:bg-orange-500",
+                                isActive && "ring-2 ring-orange-500/20"
+                            )}
+                        />
+                    </div>
+                );
             }
 
             // Derived property fields (e.g. "Director.sex") must never render as form inputs.

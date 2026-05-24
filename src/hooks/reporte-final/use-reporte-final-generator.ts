@@ -352,10 +352,22 @@ export function useReporteFinalGenerator({
   const manejarExportarWord = useCallback(async () => {
     if (!reporteGenerado) return;
     const { exportReportToWord } = await import('@/lib/export-word');
-    const filename = `Reporte de Cierre - ${format(new Date(), 'dd.MM.yyyy')}`;
+    // Usar la fecha del período de guardia activo (Orden del día) en el nombre del archivo
+    let fechaParaNombre: Date = new Date();
+    if (settings.guard_period) {
+      const parts = settings.guard_period.split(/ AL /i).map((p: string) => p.trim());
+      const firstPart = parts[0];
+      const match = firstPart?.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (match) {
+        const [_, d, m, y] = match;
+        const extracted = new Date(parseInt(y!, 10), parseInt(m!, 10) - 1, parseInt(d!, 10));
+        if (!isNaN(extracted.getTime())) fechaParaNombre = extracted;
+      }
+    }
+    const filename = `Reporte de Cierre - ${format(fechaParaNombre, 'dd.MM.yyyy')}`;
     await exportReportToWord(reporteGenerado, filename);
     toast.success('Reporte exportado a Word con éxito');
-  }, [reporteGenerado, activeGuard]);
+  }, [reporteGenerado, activeGuard, settings.guard_period]);
 
   const manejarFinalizarYGuardar = async () => {
     if (!reporteGenerado || !activeGuard) {

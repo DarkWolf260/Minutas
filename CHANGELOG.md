@@ -1,5 +1,15 @@
 # Historial de Cambios - Minutas
 
+## [1.7.5] - 2026-05-24
+
+### Añadido
+- **Nuevo Botón de "Apoyo Institucional" en los Reportes**: Ahora puedes marcar un reporte como apoyo directamente en el formulario con la etiqueta `{apoyo_ins}`. Esto colocará el texto "(Apoyo institucional)" de forma automática en la minuta, sumará 1 punto en las estadísticas de apoyos institucionales y aplicará las reglas de descarte seleccionadas.
+- **Control Total de Estadísticas**: En el editor de plantillas ahora puedes decidir con precisión qué estadísticas apagar cuando el Apoyo Institucional esté encendido. Puedes apagar la estadística principal, subcategorías individuales ("Omitir Apoyo") o decidir regla por regla cuál ignorar ("Omitir por Apoyo").
+- **Guardado y Sincronización en la Nube Mejorados**: Diseñamos un sistema inteligente que guarda tus preferencias de estadísticas de manera invisible dentro de la plantilla. Tus configuraciones se guardan al instante y se sincronizan perfectamente en todos tus dispositivos y computadoras.
+- **Diseño Visual Moderno**: Renovamos el estilo visual con hermosos botones de selección (Switches) y una atractiva píldora de color naranja translúcido con animación suave en el formulario de reportes.
+
+---
+
 ## [1.6.5] - 2026-05-18
 
 ### Añadido

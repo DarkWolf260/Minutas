@@ -28,6 +28,7 @@ import { BarChart3, Settings2, Plus, Trash2, ChevronDown, Save, Search, Check, X
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import type { StatisticRule } from '@/lib/types';
+import { Switch } from '@/components/ui/switch';
 
 const initialConfig: TemplateConfig = {
   fields: {},
@@ -189,15 +190,24 @@ export function TemplateEditor({
   onConfigChange: (config: TemplateConfig) => void;
   onTemplateChange: (template: Template) => void;
 }) {
-  const [localTemplate, setLocalTemplate] = useState<Template>(template);
+  const [localTemplate, setLocalTemplate] = useState<Template>(() => {
+    const rules = template.statistics_rules || [];
+    const metaRule = rules.find(r => r.field_id === '__meta__');
+    const disableMain = metaRule ? (metaRule as any).disable_main_stat_on_apoyo : template.disable_main_stat_on_apoyo;
+    const disabledSubs = metaRule ? (metaRule as any).disabled_sub_categories_on_apoyo : template.disabled_sub_categories_on_apoyo;
+    return {
+      ...template,
+      disable_main_stat_on_apoyo: disableMain ?? false,
+      disabled_sub_categories_on_apoyo: disabledSubs ?? [],
+      statistics_rules: rules.filter(r => r.field_id !== '__meta__')
+    };
+  });
   const [localConfig, setLocalConfig] = useState<TemplateConfig>(() => {
     return JSON.parse(JSON.stringify({ ...initialConfig, ...(config || {}) }));
   });
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    setLocalTemplate(template);
-
     // Parse the template to get live information from the content
     const result = parseTemplate(template.content);
     const { fieldNames, fieldTypes, fieldModifiers, fieldWidths, requiredFields, defaultValues, predefinedValues, sections: parsedSections } = result;
@@ -241,12 +251,36 @@ export function TemplateEditor({
       };
     });
 
+    const rules = template.statistics_rules || [];
+    const metaRule = rules.find(r => r.field_id === '__meta__');
+    const disableMain = metaRule ? (metaRule as any).disable_main_stat_on_apoyo : template.disable_main_stat_on_apoyo;
+    const disabledSubs = metaRule ? (metaRule as any).disabled_sub_categories_on_apoyo : template.disabled_sub_categories_on_apoyo;
+
+    setLocalTemplate({
+      ...template,
+      disable_main_stat_on_apoyo: disableMain ?? false,
+      disabled_sub_categories_on_apoyo: disabledSubs ?? [],
+      statistics_rules: rules.filter(r => r.field_id !== '__meta__')
+    });
+
     setHasChanges(false);
   }, [template]);
 
   const handleSaveChanges = () => {
+    const cleanRules = localTemplate.statistics_rules || [];
+    const metaRule = {
+      field_id: '__meta__',
+      disable_main_stat_on_apoyo: localTemplate.disable_main_stat_on_apoyo,
+      disabled_sub_categories_on_apoyo: localTemplate.disabled_sub_categories_on_apoyo
+    };
+
+    const finalTemplate = {
+      ...localTemplate,
+      statistics_rules: [...cleanRules, metaRule]
+    };
+
     onConfigChange(localConfig);
-    onTemplateChange(localTemplate);
+    onTemplateChange(finalTemplate);
     setHasChanges(false);
     toast.success("Cambios guardados correctamente");
   };
@@ -339,6 +373,28 @@ export function TemplateEditor({
                 />
               </div>
 
+              {/* Omitir por Apoyo Institucional - Principal */}
+              <div className="flex items-center justify-between px-3.5 py-2.5 bg-muted/20 border border-muted/50 rounded-xl animate-in fade-in duration-300">
+                <div className="flex flex-col space-y-0.5 max-w-[80%]">
+                  <Label htmlFor="disable-main-stat-on-apoyo" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 cursor-pointer">
+                    Omitir Estadística Principal
+                  </Label>
+                  <span className="text-[9px] text-muted-foreground leading-normal">
+                    Desactiva la categoría estadística principal por defecto si se marca "Apoyo institucional"
+                  </span>
+                </div>
+                <Switch
+                  id="disable-main-stat-on-apoyo"
+                  checked={!!localTemplate.disable_main_stat_on_apoyo}
+                  onCheckedChange={(checked) => {
+                    setLocalTemplate((p) => ({ ...p, disable_main_stat_on_apoyo: checked }));
+                    setHasChanges(true);
+                  }}
+                  className="data-[state=checked]:bg-orange-500"
+                />
+              </div>
+
+
               {/* Sub-categorías */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -373,6 +429,27 @@ export function TemplateEditor({
                           }}
                           placeholder="Selecciona sub-categoría..."
                           className="rounded-xl h-9 text-xs bg-muted/30 hover:bg-background"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-muted/20 px-3 py-1 rounded-xl border border-muted/50 shrink-0 h-9 shadow-sm">
+                        <Label htmlFor={`disable-sub-apoyo-${idx}`} className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/75 cursor-pointer">
+                          Omitir Apoyo
+                        </Label>
+                        <Switch
+                          id={`disable-sub-apoyo-${idx}`}
+                          checked={(localTemplate.disabled_sub_categories_on_apoyo || []).includes(sub)}
+                          onCheckedChange={(checked) => {
+                            const currentDisabled = [...(localTemplate.disabled_sub_categories_on_apoyo || [])];
+                            let nextDisabled: string[];
+                            if (checked) {
+                              nextDisabled = currentDisabled.includes(sub) ? currentDisabled : [...currentDisabled, sub];
+                            } else {
+                              nextDisabled = currentDisabled.filter(c => c !== sub);
+                            }
+                            setLocalTemplate(p => ({ ...p, disabled_sub_categories_on_apoyo: nextDisabled }));
+                            setHasChanges(true);
+                          }}
+                          className="scale-75 data-[state=checked]:bg-orange-500"
                         />
                       </div>
                       <Button
@@ -694,6 +771,24 @@ export function TemplateEditor({
 
                             {/* Duplicate / Delete Buttons */}
                             <div className="flex items-center justify-end gap-2 shrink-0 sm:pt-6">
+                              <div className="flex items-center gap-2 bg-muted/20 px-3 py-1 rounded-xl border border-muted/50 h-8 mr-2 shadow-sm animate-in fade-in duration-300">
+                                <Label htmlFor={`disable-rule-apoyo-${idx}`} className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/75 cursor-pointer">
+                                  Omitir por Apoyo
+                                </Label>
+                                <Switch
+                                  id={`disable-rule-apoyo-${idx}`}
+                                  checked={!!rule.disable_on_apoyo}
+                                  onCheckedChange={(checked) => {
+                                    const newRules = (localTemplate.statistics_rules || []).map((r, i) =>
+                                      i === idx ? { ...r, disable_on_apoyo: checked } : r
+                                    );
+                                    setLocalTemplate(p => ({ ...p, statistics_rules: newRules }));
+                                    setHasChanges(true);
+                                  }}
+                                  className="scale-75 data-[state=checked]:bg-orange-500"
+                                />
+                              </div>
+
                               <Button
                                 variant="ghost"
                                 size="sm"
