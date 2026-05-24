@@ -139,7 +139,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
             }
           }}
         >
-          <FormLayout 
+          <FormLayout
             finalConfig={finalConfig}
             controlledValues={controlledValues}
             allFormValues={getValues()}

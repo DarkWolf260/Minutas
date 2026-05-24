@@ -270,7 +270,14 @@ function resolvePropertyAccess(field_id: string, baseValue: form_dataValue): for
     if (Array.isArray(baseValue) && baseValue.length > 0) {
         const first = baseValue[0];
         if (first && typeof first === 'object') {
-            const val = (first as Record<string, unknown>)[prop] ?? (first as Record<string, unknown>)[prop.toLowerCase()];
+            const obj = first as Record<string, unknown>;
+            if (prop.toLowerCase() === 'cargo') {
+                const assignedRole = obj.role_id ?? obj.roleId;
+                if (assignedRole && assignedRole !== 'none') {
+                    return assignedRole as form_dataValue;
+                }
+            }
+            const val = obj[prop] ?? obj[prop.toLowerCase()];
             return val as form_dataValue;
         }
         // Fallback for string elements in array: if requesting 'name', return the string itself
@@ -285,6 +292,12 @@ function resolvePropertyAccess(field_id: string, baseValue: form_dataValue): for
     // Plain object
     if (baseValue && typeof baseValue === 'object' && !Array.isArray(baseValue)) {
         const obj = baseValue as Record<string, unknown>;
+        if (prop.toLowerCase() === 'cargo') {
+            const assignedRole = obj.role_id ?? obj.roleId;
+            if (assignedRole && assignedRole !== 'none') {
+                return assignedRole as form_dataValue;
+            }
+        }
         const val = obj[prop] ?? obj[prop.toLowerCase()];
         return val as form_dataValue;
     }

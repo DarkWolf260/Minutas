@@ -54,9 +54,13 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
 
     const dataToInject: Record<string, any> = {};
 
-    const rehydrate = (member: StaffMember) => {
+    const rehydrate = (member: StaffMember, assignedRole?: string) => {
       const latest = personnel.find(p => p.id === member.id);
-      return JSON.parse(JSON.stringify(latest || member));
+      const rehydrated = JSON.parse(JSON.stringify(latest || member));
+      if (assignedRole) {
+        rehydrated.role_id = assignedRole;
+      }
+      return rehydrated;
     };
 
     // Inject specific roles
@@ -66,24 +70,27 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
       if (canonicalKey) {
         const staffList = activeStaff[canonicalKey] || [];
         if (staffList.length > 0 && staffList[0]) {
-          dataToInject[canonicalKey] = [rehydrate(staffList[0] as StaffMember)];
+          dataToInject[canonicalKey] = [rehydrate(staffList[0] as StaffMember, canonicalKey)];
         }
       }
     });
 
     if (settings.reportarole_ids && settings.reportarole_ids.length > 0) {
-      const reportingPersonnel: StaffMember[] = [];
-      settings.reportarole_ids.forEach((roleName) => {
+      let firstPerson: StaffMember | null = null;
+      let assignedRole: string | null = null;
+
+      for (const roleName of settings.reportarole_ids) {
         const staffKey = Object.keys(activeStaff).find(k => k.toLowerCase() === roleName.toLowerCase());
         const roleStaff = staffKey ? (activeStaff[staffKey] || []) : [];
-        reportingPersonnel.push(...roleStaff);
-      });
-      const uniqueReportingIds = Array.from(new Set(reportingPersonnel.map(p => p.id)));
-      if (uniqueReportingIds.length > 0) {
-        const firstPerson = reportingPersonnel.find(p => p.id === uniqueReportingIds[0]);
-        if (firstPerson) {
-          dataToInject['Reporta'] = [rehydrate(firstPerson as StaffMember)];
+        if (roleStaff.length > 0 && roleStaff[0]) {
+          firstPerson = roleStaff[0];
+          assignedRole = staffKey || roleName;
+          break;
         }
+      }
+
+      if (firstPerson && assignedRole) {
+        dataToInject['Reporta'] = [rehydrate(firstPerson, assignedRole)];
       } else {
         // Fallback: search in global personnel if activeStaff didn't yield results
         const globalMatches = personnel.filter(p => 

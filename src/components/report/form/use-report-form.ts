@@ -47,7 +47,7 @@ export function useReportForm({
 
   // 1. Staff calculation
   const activeGuardStaff = useMemo(() => {
-    if (!settingsLoaded || !guardsLoaded || !draftLoaded || !settings?.active_guard_id) return [];
+    if (!settingsLoaded || !guardsLoaded || !draftLoaded || !personnelLoaded || !settings?.active_guard_id) return [];
 
     // Prioridad 1: Borrador independiente (solo si coincide con la guardia activa)
     // Prioridad 2: Borrador en settings (solo si coincide)
@@ -65,13 +65,15 @@ export function useReportForm({
       const role_id = roles.find((r: any) => r.name.trim().toLowerCase() === roleName.trim().toLowerCase())?.name || roleName;
       (staffList as any[]).forEach((person: any) => {
         if (!staffMap.has(person.id)) {
-          staffMap.set(person.id, { ...person, role_id });
+          const latest = personnel.find(p => p.id === person.id);
+          const rehydratedPerson = latest ? { ...latest } : { ...person };
+          staffMap.set(person.id, { ...rehydratedPerson, role_id });
         }
       });
     });
 
     return Array.from(staffMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [settings?.active_guard_id, settings?.orden_del_dia_draft, cloudDraft, guards, settingsLoaded, guardsLoaded, draftLoaded, roles]);
+  }, [settings?.active_guard_id, settings?.orden_del_dia_draft, cloudDraft, guards, settingsLoaded, guardsLoaded, draftLoaded, roles, personnel, personnelLoaded]);
 
   // 2. Template Parsing (Memoized separately)
   const parsedTemplate = useMemo(() => {
@@ -190,14 +192,6 @@ export function useReportForm({
   // 4. Initial Values Logic
   const getInitialValues = useCallback(
     (data?: form_dataRecord) => {
-      const initialFormValues: form_dataRecord = data ? JSON.parse(JSON.stringify(data)) : {};
-
-      const activeStaff = (cloudDraft && cloudDraft.guard_id === settings?.active_guard_id)
-        ? cloudDraft.staff
-        : (settings?.active_guard_id && settings.orden_del_dia_draft && settings.orden_del_dia_draft.guard_id === settings.active_guard_id)
-          ? settings.orden_del_dia_draft.staff
-          : (settings?.active_guard_id ? guards.find((g) => g.id === settings.active_guard_id)?.staff : null);
-
       const safeClone = <T extends unknown>(v: T): T => {
         if (v === undefined || v === null) return v;
         try {
@@ -207,10 +201,44 @@ export function useReportForm({
         }
       };
 
-      const rehydrate = (member: any) => {
+      const rehydrate = (member: any, assignedRole?: string) => {
         const latest = personnel.find(p => p.id === member.id);
-        return safeClone(latest || member);
+        const rehydrated = safeClone(latest || member);
+        if (assignedRole) {
+          rehydrated.role_id = assignedRole;
+        }
+        return rehydrated;
       };
+
+      const rehydrateValue = (val: any): any => {
+        if (!val) return val;
+        if (Array.isArray(val)) {
+          return val.map(item => rehydrateValue(item));
+        }
+        if (typeof val === 'object' && val !== null) {
+          if ('id' in val && 'name' in val) {
+            const latest = personnel.find(p => p.id === val.id);
+            if (latest) {
+              return { ...safeClone(latest), role_id: val.role_id || latest.role_id };
+            }
+          }
+          return val;
+        }
+        return val;
+      };
+
+      const initialFormValues: form_dataRecord = {};
+      if (data) {
+        Object.entries(data).forEach(([key, val]) => {
+          initialFormValues[key] = rehydrateValue(val);
+        });
+      }
+
+      const activeStaff = (cloudDraft && cloudDraft.guard_id === settings?.active_guard_id)
+        ? cloudDraft.staff
+        : (settings?.active_guard_id && settings.orden_del_dia_draft && settings.orden_del_dia_draft.guard_id === settings.active_guard_id)
+          ? settings.orden_del_dia_draft.staff
+          : (settings?.active_guard_id ? guards.find((g) => g.id === settings.active_guard_id)?.staff : null);
 
       const MANUAL_FIELDS = ['técnico', 'auxiliar', 'conductor'];
 
@@ -240,7 +268,7 @@ export function useReportForm({
                 const staffKey = Object.keys(activeStaff).find(k => k.toLowerCase() === roleName.toLowerCase());
                 const staffList = staffKey ? activeStaff[staffKey] : undefined;
                 if (staffList && staffList.length > 0) {
-                  initialStaff = [rehydrate(staffList[0])];
+                  initialStaff = [rehydrate(staffList[0], staffKey || roleName)];
                   break;
                 }
               }
@@ -262,7 +290,7 @@ export function useReportForm({
               const staffList = staffKey ? activeStaff[staffKey] : undefined;
 
               if (Array.isArray(staffList) && staffList.length > 0) {
-                initialStaff = staffList.map((s: any) => rehydrate(s));
+                initialStaff = staffList.map((s: any) => rehydrate(s, staffKey || keyLower));
               } else if (typeof (staffList as any) === 'string' && (staffList as any).trim() !== '') {
                 initialStaff = [staffList as any];
               }
