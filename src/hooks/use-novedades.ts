@@ -379,7 +379,19 @@ export function useNovedades() {
         lineasParaWord.push({ text: '' });
       });
       
-      const filename = `Minutas ${format(new Date(), 'dd.MM.yyyy')}`;
+      // Usar la fecha del período de guardia activo (Orden del día) en el nombre del archivo
+      let fechaParaNombre: Date = new Date();
+      if (settings.guard_period) {
+        const parts = settings.guard_period.split(/ AL /i).map((p: string) => p.trim());
+        const firstPart = parts[0];
+        const match = firstPart?.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (match) {
+          const [_, d, m, y] = match;
+          const extracted = new Date(parseInt(y!, 10), parseInt(m!, 10) - 1, parseInt(d!, 10));
+          if (!isNaN(extracted.getTime())) fechaParaNombre = extracted;
+        }
+      }
+      const filename = `Minutas ${format(fechaParaNombre, 'dd.MM.yyyy')}`;
       await exportReportToWord(lineasParaWord, filename);
       toast.success('Todas las novedades han sido exportadas a Word');
     }, [reportesFiltrados, templates, configs, definitions, settings, activeGuard]),
