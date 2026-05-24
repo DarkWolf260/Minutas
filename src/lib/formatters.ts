@@ -89,7 +89,8 @@ export function formatStaffReporta(member: StaffMember | string): string {
   
   const parts: string[] = [];
   
-  if (member.cargo) parts.push(member.cargo);
+  const cargoOrRole = (member.role_id && member.role_id !== 'none') ? member.role_id : member.cargo;
+  if (cargoOrRole) parts.push(cargoOrRole);
   if (member.rank && member.rank !== 'Sin jerarquía') parts.push(member.rank);
   parts.push(member.name);
   if (member.cedula) parts.push(member.cedula);

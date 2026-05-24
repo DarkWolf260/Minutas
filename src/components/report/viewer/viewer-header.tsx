@@ -1,4 +1,4 @@
-import { Trash2, Eye, Save, CheckIcon, Send, X, MessageSquare, ChevronDown, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { Trash2, Eye, Save, CheckIcon, Send, X, MessageSquare, ChevronDown, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -20,7 +20,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Calendar } from '@/components/ui/calendar';
+import { DatePicker } from '@/components/ui/custom/date-picker';
 import { useState } from 'react';
 import { useScheduledMessages } from '@/hooks/use-scheduled-messages';
 
@@ -61,7 +61,16 @@ export const ViewerHeader = ({
 }: ViewerHeaderProps) => {
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [isListDialogOpen, setIsListDialogOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+
+  const getLocalTodayString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const [selectedDateStr, setSelectedDateStr] = useState<string>(getLocalTodayString());
   const [selectedTime, setSelectedTime] = useState("12:00");
 
   const { scheduledMessages, cancelMessage } = useScheduledMessages();
@@ -69,14 +78,18 @@ export const ViewerHeader = ({
   const pendingCount = scheduledMessages.filter(m => m.status === 'pending').length;
 
   const handleScheduleConfirm = () => {
-    if (!selectedDate || !onWhatsAppSchedule) return;
+    if (!selectedDateStr || !onWhatsAppSchedule) return;
 
     const [hours, minutes] = selectedTime.split(':').map(Number);
-    const dateToSchedule = new Date(selectedDate);
-    dateToSchedule.setHours(hours ?? 12, minutes ?? 0, 0, 0);
-
-    onWhatsAppSchedule(dateToSchedule);
-    setIsScheduleDialogOpen(false);
+    const [year, month, day] = selectedDateStr.split('-').map(Number);
+    
+    if (year !== undefined && month !== undefined && day !== undefined) {
+      const dateToSchedule = new Date();
+      dateToSchedule.setFullYear(year, month - 1, day);
+      dateToSchedule.setHours(hours ?? 12, minutes ?? 0, 0, 0);
+      onWhatsAppSchedule(dateToSchedule);
+      setIsScheduleDialogOpen(false);
+    }
   };
 
   return (
@@ -203,31 +216,43 @@ export const ViewerHeader = ({
           <div className="flex flex-col gap-4 py-4">
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium">Fecha</label>
-              <input
-                type="date"
-                value={selectedDate ? selectedDate.toISOString().split('T')[0] : ''}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    const [year, month, day] = e.target.value.split('-').map(Number);
-                    if (year !== undefined && month !== undefined && day !== undefined) {
-                      const date = new Date();
-                      date.setFullYear(year, month - 1, day);
-                      setSelectedDate(date);
-                    }
-                  } else {
-                    setSelectedDate(undefined);
-                  }
-                }}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              <DatePicker
+                value={selectedDateStr}
+                onChange={(val) => setSelectedDateStr(val)}
               />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium">Hora</label>
               <input
-                type="time"
+                type="text"
+                placeholder="--:--"
                 value={selectedTime}
-                onChange={(e) => setSelectedTime(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
+                  let formatted = digits;
+                  if (digits.length > 2) {
+                    formatted = `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
+                  }
+                  setSelectedTime(formatted);
+                }}
+                onBlur={() => {
+                  const digits = selectedTime.replace(/\D/g, '');
+                  if (!digits) return;
+                  
+                  let hours = parseInt(digits.slice(0, 2), 10);
+                  let minutes = parseInt(digits.slice(2, 4), 10);
+                  
+                  if (isNaN(hours)) hours = 12;
+                  if (hours > 23) hours = 23;
+                  
+                  if (isNaN(minutes)) minutes = 0;
+                  if (minutes > 59) minutes = 59;
+                  
+                  const formattedHours = String(hours).padStart(2, '0');
+                  const formattedMinutes = String(minutes).padStart(2, '0');
+                  setSelectedTime(`${formattedHours}:${formattedMinutes}`);
+                }}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
               />
             </div>
           </div>
@@ -235,7 +260,7 @@ export const ViewerHeader = ({
             <Button variant="outline" onClick={() => setIsScheduleDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleScheduleConfirm} disabled={!selectedDate}>
+            <Button onClick={handleScheduleConfirm} disabled={!selectedDateStr}>
               Confirmar
             </Button>
           </DialogFooter>
