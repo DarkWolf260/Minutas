@@ -327,9 +327,16 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
               });
             }
             return oldDoc;
+          },
+          2: function (oldDoc: any) {
+            // New fields (disable_on_apoyo, disable_main_stat_on_apoyo,
+            // disabled_sub_categories_on_apoyo) are optional/nullable — no
+            // data transformation needed; pass existing documents through.
+            return oldDoc;
           }
         }
       },
+
       lookups: {
         schema: lookupsSchema,
         conflictHandler: commonConflictHandler,
