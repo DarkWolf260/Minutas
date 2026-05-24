@@ -67,6 +67,8 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
           statistics_category: cloudTemplate.statistics_category || existing.statistics_category,
           statistics_sub_categories: cloudTemplate.statistics_sub_categories || existing.statistics_sub_categories,
           statistics_rules: cloudTemplate.statistics_rules || existing.statistics_rules,
+          disable_main_stat_on_apoyo: cloudTemplate.disable_main_stat_on_apoyo !== undefined ? cloudTemplate.disable_main_stat_on_apoyo : existing.disable_main_stat_on_apoyo,
+          disabled_sub_categories_on_apoyo: cloudTemplate.disabled_sub_categories_on_apoyo !== undefined ? cloudTemplate.disabled_sub_categories_on_apoyo : existing.disabled_sub_categories_on_apoyo,
         });
         if (!silent) toast.success(`Plantilla "${cloudTemplate.name}" actualizada.`);
       } else {
@@ -80,6 +82,8 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
           statistics_category: cloudTemplate.statistics_category,
           statistics_sub_categories: cloudTemplate.statistics_sub_categories,
           statistics_rules: cloudTemplate.statistics_rules,
+          disable_main_stat_on_apoyo: cloudTemplate.disable_main_stat_on_apoyo,
+          disabled_sub_categories_on_apoyo: cloudTemplate.disabled_sub_categories_on_apoyo,
         };
         await addTemplate(newTemplate);
         if (!silent) toast.success(`Plantilla "${cloudTemplate.name}" descargada.`);

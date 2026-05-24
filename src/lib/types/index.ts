@@ -213,6 +213,7 @@ export interface StatisticRule {
   categories?: string[] | null;
   conditions?: StatisticRuleCondition[] | null; // Additional secondary conditions (AND)
   or_conditions?: StatisticRuleCondition[] | null; // Additional secondary conditions (OR)
+  disable_on_apoyo?: boolean;
 }
 
 export interface Template {
@@ -226,6 +227,8 @@ export interface Template {
   statistics_category?: string | null;
   statistics_sub_categories?: string[] | null;
   statistics_rules?: StatisticRule[] | null;
+  disable_main_stat_on_apoyo?: boolean | null;
+  disabled_sub_categories_on_apoyo?: string[] | null;
 }
 
 export interface ReportDraft {

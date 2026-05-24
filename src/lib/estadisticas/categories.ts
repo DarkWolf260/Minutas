@@ -107,6 +107,20 @@ export function obtenerCategoriasReporte(
 ): string[] {
   if (!template) return [];
 
+  // Extract meta-options if stored in statistics_rules
+  const rules = template.statistics_rules || [];
+  const metaRule = rules.find(r => r.field_id === '__meta__');
+  const disableMain = metaRule 
+    ? (metaRule as any).disable_main_stat_on_apoyo 
+    : template.disable_main_stat_on_apoyo;
+  const disabledSubs = metaRule 
+    ? (metaRule as any).disabled_sub_categories_on_apoyo 
+    : template.disabled_sub_categories_on_apoyo;
+
+  const esApoyo = report.form_data?.apoyo_ins === '(Apoyo institucional)' || 
+                  report.form_data?.apoyo_institucional === '(Apoyo institucional)' || 
+                  report.content?.includes('(Apoyo institucional)');
+
   // Usar un Map para consolidar conteos por cadena de categoría
   const categoryCounts = new Map<string, number>();
 
@@ -119,10 +133,25 @@ export function obtenerCategoriasReporte(
     categoryCounts.set(norm, Math.max(categoryCounts.get(norm) || 0, count));
   };
 
-  // 1. Procesar Categoría General y Subcategorías de la Plantilla
-  if (template.statistics_category) add(template.statistics_category);
+  if (esApoyo) {
+    add('8.2 APOYOS INSTITUCIONALES');
+  }
+
+  // 1. Procesar Categoría General
+  if (template.statistics_category) {
+    if (!esApoyo || !disableMain) {
+      add(template.statistics_category);
+    }
+  }
+
+  // 2. Procesar Sub-categorías
   if (Array.isArray(template.statistics_sub_categories)) {
-    template.statistics_sub_categories.forEach(cat => add(cat));
+    template.statistics_sub_categories.forEach(cat => {
+      const currentDisabledSubs = disabledSubs || [];
+      if (!esApoyo || !currentDisabledSubs.includes(cat)) {
+        add(cat);
+      }
+    });
   }
 
   // 2. Procesar Reglas Condicionales
@@ -137,6 +166,8 @@ export function obtenerCategoriasReporte(
 
     for (const rule of template.statistics_rules) {
       if (!rule.field_id) continue;
+      if (rule.field_id === '__meta__') continue; // Skip metadata container
+      if (esApoyo && rule.disable_on_apoyo) continue;
 
       let rawCondition = rule.condition || (rule as any).value || '';
 

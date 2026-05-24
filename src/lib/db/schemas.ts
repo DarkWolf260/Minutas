@@ -89,6 +89,12 @@ export const templatesSchema = {
                     operator: { type: ['string', 'null'] },
                     condition: { type: ['string', 'null'] },
                     category: { type: ['string', 'null'] },
+                    disable_on_apoyo: { type: ['boolean', 'null'] },
+                    disable_main_stat_on_apoyo: { type: ['boolean', 'null'] },
+                    disabled_sub_categories_on_apoyo: {
+                        type: ['array', 'null'],
+                        items: { type: 'string' }
+                    },
                     categories: {
                         type: ['array', 'null'],
                         items: { type: 'string' }
