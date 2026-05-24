@@ -64,7 +64,7 @@ export const reportsSchema = {
 
 export const templatesSchema = {
     title: 'templates schema',
-    version: 1,
+    version: 2,
     primaryKey: 'id',
     type: 'object',
     properties: {
