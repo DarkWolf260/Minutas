@@ -6,9 +6,20 @@ const qrcode = require('qrcode-terminal');
 const app = express();
 const port = 3001;
 
-// Middleware para CORS y Private Network Access (PNA) para preflight OPTIONS
+// Middleware para CORS y Private Network Access (PNA) con Orígenes Permitidos Seguros
+const allowedOrigins = [
+  'http://localhost:5173', // Vite Local Dev
+  'http://localhost:3000', // Local Alternativo
+  'https://minutas.vercel.app' // Hosting de Producción (Reemplazar con tu dominio real)
+];
+
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-requested-with');
   res.setHeader('Access-Control-Allow-Private-Network', 'true');
