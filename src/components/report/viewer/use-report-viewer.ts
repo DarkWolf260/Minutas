@@ -59,7 +59,7 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
       Estatus: status,
       Enc: esJefeEncargado ? '(E)' : ''
     });
-    const newTitle = String(form_data.titulo || form_data.title || resolveTemplateTitle(template.name, form_data));
+    const newTitle = String(form_data.titulo || form_data.title || resolveTemplateTitle(template.name, form_data, config));
 
     const timeHlvFieldId = Object.keys(config.fields).find(id => config.fields[id]?.type === 'time-hlv') || 'Hora';
     const timeHlvField = config.fields[timeHlvFieldId];
@@ -175,7 +175,7 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
       Estatus: newStatus,
       Enc: esJefeEncargado ? '(E)' : ''
     });
-    const newTitle = String(form_data.titulo || form_data.title || resolveTemplateTitle(template.name, form_data));
+    const newTitle = String(form_data.titulo || form_data.title || resolveTemplateTitle(template.name, form_data, config));
     const finalReport: Report = {
       ...report,
       title: newTitle,

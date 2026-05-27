@@ -12,6 +12,7 @@ import {
   renderFinalReport as renderFinalFromModule
 } from './template/renderer';
 import { validateSyntax, validateSemantics } from './template/validator';
+import { findValueInform_data } from './report-sorter';
 
 // Cache for parsed templates to avoid redundant work
 const parseCache = new Map<string, TemplateParserResult>();
@@ -143,17 +144,9 @@ export function resolveTemplateTitle(
     const trimmed = colonParts[0] || '';
     const valueMode = colonParts[1]?.toLowerCase(); // 'value', 'val', 'label', 'key'
 
-    let val = formData[trimmed];
-    let actualFieldId = trimmed;
-
-    if (val === undefined || val === null || val === '') {
-      const lowerKey = trimmed.toLowerCase();
-      const key = Object.keys(formData).find(k => k.toLowerCase() === lowerKey);
-      if (key) {
-        val = formData[key];
-        actualFieldId = key;
-      }
-    }
+    const rawVal = findValueInform_data(formData, trimmed);
+    const val = rawVal !== null && rawVal !== undefined ? rawVal : undefined;
+    const actualFieldId = trimmed;
 
     let resolvedVal = '';
     if (val !== undefined && val !== null && val !== '') {

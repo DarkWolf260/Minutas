@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTemplate } from '../template-parser';
+import { parseTemplate, resolveTemplateTitle } from '../template-parser';
 
 describe('Template Parser', () => {
     describe('Basic Field Parsing', () => {
@@ -315,6 +315,57 @@ Reportado por: {reportante:upper}`;
             expect(result.errors).toHaveLength(0);
             const repeatableSection = result.sections.find((s) => s.is_repeatable);
             expect(repeatableSection).toBeDefined();
+        });
+    });
+
+    describe('resolveTemplateTitle', () => {
+        const mockFieldsConfig = {
+            fields: {
+                'Tipo de accidente': {
+                    id: 'Tipo de accidente',
+                    label: 'Tipo de accidente',
+                    type: 'dropdown',
+                    snippet_options: [
+                        { id: 'opt1', label: 'Colisión', value: 'tipo colisión' },
+                        { id: 'opt2', label: 'Vuelco', value: 'tipo vuelco' }
+                    ]
+                }
+            }
+        };
+
+        it('should resolve simple placeholder without config', () => {
+            const resolved = resolveTemplateTitle('Accidente {Tipo de accidente}', {
+                'Tipo de accidente': 'Colisión'
+            });
+            expect(resolved).toBe('Accidente Colisión');
+        });
+
+        it('should resolve option label with config by default', () => {
+            const resolved = resolveTemplateTitle('Accidente {Tipo de accidente}', {
+                'Tipo de accidente': 'Colisión'
+            }, mockFieldsConfig as any);
+            expect(resolved).toBe('Accidente Colisión');
+        });
+
+        it('should resolve option value using :value modifier', () => {
+            const resolved = resolveTemplateTitle('Accidente {Tipo de accidente:value}', {
+                'Tipo de accidente': 'Colisión'
+            }, mockFieldsConfig as any);
+            expect(resolved).toBe('Accidente tipo colisión');
+        });
+
+        it('should apply casing modifiers', () => {
+            const resolved = resolveTemplateTitle('Accidente {Tipo de accidente:value|upper}', {
+                'Tipo de accidente': 'Colisión'
+            }, mockFieldsConfig as any);
+            expect(resolved).toBe('Accidente TIPO COLISIÓN');
+        });
+
+        it('should resolve option value using :val modifier', () => {
+            const resolved = resolveTemplateTitle('Accidente {Tipo de accidente:val}', {
+                'Tipo de accidente': 'Colisión'
+            }, mockFieldsConfig as any);
+            expect(resolved).toBe('Accidente tipo colisión');
         });
     });
 });
