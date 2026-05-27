@@ -42,8 +42,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         if (error.code === 'PGRST116') { // Not found
           setStatus({
-            isAdmin: user.user_metadata?.is_admin === true,
-            isApproved: user.user_metadata?.is_approved === true,
+            isAdmin: false,
+            isApproved: false,
             loading: false,
             exists: false
           });

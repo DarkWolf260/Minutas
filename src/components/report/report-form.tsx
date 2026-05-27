@@ -59,14 +59,27 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       rolesLoaded,
       units,
       settings,
+      cloudDraft,
       isFocused,
       isLoaded
     } = hook;
 
     const { handleSubmit } = methods;
 
+    // Helper: resolves the correct encargado flag prioritizing cloudDraft
+    const getEsJefeEncargado = () => {
+      const borrador = (cloudDraft && cloudDraft.guard_id === settings?.active_guard_id)
+        ? cloudDraft
+        : ((settings?.orden_del_dia_draft as any) || (settings as any)?.ordenDelDiaDraft);
+      return !!(borrador?.es_jefe_encargado ?? borrador?.esJefeEncargado);
+    };
+
     const handleFormSubmit = (data: form_dataRecord) => {
-      const finalContent = renderFinalReport(template.content, data, finalConfig, predefinedValues);
+      const dynamicPredefinedValues = {
+        ...controlledValues,
+        Enc: getEsJefeEncargado() ? '(E)' : '',
+      };
+      const finalContent = renderFinalReport(template.content, data, finalConfig, predefinedValues, false, dynamicPredefinedValues);
       const title = String(data.titulo || data.title || template.name);
       onSubmit(data, finalContent, title);
     };
@@ -111,12 +124,9 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       getValues: getValues,
       getRenderedContent: () => {
         const form_data = getValues();
-        const borradorObj = (settings.orden_del_dia_draft as any) || (settings as any).ordenDelDiaDraft;
-        const esJefeEncargado = borradorObj?.es_jefe_encargado ?? borradorObj?.esJefeEncargado;
-
         const dynamicPredefinedValues = {
           ...controlledValues,
-          Enc: esJefeEncargado ? '(E)' : '',
+          Enc: getEsJefeEncargado() ? '(E)' : '',
         };
         return renderFinalReport(template.content, form_data, finalConfig, predefinedValues, false, dynamicPredefinedValues);
       },

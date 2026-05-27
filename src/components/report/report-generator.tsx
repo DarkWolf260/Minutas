@@ -47,8 +47,18 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
       handlePreviewClick,
       hasCompleted,
       debouncedSaveDraft,
-      settings
+      settings,
+      cloudDraft
     } = hook;
+
+    // Compute Enc the same way as the rest of the app:
+    // prioritize cloudDraft if it matches the active guard, otherwise fall back to local draft.
+    const encBorrador = (cloudDraft && cloudDraft.guard_id === settings?.active_guard_id)
+      ? cloudDraft
+      : ((settings?.orden_del_dia_draft as any) || (settings as any)?.ordenDelDiaDraft);
+    const encValue = encBorrador?.es_jefe_encargado ?? encBorrador?.esJefeEncargado
+      ? '(E)'
+      : '';
 
     useImperativeHandle(ref, () => ({
       submit: () => {
@@ -83,7 +93,7 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
               onDataChange={handleDataChange}
               controlledValues={{
                 Estatus: 'En proceso',
-                Enc: settings.orden_del_dia_draft?.es_jefe_encargado ? '(E)' : '',
+                Enc: encValue,
               }}
             />
           </CardContent>

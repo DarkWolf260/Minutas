@@ -28,8 +28,7 @@ export function useAdmin() {
         setIsAdmin(data?.is_admin || false);
       } catch (err) {
         console.error('Error checking admin status:', err);
-        // Fallback to metadata if profile check fails (transitional)
-        setIsAdmin(user.user_metadata?.is_admin === true);
+        setIsAdmin(false);
       } finally {
         setLoading(false);
       }

@@ -21,6 +21,61 @@ const STORAGE_KEY_ACTIVE = 'active-workspace';
 const STORAGE_KEY_LIST = 'workspaces-list';
 const DEFAULT_WORKSPACE = 'minutasdb';
 
+function wipeWorkspaceLocalData(workspaceId: string): Promise<void> {
+  return new Promise((resolve) => {
+    try {
+      const request = indexedDB.open('minutas');
+
+      request.onerror = (event) => {
+        logger.error(`Error opening IndexedDB to wipe workspace ${workspaceId}:`, event);
+        resolve();
+      };
+
+      request.onsuccess = (event: any) => {
+        const db = event.target.result;
+        
+        if (db.objectStoreNames.length === 0) {
+          db.close();
+          resolve();
+          return;
+        }
+
+        const transaction = db.transaction(db.objectStoreNames, 'readwrite');
+
+        transaction.onerror = (tEvent: any) => {
+          logger.error(`IndexedDB transaction error for workspace ${workspaceId}:`, tEvent);
+          resolve();
+        };
+
+        transaction.oncomplete = () => {
+          logger.info(`Successfully physically purged IndexedDB records for workspace: ${workspaceId}`);
+          db.close();
+          resolve();
+        };
+
+        Array.from(db.objectStoreNames).forEach((storeName: any) => {
+          const store = transaction.objectStore(storeName);
+          
+          const cursorRequest = store.openCursor();
+          cursorRequest.onsuccess = (cEvent: any) => {
+            const cursor = cEvent.target.result;
+            if (cursor) {
+              const doc = cursor.value;
+              if (doc && doc.workspace_id === workspaceId) {
+                cursor.delete();
+              }
+              cursor.continue();
+            }
+          };
+        });
+      };
+    } catch (err) {
+      logger.error(`Failed to physically wipe IndexedDB cache for workspace ${workspaceId}:`, err);
+      resolve();
+    }
+  });
+}
+
 export function DatabaseProvider({ children, setupMode = false }: DatabaseProviderProps) {
   const [db, setDb] = useState<MinutasDatabase | null>(null);
   const [currentWorkspace, setCurrentWorkspace] = useState<string>(DEFAULT_WORKSPACE);
@@ -64,6 +119,10 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
       
       // Add cloud IDs to the overall list if not present
       const cloudIds = cloudList.map(ws => ws.id);
+      
+      // Persist cloud workspace IDs for session expiration offline cleanup
+      localStorage.setItem('cloud-workspaces-ids', JSON.stringify(cloudIds));
+      
       setWorkspaces(prev => {
         const combined = Array.from(new Set([...prev, ...cloudIds]));
         localStorage.setItem(STORAGE_KEY_LIST, JSON.stringify(combined));
@@ -73,6 +132,67 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
     
     syncCloud();
   }, [isAuthenticated, user, fetchCloudWorkspaces]);
+
+  // Keep track of the last known cloud workspaces
+  const cloudWorkspacesRef = React.useRef<any[]>([]);
+  useEffect(() => {
+    if (cloudWorkspaces.length > 0) {
+      cloudWorkspacesRef.current = cloudWorkspaces;
+    }
+  }, [cloudWorkspaces]);
+
+  // Clean up only cloud workspaces from IndexedDB when logging out, keeping offline workspaces completely intact
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Retrieve cloud workspaces from both memory Ref and localStorage (handles expired sessions on app load)
+      let cloudIds: string[] = [];
+      
+      const cloudWss = cloudWorkspacesRef.current;
+      if (cloudWss && cloudWss.length > 0) {
+        cloudIds = cloudWss.map(ws => ws.id);
+      } else {
+        const savedCloudIds = localStorage.getItem('cloud-workspaces-ids');
+        if (savedCloudIds) {
+          try {
+            cloudIds = JSON.parse(savedCloudIds);
+          } catch (e) {
+            console.error('Failed to parse saved cloud workspaces IDs', e);
+          }
+        }
+      }
+
+      if (cloudIds.length === 0) return;
+
+      logger.info('Authentication state is inactive. Wiping cloud workspaces data locally to prevent sync ghosting...');
+      
+      const wipeAll = async () => {
+        for (const workspaceId of cloudIds) {
+          await wipeWorkspaceLocalData(workspaceId);
+        }
+        logger.info('Successfully cleared all local cloud workspace data from PC.');
+        cloudWorkspacesRef.current = [];
+        localStorage.removeItem('cloud-workspaces-ids');
+      };
+      
+      wipeAll();
+
+      // Switch workspace if the current one was cloud-based
+      if (cloudIds.includes(currentWorkspace)) {
+        setCurrentWorkspace(DEFAULT_WORKSPACE);
+        localStorage.setItem(STORAGE_KEY_ACTIVE, DEFAULT_WORKSPACE);
+      }
+
+      // Remove cloud workspaces from local storage lists
+      setWorkspaces(prev => {
+        const filtered = prev.filter(id => !cloudIds.includes(id));
+        if (!filtered.includes(DEFAULT_WORKSPACE)) {
+          filtered.unshift(DEFAULT_WORKSPACE);
+        }
+        localStorage.setItem(STORAGE_KEY_LIST, JSON.stringify(filtered));
+        return filtered;
+      });
+    }
+  }, [isAuthenticated, currentWorkspace]);
 
   useEffect(() => {
     let mounted = true;
@@ -122,7 +242,14 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
     let cancelled = false;
     let replicationInstance: { cancel: () => void } | null = null;
 
-    if (db && currentWorkspace && currentWorkspace !== DEFAULT_WORKSPACE) {
+    // Solo iniciar la replicación si la base de datos está lista y no es el workspace local por defecto.
+    // Si el workspace es en la nube (isCloud), requerimos obligatoriamente que el usuario esté autenticado.
+    const shouldReplicate = db && 
+      currentWorkspace && 
+      currentWorkspace !== DEFAULT_WORKSPACE && 
+      (!isCloud || isAuthenticated);
+
+    if (shouldReplicate) {
       logger.info(`Starting cloud replication for content in workspace: ${currentWorkspace}`);
       startWorkspaceReplication(db, currentWorkspace).then((res) => {
         if (cancelled) {
@@ -151,7 +278,7 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
         replicationRef.current = null;
       }
     };
-  }, [db, currentWorkspace, isCloud]);
+  }, [db, currentWorkspace, isCloud, isAuthenticated]);
 
   const switchWorkspace = async (name: string) => {
     if (name === currentWorkspace) return;
@@ -189,7 +316,9 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
   const deleteWorkspace = async (name: string) => {
     if (name === DEFAULT_WORKSPACE) return; // Don't delete default
     
-    // Close db if active (simplified for now, RxDB will handle it)
+    // Physical deletion from IndexedDB to free space and protect privacy
+    await wipeWorkspaceLocalData(name);
+    
     const newList = workspaces.filter((w: string) => w !== name);
     setWorkspaces(newList);
     localStorage.setItem(STORAGE_KEY_LIST, JSON.stringify(newList));
@@ -197,9 +326,6 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
     if (currentWorkspace === name) {
       await switchWorkspace(DEFAULT_WORKSPACE);
     }
-    
-    // Physical deletion from IndexedDB would require more logic, 
-    // but removing from list "hides" it and frees it for re-creation.
   };
 
   const exportWorkspace = async (name: string) => {

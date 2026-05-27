@@ -9,6 +9,7 @@ import { useScheduledMessages } from '@/hooks/use-scheduled-messages';
 import { toast } from 'sonner';
 
 // Componentes extraídos (SOLID)
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import { useReportViewer } from './viewer/use-report-viewer';
 import { ViewerHeader } from './viewer/viewer-header';
 import { ViewerContent } from './viewer/viewer-content';
@@ -49,6 +50,7 @@ export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewer
     settings
   } = hook;
 
+  const { isCloud } = useWorkspaceManager();
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
   const { scheduleMessage } = useScheduledMessages();
   const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
