@@ -51,6 +51,19 @@ export function useSyncTemplates() {
             statistics_category, statistics_rules, statistics_sub_categories 
           } = t;
           
+          // Safeguard: Find and remove any local template duplicate by name that has a mismatching ID
+          const existingByName = await db.templates.findOne({
+            selector: {
+              name: name,
+              id: { $ne: id }
+            }
+          }).exec();
+
+          if (existingByName) {
+            logger.info(`Deduplicating local template "${name}" (removing old ID "${existingByName.id}" in favor of cloud ID "${id}")`);
+            await existingByName.remove();
+          }
+
           await db.templates.upsert({
             id,
             name,

@@ -22,6 +22,7 @@ interface BotState {
   isAvailable: boolean;
   isLoading: boolean;
   isCloudActive: boolean;
+  conflictBotUrl: string | null;
 }
 
 let globalIsOffline = false;
@@ -38,6 +39,7 @@ let botState: BotState = {
   isAvailable: false,
   isLoading: true,
   isCloudActive: false,
+  conflictBotUrl: null,
 };
 
 const listeners = new Set<(state: BotState) => void>();
@@ -127,7 +129,8 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
             type: 'whatsapp_bot_status' as any,
             data: {
               isReady: true,
-              lastSeen: new Date().toISOString()
+              lastSeen: new Date().toISOString(),
+              botId: localUrl
             }
           }).catch(err => logger.error('Error writing bot heartbeat:', err));
         }
@@ -241,7 +244,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
   // 1. Suscribirse al estado del bot en la base de datos (Supabase Cloud)
   useEffect(() => {
     if (!db || !currentWorkspace || !isCloud) {
-      updateBotState({ isCloudActive: false });
+      updateBotState({ isCloudActive: false, conflictBotUrl: null });
       return;
     }
 
@@ -252,14 +255,19 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         const data = item.data || {};
         const lastSeen = new Date(data.lastSeen || 0).getTime();
         const isRecent = Date.now() - lastSeen < 120000; // 2 min TTL
-        updateBotState({ isCloudActive: !!data.isReady && isRecent });
+        const active = !!data.isReady && isRecent;
+        const conflict = active && data.botId && data.botId !== localUrl ? data.botId : null;
+        updateBotState({ 
+          isCloudActive: active,
+          conflictBotUrl: conflict
+        });
       } else {
-        updateBotState({ isCloudActive: false });
+        updateBotState({ isCloudActive: false, conflictBotUrl: null });
       }
     });
 
     return () => sub.unsubscribe();
-  }, [db, currentWorkspace, isCloud]);
+  }, [db, currentWorkspace, isCloud, localUrl]);
 
   // 2. Re-verificar la expiración del TTL cada 30 segundos
   useEffect(() => {
@@ -273,12 +281,17 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         const data = item.data || {};
         const lastSeen = new Date(data.lastSeen || 0).getTime();
         const isRecent = Date.now() - lastSeen < 120000;
-        updateBotState({ isCloudActive: !!data.isReady && isRecent });
+        const active = !!data.isReady && isRecent;
+        const conflict = active && data.botId && data.botId !== localUrl ? data.botId : null;
+        updateBotState({ 
+          isCloudActive: active,
+          conflictBotUrl: conflict
+        });
       }
     }, 30000);
 
     return () => clearInterval(timer);
-  }, [db, currentWorkspace, isCloud]);
+  }, [db, currentWorkspace, isCloud, localUrl]);
 
   // Load chats when ready locally
   useEffect(() => {
@@ -303,6 +316,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     loadChats,
     sendMessage,
     localUrl,
-    isCloudActive: state.isCloudActive
+    isCloudActive: state.isCloudActive,
+    conflictBotUrl: state.conflictBotUrl
   };
 }

@@ -93,7 +93,7 @@ export const MultiInput = forwardRef<HTMLInputElement, MultiInputProps>(
     );
 
     return (
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={(newOpen) => !disabled && setOpen(newOpen)}>
         <PopoverTrigger asChild>
           <div
             role="combobox"

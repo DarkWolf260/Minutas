@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Eye, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cleanTemplateName } from '@/lib/template-parser';
 import { ReportForm } from './report-form';
 import { ReportPreview } from './report-preview';
 
@@ -79,7 +80,7 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
         <Card className={cn("border bg-card shadow-sm font-inherit", hideHeader && "border-none shadow-none bg-transparent")}>
           {!hideHeader && (
             <CardHeader className="bg-card/50 border-b">
-              <CardTitle className="text-xl font-bold">{template.name}</CardTitle>
+              <CardTitle className="text-xl font-bold">{cleanTemplateName(template.name)}</CardTitle>
             </CardHeader>
           )}
           <CardContent className={cn("pt-8", hideHeader && "pt-0 p-0")}>
