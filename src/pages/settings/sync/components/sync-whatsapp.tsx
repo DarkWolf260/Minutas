@@ -66,6 +66,18 @@ export function SyncWhatsApp() {
       </CardHeader>
       
       <CardContent className="pt-5 space-y-4">
+        {bot.conflictBotUrl && (
+          <div className="flex items-start gap-3 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl text-xs leading-relaxed animate-in fade-in slide-in-from-top-2 duration-300">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 animate-pulse text-rose-500" />
+            <div>
+              <span className="font-bold">Conflicto de Bot Detectado:</span> Otro bot de WhatsApp diferente está conectado y activo en esta misma área de trabajo (Servidor: <code>{bot.conflictBotUrl}</code>). 
+              <p className="mt-1 font-semibold text-[11px] text-rose-500/90">
+                Tener múltiples bots con cuentas distintas en un mismo área causará fallas en el envío y desalineación de contactos.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Configuración de URL */}
         <div className="space-y-2 pb-2 border-b border-dashed border-emerald-500/10">
           <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
@@ -106,9 +118,29 @@ export function SyncWhatsApp() {
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                   Grupos y Chats Destino
                 </label>
-                <span className={`text-xs ${(settings?.whatsapp_default_chat_ids || []).length >= 5 ? 'text-amber-500 font-bold' : 'text-muted-foreground'}`}>
-                  {(settings?.whatsapp_default_chat_ids || []).length}/5 seleccionados
-                </span>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => bot.loadChats()}
+                    className="text-[10px] text-emerald-600 hover:text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1 transition-colors"
+                  >
+                    🔄 Recargar
+                  </button>
+                  <span className={`text-xs ${(settings?.whatsapp_default_chat_ids || []).length >= 5 ? 'text-amber-500 font-bold' : 'text-muted-foreground'}`}>
+                    {(settings?.whatsapp_default_chat_ids || []).length}/5 seleccionados
+                  </span>
+                  {(settings?.whatsapp_default_chat_ids || []).length > 0 && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await saveSettings({ whatsapp_default_chat_ids: [] });
+                      }}
+                      className="text-[10px] text-destructive hover:underline font-bold uppercase tracking-wider transition-colors"
+                    >
+                      Limpiar
+                    </button>
+                  )}
+                </div>
               </div>
               
               <div className="relative">

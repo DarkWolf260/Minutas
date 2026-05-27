@@ -4,6 +4,7 @@ import { getTemplateIcon } from '@/lib/utils';
 import type { Template } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { cleanTemplateName } from '@/lib/template-parser';
 
 interface TemplateListProps {
   templates: Template[];
@@ -59,7 +60,7 @@ export const TemplateList = ({ templates, onSelect, onNavigateToTemplates }: Tem
                 <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0">
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
-                <span className="font-semibold text-sm tracking-tight">{template.name}</span>
+                <span className="font-semibold text-sm tracking-tight">{cleanTemplateName(template.name)}</span>
               </button>
             );
           })}

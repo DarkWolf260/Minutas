@@ -8,10 +8,15 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/components/providers/theme-provider';
 import { useAuth } from '@/hooks/use-auth';
 import { useAdmin } from '@/hooks/use-admin';
+import { useWorkspaceManager } from '@/lib/db/db-context';
+import { Briefcase } from 'lucide-react';
 
 interface NavUserMenuProps {
   profile: any;
@@ -25,6 +30,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
   const { theme, setTheme } = useTheme();
   const { isAuthenticated, signOut } = useAuth();
   const { isAdmin } = useAdmin();
+  const { workspaces, currentWorkspace, switchWorkspace } = useWorkspaceManager();
   const navigate = useNavigate();
 
   return (
@@ -67,12 +73,38 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
         </DropdownMenuItem>
 
         {isAdmin && (
-          <DropdownMenuItem asChild className="py-2.5">
-            <Link to="/admin" className="cursor-pointer flex w-full items-center text-primary focus:text-primary">
-              <ShieldAlert className="mr-3 h-4 w-4" />
-              <span className="text-sm font-medium">Panel Admin</span>
-            </Link>
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuItem asChild className="py-2.5">
+              <Link to="/admin" className="cursor-pointer flex w-full items-center text-primary focus:text-primary">
+                <ShieldAlert className="mr-3 h-4 w-4" />
+                <span className="text-sm font-medium">Panel Admin</span>
+              </Link>
+            </DropdownMenuItem>
+            
+            {workspaces && workspaces.length > 0 && (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="py-2.5 cursor-pointer flex w-full items-center text-orange-500 focus:text-orange-500 data-[state=open]:text-orange-500 data-[state=open]:bg-orange-500/10">
+                  <Briefcase className="mr-3 h-4 w-4" />
+                  <span className="text-sm font-medium">Áreas de Trabajo</span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-56 mb-2">
+                  {workspaces.map((ws: string) => (
+                    <DropdownMenuItem
+                      key={ws}
+                      onClick={() => switchWorkspace(ws)}
+                      className={cn(
+                        "cursor-pointer py-2.5 flex items-center justify-between",
+                        currentWorkspace === ws ? "bg-primary/10 text-primary focus:bg-primary/20 focus:text-primary" : ""
+                      )}
+                    >
+                      <span className="text-sm font-medium truncate">{ws}</span>
+                      {currentWorkspace === ws && <span className="flex h-2 w-2 rounded-full bg-primary" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            )}
+          </>
         )}
 
         <DropdownMenuSeparator />

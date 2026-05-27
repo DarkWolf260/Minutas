@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { debounce, validateTimeHlv } from '@/lib/utils';
-import { renderFinalReport } from '@/lib/template-parser';
+import { renderFinalReport, resolveTemplateTitle } from '@/lib/template-parser';
 import { useTemplates } from '@/hooks/use-templates';
 import { useSettings } from '@/hooks/use-settings';
 import { useSyncManager } from '@/hooks/use-sync';
@@ -59,7 +59,7 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
       Estatus: status,
       Enc: esJefeEncargado ? '(E)' : ''
     });
-    const newTitle = String(form_data.titulo || form_data.title || template.name);
+    const newTitle = String(form_data.titulo || form_data.title || resolveTemplateTitle(template.name, form_data));
 
     const timeHlvFieldId = Object.keys(config.fields).find(id => config.fields[id]?.type === 'time-hlv') || 'Hora';
     const timeHlvField = config.fields[timeHlvFieldId];
@@ -175,7 +175,7 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
       Estatus: newStatus,
       Enc: esJefeEncargado ? '(E)' : ''
     });
-    const newTitle = String(form_data.titulo || form_data.title || template.name);
+    const newTitle = String(form_data.titulo || form_data.title || resolveTemplateTitle(template.name, form_data));
     const finalReport: Report = {
       ...report,
       title: newTitle,

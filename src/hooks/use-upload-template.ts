@@ -19,6 +19,7 @@ export function useUploadTemplate() {
         .upsert(
           [
             {
+              id: template.id,
               name: template.name,
               content: template.content,
               description: description || `Plantilla para reportes de ${template.name}`,

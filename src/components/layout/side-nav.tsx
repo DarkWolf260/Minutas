@@ -8,6 +8,9 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 import {
   History,
@@ -25,6 +28,7 @@ import {
   LogOut,
   ShieldAlert,
   Eclipse,
+  Briefcase,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/layout/notification-bell';
@@ -33,6 +37,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useAdmin } from '@/hooks/use-admin';
 import { useProfile } from '@/hooks/use-profile';
 import { useSettings } from '@/hooks/use-settings';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import { getInitials } from '@/lib/utils';
 import type { AppModuleId } from '@/lib/types';
 
@@ -53,6 +58,7 @@ export function SideNav() {
   const { settings } = useSettings();
   const { isAuthenticated, signOut, user } = useAuth();
   const { isAdmin } = useAdmin();
+  const { workspaces, currentWorkspace, switchWorkspace } = useWorkspaceManager();
 
   const disabled_modules = settings.disabled_modules || [];
   const navItems = ALL_NAV_ITEMS.filter((item) => !disabled_modules.includes(item.moduleId));
@@ -168,10 +174,36 @@ export function SideNav() {
                 <span>Configuración</span>
               </DropdownMenuItem>
               {isAdmin && (
-                <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer font-medium text-primary focus:text-primary">
-                  <ShieldAlert className="mr-2 h-4 w-4" />
-                  <span>Panel Admin</span>
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer font-medium text-primary focus:text-primary">
+                    <ShieldAlert className="mr-2 h-4 w-4" />
+                    <span>Panel Admin</span>
+                  </DropdownMenuItem>
+
+                  {workspaces && workspaces.length > 0 && (
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="cursor-pointer font-medium text-orange-500 focus:text-orange-500 data-[state=open]:text-orange-500 data-[state=open]:bg-orange-500/10">
+                        <Briefcase className="mr-2 h-4 w-4" />
+                        <span>Áreas de Trabajo</span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="w-48 ml-1">
+                        {workspaces.map((ws: string) => (
+                          <DropdownMenuItem
+                            key={ws}
+                            onClick={() => switchWorkspace(ws)}
+                            className={cn(
+                              "cursor-pointer font-medium flex items-center justify-between",
+                              currentWorkspace === ws ? "bg-primary/10 text-primary focus:bg-primary/20 focus:text-primary" : ""
+                            )}
+                          >
+                            <span className="truncate">{ws}</span>
+                            {currentWorkspace === ws && <span className="flex h-2 w-2 rounded-full bg-primary" />}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  )}
+                </>
               )}
               <DropdownMenuSeparator />
               {isAuthenticated ? (

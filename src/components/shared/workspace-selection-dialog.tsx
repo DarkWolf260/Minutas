@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { Briefcase, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 export function WorkspaceSelectionDialog() {
   const { workspaces, currentWorkspace, switchWorkspace, cloudWorkspaces } = useWorkspaceManager();
@@ -64,8 +64,7 @@ export function WorkspaceSelectionDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-[500px] border-border/50 shadow-2xl backdrop-blur-sm">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-            <Briefcase className="h-6 w-6 text-primary" />
+          <DialogTitle className="text-2xl font-bold">
             Seleccionar Área de Trabajo
           </DialogTitle>
           <DialogDescription className="text-muted-foreground mt-2">
@@ -92,12 +91,6 @@ export function WorkspaceSelectionDialog() {
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
-                    isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-muted/80"
-                  )}>
-                    <Briefcase className="h-5 w-5" />
-                  </div>
                   <div>
                     <p className="font-medium text-foreground">{displayName}</p>
                     <p className="text-xs text-muted-foreground">

@@ -7,7 +7,7 @@ import type {
   TemplateConfig,
   form_dataRecord,
 } from '@/lib/types';
-import { renderFinalReport } from '@/lib/template-parser';
+import { renderFinalReport, resolveTemplateTitle } from '@/lib/template-parser';
 import { logger } from '@/lib/logger';
 import { validateTimeHlv } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -80,7 +80,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
         Enc: getEsJefeEncargado() ? '(E)' : '',
       };
       const finalContent = renderFinalReport(template.content, data, finalConfig, predefinedValues, false, dynamicPredefinedValues);
-      const title = String(data.titulo || data.title || template.name);
+      const title = String(data.titulo || data.title || resolveTemplateTitle(template.name, data, finalConfig));
       onSubmit(data, finalContent, title);
     };
 
