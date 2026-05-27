@@ -495,6 +495,7 @@ export function useReportForm({
     rolesLoaded,
     units,
     settings,
+    cloudDraft,
     isFocused,
     isLoaded: rolesLoaded && guardsLoaded && settingsLoaded && personnelLoaded
   };

@@ -242,7 +242,14 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
     let cancelled = false;
     let replicationInstance: { cancel: () => void } | null = null;
 
-    if (db && currentWorkspace && currentWorkspace !== DEFAULT_WORKSPACE) {
+    // Solo iniciar la replicación si la base de datos está lista y no es el workspace local por defecto.
+    // Si el workspace es en la nube (isCloud), requerimos obligatoriamente que el usuario esté autenticado.
+    const shouldReplicate = db && 
+      currentWorkspace && 
+      currentWorkspace !== DEFAULT_WORKSPACE && 
+      (!isCloud || isAuthenticated);
+
+    if (shouldReplicate) {
       logger.info(`Starting cloud replication for content in workspace: ${currentWorkspace}`);
       startWorkspaceReplication(db, currentWorkspace).then((res) => {
         if (cancelled) {
@@ -271,7 +278,7 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
         replicationRef.current = null;
       }
     };
-  }, [db, currentWorkspace, isCloud]);
+  }, [db, currentWorkspace, isCloud, isAuthenticated]);
 
   const switchWorkspace = async (name: string) => {
     if (name === currentWorkspace) return;

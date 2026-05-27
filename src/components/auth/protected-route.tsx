@@ -12,11 +12,6 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isCloud } = useWorkspaceManager();
   const location = useLocation();
 
-  // If we are not in cloud mode, everything is permitted locally
-  if (!isCloud) {
-    return <>{children}</>;
-  }
-
   if (authLoading || statusLoading) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-background gap-4">
@@ -28,11 +23,9 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  if (!isApproved) {
+  // Si hay un usuario autenticado pero no está aprobado, bloquear el acceso inmediatamente,
+  // independientemente de si el workspace activo es local o de la nube.
+  if (user && !isApproved) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background p-6">
         <div className="max-w-md w-full bg-card border rounded-3xl p-8 shadow-2xl text-center space-y-6 relative overflow-hidden">
@@ -78,5 +71,16 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // Si no hay un usuario autenticado
+  if (!user) {
+    // Si estamos en modo de nube, es obligatorio iniciar sesión
+    if (isCloud) {
+      return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+    // Si estamos en modo local, permitimos el acceso libre offline
+    return <>{children}</>;
+  }
+
+  // Si el usuario está autenticado y está aprobado, permitir acceso total
   return <>{children}</>;
 }

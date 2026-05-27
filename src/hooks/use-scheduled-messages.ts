@@ -141,8 +141,9 @@ export function useScheduledMessages() {
 
     let timeoutId: NodeJS.Timeout;
 
-    // Reset backoff if URL changed
-    if (localUrl !== lastCheckedUrl) {
+    // Reset backoff ONLY if the URL genuinely changed (ignore transient resets to the default fallback)
+    const DEFAULT_URL = 'http://localhost:3001';
+    if (localUrl !== lastCheckedUrl && !(localUrl === DEFAULT_URL && lastCheckedUrl !== '')) {
       globalIsOffline = false;
       consecutiveFailures = 0;
       currentPollingInterval = 10000;
@@ -259,8 +260,14 @@ export function useScheduledMessages() {
       }
     };
 
-    // Initial sync
-    syncStatuses();
+    // Initial sync – only run immediately if offline backoff is not active
+    const now = Date.now();
+    if (!globalIsOffline || now >= lastCheckTime + currentPollingInterval) {
+      syncStatuses();
+    } else {
+      // Backoff still active: schedule next sync without making a network request now
+      timeoutId = setTimeout(syncStatuses, lastCheckTime + currentPollingInterval - now);
+    }
 
     return () => clearTimeout(timeoutId);
   }, [db, currentWorkspace, localUrl]);

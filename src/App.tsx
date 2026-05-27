@@ -83,9 +83,11 @@ function AppLayout() {
   const { isCloud } = useWorkspaceManager();
   
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
-  // If user is in local mode (!isCloud), navigation is always allowed outside auth pages.
-  // In cloud mode, requires authenticated and approved user.
-  const showNav = !isAuthPage && (!isCloud || (user && isApproved && !statusLoading)) && (!config.maintenance_mode || isAdmin);
+  // Si el usuario está autenticado pero no está aprobado, ocultamos la navegación por completo.
+  const showNav = !isAuthPage && 
+    (!isCloud || (user && isApproved && !statusLoading)) && 
+    (!config.maintenance_mode || isAdmin) &&
+    !(user && !isApproved && !statusLoading);
   
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false

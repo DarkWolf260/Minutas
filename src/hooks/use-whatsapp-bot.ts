@@ -15,50 +15,84 @@ export interface WhatsAppStatus {
   statusMessage?: string;
 }
 
-// Module-level cache to share offline status across all hook instances and prevent duplicate requests / console ERR_CONNECTION_REFUSED spam.
+// Module-level cache to share offline status and state across all hook instances
+interface BotState {
+  status: WhatsAppStatus;
+  chats: WhatsAppChat[];
+  isAvailable: boolean;
+  isLoading: boolean;
+  isCloudActive: boolean;
+}
+
 let globalIsOffline = false;
 let lastCheckTime = 0;
 let consecutiveFailures = 0;
 let currentPollingInterval = 5000; // Start at 5s
 let lastCheckedUrl = '';
 let lastHeartbeatTime = 0; // Throttled timestamp to reduce excessive RxDB replication spam
+let isChecking = false;
+
+let botState: BotState = {
+  status: { isReady: false, needsAuth: false, qr: null, statusMessage: 'Iniciando...' },
+  chats: [],
+  isAvailable: false,
+  isLoading: true,
+  isCloudActive: false,
+};
+
+const listeners = new Set<(state: BotState) => void>();
+
+function updateBotState(updates: Partial<BotState>) {
+  botState = { ...botState, ...updates };
+  listeners.forEach(listener => listener(botState));
+}
 
 export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
   const db = useDatabase();
   const { currentWorkspace, isCloud } = useWorkspaceManager();
 
-  const [status, setStatus] = useState<WhatsAppStatus>({ isReady: false, needsAuth: false, qr: null, statusMessage: 'Iniciando...' });
-  const [chats, setChats] = useState<WhatsAppChat[]>([]);
-  const [isAvailable, setIsAvailable] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isCloudActive, setIsCloudActive] = useState<boolean>(false);
+  const [state, setState] = useState<BotState>(botState);
+
+  // Subscribe to global bot state updates
+  useEffect(() => {
+    listeners.add(setState);
+    // Sync with the latest state on mount
+    setState(botState);
+    return () => {
+      listeners.delete(setState);
+    };
+  }, []);
 
   // Stable ref for callbacks
   const isCloudActiveRef = useRef(false);
   useEffect(() => {
-    isCloudActiveRef.current = isCloudActive;
-  }, [isCloudActive]);
+    isCloudActiveRef.current = state.isCloudActive;
+  }, [state.isCloudActive]);
 
   const checkStatus = useCallback(async (forceParam: boolean | any = false) => {
     let force = forceParam === true || (typeof forceParam === 'object' && forceParam !== null && !(forceParam instanceof Headers));
     
     // Force check if the target URL has changed
-    if (localUrl !== lastCheckedUrl) {
+    if (localUrl && localUrl !== lastCheckedUrl) {
       force = true;
       lastCheckedUrl = localUrl;
     }
 
     const now = Date.now();
 
-    // If we're not forcing and we know the server was recently offline, return cached status immediately
-    // without making a fetch request, preventing console ERR_CONNECTION_REFUSED spam.
-    if (!force && globalIsOffline && now < lastCheckTime + currentPollingInterval) {
-      setIsAvailable(false);
-      setStatus({ isReady: false, needsAuth: false, qr: null, statusMessage: 'Servidor no disponible' });
-      setIsLoading(false);
-      return false;
+    // If another check is already in progress, wait
+    if (isChecking) {
+      return botState.status.isReady;
     }
 
+    // Determine the minimum time we must wait before making another fetch request
+    const minInterval = globalIsOffline ? currentPollingInterval : 4000;
+
+    if (!force && now < lastCheckTime + minInterval) {
+      return botState.status.isReady;
+    }
+
+    isChecking = true;
     try {
       const response = await fetch(`${localUrl}/api/whatsapp/status`, {
         method: 'GET',
@@ -71,20 +105,22 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       
       // Success! Reset backoff variables
       globalIsOffline = false;
-      lastCheckTime = now;
+      lastCheckTime = Date.now();
       consecutiveFailures = 0;
       currentPollingInterval = 5000;
       
-      setStatus(data);
-      setIsAvailable(true);
+      updateBotState({
+        status: data,
+        isAvailable: true
+      });
 
       // Report active status to the database (heartbeat) - throttled to once every 45 seconds to avoid excessive RxDB push/pull replication network spam
       if (db && currentWorkspace && isCloud && data.isReady) {
         const statusId = `whatsapp_bot_status:${currentWorkspace}`;
-        const shouldWrite = force || (now - lastHeartbeatTime > 45000);
+        const shouldWrite = force || (Date.now() - lastHeartbeatTime > 45000);
         
         if (shouldWrite) {
-          lastHeartbeatTime = now;
+          lastHeartbeatTime = Date.now();
           db.configs.upsert({
             id: statusId,
             workspace_id: currentWorkspace,
@@ -101,7 +137,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     } catch (error) {
       // Failure! Record offline state and increase polling interval (exponential backoff)
       globalIsOffline = true;
-      lastCheckTime = now;
+      lastCheckTime = Date.now();
       consecutiveFailures++;
       
       if (consecutiveFailures === 1) {
@@ -114,27 +150,30 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         currentPollingInterval = 120000; // 2m max
       }
       
-      setIsAvailable(false);
-      setStatus({ isReady: false, needsAuth: false, qr: null, statusMessage: 'Servidor no disponible' });
+      updateBotState({
+        isAvailable: false,
+        status: { isReady: false, needsAuth: false, qr: null, statusMessage: 'Servidor no disponible' }
+      });
       return false;
     } finally {
-      setIsLoading(false);
+      isChecking = false;
+      updateBotState({ isLoading: false });
     }
   }, [localUrl, db, currentWorkspace, isCloud]);
 
   const loadChats = useCallback(async () => {
-    if (!status.isReady) return;
+    if (!state.status.isReady) return;
     
     try {
       const response = await fetch(`${localUrl}/api/whatsapp/chats`);
       if (response.ok) {
         const data = await response.json();
-        setChats(data);
+        updateBotState({ chats: data });
       }
     } catch (error) {
       console.error('Error fetching chats:', error);
     }
-  }, [localUrl, status.isReady]);
+  }, [localUrl, state.status.isReady]);
 
   const sendMessage = useCallback(async (chatId: string, message: string) => {
     try {
@@ -179,7 +218,13 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
 
   // Polling for status with dynamic interval
   useEffect(() => {
-    checkStatus();
+    const now = Date.now();
+    const minInterval = globalIsOffline ? currentPollingInterval : 4000;
+    const shouldCheckImmediately = !lastCheckTime || (now - lastCheckTime >= minInterval);
+
+    if (shouldCheckImmediately) {
+      checkStatus();
+    }
     
     let timeoutId: NodeJS.Timeout;
     
@@ -196,7 +241,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
   // 1. Suscribirse al estado del bot en la base de datos (Supabase Cloud)
   useEffect(() => {
     if (!db || !currentWorkspace || !isCloud) {
-      setIsCloudActive(false);
+      updateBotState({ isCloudActive: false });
       return;
     }
 
@@ -207,9 +252,9 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         const data = item.data || {};
         const lastSeen = new Date(data.lastSeen || 0).getTime();
         const isRecent = Date.now() - lastSeen < 120000; // 2 min TTL
-        setIsCloudActive(!!data.isReady && isRecent);
+        updateBotState({ isCloudActive: !!data.isReady && isRecent });
       } else {
-        setIsCloudActive(false);
+        updateBotState({ isCloudActive: false });
       }
     });
 
@@ -228,7 +273,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         const data = item.data || {};
         const lastSeen = new Date(data.lastSeen || 0).getTime();
         const isRecent = Date.now() - lastSeen < 120000;
-        setIsCloudActive(!!data.isReady && isRecent);
+        updateBotState({ isCloudActive: !!data.isReady && isRecent });
       }
     }, 30000);
 
@@ -237,27 +282,27 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
 
   // Load chats when ready locally
   useEffect(() => {
-    if (isAvailable && status.isReady && chats.length === 0) {
+    if (state.isAvailable && state.status.isReady && state.chats.length === 0) {
       loadChats();
     }
-  }, [isAvailable, status.isReady, chats.length, loadChats]);
+  }, [state.isAvailable, state.status.isReady, state.chats.length, loadChats]);
 
-  const finalAvailable = isAvailable || (isCloudActive && isCloud);
-  const finalStatus = isAvailable
-    ? status
-    : (isCloudActive && isCloud)
+  const finalAvailable = state.isAvailable || (state.isCloudActive && isCloud);
+  const finalStatus = state.isAvailable
+    ? state.status
+    : (state.isCloudActive && isCloud)
       ? { isReady: true, needsAuth: false, qr: null, statusMessage: 'Disponible en la Nube' }
-      : status;
+      : state.status;
 
   return {
     isAvailable: finalAvailable,
-    isLoading,
+    isLoading: state.isLoading,
     status: finalStatus,
-    chats,
+    chats: state.chats,
     checkStatus,
     loadChats,
     sendMessage,
     localUrl,
-    isCloudActive
+    isCloudActive: state.isCloudActive
   };
 }

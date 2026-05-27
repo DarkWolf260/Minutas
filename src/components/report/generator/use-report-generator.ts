@@ -192,7 +192,8 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
     handlePreviewClick,
     hasCompleted,
     debouncedSaveDraft,
-    settings
+    settings,
+    cloudDraft
   };
 }
 
