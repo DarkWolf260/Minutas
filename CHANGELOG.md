@@ -1,5 +1,23 @@
 # Historial de Cambios - Minutas
 
+## [1.8.0] - 2026-05-29
+
+### Añadido
+- **Soporte Inicial de Imágenes en Reportes**: Primera implementación del sistema de fotos y evidencias fotográficas. Las imágenes adjuntas se guardan localmente de forma instantánea y se sincronizan automáticamente con la nube.
+- **Editor de Imágenes Integrado**: Cada foto adjunta puede editarse directamente en la aplicación sin herramientas externas. Incluye:
+  - **Pincel de anotación**: Dibuja sobre la imagen con colores personalizados para resaltar detalles importantes.
+  - **Pixelado de privacidad**: Cubre áreas de la imagen con un mosaico para ocultar rostros o datos sensibles.
+  - **Deshacer cambios**: Revierte los últimos pasos de edición uno a uno.
+  - **Zoom y desplazamiento**: Amplía con la rueda del mouse o los botones y mueve la imagen con la herramienta de mano para editar con precisión.
+  - **Recorte**: Selecciona el área de interés con guías visuales y aplica el recorte al instante.
+- **Envío de Fotos por WhatsApp**: Las imágenes adjuntas se envían automáticamente junto con la minuta, tanto en envíos inmediatos como en mensajes programados.
+- **Activación de Fotos por Plantilla**: Las plantillas pueden incluir la etiqueta `{photos}` para habilitar la sección de carga de imágenes en las novedades que lo requieran. Si una plantilla no la incluye, el formulario permanece sin la sección de imágenes.
+
+### Cambiado
+- **Formulario de Novedades**: Cuando la plantilla lo indica con `{photos}`, aparece una sección de galería fotográfica al final del formulario.
+
+---
+
 ## [1.7.5] - 2026-05-24
 
 ### Añadido

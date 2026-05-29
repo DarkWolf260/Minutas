@@ -1,7 +1,5 @@
-'use client';
-
 import React, { useState, useRef } from 'react';
-import { Camera, Trash2, X, Plus, Eye, FileImage } from 'lucide-react';
+import { Camera, Trash2, X, Plus, Eye, FileImage, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import type { ReportPhoto } from '@/lib/types';
 import { toast } from 'sonner';
+import { PhotoEditor } from './photo-editor';
 
 interface ReportPhotosProps {
   photos: ReportPhoto[];
@@ -71,6 +70,7 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
   disabled = false,
 }) => {
   const [selectedPhoto, setSelectedPhoto] = useState<ReportPhoto | null>(null);
+  const [editingPhoto, setEditingPhoto] = useState<ReportPhoto | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -212,6 +212,19 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
+
+                  {!disabled && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon"
+                      className="h-9 w-9 rounded-xl shadow-lg bg-background/90 text-foreground hover:bg-background"
+                      onClick={() => setEditingPhoto(photo)}
+                      title="Editar Imagen (Pixelear / Dibujar)"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
                   
                   {!disabled && (
                     <Button
@@ -273,6 +286,22 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Interactive Photo Editor Modal (Pen, Pixelation, Undo, Colors) */}
+      {editingPhoto && (
+        <PhotoEditor
+          isOpen={!!editingPhoto}
+          onClose={() => setEditingPhoto(null)}
+          photoUrl={editingPhoto.url}
+          photoName={editingPhoto.name}
+          onSave={(updatedUrl) => {
+            const updated = photos.map((p) =>
+              p.id === editingPhoto.id ? { ...p, url: updatedUrl } : p
+            );
+            onChange(updated);
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -8,10 +8,11 @@ import type {
   form_dataRecord,
   ReportPhoto,
 } from '@/lib/types';
-import { renderFinalReport, resolveTemplateTitle } from '@/lib/template-parser';
+import { renderFinalReport, resolveTemplateTitle, parseTemplate } from '@/lib/template-parser';
 import { logger } from '@/lib/logger';
 import { validateTimeHlv } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useMemo } from 'react';
 
 // Componentes y Hooks extraídos (SOLID)
 import { useReportForm } from './form/use-report-form';
@@ -67,6 +68,12 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
         onDataChange(form_data, photos);
       }
     };
+
+    const supportsPhotos = useMemo(() => {
+      if (!template?.content) return false;
+      const parsed = parseTemplate(template.content);
+      return parsed.fieldNames.has('photos') || parsed.fieldNames.has('fotos');
+    }, [template?.content]);
 
     const hook = useReportForm({
       reportId,
@@ -199,11 +206,13 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
           </form>
 
           {/* Galería de fotos del reporte */}
-          <ReportPhotos
-            photos={photos}
-            onChange={handlePhotosChange}
-            disabled={disabled}
-          />
+          {supportsPhotos && (
+            <ReportPhotos
+              photos={photos}
+              onChange={handlePhotosChange}
+              disabled={disabled}
+            />
+          )}
         </div>
       </FormProvider>
     );
