@@ -12,6 +12,7 @@ export interface ScheduledMessage {
   scheduledTime: string; // ISO string
   status: 'pending' | 'sent' | 'failed';
   error?: string;
+  media?: { url: string; name?: string; description?: string }[];
 }
 
 // Module-level cache to share offline status across all instances of this hook and prevent console ERR_CONNECTION_REFUSED spam.
@@ -59,7 +60,13 @@ export function useScheduledMessages() {
 
   // Function to schedule a message
   const scheduleMessage = useCallback(
-    async (chatId: string, message: string, scheduledTime: Date, title: string) => {
+    async (
+      chatId: string, 
+      message: string, 
+      scheduledTime: Date, 
+      title: string, 
+      media?: { url: string; name?: string; description?: string }[]
+    ) => {
       if (!db || !currentWorkspace) throw new Error('Database not initialized');
 
       if (scheduledTime < new Date()) {
@@ -74,6 +81,7 @@ export function useScheduledMessages() {
         title,
         scheduledTime: scheduledTime.toISOString(),
         status: 'pending',
+        media,
       };
 
       await db.configs.upsert({
@@ -93,7 +101,8 @@ export function useScheduledMessages() {
             chatId, 
             message, 
             scheduledTime: data.scheduledTime, 
-            title 
+            title,
+            media
           }),
         });
       } catch (error) {
@@ -227,7 +236,8 @@ export function useScheduledMessages() {
                     chatId: msg.chatId, 
                     message: msg.message, 
                     scheduledTime: msg.scheduledTime, 
-                    title: msg.title 
+                    title: msg.title,
+                    media: msg.media
                   }),
                 });
                 logger.info(`Pushed missing pending message ${msg.id} to background server`);

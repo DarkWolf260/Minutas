@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 
 const app = express();
@@ -31,7 +31,8 @@ app.use((req, res, next) => {
 });
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 let isReady = false;
 let qrCodeData = null;
@@ -124,7 +125,7 @@ app.post('/api/whatsapp/send', async (req, res) => {
     return res.status(400).json({ error: 'WhatsApp client is not ready' });
   }
 
-  const { chatId, message } = req.body;
+  const { chatId, message, media } = req.body;
 
   if (!chatId || !message) {
     return res.status(400).json({ error: 'Faltan parámetros: chatId y message son requeridos' });
@@ -132,9 +133,30 @@ app.post('/api/whatsapp/send', async (req, res) => {
 
   try {
     const response = await client.sendMessage(chatId, message);
+    
+    // Si se enviaron archivos/fotos adjuntos, se procesan y envían
+    if (media && Array.isArray(media)) {
+      for (const item of media) {
+        if (item.url) {
+          // Extraer mimetype y datos base64 de la Data URL
+          const matches = item.url.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+          if (matches) {
+            const mimetype = matches[1];
+            const data = matches[2];
+            const messageMedia = new MessageMedia(mimetype, data, item.name || 'foto.jpg');
+            
+            console.log(`[Media] Enviando archivo adjunto a ${chatId}: ${item.name || 'foto.jpg'}`);
+            await client.sendMessage(chatId, messageMedia, {
+              caption: item.description || ''
+            });
+          }
+        }
+      }
+    }
+
     res.json({ success: true, messageId: response.id._serialized });
   } catch (error) {
-    console.error('Error enviando mensaje:', error);
+    console.error('Error enviando mensaje con adjuntos:', error);
     res.status(500).json({ error: error.toString() });
   }
 });
@@ -188,6 +210,27 @@ setInterval(async () => {
       try {
         console.log(`[Programado] Enviando mensaje ${msg.id} a ${msg.chatId}...`);
         await client.sendMessage(msg.chatId, msg.message);
+
+        // Si se programaron archivos/fotos adjuntos, se procesan y envían
+        if (msg.media && Array.isArray(msg.media)) {
+          for (const item of msg.media) {
+            if (item.url) {
+              // Extraer mimetype y datos base64 de la Data URL
+              const matches = item.url.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+              if (matches) {
+                const mimetype = matches[1];
+                const data = matches[2];
+                const messageMedia = new MessageMedia(mimetype, data, item.name || 'foto.jpg');
+                
+                console.log(`[Programado - Media] Enviando archivo adjunto a ${msg.chatId}: ${item.name || 'foto.jpg'}`);
+                await client.sendMessage(msg.chatId, messageMedia, {
+                  caption: item.description || ''
+                });
+              }
+            }
+          }
+        }
+
         msg.status = 'sent';
         console.log(`[Programado] Mensaje ${msg.id} enviado exitosamente.`);
       } catch (error) {
@@ -206,14 +249,14 @@ setInterval(async () => {
 
 // Endpoints del sistema de programación
 app.post('/api/whatsapp/schedule', (req, res) => {
-  const { id, chatId, message, scheduledTime, title } = req.body;
+  const { id, chatId, message, scheduledTime, title, media } = req.body;
   if (!id || !chatId || !message || !scheduledTime) {
     return res.status(400).json({ error: 'Faltan parámetros requeridos para programar' });
   }
 
   const messages = getScheduledMessages();
   const existingIndex = messages.findIndex(m => m.id === id);
-  const newMsg = { id, chatId, message, scheduledTime, title, status: 'pending' };
+  const newMsg = { id, chatId, message, scheduledTime, title, media, status: 'pending' };
   
   if (existingIndex >= 0) {
     messages[existingIndex] = newMsg; // Actualiza existente

@@ -11,7 +11,7 @@ interface ViewerContentProps {
   formRef: any;
   clonedInitialData: any;
   isFinalizado: boolean;
-  onDataChange: (data: any) => void;
+  onDataChange: (data: any, photos?: any[]) => void;
   status: string;
   settings: any;
 }
@@ -53,6 +53,7 @@ export const ViewerContent = ({
                 Estatus: status,
                 Enc: settings.orden_del_dia_draft?.es_jefe_encargado ? '(E)' : '',
               }}
+              initialPhotos={report.photos}
             />
           </CardContent>
         </Card>

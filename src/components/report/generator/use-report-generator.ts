@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
-import type { Template, TemplateConfig, Report, ReportDraft, StaffMember } from '@/lib/types';
+import type { Template, TemplateConfig, Report, ReportDraft, StaffMember, ReportPhoto } from '@/lib/types';
 import { useDrafts } from '@/hooks/use-drafts';
 import { debounce } from '@/lib/utils';
 import { generateId } from '@/lib/utils/id';
@@ -144,7 +144,7 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
     debouncedSaveDraft(form_data);
   }, [debouncedSaveDraft]);
 
-  const handleCreateReport = async (form_data: Record<string, any>, content: string, title: string) => {
+  const handleCreateReport = async (form_data: Record<string, any>, content: string, title: string, photos?: ReportPhoto[]) => {
     hasCompleted.current = true;
     debouncedSaveDraft.cancel();
     await clearDraft();
@@ -159,6 +159,7 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
       is_relevant: template.type === 'relevante',
       status: 'En proceso',
       form_data: JSON.parse(JSON.stringify(form_data)),
+      photos: photos || [],
     };
 
     onSave(newReport);

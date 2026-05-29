@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "id": "ANZ-JAS:scheduled_message:f96786c0-b424-4005-afe3-660df8be0f7d",
+    "chatId": "176158268219589@lid",
+    "message": "*NOTA INFORMATIVA* ⚡\n\n*ESTADO:* Anzoátegui\n*MUNICIPIO:* Guanta\n\n*FECHA:* 27/Mayo/2026\n*HORA DEL REPORTE:* 11:11 HLV - 12:34 HLV\n\nSe reporta falla del servicio eléctrico en la sede de Protección Civil Guanta y zonas aledañas.\n\n- *REPORTA:* \n\n*PROTECCIÓN CIVIL GUANTA*",
+    "scheduledTime": "2026-05-29T06:00:00.000Z",
+    "title": "falla del servicio eléctrico",
+    "status": "sent"
+  }
+]

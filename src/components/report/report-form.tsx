@@ -1,11 +1,12 @@
 'use client';
 
-import { forwardRef, useImperativeHandle } from 'react';
+import { forwardRef, useImperativeHandle, useState, useEffect } from 'react';
 import { FormProvider } from 'react-hook-form';
 import type {
   Template,
   TemplateConfig,
   form_dataRecord,
+  ReportPhoto,
 } from '@/lib/types';
 import { renderFinalReport, resolveTemplateTitle } from '@/lib/template-parser';
 import { logger } from '@/lib/logger';
@@ -15,6 +16,7 @@ import { toast } from 'sonner';
 // Componentes y Hooks extraídos (SOLID)
 import { useReportForm } from './form/use-report-form';
 import { FormLayout } from './form/form-layout';
+import { ReportPhotos } from './report-photos';
 
 export interface ReportFormRef {
   submit: () => void;
@@ -22,6 +24,7 @@ export interface ReportFormRef {
   validate: () => Promise<form_dataRecord | null>;
   getValues: () => form_dataRecord;
   getRenderedContent: () => string;
+  getPhotos: () => ReportPhoto[];
 }
 
 export interface ReportFormProps {
@@ -29,21 +32,49 @@ export interface ReportFormProps {
   template: Template;
   config: TemplateConfig;
   initialData?: form_dataRecord;
-  onSubmit: (form_data: form_dataRecord, content: string, title: string) => void;
+  onSubmit: (form_data: form_dataRecord, content: string, title: string, photos: ReportPhoto[]) => void;
   disabled?: boolean;
-  onDataChange?: (form_data: form_dataRecord) => void;
+  onDataChange?: (form_data: form_dataRecord, photos: ReportPhoto[]) => void;
   controlledValues?: Record<string, string>;
+  initialPhotos?: ReportPhoto[];
 }
 
 export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
-  ({ reportId, template, config, initialData, onSubmit, disabled = false, onDataChange, controlledValues }, ref) => {
+  ({ reportId, template, config, initialData, onSubmit, disabled = false, onDataChange, controlledValues, initialPhotos = [] }, ref) => {
+    const [photos, setPhotos] = useState<ReportPhoto[]>(initialPhotos);
+
+    // Sync when reportId changes (switching reports)
+    useEffect(() => {
+      setPhotos(initialPhotos || []);
+    }, [reportId]);
+
+    // Handle async loading of initialPhotos (when they load from DB)
+    useEffect(() => {
+      if (initialPhotos && initialPhotos.length > 0 && photos.length === 0) {
+        setPhotos(initialPhotos);
+      }
+    }, [initialPhotos]);
+
+    const handlePhotosChange = (newPhotos: ReportPhoto[]) => {
+      setPhotos(newPhotos);
+      if (onDataChange) {
+        onDataChange(getValues(), newPhotos);
+      }
+    };
+
+    const handleFormValuesChange = (form_data: form_dataRecord) => {
+      if (onDataChange) {
+        onDataChange(form_data, photos);
+      }
+    };
+
     const hook = useReportForm({
       reportId,
       template,
       config,
       initialData,
       controlledValues,
-      onDataChange
+      onDataChange: onDataChange ? handleFormValuesChange : undefined
     });
 
     const {
@@ -81,7 +112,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       };
       const finalContent = renderFinalReport(template.content, data, finalConfig, predefinedValues, false, dynamicPredefinedValues);
       const title = String(data.titulo || data.title || resolveTemplateTitle(template.name, data, finalConfig));
-      onSubmit(data, finalContent, title);
+      onSubmit(data, finalContent, title, photos);
     };
 
     useImperativeHandle(ref, () => ({
@@ -130,40 +161,50 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
         };
         return renderFinalReport(template.content, form_data, finalConfig, predefinedValues, false, dynamicPredefinedValues);
       },
+      getPhotos: () => photos,
     }));
 
     if (!isLoaded) return null;
 
     return (
       <FormProvider {...methods}>
-        <form
-          onSubmit={handleSubmit(handleFormSubmit)}
-          className="space-y-6"
-          autoComplete="off"
-          onFocusCapture={() => {
-            isFocused.current = true;
-          }}
-          onBlurCapture={(e) => {
-            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-              isFocused.current = false;
-            }
-          }}
-        >
-          <FormLayout
-            finalConfig={finalConfig}
-            controlledValues={controlledValues}
-            allFormValues={getValues()}
-            control={control}
+        <div className="space-y-8">
+          <form
+            onSubmit={handleSubmit(handleFormSubmit)}
+            className="space-y-6"
+            autoComplete="off"
+            onFocusCapture={() => {
+              isFocused.current = true;
+            }}
+            onBlurCapture={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                isFocused.current = false;
+              }
+            }}
+          >
+            <FormLayout
+              finalConfig={finalConfig}
+              controlledValues={controlledValues}
+              allFormValues={getValues()}
+              control={control}
+              disabled={disabled}
+              roles={roles}
+              rolesLoaded={rolesLoaded}
+              activeGuardStaff={activeGuardStaff}
+              predefinedValues={predefinedValues}
+              units={units}
+              setValue={setValue}
+              settings={settings}
+            />
+          </form>
+
+          {/* Galería de fotos del reporte */}
+          <ReportPhotos
+            photos={photos}
+            onChange={handlePhotosChange}
             disabled={disabled}
-            roles={roles}
-            rolesLoaded={rolesLoaded}
-            activeGuardStaff={activeGuardStaff}
-            predefinedValues={predefinedValues}
-            units={units}
-            setValue={setValue}
-            settings={settings}
           />
-        </form>
+        </div>
       </FormProvider>
     );
   }

@@ -101,7 +101,7 @@ async function startCollectionReplication(
             if (cleanDoc.modified === undefined) cleanDoc.modified = null;
 
             // Parse stringified JSON fields back to objects
-            const jsonFields = ['data', 'form_data', 'sections', 'statistics_rules', 'statistics_sub_categories'];
+            const jsonFields = ['data', 'form_data', 'sections', 'statistics_rules', 'statistics_sub_categories', 'photos'];
             jsonFields.forEach(field => {
               if (typeof cleanDoc[field] === 'string') {
                 try { cleanDoc[field] = JSON.parse(cleanDoc[field]); } catch (e) { }
@@ -140,7 +140,7 @@ async function startCollectionReplication(
         // 1. Prepare payloads
         const allowedColumns: Record<string, string[]> = {
           personnel: ['id', 'workspace_id', 'personnel_id', 'name', 'cedula', 'rank', 'cargo', 'titulo', 'role_id', 'status', 'department', 'sex', 'specialties', 'order', '_deleted'],
-          reports: ['id', 'workspace_id', 'template_id', 'title', 'timestamp', 'content', 'is_relevant', 'status', 'form_data', 'sections', '_deleted'],
+          reports: ['id', 'workspace_id', 'template_id', 'title', 'timestamp', 'content', 'is_relevant', 'status', 'form_data', 'sections', 'photos', '_deleted'],
           templates: ['id', 'workspace_id', 'name', 'content', 'description', 'type', 'is_active', 'statistics_category', 'statistics_sub_categories', 'statistics_rules', '_deleted'],
           lookups: ['id', 'workspace_id', 'type', 'name', 'data', '_deleted'],
           configs: ['id', 'workspace_id', 'type', 'name', 'data', '_deleted'],
@@ -218,7 +218,7 @@ async function startCollectionReplication(
                 // RxDB will then trigger the conflict resolution logic in db.ts
                 return masterDocs.map(master => {
                   // Ensure master is parsed for RxDB
-                  const jsonFields = ['data', 'form_data', 'sections', 'statistics_rules', 'statistics_sub_categories'];
+                  const jsonFields = ['data', 'form_data', 'sections', 'statistics_rules', 'statistics_sub_categories', 'photos'];
                   jsonFields.forEach(field => {
                     if (typeof master[field] === 'string') {
                       try { master[field] = JSON.parse(master[field]); } catch (e) {}

@@ -105,6 +105,16 @@ export const ReportSchema = z.object({
             })
         )
         .optional(),
+    photos: z
+        .array(
+            z.object({
+                id: z.string(),
+                url: z.string(),
+                name: z.string().optional(),
+                description: z.string().optional(),
+            })
+        )
+        .optional(),
 });
 
 export type ValidatedReport = z.infer<typeof ReportSchema>;
