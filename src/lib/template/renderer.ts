@@ -940,6 +940,11 @@ export function renderFinalReport(
             dynamicPredefinedValues
         );
 
+        // Replace photos/fotos markers with empty string (or clean spacing)
+        fullRenderedContent = fullRenderedContent
+            .replace(/\{photos\}/gi, '')
+            .replace(/\{fotos\}/gi, '');
+
         // Extract summary if needed
         let summaryContent = '';
         if (summaryOnly) {

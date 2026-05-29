@@ -31,7 +31,7 @@ export const personnelSchema = {
 
 export const reportsSchema = {
     title: 'reports schema',
-    version: 1,
+    version: 2,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -52,6 +52,18 @@ export const reportsSchema = {
                     title: { type: 'string' },
                     content: { type: 'string' },
                     fields: { type: 'object' }
+                }
+            }
+        },
+        photos: {
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    id: { type: 'string' },
+                    url: { type: 'string' },
+                    name: { type: 'string' },
+                    description: { type: 'string' }
                 }
             }
         },

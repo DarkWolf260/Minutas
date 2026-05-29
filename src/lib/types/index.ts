@@ -102,6 +102,13 @@ export type AppModuleId =
   final_report_end_date?: string;
 }
 
+export interface ReportPhoto {
+  id: string;
+  url: string; // Base64 data URI o URL pública de Supabase
+  name?: string;
+  description?: string;
+}
+
 export interface Report {
   id: string;
   workspace_id: string;
@@ -117,6 +124,7 @@ export interface Report {
     content: string;
     fields: Record<string, any>;
   }>;
+  photos?: ReportPhoto[];
 }
 
 export interface GuardReport {

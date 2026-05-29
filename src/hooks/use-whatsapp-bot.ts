@@ -178,12 +178,12 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     }
   }, [localUrl, state.status.isReady]);
 
-  const sendMessage = useCallback(async (chatId: string, message: string) => {
+  const sendMessage = useCallback(async (chatId: string, message: string, media?: { url: string; name?: string; description?: string }[]) => {
     try {
       const response = await fetch(`${localUrl}/api/whatsapp/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatId, message }),
+        body: JSON.stringify({ chatId, message, media }),
       });
       
       if (!response.ok) {
@@ -204,6 +204,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
           title: 'Envío Instantáneo (Nube)',
           scheduledTime: new Date().toISOString(),
           status: 'pending',
+          media, // También guardamos la referencia de media para fallbacks si el despachador en la nube lo soporta
         };
         await db.configs.upsert({
           id,

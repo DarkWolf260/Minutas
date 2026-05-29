@@ -309,6 +309,10 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
           1: function (oldDoc: any) {
             oldDoc.sections = oldDoc.sections || [];
             return oldDoc;
+          },
+          2: function (oldDoc: any) {
+            oldDoc.photos = oldDoc.photos || [];
+            return oldDoc;
           }
         }
       },

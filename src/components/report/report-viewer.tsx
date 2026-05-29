@@ -58,6 +58,7 @@ export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewer
   const handleWhatsAppSend = async () => {
     if (!formRef.current) return;
     const content = formRef.current.getRenderedContent();
+    const photos = formRef.current.getPhotos() || [];
     const chatIds = settings?.whatsapp_default_chat_ids || [];
     
     if (chatIds.length === 0) {
@@ -68,18 +69,18 @@ export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewer
     }
 
     setIsSendingWhatsApp(true);
-    const loadingToast = toast.loading('Enviando a WhatsApp...');
+    const loadingToast = toast.loading('Enviando reporte con imágenes a WhatsApp...');
     
     try {
       // Enviar a todos los chats configurados
       for (const chatId of chatIds) {
-        await bot.sendMessage(chatId, content);
+        await bot.sendMessage(chatId, content, photos);
       }
       toast.success(`Enviado a ${chatIds.length} chat(s) en WhatsApp`, { id: loadingToast });
     } catch (error: any) {
       toast.error('Error al enviar mensaje', { 
         id: loadingToast,
-        description: error.message || 'El bot local falló al procesar el mensaje'
+        description: error.message || 'El bot local falló al procesar el mensaje o los adjuntos'
       });
     } finally {
       setIsSendingWhatsApp(false);
@@ -89,6 +90,7 @@ export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewer
   const handleWhatsAppSchedule = async (scheduledTime: Date) => {
     if (!report || !formRef.current) return;
     const content = formRef.current.getRenderedContent();
+    const photos = formRef.current.getPhotos() || [];
     const chatIds = settings?.whatsapp_default_chat_ids || [];
     
     if (chatIds.length === 0) {
@@ -100,7 +102,7 @@ export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewer
 
     try {
       for (const chatId of chatIds) {
-        await scheduleMessage(chatId, content, scheduledTime, report.title);
+        await scheduleMessage(chatId, content, scheduledTime, report.title, photos);
       }
       toast.success(`Mensaje programado para ${scheduledTime.toLocaleString()}`);
     } catch (error: any) {

@@ -62,9 +62,20 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.7.5';
+export const APP_VERSION = '1.8.0';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.8.0',
+    date: '29/05/2026',
+    changes: [
+      { type: 'nueva', text: 'Soporte Inicial de Imágenes en Reportes: Primera implementación del sistema de fotos y evidencias fotográficas. Las imágenes se guardan localmente de forma instantánea y se sincronizan automáticamente con la nube.' },
+      { type: 'nueva', text: 'Editor de Imágenes Integrado: Cada foto adjunta puede editarse directamente en la aplicación. Incluye pincel de anotación con colores personalizados, pixelado de privacidad estilo mosaico, deshacer paso a paso, zoom con rueda del mouse, desplazamiento con herramienta de mano y recorte interactivo con guías visuales.' },
+      { type: 'nueva', text: 'Envío de Fotos por WhatsApp: Las imágenes adjuntas al reporte se envían automáticamente junto con la minuta, tanto en envíos inmediatos como en mensajes programados para una hora futura.' },
+      { type: 'nueva', text: 'Activación de Fotos por Plantilla: Agrega la etiqueta {photos} en una plantilla para habilitar la sección de carga de imágenes en las novedades que lo requieran. Si la plantilla no la incluye, el formulario se mantiene sin la sección de imágenes.' },
+      { type: 'mejora', text: 'Formulario de Novedades: Cuando la plantilla lo indica con {photos}, aparece una sección de galería fotográfica al final del formulario.' },
+    ],
+  },
   {
     version: '1.7.5',
     date: '24/05/2026',

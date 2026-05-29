@@ -97,10 +97,20 @@ export function useReportForm({
       defaultValues,
     } = parsedTemplate;
 
+    const filteredLayout = layout.filter(
+      (id) => id.toLowerCase() !== 'photos' && id.toLowerCase() !== 'fotos'
+    );
+
     const newConfig: TemplateConfig = {
       fields: {},
-      sections,
-      layout,
+      sections: sections.map((sec) => ({
+        ...sec,
+        field_ids: sec.field_ids.filter((id) => id.toLowerCase() !== 'photos' && id.toLowerCase() !== 'fotos'),
+        layout: sec.layout
+          ? sec.layout.filter((id) => id.toLowerCase() !== 'photos' && id.toLowerCase() !== 'fotos')
+          : undefined,
+      })),
+      layout: filteredLayout,
     };
 
     let timeHlvFieldInConfig: string | null = null;
@@ -112,6 +122,7 @@ export function useReportForm({
     }
 
     fieldNames.forEach((field_id: string) => {
+      if (field_id.toLowerCase() === 'photos' || field_id.toLowerCase() === 'fotos') return;
       const templateFieldConfig = templateConfigFields[field_id];
       const globalDef = definitions[field_id];
       const typeFromTemplate = fieldTypes.get(field_id);

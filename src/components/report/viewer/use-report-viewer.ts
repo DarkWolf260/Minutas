@@ -5,7 +5,7 @@ import { renderFinalReport, resolveTemplateTitle } from '@/lib/template-parser';
 import { useTemplates } from '@/hooks/use-templates';
 import { useSettings } from '@/hooks/use-settings';
 import { useSyncManager } from '@/hooks/use-sync';
-import type { Report, TemplateConfig, Template } from '@/lib/types';
+import type { Report, TemplateConfig, Template, ReportPhoto } from '@/lib/types';
 import type { ReportFormRef } from '../report-form';
 
 interface UseReportViewerProps {
@@ -20,6 +20,15 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
   const [saveButtonText, setSaveButtonText] = useState('Guardar Cambios');
   const [previewContent, setPreviewContent] = useState('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const latestPhotosRef = useRef<ReportPhoto[]>([]);
+
+  // Sync ref with report's stored photos on mount or when switching reports
+  useEffect(() => {
+    if (report) {
+      latestPhotosRef.current = report.photos || [];
+    }
+  }, [report?.id]);
 
   const { templates, configs, isLoaded } = useTemplates();
   const { settings } = useSettings();
@@ -49,7 +58,7 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
     }
   }, [report?.id, report?.form_data]);
 
-  const saveLogic = useCallback(async (form_data: Record<string, any>) => {
+  const saveLogic = useCallback(async (form_data: Record<string, any>, customPhotos?: ReportPhoto[]) => {
     if (!report || !template) return;
 
     const borradorObj = (settings.orden_del_dia_draft as any) || (settings as any).ordenDelDiaDraft;
@@ -79,6 +88,7 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
       form_data: JSON.parse(JSON.stringify(form_data)),
       status: status,
       timestamp: new Date().toISOString(),
+      photos: customPhotos || latestPhotosRef.current,
     };
     await onSave(finalReport);
     setSaveButtonText('Guardado');
@@ -102,12 +112,20 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
     };
   }, [debouncedSave]);
 
+  const prevReportIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (report) {
+      // Flush pending saves for the previous report when switching reports
+      if (prevReportIdRef.current && prevReportIdRef.current !== report.id) {
+        debouncedSave.flush();
+      }
+      prevReportIdRef.current = report.id;
+
       setStatus(report.status || 'En proceso');
       setSaveButtonText('Guardar Cambios');
     }
-  }, [report]);
+  }, [report, debouncedSave]);
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(previewContent);
@@ -183,6 +201,7 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
       form_data: JSON.parse(JSON.stringify(form_data)),
       status: newStatus,
       timestamp: new Date().toISOString(),
+      photos: formRef.current ? formRef.current.getPhotos() : report.photos,
     };
     await onSave(finalReport);
 
@@ -208,11 +227,17 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
   };
 
   const handleDataChange = useCallback(
-    (form_data: Record<string, any>) => {
+    (form_data: Record<string, any>, photos?: ReportPhoto[]) => {
       setSaveButtonText('Guardar Cambios');
-      debouncedSave(form_data);
+      if (photos) {
+        // Update ref and save immediately for photo additions/deletions/caption changes!
+        latestPhotosRef.current = photos;
+        saveLogic(form_data, photos);
+      } else {
+        debouncedSave(form_data);
+      }
     },
-    [debouncedSave]
+    [debouncedSave, saveLogic]
   );
 
   return {

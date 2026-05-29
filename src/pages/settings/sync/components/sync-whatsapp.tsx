@@ -156,7 +156,7 @@ export function SyncWhatsApp() {
               <ScrollArea className="h-56 border rounded-xl bg-background/30 backdrop-blur-sm overflow-hidden">
                 <div className="p-2 space-y-1">
                   <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Grupos</div>
-                  {bot.chats.filter(c => c.isGroup && c.name.toLowerCase().includes(searchQuery.toLowerCase())).map((chat) => {
+                  {bot.chats.filter(c => c.isGroup && (c.name || '').toLowerCase().includes(searchQuery.toLowerCase())).map((chat) => {
                     const isChecked = (settings?.whatsapp_default_chat_ids || []).includes(chat.id);
                     return (
                       <div 
@@ -170,7 +170,7 @@ export function SyncWhatsApp() {
                           <div className={`p-2 rounded-full ${isChecked ? 'bg-emerald-500/20 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
                             <Users className="h-4 w-4" />
                           </div>
-                          <span className="text-sm font-medium">{chat.name}</span>
+                          <span className="text-sm font-medium">{chat.name || chat.id}</span>
                         </div>
                         <div className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors ${
                           isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-muted-foreground/30'
@@ -182,7 +182,7 @@ export function SyncWhatsApp() {
                   })}
                   
                   <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-3">Contactos</div>
-                  {bot.chats.filter(c => !c.isGroup && c.name.toLowerCase().includes(searchQuery.toLowerCase())).map((chat) => {
+                  {bot.chats.filter(c => !c.isGroup && (c.name || '').toLowerCase().includes(searchQuery.toLowerCase())).map((chat) => {
                     const isChecked = (settings?.whatsapp_default_chat_ids || []).includes(chat.id);
                     return (
                       <div 
@@ -196,7 +196,7 @@ export function SyncWhatsApp() {
                           <div className={`p-2 rounded-full ${isChecked ? 'bg-emerald-500/20 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
                             <User className="h-4 w-4" />
                           </div>
-                          <span className="text-sm font-medium">{chat.name}</span>
+                          <span className="text-sm font-medium">{chat.name || chat.id}</span>
                         </div>
                         <div className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors ${
                           isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-muted-foreground/30'
