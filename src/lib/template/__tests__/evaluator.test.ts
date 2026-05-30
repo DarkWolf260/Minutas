@@ -48,6 +48,11 @@ describe('Template Evaluator', () => {
             expect(applyModifiers('HELLO WORLD', 'title')).toBe('Hello World');
         });
 
+        it('should handle capitalize case', () => {
+            expect(applyModifiers('hello world', 'capitalize')).toBe('Hello world');
+            expect(applyModifiers('HELLO WORLD', 'capitalize')).toBe('HELLO WORLD');
+        });
+
         it('should handle multiple modifiers', () => {
             expect(applyModifiers('  hello  ', ['upper'])).toBe('  HELLO  ');
             // Modifiers are applied in sequence

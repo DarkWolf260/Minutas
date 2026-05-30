@@ -367,6 +367,13 @@ Reportado por: {reportante:upper}`;
             }, mockFieldsConfig as any);
             expect(resolved).toBe('Accidente tipo colisión');
         });
+
+        it('should apply capitalize modifier', () => {
+            const resolved = resolveTemplateTitle('Accidente {Tipo de accidente:value|capitalize}', {
+                'Tipo de accidente': 'Colisión'
+            }, mockFieldsConfig as any);
+            expect(resolved).toBe('Accidente Tipo colisión');
+        });
     });
 });
 

@@ -113,6 +113,8 @@ export function applyModifiers(value: unknown, modifiers: string | string[]): st
                 .split(' ')
                 .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(' ');
+        } else if (trimmedMod === 'capitalize') {
+            result = result.charAt(0).toUpperCase() + result.slice(1);
         } else if (trimmedMod.startsWith('default(')) {
             if (!result || result.trim() === '') {
                 const match = mod.match(/default\("?(.*?)"?\)/i);
