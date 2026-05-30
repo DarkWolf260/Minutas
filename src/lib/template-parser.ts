@@ -176,6 +176,9 @@ export function resolveTemplateTitle(
         else if (mod === 'title') {
           resolvedVal = resolvedVal.replace(/\b\w/g, (c: string) => c.toUpperCase());
         }
+        else if (mod === 'capitalize') {
+          resolvedVal = resolvedVal.charAt(0).toUpperCase() + resolvedVal.slice(1);
+        }
       });
     }
 

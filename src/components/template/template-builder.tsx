@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-import { parseTemplate } from '@/lib/template-parser';
+import { parseTemplate, resolveTemplateTitle } from '@/lib/template-parser';
 import { Save, HelpCircle, X, FileText, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { validateTemplateSyntax } from '@/lib/validators';
@@ -44,6 +44,7 @@ export function TemplateBuilder({
   // New state for report preview
   const formRef = useRef<ReportFormRef>(null);
   const [previewReportContent, setPreviewReportContent] = useState('');
+  const [previewData, setPreviewData] = useState<Record<string, any>>({});
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [mobileView, setMobileView] = useState<'editor' | 'preview'>('editor');
   const [previewStatus, setPreviewStatus] = useState<'En proceso' | 'Finalizado'>('En proceso');
@@ -55,9 +56,11 @@ export function TemplateBuilder({
     if (initialTemplate) {
       setTemplateContent(initialTemplate.content);
       setTemplateName(initialTemplate.name);
+      setPreviewData({});
     } else {
       setTemplateContent('');
       setTemplateName('');
+      setPreviewData({});
     }
   }, [initialTemplate]);
 
@@ -91,15 +94,23 @@ export function TemplateBuilder({
 
   // Creates a temporary config for the preview
   const previewConfig = useMemo<TemplateConfig>(() => {
-    const { sections, layout, defaultValues } = parseTemplate(debouncedContent);
+    const parsed = parseTemplate(debouncedContent);
+    const { sections, layout, fieldNames, fieldTypes, templateOptions, defaultValues } = parsed;
 
-    // Populate preview config fields with default values
     const fields: Record<string, any> = {};
-    if (defaultValues) {
-      defaultValues.forEach((value: string, key: string) => {
-        fields[key] = { default_value: value };
-      });
-    }
+    
+    fieldNames.forEach((fieldName: string) => {
+      const typeFromTemplate = fieldTypes.get(fieldName);
+      const optionsFromTemplate = templateOptions.get(fieldName);
+      const defaultValue = defaultValues.get(fieldName);
+
+      fields[fieldName] = {
+        type: typeFromTemplate || 'text',
+        label: fieldName,
+        default_value: defaultValue || '',
+        snippet_options: optionsFromTemplate || undefined,
+      };
+    });
 
     return {
       sections,
@@ -302,7 +313,9 @@ export function TemplateBuilder({
               <div className="w-full max-w-[1000px] mx-auto p-4 sm:p-8 pb-20">
                 <Card className="border bg-card shadow-sm">
                   <CardHeader className="bg-card/50 border-b py-4">
-                    <CardTitle className="text-lg font-bold">{templateName || 'Nueva Plantilla'}</CardTitle>
+                    <CardTitle className="text-lg font-bold">
+                      {resolveTemplateTitle(templateName || 'Nueva Plantilla', previewData, previewConfig) || templateName || 'Nueva Plantilla'}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-6">
                     <ReportForm
@@ -314,6 +327,9 @@ export function TemplateBuilder({
                       controlledValues={{
                         Estatus: previewStatus,
                         Enc: '(E)', // Default preview value for Chief Encargado
+                      }}
+                      onDataChange={(data) => {
+                        setPreviewData(data);
                       }}
                     />
                   </CardContent>

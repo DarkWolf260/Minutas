@@ -375,13 +375,22 @@ export const FieldRenderer = memo(
                 return <EstadisticasField value={value} onChange={onChange} disabled={disabled} className={className} />;
             }
 
-            if (lowerfield_id === 'apoyo_ins' || lowerfield_id === 'apoyo_institucional' || fieldConfig.label.toLowerCase() === 'apoyo_ins' || fieldConfig.label.toLowerCase() === 'apoyo institucional') {
+            const isApoyo = lowerfield_id === 'apoyo_ins' || 
+                            lowerfield_id === 'apoyo_institucional' || 
+                            lowerfield_id.replace(/_/g, ' ').trim() === 'apoyo ins' ||
+                            lowerfield_id.replace(/_/g, ' ').trim() === 'apoyo institucional' ||
+                            fieldConfig?.label?.toLowerCase() === 'apoyo_ins' || 
+                            fieldConfig?.label?.toLowerCase() === 'apoyo_institucional' ||
+                            fieldConfig?.label?.toLowerCase()?.replace(/_/g, ' ')?.trim() === 'apoyo ins' ||
+                            fieldConfig?.label?.toLowerCase()?.replace(/_/g, ' ')?.trim() === 'apoyo institucional';
+
+            if (isApoyo) {
                 const isActive = value === '(Apoyo institucional)';
                 return (
                     <div className={cn(
                         "flex items-center justify-between px-4 py-2.5 rounded-xl border transition-all duration-300 max-w-sm",
-                        isActive 
-                            ? "bg-orange-500/5 border-orange-500/20 text-orange-600 dark:text-orange-400" 
+                        isActive
+                            ? "bg-orange-500/5 border-orange-500/20 text-orange-600 dark:text-orange-400"
                             : "bg-muted/10 border-muted text-muted-foreground"
                     )}>
                         <span className={cn(
@@ -422,6 +431,26 @@ export const FieldRenderer = memo(
                         return reportarole_ids.includes(staffRoleLower);
                     }
                 );
+
+                // Extract saved redactant from value if it's not in the active guard list
+                const savedStaffMember = (() => {
+                    if (Array.isArray(value) && value.length > 0) {
+                        const first = value[0];
+                        if (first && typeof first === 'object' && 'id' in first) {
+                            return first as unknown as StaffMember;
+                        }
+                    } else if (value && typeof value === 'object' && 'id' in value) {
+                        return value as unknown as StaffMember;
+                    }
+                    return null;
+                })();
+
+                if (savedStaffMember) {
+                    const isSavedStaffInList = reportingStaff.some(staff => staff.id === savedStaffMember.id);
+                    if (!isSavedStaffInList) {
+                        reportingStaff.unshift(savedStaffMember);
+                    }
+                }
 
                 // The value might be an array of StaffMember objects. We need the ID for the Select.
                 const selectedStaffId =

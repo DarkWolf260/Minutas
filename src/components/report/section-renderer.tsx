@@ -454,7 +454,10 @@ function RepeatableSectionRenderer(props: SectionRendererProps) {
                                                 isFullWidth && 'sm:col-span-2'
                                             )}
                                         >
-                                            {field_id.toLowerCase() !== 'apoyo_ins' && field_id.toLowerCase() !== 'apoyo_institucional' && (
+                                            {(() => {
+                                                const normalized = field_id.toLowerCase().replace(/_/g, ' ').trim();
+                                                return normalized !== 'apoyo ins' && normalized !== 'apoyo institucional';
+                                            })() && (
                                                 <Label htmlFor={path}>
                                                     {fieldConfig?.label || field_id}
                                                     {fieldConfig.required && (
@@ -561,12 +564,17 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                                 key={`${field_id}-${fIdx}`}
                                 className={cn('space-y-2', isFullWidth && 'sm:col-span-2 3xl:col-span-3')}
                             >
-                                <Label htmlFor={path}>
-                                    {fieldConfig?.label || field_id}
-                                    {fieldConfig.required && (
-                                        <span className="text-destructive ml-1">*</span>
-                                    )}
-                                </Label>
+                                {(() => {
+                                    const normalized = field_id.toLowerCase().replace(/_/g, ' ').trim();
+                                    return normalized !== 'apoyo ins' && normalized !== 'apoyo institucional';
+                                })() && (
+                                    <Label htmlFor={path}>
+                                        {fieldConfig?.label || field_id}
+                                        {fieldConfig.required && (
+                                            <span className="text-destructive ml-1">*</span>
+                                        )}
+                                    </Label>
+                                )}
                                 <ReportFormField
                                     path={path}
                                     control={control}
@@ -653,12 +661,17 @@ function SingleSectionRenderer(props: SectionRendererProps) {
                                     isFullWidth && 'sm:col-span-2 3xl:col-span-3'
                                 )}
                             >
-                                <Label htmlFor={path}>
-                                    {fieldConfig?.label || field_id}
-                                    {fieldConfig.required && (
-                                        <span className="text-destructive ml-1">*</span>
-                                    )}
-                                </Label>
+                                {(() => {
+                                    const normalized = field_id.toLowerCase().replace(/_/g, ' ').trim();
+                                    return normalized !== 'apoyo ins' && normalized !== 'apoyo institucional';
+                                })() && (
+                                    <Label htmlFor={path}>
+                                        {fieldConfig?.label || field_id}
+                                        {fieldConfig.required && (
+                                            <span className="text-destructive ml-1">*</span>
+                                        )}
+                                    </Label>
+                                )}
                                 <ReportFormField
                                     path={path}
                                     control={control}

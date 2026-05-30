@@ -33,7 +33,10 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
     estaSubiendo,
     manejarClickEliminar,
     sincronizarDesdeNube,
-    estaSincronizando
+    estaSincronizando,
+    manejarDescargarTodasTXT,
+    manejarDescargarBackupJSON,
+    manejarDescargarPlantilla,
   } = hook;
 
   return (
@@ -48,19 +51,53 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
         <CardDescription>Sube y gestiona tus plantillas de reportes.</CardDescription>
       </CardHeader>
       <div className="p-4 pt-0 space-y-2 shrink-0">
-        <div className="flex flex-col sm:grid sm:grid-cols-2 gap-2">
-          <Button className="w-full text-xs h-9" size="sm" onClick={manejarClickSubirLocal}>
-            <Upload className="mr-2 h-4 w-4" />
-            Local (.txt)
-          </Button>
+        <div className="grid grid-cols-3 gap-1.5">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="w-full text-[11px] h-9 px-1.5" size="sm">
+                <Upload className="mr-1 h-3.5 w-3.5 shrink-0" />
+                Subir...
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem onClick={manejarClickSubirLocal} className="cursor-pointer">
+                <FileText className="mr-2 h-4 w-4" />
+                <span>Archivos .txt (Varios)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={manejarClickSubirLocal} className="cursor-pointer">
+                <Upload className="mr-2 h-4 w-4" />
+                <span>Copia de seguridad (.json)</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="w-full text-[11px] h-9 px-1.5" size="sm" variant="outline" disabled={templates.length === 0}>
+                <CloudDownload className="mr-1 h-3.5 w-3.5 shrink-0" />
+                Descargar...
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-48">
+              <DropdownMenuItem onClick={manejarDescargarTodasTXT} className="cursor-pointer">
+                <FileText className="mr-2 h-4 w-4" />
+                <span>Individuales (.txt)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={manejarDescargarBackupJSON} className="cursor-pointer">
+                <CloudDownload className="mr-2 h-4 w-4" />
+                <span>Copia de seguridad (.json)</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button 
-            className="w-full text-xs h-9" 
+            className="w-full text-[11px] h-9 px-1.5" 
             size="sm" 
             variant="secondary"
             onClick={sincronizarDesdeNube}
             disabled={estaSincronizando}
           >
-            <CloudDownload className={cn("mr-2 h-4 w-4", estaSincronizando && "animate-spin")} />
+            <CloudDownload className={cn("mr-1 h-3.5 w-3.5 shrink-0", estaSincronizando && "animate-spin")} />
             Sincronizar
           </Button>
         </div>
@@ -69,7 +106,8 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
           ref={inputArchivoRef}
           onChange={manejarCambioArchivo}
           className="hidden"
-          accept=".txt"
+          accept=".txt,.json"
+          multiple
         />
       </div>
       <div className="flex-1 min-h-0 w-full overflow-hidden">
@@ -133,6 +171,20 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent><p>Editar</p></TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-background/80"
+                            onClick={(e) => manejarDescargarPlantilla(e, template)}
+                          >
+                            <CloudDownload className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Descargar (.txt)</p></TooltipContent>
                       </Tooltip>
 
                       <Tooltip>
