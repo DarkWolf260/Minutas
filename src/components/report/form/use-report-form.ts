@@ -469,12 +469,10 @@ export function useReportForm({
     if (!baseDataLoaded) return;
 
     const currentInitialDataHash = stableStringify(initialData || {});
-    // Usamos el updated_at del borrador independiente como clave de cambio, o el de settings como fallback
-    const currentDraftKey = cloudDraft?.updated_at || settings?.orden_del_dia_draft?.updated_at || 'no-draft';
     
     const currentTemplateHash = stableStringify(template.content);
-    // Optimizamos la clave: solo reseteamos si cambia la guardia activa, el borrador, la data inicial, la plantilla o el personal
-    const baseDataState = `${currentInitialDataHash}:${settings?.active_guard_id}:${currentDraftKey}:${currentTemplateHash}:${personnel.length}`;
+    // Optimizamos la clave: solo reseteamos si cambia la guardia activa, la data inicial, la plantilla o el personal
+    const baseDataState = `${currentInitialDataHash}:${settings?.active_guard_id}:${currentTemplateHash}:${personnel.length}`;
 
     const baseDataChanged = baseDataState !== lastBaseDataHash.current;
 
@@ -491,7 +489,7 @@ export function useReportForm({
       const formValues = getInitialValues(initialData);
       reset(formValues);
     }
-  }, [reportId, initialData, getInitialValues, reset, methods.formState.isDirty, rolesLoaded, guardsLoaded, settingsLoaded, settings?.active_guard_id, settings?.orden_del_dia_draft?.updated_at, cloudDraft, trigger]);
+  }, [reportId, initialData, getInitialValues, reset, methods.formState.isDirty, rolesLoaded, guardsLoaded, settingsLoaded, settings?.active_guard_id, trigger]);
 
   return {
     methods,

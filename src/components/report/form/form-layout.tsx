@@ -157,7 +157,10 @@ export const FormLayout = ({
                     key={field_id}
                     className={cn('space-y-2', isFullWidth && 'sm:col-span-2 3xl:col-span-3')}
                   >
-                    {field_id.toLowerCase() !== 'apoyo_ins' && field_id.toLowerCase() !== 'apoyo_institucional' && (
+                    {(() => {
+                      const normalized = field_id.toLowerCase().replace(/_/g, ' ').trim();
+                      return normalized !== 'apoyo ins' && normalized !== 'apoyo institucional';
+                    })() && (
                       <Label htmlFor={field_id}>
                         {fieldConfig.label || field_id}
                         {fieldConfig.required && (

@@ -35,33 +35,81 @@ export function usePlantillas() {
   const { uploadTemplate: subirAPlantillaNube, isUploading: estaSubiendo } = useUploadTemplate();
   const { syncFromCloud: sincronizarDesdeNube, isSyncing: estaSincronizando } = useSyncTemplates();
 
-  const manejarCambioArchivo = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const archivo = event.target.files?.[0];
-    if (archivo) {
-      const lector = new FileReader();
-      lector.onload = (e) => {
-        const contenido = e.target?.result as string;
-        const nombre = archivo.name.replace(/\.txt$/, '');
+  const manejarCambioArchivo = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const archivos = event.target.files;
+    if (archivos && archivos.length > 0) {
+      for (let i = 0; i < archivos.length; i++) {
+        const archivo = archivos[i];
+        if (!archivo) continue;
         
-        const existente = templates.find(t => t.name.toLowerCase() === nombre.toLowerCase());
-        
-        if (existente) {
-          updateTemplate({
-            ...existente,
-            content: contenido,
-          });
-        } else {
-          const nuevaPlantilla: Template = {
-            id: generateId('template'),
-            workspace_id: currentWorkspace,
-            name: nombre,
-            content: contenido,
-            type: 'normal',
+        await new Promise<void>((resolve) => {
+          const lector = new FileReader();
+          lector.onload = async (e) => {
+            const contenido = e.target?.result as string;
+            
+            if (archivo.name.endsWith('.json')) {
+              try {
+                const parsed = JSON.parse(contenido);
+                const plantillasAAgregar = Array.isArray(parsed) ? parsed : [parsed];
+                
+                for (const p of plantillasAAgregar) {
+                  if (p && typeof p === 'object' && p.name && p.content) {
+                    const existente = templates.find(t => t.name.toLowerCase() === p.name.toLowerCase());
+                    if (existente) {
+                      await updateTemplate({
+                        ...existente,
+                        content: p.content,
+                        type: p.type || existente.type || 'normal',
+                      });
+                      if (p.config) {
+                        await updateTemplateConfig(existente.id, p.config);
+                      }
+                    } else {
+                      const newId = generateId('template');
+                      const nuevaPlantilla: Template = {
+                        id: newId,
+                        workspace_id: currentWorkspace,
+                        name: p.name,
+                        content: p.content,
+                        type: p.type || 'normal',
+                      };
+                      await addTemplate(nuevaPlantilla);
+                      if (p.config) {
+                        await updateTemplateConfig(newId, p.config);
+                      }
+                    }
+                  }
+                }
+              } catch (err) {
+                console.error("Error al parsear el archivo JSON de copia de seguridad", err);
+              }
+            } else {
+              const nombre = archivo.name.replace(/\.txt$/, '');
+              const existente = templates.find(t => t.name.toLowerCase() === nombre.toLowerCase());
+              
+              if (existente) {
+                updateTemplate({
+                  ...existente,
+                  content: contenido,
+                });
+              } else {
+                const nuevaPlantilla: Template = {
+                  id: generateId('template'),
+                  workspace_id: currentWorkspace,
+                  name: nombre,
+                  content: contenido,
+                  type: 'normal',
+                };
+                addTemplate(nuevaPlantilla);
+              }
+            }
+            resolve();
           };
-          addTemplate(nuevaPlantilla);
-        }
-      };
-      lector.readAsText(archivo);
+          lector.readAsText(archivo);
+        });
+      }
+      // Reset input value to allow uploading same files again
+      event.target.value = '';
     }
   };
 
@@ -81,6 +129,39 @@ export function usePlantillas() {
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', `${plantilla.name}.txt`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const manejarDescargarTodasTXT = () => {
+    templates.forEach((plantilla) => {
+      const blob = new Blob([plantilla.content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${plantilla.name}.txt`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
+  };
+
+  const manejarDescargarBackupJSON = () => {
+    if (templates.length === 0) return;
+    const dataToExport = templates.map((plantilla) => ({
+      name: plantilla.name,
+      content: plantilla.content,
+      type: plantilla.type,
+      config: configs[plantilla.id] || null,
+    }));
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `copia-seguridad-plantillas.json`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -159,6 +240,8 @@ export function usePlantillas() {
     manejarClickSubirLocal,
     manejarClickEliminar,
     manejarDescargarPlantilla,
+    manejarDescargarTodasTXT,
+    manejarDescargarBackupJSON,
     manejarClickEditarContenido,
     manejarSubirANube,
     manejarConfirmarEliminacion,
