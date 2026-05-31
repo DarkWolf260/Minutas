@@ -124,7 +124,7 @@ export function QuickChatSelector({ className }: QuickChatSelectorProps) {
             <Badge
               className={cn(
                 "absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-[10px] text-white font-bold animate-in zoom-in border border-background",
-                pendingCount > 0 ? "bg-amber-500 hover:bg-amber-600 animate-pulse" : "bg-emerald-500 hover:bg-emerald-600"
+                pendingCount > 0 ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"
               )}
             >
               {pendingCount > 0 ? pendingCount : selectedCount}
