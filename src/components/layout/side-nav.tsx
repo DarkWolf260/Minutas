@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/layout/notification-bell';
+import { QuickChatSelector } from '@/components/layout/quick-chat-selector';
 import { useTheme } from '@/components/providers/theme-provider';
 import { useAuth } from '@/hooks/use-auth';
 import { useAdmin } from '@/hooks/use-admin';
@@ -128,6 +129,7 @@ export function SideNav() {
         </nav>
         
         <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">
+          <QuickChatSelector />
           <NotificationBell />
           
           <DropdownMenu>

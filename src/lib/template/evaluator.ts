@@ -103,7 +103,9 @@ export function applyModifiers(value: unknown, modifiers: string | string[]): st
 
     mods.forEach((mod) => {
         const trimmedMod = mod.trim().toLowerCase();
-        if (trimmedMod === 'upper') {
+        if (trimmedMod === 'hidden') {
+            result = '';
+        } else if (trimmedMod === 'upper') {
             result = result.toUpperCase();
         } else if (trimmedMod === 'lower') {
             result = result.toLowerCase();

@@ -1,5 +1,13 @@
 # Historial de Cambios - Minutas
 
+## [1.8.1] - 2026-05-31
+
+### Añadido
+- **Selector Rápido de Chats de WhatsApp**: Se agregó un botón interactivo y premium justo encima del icono de la campana en la barra de navegación (lateral y móvil) que permite elegir y sincronizar rápidamente los chats y grupos destinatarios de los reportes.
+- **Modificador "hidden" en Plantillas**: Implementación del modificador `hidden` (`{campo:hidden}`) para evitar que las etiquetas se rendericen en el reporte final mientras conservan toda su funcionalidad interactiva dentro del formulario de novedades.
+
+---
+
 ## [1.8.0] - 2026-05-29
 
 ### Añadido

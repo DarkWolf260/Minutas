@@ -237,3 +237,16 @@ describe('Template Renderer - Condicionales con Campos', () => {
     });
 });
 
+describe('Template Renderer - Modifiers', () => {
+    it('should not render hidden fields in the report', () => {
+        const template = 'Nombre: {nombre}\nCódigo: {codigo:hidden}\nCargo: {cargo:upper}';
+        const data = { nombre: 'Juan', codigo: '12345', cargo: 'director' };
+        const result = render(template, data);
+        
+        expect(result).toContain('Nombre: Juan');
+        expect(result).toContain('Cargo: DIRECTOR');
+        expect(result).not.toContain('12345');
+        expect(result).not.toContain('Código: 12345');
+    });
+});
+
