@@ -126,40 +126,55 @@ app.post('/api/whatsapp/send', async (req, res) => {
   }
 
   const { chatId, message, media } = req.body;
+  const hasMedia = media && Array.isArray(media) && media.length > 0;
 
-  if (!chatId || !message) {
-    return res.status(400).json({ error: 'Faltan parámetros: chatId y message son requeridos' });
+  // Permitir message vacío si hay adjuntos (ej: reporte solo de fotos)
+  if (!chatId || (!message && !hasMedia)) {
+    return res.status(400).json({ error: 'Faltan parámetros: chatId y al menos message o media son requeridos' });
   }
 
   try {
-    const response = await client.sendMessage(chatId, message);
-    
-    // Si se enviaron archivos/fotos adjuntos, se procesan y envían
-    if (media && Array.isArray(media)) {
-      for (const item of media) {
-        if (item.url) {
-          // Extraer mimetype y datos base64 de la Data URL
-          const matches = item.url.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
-          if (matches) {
-            const mimetype = matches[1];
-            const data = matches[2];
-            const messageMedia = new MessageMedia(mimetype, data, item.name || 'foto.jpg');
-            
-            console.log(`[Media] Enviando archivo adjunto a ${chatId}: ${item.name || 'foto.jpg'}`);
-            await client.sendMessage(chatId, messageMedia, {
-              caption: item.description || ''
-            });
-          }
-        }
-      }
+    let textMsgId = null;
+
+    // Solo enviar texto si hay contenido (WhatsApp no acepta mensajes vacíos)
+    if (message && message.trim()) {
+      const response = await client.sendMessage(chatId, message);
+      textMsgId = response.id._serialized;
     }
 
-    res.json({ success: true, messageId: response.id._serialized });
+    // Responder inmediatamente — el browser no espera que las fotos terminen de enviarse.
+    res.json({ success: true, messageId: textMsgId, mediaCount: hasMedia ? media.length : 0 });
+
+    // Procesar y enviar fotos en background (fire-and-forget)
+    if (hasMedia) {
+      (async () => {
+        for (const item of media) {
+          if (!item.url) continue;
+          try {
+            const matches = item.url.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+            if (matches) {
+              // Base64 data URI
+              const messageMedia = new MessageMedia(matches[1], matches[2], item.name || 'foto.jpg');
+              console.log(`[Media] Enviando adjunto a ${chatId}: ${item.name || 'foto.jpg'}`);
+              await client.sendMessage(chatId, messageMedia, { caption: item.description || '' });
+            } else {
+              // URL pública (ej: Supabase Storage)
+              console.log(`[Media] Adjunto URL pública a ${chatId}: ${item.url.substring(0, 80)}...`);
+              const messageMedia = await MessageMedia.fromUrl(item.url, { unsafeMime: true });
+              await client.sendMessage(chatId, messageMedia, { caption: item.description || '' });
+            }
+          } catch (mediaErr) {
+            console.error(`[Media] Error enviando adjunto "${item.name || 'foto'}" a ${chatId}:`, mediaErr.message || mediaErr);
+          }
+        }
+      })();
+    }
   } catch (error) {
-    console.error('Error enviando mensaje con adjuntos:', error);
+    console.error('Error enviando mensaje:', error);
     res.status(500).json({ error: error.toString() });
   }
 });
+
 
 // === SISTEMA DE PROGRAMACIÓN EN SEGUNDO PLANO ===
 const fs = require('fs');
@@ -209,23 +224,24 @@ setInterval(async () => {
     if (msg.status === 'pending' && new Date(msg.scheduledTime) <= now) {
       try {
         console.log(`[Programado] Enviando mensaje ${msg.id} a ${msg.chatId}...`);
-        await client.sendMessage(msg.chatId, msg.message);
+
+        // Solo enviar texto si hay contenido (WhatsApp no acepta mensajes vacíos)
+        if (msg.message && msg.message.trim()) {
+          await client.sendMessage(msg.chatId, msg.message);
+        }
 
         // Si se programaron archivos/fotos adjuntos, se procesan y envían
         if (msg.media && Array.isArray(msg.media)) {
           for (const item of msg.media) {
             if (item.url) {
-              // Extraer mimetype y datos base64 de la Data URL
               const matches = item.url.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
               if (matches) {
-                const mimetype = matches[1];
-                const data = matches[2];
-                const messageMedia = new MessageMedia(mimetype, data, item.name || 'foto.jpg');
-                
+                const messageMedia = new MessageMedia(matches[1], matches[2], item.name || 'foto.jpg');
                 console.log(`[Programado - Media] Enviando archivo adjunto a ${msg.chatId}: ${item.name || 'foto.jpg'}`);
-                await client.sendMessage(msg.chatId, messageMedia, {
-                  caption: item.description || ''
-                });
+                await client.sendMessage(msg.chatId, messageMedia, { caption: item.description || '' });
+              } else {
+                const messageMedia = await MessageMedia.fromUrl(item.url, { unsafeMime: true });
+                await client.sendMessage(msg.chatId, messageMedia, { caption: item.description || '' });
               }
             }
           }
@@ -250,7 +266,10 @@ setInterval(async () => {
 // Endpoints del sistema de programación
 app.post('/api/whatsapp/schedule', (req, res) => {
   const { id, chatId, message, scheduledTime, title, media } = req.body;
-  if (!id || !chatId || !message || !scheduledTime) {
+  const hasMedia = media && Array.isArray(media) && media.length > 0;
+
+  // Permitir message vacío si hay adjuntos
+  if (!id || !chatId || (!message && !hasMedia) || !scheduledTime) {
     return res.status(400).json({ error: 'Faltan parámetros requeridos para programar' });
   }
 
