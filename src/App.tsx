@@ -80,7 +80,7 @@ function AppLayout() {
   const { user } = useAuth();
   const { isApproved, isAdmin, loading: statusLoading } = useUser();
   const { config, loading: configLoading } = useGlobalConfig();
-  const { isCloud } = useWorkspaceManager();
+  const { isCloud, currentWorkspace } = useWorkspaceManager();
   
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
   // Si el usuario está autenticado pero no está aprobado, ocultamos la navegación por completo.
@@ -304,8 +304,13 @@ function AppLayout() {
       {showTour && <OnboardingTour onComplete={() => setShowTour(false)} />}
       
       {/* Desktop Version Indicator */}
-      <div className="hidden sm:block fixed bottom-4 right-4 z-[40] pointer-events-none select-none opacity-80 hover:opacity-100 transition-opacity">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-foreground bg-background/90 px-2 py-1 rounded-full border border-border backdrop-blur-md shadow-md">
+      <div className="hidden sm:flex fixed bottom-4 right-4 z-[40] pointer-events-none select-none opacity-80 hover:opacity-100 transition-opacity gap-2 items-center">
+        {currentWorkspace && (
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full backdrop-blur-md shadow-md">
+            {currentWorkspace}
+          </span>
+        )}
+        <span className="text-[10px] font-bold uppercase tracking-widest text-foreground bg-background/90 px-2.5 py-1 rounded-full border border-border backdrop-blur-md shadow-md">
           v{APP_VERSION}
         </span>
       </div>

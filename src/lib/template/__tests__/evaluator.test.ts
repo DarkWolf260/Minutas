@@ -67,5 +67,10 @@ describe('Template Evaluator', () => {
         it('should trim modifiers', () => {
             expect(applyModifiers('hello', ' upper ')).toBe('HELLO');
         });
+
+        it('should handle hidden modifier', () => {
+            expect(applyModifiers('hello', 'hidden')).toBe('');
+            expect(applyModifiers('hello', ['upper', 'hidden'])).toBe('');
+        });
     });
 });

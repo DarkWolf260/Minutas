@@ -62,9 +62,17 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.8.0';
+export const APP_VERSION = '1.8.1';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.8.1',
+    date: '31/05/2026',
+    changes: [
+      { type: 'nueva', text: 'Selector Rápido de Chats de WhatsApp: Añadido un botón interactivo sobre el icono de la campana en la barra de navegación (lateral y móvil) que permite elegir y sincronizar rápidamente los destinatarios de los reportes.' },
+      { type: 'nueva', text: 'Modificador "hidden" en Plantillas: Implementada la etiqueta {:hidden} o {|hidden} para ocultar campos específicos en el reporte final manteniendo su funcionalidad en los formularios.' },
+    ],
+  },
   {
     version: '1.8.0',
     date: '29/05/2026',
