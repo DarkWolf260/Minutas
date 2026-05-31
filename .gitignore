@@ -63,3 +63,4 @@ dev-dist/
 
 #bot
 scheduled_messages_session.json
+whatsapp-bot/scheduled_messages.json

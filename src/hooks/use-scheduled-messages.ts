@@ -21,6 +21,9 @@ let lastCheckTime = 0;
 let consecutiveFailures = 0;
 let currentPollingInterval = 10000; // Start at 10s
 let lastCheckedUrl = '';
+// Previene que múltiples instancias del hook (ej: report-viewer + viewer-header)
+// ejecuten el sync worker simultáneamente, evitando pushes duplicados del mismo mensaje.
+let isSyncing = false;
 
 export function useScheduledMessages() {
   const db = useDatabase();
@@ -160,6 +163,12 @@ export function useScheduledMessages() {
     }
 
     const syncStatuses = async () => {
+      // Si ya hay un sync en curso (de otra instancia del hook), esperar
+      if (isSyncing) {
+        timeoutId = setTimeout(syncStatuses, currentPollingInterval);
+        return;
+      }
+
       const now = Date.now();
 
       // If offline cache is valid, skip request and reschedule to avoid console ERR_CONNECTION_REFUSED spam.
@@ -168,6 +177,7 @@ export function useScheduledMessages() {
         return;
       }
 
+      isSyncing = true;
       try {
         const response = await fetch(`${localUrl}/api/whatsapp/scheduled`);
         if (!response.ok) {
@@ -225,10 +235,9 @@ export function useScheduledMessages() {
                 }
               }
             } else {
-              // Message is pending locally but MISSING on the server
-              // Push it to the backend!
+              // Message is pending locally but MISSING on the server — push it
               try {
-                await fetch(`${localUrl}/api/whatsapp/schedule`, {
+                const pushRes = await fetch(`${localUrl}/api/whatsapp/schedule`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ 
@@ -240,7 +249,12 @@ export function useScheduledMessages() {
                     media: msg.media
                   }),
                 });
-                logger.info(`Pushed missing pending message ${msg.id} to background server`);
+                if (pushRes.ok) {
+                  logger.info(`Pushed missing pending message ${msg.id} to background server`);
+                } else {
+                  const errBody = await pushRes.json().catch(() => ({}));
+                  logger.error(`Failed to push message ${msg.id} (HTTP ${pushRes.status}):`, errBody);
+                }
               } catch (err) {
                 logger.error(`Failed to push missing message ${msg.id} to server`, err);
               }
@@ -265,6 +279,7 @@ export function useScheduledMessages() {
         
         logger.debug(`[WhatsApp Sync] Server is offline (consecutive failures: ${consecutiveFailures}). Backing off sync to ${currentPollingInterval / 1000}s`);
       } finally {
+        isSyncing = false;
         // Schedule next sync dynamically based on the current interval
         timeoutId = setTimeout(syncStatuses, currentPollingInterval);
       }
