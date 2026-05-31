@@ -1,0 +1,1742 @@
+{
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\.eslintrc.json": {
+    "mtime": 1775521150.3907826,
+    "ast_hash": "91c1c8e467e9e202db83eb7aef70fb71",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\.vscode\\settings.json": {
+    "mtime": 1775521150.4533124,
+    "ast_hash": "23fa538a085fc238a7b62832f390138f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\ast.json": {
+    "mtime": 1780253298.8056767,
+    "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\components.json": {
+    "mtime": 1767014050.8032343,
+    "ast_hash": "1bddba27dcaadf1ddd5959717236300b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\eslint.config.mjs": {
+    "mtime": 1775521150.4693046,
+    "ast_hash": "31770b29d3fd815afae9359e33e09704",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\package.json": {
+    "mtime": 1780254627.3534265,
+    "ast_hash": "1e4f0f2acdd0d9f337c5771ce2175882",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\postcss.config.mjs": {
+    "mtime": 1767014050.8092313,
+    "ast_hash": "3507368dae6e94b0070b0a10efa15a05",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\report.json": {
+    "mtime": 1780253298.8056767,
+    "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\scratch\\repro_parser.ts": {
+    "mtime": 1778512627.9167821,
+    "ast_hash": "7f686c7fe2b9b309a5427a52d7cf6cb7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\scratch\\test-stats.ts": {
+    "mtime": 1778871713.7343543,
+    "ast_hash": "ffe9f6248e11f1166bda6447114b1b9d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\App.tsx": {
+    "mtime": 1780255143.2245364,
+    "ast_hash": "132fdf567ac24638b236272a34dd2b96",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\auth\\admin-route.tsx": {
+    "mtime": 1778510236.1372464,
+    "ast_hash": "fe046630c59cd3ce7f879c86443f2bbb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\auth\\protected-route.tsx": {
+    "mtime": 1779853605.7657702,
+    "ast_hash": "b5c8eab22dda14a7278e08c2053a83b5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\common\\error-boundary-feature.tsx": {
+    "mtime": 1777854649.828871,
+    "ast_hash": "16d05737ef7e44209acc1c3166dd1253",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\common\\error-boundary.tsx": {
+    "mtime": 1777854649.8298712,
+    "ast_hash": "af5231cb0ce4a1387a2c8394fef68445",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\common\\loading-screen.tsx": {
+    "mtime": 1779541577.0299382,
+    "ast_hash": "2fa1e069e5225e5167d2a0f48ae5d44a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\guards\\guard-selector.tsx": {
+    "mtime": 1778871713.7373748,
+    "ast_hash": "7033788e95855a61ba50ed5362827fa7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\guards\\guard-staff-editor.tsx": {
+    "mtime": 1778871713.7383807,
+    "ast_hash": "0fb52a4fd80d23d28bc2e55ae5b8f04c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\layout\\bottom-nav.tsx": {
+    "mtime": 1778180809.2136974,
+    "ast_hash": "f1e4226cddc0e1a4395576573b13539d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\layout\\mobile-nav.tsx": {
+    "mtime": 1780254523.9783375,
+    "ast_hash": "40e8bd7e574c58c90f26339bf9f07b98",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\layout\\mobile-nav\\nav-brand.tsx": {
+    "mtime": 1778510236.1416204,
+    "ast_hash": "b65dcb2c3e453d537968594cd424567d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\layout\\mobile-nav\\nav-user-menu.tsx": {
+    "mtime": 1779856032.784868,
+    "ast_hash": "45d5a2888f1b0a49a67c14e8adeb8690",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\layout\\mobile-nav\\use-mobile-nav.ts": {
+    "mtime": 1778510236.1438155,
+    "ast_hash": "30f1db923fe1a1659c19bdf265c9dee4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\layout\\notification-bell.tsx": {
+    "mtime": 1777854649.8498838,
+    "ast_hash": "62274cd5264a6e8e375ecc07fb8fdd3f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\layout\\pwa-status.tsx": {
+    "mtime": 1779541577.0299382,
+    "ast_hash": "1f405b6b404ac3b77ad5608fb70b77de",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\layout\\quick-chat-selector.tsx": {
+    "mtime": 1780261934.1308923,
+    "ast_hash": "88c68441518f7f17a4776861cedfe14d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\layout\\side-nav.tsx": {
+    "mtime": 1780254517.3434992,
+    "ast_hash": "aff2520c5c1f2181098beef0d44bfadf",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\orden-del-dia\\activity-item.tsx": {
+    "mtime": 1777854649.8551278,
+    "ast_hash": "69f3dcf563f6261f9bb5d8074af2405a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\orden-del-dia\\add-activity-form.tsx": {
+    "mtime": 1777854649.8551278,
+    "ast_hash": "79715a6dbcfab225df0253c12e7cea84",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\orden-del-dia\\index.tsx": {
+    "mtime": 1779656248.0720253,
+    "ast_hash": "80e3e9f1350b22cc6b8fbca4f91c3c7a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\orden-del-dia\\note-item.tsx": {
+    "mtime": 1777854649.8576422,
+    "ast_hash": "8f28e0a7edcd4ce7138eec5dfd8edb23",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\orden-del-dia\\result-dialog.tsx": {
+    "mtime": 1777854649.8596532,
+    "ast_hash": "500c70bc4fe7d112ef7f6b18494ab7fd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\add-edit-personnel-dialog.tsx": {
+    "mtime": 1777854649.8601556,
+    "ast_hash": "ffe027340503da22000e928aaa25af21",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\attendance-manager.tsx": {
+    "mtime": 1775530927.609996,
+    "ast_hash": "b63fa8fc368a725824b911021d318ac2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\csv-import-button.tsx": {
+    "mtime": 1778180809.2136974,
+    "ast_hash": "b8369abeedb0ddc5e72b48f232273b74",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\csv-manager.tsx": {
+    "mtime": 1778180809.2224064,
+    "ast_hash": "0a7ddc169e6ddf0a295dcc89e3fb3a83",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\form\\personnel-form-fields.tsx": {
+    "mtime": 1778510236.152095,
+    "ast_hash": "80a13210c5efb91809a2b45c17b7b581",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\form\\use-personnel-form.ts": {
+    "mtime": 1778180809.2241957,
+    "ast_hash": "b36c9f941a5220de0a79c7f411de716f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\guard-assignment-panel.tsx": {
+    "mtime": 1778180809.2241957,
+    "ast_hash": "4010dfa254306ee801948f22a3487161",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\personnel-history-dialog.tsx": {
+    "mtime": 1778871713.7424054,
+    "ast_hash": "c1a672408535cdb8bb876ce3ab582bec",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\personnel-table.tsx": {
+    "mtime": 1778180809.2241957,
+    "ast_hash": "f53e39057d827173f009050760c5c4bf",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\units-manager.tsx": {
+    "mtime": 1777854649.870434,
+    "ast_hash": "f606b66c7786938de2cf5ced887f67fd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\units\\unit-form.tsx": {
+    "mtime": 1777854649.8714333,
+    "ast_hash": "d7efa3fddd52ffe4a90c0f00134a47f7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\units\\unit-list.tsx": {
+    "mtime": 1777728650.4956515,
+    "ast_hash": "6ae42c50aa6461773758eff516cb2eb6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\units\\use-units-manager.ts": {
+    "mtime": 1777854649.8724327,
+    "ast_hash": "12123d82458589cd35354198c78c939c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\providers\\auth-provider.tsx": {
+    "mtime": 1779541577.0370805,
+    "ast_hash": "3ed6502f09b411f0feea1283c1b80ea2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\providers\\pwa-provider.tsx": {
+    "mtime": 1779541577.0403354,
+    "ast_hash": "3c6871f1363431a770a31cf12c3873d6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\providers\\theme-provider.tsx": {
+    "mtime": 1778871713.7434125,
+    "ast_hash": "d1c3d72f56e20b3b8ec6b0caf9819017",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\providers\\user-provider.tsx": {
+    "mtime": 1779853605.7757788,
+    "ast_hash": "cabc5841bb48293326207424d9919640",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\field-renderer.tsx": {
+    "mtime": 1780245146.3569057,
+    "ast_hash": "8b357b434200a116ca2cd76b8db88112",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\form\\form-layout.tsx": {
+    "mtime": 1780245146.362135,
+    "ast_hash": "e076b42cc8b6aea70528cd839465e474",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\form\\use-report-form.ts": {
+    "mtime": 1780245146.3758109,
+    "ast_hash": "8522279c3fb3e2be8e653bfd2fd30503",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\generator\\generator-header.tsx": {
+    "mtime": 1778871713.7474823,
+    "ast_hash": "2078e1b44bf5b1dd6809043915585962",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\generator\\use-report-generator.ts": {
+    "mtime": 1780245146.381844,
+    "ast_hash": "1436d0e65f315ca9ec1284d5880a672e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\photo-editor.tsx": {
+    "mtime": 1780245146.3923275,
+    "ast_hash": "79e9e8d828746c2d37556b0d2dcbc4ad",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\report-form.tsx": {
+    "mtime": 1780245146.3923275,
+    "ast_hash": "5e8c6a3ec00bd9d1262f2d7a1ef2bdfa",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\report-generator.tsx": {
+    "mtime": 1779856032.817086,
+    "ast_hash": "86c257e1c251e070f8fe5be00c667102",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\report-photos.tsx": {
+    "mtime": 1780245146.4118056,
+    "ast_hash": "a32a7b01fa414e98b165e9150fe432ac",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\report-preview.tsx": {
+    "mtime": 1778871713.7494998,
+    "ast_hash": "544dc1352eaee53d57b0021ff684e4cd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\report-viewer.tsx": {
+    "mtime": 1780248616.4291773,
+    "ast_hash": "18c88c1f94b3408ef58c96bf786c3c62",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\section-renderer.tsx": {
+    "mtime": 1780245146.475564,
+    "ast_hash": "682563fddc4a61a6f1ca5c43184b1bb6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\viewer\\use-report-viewer.ts": {
+    "mtime": 1780245146.482092,
+    "ast_hash": "f1263c9be490628c7e7df1504f751c4f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\viewer\\viewer-content.tsx": {
+    "mtime": 1780245146.492308,
+    "ast_hash": "c24dd7bb1d0905a9e9d37f622c8645f8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\viewer\\viewer-header.tsx": {
+    "mtime": 1779641940.668788,
+    "ast_hash": "15927155af3c5d9ea3f9d785640d004d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\viewer\\viewer-states.tsx": {
+    "mtime": 1777854649.891352,
+    "ast_hash": "d966fb3847f3adc89cffbad957c9a668",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\scheduled-messages-worker.tsx": {
+    "mtime": 1779203896.1794727,
+    "ast_hash": "74c86087aa752466f910d691a40ecf79",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\shared\\address-form-dialog.tsx": {
+    "mtime": 1779541577.0557594,
+    "ast_hash": "ee232b8d534591863198d0eb957f5180",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\shared\\address-map.tsx": {
+    "mtime": 1777854649.8947446,
+    "ast_hash": "a1a4ef34895d22da3e3108a54d798e02",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\shared\\ajustes-generales-form.tsx": {
+    "mtime": 1778510236.1570902,
+    "ast_hash": "523b6a5038bdfd61fc7d2d32560a964d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\shared\\ajustes-generales.tsx": {
+    "mtime": 1778871713.7525146,
+    "ast_hash": "40b4e38a57082131b296dc479abd1df6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\shared\\workspace-selection-dialog.tsx": {
+    "mtime": 1779856032.8375902,
+    "ast_hash": "5c2435cc2240a4242cd4c05bd219b435",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\stats\\stat-card.tsx": {
+    "mtime": 1775530927.8443997,
+    "ast_hash": "c5c886feb4ed10c1585198c96f7a1aa0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\structure\\department-card.tsx": {
+    "mtime": 1777854649.9076502,
+    "ast_hash": "0f60589284ede6574cfbedc733a78ccc",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\structure\\institutional-data.ts": {
+    "mtime": 1777854649.9089894,
+    "ast_hash": "0cda53fcfbd1a077bd62ac4efdc9b18f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\structure\\role-card.tsx": {
+    "mtime": 1778180809.2368965,
+    "ast_hash": "e7571fcd22d52d3284156e2471023e4b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\structure\\role-manager-dnd.tsx": {
+    "mtime": 1778180809.2379036,
+    "ast_hash": "2e6383ca33eaaf56edbdabea7f657c39",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\structure\\role-sortable-list.tsx": {
+    "mtime": 1778180809.238911,
+    "ast_hash": "5c54041aa6d8c5d897484937b4e04e80",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\structure\\role-sorter.tsx": {
+    "mtime": 1778180809.2401597,
+    "ast_hash": "e0a504f752821f5276bea66d6c70c49a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\structure\\sortable-role-item.tsx": {
+    "mtime": 1778180809.241161,
+    "ast_hash": "eb8ff71a4f9e54e9a0794cbefa566166",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\structure\\structure-manager.tsx": {
+    "mtime": 1778180809.242645,
+    "ast_hash": "0d5e74239f95cd7acb78f454e726d907",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\structure\\structure-tree.tsx": {
+    "mtime": 1778510236.161085,
+    "ast_hash": "3cdeb5e8b717840e796dc680b9a182c2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\sync\\qr-generator.tsx": {
+    "mtime": 1777854649.9211824,
+    "ast_hash": "c4b5f2ae6afb62e04066921cc6bc6b70",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\sync\\qr-scanner.tsx": {
+    "mtime": 1777854649.9217489,
+    "ast_hash": "e2363e2561b4a837b0b7b48f06cce2bd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\template\\cloud-templates-dialog.tsx": {
+    "mtime": 1779657171.7709143,
+    "ast_hash": "c710d5e348e796b893767e4c12d402d4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\template\\snippet-option-editor.tsx": {
+    "mtime": 1778561976.2050798,
+    "ast_hash": "857fd0dfd445114fe144059b2bc21d09",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\template\\template-builder.tsx": {
+    "mtime": 1780245146.5020783,
+    "ast_hash": "1a341f199a76bfbdc5cd8eb2781f78bb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\template\\template-editor.tsx": {
+    "mtime": 1779657512.9724357,
+    "ast_hash": "32bf079e20c9abcbf54ebaa79f4d9096",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\template\\template-preview.tsx": {
+    "mtime": 1778871713.7525146,
+    "ast_hash": "a24e0853e1a5a69aaf2a9447c9bb05b9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\accordion.tsx": {
+    "mtime": 1775530927.993374,
+    "ast_hash": "22e6b0460af6c84a0471cc5485ee81b5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\alert-dialog.tsx": {
+    "mtime": 1778510236.166083,
+    "ast_hash": "5b5d9b3a6f94db7ff20ea26b8a76c72d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\alert.tsx": {
+    "mtime": 1775530928.0102563,
+    "ast_hash": "3c7be121f3ea9c8ed4e0af90044d3999",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\badge.tsx": {
+    "mtime": 1775530928.0142536,
+    "ast_hash": "9e4d209f374ec370802b4367fd7b29a9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\button.tsx": {
+    "mtime": 1775530928.0202518,
+    "ast_hash": "794ea6a683c21a298679a9898e0cdcf9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\calendar.tsx": {
+    "mtime": 1778871713.7525146,
+    "ast_hash": "7618e73421087cb12e962513f05cfc8e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\card.tsx": {
+    "mtime": 1777854649.9600549,
+    "ast_hash": "099f117e4713a57a1cc077aa719f5bdd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\checkbox.tsx": {
+    "mtime": 1775530928.0324929,
+    "ast_hash": "43409a5ba536a7041c351afcd92c6abb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\address-input.tsx": {
+    "mtime": 1779541577.0607538,
+    "ast_hash": "40dc8c9118c0f2d53b2756f56b35316c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\cedula-input.tsx": {
+    "mtime": 1777854684.5059137,
+    "ast_hash": "c29034aaeb683f88bf623396ba233bfa",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\confirm-dialog.tsx": {
+    "mtime": 1777854649.9639497,
+    "ast_hash": "b59a80b9582f14d3b586338758f92862",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\date-picker.tsx": {
+    "mtime": 1778871713.7525146,
+    "ast_hash": "37e69c98173ddb5e8e9ae9564be3ca07",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\loading-skeleton.tsx": {
+    "mtime": 1777728651.0669591,
+    "ast_hash": "04805580a4c76f19f658fb339ba41af8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\multi-input.tsx": {
+    "mtime": 1779856032.8483295,
+    "ast_hash": "b1ed4fa3478a43ae7caf212c715c81a1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\onboarding-tour.tsx": {
+    "mtime": 1777854649.9669292,
+    "ast_hash": "c1068af9848ca0d339f256477660aef5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\responsive-modal.tsx": {
+    "mtime": 1777854684.5069134,
+    "ast_hash": "23ab1ca2207270a7c7d4edc817e41d5a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\search-input.tsx": {
+    "mtime": 1777728651.085938,
+    "ast_hash": "984f033f4fd7abb7460488f06387eaac",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\status-badge.tsx": {
+    "mtime": 1777728651.1040325,
+    "ast_hash": "7ffa8b7a550c49fa71b92cf69f585507",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\time-hlv-input.tsx": {
+    "mtime": 1777854649.9704354,
+    "ast_hash": "ea7b118cabb97fb231b421e439291b71",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\dialog.tsx": {
+    "mtime": 1778510236.1720905,
+    "ast_hash": "f6c098d1c56bea3e630c52abd2793f13",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\dropdown-menu.tsx": {
+    "mtime": 1778510236.1876512,
+    "ast_hash": "321490bcfd5081b03256c3f683a85ce8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\form.tsx": {
+    "mtime": 1775530928.0685856,
+    "ast_hash": "02dad14c7d933a42668f0be9daecdab5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\input.tsx": {
+    "mtime": 1779125773.071095,
+    "ast_hash": "be67608cb84b9dfdda7a97ac3e2b54c7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\label.tsx": {
+    "mtime": 1775530928.087566,
+    "ast_hash": "4c0e2337ee2581b1756c58ab2594b189",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\popover.tsx": {
+    "mtime": 1778510236.2036374,
+    "ast_hash": "f756abdebcaf79f3c1566e1da1b3e988",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\progress.tsx": {
+    "mtime": 1775530928.1084664,
+    "ast_hash": "c6f2a221f35817587f75e3b32a855523",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\radio-group.tsx": {
+    "mtime": 1775530928.1129744,
+    "ast_hash": "14a7b16fcd563c49e552e04b1b96a54d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\scroll-area.tsx": {
+    "mtime": 1775530928.1159732,
+    "ast_hash": "db0a90b2fa0bba170698fd6adadbcfbd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\select.tsx": {
+    "mtime": 1778510236.2129858,
+    "ast_hash": "ef59719b088532e5a56fc5587cc3f17c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\separator.tsx": {
+    "mtime": 1775530928.1329627,
+    "ast_hash": "01fb6307e789defb61760afb99ce3074",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\sheet.tsx": {
+    "mtime": 1778871713.7525146,
+    "ast_hash": "181ac42c9f01b317d636ae6dce6de9b4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\skeleton.tsx": {
+    "mtime": 1775530928.1429567,
+    "ast_hash": "fc0938686abad92e43b0d7091e5af80d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\switch.tsx": {
+    "mtime": 1775530928.1504614,
+    "ast_hash": "64f9e79e33758534eaa255754f421870",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\table.tsx": {
+    "mtime": 1775530928.1554587,
+    "ast_hash": "db48c189101841af840babb218eaff39",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\tabs.tsx": {
+    "mtime": 1775530928.1614609,
+    "ast_hash": "398914e54a426453df5b0f003534d6aa",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\textarea.tsx": {
+    "mtime": 1779125773.0730467,
+    "ast_hash": "daaea1e4d29143d75c728cb23aba44ae",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\toaster.tsx": {
+    "mtime": 1778871713.7525146,
+    "ast_hash": "c8ac220fb292abd7f05ba61cf74e0398",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\ui\\tooltip.tsx": {
+    "mtime": 1775530928.186316,
+    "ast_hash": "f95f77243eb76740326c93c24d75eaae",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\orden-del-dia\\use-orden-del-dia-activities.ts": {
+    "mtime": 1777854649.9744332,
+    "ast_hash": "3b98b018bddc5351634d957758f43132",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\orden-del-dia\\use-orden-del-dia-generator.ts": {
+    "mtime": 1778871713.7525146,
+    "ast_hash": "0efc1cb789e91b1ba76f04c654de85f3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\orden-del-dia\\use-orden-del-dia-notes.ts": {
+    "mtime": 1777854649.977432,
+    "ast_hash": "c0a84449c23b346103357102fae7186e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\orden-del-dia\\use-orden-del-dia-personnel.ts": {
+    "mtime": 1778180809.251732,
+    "ast_hash": "ce48d303640b62d31dc61c001969eb96",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\reporte-final\\use-manual-novedades.ts": {
+    "mtime": 1779125773.0750024,
+    "ast_hash": "5910c0522c57850e1648dd118a996acc",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\reporte-final\\use-reporte-final-generator.ts": {
+    "mtime": 1779658472.4106567,
+    "ast_hash": "df12a53b1f112874bf2df86aa9bcec16",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\reporte-final\\use-reporte-final-history.ts": {
+    "mtime": 1778871713.7525146,
+    "ast_hash": "0d6b694aeac23249976d0fa37fbc1a9d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\reporte-final\\use-reporte-final-stats.ts": {
+    "mtime": 1779541577.0637531,
+    "ast_hash": "c30a8e37cc818b2b32ca110f6dda7c90",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-active-guard.ts": {
+    "mtime": 1778180809.2537699,
+    "ast_hash": "d9d42edc83b44da6edc58680736c3a5a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-addresses.ts": {
+    "mtime": 1778871713.7525146,
+    "ast_hash": "2bc86ef600fb2b2f4f7c63c833fd6716",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-admin-users.ts": {
+    "mtime": 1778180805.3615785,
+    "ast_hash": "6dc3bdc64bc7a1d2fff4de88f3a13b19",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-admin.ts": {
+    "mtime": 1779853605.840727,
+    "ast_hash": "5f5246f5862eacd69a83a8f3c77ffb01",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-auth.ts": {
+    "mtime": 1778180809.2571516,
+    "ast_hash": "ad41ddbcb02610b889d5bd64e7ab4014",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-cloud-templates.ts": {
+    "mtime": 1778510236.2160408,
+    "ast_hash": "b2565c182cebeb7d7a717f1c47caaf1f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-cloud-workspaces.ts": {
+    "mtime": 1778871713.7525146,
+    "ast_hash": "6582d85b506f6249c97021d2af354136",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-config-repo.ts": {
+    "mtime": 1778510236.2179174,
+    "ast_hash": "b978e2859f8567a7cc36c22ee61ab0af",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-departments.ts": {
+    "mtime": 1778510236.2189167,
+    "ast_hash": "d76b5add299f24131ff88c60e373cf91",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-direcciones.ts": {
+    "mtime": 1777854649.9879827,
+    "ast_hash": "edaf5b9d6738c1b6659f1bfefe8f2a78",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-drafts.ts": {
+    "mtime": 1776805598.6345823,
+    "ast_hash": "3d16047125f8f4b8927d75f351682e0f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-estadisticas.ts": {
+    "mtime": 1779541577.0647511,
+    "ast_hash": "7962fcd94146bdcf4d7d4f693c8d66b7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-field-definitions.ts": {
+    "mtime": 1778185495.1598797,
+    "ast_hash": "454f37031d81ccc2da4b0d39f225b7c5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-global-config.ts": {
+    "mtime": 1778871713.7681417,
+    "ast_hash": "18d2e2738a6e380147d0d1df279fd89f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-guard-history.ts": {
+    "mtime": 1778871713.7681417,
+    "ast_hash": "747a623bda1d465915d11e7e0876c665",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-guards.ts": {
+    "mtime": 1778195009.9880676,
+    "ast_hash": "223e0899f3a1fc30a65bdc7cfa029bcf",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-mobile.tsx": {
+    "mtime": 1775530928.4955072,
+    "ast_hash": "6fcae22a67cb48b1f3b3801da09de722",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-novedades.ts": {
+    "mtime": 1779658458.4440658,
+    "ast_hash": "121e9b97b56e7619e6cf324821d1618f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-orden-del-dia-draft.ts": {
+    "mtime": 1779656187.7093563,
+    "ast_hash": "b249709ba5d7daa084721492b04c897a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-orden-del-dia-pagina.ts": {
+    "mtime": 1777854650.0067928,
+    "ast_hash": "22fb3b78705b8d86d804a65e11e0818f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-orden-del-dia.ts": {
+    "mtime": 1779656208.3626873,
+    "ast_hash": "32c442f0eae071b9d564ab30b7930c4f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-personal.ts": {
+    "mtime": 1778180809.268868,
+    "ast_hash": "c3e543b4a7849b3947c624552864ef9c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-personnel-history.ts": {
+    "mtime": 1778871713.7681417,
+    "ast_hash": "0d62eb0b1a321d38baa5e07e727d5118",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-personnel.ts": {
+    "mtime": 1778871713.7681417,
+    "ast_hash": "fb4f60ca322e6777e4d0c1b114bc5a57",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-plantillas.ts": {
+    "mtime": 1780245146.5169444,
+    "ast_hash": "abd5c03aad18c7bab8c3e1f292308f88",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-profile.ts": {
+    "mtime": 1778193884.3423312,
+    "ast_hash": "bf6fd5a2e5521b928c5ad67acca26e75",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-reporte-final.ts": {
+    "mtime": 1778180809.2738028,
+    "ast_hash": "34ce584c8d7720b70c4f036ae85d23f9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-reports.ts": {
+    "mtime": 1778871713.7681417,
+    "ast_hash": "f81471c8d45018bdcb1db9cf6bf4a2c6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-roles.ts": {
+    "mtime": 1778510236.2229142,
+    "ast_hash": "97d9a3ed1000685b29d7c6285a5bc86e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-save.ts": {
+    "mtime": 1776805576.3606062,
+    "ast_hash": "328595ec79db80350ff42f5bcd562980",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-scheduled-messages.ts": {
+    "mtime": 1780249453.637856,
+    "ast_hash": "043d874d8ca256b105caba5ac84eb3ac",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-settings.ts": {
+    "mtime": 1779541577.066752,
+    "ast_hash": "dc37a897de249271a43f4a3377a21b10",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-setup.ts": {
+    "mtime": 1778519027.1655295,
+    "ast_hash": "14b5e039c6476e39f35e18448af8b461",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-stats.ts": {
+    "mtime": 1778245278.1298652,
+    "ast_hash": "c91db68b2e832cc7b856a9001f67a95a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-sync-pagina.ts": {
+    "mtime": 1778180805.39056,
+    "ast_hash": "74126ff73844cb3e07829da0ed96e5b7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-sync-templates.ts": {
+    "mtime": 1779856032.8590684,
+    "ast_hash": "2f0738c118f06854086bc4d06b1f1d32",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-sync.ts": {
+    "mtime": 1776815437.3597238,
+    "ast_hash": "201ba9d677bbb650c2e2243bdad5bc4b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-templates.ts": {
+    "mtime": 1779125773.0818336,
+    "ast_hash": "e7ef444d9a18529b479c80152e417dd2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-units.ts": {
+    "mtime": 1778193997.3995173,
+    "ast_hash": "7b5485a2b062ecef4fad083e1435ab41",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-upload-template.ts": {
+    "mtime": 1779856032.8698099,
+    "ast_hash": "41e36fd747208d12c9b5dec8de8b180c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-user-status.ts": {
+    "mtime": 1778180809.2825744,
+    "ast_hash": "e66e2d998908a531aaa0ca8db8626e0d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\hooks\\use-whatsapp-bot.ts": {
+    "mtime": 1780248616.4321773,
+    "ast_hash": "f94b207b792b6a07424fdd90376ca1a4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\__tests__\\estadisticas-utils.test.ts": {
+    "mtime": 1779657585.976298,
+    "ast_hash": "ca250e92298e6a1437f89dffe27067c8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\__tests__\\formatters.test.ts": {
+    "mtime": 1778180809.2871442,
+    "ast_hash": "9cc3c78f61d37913441a0553c83ce7d3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\__tests__\\report-sorter.test.ts": {
+    "mtime": 1778180809.2876759,
+    "ast_hash": "6cac8f8ae3a254ab2da34068f2f951c6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\__tests__\\template-parser.test.ts": {
+    "mtime": 1780245146.5423393,
+    "ast_hash": "98bd60aa787f17cbe2537d311d8f81ac",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\__tests__\\validators.test.ts": {
+    "mtime": 1777854650.0363653,
+    "ast_hash": "cff463bd5fb34b6ac9a42e9cda8797eb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\constants\\addresses.ts": {
+    "mtime": 1779541577.0708475,
+    "ast_hash": "a345fdd398d6ac02f5d48efff670bc8f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\constants\\attendance.ts": {
+    "mtime": 1777854650.0393646,
+    "ast_hash": "559b16ecd1a73dc20a6a9ccd6c325e2f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\constants\\departments.ts": {
+    "mtime": 1776123323.061969,
+    "ast_hash": "4b891265458d4d72ca57b88a5533edfe",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\constants\\personnel.ts": {
+    "mtime": 1776123352.1587927,
+    "ast_hash": "29bfc2f7d60bf8906d47f68c359a22de",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\constants\\roles.ts": {
+    "mtime": 1776559419.7668867,
+    "ast_hash": "87368dc398862bb157c164d4c07b9119",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\constants\\statistics.ts": {
+    "mtime": 1779656393.9919405,
+    "ast_hash": "c385c4a315e341f9111a8f2bf0045051",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\constants\\structure.ts": {
+    "mtime": 1778180809.2897604,
+    "ast_hash": "034a04dba7da5a7cbdd3d397461ca16c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\db\\db-context.tsx": {
+    "mtime": 1778185255.1059525,
+    "ast_hash": "792c3b4deeaf904019c2fe853defe365",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\db\\db-provider.tsx": {
+    "mtime": 1779853605.8547337,
+    "ast_hash": "3230d3d31c7645593288d17068a473e0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\db\\db.ts": {
+    "mtime": 1780245146.5569708,
+    "ast_hash": "a380252b1e2a15e5f361f7a118f7d2ae",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\db\\replication.ts": {
+    "mtime": 1780245146.5617857,
+    "ast_hash": "128de40562a619a09e57e9554e77f71e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\db\\schemas.ts": {
+    "mtime": 1780245146.575631,
+    "ast_hash": "6c4321025e4344080be1e29dab27c555",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\error-handler.ts": {
+    "mtime": 1778180809.2948606,
+    "ast_hash": "41cb2b45d2829c5381ca7330b6ccbce8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\estadisticas-utils.ts": {
+    "mtime": 1777859448.8147657,
+    "ast_hash": "705e9fc678548347686ac41357451a91",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\estadisticas\\calculator.ts": {
+    "mtime": 1779541577.0708475,
+    "ast_hash": "3fd88e896b7f3382005b66437d903e10",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\estadisticas\\categories.ts": {
+    "mtime": 1779657502.130921,
+    "ast_hash": "92c3bc01c61e6b119593d701f068b99a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\estadisticas\\evaluator.ts": {
+    "mtime": 1778180809.2993755,
+    "ast_hash": "6b1ff2d47db1edb7c754fc913e19cbcb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\estadisticas\\formatter.ts": {
+    "mtime": 1777859435.6810534,
+    "ast_hash": "3f319cffea47d0201a52d82f137f8089",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\estadisticas\\index.ts": {
+    "mtime": 1777859442.4169896,
+    "ast_hash": "fe9da3b3b3b0c70ee99a8490961fc162",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\estadisticas\\transfer-type-resolver.ts": {
+    "mtime": 1779541577.0797007,
+    "ast_hash": "dbc66d9194e713f0350f3b3d15bba9ab",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\estadisticas\\utils.ts": {
+    "mtime": 1777859367.3781707,
+    "ast_hash": "a516788fc2d74bef860e77d880230e0a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\export-word.ts": {
+    "mtime": 1778871713.779806,
+    "ast_hash": "eeb9ae38a9b71095d24e044b1aeaef7d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\formatters.ts": {
+    "mtime": 1779635375.8396444,
+    "ast_hash": "1fab9f40e6e8dd148ccadef1f7d65e96",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\logger.ts": {
+    "mtime": 1777854650.0541484,
+    "ast_hash": "ddcb7d8e9383fcd7ea23829e71ea8f99",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\notifications-provider.tsx": {
+    "mtime": 1778180809.2998815,
+    "ast_hash": "0a9e57dbf31ceeb7a57eebb28bc041ba",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\report-sorter.ts": {
+    "mtime": 1778871713.779806,
+    "ast_hash": "38cd283e04dcf17b8f0361680141baca",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\repositories\\base.repository.ts": {
+    "mtime": 1776805848.8856711,
+    "ast_hash": "35a2192b54e967e13870acaa95e118f6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\repositories\\config.repository.ts": {
+    "mtime": 1779541577.0797007,
+    "ast_hash": "90f0cecc3a8b60afd45b3f98144a7785",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\repositories\\history.repository.ts": {
+    "mtime": 1778871713.779806,
+    "ast_hash": "79e473c504704bf9fc4638434131d9c8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\repositories\\index.ts": {
+    "mtime": 1776805848.8966174,
+    "ast_hash": "6726d78cb9224c341ef84c6a165186fb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\repositories\\keys.ts": {
+    "mtime": 1779203896.2434363,
+    "ast_hash": "52d812e395728131eaa41c464bdba322",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\repositories\\lookup.repository.ts": {
+    "mtime": 1778871713.779806,
+    "ast_hash": "b0c1a4c448f4cad54a599591ca961771",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\repositories\\personnel.repository.ts": {
+    "mtime": 1778871713.779806,
+    "ast_hash": "0e53a3ec4821f1882c9450faedfa7355",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\repositories\\report.repository.ts": {
+    "mtime": 1778871713.779806,
+    "ast_hash": "b38d7966616a843e9a36ee0822343560",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\repositories\\supabase.repository.ts": {
+    "mtime": 1778510236.2398782,
+    "ast_hash": "d4160f59d1daaf50a84a5869fedf36ca",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\repositories\\template.repository.ts": {
+    "mtime": 1778871713.779806,
+    "ast_hash": "3b124069fde659ea05348e64f12ea49b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\supabase.ts": {
+    "mtime": 1778871713.779806,
+    "ast_hash": "7dce82fc8d99b35899427c745af87756",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\sync\\sync-context.tsx": {
+    "mtime": 1778871713.779806,
+    "ast_hash": "a050fc1bd280a1f9b0bf8997064eccc0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\sync\\sync-service.ts": {
+    "mtime": 1778180809.3101983,
+    "ast_hash": "ff2f59ff569ee6fe232fd8af746f0a36",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\sync\\sync-types.ts": {
+    "mtime": 1778180809.311806,
+    "ast_hash": "1d562f381d57803bbf3972faada3f9d3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template-parser.ts": {
+    "mtime": 1780245146.5816596,
+    "ast_hash": "cfa70c5d34cb93650af5209e59246ea0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\bug.test.ts": {
+    "mtime": 1777854650.0763612,
+    "ast_hash": "4496971689a21c53101767774b8af21c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\conditionmode_render.test.ts": {
+    "mtime": 1778513746.2629766,
+    "ast_hash": "31bb9b43591c2a3992b7923e34cffe86",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\evaluator.test.ts": {
+    "mtime": 1780253259.4615245,
+    "ast_hash": "2fe2a7eeafc55aa5591e4e9ba441e53a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\final_verify.test.ts": {
+    "mtime": 1778518846.1682992,
+    "ast_hash": "1776a340d18a3d14ed4d9fcb85c01869",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\preview.test.ts": {
+    "mtime": 1778518817.4121444,
+    "ast_hash": "e99f756953f517dc55c53dc8db7dee9f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\renderer.test.ts": {
+    "mtime": 1780253263.5610223,
+    "ast_hash": "0b6d266e71a2cbc2b8e0f6496e002dec",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\repro_lock.test.ts": {
+    "mtime": 1778180809.3143392,
+    "ast_hash": "d6725bd293c2b39ee0755b8d44c60c4a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template\\evaluator.ts": {
+    "mtime": 1780253255.5064175,
+    "ast_hash": "de44b9307d862b47e2dc77b4ef81d2c2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template\\index.ts": {
+    "mtime": 1777854650.0877426,
+    "ast_hash": "cf9c22385c568b6e5ad84126898b5c74",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template\\lexer.ts": {
+    "mtime": 1779203896.3084004,
+    "ast_hash": "987b3114da29d6c071f5cb3491b24a4f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template\\parser.ts": {
+    "mtime": 1780253251.4332798,
+    "ast_hash": "bf4c0808f7d08b0cbec794fe8e8b118f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template\\renderer.ts": {
+    "mtime": 1780245146.6167078,
+    "ast_hash": "37fbf96a6c31d8e499e559e07e10f378",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template\\types.ts": {
+    "mtime": 1779203896.478302,
+    "ast_hash": "b2d6b1462976b8a2e598881652a2b9e5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template\\validator.ts": {
+    "mtime": 1778180809.3143392,
+    "ast_hash": "69e76da9ad9d3b098339fdaae8b04415",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\types\\index.ts": {
+    "mtime": 1780245146.6257324,
+    "ast_hash": "4d04868293281b9c130b1a3927347652",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\types\\semantic.ts": {
+    "mtime": 1775530928.8485594,
+    "ast_hash": "81185238cab9569f3709d9960dae0d81",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\utils-pure.ts": {
+    "mtime": 1778510236.2431371,
+    "ast_hash": "69bd6236c041cf33c0cc24e9f85800c0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\utils.ts": {
+    "mtime": 1779125773.1199107,
+    "ast_hash": "02f78c668d455f6e11783d2e6bb8cc0d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\utils\\id.ts": {
+    "mtime": 1777854650.0987818,
+    "ast_hash": "a57ce8f00bcab663ca1fc6a728e59f93",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\validations\\__tests__\\schemas.test.ts": {
+    "mtime": 1778180809.322347,
+    "ast_hash": "599d3ba06f67daf44087a971061ecd77",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\validations\\personnel.ts": {
+    "mtime": 1778180809.322347,
+    "ast_hash": "a4e6410b12b319e56143047beed5b68b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\validations\\schemas.ts": {
+    "mtime": 1780245146.6317608,
+    "ast_hash": "145a9aaccad4758b0d730eb44836b272",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\validators.ts": {
+    "mtime": 1777854650.106125,
+    "ast_hash": "3e3aa88a94d3d84fbb3451719d3b466c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\main.tsx": {
+    "mtime": 1777854650.1071248,
+    "ast_hash": "4339a6f35ad5c293edb73493dee3efcd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\admin\\config\\index.tsx": {
+    "mtime": 1778871713.79543,
+    "ast_hash": "34fc964b9aaf0d96b659de39aeabc574",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\admin\\index.tsx": {
+    "mtime": 1778871713.798006,
+    "ast_hash": "a159bbc05339825e0330cf7526722d22",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\admin\\users\\index.tsx": {
+    "mtime": 1778871713.798006,
+    "ast_hash": "ce68f492f0c0b8359a2bca91b1b70ac6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\admin\\workspaces\\index.tsx": {
+    "mtime": 1778871713.798006,
+    "ast_hash": "0ecca960f4fe1b3a3b862c384fdc10d6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\estadisticas.tsx": {
+    "mtime": 1777854650.1101234,
+    "ast_hash": "169b6e26fa792cf6ea9a28893c551c36",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\estadisticas\\components\\stats-header.tsx": {
+    "mtime": 1778871713.798006,
+    "ast_hash": "88f06750789a9094fabaa46348af9419",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\estadisticas\\components\\stats-section-row.tsx": {
+    "mtime": 1777854650.113122,
+    "ast_hash": "d44a7773bdb2f94a737ec40b6585cfd2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\estadisticas\\components\\stats-table.tsx": {
+    "mtime": 1777854650.1143029,
+    "ast_hash": "06d9048330545a98daa9fd2cce1fcd16",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\estadisticas\\components\\stats-total-row.tsx": {
+    "mtime": 1777854650.1143029,
+    "ast_hash": "78c44eb4c77c18e4a54606baf53cc0e6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\login\\index.tsx": {
+    "mtime": 1778871713.798006,
+    "ast_hash": "d640752ed216286dd728e936aecdb885",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\maintenance\\index.tsx": {
+    "mtime": 1778522132.7145896,
+    "ast_hash": "21a8f2e8a53af0f29e2f4e49148ba7ff",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\not-found.tsx": {
+    "mtime": 1777854650.1232493,
+    "ast_hash": "be912cf1c6a1204f2440fb1e4ee6f685",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\novedades.tsx": {
+    "mtime": 1778871713.798006,
+    "ast_hash": "bb23c42b7a457794962e63de976a3025",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\mobile-header.tsx": {
+    "mtime": 1777854650.1256087,
+    "ast_hash": "656b4a1ef061265cfe0d140094d49ece",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\novedad-filters.tsx": {
+    "mtime": 1778871713.798006,
+    "ast_hash": "e945de7a92c7a6b154c4b0990b051246",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\novedad-item.tsx": {
+    "mtime": 1778180809.3314395,
+    "ast_hash": "07cdc6cf1f7ccf2ee937bccfa49b4d2b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\novedad-main-content.tsx": {
+    "mtime": 1778589629.994151,
+    "ast_hash": "44f1aeb19396401f7e4b5ee6746b3246",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\novedad-modals.tsx": {
+    "mtime": 1778871713.798006,
+    "ast_hash": "58d0e4e72553dc046532c1b2e6c36d9d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\novedad-sidebar.tsx": {
+    "mtime": 1780245146.6430092,
+    "ast_hash": "e6abe5d54cdd03ab2be237abf4d8cb88",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\template-list.tsx": {
+    "mtime": 1779856032.972324,
+    "ast_hash": "7b8ceb5dca60fabf6dee7a2183dc2e8d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\offline.tsx": {
+    "mtime": 1777854650.1329482,
+    "ast_hash": "c60c89ff1e428dc9fe391d425bef0a0b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\orden-del-dia.tsx": {
+    "mtime": 1778871713.798006,
+    "ast_hash": "92f4bd16483da0595a380c339fcbd8bc",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\orden-del-dia\\components\\guard-config-card.tsx": {
+    "mtime": 1778871713.798006,
+    "ast_hash": "01117ddc8c4422ed85c505ff5299a617",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\orden-del-dia\\components\\orden-empty-state.tsx": {
+    "mtime": 1777854650.1369455,
+    "ast_hash": "0e8c4f69d9dbea7f929f11acfd620fef",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\orden-del-dia\\components\\orden-header.tsx": {
+    "mtime": 1777854650.1369455,
+    "ast_hash": "5c6c62c7825317a3fe8a1590198441e8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\personal.tsx": {
+    "mtime": 1778510236.2559636,
+    "ast_hash": "ad63cd7f44fcee98438a56ac84676fff",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\personal\\components\\mass-actions-bar.tsx": {
+    "mtime": 1777728651.9858923,
+    "ast_hash": "629d22ff1a9fcb205bd4513f81dc0083",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\personal\\components\\personnel-header.tsx": {
+    "mtime": 1777854650.1401696,
+    "ast_hash": "072be2e185d363445d057f97d3f79325",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\personal\\components\\personnel-modals.tsx": {
+    "mtime": 1777854650.1401696,
+    "ast_hash": "8f732e00ee189129c69de01019074b0b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\personal\\components\\personnel-tabs.tsx": {
+    "mtime": 1777854650.1421683,
+    "ast_hash": "c62194f549de693b98dbf3a1f13c76b4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\plantillas.tsx": {
+    "mtime": 1779541577.090083,
+    "ast_hash": "ade6a4c43b83a92be9a4fb768acb32a2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\plantillas\\components\\plantillas-header.tsx": {
+    "mtime": 1779541577.090083,
+    "ast_hash": "c379c1e0e898877eda6d549acce9cbbe",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\plantillas\\components\\plantillas-modals.tsx": {
+    "mtime": 1778180805.403802,
+    "ast_hash": "987503e956d7b96fde5b6fa63ac7f436",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\plantillas\\components\\plantillas-sidebar.tsx": {
+    "mtime": 1780245146.65204,
+    "ast_hash": "3f77447aa05246960e0fcd24a3db74e7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\register\\index.tsx": {
+    "mtime": 1778520424.2742734,
+    "ast_hash": "eac2b544c186b066f45b5cb82f8037ce",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\reporte-final.tsx": {
+    "mtime": 1777854650.1481652,
+    "ast_hash": "6bd9c50c0b91e92ed32960011b52431b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\reporte-final\\components\\reporte-generar.tsx": {
+    "mtime": 1779125773.1228397,
+    "ast_hash": "e2c934946f7c86add4afed10f4f3a77a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\reporte-final\\components\\reporte-header.tsx": {
+    "mtime": 1777854650.150164,
+    "ast_hash": "9eb2ed843c4c73482650e1dedacdb538",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\reporte-final\\components\\reporte-historial.tsx": {
+    "mtime": 1778871713.798006,
+    "ast_hash": "4a6c42d4bc6b1ac8821f7e2e186f9357",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\reporte-final\\components\\reporte-modals.tsx": {
+    "mtime": 1779125773.123816,
+    "ast_hash": "7acd0247077ba7524c8d2952871b01fd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\about.tsx": {
+    "mtime": 1777728652.0823963,
+    "ast_hash": "afad763d94e11c9fba0a327985ca3e61",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\about\\app.tsx": {
+    "mtime": 1779541577.090083,
+    "ast_hash": "c98287b00ab84fcffc949623daac2aa1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\about\\changelog.tsx": {
+    "mtime": 1777854650.1561606,
+    "ast_hash": "227bcc5558d520f938f45becca707152",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\about\\components\\about-header.tsx": {
+    "mtime": 1777854650.1571603,
+    "ast_hash": "5c6080f3b2db31e0716064d8c1684e2b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\about\\components\\about-module-list.tsx": {
+    "mtime": 1777854650.1581595,
+    "ast_hash": "219378a241f788181e94e5dd4ac8b553",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\about\\data.ts": {
+    "mtime": 1780254622.8213544,
+    "ast_hash": "6216405a13822a4c71e9abbf3b07c4d2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\about\\guide.tsx": {
+    "mtime": 1777854650.1643004,
+    "ast_hash": "9069de03b4fcb8ea96af7fb02285fc5f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\about\\templates.tsx": {
+    "mtime": 1777854650.1643004,
+    "ast_hash": "55ea5aa8ddabda4d7437df9a3e185368",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\borrar-datos.tsx": {
+    "mtime": 1778510236.2679987,
+    "ast_hash": "fd0caeec98b97d4469fd6ce857ee50a7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\direcciones.tsx": {
+    "mtime": 1779541577.0999565,
+    "ast_hash": "682088dbb802cd4ff9401064f468fead",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\feedback.tsx": {
+    "mtime": 1777854650.1688218,
+    "ast_hash": "44418d23c9a002500ec13d598c7ff6e7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\index.tsx": {
+    "mtime": 1778510236.271991,
+    "ast_hash": "1c2e5751565c86e37900b862ff05512a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\modules.tsx": {
+    "mtime": 1778180809.3344793,
+    "ast_hash": "4362a093793e4f3e93e8e8057dd6d9af",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\profile.tsx": {
+    "mtime": 1778871713.8131227,
+    "ast_hash": "ff2659cc6eaf21900221553a7795c22e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\sync.tsx": {
+    "mtime": 1779125773.1286979,
+    "ast_hash": "36c40eb3028daef652f18c32589c1d1f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\sync\\components\\sync-header.tsx": {
+    "mtime": 1777854684.5401986,
+    "ast_hash": "3e42197ff9f5e67fb9fe1c11f304eab8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\sync\\components\\sync-inbox.tsx": {
+    "mtime": 1777854650.1713336,
+    "ast_hash": "7249e3b9115ebbc369466a8f35a0ad5b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\sync\\components\\sync-modals.tsx": {
+    "mtime": 1778180805.4138565,
+    "ast_hash": "9390d26a491f1d869b9984c6d50303fc",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\sync\\components\\sync-qr-display.tsx": {
+    "mtime": 1777854650.1768467,
+    "ast_hash": "37015f9f1eff66ccbcfbbfbc8be4b342",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\sync\\components\\sync-setup.tsx": {
+    "mtime": 1779125773.1296737,
+    "ast_hash": "f5b7a68b07c6d9735767b2f22601975e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\sync\\components\\sync-whatsapp.tsx": {
+    "mtime": 1780245146.6760547,
+    "ast_hash": "57ae11499b4b5f9c6afc2419bc30e109",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\workspaces.tsx": {
+    "mtime": 1778180809.3380232,
+    "ast_hash": "2ef460ad6be4f8dac8bd5bbc30ebe205",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\workspaces\\components\\workspace-controls.tsx": {
+    "mtime": 1778180809.3390555,
+    "ast_hash": "4891f8dc13243ce3412b236a1b5fca59",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\workspaces\\components\\workspace-item.tsx": {
+    "mtime": 1778180809.3395612,
+    "ast_hash": "a7784442f92a128c28aeb9b6b5b6c354",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\workspaces\\components\\workspaces-header.tsx": {
+    "mtime": 1777854650.1824138,
+    "ast_hash": "d9e35ccf8637f0d2a05800db0ebe1018",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\setup\\index.tsx": {
+    "mtime": 1778510236.2809038,
+    "ast_hash": "8002cbe531dd5dccf9231f4ea24271b5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\setup\\steps\\00-bienvenida.tsx": {
+    "mtime": 1777854650.1844163,
+    "ast_hash": "9d1d177e4fe46272c31308f6a1e4f597",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\setup\\steps\\01-area-trabajo.tsx": {
+    "mtime": 1777854684.678259,
+    "ast_hash": "8113825cea2a754d129954529aa0650e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\setup\\steps\\02-preferencias.tsx": {
+    "mtime": 1777854684.6802578,
+    "ast_hash": "7196019ec2b8f7e515e1fb7104ddbc8a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\setup\\steps\\03-modulos.tsx": {
+    "mtime": 1777854684.6822567,
+    "ast_hash": "45631167959dc909a9ade594c288eb9d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\setup\\steps\\04-estructura.tsx": {
+    "mtime": 1777854684.6832561,
+    "ast_hash": "120ad1b2ba78c8be2ee42da4dbb44cf7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\setup\\steps\\05-jerarquia.tsx": {
+    "mtime": 1777854684.6842551,
+    "ast_hash": "315c11b4126a3db2727d500473919127",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\setup\\steps\\06-plantillas.tsx": {
+    "mtime": 1777854684.6842551,
+    "ast_hash": "a9602a9120ceec28b415476a8c073689",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\setup\\steps\\07-primera-vez.tsx": {
+    "mtime": 1777854684.6852548,
+    "ast_hash": "fbbdb9a28135b25f3b2be93129d7335e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\setup\\steps\\08-guia.tsx": {
+    "mtime": 1777854684.6862545,
+    "ast_hash": "84e27c6e9959114aa5a8a88136f6766f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\setup\\steps\\09-done.tsx": {
+    "mtime": 1777854684.6872537,
+    "ast_hash": "8ebf87f4208f866a1839bb329e893fa1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\setup\\steps\\index.ts": {
+    "mtime": 1777854684.689253,
+    "ast_hash": "97b4d97d61fafa2782266c1ecdff08f8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\setup\\steps\\layout.tsx": {
+    "mtime": 1777854650.1970518,
+    "ast_hash": "0a92588a85cad42a856cb593f57872de",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\tailwind.config.ts": {
+    "mtime": 1778871713.8131227,
+    "ast_hash": "daf6a0b6f17589653551de974777a77f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\tsconfig.json": {
+    "mtime": 1775522951.8554485,
+    "ast_hash": "1e7d7011df1d684194544d1ec9db7e0e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\typedoc.json": {
+    "mtime": 1775521151.184408,
+    "ast_hash": "c2cffab303a5e782620286c80f709dc0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\vercel.json": {
+    "mtime": 1778244109.8741052,
+    "ast_hash": "61bd31a2b0ac08f10f13c932b32d6ca1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\vite.config.ts": {
+    "mtime": 1779203896.5612543,
+    "ast_hash": "faf501de49efb7701f98637e157f7eb7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\vitest.config.ts": {
+    "mtime": 1775533679.6414044,
+    "ast_hash": "08a93a76d348adf4825bbd0344bca25e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\vitest.setup.ts": {
+    "mtime": 1775521151.1874118,
+    "ast_hash": "39529208dfc584ff87969cf460d5f8e5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\whatsapp-bot\\package.json": {
+    "mtime": 1780248616.4371743,
+    "ast_hash": "e8db2260abacf5f9a032b97cb748e172",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\whatsapp-bot\\server.js": {
+    "mtime": 1780249720.7780838,
+    "ast_hash": "6802b3748fd474009de8be45bc9bf79c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\CHANGELOG.md": {
+    "mtime": 1780254617.5570374,
+    "ast_hash": "40e3d4402c1b3e72fac60206171ecf18",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\CONTRIBUTING.md": {
+    "mtime": 1775521150.454308,
+    "ast_hash": "c9f21b13b4e34033fabf455ae1e34468",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\README.md": {
+    "mtime": 1779541577.0163689,
+    "ast_hash": "f0e57126adf3d7d1a0094be0c433f0a3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\SECURITY.md": {
+    "mtime": 1777728650.3200269,
+    "ast_hash": "3634b1ffff5f5ab021b7db549fef6968",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\docs\\performance-guide.md": {
+    "mtime": 1776122808.9562013,
+    "ast_hash": "658c6a1a5ac22a863205250a63b7ee60",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\docs\\statistics-rules-guide.md": {
+    "mtime": 1779541577.0238848,
+    "ast_hash": "6332be80ec55725b75ca603aeb4ec9b8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\index.html": {
+    "mtime": 1777728650.344651,
+    "ast_hash": "898cbc58e2641a3c95b6242ba9901bee",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\pnpm-workspace.yaml": {
+    "mtime": 1778871713.7333486,
+    "ast_hash": "93384ca20dcdba8fde466956f45ea89c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\scratch\\supabase_creds.txt": {
+    "mtime": 1778180809.209567,
+    "ast_hash": "fb5ae900cbf512bf79420c1c3f42e881",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\scratch\\supabase_creds_utf8.txt": {
+    "mtime": 1778180809.209567,
+    "ast_hash": "2291354d3e2da0cb5811efbe649747c7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\lib\\template\\TEMPLATE_ENGINE.md": {
+    "mtime": 1779125773.1111243,
+    "ast_hash": "d816cc9937d697b7c1ec4631d0279743",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\public\\icons\\icon-192x192.png": {
+    "mtime": 1775521150.4862103,
+    "ast_hash": "8b55f139a8eadaf88213841ce3fcfbc1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\public\\icons\\icon-512x512.png": {
+    "mtime": 1775521150.488209,
+    "ast_hash": "8b55f139a8eadaf88213841ce3fcfbc1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\public\\screenshots\\desktop.png": {
+    "mtime": 1775521150.490208,
+    "ast_hash": "279fa53cb202b029cddfe0edaa25799a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\public\\screenshots\\mobile.png": {
+    "mtime": 1775521150.4912074,
+    "ast_hash": "b08109ddedeaca30ca65e6a22e173ac1",
+    "semantic_hash": ""
+  }
+}
