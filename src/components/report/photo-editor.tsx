@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Undo, RotateCcw, Paintbrush, Grid, Save, ZoomIn, ZoomOut, Hand, Check } from 'lucide-react';
+import { Undo, RotateCcw, Paintbrush, Grid, Save, ZoomIn, ZoomOut, Hand, Check, Crop } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -44,11 +44,27 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [tool, setTool] = useState<'pen' | 'pixel' | 'pan'>('pixel');
+  interface CropArea {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }
+
+  const [tool, setTool] = useState<'pen' | 'pixel' | 'pan' | 'crop'>('pixel');
   const [color, setColor] = useState('#EF4444');
   const [brushSize, setBrushSize] = useState(20);
 
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
+
+  // Crop states and dragging reference
+  const [cropArea, setCropArea] = useState<CropArea | null>(null);
+  const dragRef = useRef<{
+    type: 'move' | 'nw' | 'ne' | 'se' | 'sw' | 'n' | 'e' | 's' | 'w';
+    startX: number;
+    startY: number;
+    startArea: CropArea;
+  } | null>(null);
 
   // Track drawing coordinate variables synchronously in Refs to prevent async batched stale state bugs at 60fps
   const isDrawingRef = useRef(false);
@@ -82,6 +98,7 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
       setHistory([]);
       setZoom(1);
       setPan({ x: 0, y: 0 });
+      setTool('pixel');
     };
     img.onerror = () => {
       toast.error('No se pudo cargar la imagen para editar.');
@@ -118,6 +135,166 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
       window.removeEventListener('wheel', handleWheelGlobal);
     };
   }, [isOpen]);
+
+  // Initialise crop box at 80% when switching to crop tool
+  useEffect(() => {
+    if (tool === 'crop' && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const w = Math.round(canvas.width * 0.8);
+      const h = Math.round(canvas.height * 0.8);
+      const x = Math.round((canvas.width - w) / 2);
+      const y = Math.round((canvas.height - h) / 2);
+      setCropArea({ x, y, width: w, height: h });
+    } else {
+      setCropArea(null);
+    }
+  }, [tool]);
+
+  // Pointer dragging handler for resizing/moving crop area
+  const handleCropPointerDown = (
+    e: React.PointerEvent<HTMLDivElement>,
+    type: 'move' | 'nw' | 'ne' | 'se' | 'sw' | 'n' | 'e' | 's' | 'w'
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const canvas = canvasRef.current;
+    if (!canvas || !cropArea) return;
+
+    dragRef.current = {
+      type,
+      startX: e.clientX,
+      startY: e.clientY,
+      startArea: { ...cropArea },
+    };
+  };
+
+  useEffect(() => {
+    if (tool !== 'crop') return;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      const drag = dragRef.current;
+      if (!drag || !canvasRef.current) return;
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+
+      const dx = e.clientX - drag.startX;
+      const dy = e.clientY - drag.startY;
+
+      const deltaX = dx * scaleX;
+      const deltaY = dy * scaleY;
+
+      const { type, startArea } = drag;
+      const minSize = 40;
+
+      const nextArea = { ...startArea };
+
+      if (type === 'move') {
+        nextArea.x = Math.max(0, Math.min(canvas.width - startArea.width, startArea.x + deltaX));
+        nextArea.y = Math.max(0, Math.min(canvas.height - startArea.height, startArea.y + deltaY));
+      } else {
+        if (type.includes('w')) {
+          const potentialX = startArea.x + deltaX;
+          const clampedX = Math.max(0, Math.min(startArea.x + startArea.width - minSize, potentialX));
+          nextArea.width = startArea.width + (startArea.x - clampedX);
+          nextArea.x = clampedX;
+        }
+        if (type.includes('e')) {
+          const potentialW = startArea.width + deltaX;
+          nextArea.width = Math.max(minSize, Math.min(canvas.width - startArea.x, potentialW));
+        }
+        if (type.includes('n')) {
+          const potentialY = startArea.y + deltaY;
+          const clampedY = Math.max(0, Math.min(startArea.y + startArea.height - minSize, potentialY));
+          nextArea.height = startArea.height + (startArea.y - clampedY);
+          nextArea.y = clampedY;
+        }
+        if (type.includes('s')) {
+          const potentialH = startArea.height + deltaY;
+          nextArea.height = Math.max(minSize, Math.min(canvas.height - startArea.y, potentialH));
+        }
+      }
+
+      nextArea.x = Math.round(nextArea.x);
+      nextArea.y = Math.round(nextArea.y);
+      nextArea.width = Math.round(nextArea.width);
+      nextArea.height = Math.round(nextArea.height);
+
+      setCropArea(nextArea);
+    };
+
+    const handlePointerUp = () => {
+      dragRef.current = null;
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [tool]);
+
+  // Execute actual crop operation on the canvas
+  const applyCrop = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || !cropArea) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    try {
+      // Save current state to history stack for undo support
+      const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      setHistory((prev) => [...prev.slice(-19), snapshot]);
+
+      // Create a temporary canvas to draw the cropped region
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = cropArea.width;
+      tempCanvas.height = cropArea.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      if (!tempCtx) {
+        toast.error('No se pudo recortar la imagen.');
+        return;
+      }
+
+      // Draw cropped area into the temporary canvas
+      tempCtx.drawImage(
+        canvas,
+        cropArea.x,
+        cropArea.y,
+        cropArea.width,
+        cropArea.height,
+        0,
+        0,
+        cropArea.width,
+        cropArea.height
+      );
+
+      // Resize main canvas
+      canvas.width = cropArea.width;
+      canvas.height = cropArea.height;
+
+      // Draw the cropped image back to main canvas
+      ctx.drawImage(tempCanvas, 0, 0);
+
+      // Re-initialize pixelated source for difuminar tool alignment
+      initPixelatedSource(canvas);
+
+      // Reset Zoom & Pan to fit the newly cropped canvas
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+
+      // Switch tool back to pixel tool
+      setTool('pixel');
+      toast.success('Imagen recortada correctamente.');
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al aplicar el recorte.');
+    }
+  };
 
   // Pre-pixelate the entire loaded image once to allow a flicker-free, grid-aligned, performant reveal brush
   const initPixelatedSource = (source: HTMLCanvasElement | HTMLImageElement) => {
@@ -517,9 +694,10 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
               Editar Foto: {photoName}
             </DialogTitle>
             <p className="text-[10px] text-muted-foreground mt-0.5">
-              {tool === 'pixel' && 'Difumina rostros o textos arrastrando el pincel'}
-              {tool === 'pen' && 'Dibuja libremente sobre la imagen con colores'}
-              {tool === 'pan' && 'Arrastra la imagen ampliada para mover el visor (Pan)'}
+            {tool === 'pixel' && 'Difumina rostros o textos arrastrando el pincel'}
+            {tool === 'pen' && 'Dibuja libremente sobre la imagen con colores'}
+            {tool === 'pan' && 'Arrastra la imagen ampliada para mover el visor (Pan)'}
+            {tool === 'crop' && 'Arrastra las esquinas o bordes del recuadro para recortar la imagen'}
             </p>
           </div>
         </DialogHeader>
@@ -529,24 +707,117 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
           ref={containerRef}
           className="flex-1 overflow-hidden bg-zinc-950/60 relative flex items-center justify-center p-4 min-h-0 select-none"
         >
-          {/* Hardware-Accelerated Canvas with strict max-height constraint for 100% visible fit at 1x */}
-          <canvas
-            ref={canvasRef}
-            onMouseDown={handleStart}
-            onMouseMove={handleMove}
-            onMouseUp={handleEnd}
-            onMouseLeave={handleEnd}
-            onTouchStart={handleStart}
-            onTouchMove={handleMove}
-            onTouchEnd={handleEnd}
-            className="max-w-full max-h-[50vh] object-contain border border-white/10 rounded-lg shadow-2xl bg-zinc-900 touch-none"
+          {/* Wrapper that zooms/pans canvas and crop overlay together */}
+          <div
+            className="relative border border-white/10 rounded-lg shadow-2xl bg-zinc-900 touch-none overflow-hidden max-w-full max-h-[50vh] flex items-center justify-center animate-in zoom-in-95 duration-200"
             style={{
-              cursor: tool === 'pan' ? 'grab' : 'crosshair',
-              transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`, 
+              transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
               transition: isDrawingRef.current && tool === 'pan' ? 'none' : 'transform 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
               transformOrigin: 'center'
             }}
-          />
+          >
+            <canvas
+              ref={canvasRef}
+              onMouseDown={tool === 'crop' ? undefined : handleStart}
+              onMouseMove={tool === 'crop' ? undefined : handleMove}
+              onMouseUp={tool === 'crop' ? undefined : handleEnd}
+              onMouseLeave={tool === 'crop' ? undefined : handleEnd}
+              onTouchStart={tool === 'crop' ? undefined : handleStart}
+              onTouchMove={tool === 'crop' ? undefined : handleMove}
+              onTouchEnd={tool === 'crop' ? undefined : handleEnd}
+              className="max-w-full max-h-[50vh] block object-contain"
+              style={{
+                cursor: tool === 'pan' ? 'grab' : tool === 'crop' ? 'default' : 'crosshair',
+              }}
+            />
+
+            {tool === 'crop' && cropArea && canvasRef.current && (
+              <div className="absolute inset-0 pointer-events-none w-full h-full">
+                {/* Crop Box Selection Overlay */}
+                <div
+                  className="absolute border-2 border-white pointer-events-auto shadow-[0_0_0_9999px_rgba(0,0,0,0.65)]"
+                  style={{
+                    left: `${(cropArea.x / canvasRef.current.width) * 100}%`,
+                    top: `${(cropArea.y / canvasRef.current.height) * 100}%`,
+                    width: `${(cropArea.width / canvasRef.current.width) * 100}%`,
+                    height: `${(cropArea.height / canvasRef.current.height) * 100}%`,
+                  }}
+                  onPointerDown={(e) => handleCropPointerDown(e, 'move')}
+                >
+                  {/* Rule of Thirds Grid Lines */}
+                  <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-40 pointer-events-none">
+                    <div className="border-r border-b border-white border-dashed" />
+                    <div className="border-r border-b border-white border-dashed" />
+                    <div className="border-b border-white border-dashed" />
+                    <div className="border-r border-b border-white border-dashed" />
+                    <div className="border-r border-b border-white border-dashed" />
+                    <div className="border-b border-white border-dashed" />
+                    <div className="border-r border-white border-dashed" />
+                    <div className="border-r border-white border-dashed" />
+                    <div />
+                  </div>
+
+                  {/* Corners & Edges resizing handles */}
+                  {/* Top-Left */}
+                  <div
+                    className="absolute -top-3 -left-3 w-6 h-6 cursor-nwse-resize z-50 flex items-start justify-start p-1"
+                    onPointerDown={(e) => handleCropPointerDown(e, 'nw')}
+                  >
+                    <div className="w-3.5 h-3.5 border-t-[3px] border-l-[3px] border-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] rounded-[1px]" />
+                  </div>
+                  {/* Top-Right */}
+                  <div
+                    className="absolute -top-3 -right-3 w-6 h-6 cursor-nesw-resize z-50 flex items-start justify-end p-1"
+                    onPointerDown={(e) => handleCropPointerDown(e, 'ne')}
+                  >
+                    <div className="w-3.5 h-3.5 border-t-[3px] border-r-[3px] border-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] rounded-[1px]" />
+                  </div>
+                  {/* Bottom-Right */}
+                  <div
+                    className="absolute -bottom-3 -right-3 w-6 h-6 cursor-nwse-resize z-50 flex items-end justify-end p-1"
+                    onPointerDown={(e) => handleCropPointerDown(e, 'se')}
+                  >
+                    <div className="w-3.5 h-3.5 border-b-[3px] border-r-[3px] border-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] rounded-[1px]" />
+                  </div>
+                  {/* Bottom-Left */}
+                  <div
+                    className="absolute -bottom-3 -left-3 w-6 h-6 cursor-nesw-resize z-50 flex items-end justify-start p-1"
+                    onPointerDown={(e) => handleCropPointerDown(e, 'sw')}
+                  >
+                    <div className="w-3.5 h-3.5 border-b-[3px] border-l-[3px] border-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] rounded-[1px]" />
+                  </div>
+                  {/* North (Top-Center) */}
+                  <div
+                    className="absolute -top-3 left-1/2 -translate-x-1/2 w-10 h-6 cursor-ns-resize z-50 flex items-start justify-center p-1"
+                    onPointerDown={(e) => handleCropPointerDown(e, 'n')}
+                  >
+                    <div className="w-6 h-[3px] bg-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] rounded-full" />
+                  </div>
+                  {/* South (Bottom-Center) */}
+                  <div
+                    className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-10 h-6 cursor-ns-resize z-50 flex items-end justify-center p-1"
+                    onPointerDown={(e) => handleCropPointerDown(e, 's')}
+                  >
+                    <div className="w-6 h-[3px] bg-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] rounded-full" />
+                  </div>
+                  {/* West (Left-Center) */}
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 -left-3 w-6 h-10 cursor-ew-resize z-50 flex items-center justify-start p-1"
+                    onPointerDown={(e) => handleCropPointerDown(e, 'w')}
+                  >
+                    <div className="h-6 w-[3px] bg-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] rounded-full" />
+                  </div>
+                  {/* East (Right-Center) */}
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 -right-3 w-6 h-10 cursor-ew-resize z-50 flex items-center justify-end p-1"
+                    onPointerDown={(e) => handleCropPointerDown(e, 'e')}
+                  >
+                    <div className="h-6 w-[3px] bg-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] rounded-full" />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Floating Zoom & Pan Controls Inside the Frame Viewport */}
           <div className="absolute bottom-4 right-4 z-30 flex items-center gap-1 bg-zinc-900/90 backdrop-blur-md border border-white/10 p-1.5 rounded-2xl shadow-xl animate-in fade-in slide-in-from-bottom-3 duration-200">
@@ -636,9 +907,19 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
                 <Paintbrush className="h-3.5 w-3.5" />
                 <span>Lápiz de Dibujo</span>
               </Button>
+              <Button
+                type="button"
+                variant={tool === 'crop' ? 'default' : 'ghost'}
+                size="sm"
+                className="rounded-lg h-8 gap-2 font-medium px-3 text-xs"
+                onClick={() => setTool('crop')}
+              >
+                <Crop className="h-3.5 w-3.5" />
+                <span>Recortar Imagen</span>
+              </Button>
             </div>
 
-            {/* Sub-toolbar details (Brush Sizes) */}
+            {/* Sub-toolbar details (Brush Sizes or Crop controls) */}
             <div className="flex items-center gap-4">
 
               {/* Conditional size selection for draw/pixel tools */}
@@ -659,6 +940,32 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
                       </Button>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Conditional action buttons for Crop tool */}
+              {tool === 'crop' && (
+                <div className="flex items-center gap-2 animate-in slide-in-from-bottom-2 duration-200">
+                  <span className="text-[11px] text-muted-foreground font-medium">Ajusta el recuadro:</span>
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    className="h-8 gap-1.5 px-3 rounded-lg font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/10"
+                    onClick={applyCrop}
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    <span>Confirmar Recorte</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 rounded-lg font-medium"
+                    onClick={() => setTool('pixel')}
+                  >
+                    Cancelar
+                  </Button>
                 </div>
               )}
             </div>

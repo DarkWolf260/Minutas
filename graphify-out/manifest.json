@@ -10,7 +10,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\ast.json": {
-    "mtime": 1780272388.104659,
+    "mtime": 1780283586.7643342,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -35,7 +35,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\report.json": {
-    "mtime": 1780272388.0850992,
+    "mtime": 1780283586.7643342,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -270,8 +270,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\photo-editor.tsx": {
-    "mtime": 1780245146.3923275,
-    "ast_hash": "79e9e8d828746c2d37556b0d2dcbc4ad",
+    "mtime": 1780283543.6402435,
+    "ast_hash": "23f80dd65c1266caa4f182b502e716e9",
     "semantic_hash": ""
   },
   "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\report-form.tsx": {
@@ -1305,7 +1305,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\novedad-item.tsx": {
-    "mtime": 1778180809.3314395,
+    "mtime": 1780283162.7040107,
     "ast_hash": "07cdc6cf1f7ccf2ee937bccfa49b4d2b",
     "semantic_hash": ""
   },
@@ -1320,7 +1320,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\novedad-sidebar.tsx": {
-    "mtime": 1780245146.6430092,
+    "mtime": 1780283171.8673303,
     "ast_hash": "e6abe5d54cdd03ab2be237abf4d8cb88",
     "semantic_hash": ""
   },
