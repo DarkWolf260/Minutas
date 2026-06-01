@@ -396,6 +396,7 @@ function renderValue(
     if (value === undefined || value === null) return '';
 
     const fieldConfig = fields[field_id];
+    let rendered = '';
 
     // Dropdown rendering
     if (fieldConfig?.type === 'dropdown' && typeof value === 'string') {
@@ -408,64 +409,74 @@ function renderValue(
             const resolved = String(selectedOption.value);
             // If the mapped value contains {field} references, expand them with context data
             if (resolved.includes('{') && data) {
-                return resolved.replace(/\{([\s\S]+?)(?::[^}]*)?\}/g, (_, fieldRef: string) => {
+                rendered = resolved.replace(/\{([\s\S]+?)(?::[^}]*)?\}/g, (_, fieldRef: string) => {
                     const key = fieldRef.trim();
                     const found = Object.keys(data).find((k) => k.toLowerCase() === key.toLowerCase());
                     return found ? String(data[found] ?? '') : '';
                 });
+            } else {
+                rendered = resolved;
             }
-            return resolved;
+        } else {
+            rendered = String(value);
         }
-        return String(value);
     }
-
     // Date rendering
-    if (
+    else if (
         fieldConfig?.type === 'date' &&
         typeof value === 'string' &&
         value.match(/^\d{4}-\d{2}-\d{2}$/)
     ) {
         try {
             const date = new Date(value + 'T00:00:00');
-            if (isNaN(date.getTime())) return value;
-
-            const formattedDate = format(date, 'dd/MMMM/yyyy', { locale: es });
-            const parts = formattedDate.split('/');
-            const monthName = parts[1];
-            if (parts.length === 3 && monthName) {
-                parts[1] = monthName.charAt(0).toUpperCase() + monthName.slice(1);
-                return parts.join('/');
+            if (isNaN(date.getTime())) {
+                rendered = value;
+            } else {
+                const formattedDate = format(date, 'dd/MMMM/yyyy', { locale: es });
+                const parts = formattedDate.split('/');
+                const monthName = parts[1];
+                if (parts.length === 3 && monthName) {
+                    parts[1] = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+                    rendered = parts.join('/');
+                } else {
+                    rendered = formattedDate;
+                }
             }
-            return formattedDate;
         } catch {
-            return value;
+            rendered = value;
         }
     }
-
     // Array rendering
-    if (Array.isArray(value)) {
+    else if (Array.isArray(value)) {
         if (value.length > 0) {
             if (typeof value[0] === 'object' && value[0] !== null && 'name' in value[0]) {
                 const isReporta = field_id.toLowerCase() === 'reporta';
                 if (isReporta) {
-                    return value.map((member) => formatStaffReporta(member as import('@/lib/types').StaffMember)).join(' / ');
+                    rendered = value.map((member) => formatStaffReporta(member as import('@/lib/types').StaffMember)).join(' / ');
+                } else {
+                    const showCedula = field_id.toLowerCase() === 'analista';
+                    rendered = value.map((member) => formatStaffMember(member as import('@/lib/types').StaffMember, showCedula)).join(' / ');
                 }
-                const showCedula = field_id.toLowerCase() === 'analista';
-                return value.map((member) => formatStaffMember(member as import('@/lib/types').StaffMember, showCedula)).join(' / ');
+            } else {
+                rendered = value.join(' / ');
             }
+        } else {
+            rendered = value.join(' / ');
         }
-        return value.join(' / ');
     }
-
     // Semantic field rendering
-    if (fieldConfig?.type === 'semantic') {
+    else if (fieldConfig?.type === 'semantic') {
         const result = resolveSemanticConcept(field_id);
-        return String(result.value);
+        rendered = String(result.value);
+    }
+    // Default rendering
+    else {
+        rendered = String(value);
     }
 
-    // Apply text modifiers
+    // Apply text modifiers to the fully rendered value (handles upper, lower, title, hidden, etc.)
     const modifiers = config.fieldModifiers?.get(field_id) || [];
-    return applyTextModifier(String(value), modifiers);
+    return applyTextModifier(rendered, modifiers);
 }
 
 /**
