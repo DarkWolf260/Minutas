@@ -248,5 +248,17 @@ describe('Template Renderer - Modifiers', () => {
         expect(result).not.toContain('12345');
         expect(result).not.toContain('Código: 12345');
     });
+
+    it('should apply hidden modifier to date fields', () => {
+        const template = 'Inicio: {fecha_inicio:date:hidden}\nFin: {fecha_fin:date}';
+        const data = { fecha_inicio: '2026-05-31', fecha_fin: '2026-06-01' };
+        
+        const result = render(template, data);
+        
+        expect(result).toContain('Fin: 01/Junio/2026');
+        expect(result).toContain('Inicio: \n');
+        expect(result).not.toContain('31/Mayo/2026');
+        expect(result).not.toContain('2026-05-31');
+    });
 });
 

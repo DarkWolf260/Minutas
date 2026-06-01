@@ -9097,7 +9097,7 @@
       "label": "hasContent()",
       "file_type": "code",
       "source_file": "src/lib/template/renderer.ts",
-      "source_location": "L474",
+      "source_location": "L485",
       "id": "template_renderer_hascontent",
       "community": 18,
       "norm_label": "hascontent()"
@@ -9106,7 +9106,7 @@
       "label": "sectionHasValues()",
       "file_type": "code",
       "source_file": "src/lib/template/renderer.ts",
-      "source_location": "L484",
+      "source_location": "L495",
       "id": "template_renderer_sectionhasvalues",
       "community": 18,
       "norm_label": "sectionhasvalues()"
@@ -9115,7 +9115,7 @@
       "label": "renderSection()",
       "file_type": "code",
       "source_file": "src/lib/template/renderer.ts",
-      "source_location": "L541",
+      "source_location": "L552",
       "id": "template_renderer_rendersection",
       "community": 18,
       "norm_label": "rendersection()"
@@ -9124,7 +9124,7 @@
       "label": "renderContentWithSections()",
       "file_type": "code",
       "source_file": "src/lib/template/renderer.ts",
-      "source_location": "L779",
+      "source_location": "L790",
       "id": "template_renderer_rendercontentwithsections",
       "community": 18,
       "norm_label": "rendercontentwithsections()"
@@ -9133,7 +9133,7 @@
       "label": "renderFinalReport()",
       "file_type": "code",
       "source_file": "src/lib/template/renderer.ts",
-      "source_location": "L896",
+      "source_location": "L907",
       "id": "template_renderer_renderfinalreport",
       "community": 18,
       "norm_label": "renderfinalreport()"
@@ -23708,9 +23708,9 @@
       "source_file": "src/components/report/fields/report-form-field.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_report_form_field",
-      "target": "report_field_renderer",
-      "confidence_score": 1.0
+      "target": "report_field_renderer"
     },
     {
       "relation": "imports_from",
@@ -23917,9 +23917,9 @@
       "source_file": "src/components/report/field-renderer.tsx",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "report_field_renderer",
-      "target": "fields_estadisticas_field",
-      "confidence_score": 1.0
+      "target": "fields_estadisticas_field"
     },
     {
       "relation": "imports",
@@ -23928,9 +23928,9 @@
       "source_file": "src/components/report/field-renderer.tsx",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "report_field_renderer",
-      "target": "fields_estadisticas_field_estadisticasfield",
-      "confidence_score": 1.0
+      "target": "fields_estadisticas_field_estadisticasfield"
     },
     {
       "relation": "imports_from",
@@ -24441,9 +24441,9 @@
       "source_file": "src/components/report/fields/report-form-field.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_report_form_field",
-      "target": "report_field_renderer_fieldrenderer",
-      "confidence_score": 1.0
+      "target": "report_field_renderer_fieldrenderer"
     },
     {
       "relation": "imports",
@@ -24474,9 +24474,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "custom_date_picker",
-      "confidence_score": 1.0
+      "target": "custom_date_picker"
     },
     {
       "relation": "imports",
@@ -24485,9 +24485,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "custom_date_picker_datepicker",
-      "confidence_score": 1.0
+      "target": "custom_date_picker_datepicker"
     },
     {
       "relation": "imports_from",
@@ -24496,9 +24496,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "custom_responsive_modal",
-      "confidence_score": 1.0
+      "target": "custom_responsive_modal"
     },
     {
       "relation": "imports",
@@ -24507,9 +24507,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "custom_responsive_modal_responsivemodal",
-      "confidence_score": 1.0
+      "target": "custom_responsive_modal_responsivemodal"
     },
     {
       "relation": "imports_from",
@@ -24518,9 +24518,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "db_db_context",
-      "confidence_score": 1.0
+      "target": "db_db_context"
     },
     {
       "relation": "imports",
@@ -24529,9 +24529,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "db_db_context_usedatabase",
-      "confidence_score": 1.0
+      "target": "db_db_context_usedatabase"
     },
     {
       "relation": "imports",
@@ -24540,9 +24540,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "db_db_context_useworkspacemanager",
-      "confidence_score": 1.0
+      "target": "db_db_context_useworkspacemanager"
     },
     {
       "relation": "imports",
@@ -24551,9 +24551,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "estadisticas_calculator_calcularestadisticasdia",
-      "confidence_score": 1.0
+      "target": "estadisticas_calculator_calcularestadisticasdia"
     },
     {
       "relation": "imports",
@@ -24562,9 +24562,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "estadisticas_formatter_formatearestadisticasdia",
-      "confidence_score": 1.0
+      "target": "estadisticas_formatter_formatearestadisticasdia"
     },
     {
       "relation": "contains",
@@ -24572,9 +24572,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "fields_estadisticas_field_estadisticasfield",
-      "confidence_score": 1.0
+      "target": "fields_estadisticas_field_estadisticasfield"
     },
     {
       "relation": "contains",
@@ -24582,9 +24582,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "fields_estadisticas_field_estadisticasfieldprops",
-      "confidence_score": 1.0
+      "target": "fields_estadisticas_field_estadisticasfieldprops"
     },
     {
       "relation": "imports_from",
@@ -24593,9 +24593,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "hooks_use_active_guard",
-      "confidence_score": 1.0
+      "target": "hooks_use_active_guard"
     },
     {
       "relation": "imports",
@@ -24604,9 +24604,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "hooks_use_active_guard_useactiveguard",
-      "confidence_score": 1.0
+      "target": "hooks_use_active_guard_useactiveguard"
     },
     {
       "relation": "imports_from",
@@ -24615,9 +24615,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "hooks_use_field_definitions",
-      "confidence_score": 1.0
+      "target": "hooks_use_field_definitions"
     },
     {
       "relation": "imports",
@@ -24626,9 +24626,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "hooks_use_field_definitions_usefielddefinitions",
-      "confidence_score": 1.0
+      "target": "hooks_use_field_definitions_usefielddefinitions"
     },
     {
       "relation": "imports_from",
@@ -24637,9 +24637,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "lib_report_sorter",
-      "confidence_score": 1.0
+      "target": "lib_report_sorter"
     },
     {
       "relation": "imports",
@@ -24648,9 +24648,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "lib_report_sorter_findvalueinform_data",
-      "confidence_score": 1.0
+      "target": "lib_report_sorter_findvalueinform_data"
     },
     {
       "relation": "imports",
@@ -24659,9 +24659,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "lib_report_sorter_getreportdatetime",
-      "confidence_score": 1.0
+      "target": "lib_report_sorter_getreportdatetime"
     },
     {
       "relation": "imports_from",
@@ -24670,9 +24670,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "repositories_index",
-      "confidence_score": 1.0
+      "target": "repositories_index"
     },
     {
       "relation": "imports",
@@ -24681,9 +24681,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "repositories_report_repository_createreportrepository",
-      "confidence_score": 1.0
+      "target": "repositories_report_repository_createreportrepository"
     },
     {
       "relation": "imports_from",
@@ -24692,9 +24692,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "types_index",
-      "confidence_score": 1.0
+      "target": "types_index"
     },
     {
       "relation": "imports",
@@ -24703,9 +24703,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "types_index_form_datavalue",
-      "confidence_score": 1.0
+      "target": "types_index_form_datavalue"
     },
     {
       "relation": "imports_from",
@@ -24714,9 +24714,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "ui_button",
-      "confidence_score": 1.0
+      "target": "ui_button"
     },
     {
       "relation": "imports",
@@ -24725,9 +24725,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "ui_button_button",
-      "confidence_score": 1.0
+      "target": "ui_button_button"
     },
     {
       "relation": "imports_from",
@@ -24736,9 +24736,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "ui_textarea",
-      "confidence_score": 1.0
+      "target": "ui_textarea"
     },
     {
       "relation": "imports",
@@ -24747,9 +24747,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field",
-      "target": "ui_textarea_textarea",
-      "confidence_score": 1.0
+      "target": "ui_textarea_textarea"
     },
     {
       "relation": "references",
@@ -24758,9 +24758,9 @@
       "source_file": "src/components/report/fields/estadisticas-field.tsx",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_estadisticas_field_estadisticasfieldprops",
-      "target": "types_index_form_datavalue",
-      "confidence_score": 1.0
+      "target": "types_index_form_datavalue"
     },
     {
       "relation": "calls",
@@ -24812,9 +24812,9 @@
       "source_file": "src/components/report/fields/report-form-field.tsx",
       "source_location": "L30",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_report_form_field",
-      "target": "fields_report_form_field_reportformfield",
-      "confidence_score": 1.0
+      "target": "fields_report_form_field_reportformfield"
     },
     {
       "relation": "contains",
@@ -24822,9 +24822,9 @@
       "source_file": "src/components/report/fields/report-form-field.tsx",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_report_form_field",
-      "target": "fields_report_form_field_reportformfieldprops",
-      "confidence_score": 1.0
+      "target": "fields_report_form_field_reportformfieldprops"
     },
     {
       "relation": "imports_from",
@@ -24833,9 +24833,9 @@
       "source_file": "src/components/report/fields/report-form-field.tsx",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_report_form_field",
-      "target": "lib_utils",
-      "confidence_score": 1.0
+      "target": "lib_utils"
     },
     {
       "relation": "imports",
@@ -24844,9 +24844,9 @@
       "source_file": "src/components/report/fields/report-form-field.tsx",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_report_form_field",
-      "target": "lib_utils_cn",
-      "confidence_score": 1.0
+      "target": "lib_utils_cn"
     },
     {
       "relation": "imports_from",
@@ -24855,9 +24855,9 @@
       "source_file": "src/components/report/fields/report-form-field.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_report_form_field",
-      "target": "types_index",
-      "confidence_score": 1.0
+      "target": "types_index"
     },
     {
       "relation": "imports",
@@ -24866,9 +24866,9 @@
       "source_file": "src/components/report/fields/report-form-field.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_report_form_field",
-      "target": "types_index_appsettings",
-      "confidence_score": 1.0
+      "target": "types_index_appsettings"
     },
     {
       "relation": "imports",
@@ -24877,9 +24877,9 @@
       "source_file": "src/components/report/fields/report-form-field.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_report_form_field",
-      "target": "types_index_form_datavalue",
-      "confidence_score": 1.0
+      "target": "types_index_form_datavalue"
     },
     {
       "relation": "imports",
@@ -24888,9 +24888,9 @@
       "source_file": "src/components/report/fields/report-form-field.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_report_form_field",
-      "target": "types_index_staffmember",
-      "confidence_score": 1.0
+      "target": "types_index_staffmember"
     },
     {
       "relation": "imports",
@@ -24899,9 +24899,9 @@
       "source_file": "src/components/report/fields/report-form-field.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_report_form_field",
-      "target": "types_index_staffrole",
-      "confidence_score": 1.0
+      "target": "types_index_staffrole"
     },
     {
       "relation": "imports_from",
@@ -24910,9 +24910,9 @@
       "source_file": "src/components/report/sections/repeatable-section-renderer.tsx",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_repeatable_section_renderer",
-      "target": "fields_report_form_field",
-      "confidence_score": 1.0
+      "target": "fields_report_form_field"
     },
     {
       "relation": "imports_from",
@@ -24921,9 +24921,9 @@
       "source_file": "src/components/report/sections/single-section-renderer.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_single_section_renderer",
-      "target": "fields_report_form_field",
-      "confidence_score": 1.0
+      "target": "fields_report_form_field"
     },
     {
       "relation": "references",
@@ -24932,9 +24932,9 @@
       "source_file": "src/components/report/fields/report-form-field.tsx",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_report_form_field_reportformfieldprops",
-      "target": "types_index_appsettings",
-      "confidence_score": 1.0
+      "target": "types_index_appsettings"
     },
     {
       "relation": "references",
@@ -24943,9 +24943,9 @@
       "source_file": "src/components/report/fields/report-form-field.tsx",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_report_form_field_reportformfieldprops",
-      "target": "types_index_form_datavalue",
-      "confidence_score": 1.0
+      "target": "types_index_form_datavalue"
     },
     {
       "relation": "references",
@@ -24954,9 +24954,9 @@
       "source_file": "src/components/report/fields/report-form-field.tsx",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_report_form_field_reportformfieldprops",
-      "target": "types_index_staffmember",
-      "confidence_score": 1.0
+      "target": "types_index_staffmember"
     },
     {
       "relation": "references",
@@ -24965,9 +24965,9 @@
       "source_file": "src/components/report/fields/report-form-field.tsx",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fields_report_form_field_reportformfieldprops",
-      "target": "types_index_staffrole",
-      "confidence_score": 1.0
+      "target": "types_index_staffrole"
     },
     {
       "relation": "imports",
@@ -24976,9 +24976,9 @@
       "source_file": "src/components/report/sections/repeatable-section-renderer.tsx",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_repeatable_section_renderer",
-      "target": "fields_report_form_field_reportformfield",
-      "confidence_score": 1.0
+      "target": "fields_report_form_field_reportformfield"
     },
     {
       "relation": "imports",
@@ -24987,9 +24987,9 @@
       "source_file": "src/components/report/sections/single-section-renderer.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_single_section_renderer",
-      "target": "fields_report_form_field_reportformfield",
-      "confidence_score": 1.0
+      "target": "fields_report_form_field_reportformfield"
     },
     {
       "relation": "contains",
@@ -27618,9 +27618,9 @@
       "source_file": "src/components/report/section-renderer.tsx",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "report_section_renderer",
-      "target": "sections_repeatable_section_renderer",
-      "confidence_score": 1.0
+      "target": "sections_repeatable_section_renderer"
     },
     {
       "relation": "imports",
@@ -27629,9 +27629,9 @@
       "source_file": "src/components/report/section-renderer.tsx",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "report_section_renderer",
-      "target": "sections_repeatable_section_renderer_repeatablesectionrenderer",
-      "confidence_score": 1.0
+      "target": "sections_repeatable_section_renderer_repeatablesectionrenderer"
     },
     {
       "relation": "imports_from",
@@ -27640,9 +27640,9 @@
       "source_file": "src/components/report/section-renderer.tsx",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "report_section_renderer",
-      "target": "sections_single_section_renderer",
-      "confidence_score": 1.0
+      "target": "sections_single_section_renderer"
     },
     {
       "relation": "imports",
@@ -27651,9 +27651,9 @@
       "source_file": "src/components/report/section-renderer.tsx",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "report_section_renderer",
-      "target": "sections_single_section_renderer_singlesectionrenderer",
-      "confidence_score": 1.0
+      "target": "sections_single_section_renderer_singlesectionrenderer"
     },
     {
       "relation": "imports",
@@ -27827,9 +27827,9 @@
       "source_file": "src/components/report/section-renderer.tsx",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "report_section_renderer_sectionrendererprops",
-      "target": "types_index_appsettings",
-      "confidence_score": 1.0
+      "target": "types_index_appsettings"
     },
     {
       "relation": "references",
@@ -27838,9 +27838,9 @@
       "source_file": "src/components/report/section-renderer.tsx",
       "source_location": "L24",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "report_section_renderer_sectionrendererprops",
-      "target": "types_index_form_datarecord",
-      "confidence_score": 1.0
+      "target": "types_index_form_datarecord"
     },
     {
       "relation": "references",
@@ -27849,9 +27849,9 @@
       "source_file": "src/components/report/section-renderer.tsx",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "report_section_renderer_sectionrendererprops",
-      "target": "types_index_form_datavalue",
-      "confidence_score": 1.0
+      "target": "types_index_form_datavalue"
     },
     {
       "relation": "references",
@@ -27860,9 +27860,9 @@
       "source_file": "src/components/report/section-renderer.tsx",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "report_section_renderer_sectionrendererprops",
-      "target": "types_index_sectionconfig",
-      "confidence_score": 1.0
+      "target": "types_index_sectionconfig"
     },
     {
       "relation": "references",
@@ -27871,9 +27871,9 @@
       "source_file": "src/components/report/section-renderer.tsx",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "report_section_renderer_sectionrendererprops",
-      "target": "types_index_staffmember",
-      "confidence_score": 1.0
+      "target": "types_index_staffmember"
     },
     {
       "relation": "references",
@@ -27882,9 +27882,9 @@
       "source_file": "src/components/report/section-renderer.tsx",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "report_section_renderer_sectionrendererprops",
-      "target": "types_index_staffrole",
-      "confidence_score": 1.0
+      "target": "types_index_staffrole"
     },
     {
       "relation": "references",
@@ -27893,9 +27893,9 @@
       "source_file": "src/components/report/section-renderer.tsx",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "report_section_renderer_sectionrendererprops",
-      "target": "types_index_templateconfig",
-      "confidence_score": 1.0
+      "target": "types_index_templateconfig"
     },
     {
       "relation": "imports",
@@ -27904,9 +27904,9 @@
       "source_file": "src/components/report/sections/repeatable-section-renderer.tsx",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_repeatable_section_renderer",
-      "target": "report_section_renderer_sectionrendererprops",
-      "confidence_score": 1.0
+      "target": "report_section_renderer_sectionrendererprops"
     },
     {
       "relation": "imports",
@@ -27915,9 +27915,9 @@
       "source_file": "src/components/report/sections/single-section-renderer.tsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_single_section_renderer",
-      "target": "report_section_renderer_sectionrendererprops",
-      "confidence_score": 1.0
+      "target": "report_section_renderer_sectionrendererprops"
     },
     {
       "relation": "calls",
@@ -27937,9 +27937,9 @@
       "source_file": "src/components/report/sections/repeatable-section-renderer.tsx",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_repeatable_section_renderer",
-      "target": "report_section_renderer_sectionrenderer",
-      "confidence_score": 1.0
+      "target": "report_section_renderer_sectionrenderer"
     },
     {
       "relation": "imports",
@@ -27948,9 +27948,9 @@
       "source_file": "src/components/report/sections/single-section-renderer.tsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_single_section_renderer",
-      "target": "report_section_renderer_sectionrenderer",
-      "confidence_score": 1.0
+      "target": "report_section_renderer_sectionrenderer"
     },
     {
       "relation": "imports_from",
@@ -27959,9 +27959,9 @@
       "source_file": "src/components/report/sections/repeatable-section-renderer.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_repeatable_section_renderer",
-      "target": "lib_utils",
-      "confidence_score": 1.0
+      "target": "lib_utils"
     },
     {
       "relation": "imports",
@@ -27970,9 +27970,9 @@
       "source_file": "src/components/report/sections/repeatable-section-renderer.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_repeatable_section_renderer",
-      "target": "lib_utils_cn",
-      "confidence_score": 1.0
+      "target": "lib_utils_cn"
     },
     {
       "relation": "contains",
@@ -27980,9 +27980,9 @@
       "source_file": "src/components/report/sections/repeatable-section-renderer.tsx",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_repeatable_section_renderer",
-      "target": "sections_repeatable_section_renderer_repeatablesectionrenderer",
-      "confidence_score": 1.0
+      "target": "sections_repeatable_section_renderer_repeatablesectionrenderer"
     },
     {
       "relation": "imports_from",
@@ -27991,9 +27991,9 @@
       "source_file": "src/components/report/sections/repeatable-section-renderer.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_repeatable_section_renderer",
-      "target": "types_index",
-      "confidence_score": 1.0
+      "target": "types_index"
     },
     {
       "relation": "imports",
@@ -28002,9 +28002,9 @@
       "source_file": "src/components/report/sections/repeatable-section-renderer.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_repeatable_section_renderer",
-      "target": "types_index_form_datarecord",
-      "confidence_score": 1.0
+      "target": "types_index_form_datarecord"
     },
     {
       "relation": "imports",
@@ -28013,9 +28013,9 @@
       "source_file": "src/components/report/sections/repeatable-section-renderer.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_repeatable_section_renderer",
-      "target": "types_index_sectionconfig",
-      "confidence_score": 1.0
+      "target": "types_index_sectionconfig"
     },
     {
       "relation": "imports_from",
@@ -28024,9 +28024,9 @@
       "source_file": "src/components/report/sections/repeatable-section-renderer.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_repeatable_section_renderer",
-      "target": "ui_button",
-      "confidence_score": 1.0
+      "target": "ui_button"
     },
     {
       "relation": "imports",
@@ -28035,9 +28035,9 @@
       "source_file": "src/components/report/sections/repeatable-section-renderer.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_repeatable_section_renderer",
-      "target": "ui_button_button",
-      "confidence_score": 1.0
+      "target": "ui_button_button"
     },
     {
       "relation": "imports_from",
@@ -28046,9 +28046,9 @@
       "source_file": "src/components/report/sections/repeatable-section-renderer.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_repeatable_section_renderer",
-      "target": "ui_label",
-      "confidence_score": 1.0
+      "target": "ui_label"
     },
     {
       "relation": "imports",
@@ -28057,9 +28057,9 @@
       "source_file": "src/components/report/sections/repeatable-section-renderer.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_repeatable_section_renderer",
-      "target": "ui_label_label",
-      "confidence_score": 1.0
+      "target": "ui_label_label"
     },
     {
       "relation": "calls",
@@ -28079,9 +28079,9 @@
       "source_file": "src/components/report/sections/single-section-renderer.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_single_section_renderer",
-      "target": "lib_utils",
-      "confidence_score": 1.0
+      "target": "lib_utils"
     },
     {
       "relation": "imports",
@@ -28090,9 +28090,9 @@
       "source_file": "src/components/report/sections/single-section-renderer.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_single_section_renderer",
-      "target": "lib_utils_cn",
-      "confidence_score": 1.0
+      "target": "lib_utils_cn"
     },
     {
       "relation": "contains",
@@ -28100,9 +28100,9 @@
       "source_file": "src/components/report/sections/single-section-renderer.tsx",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_single_section_renderer",
-      "target": "sections_single_section_renderer_singlesectionrenderer",
-      "confidence_score": 1.0
+      "target": "sections_single_section_renderer_singlesectionrenderer"
     },
     {
       "relation": "imports_from",
@@ -28111,9 +28111,9 @@
       "source_file": "src/components/report/sections/single-section-renderer.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_single_section_renderer",
-      "target": "types_index",
-      "confidence_score": 1.0
+      "target": "types_index"
     },
     {
       "relation": "imports",
@@ -28122,9 +28122,9 @@
       "source_file": "src/components/report/sections/single-section-renderer.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_single_section_renderer",
-      "target": "types_index_sectionconfig",
-      "confidence_score": 1.0
+      "target": "types_index_sectionconfig"
     },
     {
       "relation": "imports_from",
@@ -28133,9 +28133,9 @@
       "source_file": "src/components/report/sections/single-section-renderer.tsx",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_single_section_renderer",
-      "target": "ui_label",
-      "confidence_score": 1.0
+      "target": "ui_label"
     },
     {
       "relation": "imports",
@@ -28144,9 +28144,9 @@
       "source_file": "src/components/report/sections/single-section-renderer.tsx",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_single_section_renderer",
-      "target": "ui_label_label",
-      "confidence_score": 1.0
+      "target": "ui_label_label"
     },
     {
       "relation": "imports_from",
@@ -28155,9 +28155,9 @@
       "source_file": "src/components/report/sections/single-section-renderer.tsx",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_single_section_renderer",
-      "target": "ui_separator",
-      "confidence_score": 1.0
+      "target": "ui_separator"
     },
     {
       "relation": "imports",
@@ -28166,9 +28166,9 @@
       "source_file": "src/components/report/sections/single-section-renderer.tsx",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sections_single_section_renderer",
-      "target": "ui_separator_separator",
-      "confidence_score": 1.0
+      "target": "ui_separator_separator"
     },
     {
       "relation": "calls",
@@ -68142,5 +68142,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "02f0807b96711b3f624acdff117c86dfc17a0e09"
+  "built_at_commit": "105b2df6b19c42b2a1eecbd22f643de271a4bf19"
 }
