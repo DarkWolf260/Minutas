@@ -10,7 +10,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\ast.json": {
-    "mtime": 1780253298.8056767,
+    "mtime": 1780272001.8942585,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -35,7 +35,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\report.json": {
-    "mtime": 1780253298.8056767,
+    "mtime": 1780272001.8942585,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -245,8 +245,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\field-renderer.tsx": {
-    "mtime": 1780245146.3569057,
-    "ast_hash": "8b357b434200a116ca2cd76b8db88112",
+    "mtime": 1780271836.5526485,
+    "ast_hash": "20cc89847a064fc95c0bfea2a8720dd7",
     "semantic_hash": ""
   },
   "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\form\\form-layout.tsx": {
@@ -300,8 +300,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\section-renderer.tsx": {
-    "mtime": 1780245146.475564,
-    "ast_hash": "682563fddc4a61a6f1ca5c43184b1bb6",
+    "mtime": 1780271875.5925658,
+    "ast_hash": "dc8673254e5a6dbb26ae51d3f4c56aad",
     "semantic_hash": ""
   },
   "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\viewer\\use-report-viewer.ts": {
@@ -1737,6 +1737,26 @@
   "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\public\\screenshots\\mobile.png": {
     "mtime": 1775521150.4912074,
     "ast_hash": "b08109ddedeaca30ca65e6a22e173ac1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\fields\\estadisticas-field.tsx": {
+    "mtime": 1780271821.8889315,
+    "ast_hash": "a77d3489c7543895c145d5d574d691c7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\fields\\report-form-field.tsx": {
+    "mtime": 1780271844.7907052,
+    "ast_hash": "fd3a02af4a9d9dadb917d7b3c5a5ef21",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\sections\\repeatable-section-renderer.tsx": {
+    "mtime": 1780271853.5628107,
+    "ast_hash": "0b1b2dd96b9bfe19b79ffbf2ddb070e5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\SPIDERTECH\\Documents\\GitHub\\Minutas\\src\\components\\report\\sections\\single-section-renderer.tsx": {
+    "mtime": 1780271861.168833,
+    "ast_hash": "e40790f7a303c59502e0aad7f28a5e42",
     "semantic_hash": ""
   }
 }
