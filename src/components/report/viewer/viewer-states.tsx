@@ -1,7 +1,6 @@
 import React from 'react';
 import { FileText, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Report } from '@/lib/types';
 
@@ -33,7 +32,7 @@ export const ViewerError = ({ report, onDelete }: ViewerErrorProps) => (
         <h3 className="mt-4 text-lg font-semibold text-destructive">Error en la Plantilla</h3>
         <p className="text-muted-foreground mb-6">La plantilla no se encuentra o tiene un error.</p>
         <div className="text-left">
-          <Label>Contenido Original</Label>
+          <span className="text-sm font-semibold text-muted-foreground block">Contenido Original</span>
           <div className="mt-2 p-4 bg-muted/40 rounded-md border font-mono text-sm whitespace-pre-wrap leading-relaxed min-h-[200px]">
             {report.content}
           </div>

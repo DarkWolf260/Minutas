@@ -11,6 +11,8 @@ import { useOrdenDelDiaDraft } from '@/hooks/use-orden-del-dia-draft';
 import { renderFinalReport } from '@/lib/template-parser';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useRoles } from '@/hooks/use-roles';
+import { useAdmin } from '@/hooks/use-admin';
+import { useGlobalConfig } from '@/hooks/use-global-config';
 import { LEADER_ROLES } from '@/lib/constants/roles';
 import type { Report, Template, StaffMember } from '@/lib/types';
 import type { ReportGeneratorRef } from '@/components/report/report-generator';
@@ -23,6 +25,8 @@ export function useNovedades() {
   const { definitions } = useFieldDefinitions();
   const { roles } = useRoles();
   const { draft: cloudDraft } = useOrdenDelDiaDraft();
+  const { isAdmin } = useAdmin();
+  const { config: globalConfig } = useGlobalConfig();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const generatorRef = useRef<ReportGeneratorRef>(null);
@@ -254,7 +258,10 @@ export function useNovedades() {
         settingsMap
       );
 
-      const ordenDelDiaDeshabilitado = (settings.disabled_modules || []).includes('orden-del-dia');
+      const disabled_modules = isAdmin 
+        ? (globalConfig.disabled_modules_admins || []) 
+        : (settings.disabled_modules || []);
+      const ordenDelDiaDeshabilitado = disabled_modules.includes('orden-del-dia');
       const borrador = !ordenDelDiaDeshabilitado 
         ? ((cloudDraft && cloudDraft.guard_id === settings.active_guard_id) ? cloudDraft : settings.orden_del_dia_draft)
         : undefined;

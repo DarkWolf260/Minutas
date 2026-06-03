@@ -477,17 +477,22 @@ export function useReportForm({
     const baseDataChanged = baseDataState !== lastBaseDataHash.current;
 
     if (baseDataChanged && (!methods.formState.isDirty || template.id === 'preview') && !isFocused.current) {
-      logger.info('Resetting form due to base data or template change', {
-        feature: 'useReportForm',
-        metadata: {
-          reportId,
-          prevHash: lastBaseDataHash.current,
-          newHash: baseDataState
-        }
-      });
-      lastBaseDataHash.current = baseDataState;
       const formValues = getInitialValues(initialData);
-      reset(formValues);
+      const currentValues = getValues();
+      const isDataMatching = stableStringify(formValues) === stableStringify(currentValues);
+
+      if (!isDataMatching) {
+        logger.info('Resetting form due to base data or template change', {
+          feature: 'useReportForm',
+          metadata: {
+            reportId,
+            prevHash: lastBaseDataHash.current,
+            newHash: baseDataState
+          }
+        });
+        reset(formValues);
+      }
+      lastBaseDataHash.current = baseDataState;
     }
   }, [reportId, initialData, getInitialValues, reset, methods.formState.isDirty, rolesLoaded, guardsLoaded, settingsLoaded, settings?.active_guard_id, trigger]);
 

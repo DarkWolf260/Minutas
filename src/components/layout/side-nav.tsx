@@ -38,6 +38,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useAdmin } from '@/hooks/use-admin';
 import { useProfile } from '@/hooks/use-profile';
 import { useSettings } from '@/hooks/use-settings';
+import { useGlobalConfig } from '@/hooks/use-global-config';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { getInitials } from '@/lib/utils';
 import type { AppModuleId } from '@/lib/types';
@@ -59,9 +60,12 @@ export function SideNav() {
   const { settings } = useSettings();
   const { isAuthenticated, signOut, user } = useAuth();
   const { isAdmin } = useAdmin();
+  const { config: globalConfig } = useGlobalConfig();
   const { workspaces, currentWorkspace, switchWorkspace } = useWorkspaceManager();
 
-  const disabled_modules = settings.disabled_modules || [];
+  const disabled_modules = isAdmin 
+    ? (globalConfig.disabled_modules_admins || []) 
+    : (settings.disabled_modules || []);
   const navItems = ALL_NAV_ITEMS.filter((item) => !disabled_modules.includes(item.moduleId));
 
   // Dynamic name logic: Use Analista de CEMUPRAD if a guard is active

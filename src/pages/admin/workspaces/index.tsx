@@ -34,6 +34,8 @@ import { useCloudWorkspaces } from '@/hooks/use-cloud-workspaces';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
+import { MODULE_DEFS } from '@/pages/settings/modules';
 
 import {
   Dialog,
@@ -137,9 +139,10 @@ export default function AdminWorkspacesPage() {
           if (confData.data && confData.data.data) {
             const rawData = confData.data.data;
             const reportarole_ids = rawData.reportarole_ids || rawData.reportaroleIds || [];
-            setWsConfig({ ...rawData, reportarole_ids });
+            const disabled_modules = rawData.disabled_modules || rawData.disabledModules || [];
+            setWsConfig({ ...rawData, reportarole_ids, disabled_modules });
           } else {
-            setWsConfig({ reportarole_ids: [] });
+            setWsConfig({ reportarole_ids: [], disabled_modules: [] });
           }
         } catch (err) {
           console.error('Error loading settings:', err);
@@ -716,6 +719,75 @@ export default function AdminWorkspacesPage() {
                                   No hay cargos seleccionados.
                                 </div>
                               )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      {/* Configuración de Módulos */}
+                      <div className="space-y-6">
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-semibold">Configuración de Módulos</h4>
+                          <p className="text-xs text-muted-foreground">
+                            Elige qué módulos estarán visibles para cada tipo de rol en este área de trabajo.
+                          </p>
+                        </div>
+
+                        <div className="space-y-6">
+                          {/* Módulos para Usuarios Generales */}
+                          <div className="space-y-3">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">
+                              Módulos para Usuarios Generales
+                            </Label>
+                            <div className="rounded-2xl border overflow-hidden divide-y bg-background shadow-sm">
+                              {MODULE_DEFS.map(({ id, label, description, icon: Icon, color }) => {
+                                const disabled_modules = wsConfig.disabled_modules || [];
+                                const enabled = !disabled_modules.includes(id);
+                                const locked = id === 'novedades';
+
+                                const toggleModule = () => {
+                                  const next = disabled_modules.includes(id)
+                                    ? disabled_modules.filter((m: string) => m !== id)
+                                    : [...disabled_modules, id];
+                                  setWsConfig((prev: any) => ({ ...prev, disabled_modules: next }));
+                                };
+
+                                return (
+                                  <div
+                                    key={id}
+                                    className={cn(
+                                      'flex items-center justify-between px-4 py-3 transition-colors',
+                                      enabled ? 'bg-card hover:bg-muted/10' : 'bg-muted/10'
+                                    )}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div className={cn(
+                                        'h-8 w-8 rounded-xl flex items-center justify-center shrink-0 transition-opacity',
+                                        color,
+                                        !enabled && 'opacity-40'
+                                      )}>
+                                        <Icon className="h-4 w-4" />
+                                      </div>
+                                      <div className={cn('transition-opacity', !enabled && 'opacity-40')}>
+                                        <p className="text-xs font-semibold leading-tight">{label}</p>
+                                        <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{description}</p>
+                                      </div>
+                                      {locked && (
+                                        <span className="text-[8px] font-bold uppercase tracking-wide bg-muted border px-1.5 py-0.5 rounded text-muted-foreground ml-1">
+                                          Requerido
+                                        </span>
+                                      )}
+                                    </div>
+                                    <Switch
+                                      checked={enabled}
+                                      onCheckedChange={toggleModule}
+                                      disabled={locked}
+                                    />
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>

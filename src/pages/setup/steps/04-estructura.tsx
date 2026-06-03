@@ -128,8 +128,9 @@ export function PasoEstructura({
         {presetSeleccionado === 'extendido' && (
           <div className="space-y-3 pt-2 animate-in slide-in-from-top-2 duration-300">
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground ml-1">Nombre de la Sala de Monitoreo</Label>
+              <Label htmlFor="monitor-room-name" className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground ml-1">Nombre de la Sala de Monitoreo</Label>
               <Input 
+                id="monitor-room-name"
                 value={nombreMonitoreo}
                 onChange={e => setNombreMonitoreo(e.target.value)}
                 placeholder="Ej: CEMUPRAD, Sala Situacional..."

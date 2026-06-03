@@ -26,6 +26,8 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useActiveGuard } from '@/hooks/use-active-guard';
+import { useAdmin } from '@/hooks/use-admin';
+import { useGlobalConfig } from '@/hooks/use-global-config';
 import { Link } from 'react-router-dom';
 
 interface GuardSelectorProps {
@@ -190,7 +192,13 @@ export function NoGuardBanner({
     isLoaded,
   } = useActiveGuard();
 
-  const ordenDelDiaDisabled = (settings.disabled_modules || []).includes('orden-del-dia');
+  const { isAdmin } = useAdmin();
+  const { config: globalConfig } = useGlobalConfig();
+
+  const disabled_modules = isAdmin 
+    ? (globalConfig.disabled_modules_admins || []) 
+    : (settings.disabled_modules || []);
+  const ordenDelDiaDisabled = disabled_modules.includes('orden-del-dia');
 
   const handleOpen = () => {
     openGuard();

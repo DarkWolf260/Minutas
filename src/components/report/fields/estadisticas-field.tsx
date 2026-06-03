@@ -16,13 +16,15 @@ import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface EstadisticasFieldProps {
+    id?: string;
+    name?: string;
     value: form_dataValue;
     onChange: (value: form_dataValue) => void;
     disabled?: boolean;
     className?: string;
 }
 
-export const EstadisticasField = ({ value, onChange, disabled, className }: EstadisticasFieldProps) => {
+export const EstadisticasField = ({ id, name, value, onChange, disabled, className }: EstadisticasFieldProps) => {
     const db = useDatabase();
     const { currentWorkspace, isCloud } = useWorkspaceManager();
     const { activeGuard } = useActiveGuard();
@@ -189,6 +191,8 @@ export const EstadisticasField = ({ value, onChange, disabled, className }: Esta
                 Actualizar
             </Button>
             <Textarea
+                id={id}
+                name={name}
                 value={String(value || '')}
                 onChange={(e) => onChange(e.target.value)}
                 disabled={disabled}
@@ -222,12 +226,14 @@ export const EstadisticasField = ({ value, onChange, disabled, className }: Esta
             >
                 <div className="grid grid-cols-2 gap-4 py-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Fecha de Inicio</label>
-                        <DatePicker value={startDateStr} onChange={setStartDateStr} />
+                        <label htmlFor="startDate" className="text-sm font-medium">Fecha de Inicio</label>
+                        <DatePicker id="startDate" name="startDate" value={startDateStr} onChange={setStartDateStr} />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Hora de Inicio</label>
+                        <label htmlFor="startTime" className="text-sm font-medium">Hora de Inicio</label>
                         <input
+                            id="startTime"
+                            name="startTime"
                             type="text"
                             placeholder="08:00"
                             value={startTime}
@@ -256,12 +262,14 @@ export const EstadisticasField = ({ value, onChange, disabled, className }: Esta
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Fecha de Fin</label>
-                        <DatePicker value={endDateStr} onChange={setEndDateStr} />
+                        <label htmlFor="endDate" className="text-sm font-medium">Fecha de Fin</label>
+                        <DatePicker id="endDate" name="endDate" value={endDateStr} onChange={setEndDateStr} />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Hora de Fin</label>
+                        <label htmlFor="endTime" className="text-sm font-medium">Hora de Fin</label>
                         <input
+                            id="endTime"
+                            name="endTime"
                             type="text"
                             placeholder="08:00"
                             value={endTime}

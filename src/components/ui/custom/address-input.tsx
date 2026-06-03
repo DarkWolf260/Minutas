@@ -4,7 +4,7 @@ import React, { useState, useMemo, useRef, useEffect, forwardRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ChevronsUpDown } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger, PopoverAnchor } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAddresses } from '@/hooks/use-addresses';
@@ -117,14 +117,30 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
     };
 
     if (!isLoaded) {
-      return <Skeleton className="h-10 w-full" />;
+      return isTextarea ? (
+        <Textarea
+          id={id}
+          name={name}
+          disabled
+          placeholder="Cargando direcciones..."
+          className={cn("min-h-[80px]", className)}
+        />
+      ) : (
+        <Input
+          id={id}
+          name={name}
+          disabled
+          placeholder="Cargando direcciones..."
+          className={className}
+        />
+      );
     }
 
     return (
       <div className="flex flex-col gap-1.5">
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild disabled={disabled}>
-            <div className="relative">
+        <div className="relative">
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverAnchor asChild>
               {isTextarea ? (
                 <Textarea
                   ref={(node: HTMLTextAreaElement | null) => {
@@ -133,7 +149,16 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
                     else if (ref) (ref as React.MutableRefObject<HTMLTextAreaElement | null>).current = node;
                   }}
                   value={value}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                    onChange(e.target.value);
+                    if (!open) setOpen(true);
+                  }}
+                  onFocus={() => {
+                    if (!disabled) setOpen(true);
+                  }}
+                  onClick={() => {
+                    if (!disabled) setOpen(true);
+                  }}
                   placeholder={placeholder || 'Selecciona o escribe una dirección...'}
                   disabled={disabled}
                   className={cn("pr-8 min-h-[80px]", className)}
@@ -143,13 +168,23 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
                 />
               ) : (
                 <Input
+                  type="text"
                   ref={(node: HTMLInputElement | null) => {
                     internalInputRef.current = node;
                     if (typeof ref === 'function') ref(node);
                     else if (ref) (ref as React.MutableRefObject<HTMLInputElement | null>).current = node;
                   }}
                   value={value}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    onChange(e.target.value);
+                    if (!open) setOpen(true);
+                  }}
+                  onFocus={() => {
+                    if (!disabled) setOpen(true);
+                  }}
+                  onClick={() => {
+                    if (!disabled) setOpen(true);
+                  }}
                   placeholder={placeholder || 'Selecciona o escribe una dirección...'}
                   disabled={disabled}
                   className={cn("pr-8", className)}
@@ -158,13 +193,11 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
                   id={id}
                 />
               )}
-              <ChevronsUpDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 shrink-0 opacity-50" />
-            </div>
-          </PopoverTrigger>
-          <PopoverContent
-            className="w-[var(--radix-popover-trigger-width)] p-0"
-            onOpenAutoFocus={(e) => e.preventDefault()}
-          >
+            </PopoverAnchor>
+            <PopoverContent
+              className="w-[var(--radix-popover-trigger-width)] p-0"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+            >
             <ScrollArea className="max-h-60 w-full" type="always">
               <div className="p-1">
                 {addresses.length > 0 ? (
@@ -195,6 +228,8 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
             </ScrollArea>
           </PopoverContent>
         </Popover>
+        <ChevronsUpDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 shrink-0 opacity-50 pointer-events-none" />
+      </div>
 
         {/* Badge informativo cuando coincide con el directorio */}
         {resolvedType && LOCATION_TYPE_BADGE[resolvedType] && (
@@ -212,7 +247,7 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
             <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide shrink-0">
               Tipo de lugar:
             </span>
-            <Select value={typeValue ?? ''} onValueChange={onTypeChange} disabled={disabled}>
+            <Select name={name ? `${name}_tipo` : undefined} value={typeValue ?? ''} onValueChange={onTypeChange} disabled={disabled}>
               <SelectTrigger className="h-7 text-xs rounded-lg border-dashed flex-1">
                 <SelectValue placeholder="Seleccionar tipo..." />
               </SelectTrigger>

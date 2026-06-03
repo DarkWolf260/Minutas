@@ -27,7 +27,7 @@ import { APP_VERSION } from '@/pages/settings/about/data';
 import { AdminRoute } from '@/components/auth/admin-route';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { useAuth } from '@/hooks/use-auth';
-import { useGlobalConfig } from '@/hooks/use-global-config';
+import { useGlobalConfig, GlobalConfigProvider } from '@/hooks/use-global-config';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 
 // ─── Lazy-load app pages ──────────────────────────────────────────────────────
@@ -61,6 +61,7 @@ const AdminDashboardPage = lazy(() => import('@/pages/admin'));
 const AdminUsersPage = lazy(() => import('@/pages/admin/users'));
 const AdminConfigPage = lazy(() => import('@/pages/admin/config'));
 const AdminWorkspacesPage = lazy(() => import('@/pages/admin/workspaces'));
+const AdminFeedbackPage = lazy(() => import('@/pages/admin/feedback'));
 const MaintenancePage = lazy(() => import('@/pages/maintenance'));
 
 // ─── Shared loader ────────────────────────────────────────────────────────────
@@ -290,6 +291,13 @@ function AppLayout() {
                       </AdminRoute>
                     </ProtectedRoute>
                   } />
+                  <Route path="/admin/feedback" element={
+                    <ProtectedRoute>
+                      <AdminRoute>
+                        <AdminFeedbackPage />
+                      </AdminRoute>
+                    </ProtectedRoute>
+                  } />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </div>
@@ -340,31 +348,33 @@ function Root() {
       <PwaProvider>
         <AuthProvider>
           <UserProvider>
-            <DatabaseProvider setupMode={!setupDone}>
-            <NotificationsProvider>
-              <SyncProvider>
-                <TooltipProvider>
-                  {setupDone ? (
-                    // ── Normal app shell ─────────────────────────────────────────
-                    <Suspense fallback={<PageLoader />}>
-                      <ScheduledMessagesWorker />
-                      <AppLayout />
-                    </Suspense>
-                  ) : (
-                    // ── Full-screen setup wizard (no SideNav, no BottomNav) ──────
-                    // SetupPage uses DatabaseProvider hooks internally (workspace, settings)
-                    <SetupPage onComplete={handleSetupComplete} />
-                  )}
+            <GlobalConfigProvider>
+              <DatabaseProvider setupMode={!setupDone}>
+              <NotificationsProvider>
+                <SyncProvider>
+                  <TooltipProvider>
+                    {setupDone ? (
+                      // ── Normal app shell ─────────────────────────────────────────
+                      <Suspense fallback={<PageLoader />}>
+                        <ScheduledMessagesWorker />
+                        <AppLayout />
+                      </Suspense>
+                    ) : (
+                      // ── Full-screen setup wizard (no SideNav, no BottomNav) ──────
+                      // SetupPage uses DatabaseProvider hooks internally (workspace, settings)
+                      <SetupPage onComplete={handleSetupComplete} />
+                    )}
 
-                  {/* Global overlays — shown in both modes */}
-                  <PWAStatus />
-                  <Toaster />
-                </TooltipProvider>
-              </SyncProvider>
-            </NotificationsProvider>
-          </DatabaseProvider>
-        </UserProvider>
-      </AuthProvider>
+                    {/* Global overlays — shown in both modes */}
+                    <PWAStatus />
+                    <Toaster />
+                  </TooltipProvider>
+                </SyncProvider>
+              </NotificationsProvider>
+              </DatabaseProvider>
+            </GlobalConfigProvider>
+          </UserProvider>
+        </AuthProvider>
       </PwaProvider>
     </ThemeProvider>
   );

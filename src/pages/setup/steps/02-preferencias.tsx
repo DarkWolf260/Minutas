@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -96,7 +95,7 @@ export function PasoPreferencias({ alSiguiente, alAtras }: { alSiguiente: () => 
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Apariencia</Label>
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">Apariencia</span>
             <div className="grid grid-cols-3 gap-2">
               {OPCIONES_TEMA.map(({ value, label, icon: Icon }) => (
                 <button

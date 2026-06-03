@@ -87,9 +87,9 @@ export function PasoAreaTrabajo({
           </div>
         ) : (
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Seleccionar área de trabajo</Label>
+            <Label htmlFor="select-workspace" className="text-sm font-medium">Seleccionar área de trabajo</Label>
             <Select value={seleccionado} onValueChange={setSeleccionado}>
-              <SelectTrigger className="h-11"><SelectValue placeholder="Elige un área..." /></SelectTrigger>
+              <SelectTrigger id="select-workspace" className="h-11"><SelectValue placeholder="Elige un área..." /></SelectTrigger>
               <SelectContent className="z-[200]">
                 {workspacesExistentes.map((ws) => (
                   <SelectItem key={ws} value={ws}>{ws}</SelectItem>
