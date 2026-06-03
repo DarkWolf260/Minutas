@@ -80,7 +80,7 @@ export const FieldRenderer = memo(
             });
 
             if (lowerfield_id === 'estadísticas' || lowerfield_id === 'estadisticas' || fieldConfig.label.toLowerCase() === 'estadísticas') {
-                return <EstadisticasField value={value} onChange={onChange} disabled={disabled} className={className} />;
+                return <EstadisticasField id={name} name={name} value={value} onChange={onChange} disabled={disabled} className={className} />;
             }
 
             const isApoyo = lowerfield_id === 'apoyo_ins' || 
@@ -108,7 +108,8 @@ export const FieldRenderer = memo(
                             Apoyo institucional
                         </span>
                         <Switch
-                            id={field_id}
+                            id={name}
+                            name={name}
                             checked={isActive}
                             onCheckedChange={(checked) => onChange(checked ? '(Apoyo institucional)' : '')}
                             disabled={disabled}
@@ -178,11 +179,12 @@ export const FieldRenderer = memo(
 
                 return (
                     <Select
+                        name={name}
                         onValueChange={handleSelectChange}
                         value={selectedStaffId || ''}
                         disabled={disabled}
                     >
-                        <SelectTrigger className={className} ref={ref} onBlur={onBlur} id={field_id}>
+                        <SelectTrigger className={className} ref={ref} onBlur={onBlur} id={name}>
                             <SelectValue placeholder="Selecciona el personal..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -219,7 +221,7 @@ export const FieldRenderer = memo(
                             onBlur={onBlur}
                             isTextarea
                             name={name}
-                            id={field_id}
+                            id={name}
                         />
                     );
                 }
@@ -236,7 +238,7 @@ export const FieldRenderer = memo(
                                 rows={1}
                                 ref={ref}
                                 name={name}
-                                id={field_id}
+                                id={name}
                             />
                         );
                     case 'time-hlv':
@@ -249,7 +251,7 @@ export const FieldRenderer = memo(
                                 ref={ref}
                                 onBlur={onBlur}
                                 name={name}
-                                id={field_id}
+                                id={name}
                             />
                         );
                     case 'date':
@@ -262,7 +264,7 @@ export const FieldRenderer = memo(
                                 ref={ref}
                                 onBlur={onBlur}
                                 name={name}
-                                id={field_id}
+                                id={name}
                             />
                         );
                     case 'multi-text':
@@ -278,7 +280,7 @@ export const FieldRenderer = memo(
                                 ref={ref}
                                 onBlur={onBlur}
                                 name={name}
-                                id={field_id}
+                                id={name}
                             />
                         );
                     case 'dropdown': {
@@ -292,11 +294,12 @@ export const FieldRenderer = memo(
                         };
                         return (
                             <Select
+                                name={name}
                                 onValueChange={handleSelect}
                                 value={(typeof value === 'string' ? value : '')}
                                 disabled={disabled}
                             >
-                                <SelectTrigger className={`w-full ${className || ''}`} ref={ref} onBlur={onBlur} id={field_id}>
+                                <SelectTrigger className={`w-full ${className || ''}`} ref={ref} onBlur={onBlur} id={name}>
                                     <SelectValue placeholder="Selecciona una opción..." />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -319,7 +322,7 @@ export const FieldRenderer = memo(
                                 ref={ref}
                                 onBlur={onBlur}
                                 name={name}
-                                id={field_id}
+                                id={name}
                             />
                         );
                 }
@@ -336,7 +339,7 @@ export const FieldRenderer = memo(
                         ref={ref}
                         onBlur={onBlur}
                         name={name}
-                        id={field_id}
+                        id={name}
                     />
                 );
             }
@@ -355,7 +358,7 @@ export const FieldRenderer = memo(
                         ref={ref}
                         onBlur={onBlur}
                         name={name}
-                        id={field_id}
+                        id={name}
                     />
                 );
             }
@@ -374,7 +377,7 @@ export const FieldRenderer = memo(
                         ref={ref}
                         onBlur={onBlur}
                         name={name}
-                        id={field_id}
+                        id={name}
                     />
                 );
             }
@@ -419,14 +422,14 @@ export const FieldRenderer = memo(
                         ref={ref}
                         onBlur={onBlur}
                         name={name}
-                        id={field_id}
+                        id={name}
                     />
                 );
             }
 
             return (
                 <Input
-                    id={field_id}
+                    id={name}
                     name={name}
                     value={(typeof value === 'string' || typeof value === 'number' ? value : '')}
                     onChange={(e) => onChange(e.target.value)}

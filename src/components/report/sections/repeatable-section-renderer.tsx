@@ -83,12 +83,12 @@ export function RepeatableSectionRenderer(props: SectionRendererProps) {
             >
                 {section.label &&
                     (isNested ? (
-                        <Label className="text-sm font-medium">
+                        <span className="text-sm font-medium leading-none text-foreground block">
                             {section.label}
                             {fieldConfig.required && (
                                 <span className="text-destructive ml-1">*</span>
                             )}
-                        </Label>
+                        </span>
                     ) : (
                         <h3 className="text-lg font-semibold">
                             {section.label}

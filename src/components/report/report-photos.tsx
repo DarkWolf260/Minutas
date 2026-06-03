@@ -201,6 +201,8 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
               ref={fileInputRef}
               onChange={handleFileChange}
               disabled={isUploading}
+              id="report-photo-upload"
+              name="report-photo-upload"
             />
             <Button
               type="button"
@@ -269,7 +271,6 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
                     src={photo.url}
                     alt={photo.name || 'Evidencia'}
                     className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500 ease-out"
-                    loading="lazy"
                   />
 
                   {/* Actions overlay */}
@@ -320,6 +321,8 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
                     onChange={(e) => handleDescriptionChange(photo.id, e.target.value)}
                     disabled={disabled}
                     className="h-8 text-xs border-muted/30 focus-visible:ring-primary/40 rounded-lg px-2 bg-muted/10 focus:bg-background"
+                    id={`photo-desc-${photo.id}`}
+                    name={`photo-desc-${photo.id}`}
                   />
                   {photo.name && (
                     <span className="text-[10px] text-muted-foreground/60 truncate" title={photo.name}>
