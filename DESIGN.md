@@ -1,6 +1,6 @@
 ---
 name: Minutas
-description: Generador de Reportes Policiales Local-First
+description: Generador de Reportes de Protección Civil Local-First
 colors:
   primary: "#1d4ed8"
   primary-dark: "#3b82f6"
@@ -53,7 +53,7 @@ components:
 
 **Creative North Star: "The Tactical Terminal" (El Terminal Táctico)**
 
-El diseño de Minutas se define como un entorno utilitario, altamente denso y preciso, concebido para brindar máxima eficiencia a los funcionarios en servicio. Prioriza la legibilidad inmediata y un orden riguroso que minimice la fatiga visual bajo condiciones de luz cambiante (como turnos nocturnos o luz solar directa sobre dispositivos móviles). Este sistema rechaza el decorativismo vacío de los dashboards comerciales comunes y se establece como una herramienta de trabajo sobria, confiable y extremadamente rápida.
+El diseño de Minutas se define como un entorno utilitario, altamente denso y preciso, concebido para brindar máxima eficiencia en la atención de emergencias y operaciones en servicio. Prioriza la legibilidad inmediata y un orden riguroso que minimice la fatiga visual bajo condiciones de luz cambiante (como turnos nocturnos o luz solar directa sobre dispositivos móviles). Este sistema rechaza el decorativismo vacío de los dashboards comerciales comunes y se establece como una herramienta de trabajo sobria, confiable y extremadamente rápida.
 
 **Key Characteristics:**
 - Alta densidad de datos sin abrumar visualmente.
@@ -65,7 +65,7 @@ El diseño de Minutas se define como un entorno utilitario, altamente denso y pr
 
 ## 2. Colors
 
-La paleta de colores utiliza contrastes fuertes para garantizar una lectura rápida y cumplir rigurosamente con los estándares de accesibilidad WCAG AA.
+La paleta de colores utiliza contrastes fuertes para garantizar una lectura rápida y cumplir rigurosamente con los estándares de accesibilidad WCAG AAA en los textos críticos de emergencias.
 
 ### Primary
 - **Tactical Cobalt** (`#1d4ed8` / `oklch(0.51 0.22 260)`): Azul de alta intensidad usado para acciones primarias, acentos de selección principales e indicadores clave del sistema. Simboliza autoridad y claridad.
@@ -80,6 +80,7 @@ La paleta de colores utiliza contrastes fuertes para garantizar una lectura ráp
 
 ### Named Rules
 **The 10% Accent Rule.** El azul primario se reserva estrictamente para botones de acción directa, enlaces de navegación activos e indicadores de estado crítico. Nunca se usa como color de fondo decorativo para secciones completas.
+**The High-Contrast Readability Rule.** El texto secundario o descriptivo (`Ink Muted`) debe mantener un ratio de contraste de al menos 5:1 contra el fondo de la pantalla (nivel WCAG AAA recomendado para visualización bajo luz solar directa o en cabinas de vehículos de emergencias).
 
 ---
 
@@ -121,7 +122,7 @@ Cada componente se diseña bajo el principio de ergonomía y robustez física (f
 ### Buttons
 - **Shape:** Radio de borde medio (8px / `rounded-md`).
 - **Primary:** Fondo Tactical Cobalt (`#1d4ed8`) y texto blanco, con padding generoso (`8px 16px` o superior en móvil para aumentar la zona de toque).
-- **Hover / Focus:** Transiciones fluidas en 200ms (`transition-colors duration-200`). En hover se oscurece a `#1e40af`. Al enfocar se muestra un anillo de enfoque marcado (`ring-2 ring-primary`).
+- **Hover / Focus:** Transiciones ultrarrápidas en 100-150ms (`transition-colors duration-150`). En hover se oscurece a `#1e40af`. Al enfocar se muestra un anillo de enfoque marcado de 3px (`ring-3 ring-primary`).
 
 ### Cards / Containers
 - **Corner Style:** Radio de borde amplio (16px / `rounded-2xl` / `var(--radius)`) para suavizar el aspecto del terminal técnico.
@@ -131,7 +132,7 @@ Cada componente se diseña bajo el principio de ergonomía y robustez física (f
 
 ### Inputs / Fields
 - **Style:** Fondo claro o neutro oscuro, radio de 8px, y borde sólido de 1px (`#e2e8f0` o `#27272a`).
-- **Focus:** Cambio de borde inmediato al color primario con anillo de enfoque sutil.
+- **Focus:** Cambio de borde inmediato al color primario con anillo de enfoque marcado de 3px (`ring-3 ring-primary`).
 - **Error:** Borde rojo destructivo (`#ef4444`) con mensaje aclaratorio inmediato de alto contraste.
 
 ---
