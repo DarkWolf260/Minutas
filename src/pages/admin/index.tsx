@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   ShieldCheck,
   Users,
@@ -5,7 +6,8 @@ import {
   Layers,
   ArrowRight,
   Activity,
-  Globe
+  Globe,
+  MessageSquare
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +15,7 @@ import { useAdminUsers } from '@/hooks/use-admin-users';
 import { useCloudWorkspaces } from '@/hooks/use-cloud-workspaces';
 import { useGlobalConfig } from '@/hooks/use-global-config';
 import { APP_VERSION } from '@/pages/settings/about/data';
+import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
 export default function AdminDashboardPage() {
@@ -20,6 +23,33 @@ export default function AdminDashboardPage() {
   const { users, loading: loadingUsers } = useAdminUsers();
   const { workspaces, loading: loadingWorkspaces } = useCloudWorkspaces();
   const { config } = useGlobalConfig();
+
+  // Sync and extra admin metrics
+  const [syncReportsCount, setSyncReportsCount] = useState<number | null>(null);
+  const [syncChannelsCount, setSyncChannelsCount] = useState<number | null>(null);
+  const [feedbackCount, setFeedbackCount] = useState<number | null>(null);
+  const [loadingExtra, setLoadingExtra] = useState(true);
+
+  useEffect(() => {
+    async function fetchExtraCounts() {
+      try {
+        setLoadingExtra(true);
+        const [reportsRes, channelsRes, feedbackRes] = await Promise.all([
+          supabase.from('sync_reports').select('*', { count: 'exact', head: true }),
+          supabase.from('sync_channels').select('*', { count: 'exact', head: true }),
+          supabase.from('feedback').select('*', { count: 'exact', head: true })
+        ]);
+        setSyncReportsCount(reportsRes.count ?? 0);
+        setSyncChannelsCount(channelsRes.count ?? 0);
+        setFeedbackCount(feedbackRes.count ?? 0);
+      } catch (err) {
+        console.error('Error fetching extra counts:', err);
+      } finally {
+        setLoadingExtra(false);
+      }
+    }
+    fetchExtraCounts();
+  }, []);
 
   const stats = [
     {
@@ -30,8 +60,22 @@ export default function AdminDashboardPage() {
       bg: 'bg-emerald-500/10'
     },
     {
-      label: 'Estado del Sistema',
-      value: 'Activo',
+      label: 'Personal Registrado',
+      value: loadingUsers ? '...' : users.length,
+      icon: Users,
+      color: 'text-blue-500',
+      bg: 'bg-blue-500/10'
+    },
+    {
+      label: 'Reportes Sincronizados',
+      value: loadingExtra ? '...' : syncReportsCount,
+      icon: Layers,
+      color: 'text-violet-500',
+      bg: 'bg-violet-500/10'
+    },
+    {
+      label: 'Canales Sincronizados',
+      value: loadingExtra ? '...' : syncChannelsCount,
       icon: Activity,
       color: 'text-amber-500',
       bg: 'bg-amber-500/10'
@@ -48,7 +92,7 @@ export default function AdminDashboardPage() {
           {/* Hero Section */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-primary/5 border border-primary/20 p-6 md:p-10 rounded-2xl shadow-sm relative overflow-hidden">
             <div className="space-y-2 relative">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full   bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest mb-2 border border-primary/20">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest mb-2 border border-primary/20">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 Acceso de Administrador
               </div>
@@ -69,7 +113,7 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat, i) => (
               <Card key={i} className="border-muted/50 bg-card shadow-sm rounded-2xl overflow-hidden group hover:border-primary/30 transition-all duration-300">
                 <CardContent className="p-6 flex items-center justify-between">
@@ -119,6 +163,16 @@ export default function AdminDashboardPage() {
               count={loadingWorkspaces ? null : workspaces.length}
               color="emerald"
               onClick={() => navigate('/admin/workspaces')}
+            />
+
+            {/* Feedback Admin */}
+            <NavCard
+              title="Bandeja de Feedback"
+              description="Supervisa y responde a las sugerencias, errores y elogios enviados por los usuarios."
+              icon={MessageSquare}
+              count={loadingExtra ? null : feedbackCount}
+              color="amber"
+              onClick={() => navigate('/admin/feedback')}
             />
           </div>
         </div>
@@ -195,8 +249,4 @@ function NavCard({ title, description, icon: Icon, count, label, color, onClick 
       </CardContent>
     </Card>
   );
-}
-
-function Separator({ className }: { className?: string }) {
-  return <div className={cn("h-[1px] bg-muted/40", className)} />;
 }

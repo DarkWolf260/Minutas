@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { useSettings } from '@/hooks/use-settings';
+import { useAdmin } from '@/hooks/use-admin';
+import { useGlobalConfig } from '@/hooks/use-global-config';
 import type { AppModuleId } from '@/lib/types';
 import {
   ChevronLeft,
@@ -16,13 +18,14 @@ import {
   FileText,
   Laptop,
   Smartphone,
+  ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 // ─── Module definitions ────────────────────────────────────────────────────────
 
-const MODULE_DEFS: {
+export const MODULE_DEFS: {
   id: AppModuleId;
   label: string;
   description: string;
@@ -59,19 +62,32 @@ function matchesPreset(disabled: AppModuleId[], preset: AppModuleId[]) {
 
 export default function SettingsModulesPage() {
   const navigate = useNavigate();
-  const { settings, saveSettings, isLoaded } = useSettings();
+  const { settings, isLoaded } = useSettings();
+  const { isAdmin } = useAdmin();
+  const { config: globalConfig, loading: globalConfigLoading, updateConfig } = useGlobalConfig();
 
-  const disabled_modules: AppModuleId[] = settings.disabled_modules || [];
+  // If user is admin, they configure disabled_modules_admins.
+  // Otherwise, they view disabled_modules.
+  const disabled_modules: AppModuleId[] = isAdmin
+    ? (globalConfig.disabled_modules_admins || [])
+    : (settings.disabled_modules || []);
 
   const isEnabled = (id: AppModuleId) => !disabled_modules.includes(id);
+  
   const toggle = (id: AppModuleId) => {
+    if (!isAdmin) return;
     const next = disabled_modules.includes(id)
       ? disabled_modules.filter((m) => m !== id)
       : [...disabled_modules, id];
-    saveSettings({ disabled_modules: next });
+    updateConfig('disabled_modules_admins', next);
   };
-  const applyPreset = (preset: AppModuleId[]) =>
-    saveSettings({ disabled_modules: preset });
+  
+  const applyPreset = (preset: AppModuleId[]) => {
+    if (!isAdmin) return;
+    updateConfig('disabled_modules_admins', preset);
+  };
+
+  const isLoadedCombined = isLoaded && !globalConfigLoading;
 
   return (
     <ScrollArea className="h-full w-full" type="always">
@@ -98,61 +114,76 @@ export default function SettingsModulesPage() {
           </div>
         </div>
 
-        {/* Presets */}
-        <div className="space-y-2">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-1">
-            Configuración rápida
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => applyPreset(PRESET_DESKTOP)}
-              className={cn(
-                'flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left',
-                matchesPreset(disabled_modules, PRESET_DESKTOP)
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30'
-              )}
-            >
-              <div className={cn(
-                'h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-colors',
-                matchesPreset(disabled_modules, PRESET_DESKTOP)
-                  ? 'bg-primary/10 text-primary'
-                  : 'bg-muted text-muted-foreground'
-              )}>
-                <Laptop className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">Escritorio</p>
-                <p className="text-[11px] text-muted-foreground leading-tight">Todos los módulos activos</p>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => applyPreset(PRESET_MOBILE)}
-              className={cn(
-                'flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left',
-                matchesPreset(disabled_modules, PRESET_MOBILE)
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30'
-              )}
-            >
-              <div className={cn(
-                'h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-colors',
-                matchesPreset(disabled_modules, PRESET_MOBILE)
-                  ? 'bg-primary/10 text-primary'
-                  : 'bg-muted text-muted-foreground'
-              )}>
-                <Smartphone className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">Móvil</p>
-                <p className="text-[11px] text-muted-foreground leading-tight">Sin Estadísticas ni Plantillas</p>
-              </div>
-            </button>
+        {/* Warning banner for non-admins */}
+        {!isAdmin && isLoaded && (
+          <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 animate-in fade-in duration-300">
+            <ShieldAlert className="h-5 w-5 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-sm">Vista de solo lectura</p>
+              <p className="text-xs text-amber-600/80 leading-relaxed mt-0.5">
+                La configuración de módulos para tu área de trabajo es administrada centralmente. Comunícate con un administrador si necesitas habilitar o deshabilitar alguna herramienta.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Presets (Only visible to Admins) */}
+        {isAdmin && (
+          <div className="space-y-2">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-1">
+              Configuración rápida
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => applyPreset(PRESET_DESKTOP)}
+                className={cn(
+                  'flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left',
+                  matchesPreset(disabled_modules, PRESET_DESKTOP)
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30'
+                )}
+              >
+                <div className={cn(
+                  'h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-colors',
+                  matchesPreset(disabled_modules, PRESET_DESKTOP)
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-muted text-muted-foreground'
+                )}>
+                  <Laptop className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">Escritorio</p>
+                  <p className="text-[11px] text-muted-foreground leading-tight">Todos los módulos activos</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => applyPreset(PRESET_MOBILE)}
+                className={cn(
+                  'flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left',
+                  matchesPreset(disabled_modules, PRESET_MOBILE)
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30'
+                )}
+              >
+                <div className={cn(
+                  'h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-colors',
+                  matchesPreset(disabled_modules, PRESET_MOBILE)
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-muted text-muted-foreground'
+                )}>
+                  <Smartphone className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">Móvil</p>
+                  <p className="text-[11px] text-muted-foreground leading-tight">Sin Estadísticas ni Plantillas</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Module list */}
         <div className="space-y-2">
@@ -193,7 +224,7 @@ export default function SettingsModulesPage() {
                     id={`module-${id}`}
                     checked={enabled}
                     onCheckedChange={() => toggle(id)}
-                    disabled={locked || !isLoaded}
+                    disabled={locked || !isLoadedCombined || !isAdmin}
                   />
                 </div>
               );

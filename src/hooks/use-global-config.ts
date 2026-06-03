@@ -1,18 +1,31 @@
-import { useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, callWithTokenRefresh } from '@/lib/supabase';
 import { toast } from 'sonner';
+import type { AppModuleId } from '@/lib/types';
 
 export interface GlobalConfig {
   maintenance_mode: boolean;
   allow_registration: boolean;
+  disabled_modules_admins: AppModuleId[];
+}
+
+interface GlobalConfigContextProps {
+  config: GlobalConfig;
+  loading: boolean;
+  updateConfig: (key: keyof GlobalConfig, value: any) => Promise<boolean>;
+  refresh: () => Promise<void>;
 }
 
 const BOOLEAN_KEYS = ['maintenance_mode', 'allow_registration'];
+const ARRAY_KEYS = ['disabled_modules_admins'];
 
-export function useGlobalConfig() {
+const GlobalConfigContext = createContext<GlobalConfigContextProps | undefined>(undefined);
+
+export function GlobalConfigProvider({ children }: { children: React.ReactNode }) {
   const [config, setConfig] = useState<GlobalConfig>({
     maintenance_mode: false,
     allow_registration: true,
+    disabled_modules_admins: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -36,6 +49,11 @@ export function useGlobalConfig() {
             // Robust boolean casting
             if (BOOLEAN_KEYS.includes(item.key)) {
               val = String(val).toLowerCase() === 'true' || val === true || val === 1;
+            } else if (ARRAY_KEYS.includes(item.key)) {
+              if (typeof val === 'string') {
+                try { val = JSON.parse(val); } catch (e) { val = val ? val.split(',').map((s: string) => s.trim()) : []; }
+              }
+              if (!Array.isArray(val)) val = [];
             }
             (newConfig as any)[item.key] = val;
           }
@@ -67,6 +85,11 @@ export function useGlobalConfig() {
           let val = newItem.value;
           if (BOOLEAN_KEYS.includes(newItem.key)) {
             val = String(val).toLowerCase() === 'true' || val === true || val === 1;
+          } else if (ARRAY_KEYS.includes(newItem.key)) {
+            if (typeof val === 'string') {
+              try { val = JSON.parse(val); } catch (e) { val = val ? val.split(',').map((s: string) => s.trim()) : []; }
+            }
+            if (!Array.isArray(val)) val = [];
           }
 
           setConfig(prev => {
@@ -89,12 +112,17 @@ export function useGlobalConfig() {
       // Optimistic update
       setConfig(prev => ({ ...prev, [key]: value }));
 
+      let dbValue = value;
+      if (ARRAY_KEYS.includes(key)) {
+        dbValue = JSON.stringify(value);
+      }
+
       const { error } = await callWithTokenRefresh<any>(() => 
         supabase
           .from('global_config')
           .upsert({ 
             key, 
-            value, 
+            value: dbValue, 
             updated_at: new Date().toISOString()
           }, { onConflict: 'key' })
       );
@@ -112,10 +140,17 @@ export function useGlobalConfig() {
     }
   };
 
-  return {
-    config,
-    loading,
-    updateConfig,
-    refresh: fetchConfig
-  };
+  return React.createElement(
+    GlobalConfigContext.Provider,
+    { value: { config, loading, updateConfig, refresh: fetchConfig } },
+    children
+  );
+}
+
+export function useGlobalConfig() {
+  const context = useContext(GlobalConfigContext);
+  if (context === undefined) {
+    throw new Error('useGlobalConfig must be used within a GlobalConfigProvider');
+  }
+  return context;
 }

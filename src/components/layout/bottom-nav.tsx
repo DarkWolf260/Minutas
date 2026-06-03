@@ -9,6 +9,8 @@ import {
   FileText,
 } from 'lucide-react';
 import { useSettings } from '@/hooks/use-settings';
+import { useAdmin } from '@/hooks/use-admin';
+import { useGlobalConfig } from '@/hooks/use-global-config';
 import type { AppModuleId } from '@/lib/types';
 
 const ALL_NAV_ITEMS: { href: string; label: string; icon: any; moduleId: AppModuleId }[] = [
@@ -23,8 +25,12 @@ const ALL_NAV_ITEMS: { href: string; label: string; icon: any; moduleId: AppModu
 export function BottomNav() {
   const { pathname } = useLocation();
   const { settings } = useSettings();
+  const { isAdmin } = useAdmin();
+  const { config: globalConfig } = useGlobalConfig();
 
-  const disabled_modules = settings.disabled_modules || [];
+  const disabled_modules = isAdmin 
+    ? (globalConfig.disabled_modules_admins || []) 
+    : (settings.disabled_modules || []);
   const navItems = ALL_NAV_ITEMS.filter((item) => !disabled_modules.includes(item.moduleId));
 
   return (

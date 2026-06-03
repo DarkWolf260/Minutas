@@ -8,6 +8,8 @@ import { LEADER_ROLES } from '@/lib/constants/roles';
 import { calcularEstadisticasDia } from '@/lib/estadisticas-utils';
 import type { StaffMember, Report } from '@/lib/types';
 import { useOrdenDelDiaDraft } from '@/hooks/use-orden-del-dia-draft';
+import { useAdmin } from '@/hooks/use-admin';
+import { useGlobalConfig } from '@/hooks/use-global-config';
 
 interface UseReporteFinalGeneratorProps {
   reportesFinalizados: any[];
@@ -58,6 +60,8 @@ export function useReporteFinalGenerator({
   setEstadisticasLocal
 }: UseReporteFinalGeneratorProps) {
   const { draft: cloudDraft } = useOrdenDelDiaDraft();
+  const { isAdmin } = useAdmin();
+  const { config: globalConfig } = useGlobalConfig();
   const [reporteGenerado, setReporteGenerado] = useState('');
   const [esDialogOpenResultado, setEsDialogOpenResultado] = useState(false);
   const [esDialogOpenConfirmarGuardar, setEsDialogOpenConfirmarGuardar] = useState(false);
@@ -112,7 +116,10 @@ export function useReporteFinalGenerator({
       return;
     }
 
-    const ordenDelDiaDeshabilitado = (settings.disabled_modules || []).includes('orden-del-dia');
+    const disabled_modules = isAdmin 
+      ? (globalConfig.disabled_modules_admins || []) 
+      : (settings.disabled_modules || []);
+    const ordenDelDiaDeshabilitado = disabled_modules.includes('orden-del-dia');
     const borrador = !ordenDelDiaDeshabilitado 
       ? ((cloudDraft && cloudDraft.guard_id === settings.active_guard_id) ? cloudDraft : (settings.orden_del_dia_draft || settings.ordenDelDiaDraft))
       : undefined;
@@ -340,7 +347,9 @@ export function useReporteFinalGenerator({
     roles, 
     templates, 
     configs,
-    cloudDraft
+    cloudDraft,
+    isAdmin,
+    globalConfig
   ]);
 
   const manejarCopiarAlPortapapeles = useCallback(() => {
