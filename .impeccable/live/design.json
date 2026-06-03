@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-03T06:00:00Z",
+  "title": "Design System: Minutas",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Tactical Cobalt", "canonical": "oklch(51% 0.22 260)", "tonalRamp": ["#001c57", "#002a7b", "#003aa3", "#1d4ed8", "#3b62f6", "#6888ff", "#9bb1ff", "#d5dfff"] },
+      "primary-dark": { "role": "primary", "displayName": "Vibrant Indigo", "canonical": "oklch(65% 0.22 260)", "tonalRamp": ["#002363", "#003289", "#0044b2", "#3b82f6", "#60a5fa", "#93c5fd", "#c7d2fe", "#e0e7ff"] },
+      "background-dark": { "role": "neutral", "displayName": "Deep Obsidian", "canonical": "oklch(12% 0.01 240)", "tonalRamp": ["#000000", "#050506", "#0c0d10", "#14151a", "#22242a", "#383c46", "#585e6d", "#c5cad6"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Títulos principales del sistema y encabezados de página." },
+      "body": { "displayName": "Body", "purpose": "Texto de reportes, minutas generadas y párrafos explicativos." }
+    },
+    "shadows": [
+      { "name": "Float Control", "value": "0 4px 12px rgba(0, 0, 0, 0.08)", "purpose": "Elementos flotantes interactivos como diálogos (modales), popovers y toasts." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Transición por defecto para cambios de estado en componentes (200ms)." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1440px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Botón principal para acciones definitivas del sistema como Guardar, Generar o Descargar.",
+      "html": "<button class=\"ds-btn-primary\">GUARDAR REPORTES</button>",
+      "css": ".ds-btn-primary { background: #1d4ed8; color: #ffffff; padding: 8px 16px; font-weight: 500; font-family: 'Outfit', sans-serif; border: none; border-radius: 8px; font-size: 14px; transition: background-color 0.2s ease-out, box-shadow 0.2s ease-out; cursor: pointer; } .ds-btn-primary:hover { background: #1e40af; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #1d4ed8; }"
+    },
+    {
+      "name": "Card Container",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Contenedor principal para agrupar información estructurada, campos de plantillas y gráficos de estadísticas.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Datos Generales</h3><p class=\"ds-card-text\">Contenido del reporte...</p></div>",
+      "css": ".ds-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; font-family: 'Outfit', sans-serif; } .ds-card-title { margin: 0 0 8px 0; font-size: 18px; font-weight: 500; color: #030712; } .ds-card-text { margin: 0; font-size: 14px; color: #475569; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Tactical Terminal",
+    "overview": "El diseño de Minutas se define como un entorno utilitario, altamente denso y preciso, concebido para brindar máxima eficiencia a los funcionarios en servicio. Prioriza la legibilidad inmediata y un orden riguroso que minimice la fatiga visual bajo condiciones de luz cambiante. Este sistema rechaza el decorativismo vacío de los dashboards comerciales comunes y se establece como una herramienta de trabajo sobria, confiable y extremadamente rápida.",
+    "keyCharacteristics": [
+      "Alta densidad de datos sin abrumar visualmente.",
+      "Interfaz adaptativa optimizada con modo oscuro OLED profundo y modo 'Facebook' de bajo contraste.",
+      "Jerarquía de información clara a través de contrastes tipográficos y espaciados calculados.",
+      "Ausencia de adornos: cada borde y fondo cumple una función delimitadora o de estado."
+    ],
+    "rules": [
+      { "name": "The 10% Accent Rule", "body": "El azul primario se reserva estrictamente para botones de acción directa, enlaces de navegación activos e indicadores de estado crítico.", "section": "colors" },
+      { "name": "The Balance Rule", "body": "Todos los encabezados h1 a h3 deben aplicar la propiedad text-wrap: balance. El texto de cuerpo largo debe usar text-wrap: pretty.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Todos los paneles, campos y tarjetas del sistema son planos y se delimitan mediante bordes sutiles o variaciones del fondo tonal. Las sombras solo aparecen cuando un elemento flota.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do Asegurar que todo texto principal tenga un contraste mínimo de 4.5:1 (usando grises oscuros o colores sólidos sobre los fondos).",
+      "Do Usar iconos SVG de lucide-react con tamaño fijo de w-5 h-5 (20px) o w-6 h-6 (24px) para mantener consistencia.",
+      "Do Agregar la clase cursor-pointer a cualquier tarjeta o elemento que sea clickeable.",
+      "Do Respetar la preferencia de movimiento reducido @media (prefers-reduced-motion: reduce) simplificando las transiciones a opacidades inmediatas."
+    ],
+    "donts": [
+      "Don't Usar emojis decorativos en la interfaz o como iconos de navegación (ej: ⚙️, 📅, 👥). Utilizar siempre SVGs.",
+      "Don't Usar textos en degradado (gradient text) o glassmorphism como elemento por defecto.",
+      "Don't Colocar bordes acentuados gruesos a un solo lado (side-stripe borders mayores a 1px) en tarjetas o alertas.",
+      "Don't Animar imágenes o tarjetas mediante transformaciones de escala o rotación agresivas en :hover.",
+      "Don't Nestar tarjetas dentro de otras tarjetas (cards inside cards). Si se necesita jerarquía, utiliza colores de fondo planos alternativos o divisores semánticos."
+    ]
+  }
+}
