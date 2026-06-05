@@ -20,7 +20,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\ast.json": {
-    "mtime": 1780113076.048976,
+    "mtime": 1780633021.7113965,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -45,7 +45,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\report.json": {
-    "mtime": 1780113076.048976,
+    "mtime": 1780633021.7113965,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -910,8 +910,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\__tests__\\estadisticas-utils.test.ts": {
-    "mtime": 1779749665.7214906,
-    "ast_hash": "ca250e92298e6a1437f89dffe27067c8",
+    "mtime": 1780632371.5884342,
+    "ast_hash": "64f42f1bfb5c171e990c1a30b8aca6e7",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\__tests__\\formatters.test.ts": {
@@ -960,8 +960,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\constants\\statistics.ts": {
-    "mtime": 1779749665.7381868,
-    "ast_hash": "c385c4a315e341f9111a8f2bf0045051",
+    "mtime": 1780633006.1112492,
+    "ast_hash": "262df5b1255972619faed73e3bbc45ca",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\constants\\structure.ts": {
@@ -1020,8 +1020,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\estadisticas\\formatter.ts": {
-    "mtime": 1777916696.0972543,
-    "ast_hash": "2410d057d5f426cd69baff43d1b15dd5",
+    "mtime": 1780632242.1248138,
+    "ast_hash": "12aa0c66c138e7255a76d3ce213eb11a",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\estadisticas\\index.ts": {

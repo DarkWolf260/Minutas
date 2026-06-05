@@ -6,7 +6,7 @@ export function formatearEstadisticasDia(stats: Map<string, number>): string {
   
   return Array.from(stats.entries())
     .filter(([_, count]) => count > 0)
-    .sort((a, b) => a[0].localeCompare(b[0]))
+    .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: 'base' }))
     .map(([category, count]) => {
       // Extraer la parte de la etiqueta (sin el código)
       const labelPart = category.replace(/^[\d.]+\s*/, '');

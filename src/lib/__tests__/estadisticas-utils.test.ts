@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { obtenerCategoriasReporte, calcularEstadisticasMensuales } from '../estadisticas-utils';
+import { obtenerCategoriasReporte, calcularEstadisticasMensuales, formatearEstadisticasDia } from '../estadisticas-utils';
 import type { Report, Template, TemplateConfig, Address } from '@/lib/types';
 
 // Mock data factories
@@ -705,6 +705,25 @@ describe('statistics-utils', () => {
             const stats = calcularEstadisticasMensuales(reports, [template], {}, 0, 2026);
             expect(stats.get('5.1 ATENCIONES PREHOSPITALARIAS')!.get(5)).toBe(1);
             expect(stats.get('5.1 ATENCIONES PREHOSPITALARIAS')!.get(10)).toBeUndefined();
+        });
+    });
+
+    describe('formatearEstadisticasDia sorting and natural order', () => {
+        it('should format and sort stats using natural numeric ordering', () => {
+            const stats = new Map<string, number>([
+                ['3.12 RESCATADOS EN ACCIDENTES DE TRÁNSITO URBANOS Y EXTRA URBANOS', 2],
+                ['3.2 COLISIÓN VEHÍCULO-VEHÍCULO', 5],
+                ['3.8 ARROLLAMIENTO', 1],
+                ['2.9 VOLCAMIENTO', 3]
+            ]);
+
+            const formatted = formatearEstadisticasDia(stats);
+            const lines = formatted.split('\n');
+
+            expect(lines[0]).toBe('- Volcamiento 03');
+            expect(lines[1]).toBe('- Colisión vehículo-vehículo 05');
+            expect(lines[2]).toBe('- Arrollamiento 01');
+            expect(lines[3]).toBe('- Rescatados en accidentes de tránsito urbanos y extra urbanos 02');
         });
     });
 });
