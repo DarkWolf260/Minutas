@@ -275,8 +275,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\form\\use-report-form.ts": {
-    "mtime": 1780423255.119761,
-    "ast_hash": "14ef52f6b2fcd8a934fc17a53a852257",
+    "mtime": 1780629829.2960095,
+    "ast_hash": "54d65a281d6f706d468bf555a3439c39",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\generator\\generator-header.tsx": {
@@ -285,7 +285,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\generator\\use-report-generator.ts": {
-    "mtime": 1780030615.2174675,
+    "mtime": 1780629848.217157,
     "ast_hash": "1436d0e65f315ca9ec1284d5880a672e",
     "semantic_hash": ""
   },
@@ -1800,8 +1800,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\actividades.tsx": {
-    "mtime": 1780628949.0041678,
-    "ast_hash": "c9adbe3e8e9615d02bfc7aed0b64d2ba",
+    "mtime": 1780629074.9692452,
+    "ast_hash": "85769f5b2a48c37e4991c115d76471cd",
     "semantic_hash": ""
   }
 }
