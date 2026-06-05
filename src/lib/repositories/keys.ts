@@ -16,6 +16,7 @@ export const DbKeys = {
   unit: (ws: string, unitId: string) => `${ws}:unit:${unitId}`,
   templateConfig: (ws: string, template_id: string) => `${ws}:template_config:${template_id}`,
   scheduledMessage: (ws: string, id: string) => `${ws}:scheduled_message:${id}`,
+  pendingActivity: (ws: string, id: string) => `${ws}:pending_activity:${id}`,
 
   // ─── Lookups collection ──────────────────────────────────────────────────
   role: (ws: string, roleName: string) => `${ws}:role:${roleName}`,

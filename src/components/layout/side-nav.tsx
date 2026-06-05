@@ -29,6 +29,7 @@ import {
   ShieldAlert,
   Eclipse,
   Briefcase,
+  CalendarClock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/layout/notification-bell';
@@ -46,6 +47,7 @@ import type { AppModuleId } from '@/lib/types';
 const ALL_NAV_ITEMS: { href: string; label: string; icon: any; moduleId: AppModuleId }[] = [
   { href: '/', label: 'Novedades', icon: Newspaper, moduleId: 'novedades' },
   { href: '/orden-del-dia', label: 'Lista', icon: ClipboardList, moduleId: 'orden-del-dia' },
+  { href: '/actividades', label: 'Tablón', icon: CalendarClock, moduleId: 'actividades' },
   { href: '/reporte-final', label: 'Reporte', icon: History, moduleId: 'reporte-final' },
   { href: '/estadisticas', label: 'Estadísticas', icon: BarChart2, moduleId: 'estadisticas' },
   { href: '/personal', label: 'Personal', icon: Users, moduleId: 'personal' },

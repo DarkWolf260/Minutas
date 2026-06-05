@@ -42,6 +42,7 @@ import PersonalPage from '@/pages/personal';
 import PlantillasPage from '@/pages/plantillas';
 import ReporteFinalPage from '@/pages/reporte-final';
 
+const ActividadesPage = lazy(() => import('@/pages/actividades'));
 const DireccionesPage = lazy(() => import('@/pages/settings/direcciones'));
 const EstadisticasPage = lazy(() => import('@/pages/estadisticas'));
 const SettingsPage = lazy(() => import('@/pages/settings'));
@@ -185,6 +186,11 @@ function AppLayout() {
                   <Route path="/orden-del-dia" element={
                     <ProtectedRoute>
                       <OrdenDelDiaPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/actividades" element={
+                    <ProtectedRoute>
+                      <ActividadesPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/personal" element={
