@@ -9,7 +9,8 @@ import {
   BarChart2,
   FileText,
   Monitor,
-  Smartphone
+  Smartphone,
+  CalendarClock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AppModuleId } from '@/lib/types';
@@ -21,6 +22,7 @@ const DEF_MODULOS: { id: AppModuleId; label: string; description: string; icon: 
   { id: 'personal', label: 'Personal', description: 'Gestiona efectivos y asignación de guardias', icon: Users, color: 'text-amber-500 bg-amber-500/10' },
   { id: 'estadisticas', label: 'Estadísticas', description: 'Panel de métricas e indicadores históricos', icon: BarChart2, color: 'text-rose-500 bg-rose-500/10' },
   { id: 'plantillas', label: 'Plantillas', description: 'Crea y gestiona plantillas de novedades', icon: FileText, color: 'text-slate-500 bg-slate-500/10' },
+  { id: 'actividades', label: 'Tablón de Actividades', description: 'Visualiza y gestiona las actividades planificadas, preventivos y tareas del área', icon: CalendarClock, color: 'text-orange-500 bg-orange-500/10' },
 ];
 
 const PRESET_ESCRITORIO: AppModuleId[] = [];

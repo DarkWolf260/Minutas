@@ -227,7 +227,7 @@ export function useReportForm({
           return val.map(item => rehydrateValue(item));
         }
         if (typeof val === 'object' && val !== null) {
-          if ('id' in val && 'name' in val) {
+          if ('id' in val) {
             const latest = personnel.find(p => p.id === val.id);
             if (latest) {
               return { ...safeClone(latest), role_id: val.role_id || latest.role_id };
@@ -279,8 +279,11 @@ export function useReportForm({
                 const staffKey = Object.keys(activeStaff).find(k => k.toLowerCase() === roleName.toLowerCase());
                 const staffList = staffKey ? activeStaff[staffKey] : undefined;
                 if (staffList && staffList.length > 0) {
-                  initialStaff = [rehydrate(staffList[0], staffKey || roleName)];
-                  break;
+                  const validStaffList = staffList.filter((s: any) => s && (typeof s === 'string' || (s.name && s.name.trim() !== '')));
+                  if (validStaffList.length > 0) {
+                    initialStaff = [rehydrate(validStaffList[0], staffKey || roleName)];
+                    break;
+                  }
                 }
               }
 
@@ -301,7 +304,9 @@ export function useReportForm({
               const staffList = staffKey ? activeStaff[staffKey] : undefined;
 
               if (Array.isArray(staffList) && staffList.length > 0) {
-                initialStaff = staffList.map((s: any) => rehydrate(s, staffKey || keyLower));
+                // Filter out empty/invalid members to avoid empty badges or slashes in final reports
+                const validStaffList = staffList.filter((s: any) => s && (typeof s === 'string' || (s.name && s.name.trim() !== '')));
+                initialStaff = validStaffList.map((s: any) => rehydrate(s, staffKey || keyLower));
               } else if (typeof (staffList as any) === 'string' && (staffList as any).trim() !== '') {
                 initialStaff = [staffList as any];
               }

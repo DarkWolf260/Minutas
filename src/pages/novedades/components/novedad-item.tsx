@@ -26,7 +26,7 @@ export const NovedadItem = React.memo(({ report, isSelected, onSelect }: Novedad
       <div className="flex w-full items-start gap-3.5">
         <div className="min-w-0 flex-1">
           <p className={cn(
-            "font-semibold leading-tight mb-1 truncate",
+            "font-semibold leading-tight mb-1 break-words",
             isSelected ? "text-primary" : "text-foreground"
           )}>
             {report.title}
