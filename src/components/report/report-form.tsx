@@ -13,6 +13,9 @@ import { logger } from '@/lib/logger';
 import { validateTimeHlv } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useMemo } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { useAddresses } from '@/hooks/use-addresses';
+import { obtenerCategoriasReporte } from '@/lib/estadisticas-utils';
 
 // Componentes y Hooks extraídos (SOLID)
 import { useReportForm } from './form/use-report-form';
@@ -103,6 +106,31 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
     } = hook;
 
     const { handleSubmit } = methods;
+    const { addresses } = useAddresses();
+
+    const formValues = getValues();
+    const mockReport = useMemo(() => ({
+      id: reportId || '',
+      template_id: template.id,
+      title: String(formValues.titulo || formValues.title || ''),
+      form_data: formValues,
+      status: controlledValues?.Estatus || 'Finalizado',
+      timestamp: new Date().toISOString(),
+      workspace_id: '',
+      content: ''
+    } as any), [reportId, template.id, formValues, controlledValues?.Estatus]);
+
+    const reportCategories = useMemo(() => {
+      return obtenerCategoriasReporte(mockReport, template, finalConfig, predefinedValues, addresses);
+    }, [mockReport, template, finalConfig, predefinedValues, addresses]);
+
+    const uniqueCategories = useMemo(() => {
+      const counts: Record<string, number> = {};
+      reportCategories.forEach((cat) => {
+        counts[cat] = (counts[cat] || 0) + 1;
+      });
+      return Object.entries(counts);
+    }, [reportCategories]);
 
     // Helper: resolves the correct encargado flag prioritizing cloudDraft
     const getEsJefeEncargado = () => {
@@ -212,6 +240,17 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
               onChange={handlePhotosChange}
               disabled={disabled}
             />
+          )}
+
+          {/* Estadísticas a sumar */}
+          {uniqueCategories.length > 0 && (
+            <div className="pt-6 border-t flex flex-wrap items-center gap-2 text-xs text-muted-foreground animate-in fade-in duration-200">
+              {uniqueCategories.map(([cat, count], idx) => (
+                <Badge key={idx} variant="outline" className="font-semibold bg-primary/5 text-primary border-primary/20 shadow-sm">
+                  {cat} (+{count})
+                </Badge>
+              ))}
+            </div>
           )}
         </div>
       </FormProvider>

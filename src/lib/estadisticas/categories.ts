@@ -117,9 +117,29 @@ export function obtenerCategoriasReporte(
     ? (metaRule as any).disabled_sub_categories_on_apoyo 
     : template.disabled_sub_categories_on_apoyo;
 
-  const esApoyo = report.form_data?.apoyo_ins === '(Apoyo institucional)' || 
-                  report.form_data?.apoyo_institucional === '(Apoyo institucional)' || 
-                  report.content?.includes('(Apoyo institucional)');
+  const checkApoyoIns = (val: any) => {
+    if (val === true || val === 'true') return true;
+    if (typeof val === 'string') {
+      const norm = val.trim().toLowerCase();
+      return norm === '(apoyo institucional)' || norm === 'apoyo institucional' || norm === 'si' || norm === 'sí';
+    }
+    return false;
+  };
+
+  const findValueCaseInsensitive = (obj: any, targetKey: string) => {
+    if (!obj) return undefined;
+    const lowerTarget = targetKey.toLowerCase();
+    const foundKey = Object.keys(obj).find(k => k.toLowerCase() === lowerTarget);
+    return foundKey ? obj[foundKey] : undefined;
+  };
+
+  const apoyoInsVal = findValueCaseInsensitive(report.form_data, 'apoyo_ins');
+  const apoyoInstVal = findValueCaseInsensitive(report.form_data, 'apoyo_institucional');
+
+  const esApoyo = checkApoyoIns(apoyoInsVal) || 
+                  checkApoyoIns(apoyoInstVal) || 
+                  (report.content?.includes('(Apoyo institucional)') ?? false) ||
+                  (report.content?.includes('Apoyo institucional') ?? false);
 
   // Usar un Map para consolidar conteos por cadena de categoría
   const categoryCounts = new Map<string, number>();
