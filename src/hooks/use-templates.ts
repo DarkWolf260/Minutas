@@ -44,6 +44,7 @@ import { supabase } from '@/lib/supabase';
 import { generateId } from '@/lib/utils/id';
 import { createConfigRepository, createTemplateRepository, DbKeys } from '@/lib/repositories';
 import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
+import { useAdmin } from './use-admin';
 
 
 // Global lock to prevent multiple instances from bootstrapping the same workspace
@@ -52,6 +53,7 @@ const bootstrapLocks: Record<string, boolean> = {};
 export function useTemplates() {
   const db = useDatabase();
   const { currentWorkspace, isCloud } = useWorkspaceManager();
+  const { isAdmin } = useAdmin();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [configs, setConfigs] = useState<Record<string, TemplateConfig>>({});
   const [isTemplatesLoaded, setIsTemplatesLoaded] = useState(false);
@@ -344,19 +346,49 @@ export function useTemplates() {
     await configRepo.upsertTemplateConfig(template_id, config);
   };
 
-  const updateTemplate = async (updatedTemplate: Template) => {
+  const updateTemplate = async (updatedTemplate: Template): Promise<string | undefined> => {
     if (!db || !currentWorkspace) return;
     try {
+      let templateToUpdate = { ...updatedTemplate };
+      const isGlobal = !templateToUpdate.workspace_id || templateToUpdate.workspace_id === 'minutasdb';
+      const isRealWorkspace = currentWorkspace !== 'minutasdb';
+      
+      if (isGlobal && isRealWorkspace && !isAdmin) {
+        const newId = generateId('template');
+        logger.info(`Cloning global template "${templateToUpdate.name}" for workspace "${currentWorkspace}" with new ID "${newId}"`);
+        
+        const validatedTemplate = TemplateSchema.parse({
+          ...templateToUpdate,
+          id: newId,
+          workspace_id: currentWorkspace,
+        });
+        
+        const templateRepo = createTemplateRepository(db, currentWorkspace, isCloud);
+        await templateRepo.add(validatedTemplate);
+        
+        // Clone configuration
+        const oldConfig = configs[templateToUpdate.id];
+        if (oldConfig) {
+          const configRepo = createConfigRepository(db, currentWorkspace, isCloud);
+          await configRepo.upsertTemplateConfig(newId, oldConfig);
+        }
+        
+        toast.success(`Plantilla "${validatedTemplate.name}" guardada como copia de trabajo.`);
+        return newId;
+      }
+
       const validatedTemplate = TemplateSchema.parse({
-        ...updatedTemplate,
-        workspace_id: currentWorkspace,
+        ...templateToUpdate,
+        workspace_id: isGlobal ? null : currentWorkspace,
       });
       const repo = createTemplateRepository(db, currentWorkspace, isCloud);
       await repo.update(validatedTemplate);
-      logger.info('Template updated', { id: validatedTemplate.id, workspace_id: currentWorkspace });
+      logger.info('Template updated', { id: validatedTemplate.id, workspace_id: validatedTemplate.workspace_id });
+      return validatedTemplate.id;
     } catch (error) {
       logger.error('Failed to update template', error);
       toast.error(getUserFriendlyErrorMessage(error));
+      return undefined;
     }
   };
 

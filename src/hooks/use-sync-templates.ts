@@ -51,11 +51,12 @@ export function useSyncTemplates() {
             statistics_category, statistics_rules, statistics_sub_categories 
           } = t;
           
-          // Safeguard: Find and remove any local template duplicate by name that has a mismatching ID
+          // Safeguard: Find and remove any local template duplicate by name that has a mismatching ID and same workspace_id
           const existingByName = await db.templates.findOne({
             selector: {
               name: name,
-              id: { $ne: id }
+              id: { $ne: id },
+              workspace_id: workspace_id || null
             }
           }).exec();
 
