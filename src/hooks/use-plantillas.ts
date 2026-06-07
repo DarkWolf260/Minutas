@@ -14,7 +14,7 @@ export function usePlantillas() {
     templates,
     addTemplate,
     removeTemplate,
-    updateTemplate,
+    updateTemplate: hookUpdateTemplate,
     configs,
     updateTemplateConfig,
     clearAllTemplates,
@@ -205,6 +205,13 @@ export function usePlantillas() {
     }
     setPlantillaEditando(null);
   };
+
+  const updateTemplate = useCallback(async (updatedTemplate: Template) => {
+    const nextId = await hookUpdateTemplate(updatedTemplate);
+    if (nextId && nextId !== updatedTemplate.id) {
+      setIdPlantillaSeleccionada(nextId);
+    }
+  }, [hookUpdateTemplate]);
 
   const manejarCancelarEdicion = () => {
     setPlantillaEditando(null);

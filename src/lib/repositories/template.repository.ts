@@ -25,7 +25,18 @@ export function createTemplateRepository(db: MinutasDatabase | null, workspace_i
         ]
       },
     }).$.pipe(
-      map(docs => docs.map(d => (typeof d.toJSON === 'function' ? d.toJSON() : d) as Template).sort((a, b) => a.name.localeCompare(b.name)))
+      map(docs => {
+        const list = docs.map(d => (typeof d.toJSON === 'function' ? d.toJSON() : d) as Template);
+        const workspaceNames = new Set(
+          list
+            .filter(t => t.workspace_id === ws)
+            .map(t => t.name.toLowerCase())
+        );
+        const filtered = list.filter(
+          t => t.workspace_id === ws || !workspaceNames.has(t.name.toLowerCase())
+        );
+        return filtered.sort((a, b) => a.name.localeCompare(b.name));
+      })
     );
 
   const add = async (template: Template) =>
