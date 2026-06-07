@@ -20,7 +20,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\ast.json": {
-    "mtime": 1780872438.51183,
+    "mtime": 1780874655.1330786,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -45,7 +45,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\report.json": {
-    "mtime": 1780872438.510831,
+    "mtime": 1780874655.1325707,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -130,8 +130,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\layout\\pwa-status.tsx": {
-    "mtime": 1779424667.0065663,
-    "ast_hash": "1f405b6b404ac3b77ad5608fb70b77de",
+    "mtime": 1780874586.8910296,
+    "ast_hash": "79335bd5bc122916d50c93d7390bb99b",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\layout\\quick-chat-selector.tsx": {
@@ -1470,8 +1470,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\about\\app.tsx": {
-    "mtime": 1779424680.3121529,
-    "ast_hash": "c98287b00ab84fcffc949623daac2aa1",
+    "mtime": 1780874558.4272943,
+    "ast_hash": "6a654e31c8b1c961ca56730616a2f7dd",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\about\\changelog.tsx": {
@@ -1675,8 +1675,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\vite.config.ts": {
-    "mtime": 1780870535.6065395,
-    "ast_hash": "570352a81088394f8eed8ad5f19adfc3",
+    "mtime": 1780874540.6573498,
+    "ast_hash": "f4502a2db2fb7bfceffbfa15a69d8631",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\vitest.config.ts": {

@@ -1,7 +1,7 @@
 # Graph Report - Minutas  (2026-06-07)
 
 ## Corpus Check
-- 361 files · ~220,476 words
+- 361 files · ~221,010 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `de461505`
+- Built from commit: `4506ce69`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -169,12 +169,12 @@ Cohesion: 0.08
 Nodes (25): GuardConfigCard(), OrdenEmptyState(), OrdenEmptyStateProps, OrdenHeader(), GuardSelector(), OrdenDelDiaDraft, useOrdenDelDiaPagina(), parsePeriodToDate() (+17 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.16
-Nodes (15): useAuth(), useProfile(), UserStatus, useUserStatus(), MobileNav(), NotificationBell(), SideNav(), getInitials() (+7 more)
+Cohesion: 0.31
+Nodes (8): useProfile(), MobileNav(), NotificationBell(), SideNav(), getInitials(), NavBrand(), useMobileNav(), ProfilePage()
 
 ### Community 8 - "Community 8"
-Cohesion: 0.21
-Nodes (13): AddressInput, MultiInput, calcularEstadisticasDia(), formatearEstadisticasDia(), EstadisticasField(), useActiveGuard(), useConfigRepo(), defaultDefinitions (+5 more)
+Cohesion: 0.17
+Nodes (15): AddressInput, MultiInput, calcularEstadisticasDia(), formatearEstadisticasDia(), EstadisticasField(), useActiveGuard(), useConfigRepo(), defaultDefinitions (+7 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.11
@@ -193,8 +193,8 @@ Cohesion: 0.05
 Nodes (35): AdminRoute(), OnboardingTour(), TOUR_STEPS, TourStep, tryGet(), tryRemove(), trySet(), PWAStatus() (+27 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.10
-Nodes (18): useDatabase(), NotificationItem, useOfflineUpload(), ActivityStatus, PendingActivity, SubTask, usePendingActivities(), defaultProfile (+10 more)
+Cohesion: 0.09
+Nodes (21): DEFAULT_ADDRESSES, useDatabase(), NotificationItem, useOfflineUpload(), ActivityStatus, PendingActivity, SubTask, usePendingActivities() (+13 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.12
@@ -317,8 +317,8 @@ Cohesion: 0.04
 Nodes (47): dependencies, class-variance-authority, clsx, date-fns, @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, docx (+39 more)
 
 ### Community 46 - "Community 46"
-Cohesion: 0.15
-Nodes (19): DEFAULT_ADDRESSES, useAddresses(), ModoEstadistica, useEstadisticas(), useGuardHistory(), usePrecacheImages(), useReporteFinal(), useReports() (+11 more)
+Cohesion: 0.18
+Nodes (18): useAddresses(), useDirecciones(), ModoEstadistica, useEstadisticas(), useGuardHistory(), usePrecacheImages(), useReporteFinal(), useReports() (+10 more)
 
 ### Community 47 - "Community 47"
 Cohesion: 0.15
@@ -365,8 +365,8 @@ Cohesion: 0.07
 Nodes (27): devDependencies, @babel/core, babel-plugin-react-compiler, eslint, eslint-config-prettier, jsdom, postcss, prettier (+19 more)
 
 ### Community 61 - "Community 61"
-Cohesion: 0.22
-Nodes (10): PlantillasHeader(), NoGuardBanner(), useAdmin(), useDirecciones(), usePlantillas(), useSyncTemplates(), bootstrapLocks, useUploadTemplate() (+2 more)
+Cohesion: 0.20
+Nodes (12): PlantillasHeader(), AdminConfigPage(), NoGuardBanner(), useAdmin(), useGlobalConfig(), usePlantillas(), useSyncTemplates(), useUploadTemplate() (+4 more)
 
 ### Community 63 - "Community 63"
 Cohesion: 0.12
@@ -401,7 +401,7 @@ Cohesion: 0.10
 Nodes (19): compilerOptions, allowJs, esModuleInterop, isolatedModules, jsx, lib, module, moduleResolution (+11 more)
 
 ### Community 83 - "Community 83"
-Cohesion: 0.21
+Cohesion: 0.20
 Nodes (16): DatabaseContext, useReportForm(), useReportGenerator(), defaultGuards, useGuards(), useOrdenDelDiaDraft(), useOrdenDelDia(), usePersonnel() (+8 more)
 
 ### Community 84 - "Community 84"
@@ -425,8 +425,8 @@ Cohesion: 0.12
 Nodes (15): 1. Variables Básicas, 2. Tipos de Campos, 3. Dropdowns (Listas Desplegables), 4. Secciones, 5. Lógica Condicional, 6. Resumen Automático, 7. Separadores, 8. Reglas Estadísticas y Etiquetas Especiales (`*` y ` (1)`) (+7 more)
 
 ### Community 89 - "Community 89"
-Cohesion: 0.13
-Nodes (19): ScheduledMessagesWorker(), SyncWhatsApp(), AdminConfigPage(), useGlobalConfig(), ScheduledMessage, useScheduledMessages(), defaultSettings, useSettings() (+11 more)
+Cohesion: 0.19
+Nodes (13): ScheduledMessagesWorker(), SyncWhatsApp(), ScheduledMessage, useScheduledMessages(), defaultSettings, useSettings(), useWhatsAppBot(), ALL_NAV_ITEMS (+5 more)
 
 ### Community 90 - "Community 90"
 Cohesion: 0.15
@@ -493,8 +493,8 @@ Cohesion: 0.57
 Nodes (4): buildFullStaffName(), formatStaffMember(), formatStaffMemberForAutocomplete(), formatStaffMemberForDisplay()
 
 ### Community 108 - "Community 108"
-Cohesion: 0.50
-Nodes (4): UserContext, UserContextType, UserProvider(), UserStatus
+Cohesion: 0.20
+Nodes (11): useAuth(), UserStatus, useUserStatus(), AuthContext, AuthContextType, AuthProvider(), useAuthContext(), UserContext (+3 more)
 
 ## Knowledge Gaps
 - **834 isolated node(s):** `extends`, `@typescript-eslint/no-explicit-any`, `@typescript-eslint/no-unused-vars`, `no-console`, `prefer-const` (+829 more)
@@ -504,7 +504,7 @@ Nodes (4): UserContext, UserContextType, UserProvider(), UserStatus
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `Community 27` to `Community 1`, `Community 2`, `Community 4`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 12`, `Community 13`, `Community 14`, `Community 16`, `Community 17`, `Community 22`, `Community 25`, `Community 28`, `Community 29`, `Community 30`, `Community 31`, `Community 36`, `Community 40`, `Community 43`, `Community 63`, `Community 85`, `Community 89`, `Community 91`, `Community 96`, `Community 97`, `Community 98`, `Community 100`?**
+- **Why does `cn()` connect `Community 27` to `Community 1`, `Community 2`, `Community 4`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 12`, `Community 13`, `Community 14`, `Community 16`, `Community 17`, `Community 22`, `Community 25`, `Community 28`, `Community 29`, `Community 30`, `Community 31`, `Community 36`, `Community 40`, `Community 43`, `Community 61`, `Community 63`, `Community 85`, `Community 89`, `Community 91`, `Community 96`, `Community 97`, `Community 98`, `Community 100`?**
   _High betweenness centrality (0.036) - this node is a cross-community bridge._
 - **Why does `Button` connect `Community 9` to `Community 2`, `Community 4`, `Community 6`, `Community 8`, `Community 10`, `Community 12`, `Community 14`, `Community 16`, `Community 17`, `Community 22`, `Community 25`, `Community 27`, `Community 28`, `Community 29`, `Community 30`, `Community 31`, `Community 32`, `Community 34`, `Community 35`, `Community 36`, `Community 40`, `Community 43`, `Community 63`, `Community 64`, `Community 85`, `Community 91`, `Community 97`, `Community 98`, `Community 100`, `Community 102`, `Community 106`?**
   _High betweenness centrality (0.030) - this node is a cross-community bridge._

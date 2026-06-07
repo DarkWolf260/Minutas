@@ -17,11 +17,14 @@ export default function AboutAppPage() {
     try {
       const updateFound = await checkForUpdates();
       if (updateFound) {
-        toast.success('¡Nueva versión encontrada!', {
-          description: 'Descargando y actualizando aplicación...',
+        toast.info('¡Nueva versión encontrada!', {
+          description: 'Hay una nueva versión disponible para instalar.',
+          action: {
+            label: 'Actualizar',
+            onClick: () => updateServiceWorker(true)
+          },
+          duration: 10000,
         });
-        // Trigger immediate service worker skipWaiting/reload
-        await updateServiceWorker(true);
       } else {
         toast.success('Todos los componentes están actualizados', {
           description: `Versión actual: ${APP_VERSION}`,
