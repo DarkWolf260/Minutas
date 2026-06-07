@@ -16,26 +16,35 @@ export function createTemplateRepository(db: MinutasDatabase | null, workspace_i
   // RxDB Implementation
   if (!db) throw new Error('Database not initialized');
 
+  const isLocalOnly = !ws || ws === 'minutasdb';
+
   const watchAll = () =>
     db.templates.find({
-      selector: {
-        $or: [
-          { workspace_id: ws },
-          { workspace_id: null }
-        ]
-      },
+      selector: isLocalOnly
+        ? {
+            $or: [
+              { workspace_id: ws },
+              { workspace_id: null }
+            ]
+          }
+        : {
+            workspace_id: null
+          }
     }).$.pipe(
       map(docs => {
         const list = docs.map(d => (typeof d.toJSON === 'function' ? d.toJSON() : d) as Template);
-        const workspaceNames = new Set(
-          list
-            .filter(t => t.workspace_id === ws)
-            .map(t => t.name.toLowerCase())
-        );
-        const filtered = list.filter(
-          t => t.workspace_id === ws || !workspaceNames.has(t.name.toLowerCase())
-        );
-        return filtered.sort((a, b) => a.name.localeCompare(b.name));
+        if (isLocalOnly) {
+          const workspaceNames = new Set(
+            list
+              .filter(t => t.workspace_id === ws)
+              .map(t => t.name.toLowerCase())
+          );
+          const filtered = list.filter(
+            t => t.workspace_id === ws || !workspaceNames.has(t.name.toLowerCase())
+          );
+          return filtered.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        return list.sort((a, b) => a.name.localeCompare(b.name));
       })
     );
 
@@ -65,10 +74,6 @@ export function createTemplateRepository(db: MinutasDatabase | null, workspace_i
       async () => {
         const templateDoc = await db.templates.findOne(template_id).exec();
         if (templateDoc) await templateDoc.remove();
-        const configDoc = await db.configs
-          .findOne(DbKeys.templateConfig(ws, template_id))
-          .exec();
-        if (configDoc) await configDoc.remove();
       },
       { feature: 'Templates', successMessage: 'Plantilla eliminada.' }
     );
@@ -94,10 +99,6 @@ export function createTemplateRepository(db: MinutasDatabase | null, workspace_i
           .find({ selector: { workspace_id: ws } })
           .exec();
         await Promise.all(allTemplates.map((d) => d.remove()));
-        const allConfigs = await db.configs
-          .find({ selector: { type: 'template_config', workspace_id: ws } })
-          .exec();
-        await Promise.all(allConfigs.map((d: any) => d.remove()));
       },
       { feature: 'Templates' }
     );

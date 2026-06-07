@@ -16,10 +16,9 @@ export function usePlantillas() {
     removeTemplate,
     updateTemplate: hookUpdateTemplate,
     configs,
-    updateTemplateConfig,
     clearAllTemplates,
   } = useTemplates();
-  const { currentWorkspace } = useWorkspaceManager();
+  const { currentWorkspace, isCloud } = useWorkspaceManager();
   
   const [idPlantillaSeleccionada, setIdPlantillaSeleccionada] = useState<string | null>(null);
   const [plantillaAEliminar, setPlantillaAEliminar] = useState<string | null>(null);
@@ -61,9 +60,6 @@ export function usePlantillas() {
                         content: p.content,
                         type: p.type || existente.type || 'normal',
                       });
-                      if (p.config) {
-                        await updateTemplateConfig(existente.id, p.config);
-                      }
                     } else {
                       const newId = generateId('template');
                       const nuevaPlantilla: Template = {
@@ -74,9 +70,6 @@ export function usePlantillas() {
                         type: p.type || 'normal',
                       };
                       await addTemplate(nuevaPlantilla);
-                      if (p.config) {
-                        await updateTemplateConfig(newId, p.config);
-                      }
                     }
                   }
                 }
@@ -238,6 +231,7 @@ export function usePlantillas() {
     inputArchivoRef,
     estaAutenticado,
     isAdmin,
+    isCloud,
     usuario,
     estaSubiendo,
     plantillaSeleccionada,
@@ -255,7 +249,6 @@ export function usePlantillas() {
     manejarActualizarContenidoPlantilla,
     manejarCancelarEdicion,
     updateTemplate,
-    updateTemplateConfig,
     addTemplate,
     cerrarSesion,
     subirAPlantillaNube,

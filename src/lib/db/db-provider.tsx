@@ -6,6 +6,7 @@ import { MinutasDatabase, getDatabase, removeRxDatabase, getRxStorageDexie } fro
 import { startWorkspaceReplication, triggerCloudSync } from './replication';
 import { logger } from '../logger';
 import { DatabaseContext } from './db-context';
+import { cn } from '@/lib/utils';
 
 import { LoadingScreen } from '@/components/common/loading-screen';
 import { useAuth } from '@/hooks/use-auth';
@@ -418,16 +419,6 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
               docToUpsert.id = existing.id;
             }
           } 
-          
-          // 2. Remapping for Template-Dependent Entities
-          else if (colName === 'configs' && doc.type === 'template_config') {
-            // Remap template_config ID and its name field (which holds the template ID)
-            const mappedtemplate_id = idMapping[doc.name];
-            if (mappedtemplate_id) {
-              docToUpsert.id = `${workspace_id}:template_config:${mappedtemplate_id}`;
-              docToUpsert.name = mappedtemplate_id;
-            }
-          }
           else if (colName === 'reports') {
             // Ensure reports point to the correct deduplicated template
             const mappedtemplate_id = idMapping[doc.template_id];
@@ -491,12 +482,21 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
             </svg>
           </div>
 
-          <h2 className="text-2xl font-bold text-foreground mb-3">Sincronización Fallida</h2>
-          <div className="max-h-[200px] overflow-y-auto mb-8 px-2 custom-scrollbar">
+          <h2 className="text-2xl font-bold text-foreground mb-3">Error en la base de datos</h2>
+          <div className="max-h-[200px] overflow-y-auto mb-6 px-2 custom-scrollbar">
             <p className="text-xs text-muted-foreground leading-relaxed break-words text-left font-mono bg-muted/30 p-3 rounded-lg border border-border/50">
               {error.message.includes('DB9') 
                 ? 'Se detectó un conflicto crítico de configuración en el almacenamiento local. Los intentos de recuperación automática han fallado.'
                 : error.message}
+            </p>
+          </div>
+
+          <div className="text-xs text-left mb-6 p-4 rounded-xl border bg-muted/10 border-border space-y-2">
+            <p className="text-muted-foreground leading-relaxed">
+              Si estabas trabajando en la <strong>nube</strong>, por favor utiliza el botón de <strong>Limpiar Todo (Hard Reset)</strong> a continuación y procede a iniciar sesión nuevamente.
+            </p>
+            <p className="text-destructive font-medium leading-relaxed">
+              Si estabas en un <strong>entorno local</strong>, por favor <strong>contacta con un administrador</strong> y <strong>NO</strong> utilices dicho botón.
             </p>
           </div>
 

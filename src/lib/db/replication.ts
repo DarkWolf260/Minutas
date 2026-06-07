@@ -101,7 +101,7 @@ async function startCollectionReplication(
             if (cleanDoc.modified === undefined) cleanDoc.modified = null;
 
             // Parse stringified JSON fields back to objects
-            const jsonFields = ['data', 'form_data', 'sections', 'statistics_rules', 'statistics_sub_categories', 'photos'];
+            const jsonFields = ['data', 'form_data', 'sections', 'statistics_rules', 'statistics_sub_categories', 'photos', 'subtasks', 'media'];
             jsonFields.forEach(field => {
               if (typeof cleanDoc[field] === 'string') {
                 try { cleanDoc[field] = JSON.parse(cleanDoc[field]); } catch (e) { }
@@ -144,7 +144,9 @@ async function startCollectionReplication(
           templates: ['id', 'workspace_id', 'name', 'content', 'description', 'type', 'is_active', 'statistics_category', 'statistics_sub_categories', 'statistics_rules', '_deleted'],
           lookups: ['id', 'workspace_id', 'type', 'name', 'data', '_deleted'],
           configs: ['id', 'workspace_id', 'type', 'name', 'data', '_deleted'],
-          history: ['id', 'workspace_id', 'type', 'date', 'personnel_id', 'data', '_deleted']
+          history: ['id', 'workspace_id', 'type', 'date', 'personnel_id', 'data', '_deleted'],
+          pending_activities: ['id', 'workspace_id', 'date', 'time', 'text', 'category', 'status', 'completed', 'priority', 'subtasks', '_deleted'],
+          scheduled_messages: ['id', 'workspace_id', 'chatId', 'message', 'title', 'scheduledTime', 'status', 'error', 'media', '_deleted']
         };
 
         const columns = allowedColumns[collectionName] || [];
@@ -301,7 +303,7 @@ export async function startWorkspaceReplication(db: MinutasDatabase, workspace_i
 
   const collectionsToSync: (keyof typeof db.collections)[] = isLocalOnly 
     ? ['templates'] 
-    : ['personnel', 'reports', 'templates', 'lookups', 'configs', 'history'];
+    : ['personnel', 'reports', 'templates', 'lookups', 'configs', 'history', 'pending_activities', 'scheduled_messages'];
 
   if (isLocalOnly) {
     logger.info('Starting community-only replication for local workspace');

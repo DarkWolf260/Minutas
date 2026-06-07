@@ -44,6 +44,8 @@ import {
   configsSchema,
   historySchema,
   notificationsSchema,
+  pendingActivitiesSchema,
+  scheduledMessagesSchema,
 } from './schemas';
 
 import { logger } from '../logger';
@@ -69,7 +71,7 @@ export type LookupItem = {
 export type ConfigItem = {
   id: string; // type:originalId or just 'settings'
   workspace_id: string;
-  type: 'settings' | 'unit' | 'field_definition' | 'template_config' | 'guard' | 'draft' | 'profile' | 'orden_del_dia';
+  type: 'settings' | 'unit' | 'field_definition' | 'guard' | 'draft' | 'profile' | 'orden_del_dia' | 'whatsapp_bot_status';
   name?: string;
   data: any;
 };
@@ -83,9 +85,40 @@ export type HistoryItem = {
   data: any;
 };
 
+export type PendingActivityDoc = {
+  id: string;
+  workspace_id: string;
+  date: string;
+  time: string;
+  text: string;
+  category: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  completed: boolean;
+  priority?: 'low' | 'medium' | 'high';
+  subtasks?: { id: string; text: string; completed: boolean; }[];
+  modified?: string | null;
+  _deleted?: boolean;
+};
+
+export type ScheduledMessageDoc = {
+  id: string;
+  workspace_id: string;
+  chatId: string;
+  message?: string | null;
+  title: string;
+  scheduledTime: string;
+  status: 'pending' | 'sent' | 'failed';
+  error?: string | null;
+  media?: { url: string; name?: string | null; description?: string | null; }[];
+  modified?: string | null;
+  _deleted?: boolean;
+};
+
 export type LookupsCollection = RxCollection<LookupItem>;
 export type ConfigsCollection = RxCollection<ConfigItem>;
 export type HistoryCollection = RxCollection<HistoryItem>;
+export type PendingActivitiesCollection = RxCollection<PendingActivityDoc>;
+export type ScheduledMessagesCollection = RxCollection<ScheduledMessageDoc>;
 
 export type NotificationItem = {
   id: string;
@@ -109,6 +142,8 @@ export type MinutasDatabaseCollections = {
   configs: ConfigsCollection;
   history: HistoryCollection;
   notifications: NotificationsCollection;
+  pending_activities: PendingActivitiesCollection;
+  scheduled_messages: ScheduledMessagesCollection;
 };
 
 export type MinutasDatabase = RxDatabase<MinutasDatabaseCollections>;
@@ -355,6 +390,14 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
       },
       notifications: {
         schema: notificationsSchema,
+      },
+      pending_activities: {
+        schema: pendingActivitiesSchema,
+        conflictHandler: commonConflictHandler,
+      },
+      scheduled_messages: {
+        schema: scheduledMessagesSchema,
+        conflictHandler: commonConflictHandler,
       },
     };
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
+import { DbKeys } from '@/lib/repositories/keys';
 import { logger } from '@/lib/logger';
 
 export interface WhatsAppChat {
@@ -126,7 +127,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
           db.configs.upsert({
             id: statusId,
             workspace_id: currentWorkspace,
-            type: 'whatsapp_bot_status' as any,
+            type: 'whatsapp_bot_status',
             data: {
               isReady: true,
               lastSeen: new Date().toISOString(),
@@ -197,20 +198,16 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       // lo programamos para "ya mismo" (dentro de la base de datos).
       if (isCloud && isCloudActiveRef.current && db && currentWorkspace) {
         logger.info('Direct send failed/unreachable. Scheduling immediately via Cloud fallback...');
-        const id = `scheduled_message:${currentWorkspace}:${crypto.randomUUID()}`;
-        const data = {
+        const id = DbKeys.scheduledMessage(currentWorkspace, crypto.randomUUID());
+        await db.scheduled_messages.upsert({
+          id,
+          workspace_id: currentWorkspace,
           chatId,
           message,
           title: 'Envío Instantáneo (Nube)',
           scheduledTime: new Date().toISOString(),
           status: 'pending',
-          media, // También guardamos la referencia de media para fallbacks si el despachador en la nube lo soporta
-        };
-        await db.configs.upsert({
-          id,
-          workspace_id: currentWorkspace,
-          type: 'scheduled_message' as any,
-          data,
+          media: media || [],
         });
         return { success: true, viaCloud: true };
       }

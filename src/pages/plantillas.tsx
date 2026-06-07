@@ -77,7 +77,7 @@ export default function PlantillasPage() {
                         layout: [],
                       }) as any
                     }
-                    onConfigChange={(config) => hook.updateTemplateConfig(plantillaSeleccionada.id, config)}
+                    isReadOnly={hook.isCloud && !hook.isAdmin}
                     onTemplateChange={hook.updateTemplate}
                   />
                 </div>

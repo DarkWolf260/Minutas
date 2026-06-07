@@ -14,7 +14,6 @@ export const DbKeys = {
   fieldDefinition: (ws: string, fieldName: string) => `${ws}:field_definition:${fieldName}`,
   guard: (ws: string, guardId: string) => `${ws}:guard:${guardId}`,
   unit: (ws: string, unitId: string) => `${ws}:unit:${unitId}`,
-  templateConfig: (ws: string, template_id: string) => `${ws}:template_config:${template_id}`,
   scheduledMessage: (ws: string, id: string) => `${ws}:scheduled_message:${id}`,
   pendingActivity: (ws: string, id: string) => `${ws}:pending_activity:${id}`,
 

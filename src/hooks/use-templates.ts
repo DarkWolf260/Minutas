@@ -55,15 +55,10 @@ export function useTemplates() {
   const { currentWorkspace, isCloud } = useWorkspaceManager();
   const { isAdmin } = useAdmin();
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [configs, setConfigs] = useState<Record<string, TemplateConfig>>({});
   const [isTemplatesLoaded, setIsTemplatesLoaded] = useState(false);
-  const [isConfigsLoaded, setIsConfigsLoaded] = useState(false);
 
   const { definitions: globalDefinitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
   const { isLoaded: settingsLoaded } = useSettings();
-
-  // Use a ref to track what was last synced to the DB to break the update loop
-  const lastSyncedConfigsRef = useRef<string>('');
 
   useEffect(() => {
     if (!db || !currentWorkspace) return;
@@ -74,21 +69,8 @@ export function useTemplates() {
       setIsTemplatesLoaded(true);
     });
 
-    const configRepo = createConfigRepository(db, currentWorkspace, isCloud);
-    const subConfigs = configRepo.watchTemplateConfigs().subscribe((data) => {
-      const configMap: Record<string, TemplateConfig> = {};
-      data.forEach((d) => {
-        // Handle both RxDB and Supabase document shapes
-        const item = d.toJSON ? d.toJSON() : d;
-        configMap[item.name || ''] = item.data as TemplateConfig;
-      });
-      setConfigs(configMap);
-      setIsConfigsLoaded(true);
-    });
-
     return () => {
       subTemplates.unsubscribe();
-      subConfigs.unsubscribe();
     };
   }, [db, currentWorkspace, isCloud]);
 
@@ -102,94 +84,64 @@ export function useTemplates() {
     return cache;
   }, [templates]);
 
-  // Optimize config synchronization to avoid unnecessary writes and re-renders
-  useEffect(() => {
-    if (isTemplatesLoaded && definitionsLoaded && templates.length > 0 && db && currentWorkspace) {
-      const newConfigs: Record<string, TemplateConfig> = {};
-      let hasSignificantChanges = false;
+  // Calcular las configuraciones de plantilla en memoria
+  const configs = useMemo(() => {
+    if (!isTemplatesLoaded || !definitionsLoaded || templates.length === 0) {
+      return {};
+    }
 
-      templates.forEach(template => {
-        const cacheKey = `${template.id}-${template.content.length}`;
-        const parsed = parsedTemplates.get(cacheKey);
-        const existingConfig = configs[template.id] || { fields: {}, sections: [], layout: [] };
+    const newConfigs: Record<string, TemplateConfig> = {};
 
-        const finalConfig: TemplateConfig = {
-          sections: parsed.sections.map((parsedSection: SectionConfig) => {
-            const existingSection = (existingConfig.sections || []).find((s: SectionConfig) => s.label === parsedSection.label);
-            return {
-              ...parsedSection,
-              statistics_category: existingSection?.statistics_category
-            };
-          }),
-          layout: parsed.layout,
-          fields: {},
+    templates.forEach(template => {
+      const cacheKey = `${template.id}-${template.content.length}`;
+      const parsed = parsedTemplates.get(cacheKey);
+      if (!parsed) return;
+
+      const finalConfig: TemplateConfig = {
+        sections: parsed.sections.map((parsedSection: SectionConfig) => {
+          return {
+            ...parsedSection,
+            statistics_category: parsedSection.statistics_category
+          };
+        }),
+        layout: parsed.layout,
+        fields: {},
+      };
+
+      parsed.fieldNames.forEach((fieldName: string) => {
+        const globalDef = globalDefinitions[fieldName];
+        const typeFromTemplate = parsed.fieldTypes.get(fieldName);
+        const optionsFromTemplate = parsed.templateOptions.get(fieldName);
+
+        const baseConfig: FieldConfig = {
+          type: 'text',
+          label: fieldName,
+          ...globalDef,
         };
 
-        parsed.fieldNames.forEach((fieldName: string) => {
-          const existingFieldConfig = existingConfig.fields[fieldName];
-          const globalDef = globalDefinitions[fieldName];
-          const typeFromTemplate = parsed.fieldTypes.get(fieldName);
-          const optionsFromTemplate = parsed.templateOptions.get(fieldName);
-
-          const baseConfig: FieldConfig = {
-            type: 'text',
-            label: fieldName,
-            ...globalDef,
-            ...existingFieldConfig,
-          };
-
-          if (typeFromTemplate) {
-            baseConfig.type = typeFromTemplate;
-          } else if (globalDef?.type) {
-            baseConfig.type = globalDef.type;
-          }
-
-          if (optionsFromTemplate) {
-            baseConfig.snippet_options = optionsFromTemplate;
-          }
-
-          const modifiersFromTemplate = parsed.fieldModifiers.get(fieldName);
-          if (modifiersFromTemplate) {
-            baseConfig.modifiers = modifiersFromTemplate;
-          }
-
-          finalConfig.fields[fieldName] = baseConfig;
-        });
-
-        newConfigs[template.id] = finalConfig;
-
-        // Check if this specific template config actually changed from what we have in state
-        const configStr = stableStringify(finalConfig);
-        const existingStr = stableStringify(existingConfig);
-
-        if (configStr !== existingStr) {
-          hasSignificantChanges = true;
+        if (typeFromTemplate) {
+          baseConfig.type = typeFromTemplate;
+        } else if (globalDef?.type) {
+          baseConfig.type = globalDef.type;
         }
+
+        if (optionsFromTemplate) {
+          baseConfig.snippet_options = optionsFromTemplate;
+        }
+
+        const modifiersFromTemplate = parsed.fieldModifiers.get(fieldName);
+        if (modifiersFromTemplate) {
+          baseConfig.modifiers = modifiersFromTemplate;
+        }
+
+        finalConfig.fields[fieldName] = baseConfig;
       });
 
-      if (hasSignificantChanges) {
-        const fullNewConfigsStr = stableStringify(newConfigs);
-        lastSyncedConfigsRef.current = fullNewConfigsStr;
+      newConfigs[template.id] = finalConfig;
+    });
 
-        // Use a small timeout to debounce bulkUpsert if multiple renders happen quickly
-        const timeoutId = setTimeout(() => {
-          const entries = Object.entries(newConfigs).map(([id, config]) => ({
-            id: DbKeys.templateConfig(currentWorkspace, id),
-            workspace_id: currentWorkspace,
-            type: 'template_config' as const,
-            name: id,
-            data: config,
-          }));
-
-          const repo = createConfigRepository(db, currentWorkspace, isCloud);
-          repo.bulkUpsertTemplateConfigs(entries as any).catch((err: any) =>
-            logger.error('Failed to sync template configs', err, { feature: 'Templates' })
-          );
-        }, 100);
-        return () => clearTimeout(timeoutId);
-      }
-    }
-  }, [isTemplatesLoaded, definitionsLoaded, templates, db, currentWorkspace, parsedTemplates, globalDefinitions]);
+    return newConfigs;
+  }, [isTemplatesLoaded, definitionsLoaded, templates, parsedTemplates, globalDefinitions]);
 
   // Bootstrap initial templates from Cloud ONLY if:
   //   1. No local templates exist yet
@@ -285,8 +237,7 @@ export function useTemplates() {
         workspace_id: currentWorkspace,
       });
 
-      const { sections, layout, fieldNames, fieldTypes, templateOptions, fieldModifiers, errors } =
-        parseTemplate(validatedTemplate.content);
+      const { errors } = parseTemplate(validatedTemplate.content);
 
       if (errors.length > 0) {
         toast.error(`La plantilla tiene errores: ${errors[0]}`);
@@ -302,31 +253,6 @@ export function useTemplates() {
 
       const templateRepo = createTemplateRepository(db, currentWorkspace, isCloud);
       await templateRepo.add({ ...validatedTemplate, is_active: errors.length === 0 });
-
-      const newConfig: TemplateConfig = { fields: {}, sections, layout };
-      fieldNames.forEach((fieldName: string) => {
-        newConfig.fields[fieldName] = {
-          ...(globalDefinitions[fieldName] || { type: 'text', label: fieldName }),
-        };
-        const typeFromTemplate = fieldTypes.get(fieldName);
-        if (typeFromTemplate) {
-          const field = newConfig.fields[fieldName];
-          if (field) field.type = typeFromTemplate;
-        }
-        const optionsFromTemplate = templateOptions.get(fieldName);
-        if (optionsFromTemplate) {
-          const field = newConfig.fields[fieldName];
-          if (field) field.snippet_options = optionsFromTemplate;
-        }
-        const modifiersFromTemplate = fieldModifiers.get(fieldName);
-        if (modifiersFromTemplate) {
-          const field = newConfig.fields[fieldName];
-          if (field) field.modifiers = modifiersFromTemplate as any;
-        }
-      });
-
-      const configRepo = createConfigRepository(db, currentWorkspace, isCloud);
-      await configRepo.upsertTemplateConfig(validatedTemplate.id, newConfig);
     } catch (error) {
       logger.error('Error adding template', error);
       toast.error(getUserFriendlyErrorMessage(error));
@@ -340,46 +266,19 @@ export function useTemplates() {
     logger.info('Template removed', { id: template_id });
   };
 
-  const updateTemplateConfig = async (template_id: string, config: TemplateConfig) => {
-    if (!db || !currentWorkspace) return;
-    const configRepo = createConfigRepository(db, currentWorkspace, isCloud);
-    await configRepo.upsertTemplateConfig(template_id, config);
-  };
-
   const updateTemplate = async (updatedTemplate: Template): Promise<string | undefined> => {
     if (!db || !currentWorkspace) return;
     try {
-      let templateToUpdate = { ...updatedTemplate };
-      const isGlobal = !templateToUpdate.workspace_id || templateToUpdate.workspace_id === 'minutasdb';
-      const isRealWorkspace = currentWorkspace !== 'minutasdb';
-      
-      if (isGlobal && isRealWorkspace && !isAdmin) {
-        const newId = generateId('template');
-        logger.info(`Cloning global template "${templateToUpdate.name}" for workspace "${currentWorkspace}" with new ID "${newId}"`);
-        
-        const validatedTemplate = TemplateSchema.parse({
-          ...templateToUpdate,
-          id: newId,
-          workspace_id: currentWorkspace,
-        });
-        
-        const templateRepo = createTemplateRepository(db, currentWorkspace, isCloud);
-        await templateRepo.add(validatedTemplate);
-        
-        // Clone configuration
-        const oldConfig = configs[templateToUpdate.id];
-        if (oldConfig) {
-          const configRepo = createConfigRepository(db, currentWorkspace, isCloud);
-          await configRepo.upsertTemplateConfig(newId, oldConfig);
-        }
-        
-        toast.success(`Plantilla "${validatedTemplate.name}" guardada como copia de trabajo.`);
-        return newId;
+      if (isCloud && !isAdmin) {
+        const errMsg = 'No tienes permisos para modificar las plantillas en la nube.';
+        logger.error(errMsg);
+        toast.error(errMsg);
+        return undefined;
       }
 
       const validatedTemplate = TemplateSchema.parse({
-        ...templateToUpdate,
-        workspace_id: isGlobal ? null : currentWorkspace,
+        ...updatedTemplate,
+        workspace_id: isCloud ? null : currentWorkspace,
       });
       const repo = createTemplateRepository(db, currentWorkspace, isCloud);
       await repo.update(validatedTemplate);
@@ -412,7 +311,6 @@ export function useTemplates() {
     addTemplate,
     removeTemplate,
     updateTemplate,
-    updateTemplateConfig,
     toggleTemplateActive,
     clearAllTemplates,
     isLoaded: isTemplatesLoaded && definitionsLoaded && settingsLoaded
@@ -422,7 +320,6 @@ export function useTemplates() {
     addTemplate, 
     removeTemplate, 
     updateTemplate, 
-    updateTemplateConfig, 
     toggleTemplateActive, 
     clearAllTemplates, 
     isTemplatesLoaded, 
