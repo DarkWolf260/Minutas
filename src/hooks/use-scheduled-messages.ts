@@ -39,9 +39,8 @@ export function useScheduledMessages() {
   useEffect(() => {
     if (!db || !currentWorkspace) return;
 
-    const query = db.configs.find({
+    const query = db.scheduled_messages.find({
       selector: {
-        type: 'scheduled_message' as any,
         workspace_id: currentWorkspace,
       },
     });
@@ -51,7 +50,13 @@ export function useScheduledMessages() {
         const json = doc.toJSON();
         return {
           id: json.id,
-          ...json.data,
+          chatId: json.chatId,
+          message: json.message,
+          title: json.title,
+          scheduledTime: json.scheduledTime,
+          status: json.status,
+          error: json.error,
+          media: json.media || [],
         } as ScheduledMessage;
       });
       setScheduledMessages(messages);
@@ -78,20 +83,17 @@ export function useScheduledMessages() {
 
       const id = DbKeys.scheduledMessage(currentWorkspace, crypto.randomUUID());
       
-      const data: Omit<ScheduledMessage, 'id'> = {
+      const isoTime = scheduledTime.toISOString();
+
+      await db.scheduled_messages.upsert({
+        id,
+        workspace_id: currentWorkspace,
         chatId,
         message,
         title,
-        scheduledTime: scheduledTime.toISOString(),
+        scheduledTime: isoTime,
         status: 'pending',
-        media,
-      };
-
-      await db.configs.upsert({
-        id,
-        workspace_id: currentWorkspace,
-        type: 'scheduled_message' as any, // Cast to avoid TS error with strict types
-        data,
+        media: media || [],
       });
 
       // Enviar al backend Node para que lo programe en segundo plano
@@ -103,7 +105,7 @@ export function useScheduledMessages() {
             id, 
             chatId, 
             message, 
-            scheduledTime: data.scheduledTime, 
+            scheduledTime: isoTime, 
             title,
             media
           }),
@@ -112,7 +114,7 @@ export function useScheduledMessages() {
         logger.error('Failed to schedule message in background server', error);
       }
 
-      logger.info(`Message scheduled for ${scheduledTime.toISOString()}`);
+      logger.info(`Message scheduled for ${isoTime}`);
       return id;
     },
     [db, currentWorkspace, localUrl]
@@ -126,7 +128,7 @@ export function useScheduledMessages() {
       deletingIds.current.add(id);
       
       try {
-        const doc = await db.configs.findOne(id).exec();
+        const doc = await db.scheduled_messages.findOne(id).exec();
         if (doc) {
           await doc.remove();
           logger.info(`Scheduled message ${id} cancelled locally`);
@@ -195,9 +197,8 @@ export function useScheduledMessages() {
         const serverMap = new Map(serverMessages.map(m => [m.id, m]));
 
         // Consultar directamente a la base de datos local para tener el estado absoluto y evitar retrasos de React
-        const docs = await db.configs.find({
+        const docs = await db.scheduled_messages.find({
           selector: {
-            type: 'scheduled_message' as any,
             workspace_id: currentWorkspace,
           },
         }).exec();
@@ -206,7 +207,13 @@ export function useScheduledMessages() {
           const json = doc.toJSON();
           return {
             id: json.id,
-            ...json.data,
+            chatId: json.chatId,
+            message: json.message,
+            title: json.title,
+            scheduledTime: json.scheduledTime,
+            status: json.status,
+            error: json.error,
+            media: json.media || [],
           } as ScheduledMessage;
         });
 
@@ -222,14 +229,11 @@ export function useScheduledMessages() {
             if (serverMsg) {
               if (serverMsg.status !== 'pending') {
                 // Status changed (sent or failed), update local DB
-                const doc = await db.configs.findOne(msg.id).exec();
+                const doc = await db.scheduled_messages.findOne(msg.id).exec();
                 if (doc) {
                   await doc.incrementalPatch({
-                    data: { 
-                      ...msg, 
-                      status: serverMsg.status, 
-                      error: serverMsg.error 
-                    }
+                    status: serverMsg.status, 
+                    error: serverMsg.error 
                   });
                   logger.info(`Synced status for ${msg.id} to ${serverMsg.status}`);
                 }

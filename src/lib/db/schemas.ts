@@ -44,9 +44,9 @@ export const reportsSchema = {
         is_relevant: { type: 'boolean' },
         status: { type: 'string' },
         form_data: { type: 'object' },
-        sections: { 
-            type: 'array', 
-            items: { 
+        sections: {
+            type: 'array',
+            items: {
                 type: 'object',
                 properties: {
                     title: { type: 'string' },
@@ -165,7 +165,7 @@ export const lookupsSchema = {
 };
 
 /**
- * Consolidated collection for configuration items: settings, units, field_definitions, template_configs, guards, drafts.
+ * Consolidated collection for configuration items: settings, units, field_definitions, guards, drafts.
  */
 export const configsSchema = {
     title: 'configs schema',
@@ -227,6 +227,78 @@ export const notificationsSchema = {
         metadata: { type: 'object' },
     },
 };
+
+/**
+ * Collection for pending activities / Kanban tasks.
+ */
+export const pendingActivitiesSchema = {
+    title: 'pending activities schema',
+    version: 0,
+    primaryKey: 'id',
+    type: 'object',
+    properties: {
+        id: { type: 'string', maxLength: 150 },
+        workspace_id: { type: 'string', maxLength: 50 },
+        date: { type: 'string', maxLength: 20 },
+        time: { type: 'string' },
+        text: { type: 'string' },
+        category: { type: 'string' },
+        status: { type: 'string', enum: ['pending', 'in_progress', 'completed'], maxLength: 50 },
+        completed: { type: 'boolean' },
+        priority: { type: 'string', enum: ['low', 'medium', 'high'] },
+        subtasks: {
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    id: { type: 'string' },
+                    text: { type: 'string' },
+                    completed: { type: 'boolean' }
+                }
+            }
+        },
+        modified: { type: ['string', 'null'] },
+        _deleted: { type: 'boolean' }
+    },
+    required: ['id', 'workspace_id', 'date', 'time', 'text', 'category', 'status'],
+    indexes: ['workspace_id', 'status', 'date']
+};
+
+/**
+ * Collection for WhatsApp scheduled messages.
+ */
+export const scheduledMessagesSchema = {
+    title: 'scheduled messages schema',
+    version: 0,
+    primaryKey: 'id',
+    type: 'object',
+    properties: {
+        id: { type: 'string', maxLength: 150 },
+        workspace_id: { type: 'string', maxLength: 50 },
+        chatId: { type: 'string', maxLength: 100 },
+        message: { type: ['string', 'null'] },
+        title: { type: 'string' },
+        scheduledTime: { type: 'string', maxLength: 50 },
+        status: { type: 'string', enum: ['pending', 'sent', 'failed'], maxLength: 50 },
+        error: { type: ['string', 'null'] },
+        media: {
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    url: { type: 'string' },
+                    name: { type: ['string', 'null'] },
+                    description: { type: ['string', 'null'] }
+                }
+            }
+        },
+        modified: { type: ['string', 'null'] },
+        _deleted: { type: 'boolean' }
+    },
+    required: ['id', 'workspace_id', 'chatId', 'title', 'scheduledTime', 'status'],
+    indexes: ['workspace_id', 'status', 'scheduledTime']
+};
+
 
 
 

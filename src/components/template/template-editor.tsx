@@ -59,13 +59,15 @@ const SearchableCategorySelector = ({
   onSelect,
   placeholder = "Selecciona una categoría...",
   className = "",
-  customTrigger
+  customTrigger,
+  disabled = false
 }: {
   value: string;
   onSelect: (val: string) => void;
   placeholder?: string;
   className?: string;
   customTrigger?: React.ReactNode;
+  disabled?: boolean;
 }) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -85,13 +87,14 @@ const SearchableCategorySelector = ({
   }, [search]);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={disabled ? undefined : setOpen}>
       <PopoverTrigger asChild>
         {customTrigger || (
           <Button
             variant="outline"
             role="combobox"
             aria-expanded={open}
+            disabled={disabled}
             className={cn("w-full justify-between text-left font-normal truncate", className, value === 'none' && "text-muted-foreground")}
           >
             {value === 'none' ? placeholder : value}
@@ -182,13 +185,13 @@ const SearchableCategorySelector = ({
 export function TemplateEditor({
   template,
   config,
-  onConfigChange,
   onTemplateChange,
+  isReadOnly = false,
 }: {
   template: Template;
   config: TemplateConfig;
-  onConfigChange: (config: TemplateConfig) => void;
   onTemplateChange: (template: Template) => void;
+  isReadOnly?: boolean;
 }) {
   const [localTemplate, setLocalTemplate] = useState<Template>(() => {
     const rules = template.statistics_rules || [];
@@ -267,6 +270,7 @@ export function TemplateEditor({
   }, [template]);
 
   const handleSaveChanges = () => {
+    if (isReadOnly) return;
     const cleanRules = localTemplate.statistics_rules || [];
     const metaRule = {
       field_id: '__meta__',
@@ -279,7 +283,6 @@ export function TemplateEditor({
       statistics_rules: [...cleanRules, metaRule]
     };
 
-    onConfigChange(localConfig);
     onTemplateChange(finalTemplate);
     setHasChanges(false);
     toast.success("Cambios guardados correctamente");
@@ -318,16 +321,16 @@ export function TemplateEditor({
             </div>
             <Button
               onClick={handleSaveChanges}
-              disabled={!hasChanges}
+              disabled={!hasChanges || isReadOnly}
               className={cn(
                 "h-9 px-6 text-xs shadow-md font-bold rounded-xl shrink-0 sm:w-auto transition-all duration-300",
-                hasChanges
+                hasChanges && !isReadOnly
                   ? "bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/20 text-white"
                   : "bg-muted text-muted-foreground hover:bg-muted"
               )}
             >
               <Save className="h-4 w-4 mr-2" />
-              {hasChanges ? 'Guardar Cambios' : 'Guardado'}
+              {isReadOnly ? 'Solo Lectura' : hasChanges ? 'Guardar Cambios' : 'Guardado'}
             </Button>
           </div>
 
@@ -354,6 +357,7 @@ export function TemplateEditor({
                     setLocalTemplate((p) => ({ ...p, name: e.target.value }));
                     setHasChanges(true);
                   }}
+                  disabled={isReadOnly}
                   className="h-9 text-xs bg-muted/30 focus:bg-background transition-colors border-muted rounded-xl"
                 />
               </div>
@@ -369,6 +373,7 @@ export function TemplateEditor({
                     setLocalTemplate((p) => ({ ...p, statistics_category: val === 'none' ? '' : val }));
                     setHasChanges(true);
                   }}
+                  disabled={isReadOnly}
                   className="rounded-xl h-9 text-xs bg-muted/30 hover:bg-background"
                 />
               </div>
@@ -390,6 +395,7 @@ export function TemplateEditor({
                     setLocalTemplate((p) => ({ ...p, disable_main_stat_on_apoyo: checked }));
                     setHasChanges(true);
                   }}
+                  disabled={isReadOnly}
                   className="data-[state=checked]:bg-orange-500"
                 />
               </div>
@@ -410,6 +416,7 @@ export function TemplateEditor({
                       setLocalTemplate(p => ({ ...p, statistics_sub_categories: [...current, ''] }));
                       setHasChanges(true);
                     }}
+                    disabled={isReadOnly}
                   >
                     <Plus className="h-3.5 w-3.5 mr-1" /> Añadir
                   </Button>
@@ -427,6 +434,7 @@ export function TemplateEditor({
                             setLocalTemplate(p => ({ ...p, statistics_sub_categories: newList }));
                             setHasChanges(true);
                           }}
+                          disabled={isReadOnly}
                           placeholder="Selecciona sub-categoría..."
                           className="rounded-xl h-9 text-xs bg-muted/30 hover:bg-background"
                         />
@@ -449,6 +457,7 @@ export function TemplateEditor({
                             setLocalTemplate(p => ({ ...p, disabled_sub_categories_on_apoyo: nextDisabled }));
                             setHasChanges(true);
                           }}
+                          disabled={isReadOnly}
                           className="scale-75 data-[state=checked]:bg-orange-500"
                         />
                       </div>
@@ -461,6 +470,7 @@ export function TemplateEditor({
                           setLocalTemplate(p => ({ ...p, statistics_sub_categories: newList }));
                           setHasChanges(true);
                         }}
+                        disabled={isReadOnly}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -494,6 +504,7 @@ export function TemplateEditor({
                     setLocalTemplate(p => ({ ...p, statistics_rules: newRules as StatisticRule[] }));
                     setHasChanges(true);
                   }}
+                  disabled={isReadOnly}
                 >
                   <Plus className="h-3 w-3 mr-1" /> Nueva Regla
                 </Button>
@@ -518,8 +529,9 @@ export function TemplateEditor({
                             <Select
                               value={cond.field_id || ''}
                               onValueChange={(val) => onChange('field_id', val)}
+                              disabled={isReadOnly}
                             >
-                              <SelectTrigger className="h-8 text-[10px] w-full bg-background border-muted shadow-sm rounded-lg">
+                              <SelectTrigger className="h-8 text-[10px] w-full bg-background border-muted shadow-sm rounded-lg" disabled={isReadOnly}>
                                 <SelectValue placeholder="Campo" />
                               </SelectTrigger>
                               <SelectContent>
@@ -536,8 +548,9 @@ export function TemplateEditor({
                             <Select
                               value={cond.operator || '='}
                               onValueChange={(val) => onChange('operator', val)}
+                              disabled={isReadOnly}
                             >
-                              <SelectTrigger className="h-8 w-full text-[10px] px-2 bg-background border-muted shadow-sm font-mono rounded-lg">
+                              <SelectTrigger className="h-8 w-full text-[10px] px-2 bg-background border-muted shadow-sm font-mono rounded-lg" disabled={isReadOnly}>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -560,8 +573,9 @@ export function TemplateEditor({
                                     <Select
                                       value={cond.condition || ''}
                                       onValueChange={(val) => onChange('condition', val)}
+                                      disabled={isReadOnly}
                                     >
-                                      <SelectTrigger className="h-8 text-[10px] w-full bg-background border-muted shadow-sm rounded-lg">
+                                      <SelectTrigger className="h-8 text-[10px] w-full bg-background border-muted shadow-sm rounded-lg" disabled={isReadOnly}>
                                         <SelectValue placeholder="Valor..." />
                                       </SelectTrigger>
                                       <SelectContent>
@@ -581,6 +595,7 @@ export function TemplateEditor({
                                     placeholder="Valor..."
                                     value={cond.condition || ''}
                                     onChange={(e) => onChange('condition', e.target.value)}
+                                    disabled={isReadOnly}
                                   />
                                 );
                               })()}
@@ -600,7 +615,7 @@ export function TemplateEditor({
 
                       return (
                         <div
-                          key={idx}
+                           key={idx}
                           className="bg-muted/20 p-5 rounded-2xl border border-muted/50 hover:border-primary/30 transition-all duration-300 space-y-4"
                         >
                           {/* SI (Condición) Header */}
@@ -629,6 +644,7 @@ export function TemplateEditor({
                                         newSecConditions.splice(cIdx, 1);
                                         updateRule({ conditions: newSecConditions });
                                       }}
+                                      disabled={isReadOnly}
                                     >
                                       <Trash2 className="h-3 w-3" />
                                     </Button>
@@ -656,6 +672,7 @@ export function TemplateEditor({
                                         newOrConditions.splice(cIdx, 1);
                                         updateRule({ or_conditions: newOrConditions });
                                       }}
+                                      disabled={isReadOnly}
                                     >
                                       <Trash2 className="h-3 w-3" />
                                     </Button>
@@ -680,6 +697,7 @@ export function TemplateEditor({
                                 const newSecConditions = [...(rule.conditions || []), { field_id: '', operator: '=' as const, condition: '' }];
                                 updateRule({ conditions: newSecConditions as any });
                               }}
+                              disabled={isReadOnly}
                             >
                               <Plus className="h-3 w-3 mr-1" /> Añadir Y (AND)
                             </Button>
@@ -691,6 +709,7 @@ export function TemplateEditor({
                                 const newOrConditions = [...(rule.or_conditions || []), { field_id: '', operator: '=' as const, condition: '' }];
                                 updateRule({ or_conditions: newOrConditions as any });
                               }}
+                              disabled={isReadOnly}
                             >
                               <Plus className="h-3 w-3 mr-1" /> Añadir O (OR)
                             </Button>
@@ -720,7 +739,7 @@ export function TemplateEditor({
                                               <span className="truncate max-w-[200px]">{cat}</span>
                                               <button
                                                 type="button"
-                                                onClick={() => {
+                                                onClick={isReadOnly ? undefined : () => {
                                                   const newCats = currentCategories.filter(c => c !== cat);
                                                   const newRules = (localTemplate.statistics_rules || []).map((r, i) =>
                                                     i === idx ? { ...r, categories: newCats, category: newCats[0] || null } : r
@@ -728,7 +747,8 @@ export function TemplateEditor({
                                                   setLocalTemplate(p => ({ ...p, statistics_rules: newRules }));
                                                   setHasChanges(true);
                                                 }}
-                                                className="p-0.5 rounded-full hover:bg-emerald-500/20 text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-300 transition-colors shrink-0"
+                                                disabled={isReadOnly}
+                                                className="p-0.5 rounded-full hover:bg-emerald-500/20 text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-300 transition-colors shrink-0 disabled:opacity-50"
                                               >
                                                 <X className="h-3 w-3" />
                                               </button>
@@ -751,6 +771,7 @@ export function TemplateEditor({
                                             }
                                           }
                                         }}
+                                        disabled={isReadOnly}
                                         className="h-8 py-1 px-3 bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/20 text-emerald-500 font-bold rounded-lg text-xs w-auto shrink-0"
                                         placeholder="Añadir..."
                                         customTrigger={
@@ -758,6 +779,7 @@ export function TemplateEditor({
                                             variant="outline"
                                             size="sm"
                                             className="h-7 text-[10px] bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/20 text-emerald-500 font-black uppercase tracking-wider rounded-lg shrink-0 animate-pulse"
+                                            disabled={isReadOnly}
                                           >
                                             <Plus className="h-3 w-3 mr-1" /> Añadir
                                           </Button>
@@ -785,6 +807,7 @@ export function TemplateEditor({
                                     setLocalTemplate(p => ({ ...p, statistics_rules: newRules }));
                                     setHasChanges(true);
                                   }}
+                                  disabled={isReadOnly}
                                   className="scale-75 data-[state=checked]:bg-orange-500"
                                 />
                               </div>
@@ -801,6 +824,7 @@ export function TemplateEditor({
                                   setHasChanges(true);
                                   toast.success("Regla duplicada");
                                 }}
+                                disabled={isReadOnly}
                               >
                                 <Copy className="h-3.5 w-3.5" /> Duplicar
                               </Button>
@@ -814,6 +838,7 @@ export function TemplateEditor({
                                   setLocalTemplate(p => ({ ...p, statistics_rules: newRules }));
                                   setHasChanges(true);
                                 }}
+                                disabled={isReadOnly}
                               >
                                 <Trash2 className="h-3.5 w-3.5" /> Eliminar
                               </Button>

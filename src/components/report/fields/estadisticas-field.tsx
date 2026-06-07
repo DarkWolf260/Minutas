@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import {
     form_dataValue,
+    TemplateConfig,
+    SectionConfig,
+    FieldConfig,
 } from '@/lib/types';
+import { parseTemplate } from '@/lib/template-parser';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/custom/date-picker';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
@@ -113,7 +117,7 @@ export const EstadisticasField = ({ id, name, value, onChange, disabled, classNa
                 return;
             }
 
-            // Fetch templates and configs directly from DB to avoid reactive hooks
+            // Fetch templates directly from DB to avoid reactive hooks
             const templatesDocs = await db.templates.find({
                 selector: {
                     $or: [
@@ -124,19 +128,50 @@ export const EstadisticasField = ({ id, name, value, onChange, disabled, classNa
             }).exec();
             const templates = templatesDocs.map(doc => doc.toJSON());
 
-            const configsDocs = await db.configs.find({
-                selector: {
-                    workspace_id: currentWorkspace,
-                    type: 'template_config'
-                }
-            }).exec();
-            const configs = configsDocs.map(doc => doc.toJSON());
+            // Build configs map in memory
+            const configsMap: Record<string, TemplateConfig> = {};
+            templates.forEach((template: any) => {
+                const parsed = parseTemplate(template.content);
+                const finalConfig: TemplateConfig = {
+                    sections: parsed.sections.map((parsedSection: SectionConfig) => ({
+                        ...parsedSection,
+                        statistics_category: parsedSection.statistics_category
+                    })),
+                    layout: parsed.layout,
+                    fields: {},
+                };
 
-            // Build configs map as in useTemplates
-            const configsMap = configs.reduce((acc: any, config: any) => {
-                acc[config.name || ''] = config.data;
-                return acc;
-            }, {});
+                parsed.fieldNames.forEach((fieldName: string) => {
+                    const globalDef = definitions[fieldName];
+                    const typeFromTemplate = parsed.fieldTypes.get(fieldName);
+                    const optionsFromTemplate = parsed.templateOptions.get(fieldName);
+
+                    const baseConfig: FieldConfig = {
+                        type: 'text',
+                        label: fieldName,
+                        ...globalDef,
+                    };
+
+                    if (typeFromTemplate) {
+                        baseConfig.type = typeFromTemplate;
+                    } else if (globalDef?.type) {
+                        baseConfig.type = globalDef.type;
+                    }
+
+                    if (optionsFromTemplate) {
+                        baseConfig.snippet_options = optionsFromTemplate;
+                    }
+
+                    const modifiersFromTemplate = parsed.fieldModifiers.get(fieldName);
+                    if (modifiersFromTemplate) {
+                        baseConfig.modifiers = modifiersFromTemplate as any;
+                    }
+
+                    finalConfig.fields[fieldName] = baseConfig;
+                });
+
+                configsMap[template.id] = finalConfig;
+            });
 
             // Build configuracionesGlobales
             const settingsMap: Record<string, string> = {};

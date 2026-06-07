@@ -29,6 +29,7 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
     manejarClickEditarContenido,
     estaAutenticado,
     isAdmin,
+    isCloud,
     manejarSubirANube,
     estaSubiendo,
     manejarClickEliminar,
@@ -54,7 +55,7 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
         <div className="grid grid-cols-3 gap-1.5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="w-full text-[11px] h-9 px-1.5" size="sm">
+              <Button className="w-full text-[11px] h-9 px-1.5" size="sm" disabled={isCloud && !isAdmin}>
                 <Upload className="mr-1 h-3.5 w-3.5 shrink-0" />
                 Subir...
               </Button>
@@ -159,19 +160,21 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
                     </div>
 
                     <div className="flex items-center gap-0.5 shrink-0 justify-end">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-background/80"
-                            onClick={(e) => manejarClickEditarContenido(e, template)}
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent><p>Editar</p></TooltipContent>
-                      </Tooltip>
+                      {!(isCloud && !isAdmin) && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-background/80"
+                              onClick={(e) => manejarClickEditarContenido(e, template)}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Editar</p></TooltipContent>
+                        </Tooltip>
+                      )}
 
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -213,27 +216,29 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
                         </TooltipContent>
                       </Tooltip>
                       
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem 
-                            className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
-                            onClick={(e: React.MouseEvent) => manejarClickEliminar(e, template.id)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            <span>Eliminar</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {!(isCloud && !isAdmin) && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                              onClick={(e: React.MouseEvent) => manejarClickEliminar(e, template.id)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              <span>Eliminar</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </div>
                 );

@@ -4,7 +4,14 @@ import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { useWorkspaceManager } from '@/lib/db/db-context';
+import { useAdmin } from '@/hooks/use-admin';
+
 export const PlantillasHeader = () => {
+  const { isCloud } = useWorkspaceManager();
+  const { isAdmin } = useAdmin();
+  const showTabs = !(isCloud && !isAdmin);
+
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10 w-full shrink-0">
       <div className="flex items-center gap-4">
@@ -21,12 +28,14 @@ export const PlantillasHeader = () => {
         </div>
       </div>
       
-      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 w-full sm:w-auto">
-        <TabsList className="grid w-[240px] grid-cols-2 shadow-sm">
-          <TabsTrigger value="editor">Gestionar</TabsTrigger>
-          <TabsTrigger value="builder">Constructor</TabsTrigger>
-        </TabsList>
-      </div>
+      {showTabs && (
+        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 w-full sm:w-auto">
+          <TabsList className="grid w-[240px] grid-cols-2 shadow-sm">
+            <TabsTrigger value="editor">Gestionar</TabsTrigger>
+            <TabsTrigger value="builder">Constructor</TabsTrigger>
+          </TabsList>
+        </div>
+      )}
     </div>
   );
 };

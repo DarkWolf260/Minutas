@@ -33,9 +33,8 @@ export function usePendingActivities() {
   useEffect(() => {
     if (!db || !currentWorkspace) return;
 
-    const query = db.configs.find({
+    const query = db.pending_activities.find({
       selector: {
-        type: 'pending_activity' as any,
         workspace_id: currentWorkspace,
       },
     });
@@ -43,14 +42,16 @@ export function usePendingActivities() {
     const sub = query.$.subscribe((docs) => {
       const list = docs.map((doc) => {
         const json = doc.toJSON();
-        const data = json.data || {};
         return {
           id: json.id,
-          ...data,
-          status: data.status || (data.completed ? 'completed' : 'pending'),
-          completed: data.completed !== undefined ? !!data.completed : data.status === 'completed',
-          priority: data.priority || 'medium',
-          subtasks: data.subtasks || [],
+          date: json.date,
+          time: json.time,
+          text: json.text,
+          category: json.category,
+          status: json.status,
+          completed: !!json.completed,
+          priority: json.priority || 'medium',
+          subtasks: json.subtasks || [],
         } as PendingActivity;
       });
       setActivities(list);
@@ -73,7 +74,9 @@ export function usePendingActivities() {
     if (!db || !currentWorkspace) throw new Error('Database not initialized');
     const id = DbKeys.pendingActivity(currentWorkspace, crypto.randomUUID());
     
-    const data: Omit<PendingActivity, 'id'> = {
+    await db.pending_activities.upsert({
+      id,
+      workspace_id: currentWorkspace,
       date,
       time,
       text,
@@ -82,13 +85,6 @@ export function usePendingActivities() {
       completed: status === 'completed',
       priority,
       subtasks,
-    };
-
-    await db.configs.upsert({
-      id,
-      workspace_id: currentWorkspace,
-      type: 'pending_activity' as any,
-      data,
     });
     
     logger.info(`Activity added: ${text}`);
@@ -97,15 +93,11 @@ export function usePendingActivities() {
   // Update activity status (Kanban movement)
   const updateActivityStatus = useCallback(async (id: string, newStatus: ActivityStatus) => {
     if (!db) return;
-    const doc = await db.configs.findOne(id).exec();
+    const doc = await db.pending_activities.findOne(id).exec();
     if (doc) {
-      const data = doc.toJSON().data;
       await doc.incrementalPatch({
-        data: {
-          ...data,
-          status: newStatus,
-          completed: newStatus === 'completed',
-        }
+        status: newStatus,
+        completed: newStatus === 'completed',
       });
     }
   }, [db]);
@@ -122,21 +114,17 @@ export function usePendingActivities() {
     subtasks: SubTask[]
   ) => {
     if (!db) return;
-    const doc = await db.configs.findOne(id).exec();
+    const doc = await db.pending_activities.findOne(id).exec();
     if (doc) {
-      const data = doc.toJSON().data;
       await doc.incrementalPatch({
-        data: {
-          ...data,
-          date,
-          time,
-          text,
-          category,
-          status,
-          completed: status === 'completed',
-          priority,
-          subtasks,
-        }
+        date,
+        time,
+        text,
+        category,
+        status,
+        completed: status === 'completed',
+        priority,
+        subtasks,
       });
     }
   }, [db]);
@@ -144,20 +132,17 @@ export function usePendingActivities() {
   // Toggle specific subtask
   const toggleSubtask = useCallback(async (activityId: string, subtaskId: string) => {
     if (!db) return;
-    const doc = await db.configs.findOne(activityId).exec();
+    const doc = await db.pending_activities.findOne(activityId).exec();
     if (doc) {
-      const data = doc.toJSON().data || {};
-      const subtasks = (data.subtasks || []).map((sub: any) => {
+      const json = doc.toJSON();
+      const subtasks = (json.subtasks || []).map((sub: any) => {
         if (sub.id === subtaskId) {
           return { ...sub, completed: !sub.completed };
         }
         return sub;
       });
       await doc.incrementalPatch({
-        data: {
-          ...data,
-          subtasks,
-        }
+        subtasks,
       });
     }
   }, [db]);
@@ -165,28 +150,23 @@ export function usePendingActivities() {
   // Clear all completed activities
   const clearCompletedActivities = useCallback(async () => {
     if (!db || !currentWorkspace) return;
-    const docs = await db.configs.find({
+    const docs = await db.pending_activities.find({
       selector: {
-        type: 'pending_activity' as any,
         workspace_id: currentWorkspace,
+        status: 'completed',
       }
     }).exec();
     
-    const completedDocs = docs.filter(doc => {
-      const data = doc.toJSON().data || {};
-      return data.status === 'completed';
-    });
-
-    for (const doc of completedDocs) {
+    for (const doc of docs) {
       await doc.remove();
     }
-    logger.info(`Cleared ${completedDocs.length} completed activities.`);
+    logger.info(`Cleared ${docs.length} completed activities.`);
   }, [db, currentWorkspace]);
 
   // Delete activity
   const deleteActivity = useCallback(async (id: string) => {
     if (!db) return;
-    const doc = await db.configs.findOne(id).exec();
+    const doc = await db.pending_activities.findOne(id).exec();
     if (doc) {
       await doc.remove();
       logger.info(`Activity deleted: ${id}`);

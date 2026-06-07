@@ -75,6 +75,11 @@ export function createConfigRepository(db: MinutasDatabase | null, workspace_id:
         if (merged.guardPeriod !== undefined) merged.guard_period = merged.guardPeriod;
         if (merged.ordenDelDiaDraft !== undefined) merged.orden_del_dia_draft = merged.ordenDelDiaDraft;
         if (merged.finalReportStatistics !== undefined) merged.final_report_statistics = merged.finalReportStatistics;
+        if (merged.finalReportManualNovedades !== undefined) merged.final_report_manual_novedades = merged.finalReportManualNovedades;
+        if (merged.disabledModules !== undefined) merged.disabled_modules = merged.disabledModules;
+        if (merged.reportaroleIds !== undefined) merged.reportarole_ids = merged.reportaroleIds;
+        if (merged.whatsappDefaultChatIds !== undefined) merged.whatsapp_default_chat_ids = merged.whatsappDefaultChatIds;
+        if (merged.whatsappLocalUrl !== undefined) merged.whatsapp_local_url = merged.whatsappLocalUrl;
 
         // Eliminar versiones viejas
         delete merged.activeGuardId;
@@ -82,6 +87,11 @@ export function createConfigRepository(db: MinutasDatabase | null, workspace_id:
         delete merged.guardPeriod;
         delete merged.ordenDelDiaDraft;
         delete merged.finalReportStatistics;
+        delete merged.finalReportManualNovedades;
+        delete merged.disabledModules;
+        delete merged.reportaroleIds;
+        delete merged.whatsappDefaultChatIds;
+        delete merged.whatsappLocalUrl;
 
         // 4. VERIFICACIÓN DE CAMBIO REAL (Freno al bucle)
         if (stableStringify(currentData) === stableStringify(merged)) {
@@ -343,45 +353,6 @@ export function createConfigRepository(db: MinutasDatabase | null, workspace_id:
       { feature: 'Guards' }
     );
 
-  const watchTemplateConfigs = () =>
-    db.configs.find({
-      selector: { type: 'template_config', workspace_id: ws },
-    }).$;
-
-  const upsertTemplateConfig = async (template_id: string, config: TemplateConfig) =>
-    safeWrite(
-      () =>
-        db.configs.upsert({
-          id: DbKeys.templateConfig(ws, template_id),
-          workspace_id: ws,
-          type: 'template_config',
-          name: template_id,
-          data: config,
-        } as any),
-      { feature: 'Templates' }
-    );
-
-  const removeTemplateConfig = async (template_id: string) => {
-    const doc = await db.configs
-      .findOne(DbKeys.templateConfig(ws, template_id))
-      .exec();
-    if (doc) await doc.remove();
-  };
-
-  const clearAllTemplateConfigs = async () =>
-    silentWrite(
-      async () => {
-        const allDocs = await db.configs
-          .find({ selector: { type: 'template_config', workspace_id: ws } })
-          .exec();
-        await Promise.all(allDocs.map((d: any) => d.remove()));
-      },
-      { feature: 'Templates' }
-    );
-
-  const bulkUpsertTemplateConfigs = async (entries: any[]) =>
-    silentWrite(() => db.configs.bulkUpsert(entries as any), { feature: 'Templates' });
-
   return {
     watchUnits,
     saveUnits,
@@ -408,11 +379,6 @@ export function createConfigRepository(db: MinutasDatabase | null, workspace_id:
     bulkInitGuards,
     saveGuards,
     clearAllGuards,
-    watchTemplateConfigs,
-    upsertTemplateConfig,
-    removeTemplateConfig,
-    clearAllTemplateConfigs,
-    bulkUpsertTemplateConfigs,
     getOrdenDelDia,
     watchOrdenDelDia,
     saveOrdenDelDia,
