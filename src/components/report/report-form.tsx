@@ -239,6 +239,10 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
               photos={photos}
               onChange={handlePhotosChange}
               disabled={disabled}
+              reportTitle={() => {
+                const data = getValues();
+                return String(data.titulo || data.title || resolveTemplateTitle(template.name, data, finalConfig));
+              }}
             />
           )}
 

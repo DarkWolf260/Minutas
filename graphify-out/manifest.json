@@ -20,7 +20,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\ast.json": {
-    "mtime": 1780813395.4344435,
+    "mtime": 1780872438.51183,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -45,7 +45,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\report.json": {
-    "mtime": 1780813395.4334433,
+    "mtime": 1780872438.510831,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\App.tsx": {
-    "mtime": 1780626007.5965254,
-    "ast_hash": "470d2c14e5159bd9246131dfae0bb2e3",
+    "mtime": 1780870913.310746,
+    "ast_hash": "f69e54fcd857aa05a45d3752bd66a47e",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\auth\\admin-route.tsx": {
@@ -295,8 +295,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\report-form.tsx": {
-    "mtime": 1780726489.347792,
-    "ast_hash": "204ef65bebe29da6c55b938d0abde93f",
+    "mtime": 1780871206.6724563,
+    "ast_hash": "1a6ad8c462afd51ba4cf70667fbd1a88",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\report-generator.tsx": {
@@ -305,8 +305,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\report-photos.tsx": {
-    "mtime": 1780431662.963384,
-    "ast_hash": "e96faf88db738b1181dc5be1237e85f9",
+    "mtime": 1780872356.4442108,
+    "ast_hash": "5790452905e36407d0b6512c11ca6840",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\report-preview.tsx": {
@@ -1210,8 +1210,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\types\\index.ts": {
-    "mtime": 1780626072.30292,
-    "ast_hash": "d11a3d172a21384b664d097465450b7b",
+    "mtime": 1780870966.985031,
+    "ast_hash": "0a53fd916f860838c9aeaddd8498caa2",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\types\\semantic.ts": {
@@ -1675,8 +1675,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\vite.config.ts": {
-    "mtime": 1779143580.7458453,
-    "ast_hash": "faf501de49efb7701f98637e157f7eb7",
+    "mtime": 1780870535.6065395,
+    "ast_hash": "570352a81088394f8eed8ad5f19adfc3",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\vitest.config.ts": {
@@ -1832,6 +1832,21 @@
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\scratch\\test-update-workspace-template.js": {
     "mtime": 1780729089.044987,
     "ast_hash": "0eeceec90d9bc8da09799b38cf175991",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\use-offline-upload.ts": {
+    "mtime": 1780871216.7344215,
+    "ast_hash": "99dc473729cfc52e58a34315b69b5836",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\use-precache-images.ts": {
+    "mtime": 1780870528.9577577,
+    "ast_hash": "7014a54a709133e6baa9fe50da55a90c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\offline-photos.ts": {
+    "mtime": 1780870849.400684,
+    "ast_hash": "52966b7e14eec681b22ec7a95629359d",
     "semantic_hash": ""
   }
 }
