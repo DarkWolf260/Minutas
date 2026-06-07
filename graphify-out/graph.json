@@ -12139,7 +12139,7 @@
       "label": "CHANGE_TYPE_CONFIG",
       "file_type": "code",
       "source_file": "src/pages/settings/about/data.ts",
-      "source_location": "L262",
+      "source_location": "L274",
       "id": "about_data_change_type_config",
       "community": 2,
       "norm_label": "change_type_config"
