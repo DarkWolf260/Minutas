@@ -29,6 +29,8 @@ import { ProtectedRoute } from '@/components/auth/protected-route';
 import { useAuth } from '@/hooks/use-auth';
 import { useGlobalConfig, GlobalConfigProvider } from '@/hooks/use-global-config';
 import { useWorkspaceManager } from '@/lib/db/db-context';
+import { usePrecacheImages } from '@/hooks/use-precache-images';
+import { useOfflineUpload } from '@/hooks/use-offline-upload';
 
 // ─── Lazy-load app pages ──────────────────────────────────────────────────────
 
@@ -83,6 +85,12 @@ function AppLayout() {
   const { isApproved, isAdmin, loading: statusLoading } = useUser();
   const { config, loading: configLoading } = useGlobalConfig();
   const { isCloud, currentWorkspace } = useWorkspaceManager();
+  
+  // Pre-download all reports photos for offline availability
+  usePrecacheImages();
+  
+  // Background upload sync for offline captured photos
+  useOfflineUpload();
   
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
   // Si el usuario está autenticado pero no está aprobado, ocultamos la navegación por completo.

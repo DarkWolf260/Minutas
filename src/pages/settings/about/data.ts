@@ -62,9 +62,21 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.8.1';
+export const APP_VERSION = '1.8.2';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.8.2',
+    date: '07/06/2026',
+    changes: [
+      { type: 'nueva', text: 'Actualizaciones PWA Manuales (Prompt Update): Se implementó el flujo de confirmación manual de actualizaciones de la PWA. La app ya no se reinicia automáticamente al haber despliegues, previniendo la pérdida de datos, y se añadió una alerta de inicio con banners interactivos (sonner).' },
+      { type: 'nueva', text: 'Migración Completa de Fotos a Supabase Storage: Las imágenes se guardan directamente en el bucket público de Supabase en lugar de guardarse como cadenas base64 en la base de datos, reduciendo drásticamente el peso de las tablas.' },
+      { type: 'nueva', text: 'Renombrado Automático de Fotos: Antes de la subida, las imágenes se renombran con el formato "AAAA.MM.DD - HH.MM - Nombre del reporte_[index]_[unique].jpg" facilitando la organización en la nube.' },
+      { type: 'nueva', text: 'Soporte de Descarga de Fotos: Añadido un botón de descarga rápida en la galería de fotos del reporte que descarga la imagen con su nombre formateado descriptivo.' },
+      { type: 'nueva', text: 'Visor de Fotos Interactivo con Zoom y Paneo: Se agregó un diálogo de previsualización que soporta zoom táctil/con rueda de mouse, arrastrar para panear e indicador de porcentaje con controles alineados sin desplazamiento.' },
+      { type: 'corrección', text: 'Saneamiento de Base de Datos y Tipos: Eliminadas las propiedades camelCase antiguas de configuraciones duplicadas de la base de datos remota Supabase y RxDB local.' }
+    ],
+  },
   {
     version: '1.8.1',
     date: '31/05/2026',

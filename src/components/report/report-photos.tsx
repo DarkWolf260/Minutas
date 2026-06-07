@@ -1,5 +1,5 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { Camera, Trash2, Plus, Eye, FileImage, Pencil, UploadCloud } from 'lucide-react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { Camera, Trash2, Plus, Eye, FileImage, Pencil, UploadCloud, Download, ZoomIn, ZoomOut, RotateCcw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,11 +12,14 @@ import {
 import type { ReportPhoto } from '@/lib/types';
 import { toast } from 'sonner';
 import { PhotoEditor } from './photo-editor';
+import { supabase } from '@/lib/supabase';
+import { OfflinePhotosDB } from '@/lib/offline-photos';
 
 interface ReportPhotosProps {
   photos: ReportPhoto[];
-  onChange: (photos: ReportPhoto[]) => void;
+  onChange: (newPhotos: ReportPhoto[]) => void;
   disabled?: boolean;
+  reportTitle?: string | (() => string);
 }
 
 // Helper function to compress images using Canvas with high quality preservation
@@ -63,10 +66,81 @@ const compressImage = (file: File, maxWidth = 2048, maxHeight = 2048, quality = 
   });
 };
 
+const base64ToBlob = (base64DataUrl: string): Blob => {
+  const parts = base64DataUrl.split(';base64,');
+  const contentType = parts[0]?.split(':')[1] || 'image/jpeg';
+  const rawBase64 = parts[1] || '';
+  const raw = window.atob(rawBase64);
+  const rawLength = raw.length;
+  const uInt8Array = new Uint8Array(rawLength);
+  for (let i = 0; i < rawLength; ++i) {
+    uInt8Array[i] = raw.charCodeAt(i);
+  }
+  return new Blob([uInt8Array], { type: contentType });
+};
+
+const uploadToSupabase = async (filePath: string, blob: Blob): Promise<string> => {
+  const { data, error } = await supabase.storage
+    .from('activity-images')
+    .upload(filePath, blob, {
+      cacheControl: '3600',
+      upsert: true
+    });
+    
+  if (error) throw error;
+  
+  const { data: { publicUrl } } = supabase.storage
+    .from('activity-images')
+    .getPublicUrl(filePath);
+    
+  return publicUrl;
+};
+
+const generateReportPhotoName = (reportTitle: string, index: number, originalName: string): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  
+  const dateStr = `${year}.${month}.${day}`;
+  const timeStr = `${hours}.${minutes}`;
+  const cleanTitle = (reportTitle || 'Reporte')
+    .replace(/[\\/:*?"<>|#%]/g, '_')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const fileExt = originalName.split('.').pop() || 'jpg';
+  
+  // Unique suffix to avoid duplicate filenames on multiple uploads in same minute
+  const uniqueSuffix = Math.random().toString(36).substring(2, 6);
+  return `${dateStr} - ${timeStr} - ${cleanTitle}_${index + 1}_${uniqueSuffix}.${fileExt}`;
+};
+
+const downloadImage = async (url: string, filename: string) => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(blobUrl);
+  } catch (err) {
+    console.error('Failed to download image:', err);
+    // Fallback: open in new tab
+    window.open(url, '_blank');
+  }
+};
+
 export const ReportPhotos: React.FC<ReportPhotosProps> = ({
   photos = [],
   onChange,
   disabled = false,
+  reportTitle,
 }) => {
   const [selectedPhoto, setSelectedPhoto] = useState<ReportPhoto | null>(null);
   const [editingPhoto, setEditingPhoto] = useState<ReportPhoto | null>(null);
@@ -76,6 +150,61 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
   // Use a counter to handle nested drag enter/leave events correctly
   const dragCounterRef = useRef(0);
 
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const viewerRef = useRef<HTMLDivElement>(null);
+
+  // Reset zoom and panning when selectedPhoto changes, and set up wheel listener
+  useEffect(() => {
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+
+    const handleWheelEvent = (e: WheelEvent) => {
+      e.preventDefault();
+      const zoomFactor = 0.2;
+      const direction = e.deltaY < 0 ? 1 : -1;
+      
+      setScale(s => {
+        const newScale = Math.min(4, Math.max(1, s + direction * zoomFactor));
+        if (newScale === 1) {
+          setPosition({ x: 0, y: 0 });
+        }
+        return newScale;
+      });
+    };
+
+    viewer.addEventListener('wheel', handleWheelEvent, { passive: false });
+    return () => {
+      viewer.removeEventListener('wheel', handleWheelEvent);
+    };
+  }, [selectedPhoto]);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (scale <= 1) return; // Only pan when zoomed in
+    setIsDraggingImage(true);
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDraggingImage) return;
+    const newX = e.clientX - dragStart.x;
+    const newY = e.clientY - dragStart.y;
+    setPosition({ x: newX, y: newY });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (isDraggingImage) {
+      setIsDraggingImage(false);
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+  };
+
   const processFiles = useCallback(async (files: File[]) => {
     if (files.length === 0) return;
 
@@ -83,6 +212,8 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
     const loadingToast = toast.loading('Procesando y comprimiendo imágenes...');
     const newPhotos: ReportPhoto[] = [...photos];
     let added = 0;
+    
+    const resolvedTitle = typeof reportTitle === 'function' ? reportTitle() : (reportTitle || 'Reporte');
 
     try {
       for (const file of files) {
@@ -97,12 +228,41 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
           continue;
         }
 
+        const photoId = `photo-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         const compressedBase64 = await compressImage(file);
+        const blob = base64ToBlob(compressedBase64);
+        
+        // Generate the custom filename
+        const customName = generateReportPhotoName(resolvedTitle, newPhotos.length, file.name);
+        
+        let url = '';
+        let pendingUpload = false;
+        let localBlobId = '';
+        
+        if (navigator.onLine) {
+          try {
+            url = await uploadToSupabase(customName, blob);
+          } catch (uploadErr) {
+            console.warn('Online upload failed, falling back to offline storage:', uploadErr);
+            await OfflinePhotosDB.save(photoId, blob);
+            url = URL.createObjectURL(blob);
+            pendingUpload = true;
+            localBlobId = photoId;
+          }
+        } else {
+          await OfflinePhotosDB.save(photoId, blob);
+          url = URL.createObjectURL(blob);
+          pendingUpload = true;
+          localBlobId = photoId;
+        }
+
         newPhotos.push({
-          id: `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          url: compressedBase64,
-          name: file.name,
+          id: photoId,
+          url,
+          name: customName,
           description: '',
+          pending_upload: pendingUpload,
+          local_blob_id: localBlobId,
         });
         added++;
       }
@@ -123,7 +283,7 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
-  }, [photos, onChange]);
+  }, [photos, onChange, reportTitle]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     await processFiles(Array.from(e.target.files || []));
@@ -281,8 +441,20 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
                       size="icon"
                       className="h-9 w-9 rounded-xl shadow-lg bg-background/90 text-foreground hover:bg-background"
                       onClick={() => setSelectedPhoto(photo)}
+                      title="Ver Imagen"
                     >
                       <Eye className="h-4 w-4" />
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon"
+                      className="h-9 w-9 rounded-xl shadow-lg bg-background/90 text-foreground hover:bg-background"
+                      onClick={() => downloadImage(photo.url, photo.name || `${photo.id}.jpg`)}
+                      title="Descargar Imagen"
+                    >
+                      <Download className="h-4 w-4" />
                     </Button>
 
                     {!disabled && (
@@ -305,6 +477,7 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
                         size="icon"
                         className="h-9 w-9 rounded-xl shadow-lg bg-destructive/90 text-destructive-foreground hover:bg-destructive"
                         onClick={() => handleRemovePhoto(photo.id)}
+                        title="Eliminar Imagen"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -368,17 +541,93 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
             <DialogTitle className="text-sm font-semibold truncate pr-8">
               {selectedPhoto?.description || selectedPhoto?.name || 'Vista previa de evidencia'}
             </DialogTitle>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full hover:bg-muted absolute right-4 top-3 z-20"
+              onClick={() => setSelectedPhoto(null)}
+              title="Cerrar"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </DialogHeader>
-          <div className="pt-14 pb-4 px-4 flex flex-col items-center justify-center bg-black/5 min-h-[50vh] max-h-[80vh] overflow-y-auto">
+          <div className="relative pt-14 pb-4 px-4 flex flex-col items-center justify-center bg-black/5 min-h-[55vh] max-h-[80vh] overflow-y-auto">
             {selectedPhoto && (
-              <img
-                src={selectedPhoto.url}
-                alt={selectedPhoto.description || 'Evidencia'}
-                className="max-w-full max-h-[60vh] object-contain rounded-lg shadow-md border border-muted/15"
-              />
+              <div 
+                ref={viewerRef}
+                className="relative overflow-hidden w-full flex-1 flex items-center justify-center min-h-[45vh] max-h-[60vh] cursor-grab active:cursor-grabbing select-none"
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerLeave={handlePointerUp}
+              >
+                <img
+                  src={selectedPhoto.url}
+                  alt={selectedPhoto.description || 'Evidencia'}
+                  style={{
+                    transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+                    transition: isDraggingImage ? 'none' : 'transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                  }}
+                  className="max-w-full max-h-[50vh] object-contain rounded-lg shadow-md border border-muted/15 pointer-events-none"
+                />
+              </div>
             )}
+            
+            {/* Floating Zoom Controls */}
+            <div className="mt-4 flex items-center gap-2 bg-background/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-muted/20 shadow-md">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full hover:bg-muted"
+                onClick={() => {
+                  setScale(s => {
+                    const newScale = Math.max(1, s - 0.5);
+                    if (newScale === 1) setPosition({ x: 0, y: 0 });
+                    return newScale;
+                  });
+                }}
+                disabled={scale <= 1}
+                title="Alejar Zoom"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <span className="text-[10px] font-bold min-w-[32px] text-center select-none text-muted-foreground">
+                {Math.round(scale * 100)}%
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full hover:bg-muted"
+                onClick={() => setScale(s => Math.min(4, s + 0.5))}
+                disabled={scale >= 4}
+                title="Acercar Zoom"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={`h-8 w-8 rounded-full hover:bg-muted text-primary transition-all duration-200 ${
+                  scale > 1 || position.x !== 0 || position.y !== 0
+                    ? 'opacity-100 scale-100 pointer-events-auto'
+                    : 'opacity-0 scale-75 pointer-events-none'
+                }`}
+                onClick={() => {
+                  setScale(1);
+                  setPosition({ x: 0, y: 0 });
+                }}
+                title="Restablecer vista"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            </div>
+
             {selectedPhoto?.description && (
-              <p className="mt-4 text-sm font-medium text-center text-foreground/90 max-w-xl bg-card border border-muted/20 rounded-xl px-4 py-2 shadow-sm">
+              <p className="mt-4 text-xs font-medium text-center text-foreground/90 max-w-xl bg-card border border-muted/20 rounded-xl px-4 py-2 shadow-sm">
                 {selectedPhoto.description}
               </p>
             )}
@@ -393,8 +642,46 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
           onClose={() => setEditingPhoto(null)}
           photoUrl={editingPhoto.url}
           photoName={editingPhoto.name}
-          onSave={(updatedUrl) => {
-            onChange(photos.map((p) => (p.id === editingPhoto.id ? { ...p, url: updatedUrl } : p)));
+          onSave={async (updatedUrl) => {
+            const photoId = editingPhoto.id;
+            const blob = base64ToBlob(updatedUrl);
+            
+            let url = updatedUrl;
+            let pendingUpload = false;
+            let localBlobId = '';
+            
+            const loadingToast = toast.loading('Guardando imagen editada...');
+            
+            try {
+              if (navigator.onLine) {
+                try {
+                  url = await uploadToSupabase(editingPhoto.name || `${photoId}.jpg`, blob);
+                } catch (uploadErr) {
+                  console.warn('Failed to upload edited photo, storing locally:', uploadErr);
+                  await OfflinePhotosDB.save(photoId, blob);
+                  url = URL.createObjectURL(blob);
+                  pendingUpload = true;
+                  localBlobId = photoId;
+                }
+              } else {
+                await OfflinePhotosDB.save(photoId, blob);
+                url = URL.createObjectURL(blob);
+                pendingUpload = true;
+                localBlobId = photoId;
+              }
+              
+              onChange(photos.map((p) => 
+                p.id === photoId 
+                  ? { ...p, url, pending_upload: pendingUpload, local_blob_id: localBlobId } 
+                  : p
+              ));
+              toast.success('Imagen editada guardada.', { id: loadingToast });
+            } catch (err) {
+              console.error(err);
+              toast.error('Error al guardar la imagen editada.', { id: loadingToast });
+            } finally {
+              setEditingPhoto(null);
+            }
           }}
         />
       )}

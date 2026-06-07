@@ -109,6 +109,8 @@ export interface ReportPhoto {
   url: string; // Base64 data URI o URL pública de Supabase
   name?: string;
   description?: string;
+  pending_upload?: boolean;
+  local_blob_id?: string;
 }
 
 export interface Report {
@@ -127,6 +129,7 @@ export interface Report {
     fields: Record<string, any>;
   }>;
   photos?: ReportPhoto[];
+  modified?: string | null;
 }
 
 export interface GuardReport {

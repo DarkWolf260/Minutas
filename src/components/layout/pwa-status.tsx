@@ -5,6 +5,7 @@ import { RefreshCw, Download, MonitorSmartphone } from 'lucide-react';
 import { usePwa } from '@/components/providers/pwa-provider';
 import { Button } from '@/components/ui/button';
 import { SETUP_DONE_KEY, tryGet } from '@/hooks/use-setup';
+import { toast } from 'sonner';
 
 export function PWAStatus() {
     const {
@@ -13,6 +14,7 @@ export function PWAStatus() {
         needRefresh,
         setNeedRefresh,
         updateServiceWorker,
+        checkForUpdates,
     } = usePwa();
 
     const [isMounted, setIsMounted] = useState(false);
@@ -35,8 +37,33 @@ export function PWAStatus() {
 
         window.addEventListener('beforeinstallprompt', handler);
 
-        return () => window.removeEventListener('beforeinstallprompt', handler);
-    }, []);
+        // Check for updates automatically in the background on startup (after 6 seconds)
+        const updateCheckTimeout = setTimeout(() => {
+            if (navigator.onLine) {
+                checkForUpdates().catch((err) => console.error('PWA background update check failed:', err));
+            }
+        }, 6000);
+
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handler);
+            clearTimeout(updateCheckTimeout);
+        };
+    }, [checkForUpdates]);
+
+    // Show a sticky toast notification when a new version is available
+    useEffect(() => {
+        if (needRefresh) {
+            toast.info('Actualización disponible', {
+                description: 'Hay una nueva versión de la aplicación. Haz clic en actualizar para aplicar los cambios.',
+                action: {
+                    label: 'Actualizar',
+                    onClick: () => updateServiceWorker(true),
+                },
+                duration: Infinity, // keep open
+                id: 'pwa-update-toast', // avoid duplicates
+            });
+        }
+    }, [needRefresh, updateServiceWorker]);
 
     if (!isMounted || isSetup) return null;
 

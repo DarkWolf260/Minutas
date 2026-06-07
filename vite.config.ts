@@ -14,7 +14,7 @@ export default defineConfig({
       },
     }),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['icons/icon-192x192.png', 'icons/icon-512x512.png', 'screenshots/desktop.png', 'screenshots/mobile.png'],
       manifestFilename: 'manifest.json',
       manifest: {
@@ -71,6 +71,20 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,png}'],
         navigateFallback: 'index.html',
         runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/dcsmijbstwndaorigqyb\.supabase\.co\/storage\/v1\/object\/public\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'supabase-storage-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
