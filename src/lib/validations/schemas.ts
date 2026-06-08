@@ -50,7 +50,7 @@ export type ValidatedStaffMember = z.infer<typeof StaffMemberSchema>;
  */
 export const TemplateSchema = z.object({
     id: z.string().min(1, 'ID es requerido'),
-    workspace_id: z.string().min(1, 'Workspace ID es requerido'),
+    workspace_id: z.string().min(1, 'Workspace ID es requerido').nullable().optional(),
     name: z.string().min(1, 'Nombre de plantilla es requerido').max(200, 'Nombre muy largo'),
     content: z.string().min(1, 'Contenido de plantilla es requerido'),
     type: z.enum(['normal', 'relevante'], {

@@ -252,7 +252,11 @@ export function useTemplates() {
       }
 
       const templateRepo = createTemplateRepository(db, currentWorkspace, isCloud);
-      await templateRepo.add({ ...validatedTemplate, is_active: errors.length === 0 });
+      await templateRepo.add({
+        ...validatedTemplate,
+        workspace_id: validatedTemplate.workspace_id ?? null,
+        is_active: errors.length === 0,
+      });
     } catch (error) {
       logger.error('Error adding template', error);
       toast.error(getUserFriendlyErrorMessage(error));
@@ -281,7 +285,10 @@ export function useTemplates() {
         workspace_id: isCloud ? null : currentWorkspace,
       });
       const repo = createTemplateRepository(db, currentWorkspace, isCloud);
-      await repo.update(validatedTemplate);
+      await repo.update({
+        ...validatedTemplate,
+        workspace_id: validatedTemplate.workspace_id ?? null,
+      });
       logger.info('Template updated', { id: validatedTemplate.id, workspace_id: validatedTemplate.workspace_id });
       return validatedTemplate.id;
     } catch (error) {
