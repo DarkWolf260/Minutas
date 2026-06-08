@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 export function useUploadTemplate() {
   const [isUploading, setIsUploading] = useState(false);
 
-  const uploadTemplate = async (template: Template, description?: string) => {
+  const uploadTemplate = async (template: Template) => {
     setIsUploading(true);
     try {
       // Basic validation
@@ -22,7 +22,6 @@ export function useUploadTemplate() {
               id: template.id,
               name: template.name,
               content: template.content,
-              description: description || `Plantilla para reportes de ${template.name}`,
               type: 'normal',
               workspace_id: null, // Global templates
               statistics_category: template.statistics_category,

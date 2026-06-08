@@ -141,7 +141,7 @@ async function startCollectionReplication(
         const allowedColumns: Record<string, string[]> = {
           personnel: ['id', 'workspace_id', 'personnel_id', 'name', 'cedula', 'rank', 'cargo', 'titulo', 'role_id', 'status', 'department', 'sex', 'specialties', 'order', '_deleted'],
           reports: ['id', 'workspace_id', 'template_id', 'title', 'timestamp', 'content', 'is_relevant', 'status', 'form_data', 'sections', 'photos', '_deleted'],
-          templates: ['id', 'workspace_id', 'name', 'content', 'description', 'type', 'is_active', 'statistics_category', 'statistics_sub_categories', 'statistics_rules', '_deleted'],
+          templates: ['id', 'workspace_id', 'name', 'content', 'type', 'is_active', 'statistics_category', 'statistics_sub_categories', 'statistics_rules', '_deleted'],
           lookups: ['id', 'workspace_id', 'type', 'name', 'data', '_deleted'],
           configs: ['id', 'workspace_id', 'type', 'name', 'data', '_deleted'],
           history: ['id', 'workspace_id', 'type', 'date', 'personnel_id', 'data', '_deleted'],
