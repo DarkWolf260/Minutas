@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/custom/date-picker';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { createReportRepository } from '@/lib/repositories';
-import { useActiveGuard } from '@/hooks/use-active-guard';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { calcularEstadisticasDia, formatearEstadisticasDia } from '@/lib/estadisticas-utils';
 import { findValueInform_data, getReportDateTime } from '@/lib/report-sorter';
@@ -31,7 +30,6 @@ interface EstadisticasFieldProps {
 export const EstadisticasField = ({ id, name, value, onChange, disabled, className }: EstadisticasFieldProps) => {
     const db = useDatabase();
     const { currentWorkspace, isCloud } = useWorkspaceManager();
-    const { activeGuard } = useActiveGuard();
     const { definitions } = useFieldDefinitions();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,15 +69,8 @@ export const EstadisticasField = ({ id, name, value, onChange, disabled, classNa
             const allReports = await repo.findAll();
 
             // Filter reports
-            const currentGuardId = activeGuard?.id;
             const reportesFinalizados = allReports.filter((report) => {
                 if (report.status !== 'Finalizado') return false;
-                if (currentGuardId) {
-                    const reportGuard = findValueInform_data(report.form_data, 'Guardia');
-                    if (reportGuard && String(reportGuard).trim().toUpperCase() !== String(currentGuardId).trim().toUpperCase()) {
-                        return false;
-                    }
-                }
 
                 // Filter by date & time range if provided
                 if (startDateStr || endDateStr) {
