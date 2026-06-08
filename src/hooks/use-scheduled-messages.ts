@@ -3,6 +3,7 @@ import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { useSettings } from '@/hooks/use-settings';
 import { DbKeys } from '@/lib/repositories/keys';
 import { logger } from '@/lib/logger';
+import { OfflinePhotosDB } from '@/lib/offline-photos';
 
 export interface ScheduledMessage {
   id: string;
@@ -24,6 +25,57 @@ let lastCheckedUrl = '';
 // Previene que múltiples instancias del hook (ej: report-viewer + viewer-header)
 // ejecuten el sync worker simultáneamente, evitando pushes duplicados del mismo mensaje.
 let isSyncing = false;
+
+async function convertPhotoToBase64(photoId: string, url: string, localBlobId?: string): Promise<string> {
+  // 1. Try to load from OfflinePhotosDB first
+  try {
+    let blob: Blob | null = null;
+    if (localBlobId) {
+      blob = await OfflinePhotosDB.get(localBlobId);
+    }
+    if (!blob) {
+      blob = await OfflinePhotosDB.get(photoId);
+    }
+    
+    if (blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+  } catch (dbErr) {
+    console.warn('Failed to load blob from OfflinePhotosDB:', dbErr);
+  }
+
+  // 2. Fallback to fetching URL if it is a blob URL of the same origin
+  if (url && url.startsWith('blob:')) {
+    let isSameOrigin = false;
+    try {
+      const urlObj = new URL(url.replace('blob:', ''));
+      isSameOrigin = urlObj.origin === window.location.origin;
+    } catch (e) {}
+
+    if (isSameOrigin) {
+      try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (fetchErr) {
+        console.warn('Failed to fetch blob URL:', fetchErr);
+      }
+    }
+  }
+
+  // 3. Keep http public URLs as is so the bot can download them
+  return url;
+}
 
 export function useScheduledMessages() {
   const db = useDatabase();
@@ -73,7 +125,7 @@ export function useScheduledMessages() {
       message: string, 
       scheduledTime: Date, 
       title: string, 
-      media?: { url: string; name?: string; description?: string }[]
+      media?: { id?: string; local_blob_id?: string; url: string; name?: string; description?: string }[]
     ) => {
       if (!db || !currentWorkspace) throw new Error('Database not initialized');
 
@@ -85,6 +137,21 @@ export function useScheduledMessages() {
       
       const isoTime = scheduledTime.toISOString();
 
+      // Convert any local blob: URLs to base64 before sending to the bot
+      const processedMedia = media
+        ? await Promise.all(
+            media.map(async (item) => {
+              try {
+                const base64Url = await convertPhotoToBase64(item.id || '', item.url, item.local_blob_id);
+                return { ...item, url: base64Url };
+              } catch (err) {
+                console.error('Failed to convert blob URL to base64:', err);
+                return item;
+              }
+            })
+          )
+        : [];
+
       await db.scheduled_messages.upsert({
         id,
         workspace_id: currentWorkspace,
@@ -93,7 +160,7 @@ export function useScheduledMessages() {
         title,
         scheduledTime: isoTime,
         status: 'pending',
-        media: media || [],
+        media: processedMedia,
       });
 
       // Enviar al backend Node para que lo programe en segundo plano
@@ -107,7 +174,7 @@ export function useScheduledMessages() {
             message, 
             scheduledTime: isoTime, 
             title,
-            media
+            media: processedMedia
           }),
         });
       } catch (error) {

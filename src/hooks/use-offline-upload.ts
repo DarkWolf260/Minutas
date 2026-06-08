@@ -7,6 +7,15 @@ import { supabase } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
 import { toast } from 'sonner';
 
+function sanitizeFilename(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics/accents
+    .replace(/[^a-zA-Z0-9.\-_]/g, '_') // Replace non-safe URL chars with underscore
+    .replace(/__+/g, '_') // Collapse multiple underscores
+    .replace(/^_+|_+$/g, ''); // Trim leading/trailing underscores
+}
+
 /**
  * Background hook that monitors local RxDB reports.
  * When online, it uploads any photos marked as `pending_upload` to Supabase Storage,
@@ -31,7 +40,11 @@ export function useOfflineUpload() {
         const photos = report.photos || [];
         
         // Find photos that need to be uploaded
-        const pendingPhotos = photos.filter(p => p.pending_upload && p.local_blob_id);
+        // Either they have pending_upload = true, or their URL is still a blob URL (self-healing)
+        const pendingPhotos = photos.filter(p => 
+          (p.pending_upload && p.local_blob_id) || 
+          (p.url && p.url.startsWith('blob:'))
+        );
         if (pendingPhotos.length === 0) continue;
 
         let updatedPhotos = [...photos];
@@ -45,21 +58,29 @@ export function useOfflineUpload() {
           uploadingRef.current.add(photoId);
 
           try {
-            const blob = await OfflinePhotosDB.get(photo.local_blob_id!);
+            let blob: Blob | null = null;
+
+            // 1. Try to load from OfflinePhotosDB
+            if (photo.local_blob_id) {
+              blob = await OfflinePhotosDB.get(photo.local_blob_id);
+            }
             if (!blob) {
-              // File is missing from IndexedDB, mark as not pending to avoid infinite retry loops
-              updatedPhotos = updatedPhotos.map(p => 
-                p.id === photoId ? { ...p, pending_upload: false } : p
-              );
-              hasChanges = true;
+              blob = await OfflinePhotosDB.get(photoId);
+            }
+
+
+
+            if (!blob) {
+              // We don't have the binary data on this device.
+              // Just skip and let the original device handle it when it logs in.
               uploadingRef.current.delete(photoId);
               continue;
             }
 
-            logger.info(`Uploading offline cached photo to Supabase Storage: ${photoId}`);
+            logger.info(`Uploading photo to Supabase Storage (Self-healing/Sync): ${photoId}`);
             
-            // Upload to Supabase Storage using the custom filename
-            const filePath = photo.name || `${photoId}.jpg`;
+            // Upload to Supabase Storage using the custom filename (sanitized)
+            const filePath = sanitizeFilename(photo.name || `${photoId}.jpg`);
             
             const { data, error } = await supabase.storage
               .from('activity-images')
@@ -83,12 +104,16 @@ export function useOfflineUpload() {
             );
             hasChanges = true;
 
-            // Delete the file from local IndexedDB
-            await OfflinePhotosDB.delete(photo.local_blob_id!);
-            logger.info(`Offline cached photo uploaded and cleaned up: ${photoId}`);
+            // Delete the file from local IndexedDB if it was there
+            if (photo.local_blob_id) {
+              await OfflinePhotosDB.delete(photo.local_blob_id);
+            }
+            await OfflinePhotosDB.delete(photoId);
+            
+            logger.info(`Photo uploaded and cleaned up: ${photoId}`);
             toast.success(`Imagen "${photo.name || 'Evidencia'}" sincronizada en la nube.`);
           } catch (err) {
-            logger.error(`Failed to upload offline cached photo: ${photoId}`, err);
+            logger.error(`Failed to upload photo: ${photoId}`, err);
           } finally {
             uploadingRef.current.delete(photoId);
           }

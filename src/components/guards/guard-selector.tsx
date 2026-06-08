@@ -195,9 +195,10 @@ export function NoGuardBanner({
   const { isAdmin } = useAdmin();
   const { config: globalConfig } = useGlobalConfig();
 
-  const disabled_modules = isAdmin 
-    ? (globalConfig.disabled_modules_admins || []) 
-    : (settings.disabled_modules || []);
+  const disabled_modules = [
+    ...(settings.disabled_modules || []),
+    ...(isAdmin ? (globalConfig.disabled_modules_admins || []) : [])
+  ];
   const ordenDelDiaDisabled = disabled_modules.includes('orden-del-dia');
 
   const handleOpen = () => {

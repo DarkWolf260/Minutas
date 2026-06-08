@@ -116,9 +116,10 @@ export function useReporteFinalGenerator({
       return;
     }
 
-    const disabled_modules = isAdmin 
-      ? (globalConfig.disabled_modules_admins || []) 
-      : (settings.disabled_modules || []);
+    const disabled_modules = [
+      ...(settings.disabled_modules || []),
+      ...(isAdmin ? (globalConfig.disabled_modules_admins || []) : [])
+    ];
     const ordenDelDiaDeshabilitado = disabled_modules.includes('orden-del-dia');
     const borrador = !ordenDelDiaDeshabilitado 
       ? ((cloudDraft && cloudDraft.guard_id === settings.active_guard_id) ? cloudDraft : (settings.orden_del_dia_draft || settings.ordenDelDiaDraft))

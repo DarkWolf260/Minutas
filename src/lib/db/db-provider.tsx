@@ -86,7 +86,7 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
   const [isSwitching, setIsSwitching] = useState(false);
   const replicationRef = React.useRef<any>(null);
 
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const { fetchCloudWorkspaces } = useCloudWorkspaces();
   
   const isCloud = cloudWorkspaces.some(ws => ws.id === currentWorkspace);
@@ -144,6 +144,7 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
 
   // Clean up only cloud workspaces from IndexedDB when logging out, keeping offline workspaces completely intact
   useEffect(() => {
+    if (loading) return; // Wait until authentication state is loaded to prevent false positive wipes on app start
     if (!isAuthenticated) {
       // Retrieve cloud workspaces from both memory Ref and localStorage (handles expired sessions on app load)
       let cloudIds: string[] = [];

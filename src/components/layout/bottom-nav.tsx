@@ -30,9 +30,10 @@ export function BottomNav() {
   const { isAdmin } = useAdmin();
   const { config: globalConfig } = useGlobalConfig();
 
-  const disabled_modules = isAdmin 
-    ? (globalConfig.disabled_modules_admins || []) 
-    : (settings.disabled_modules || []);
+  const disabled_modules = [
+    ...(settings.disabled_modules || []),
+    ...(isAdmin ? (globalConfig.disabled_modules_admins || []) : [])
+  ];
   const navItems = ALL_NAV_ITEMS.filter((item) => !disabled_modules.includes(item.moduleId));
 
   return (
