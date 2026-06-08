@@ -37,9 +37,9 @@ export function useSyncTemplates() {
       // 2. Upsert templates locally
       if (cloudTemplates) {
         for (const t of cloudTemplates) {
-          // Destructure to only get what RxDB expects (Now including description)
+          // Destructure to only get what RxDB expects
           const { 
-            id, name, content, type, is_active, description, workspace_id,
+            id, name, content, type, is_active, workspace_id,
             statistics_category, statistics_rules, statistics_sub_categories 
           } = t;
           
@@ -61,7 +61,6 @@ export function useSyncTemplates() {
             id,
             name,
             content,
-            description,
             type: type || 'normal',
             is_active: is_active !== undefined ? is_active : true,
             workspace_id: workspace_id || null, // Keep NULL if global

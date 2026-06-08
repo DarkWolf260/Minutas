@@ -76,14 +76,13 @@ export const reportsSchema = {
 
 export const templatesSchema = {
     title: 'templates schema',
-    version: 2,
+    version: 3,
     primaryKey: 'id',
     type: 'object',
     properties: {
         id: { type: 'string', maxLength: 100 },
         workspace_id: { type: ['string', 'null'], maxLength: 50 },
         name: { type: 'string' },
-        description: { type: ['string', 'null'] },
         content: { type: 'string' },
         type: { type: 'string' },
         is_active: { type: 'boolean' },

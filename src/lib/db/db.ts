@@ -372,6 +372,10 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
             // disabled_sub_categories_on_apoyo) are optional/nullable — no
             // data transformation needed; pass existing documents through.
             return oldDoc;
+          },
+          3: function (oldDoc: any) {
+            delete oldDoc.description;
+            return oldDoc;
           }
         }
       },
