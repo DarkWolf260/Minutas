@@ -65,9 +65,10 @@ export function SideNav() {
   const { config: globalConfig } = useGlobalConfig();
   const { workspaces, currentWorkspace, switchWorkspace } = useWorkspaceManager();
 
-  const disabled_modules = isAdmin 
-    ? (globalConfig.disabled_modules_admins || []) 
-    : (settings.disabled_modules || []);
+  const disabled_modules = [
+    ...(settings.disabled_modules || []),
+    ...(isAdmin ? (globalConfig.disabled_modules_admins || []) : [])
+  ];
   const navItems = ALL_NAV_ITEMS.filter((item) => !disabled_modules.includes(item.moduleId));
 
   // Dynamic name logic: Use Analista de CEMUPRAD if a guard is active

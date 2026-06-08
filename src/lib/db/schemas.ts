@@ -31,7 +31,7 @@ export const personnelSchema = {
 
 export const reportsSchema = {
     title: 'reports schema',
-    version: 2,
+    version: 3,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -63,7 +63,9 @@ export const reportsSchema = {
                     id: { type: 'string' },
                     url: { type: 'string' },
                     name: { type: 'string' },
-                    description: { type: 'string' }
+                    description: { type: 'string' },
+                    pending_upload: { type: 'boolean' },
+                    local_blob_id: { type: 'string' }
                 }
             }
         },

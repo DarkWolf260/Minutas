@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { DbKeys } from '@/lib/repositories/keys';
 import { logger } from '@/lib/logger';
+import { OfflinePhotosDB } from '@/lib/offline-photos';
 
 export interface WhatsAppChat {
   id: string;
@@ -48,6 +49,57 @@ const listeners = new Set<(state: BotState) => void>();
 function updateBotState(updates: Partial<BotState>) {
   botState = { ...botState, ...updates };
   listeners.forEach(listener => listener(botState));
+}
+
+async function convertPhotoToBase64(photoId: string, url: string, localBlobId?: string): Promise<string> {
+  // 1. Try to load from OfflinePhotosDB first
+  try {
+    let blob: Blob | null = null;
+    if (localBlobId) {
+      blob = await OfflinePhotosDB.get(localBlobId);
+    }
+    if (!blob) {
+      blob = await OfflinePhotosDB.get(photoId);
+    }
+    
+    if (blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+  } catch (dbErr) {
+    console.warn('Failed to load blob from OfflinePhotosDB:', dbErr);
+  }
+
+  // 2. Fallback to fetching URL if it is a blob URL of the same origin
+  if (url && url.startsWith('blob:')) {
+    let isSameOrigin = false;
+    try {
+      const urlObj = new URL(url.replace('blob:', ''));
+      isSameOrigin = urlObj.origin === window.location.origin;
+    } catch (e) {}
+
+    if (isSameOrigin) {
+      try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (fetchErr) {
+        console.warn('Failed to fetch blob URL:', fetchErr);
+      }
+    }
+  }
+
+  // 3. Keep http public URLs as is so the bot can download them
+  return url;
 }
 
 export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
@@ -166,25 +218,73 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
   }, [localUrl, db, currentWorkspace, isCloud]);
 
   const loadChats = useCallback(async () => {
-    if (!state.status.isReady) return;
+    const isBotReady = state.status.isReady || (state.isCloudActive && isCloud);
+    if (!isBotReady) return;
     
-    try {
-      const response = await fetch(`${localUrl}/api/whatsapp/chats`);
-      if (response.ok) {
-        const data = await response.json();
-        updateBotState({ chats: data });
+    // If the local bot is running on this device, fetch from it
+    if (state.isAvailable && state.status.isReady) {
+      try {
+        const response = await fetch(`${localUrl}/api/whatsapp/chats`);
+        if (response.ok) {
+          const data = await response.json();
+          updateBotState({ chats: data });
+          
+          // Sync to database if we are in cloud workspace
+          if (db && currentWorkspace && isCloud) {
+            const chatsId = `whatsapp_chats:${currentWorkspace}`;
+            await db.configs.upsert({
+              id: chatsId,
+              workspace_id: currentWorkspace,
+              type: 'whatsapp_bot_status',
+              data: {
+                chats: data,
+                updatedAt: new Date().toISOString()
+              }
+            }).catch(err => console.error('Error syncing chats list to DB:', err));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching chats from local bot:', error);
       }
-    } catch (error) {
-      console.error('Error fetching chats:', error);
+    } else if (isCloud && db && currentWorkspace) {
+      // If we are a remote client, load from the database
+      try {
+        const chatsId = `whatsapp_chats:${currentWorkspace}`;
+        const doc = await db.configs.findOne(chatsId).exec();
+        if (doc) {
+          const item = doc.toJSON();
+          const data = item.data || {};
+          if (Array.isArray(data.chats)) {
+            updateBotState({ chats: data.chats });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading chats from database:', error);
+      }
     }
-  }, [localUrl, state.status.isReady]);
+  }, [localUrl, state.isAvailable, state.status.isReady, state.isCloudActive, isCloud, db, currentWorkspace]);
 
-  const sendMessage = useCallback(async (chatId: string, message: string, media?: { url: string; name?: string; description?: string }[]) => {
+  const sendMessage = useCallback(async (chatId: string, message: string, media?: { id?: string; local_blob_id?: string; url: string; name?: string; description?: string }[]) => {
     try {
+      // Convert any local blob: URLs to base64 before sending to the bot
+      const processedMedia = media
+        ? await Promise.all(
+            media.map(async (item) => {
+              try {
+                const base64Url = await convertPhotoToBase64(item.id || '', item.url, item.local_blob_id);
+                return { ...item, url: base64Url };
+              } catch (err) {
+                console.error('Failed to convert blob URL to base64:', err);
+                return item;
+              }
+            })
+          )
+        : undefined;
+
       const response = await fetch(`${localUrl}/api/whatsapp/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatId, message, media }),
+        body: JSON.stringify({ chatId, message, media: processedMedia }),
       });
       
       if (!response.ok) {
@@ -199,6 +299,21 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       if (isCloud && isCloudActiveRef.current && db && currentWorkspace) {
         logger.info('Direct send failed/unreachable. Scheduling immediately via Cloud fallback...');
         const id = DbKeys.scheduledMessage(currentWorkspace, crypto.randomUUID());
+        
+        // Ensure processedMedia is prepared (in case conversion failed, or wasn't run)
+        const finalMedia = media
+          ? await Promise.all(
+              media.map(async (item) => {
+                try {
+                  const base64Url = await convertPhotoToBase64(item.id || '', item.url, item.local_blob_id);
+                  return { ...item, url: base64Url };
+                } catch (err) {
+                  return item;
+                }
+              })
+            )
+          : [];
+
         await db.scheduled_messages.upsert({
           id,
           workspace_id: currentWorkspace,
@@ -207,7 +322,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
           title: 'Envío Instantáneo (Nube)',
           scheduledTime: new Date().toISOString(),
           status: 'pending',
-          media: media || [],
+          media: finalMedia,
         });
         return { success: true, viaCloud: true };
       }
@@ -290,6 +405,29 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
 
     return () => clearInterval(timer);
   }, [db, currentWorkspace, isCloud, localUrl]);
+
+  // 3. Suscribirse a los chats del bot en la base de datos (para clientes en la nube)
+  useEffect(() => {
+    if (!db || !currentWorkspace || !isCloud) return;
+
+    const chatsId = `whatsapp_chats:${currentWorkspace}`;
+    const sub = db.configs.findOne(chatsId).$.subscribe((doc) => {
+      // Solo aplicar la actualización de la base de datos si NO tenemos el bot local corriendo
+      if (!botState.isAvailable || !botState.status.isReady) {
+        if (doc) {
+          const item = doc.toJSON();
+          const data = item.data || {};
+          if (Array.isArray(data.chats)) {
+            updateBotState({ chats: data.chats });
+          }
+        } else {
+          updateBotState({ chats: [] });
+        }
+      }
+    });
+
+    return () => sub.unsubscribe();
+  }, [db, currentWorkspace, isCloud]);
 
   // Load chats when ready locally
   useEffect(() => {

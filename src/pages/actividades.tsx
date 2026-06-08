@@ -254,12 +254,18 @@ function ActividadesPageContent() {
     return false;
   }, [getFirstTimeHour]);
 
-  const handleRegisterNovelty = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Texto de actividad copiado. Abriendo novedades...');
-    setTimeout(() => {
-      navigate('/?new=true');
-    }, 800);
+  const handleRegisterNovelty = (activity: PendingActivity) => {
+    // Store activity data for the novedades page to auto-select template & pre-fill
+    try {
+      sessionStorage.setItem('minutas_activity_to_report', JSON.stringify({
+        time: activity.time,
+        text: activity.text,
+        category: activity.category,
+        date: activity.date,
+      }));
+    } catch (e) { /* ignore */ }
+    toast.success('Abriendo novedades con la actividad...');
+    navigate('/?from_activity=true');
   };
 
   const openAddDialog = (status: ActivityStatus = 'pending') => {
@@ -1119,9 +1125,9 @@ function ActividadesPageContent() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() => handleRegisterNovelty(act.text)}
+                                      onClick={() => handleRegisterNovelty(act)}
                                       className="h-7 w-7 text-primary hover:bg-primary/10 rounded-lg"
-                                      title="Copiar y Reportar en Novedades"
+                                      title="Crear Reporte de esta Actividad"
                                     >
                                       <CheckSquare className="h-3.5 w-3.5" />
                                     </Button>
@@ -1284,9 +1290,9 @@ function ActividadesPageContent() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() => handleRegisterNovelty(act.text)}
+                                      onClick={() => handleRegisterNovelty(act)}
                                       className="h-7 w-7 text-primary hover:bg-primary/10 rounded-lg"
-                                      title="Copiar y Reportar"
+                                      title="Crear Reporte de esta Actividad"
                                     >
                                       <CheckSquare className="h-3.5 w-3.5" />
                                     </Button>

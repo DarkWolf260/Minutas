@@ -106,15 +106,21 @@ const generateReportPhotoName = (reportTitle: string, index: number, originalNam
   
   const dateStr = `${year}.${month}.${day}`;
   const timeStr = `${hours}.${minutes}`;
+  
   const cleanTitle = (reportTitle || 'Reporte')
-    .replace(/[\\/:*?"<>|#%]/g, '_')
-    .replace(/\s+/g, ' ')
-    .trim();
-  const fileExt = originalName.split('.').pop() || 'jpg';
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics/accents
+    .replace(/[^a-zA-Z0-9]/g, '_') // Replace non-alphanumeric with underscore
+    .replace(/__+/g, '_') // Collapse multiple underscores
+    .replace(/^_+|_+$/g, ''); // Trim leading/trailing underscores
+  
+  const fileExt = (originalName.split('.').pop() || 'jpg')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
   
   // Unique suffix to avoid duplicate filenames on multiple uploads in same minute
   const uniqueSuffix = Math.random().toString(36).substring(2, 6);
-  return `${dateStr} - ${timeStr} - ${cleanTitle}_${index + 1}_${uniqueSuffix}.${fileExt}`;
+  return `${dateStr}_-_${timeStr}_-_${cleanTitle}_${index + 1}_${uniqueSuffix}.${fileExt}`;
 };
 
 const downloadImage = async (url: string, filename: string) => {
@@ -135,6 +141,113 @@ const downloadImage = async (url: string, filename: string) => {
     window.open(url, '_blank');
   }
 };
+
+interface ReportImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+  photoId: string;
+  localBlobId?: string;
+}
+
+const ReportImage: React.FC<ReportImageProps> = ({ photoId, localBlobId, src, alt, className, ...props }) => {
+  const [resolvedSrc, setResolvedSrc] = useState<string | undefined>(undefined);
+  const [isPendingUpload, setIsPendingUpload] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (src && src.startsWith('http')) {
+      setResolvedSrc(src);
+      setIsPendingUpload(false);
+      return;
+    }
+
+    let active = true;
+    let objectUrlToCleanup: string | null = null;
+
+    async function loadOffline() {
+      try {
+        let blob: Blob | null = null;
+        if (localBlobId) {
+          blob = await OfflinePhotosDB.get(localBlobId);
+        }
+        if (!blob) {
+          blob = await OfflinePhotosDB.get(photoId);
+        }
+
+        if (blob && active) {
+          const freshBlobUrl = URL.createObjectURL(blob);
+          objectUrlToCleanup = freshBlobUrl;
+          setResolvedSrc(freshBlobUrl);
+          setIsPendingUpload(false);
+        } else if (active) {
+          setIsPendingUpload(true);
+        }
+      } catch (err) {
+        console.warn('Failed to load offline image for ID:', photoId, err);
+        if (active) setIsPendingUpload(true);
+      }
+    }
+
+    if (src && src.startsWith('blob:')) {
+      let isSameOrigin = false;
+      try {
+        const urlObj = new URL(src.replace('blob:', ''));
+        isSameOrigin = urlObj.origin === window.location.origin;
+      } catch (e) {}
+
+      if (!isSameOrigin) {
+        loadOffline();
+      } else {
+        fetch(src)
+          .then((res) => {
+            if (!res.ok) throw new Error();
+            if (active) {
+              setResolvedSrc(src);
+              setIsPendingUpload(false);
+            }
+          })
+          .catch(() => {
+            loadOffline();
+          });
+      }
+    } else if (!src) {
+      loadOffline();
+    } else {
+      if (active) {
+        setResolvedSrc(src);
+        setIsPendingUpload(false);
+      }
+    }
+
+    return () => {
+      active = false;
+      if (objectUrlToCleanup) {
+        URL.revokeObjectURL(objectUrlToCleanup);
+      }
+    };
+  }, [src, photoId, localBlobId]);
+
+  const fallbackSrc = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+  return (
+    <div className="relative w-full h-full flex items-center justify-center">
+      <img
+        src={resolvedSrc || fallbackSrc}
+        alt={alt}
+        className={className}
+        {...props}
+      />
+      {isPendingUpload && (
+        <div className="absolute inset-0 bg-black/75 backdrop-blur-[1px] flex flex-col items-center justify-center text-white p-3 text-center">
+          <UploadCloud className="h-5 w-5 mb-1.5 text-primary animate-pulse" />
+          <span className="text-[11px] font-semibold">Esperando sincronización</span>
+          <span className="text-[9px] text-zinc-400 mt-0.5 max-w-[150px]">
+            La imagen original aún no se ha subido a la nube.
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 
 export const ReportPhotos: React.FC<ReportPhotosProps> = ({
   photos = [],
@@ -427,7 +540,9 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
               >
                 {/* Image Preview */}
                 <div className="relative aspect-video min-h-[160px] w-full bg-muted/30 overflow-hidden flex items-center justify-center">
-                  <img
+                  <ReportImage
+                    photoId={photo.id}
+                    localBlobId={photo.local_blob_id}
                     src={photo.url}
                     alt={photo.name || 'Evidencia'}
                     className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500 ease-out"
@@ -562,7 +677,9 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
                 onPointerUp={handlePointerUp}
                 onPointerLeave={handlePointerUp}
               >
-                <img
+                <ReportImage
+                  photoId={selectedPhoto.id}
+                  localBlobId={selectedPhoto.local_blob_id}
                   src={selectedPhoto.url}
                   alt={selectedPhoto.description || 'Evidencia'}
                   style={{

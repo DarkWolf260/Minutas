@@ -8,7 +8,7 @@ import { useActiveGuard } from '@/hooks/use-active-guard';
 import { sortReports, findValueInform_data } from '@/lib/report-sorter';
 import { normalizeString } from '@/lib/utils';
 import { useOrdenDelDiaDraft } from '@/hooks/use-orden-del-dia-draft';
-import { renderFinalReport } from '@/lib/template-parser';
+import { renderFinalReport, parseTemplate } from '@/lib/template-parser';
 import { useFieldDefinitions } from '@/hooks/use-field-definitions';
 import { useRoles } from '@/hooks/use-roles';
 import { useAdmin } from '@/hooks/use-admin';
@@ -162,6 +162,110 @@ export function useNovedades() {
     }
   }, [estaMontado, searchParams, creandoReporte]);
 
+  // Handle auto-report creation from Kanban activities
+  useEffect(() => {
+    if (!estaMontado) return;
+    if (searchParams.get('from_activity') !== 'true') return;
+    if (creandoReporte) return;
+    if (templates.length === 0) return;
+
+    // Clean URL param immediately
+    const sp = new URLSearchParams(searchParams);
+    sp.delete('from_activity');
+    const newUrl = sp.toString() ? `${window.location.pathname}?${sp.toString()}` : window.location.pathname;
+    window.history.replaceState({}, '', newUrl);
+
+    // Read activity data from sessionStorage
+    let activityData: { time?: string; text?: string; category?: string; date?: string } | null = null;
+    try {
+      const raw = sessionStorage.getItem('minutas_activity_to_report');
+      if (raw) {
+        activityData = JSON.parse(raw);
+        sessionStorage.removeItem('minutas_activity_to_report');
+      }
+    } catch (e) { /* ignore */ }
+
+    if (!activityData || !activityData.category) return;
+
+    // Map kanban category → template name keyword for fuzzy matching
+    const CATEGORY_TO_TEMPLATE_KEYWORD: Record<string, string> = {
+      'guardia': 'guardia preventiva',
+      'apoyo': 'guardia preventiva', // fallback to guardia preventiva
+      'inspeccion': 'inspecci', // partial match for "Inspección"
+      'reunion': 'capacitaci', // partial match for "Capacitación"
+      'monitoreo': 'guardia preventiva', // fallback
+      'otro': 'guardia preventiva', // fallback
+    };
+
+    const keyword = CATEGORY_TO_TEMPLATE_KEYWORD[activityData.category] || 'guardia preventiva';
+
+    // Find matching template (case-insensitive, partial match)
+    const matchedTemplate = templates.find((t: Template) =>
+      t.name.toLowerCase().includes(keyword.toLowerCase())
+    );
+
+    if (!matchedTemplate) {
+      // Fallback: open the template selector dialog
+      window.dispatchEvent(new CustomEvent('open-novedades-create'));
+      return;
+    }
+
+    // Parse the template to get default values for textarea fields
+    const parsed = parseTemplate(matchedTemplate.content);
+    const initialFormData: Record<string, any> = {};
+
+    // Compute time-of-day period from the activity's time (HH:MM format or "HH:MM HLV")
+    const getTimePeriodText = (timeStr: string): string => {
+      const digits = timeStr.replace(/\D/g, '').slice(0, 4);
+      const hour = digits.length >= 2 ? parseInt(digits.slice(0, 2), 10) : -1;
+      if (hour >= 6 && hour < 12) return 'mañana';
+      if (hour >= 12 && hour < 18) return 'tarde';
+      if (hour >= 18 || (hour >= 0 && hour < 6)) return 'noche';
+      return 'mañana'; // fallback
+    };
+
+    const timePeriod = activityData.time ? getTimePeriodText(activityData.time) : 'mañana';
+    const activityName = activityData.text || '';
+
+    // Pre-fill the Hora field
+    if (activityData.time && parsed.fieldNames.has('Hora')) {
+      initialFormData['Hora'] = activityData.time;
+    }
+
+    // Pre-fill the Fecha field
+    if (activityData.date && parsed.fieldNames.has('Fecha')) {
+      // Convert YYYY-MM-DD to DD/MM/YYYY
+      const [y, m, d] = activityData.date.split('-');
+      if (y && m && d) {
+        initialFormData['Fecha'] = `${d}/${m}/${y}`;
+      }
+    }
+
+    // Find textarea fields with default values containing "-------" and replace them
+    parsed.defaultValues.forEach((defaultVal, fieldId) => {
+      const fieldType = parsed.fieldTypes.get(fieldId);
+      if (fieldType === 'textarea' && defaultVal.includes('-------')) {
+        // Replace dashes: first occurrence with time period, second with activity name
+        let replacementCount = 0;
+        const filledText = defaultVal.replace(/-{3,}/g, (_match) => {
+          replacementCount++;
+          if (replacementCount === 1) return timePeriod;
+          if (replacementCount === 2) return activityName;
+          return _match; // leave additional dashes untouched
+        });
+        initialFormData[fieldId] = filledText;
+      }
+    });
+
+    // Set initial data and start creating the report
+    generatorRef.current?.cancel();
+    setDatosBorradorInicial(Object.keys(initialFormData).length > 0 ? initialFormData : undefined);
+    setIdReporteSeleccionado(null);
+    setCreandoReporte(matchedTemplate);
+    setEsDialogOpenCrear(false);
+    navigate('/');
+  }, [estaMontado, searchParams, creandoReporte, templates, navigate]);
+
   useEffect(() => {
     if (!estaMontado) return;
     if (creandoReporte || estaNavegandoAtras) return;
@@ -258,9 +362,10 @@ export function useNovedades() {
         settingsMap
       );
 
-      const disabled_modules = isAdmin 
-        ? (globalConfig.disabled_modules_admins || []) 
-        : (settings.disabled_modules || []);
+      const disabled_modules = [
+        ...(settings.disabled_modules || []),
+        ...(isAdmin ? (globalConfig.disabled_modules_admins || []) : [])
+      ];
       const ordenDelDiaDeshabilitado = disabled_modules.includes('orden-del-dia');
       const borrador = !ordenDelDiaDeshabilitado 
         ? ((cloudDraft && cloudDraft.guard_id === settings.active_guard_id) ? cloudDraft : settings.orden_del_dia_draft)
