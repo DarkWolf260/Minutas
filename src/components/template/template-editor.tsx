@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import type {
   Template,
   TemplateConfig,
@@ -54,7 +54,7 @@ const OPERATORS = [
 ] as const;
 
 // Searchable Category Selector Component
-const SearchableCategorySelector = ({
+const SearchableCategorySelector = React.memo(({
   value,
   onSelect,
   placeholder = "Selecciona una categoría...",
@@ -180,7 +180,372 @@ const SearchableCategorySelector = ({
       </PopoverContent>
     </Popover>
   );
+});
+SearchableCategorySelector.displayName = 'SearchableCategorySelector';
+
+// Debounced Input Component to prevent keystroke lag in complex forms
+const DebouncedInput = ({
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  className,
+  ...props
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
+  [key: string]: any;
+}) => {
+  const [localValue, setLocalValue] = useState(value || '');
+
+  useEffect(() => {
+    setLocalValue(value || '');
+  }, [value]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localValue !== (value || '')) {
+        onChange(localValue);
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [localValue, onChange, value]);
+
+  return (
+    <Input
+      className={className}
+      placeholder={placeholder}
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      disabled={disabled}
+      {...props}
+    />
+  );
 };
+
+// Memoized Rule Editor Card Component to prevent unnecessary re-renders of other cards
+const RuleEditorCard = React.memo(({
+  id,
+  rule,
+  index,
+  availableFields,
+  localConfig,
+  isReadOnly,
+  onUpdate,
+  onDuplicate,
+  onDelete,
+}: {
+  id: string;
+  rule: StatisticRule;
+  index: number;
+  availableFields: string[];
+  localConfig: TemplateConfig;
+  isReadOnly: boolean;
+  onUpdate: (id: string, updatedFields: Partial<StatisticRule>) => void;
+  onDuplicate: (id: string) => void;
+  onDelete: (id: string) => void;
+}) => {
+  const renderConditionInputs = (cond: any, onChange: (field: string, val: any) => void) => {
+    const hasValue = cond.operator !== 'empty' && cond.operator !== 'not_empty' && cond.operator !== 'extract_value';
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 w-full items-center">
+        <div className={cn("sm:col-span-6", !hasValue && "sm:col-span-8")}>
+          <Select
+            value={cond.field_id || ''}
+            onValueChange={(val) => onChange('field_id', val)}
+            disabled={isReadOnly}
+          >
+            <SelectTrigger className="h-8 text-[10px] w-full bg-background border-muted shadow-sm rounded-lg" disabled={isReadOnly}>
+              <SelectValue placeholder="Campo" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableFields.map((f) => (
+                <SelectItem key={f} value={f} className="text-xs">
+                  {f}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className={cn("sm:col-span-3", !hasValue && "sm:col-span-4")}>
+          <Select
+            value={cond.operator || '='}
+            onValueChange={(val) => onChange('operator', val)}
+            disabled={isReadOnly}
+          >
+            <SelectTrigger className="h-8 w-full text-[10px] px-2 bg-background border-muted shadow-sm font-mono rounded-lg" disabled={isReadOnly}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {OPERATORS.map(op => (
+                <SelectItem key={op.value} value={op.value} className="text-xs">{op.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {hasValue && (
+          <div className="sm:col-span-3">
+            {(() => {
+              const fieldConfig = cond.field_id ? localConfig.fields[cond.field_id] : undefined;
+              const isDropdown = fieldConfig?.type === 'dropdown';
+              const options = fieldConfig?.snippet_options || [];
+
+              if (isDropdown && options.length > 0) {
+                return (
+                  <Select
+                    value={cond.condition || ''}
+                    onValueChange={(val) => onChange('condition', val)}
+                    disabled={isReadOnly}
+                  >
+                    <SelectTrigger className="h-8 text-[10px] w-full bg-background border-muted shadow-sm rounded-lg" disabled={isReadOnly}>
+                      <SelectValue placeholder="Valor..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {options.map((opt: any) => (
+                        <SelectItem key={opt.id} value={opt.label || ''} className="text-xs">
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                );
+              }
+
+              return (
+                <DebouncedInput
+                  className="h-8 text-[10px] w-full bg-background border-muted shadow-sm rounded-lg"
+                  placeholder="Valor..."
+                  value={cond.condition || ''}
+                  onChange={(val) => onChange('condition', val)}
+                  disabled={isReadOnly}
+                />
+              );
+            })()}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const currentCategories = rule.categories || (rule.category ? [rule.category] : []);
+
+  return (
+    <div
+      className="bg-muted/20 p-5 rounded-2xl border border-muted/50 hover:border-primary/30 transition-all duration-300 space-y-4 animate-in fade-in duration-200"
+    >
+      {/* SI (Condición) Header */}
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded">SI (Condición)</span>
+      </div>
+
+      {/* Primary Condition */}
+      {renderConditionInputs(rule, (field, val) => onUpdate(id, { [field]: val }))}
+
+      {/* Secondary Conditions */}
+      {((rule.conditions && rule.conditions.length > 0) || (rule.or_conditions && rule.or_conditions.length > 0)) && (
+        <div className="space-y-3 pl-3 border-l-2 border-primary/20">
+          {rule.conditions?.map((secCond, cIdx) => (
+            <div key={cIdx} className="flex flex-col gap-2 w-full pt-1 relative">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1.5 tracking-wider">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div> Y (AND)
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 rounded-md"
+                  onClick={() => {
+                    const newSecConditions = [...(rule.conditions || [])];
+                    newSecConditions.splice(cIdx, 1);
+                    onUpdate(id, { conditions: newSecConditions });
+                  }}
+                  disabled={isReadOnly}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+              {renderConditionInputs(secCond, (field, val) => {
+                const newSecConditions = [...(rule.conditions || [])];
+                newSecConditions[cIdx] = { ...newSecConditions[cIdx], [field]: val };
+                onUpdate(id, { conditions: newSecConditions });
+              })}
+            </div>
+          ))}
+
+          {rule.or_conditions?.map((orCond, cIdx) => (
+            <div key={cIdx} className="flex flex-col gap-2 w-full pt-1 relative">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black text-amber-500 uppercase flex items-center gap-1.5 tracking-wider">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div> O (OR)
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 rounded-md"
+                  onClick={() => {
+                    const newOrConditions = [...(rule.or_conditions || [])];
+                    newOrConditions.splice(cIdx, 1);
+                    onUpdate(id, { or_conditions: newOrConditions });
+                  }}
+                  disabled={isReadOnly}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+              {renderConditionInputs(orCond, (field, val) => {
+                const newOrConditions = [...(rule.or_conditions || [])];
+                newOrConditions[cIdx] = { ...newOrConditions[cIdx], [field]: val };
+                onUpdate(id, { or_conditions: newOrConditions });
+              })}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Adding conditions buttons */}
+      <div className="flex gap-3 pt-1">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 flex-1 text-[9px] font-bold uppercase tracking-wider border-dashed border-muted-foreground/30 text-muted-foreground hover:text-foreground rounded-lg"
+          onClick={() => {
+            const newSecConditions = [...(rule.conditions || []), { field_id: '', operator: '=' as const, condition: '' }];
+            onUpdate(id, { conditions: newSecConditions as any });
+          }}
+          disabled={isReadOnly}
+        >
+          <Plus className="h-3 w-3 mr-1" /> Añadir Y (AND)
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 flex-1 text-[9px] font-bold uppercase tracking-wider border-dashed border-muted-foreground/30 text-muted-foreground hover:text-foreground rounded-lg"
+          onClick={() => {
+            const newOrConditions = [...(rule.or_conditions || []), { field_id: '', operator: '=' as const, condition: '' }];
+            onUpdate(id, { or_conditions: newOrConditions as any });
+          }}
+          disabled={isReadOnly}
+        >
+          <Plus className="h-3 w-3 mr-1" /> Añadir O (OR)
+        </Button>
+      </div>
+
+      <div className="h-px bg-muted/60 my-2" />
+
+      {/* ENTONCES (Asignar) Header & Action Block */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex-1 min-w-0 space-y-3">
+          <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded inline-block">ENTONCES (Asignar)</span>
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
+            {currentCategories.length === 0 ? (
+              <span className="text-[10px] text-muted-foreground/60 italic py-1">Sin categorías estadísticas asignadas</span>
+            ) : (
+              <div className="flex flex-wrap gap-1.5 max-w-full">
+                {currentCategories.map((cat) => (
+                  <Badge
+                    key={cat}
+                    variant="secondary"
+                    className="bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold py-0.5 pl-2.5 pr-1.5 rounded-lg flex items-center gap-0.5 shrink-0 max-w-full"
+                  >
+                    <span className="truncate max-w-[200px]">{cat}</span>
+                    <button
+                      type="button"
+                      onClick={isReadOnly ? undefined : () => {
+                        const newCats = currentCategories.filter(c => c !== cat);
+                        onUpdate(id, { categories: newCats });
+                      }}
+                      disabled={isReadOnly}
+                      className="p-0.5 rounded-full hover:bg-emerald-500/20 text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-300 transition-colors shrink-0 disabled:opacity-50"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            <SearchableCategorySelector
+              value="none"
+              onSelect={(val) => {
+                if (val !== 'none') {
+                  if (!currentCategories.includes(val)) {
+                    const newCats = [...currentCategories, val];
+                    onUpdate(id, { categories: newCats });
+                  }
+                }
+              }}
+              disabled={isReadOnly}
+              className="h-8 py-1 px-3 bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/20 text-emerald-500 font-bold rounded-lg text-xs w-auto shrink-0"
+              placeholder="Añadir..."
+              customTrigger={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-[10px] bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/20 text-emerald-500 font-black uppercase tracking-wider rounded-lg shrink-0 animate-pulse"
+                  disabled={isReadOnly}
+                >
+                  <Plus className="h-3 w-3 mr-1" /> Añadir
+                </Button>
+              }
+            />
+          </div>
+        </div>
+
+        {/* Duplicate / Delete Buttons */}
+        <div className="flex items-center justify-end gap-2 shrink-0 sm:pt-6">
+          <div className="flex items-center gap-2 bg-muted/20 px-3 py-1 rounded-xl border border-muted/50 h-8 mr-2 shadow-sm animate-in fade-in duration-300">
+            <Label htmlFor={`disable-rule-apoyo-${index}`} className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/75 cursor-pointer">
+              Omitir por Apoyo
+            </Label>
+            <Switch
+              id={`disable-rule-apoyo-${index}`}
+              checked={!!rule.disable_on_apoyo}
+              onCheckedChange={(checked) => {
+                onUpdate(id, { disable_on_apoyo: checked });
+              }}
+              disabled={isReadOnly}
+              className="scale-75 data-[state=checked]:bg-orange-500"
+            />
+          </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-[10px] gap-1.5 text-muted-foreground hover:text-foreground hover:bg-background/80 px-2.5 rounded-lg border border-muted/50 shadow-sm"
+            onClick={() => onDuplicate(id)}
+            disabled={isReadOnly}
+          >
+            <Copy className="h-3.5 w-3.5" /> Duplicar
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-[10px] gap-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 px-2.5 rounded-lg border border-destructive/20 shadow-sm"
+            onClick={() => onDelete(id)}
+            disabled={isReadOnly}
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Eliminar
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.rule === nextProps.rule &&
+    prevProps.index === nextProps.index &&
+    prevProps.isReadOnly === nextProps.isReadOnly &&
+    prevProps.availableFields === nextProps.availableFields &&
+    prevProps.localConfig === nextProps.localConfig
+  );
+});
+RuleEditorCard.displayName = 'RuleEditorCard';
 
 export function TemplateEditor({
   template,
@@ -205,6 +570,68 @@ export function TemplateEditor({
       statistics_rules: rules.filter(r => r.field_id !== '__meta__')
     };
   });
+
+  const [localRules, setLocalRules] = useState<{ id: string; rule: StatisticRule }[]>(() => {
+    const rules = template.statistics_rules || [];
+    return rules
+      .filter(r => r.field_id !== '__meta__')
+      .map((r, i) => ({
+        id: `rule-${template.id}-${i}-${Math.random()}`,
+        rule: r,
+      }));
+  });
+
+  const [visibleCount, setVisibleCount] = useState(10);
+
+  // Reset visible rules count when the template changes
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [template.id]);
+
+  // Progressive batch rendering of rule cards to prevent initial loading lag
+  useEffect(() => {
+    if (visibleCount < localRules.length) {
+      const diff = localRules.length - visibleCount;
+      // If we manually added/duplicated a single rule, show it instantly
+      if (diff === 1) {
+        setVisibleCount(localRules.length);
+        return;
+      }
+      const timer = setTimeout(() => {
+        setVisibleCount(prev => Math.min(prev + 15, localRules.length));
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [localRules.length, visibleCount]);
+
+  const handleUpdateRule = useCallback((id: string, updatedFields: Partial<StatisticRule>) => {
+    setLocalRules(prev => prev.map(item => item.id === id ? { ...item, rule: { ...item.rule, ...updatedFields } } : item));
+    setHasChanges(true);
+  }, []);
+
+  const handleDeleteRule = useCallback((id: string) => {
+    setLocalRules(prev => prev.filter(item => item.id !== id));
+    setHasChanges(true);
+  }, []);
+
+  const handleDuplicateRule = useCallback((id: string) => {
+    setLocalRules(prev => {
+      const idx = prev.findIndex(item => item.id === id);
+      if (idx === -1) return prev;
+      const targetItem = prev[idx];
+      if (!targetItem) return prev;
+      const ruleToDuplicate = JSON.parse(JSON.stringify(targetItem.rule));
+      const newRules = [...prev];
+      newRules.splice(idx + 1, 0, {
+        id: `rule-dup-${Date.now()}-${Math.random()}`,
+        rule: ruleToDuplicate
+      });
+      return newRules;
+    });
+    setHasChanges(true);
+    toast.success("Regla duplicada");
+  }, []);
+
   const [localConfig, setLocalConfig] = useState<TemplateConfig>(() => {
     return JSON.parse(JSON.stringify({ ...initialConfig, ...(config || {}) }));
   });
@@ -266,12 +693,34 @@ export function TemplateEditor({
       statistics_rules: rules.filter(r => r.field_id !== '__meta__')
     });
 
+    const filteredRules = rules.filter(r => r.field_id !== '__meta__');
+    setLocalRules(prev => {
+      const firstItem = prev[0];
+      const isSameTemplate = !!firstItem && firstItem.id.startsWith(`rule-${template.id}-`);
+      return filteredRules.map((r, i) => {
+        const existing = prev[i];
+        if (isSameTemplate && existing) {
+          return { id: existing.id, rule: r };
+        }
+        return {
+          id: `rule-${template.id}-${i}-${Math.random()}`,
+          rule: r
+        };
+      });
+    });
+
     setHasChanges(false);
   }, [template]);
 
   const handleSaveChanges = () => {
     if (isReadOnly) return;
-    const cleanRules = localTemplate.statistics_rules || [];
+    
+    // Map rules to clean up the legacy and redundant single 'category' property
+    const cleanRules = localRules.map(({ rule }) => {
+      const { category, ...rest } = rule;
+      return rest;
+    });
+
     const metaRule = {
       field_id: '__meta__',
       disable_main_stat_on_apoyo: localTemplate.disable_main_stat_on_apoyo,
@@ -350,11 +799,11 @@ export function TemplateEditor({
                 <Label htmlFor="template-name" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
                   Nombre de la Plantilla
                 </Label>
-                <Input
+                <DebouncedInput
                   id="template-name"
                   value={localTemplate.name}
-                  onChange={(e) => {
-                    setLocalTemplate((p) => ({ ...p, name: e.target.value }));
+                  onChange={(val) => {
+                    setLocalTemplate((p) => ({ ...p, name: val }));
                     setHasChanges(true);
                   }}
                   disabled={isReadOnly}
@@ -489,9 +938,9 @@ export function TemplateEditor({
                 <div className="flex items-center gap-2">
                   <BarChart3 className="h-4 w-4 text-primary" />
                   <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Reglas Condicionales</h3>
-                  {(localTemplate.statistics_rules || []).length > 0 && (
+                  {localRules.length > 0 && (
                     <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[9px] h-4 px-1.5">
-                      {(localTemplate.statistics_rules || []).length}
+                      {localRules.length}
                     </Badge>
                   )}
                 </div>
@@ -500,8 +949,13 @@ export function TemplateEditor({
                   variant="outline"
                   className="h-7 text-[10px] bg-background shrink-0 px-2 rounded-lg"
                   onClick={() => {
-                    const newRules = [...(localTemplate.statistics_rules || []), { field_id: '', operator: '=', condition: '', category: '', categories: [] }];
-                    setLocalTemplate(p => ({ ...p, statistics_rules: newRules as StatisticRule[] }));
+                    setLocalRules(p => [
+                      ...p,
+                      {
+                        id: `rule-new-${Date.now()}-${Math.random()}`,
+                        rule: { field_id: '', operator: '=', condition: '', categories: [] }
+                      }
+                    ]);
                     setHasChanges(true);
                   }}
                   disabled={isReadOnly}
@@ -513,341 +967,27 @@ export function TemplateEditor({
               {/* Scrollable Rules Container */}
               <ScrollArea className="flex-1 md:min-h-0 pr-4 -mr-4">
                 <div className="space-y-4 pb-6">
-                  {(localTemplate.statistics_rules || []).length === 0 && (
+                  {localRules.length === 0 && (
                     <div className="text-center py-16 border-2 border-dashed rounded-2xl bg-muted/5">
                       <BarChart3 className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/65">Sin reglas automáticas configuradas.</p>
                       <p className="text-xs text-muted-foreground/50 mt-1 max-w-[280px] mx-auto">Configura reglas para mapear palabras clave de los reportes a estadísticas automáticamente.</p>
                     </div>
                   )}
-                  {(() => {
-                    const renderConditionInputs = (cond: any, onChange: (field: string, val: any) => void) => {
-                      const hasValue = cond.operator !== 'empty' && cond.operator !== 'not_empty' && cond.operator !== 'extract_value';
-                      return (
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 w-full items-center">
-                          <div className={cn("sm:col-span-6", !hasValue && "sm:col-span-8")}>
-                            <Select
-                              value={cond.field_id || ''}
-                              onValueChange={(val) => onChange('field_id', val)}
-                              disabled={isReadOnly}
-                            >
-                              <SelectTrigger className="h-8 text-[10px] w-full bg-background border-muted shadow-sm rounded-lg" disabled={isReadOnly}>
-                                <SelectValue placeholder="Campo" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {availableFields.map((f) => (
-                                  <SelectItem key={f} value={f} className="text-xs">
-                                    {f}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className={cn("sm:col-span-3", !hasValue && "sm:col-span-4")}>
-                            <Select
-                              value={cond.operator || '='}
-                              onValueChange={(val) => onChange('operator', val)}
-                              disabled={isReadOnly}
-                            >
-                              <SelectTrigger className="h-8 w-full text-[10px] px-2 bg-background border-muted shadow-sm font-mono rounded-lg" disabled={isReadOnly}>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {OPERATORS.map(op => (
-                                  <SelectItem key={op.value} value={op.value} className="text-xs">{op.label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {hasValue && (
-                            <div className="sm:col-span-3">
-                              {(() => {
-                                const fieldConfig = cond.field_id ? localConfig.fields[cond.field_id] : undefined;
-                                const isDropdown = fieldConfig?.type === 'dropdown';
-                                const options = fieldConfig?.snippet_options || [];
-
-                                if (isDropdown && options.length > 0) {
-                                  return (
-                                    <Select
-                                      value={cond.condition || ''}
-                                      onValueChange={(val) => onChange('condition', val)}
-                                      disabled={isReadOnly}
-                                    >
-                                      <SelectTrigger className="h-8 text-[10px] w-full bg-background border-muted shadow-sm rounded-lg" disabled={isReadOnly}>
-                                        <SelectValue placeholder="Valor..." />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {options.map((opt: any) => (
-                                          <SelectItem key={opt.id} value={opt.label || ''} className="text-xs">
-                                            {opt.label}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  );
-                                }
-
-                                return (
-                                  <Input
-                                    className="h-8 text-[10px] w-full bg-background border-muted shadow-sm rounded-lg"
-                                    placeholder="Valor..."
-                                    value={cond.condition || ''}
-                                    onChange={(e) => onChange('condition', e.target.value)}
-                                    disabled={isReadOnly}
-                                  />
-                                );
-                              })()}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    };
-
-                    return (localTemplate.statistics_rules || []).map((rule, idx) => {
-                      const updateRule = (updatedFields: Partial<StatisticRule>) => {
-                        const newRules = [...(localTemplate.statistics_rules || [])];
-                        newRules[idx] = { ...newRules[idx], ...updatedFields };
-                        setLocalTemplate(p => ({ ...p, statistics_rules: newRules }));
-                        setHasChanges(true);
-                      };
-
-                      return (
-                        <div
-                           key={idx}
-                          className="bg-muted/20 p-5 rounded-2xl border border-muted/50 hover:border-primary/30 transition-all duration-300 space-y-4"
-                        >
-                          {/* SI (Condición) Header */}
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded">SI (Condición)</span>
-                          </div>
-
-                          {/* Primary Condition */}
-                          {renderConditionInputs(rule, (field, val) => updateRule({ [field]: val }))}
-
-                          {/* Secondary Conditions */}
-                          {((rule.conditions && rule.conditions.length > 0) || (rule.or_conditions && rule.or_conditions.length > 0)) && (
-                            <div className="space-y-3 pl-3 border-l-2 border-primary/20">
-                              {rule.conditions?.map((secCond, cIdx) => (
-                                <div key={cIdx} className="flex flex-col gap-2 w-full pt-1 relative">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-[9px] font-black text-muted-foreground uppercase flex items-center gap-1.5 tracking-wider">
-                                      <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div> Y (AND)
-                                    </span>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-5 w-5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 rounded-md"
-                                      onClick={() => {
-                                        const newSecConditions = [...(rule.conditions || [])];
-                                        newSecConditions.splice(cIdx, 1);
-                                        updateRule({ conditions: newSecConditions });
-                                      }}
-                                      disabled={isReadOnly}
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                  {renderConditionInputs(secCond, (field, val) => {
-                                    const newSecConditions = [...(rule.conditions || [])];
-                                    newSecConditions[cIdx] = { ...newSecConditions[cIdx], [field]: val };
-                                    updateRule({ conditions: newSecConditions });
-                                  })}
-                                </div>
-                              ))}
-
-                              {rule.or_conditions?.map((orCond, cIdx) => (
-                                <div key={cIdx} className="flex flex-col gap-2 w-full pt-1 relative">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-[9px] font-black text-amber-500 uppercase flex items-center gap-1.5 tracking-wider">
-                                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div> O (OR)
-                                    </span>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-5 w-5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 rounded-md"
-                                      onClick={() => {
-                                        const newOrConditions = [...(rule.or_conditions || [])];
-                                        newOrConditions.splice(cIdx, 1);
-                                        updateRule({ or_conditions: newOrConditions });
-                                      }}
-                                      disabled={isReadOnly}
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                  {renderConditionInputs(orCond, (field, val) => {
-                                    const newOrConditions = [...(rule.or_conditions || [])];
-                                    newOrConditions[cIdx] = { ...newOrConditions[cIdx], [field]: val };
-                                    updateRule({ or_conditions: newOrConditions });
-                                  })}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* Adding conditions buttons */}
-                          <div className="flex gap-3 pt-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 flex-1 text-[9px] font-bold uppercase tracking-wider border-dashed border-muted-foreground/30 text-muted-foreground hover:text-foreground rounded-lg"
-                              onClick={() => {
-                                const newSecConditions = [...(rule.conditions || []), { field_id: '', operator: '=' as const, condition: '' }];
-                                updateRule({ conditions: newSecConditions as any });
-                              }}
-                              disabled={isReadOnly}
-                            >
-                              <Plus className="h-3 w-3 mr-1" /> Añadir Y (AND)
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 flex-1 text-[9px] font-bold uppercase tracking-wider border-dashed border-muted-foreground/30 text-muted-foreground hover:text-foreground rounded-lg"
-                              onClick={() => {
-                                const newOrConditions = [...(rule.or_conditions || []), { field_id: '', operator: '=' as const, condition: '' }];
-                                updateRule({ or_conditions: newOrConditions as any });
-                              }}
-                              disabled={isReadOnly}
-                            >
-                              <Plus className="h-3 w-3 mr-1" /> Añadir O (OR)
-                            </Button>
-                          </div>
-
-                          <div className="h-px bg-muted/60 my-2" />
-
-                          {/* ENTONCES (Asignar) Header & Action Block */}
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div className="flex-1 min-w-0 space-y-3">
-                              <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded inline-block">ENTONCES (Asignar)</span>
-                              <div className="flex flex-wrap items-center gap-2 min-w-0">
-                                {(() => {
-                                  const currentCategories = rule.categories || (rule.category ? [rule.category] : []);
-                                  return (
-                                    <>
-                                      {currentCategories.length === 0 ? (
-                                        <span className="text-[10px] text-muted-foreground/60 italic py-1">Sin categorías estadísticas asignadas</span>
-                                      ) : (
-                                        <div className="flex flex-wrap gap-1.5 max-w-full">
-                                          {currentCategories.map((cat) => (
-                                            <Badge
-                                              key={cat}
-                                              variant="secondary"
-                                              className="bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold py-0.5 pl-2.5 pr-1.5 rounded-lg flex items-center gap-0.5 shrink-0 max-w-full"
-                                            >
-                                              <span className="truncate max-w-[200px]">{cat}</span>
-                                              <button
-                                                type="button"
-                                                onClick={isReadOnly ? undefined : () => {
-                                                  const newCats = currentCategories.filter(c => c !== cat);
-                                                  const newRules = (localTemplate.statistics_rules || []).map((r, i) =>
-                                                    i === idx ? { ...r, categories: newCats, category: newCats[0] || null } : r
-                                                  );
-                                                  setLocalTemplate(p => ({ ...p, statistics_rules: newRules }));
-                                                  setHasChanges(true);
-                                                }}
-                                                disabled={isReadOnly}
-                                                className="p-0.5 rounded-full hover:bg-emerald-500/20 text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-300 transition-colors shrink-0 disabled:opacity-50"
-                                              >
-                                                <X className="h-3 w-3" />
-                                              </button>
-                                            </Badge>
-                                          ))}
-                                        </div>
-                                      )}
-
-                                      <SearchableCategorySelector
-                                        value="none"
-                                        onSelect={(val) => {
-                                          if (val !== 'none') {
-                                            if (!currentCategories.includes(val)) {
-                                              const newCats = [...currentCategories, val];
-                                              const newRules = (localTemplate.statistics_rules || []).map((r, i) =>
-                                                i === idx ? { ...r, categories: newCats, category: newCats[0] || null } : r
-                                              );
-                                              setLocalTemplate(p => ({ ...p, statistics_rules: newRules }));
-                                              setHasChanges(true);
-                                            }
-                                          }
-                                        }}
-                                        disabled={isReadOnly}
-                                        className="h-8 py-1 px-3 bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/20 text-emerald-500 font-bold rounded-lg text-xs w-auto shrink-0"
-                                        placeholder="Añadir..."
-                                        customTrigger={
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-7 text-[10px] bg-emerald-500/5 hover:bg-emerald-500/10 border-emerald-500/20 text-emerald-500 font-black uppercase tracking-wider rounded-lg shrink-0 animate-pulse"
-                                            disabled={isReadOnly}
-                                          >
-                                            <Plus className="h-3 w-3 mr-1" /> Añadir
-                                          </Button>
-                                        }
-                                      />
-                                    </>
-                                  );
-                                })()}
-                              </div>
-                            </div>
-
-                            {/* Duplicate / Delete Buttons */}
-                            <div className="flex items-center justify-end gap-2 shrink-0 sm:pt-6">
-                              <div className="flex items-center gap-2 bg-muted/20 px-3 py-1 rounded-xl border border-muted/50 h-8 mr-2 shadow-sm animate-in fade-in duration-300">
-                                <Label htmlFor={`disable-rule-apoyo-${idx}`} className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/75 cursor-pointer">
-                                  Omitir por Apoyo
-                                </Label>
-                                <Switch
-                                  id={`disable-rule-apoyo-${idx}`}
-                                  checked={!!rule.disable_on_apoyo}
-                                  onCheckedChange={(checked) => {
-                                    const newRules = (localTemplate.statistics_rules || []).map((r, i) =>
-                                      i === idx ? { ...r, disable_on_apoyo: checked } : r
-                                    );
-                                    setLocalTemplate(p => ({ ...p, statistics_rules: newRules }));
-                                    setHasChanges(true);
-                                  }}
-                                  disabled={isReadOnly}
-                                  className="scale-75 data-[state=checked]:bg-orange-500"
-                                />
-                              </div>
-
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 text-[10px] gap-1.5 text-muted-foreground hover:text-foreground hover:bg-background/80 px-2.5 rounded-lg border border-muted/50 shadow-sm"
-                                onClick={() => {
-                                  const ruleToDuplicate = JSON.parse(JSON.stringify(localTemplate.statistics_rules![idx]));
-                                  const newRules = [...(localTemplate.statistics_rules || [])];
-                                  newRules.splice(idx + 1, 0, ruleToDuplicate);
-                                  setLocalTemplate(p => ({ ...p, statistics_rules: newRules }));
-                                  setHasChanges(true);
-                                  toast.success("Regla duplicada");
-                                }}
-                                disabled={isReadOnly}
-                              >
-                                <Copy className="h-3.5 w-3.5" /> Duplicar
-                              </Button>
-
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 text-[10px] gap-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 px-2.5 rounded-lg border border-destructive/20 shadow-sm"
-                                onClick={() => {
-                                  const newRules = (localTemplate.statistics_rules || []).filter((_, i) => i !== idx);
-                                  setLocalTemplate(p => ({ ...p, statistics_rules: newRules }));
-                                  setHasChanges(true);
-                                }}
-                                disabled={isReadOnly}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" /> Eliminar
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
+                  {localRules.slice(0, visibleCount).map((item, idx) => (
+                    <RuleEditorCard
+                      key={item.id}
+                      id={item.id}
+                      rule={item.rule}
+                      index={idx}
+                      availableFields={availableFields}
+                      localConfig={localConfig}
+                      isReadOnly={isReadOnly}
+                      onUpdate={handleUpdateRule}
+                      onDuplicate={handleDuplicateRule}
+                      onDelete={handleDeleteRule}
+                    />
+                  ))}
                 </div>
               </ScrollArea>
             </div>

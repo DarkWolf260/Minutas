@@ -69,6 +69,18 @@ describe('statistics-utils', () => {
             expect(result).toContain('1.2 LLAMADAS DE EMERGENCIAS');
         });
 
+        it('should return statistics_sub_categories when template has them', () => {
+            const report = createMockReport();
+            const template = createMockTemplate({
+                statistics_category: '1.2 LLAMADAS DE EMERGENCIAS',
+                statistics_sub_categories: ['5.3 EN RESIDENCIA', '5.5 EN VÍA / LUGAR PÚBLICO'],
+            });
+            const result = obtenerCategoriasReporte(report, template);
+            expect(result).toContain('1.2 LLAMADAS DE EMERGENCIAS');
+            expect(result).toContain('5.3 EN RESIDENCIA');
+            expect(result).toContain('5.5 EN VÍA / LUGAR PÚBLICO');
+        });
+
         it('should include both default category and matching rules', () => {
             const report = createMockReport({
                 form_data: { tipo: 'hurto' },

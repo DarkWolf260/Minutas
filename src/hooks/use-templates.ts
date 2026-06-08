@@ -143,6 +143,34 @@ export function useTemplates() {
     return newConfigs;
   }, [isTemplatesLoaded, definitionsLoaded, templates, parsedTemplates, globalDefinitions]);
 
+  // Migrate templates with workspace_id !== null to null in cloud mode
+  useEffect(() => {
+    if (!db || !currentWorkspace || !isCloud) return;
+
+    const migrateTemplates = async () => {
+      try {
+        const templatesToMigrate = await db.templates.find({
+          selector: {
+            workspace_id: { $ne: null }
+          }
+        }).exec();
+
+        if (templatesToMigrate.length > 0) {
+          logger.info(`Migrating ${templatesToMigrate.length} templates in cloud mode to workspace_id: null`);
+          await Promise.all(
+            templatesToMigrate.map(async (doc) => {
+              await doc.patch({ workspace_id: null });
+            })
+          );
+        }
+      } catch (err) {
+        logger.error('Failed to migrate cloud templates', err);
+      }
+    };
+
+    migrateTemplates();
+  }, [db, currentWorkspace, isCloud]);
+
   // Bootstrap initial templates from Cloud ONLY if:
   //   1. No local templates exist yet
   //   2. The user explicitly opted in during onboarding (minutas-template-bootstrap-ok)
@@ -182,9 +210,11 @@ export function useTemplates() {
 
           logger.info('Bootstrapping templates from cloud', { count: data.length });
           
-          // 1. Fetch existing template names in this workspace to avoid duplicates
+          // 1. Fetch existing template names to avoid duplicates
           const existingTemplates = await db.templates.find({
-            selector: { workspace_id: currentWorkspace }
+            selector: isCloud
+              ? { workspace_id: null }
+              : { workspace_id: currentWorkspace }
           }).exec();
           const existingNames = new Set(existingTemplates.map(t => t.name));
 
@@ -192,8 +222,8 @@ export function useTemplates() {
           const newTemplates = data
             .filter(ct => !existingNames.has(ct.name))
             .map(ct => ({
-              id: generateId('template'),
-              workspace_id: currentWorkspace,
+              id: ct.id,
+              workspace_id: isCloud ? null : currentWorkspace,
               name: ct.name,
               content: ct.content,
               type: ct.type || 'normal',
@@ -234,7 +264,7 @@ export function useTemplates() {
     try {
       const validatedTemplate = TemplateSchema.parse({
         ...newTemplate,
-        workspace_id: currentWorkspace,
+        workspace_id: isCloud ? null : currentWorkspace,
       });
 
       const { errors } = parseTemplate(validatedTemplate.content);
@@ -247,12 +277,16 @@ export function useTemplates() {
         logger.info('Template added', {
           id: validatedTemplate.id,
           name: validatedTemplate.name,
-          workspace_id: currentWorkspace,
+          workspace_id: validatedTemplate.workspace_id,
         });
       }
 
       const templateRepo = createTemplateRepository(db, currentWorkspace, isCloud);
-      await templateRepo.add({ ...validatedTemplate, is_active: errors.length === 0 });
+      await templateRepo.add({
+        ...validatedTemplate,
+        workspace_id: validatedTemplate.workspace_id ?? null,
+        is_active: errors.length === 0,
+      });
     } catch (error) {
       logger.error('Error adding template', error);
       toast.error(getUserFriendlyErrorMessage(error));
@@ -281,7 +315,10 @@ export function useTemplates() {
         workspace_id: isCloud ? null : currentWorkspace,
       });
       const repo = createTemplateRepository(db, currentWorkspace, isCloud);
-      await repo.update(validatedTemplate);
+      await repo.update({
+        ...validatedTemplate,
+        workspace_id: validatedTemplate.workspace_id ?? null,
+      });
       logger.info('Template updated', { id: validatedTemplate.id, workspace_id: validatedTemplate.workspace_id });
       return validatedTemplate.id;
     } catch (error) {

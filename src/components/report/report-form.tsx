@@ -129,7 +129,9 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       reportCategories.forEach((cat) => {
         counts[cat] = (counts[cat] || 0) + 1;
       });
-      return Object.entries(counts);
+      return Object.entries(counts).sort((a, b) =>
+        a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: 'base' })
+      );
     }, [reportCategories]);
 
     // Helper: resolves the correct encargado flag prioritizing cloudDraft
