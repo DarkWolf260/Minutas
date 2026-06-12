@@ -102,6 +102,12 @@ export interface AppSettings {
   final_report_guard_id?: string;
   final_report_start_date?: string;
   final_report_end_date?: string;
+  group_consecutive_reports?: boolean;
+  enable_report_numbering?: boolean;
+  report_numbering_type?: 'general' | 'template';
+  group_by_template_type?: boolean;
+  pinned_template_ids?: string[];
+  grouped_template_ids?: string[];
 }
 
 export interface ReportPhoto {
