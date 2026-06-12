@@ -142,46 +142,67 @@ export function AjustesGenerales() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // 1. Save definitions
-      const newDefinitions = { ...definitions };
-      Object.keys(localValues).forEach(key => {
-        if (newDefinitions[key]) {
-          newDefinitions[key] = { ...newDefinitions[key]!, value: localValues[key] || '' };
-        }
-      });
+      const promises: Promise<any>[] = [];
 
-      // 2. Perform all saves
-      const existingRoleNames = new Set(roles.map(r => r.name));
-      const cleanedReportaRoles = localReportaRoles.filter(role => existingRoleNames.has(role));
+      if (!isBlocked) {
+        // 1. Save definitions
+        const newDefinitions = { ...definitions };
+        Object.keys(localValues).forEach(key => {
+          if (newDefinitions[key]) {
+            newDefinitions[key] = { ...newDefinitions[key]!, value: localValues[key] || '' };
+          }
+        });
+        promises.push(saveDefinitions(newDefinitions));
 
-      await Promise.all([
-        saveDefinitions(newDefinitions),
-        saveSettings({ 
-          ...settings, 
-          reportarole_ids: cleanedReportaRoles,
-          group_consecutive_reports: localGroupConsecutive,
-          group_by_template_type: localGroupByTemplateType,
-          grouped_template_ids: localGroupedTemplateIds,
-          enable_report_numbering: localEnableNumbering,
-          report_numbering_type: localNumberingType
-        })
-      ]);
+        // 2. Perform all saves including roles
+        const existingRoleNames = new Set(roles.map(r => r.name));
+        const cleanedReportaRoles = localReportaRoles.filter(role => existingRoleNames.has(role));
+        promises.push(
+          saveSettings({ 
+            ...settings, 
+            reportarole_ids: cleanedReportaRoles,
+            group_consecutive_reports: localGroupConsecutive,
+            group_by_template_type: localGroupByTemplateType,
+            grouped_template_ids: localGroupedTemplateIds,
+            enable_report_numbering: localEnableNumbering,
+            report_numbering_type: localNumberingType
+          })
+        );
+      } else {
+        // Cloud non-admin user: only save visualization settings to prevent RLS/sync errors
+        promises.push(
+          saveSettings({ 
+            ...settings, 
+            group_consecutive_reports: localGroupConsecutive,
+            group_by_template_type: localGroupByTemplateType,
+            grouped_template_ids: localGroupedTemplateIds,
+            enable_report_numbering: localEnableNumbering,
+            report_numbering_type: localNumberingType
+          })
+        );
+      }
+
+      await Promise.all(promises);
 
       // Update refs to prevent sync loops
-      const savedValues: Record<string, string> = {};
-      Object.keys(localValues).forEach(key => {
-        savedValues[key] = localValues[key] || '';
-      });
-      lastSavedValues.current = savedValues;
-      lastSavedReportaRoles.current = cleanedReportaRoles;
+      if (!isBlocked) {
+        const savedValues: Record<string, string> = {};
+        Object.keys(localValues).forEach(key => {
+          savedValues[key] = localValues[key] || '';
+        });
+        lastSavedValues.current = savedValues;
+        const existingRoleNames = new Set(roles.map(r => r.name));
+        const cleanedReportaRoles = localReportaRoles.filter(role => existingRoleNames.has(role));
+        lastSavedReportaRoles.current = cleanedReportaRoles;
+        setLocalReportaRoles(cleanedReportaRoles);
+      }
+      
       lastSavedGroupConsecutive.current = localGroupConsecutive;
       lastSavedGroupByTemplateType.current = localGroupByTemplateType;
       lastSavedGroupedTemplateIds.current = localGroupedTemplateIds;
       lastSavedEnableNumbering.current = localEnableNumbering;
       lastSavedNumberingType.current = localNumberingType;
 
-      // Update local state with cleaned roles
-      setLocalReportaRoles(cleanedReportaRoles);
       toast.success('Configuración guardada correctamente');
     } catch (error) {
       toast.error('Error al guardar la configuración');
@@ -469,7 +490,6 @@ export function AjustesGenerales() {
                       setLocalGroupByTemplateType(false);
                     }
                   }}
-                  disabled={isBlocked}
                 />
               </div>
 
@@ -491,7 +511,6 @@ export function AjustesGenerales() {
                       setLocalGroupConsecutive(false);
                     }
                   }}
-                  disabled={isBlocked}
                 />
               </div>
 
@@ -522,10 +541,9 @@ export function AjustesGenerales() {
                                 setLocalGroupedTemplateIds(prev => [...prev, templateId]);
                               }
                             }}
-                            disabled={isBlocked}
                           >
                             <SelectTrigger className="h-9">
-                              <SelectValue placeholder={isBlocked ? "Bloqueado por Administración" : "Selecciona una plantilla..."} />
+                              <SelectValue placeholder="Selecciona una plantilla..." />
                             </SelectTrigger>
                             <SelectContent className="z-[200]">
                               {availableTemplates.map(template => (
@@ -570,10 +588,8 @@ export function AjustesGenerales() {
                                   size="icon"
                                   className="h-7 w-7 text-destructive hover:bg-destructive/10"
                                   onClick={() => {
-                                    if (isBlocked) return;
                                     setLocalGroupedTemplateIds(prev => prev.filter(id => id !== templateId));
                                   }}
-                                  disabled={isBlocked}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -604,7 +620,6 @@ export function AjustesGenerales() {
                   id="numbering-toggle"
                   checked={localEnableNumbering}
                   onCheckedChange={setLocalEnableNumbering}
-                  disabled={isBlocked}
                 />
               </div>
 
@@ -621,7 +636,6 @@ export function AjustesGenerales() {
                   <Select
                     value={localNumberingType}
                     onValueChange={(val: any) => setLocalNumberingType(val)}
-                    disabled={isBlocked}
                   >
                     <SelectTrigger id="numbering-type" className="w-[200px] bg-background">
                       <SelectValue placeholder="Selecciona..." />
@@ -636,17 +650,15 @@ export function AjustesGenerales() {
             </div>
 
             <div className="flex justify-end pt-2">
-              {!isBlocked && (
-                <Button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="h-9 px-4 shrink-0 shadow-sm font-bold"
-                  title="Guardar Configuración"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
-                </Button>
-              )}
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="h-9 px-4 shrink-0 shadow-sm font-bold"
+                title="Guardar Configuración"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
+              </Button>
             </div>
           </div>
         </ScrollArea>
