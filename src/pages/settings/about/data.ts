@@ -62,9 +62,16 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.8.2';
+export const APP_VERSION = '1.8.5';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.8.5',
+    date: '12/06/2026',
+    changes: [
+      { type: 'nueva', text: 'Agrupación de Plantillas Personalizada.' }
+    ],
+  },
   {
     version: '1.8.2',
     date: '07/06/2026',

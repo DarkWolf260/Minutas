@@ -20,6 +20,7 @@ interface UseReporteFinalGeneratorProps {
   saveSettings: (settings: any) => Promise<void>;
   saveGuardReport: (report: any) => Promise<void>;
   clearAllReports: () => Promise<void>;
+  removeReport: (reportId: string) => Promise<void>;
   templates: any[];
   configs: any;
   configuracionesGlobales: any;
@@ -52,6 +53,7 @@ export function useReporteFinalGenerator({
   saveSettings,
   saveGuardReport,
   clearAllReports,
+  removeReport,
   templates,
   configs,
   configuracionesGlobales,
@@ -275,8 +277,29 @@ export function useReporteFinalGenerator({
       .filter((item) => item.sortDate)
       .sort((a, b) => a.sortDate!.getTime() - b.sortDate!.getTime());
 
+    const templateCounters: Record<string, number> = {};
+    let manualCounter = 0;
+    let generalCounter = 0;
+
     const contenidoReporte = todasNovedadesOrdenadas
       .map((item) => {
+        generalCounter++;
+        let numText = '';
+        if (settings.enable_report_numbering) {
+          if (settings.report_numbering_type === 'template') {
+            if (item.type === 'report') {
+              const r = item.data as Report;
+              templateCounters[r.template_id] = (templateCounters[r.template_id] || 0) + 1;
+              numText = `Nº ${templateCounters[r.template_id]}) `;
+            } else {
+              manualCounter++;
+              numText = `Nº ${manualCounter}) `;
+            }
+          } else {
+            numText = `Nº ${generalCounter}) `;
+          }
+        }
+
         if (item.type === 'report') {
           const report = item.data as Report;
           const sortDate = item.sortDate!;
@@ -311,7 +334,7 @@ export function useReporteFinalGenerator({
             );
           }
 
-          const textoTitulo = ` - *${timestampText}* - *${report.title}*`;
+          const textoTitulo = ` - *${numText}${timestampText}* - *${report.title}*`;
           return textoContenido ? `${textoTitulo}\n\n${textoContenido}` : textoTitulo;
         } else {
           const novedad = item.data;
@@ -322,7 +345,7 @@ export function useReporteFinalGenerator({
             year: 'numeric',
           }).format(sortDate);
           const timestampText = `${fechaFormateada} ${novedad.time}`;
-          return ` - *${timestampText}* - *${novedad.text}*`;
+          return ` - *${numText}${timestampText}* - *${novedad.text}*`;
         }
       })
       .filter(Boolean)
@@ -426,7 +449,10 @@ export function useReporteFinalGenerator({
         orden_del_dia_draft: null, 
       });
 
-      await clearAllReports();
+      // Eliminar de la base de datos de trabajo activa únicamente los reportes finalizados de esta guardia
+      await Promise.all(
+        reportesFinalizados.map((report) => removeReport(report.id))
+      );
       setEsDialogOpenConfirmarGuardar(false);
       setEsDialogOpenResultado(false);
       setTabActiva('history'); 

@@ -42,7 +42,8 @@ const client = new Client({
   authStrategy: new LocalAuth({ dataPath: './session' }),
   puppeteer: {
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
-  }
+  },
+  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
 });
 
 client.on('qr', (qr) => {

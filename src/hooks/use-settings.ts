@@ -18,6 +18,12 @@ const defaultSettings: AppSettings = {
   final_report_manual_novedades: [],
   final_report_statistics: '',
   reportarole_ids: [],
+  group_consecutive_reports: false,
+  enable_report_numbering: false,
+  report_numbering_type: 'general',
+  group_by_template_type: false,
+  pinned_template_ids: [],
+  grouped_template_ids: [],
 };
 
 export function useSettings() {
@@ -61,6 +67,12 @@ export function useSettings() {
         sanitized.whatsapp_default_chat_ids = d.whatsapp_default_chat_ids || d.whatsappDefaultChatIds || [];
         sanitized.whatsapp_local_url = d.whatsapp_local_url || d.whatsappLocalUrl || '';
         sanitized.final_report_statistics = d.final_report_statistics || d.finalReportStatistics || '';
+        sanitized.group_consecutive_reports = d.group_consecutive_reports !== undefined ? d.group_consecutive_reports : false;
+        sanitized.enable_report_numbering = d.enable_report_numbering !== undefined ? d.enable_report_numbering : false;
+        sanitized.report_numbering_type = d.report_numbering_type || 'general';
+        sanitized.group_by_template_type = d.group_by_template_type !== undefined ? d.group_by_template_type : false;
+        sanitized.pinned_template_ids = d.pinned_template_ids || [];
+        sanitized.grouped_template_ids = d.grouped_template_ids || [];
 
         // 4. Comparación Profunda: Solo actualizar si hay un cambio real
         setSettings(prev => {

@@ -442,21 +442,10 @@ export function useNovedades() {
       });
       
       const lineasParaWord: any[] = [];
+      let validIndex = 0;
       
-      reportesParaExportar.forEach((r, index) => {
+      reportesParaExportar.forEach((r) => {
         const esFinalizado = r.status?.trim().toLowerCase() === 'finalizado';
-        const colorEstado = esFinalizado ? '4EA72E' : 'FFFF00';
-        
-        lineasParaWord.push({
-          text: `MINUTA ${index + 1}`,
-          color: colorEstado,
-          bold: true,
-          isSeparator: true,
-          alignment: 'CENTER',
-          pageBreakBefore: index > 0
-        });
-        
-        lineasParaWord.push({ text: '' });
         
         const template = templates.find(t => t.id === r.template_id);
         const config = configs[r.template_id];
@@ -482,13 +471,30 @@ export function useNovedades() {
             })
           : '';
         
-        const contentToUse = rendered || r.content || 'Minuta sin contenido disponible';
+        const contentToUse = (rendered || r.content || '').trim();
+        if (!contentToUse) {
+          return;
+        }
+
+        const colorEstado = esFinalizado ? '4EA72E' : 'FFFF00';
+        
+        lineasParaWord.push({
+          text: `MINUTA ${validIndex + 1}`,
+          color: colorEstado,
+          bold: true,
+          isSeparator: true,
+          alignment: 'CENTER',
+          pageBreakBefore: validIndex > 0
+        });
+        
+        lineasParaWord.push({ text: '' });
         
         contentToUse.split('\n').forEach((line: string) => {
           lineasParaWord.push({ text: line });
         });
         
         lineasParaWord.push({ text: '' });
+        validIndex++;
       });
       
       // Usar la fecha del período de guardia activo (Orden del día) en el nombre del archivo
