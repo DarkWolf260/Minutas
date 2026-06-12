@@ -281,6 +281,7 @@ export interface Address {
   latitude?: string;
   longitude?: string;
   details?: string;
+  isDeleted?: boolean;
 }
 
 export interface DefinitionSection {

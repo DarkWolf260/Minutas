@@ -240,11 +240,20 @@ export function createLookupRepository(db: MinutasDatabase | null, workspace_id:
     silentWrite(
       async () => {
         const doc = await db.lookups.findOne(DbKeys.address(ws, addr.id)).exec();
-        if (doc)
+        if (doc) {
           await doc.patch({
             name: addr.name,
             data: { ...addr, workspace_id: ws },
           });
+        } else {
+          await db.lookups.insert({
+            id: DbKeys.address(ws, addr.id),
+            workspace_id: ws,
+            type: 'address',
+            name: addr.name,
+            data: { ...addr, workspace_id: ws },
+          });
+        }
       },
       { feature: 'Addresses' }
     );
@@ -252,8 +261,34 @@ export function createLookupRepository(db: MinutasDatabase | null, workspace_id:
   const removeAddress = async (addrId: string) =>
     silentWrite(
       async () => {
-        const doc = await db.lookups.findOne(DbKeys.address(ws, addrId)).exec();
-        if (doc) await doc.remove();
+        if (addrId.startsWith('default_')) {
+          const doc = await db.lookups.findOne(DbKeys.address(ws, addrId)).exec();
+          const deletedAddress: Address = {
+            id: addrId,
+            name: 'DELETED',
+            municipality: '',
+            parish: '',
+            peaceQuadrant: '',
+            isDeleted: true,
+          };
+          if (doc) {
+            await doc.patch({
+              name: deletedAddress.name,
+              data: { ...deletedAddress, workspace_id: ws },
+            });
+          } else {
+            await db.lookups.insert({
+              id: DbKeys.address(ws, addrId),
+              workspace_id: ws,
+              type: 'address',
+              name: deletedAddress.name,
+              data: { ...deletedAddress, workspace_id: ws },
+            });
+          }
+        } else {
+          const doc = await db.lookups.findOne(DbKeys.address(ws, addrId)).exec();
+          if (doc) await doc.remove();
+        }
       },
       { feature: 'Addresses' }
     );

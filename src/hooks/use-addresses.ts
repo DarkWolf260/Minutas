@@ -20,17 +20,34 @@ export function useAddresses() {
 
     const sub = repo.watchAddresses().subscribe({
       next: (data) => {
-        if (data.length > 0) {
-          setAddresses(
-            data.map((item: any) => {
-              const rawData = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
-              return { ...(rawData as Address), workspace_id: currentWorkspace };
-            })
-          );
-        } else {
-          // Just use defaults in state, do NOT init in DB to avoid cloud conflicts
-          setAddresses(DEFAULT_ADDRESSES as Address[]);
-        }
+        const dbAddresses = data.map((item: any) => {
+          const rawData = typeof item.data === 'string' ? JSON.parse(item.data) : item.data;
+          return { ...(rawData as Address), workspace_id: currentWorkspace };
+        });
+
+        // Extract custom user-added addresses (IDs not starting with 'default_')
+        const customAddresses = dbAddresses.filter((addr) => !addr.id.startsWith('default_'));
+
+        // Extract default address overrides (IDs starting with 'default_' and not marked as deleted)
+        const dbDefaultOverrides = dbAddresses.filter((addr) => addr.id.startsWith('default_') && !addr.isDeleted);
+
+        // Identify deleted default addresses (IDs starting with 'default_' and marked as deleted)
+        const deletedDefaultIds = new Set(
+          dbAddresses.filter((addr) => addr.id.startsWith('default_') && addr.isDeleted).map((addr) => addr.id)
+        );
+
+        // Build the list of active default addresses:
+        // - Exclude those that are logically deleted.
+        // - Replace those that have custom overrides.
+        const activeDefaults = (DEFAULT_ADDRESSES as Address[])
+          .filter((addr) => !deletedDefaultIds.has(addr.id))
+          .map((addr) => {
+            const override = dbDefaultOverrides.find((o) => o.id === addr.id);
+            return override ? override : addr;
+          });
+
+        // Combine the default and custom addresses
+        setAddresses([...activeDefaults, ...customAddresses]);
         setIsLoaded(true);
       }
     });
