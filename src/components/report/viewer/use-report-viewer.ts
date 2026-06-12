@@ -81,11 +81,16 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
       return;
     }
 
+    const updatedFormData = JSON.parse(JSON.stringify(form_data));
+    if (status === 'Finalizado' && settings.active_guard_id) {
+      updatedFormData._finalized_by_guard = settings.active_guard_id;
+    }
+
     const finalReport: Report = {
       ...report,
       title: newTitle,
       content: content,
-      form_data: JSON.parse(JSON.stringify(form_data)),
+      form_data: updatedFormData,
       status: status,
       timestamp: new Date().toISOString(),
       photos: customPhotos || latestPhotosRef.current,
@@ -194,11 +199,16 @@ export function useReportViewer({ report, onSave }: UseReportViewerProps) {
       Enc: esJefeEncargado ? '(E)' : ''
     });
     const newTitle = String(form_data.titulo || form_data.title || resolveTemplateTitle(template.name, form_data, config));
+    const updatedFormData = JSON.parse(JSON.stringify(form_data));
+    if (newStatus === 'Finalizado' && settings.active_guard_id) {
+      updatedFormData._finalized_by_guard = settings.active_guard_id;
+    }
+
     const finalReport: Report = {
       ...report,
       title: newTitle,
       content: content,
-      form_data: JSON.parse(JSON.stringify(form_data)),
+      form_data: updatedFormData,
       status: newStatus,
       timestamp: new Date().toISOString(),
       photos: formRef.current ? formRef.current.getPhotos() : report.photos,

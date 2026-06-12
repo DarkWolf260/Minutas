@@ -20,6 +20,7 @@ interface UseReporteFinalGeneratorProps {
   saveSettings: (settings: any) => Promise<void>;
   saveGuardReport: (report: any) => Promise<void>;
   clearAllReports: () => Promise<void>;
+  removeReport: (reportId: string) => Promise<void>;
   templates: any[];
   configs: any;
   configuracionesGlobales: any;
@@ -52,6 +53,7 @@ export function useReporteFinalGenerator({
   saveSettings,
   saveGuardReport,
   clearAllReports,
+  removeReport,
   templates,
   configs,
   configuracionesGlobales,
@@ -426,7 +428,10 @@ export function useReporteFinalGenerator({
         orden_del_dia_draft: null, 
       });
 
-      await clearAllReports();
+      // Eliminar de la base de datos de trabajo activa únicamente los reportes finalizados de esta guardia
+      await Promise.all(
+        reportesFinalizados.map((report) => removeReport(report.id))
+      );
       setEsDialogOpenConfirmarGuardar(false);
       setEsDialogOpenResultado(false);
       setTabActiva('history'); 

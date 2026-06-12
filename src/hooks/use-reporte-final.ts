@@ -16,7 +16,7 @@ import { useReporteFinalGenerator } from './reporte-final/use-reporte-final-gene
 
 export function useReporteFinal() {
   // 1. Data Hooks
-  const { reports, clearAllReports, isLoaded: reportsLoaded } = useReports();
+  const { reports, clearAllReports, removeReport, isLoaded: reportsLoaded } = useReports();
   const {
     guardsLoaded,
     activeGuard,
@@ -61,7 +61,12 @@ export function useReporteFinal() {
       if (report.status !== 'Finalizado') return false;
       if (currentGuardId) {
         const reportGuard = findValueInform_data(report.form_data, 'Guardia');
-        if (reportGuard && String(reportGuard).trim().toUpperCase() !== String(currentGuardId).trim().toUpperCase()) {
+        const finalizedByGuard = report.form_data?._finalized_by_guard || (report.form_data as any)?.finalized_by_guard;
+
+        const matchCreator = reportGuard && String(reportGuard).trim().toUpperCase() === String(currentGuardId).trim().toUpperCase();
+        const matchFinalizer = finalizedByGuard && String(finalizedByGuard).trim().toUpperCase() === String(currentGuardId).trim().toUpperCase();
+
+        if (!matchCreator && !matchFinalizer) {
           return false;
         }
       }
@@ -93,6 +98,7 @@ export function useReporteFinal() {
     saveSettings,
     saveGuardReport: history.saveGuardReport,
     clearAllReports,
+    removeReport,
     templates,
     configs,
     configuracionesGlobales,
