@@ -35,8 +35,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\package.json": {
-    "mtime": 1780371880.1189544,
-    "ast_hash": "1e4f0f2acdd0d9f337c5771ce2175882",
+    "mtime": 1781252888.1610408,
+    "ast_hash": "d23dd2e581652d8c79c7fda9df1a36cc",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\postcss.config.mjs": {
@@ -815,8 +815,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\use-novedades.ts": {
-    "mtime": 1781249741.8070161,
-    "ast_hash": "9169357a5850efc5ec6dc9608f933a15",
+    "mtime": 1781253171.529665,
+    "ast_hash": "60660590f83487a86710c996918013a3",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\use-offline-upload.ts": {
@@ -1415,8 +1415,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\novedad-sidebar.tsx": {
-    "mtime": 1781252508.090966,
-    "ast_hash": "63055d954c207ca4c7e0cde070de44dd",
+    "mtime": 1781252833.4514601,
+    "ast_hash": "f4f1aee2ace6dd58de38dde3900d1da9",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\template-list.tsx": {
@@ -1550,8 +1550,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\about\\data.ts": {
-    "mtime": 1780874914.9822884,
-    "ast_hash": "0255b884f9890f016d59a3bb5fd4f433",
+    "mtime": 1781253260.5336876,
+    "ast_hash": "b20729147872ba282a6033ac4a44bbb2",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\about\\guide.tsx": {
