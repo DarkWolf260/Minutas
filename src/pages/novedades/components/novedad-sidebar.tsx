@@ -403,38 +403,26 @@ export const NovedadSidebar = ({ hook, isMobile }: NovedadSidebarProps) => {
                 <div className="space-y-6">
                   {/* Pinned Groups Section */}
                   {pinnedGroups.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 px-1 mb-2">
-                        <Pin className="h-3.5 w-3.5 text-primary shrink-0" />
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-primary truncate">
-                          Anclados
-                        </span>
-                        <div className="flex-1 h-px bg-primary/20" />
-                        <span className="text-[10px] text-primary/60 shrink-0 font-medium">
-                          {pinnedGroups.length}
-                        </span>
-                      </div>
-                      <div className="space-y-1">
-                        {pinnedGroups.map((group) => (
-                          <NovedadGroupItem
-                            key={group.id}
-                            id={group.id}
-                            templateId={group.templateId}
-                            templateName={group.templateName}
-                            timeRange={group.timeRange}
-                            reports={group.reports}
-                            isExpanded={!!expandedGroups[group.id]}
-                            onToggleExpand={handleToggleExpand}
-                            idReporteSeleccionado={idReporteSeleccionado}
-                            creandoReporte={creandoReporte}
-                            manejarSeleccionarReporte={manejarSeleccionarReporte}
-                            reportNumbers={reportNumbers}
-                            isPinned={true}
-                            onTogglePin={handleTogglePin}
-                            showDate={true}
-                          />
-                        ))}
-                      </div>
+                    <div className="space-y-1">
+                      {pinnedGroups.map((group) => (
+                        <NovedadGroupItem
+                          key={group.id}
+                          id={group.id}
+                          templateId={group.templateId}
+                          templateName={group.templateName}
+                          timeRange={group.timeRange}
+                          reports={group.reports}
+                          isExpanded={!!expandedGroups[group.id]}
+                          onToggleExpand={handleToggleExpand}
+                          idReporteSeleccionado={idReporteSeleccionado}
+                          creandoReporte={creandoReporte}
+                          manejarSeleccionarReporte={manejarSeleccionarReporte}
+                          reportNumbers={reportNumbers}
+                          isPinned={true}
+                          onTogglePin={handleTogglePin}
+                          showDate={true}
+                        />
+                      ))}
                     </div>
                   )}
 
