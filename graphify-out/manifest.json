@@ -20,7 +20,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\ast.json": {
-    "mtime": 1780955346.8913739,
+    "mtime": 1781306987.4989543,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -35,8 +35,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\package.json": {
-    "mtime": 1781252888.1610408,
-    "ast_hash": "d23dd2e581652d8c79c7fda9df1a36cc",
+    "mtime": 1781308519.29284,
+    "ast_hash": "1d0b705cdc161c9d23f1f661d956381a",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\postcss.config.mjs": {
@@ -45,7 +45,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\report.json": {
-    "mtime": 1780955346.8893738,
+    "mtime": 1781306987.4984446,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -405,8 +405,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\shared\\ajustes-generales.tsx": {
-    "mtime": 1781296310.7685995,
-    "ast_hash": "0a492752c0ed14754fe6011eb39b6586",
+    "mtime": 1781299199.0002446,
+    "ast_hash": "26d8e30d95d2c0c159338ebe190b311a",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\shared\\workspace-selection-dialog.tsx": {
@@ -735,8 +735,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\use-addresses.ts": {
-    "mtime": 1778740915.0616188,
-    "ast_hash": "2bc86ef600fb2b2f4f7c63c833fd6716",
+    "mtime": 1781306923.7705388,
+    "ast_hash": "b304b17c25f858f524463f20197b6264",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\use-admin-users.ts": {
@@ -1140,8 +1140,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\repositories\\lookup.repository.ts": {
-    "mtime": 1778740824.2110324,
-    "ast_hash": "b0c1a4c448f4cad54a599591ca961771",
+    "mtime": 1781306915.4730566,
+    "ast_hash": "44699552b5b107e6e4dc1fdf0fd09d70",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\repositories\\personnel.repository.ts": {
@@ -1260,8 +1260,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\types\\index.ts": {
-    "mtime": 1781251886.5255105,
-    "ast_hash": "efd62eff109fbede5d7611dad8bc67a6",
+    "mtime": 1781306907.2168512,
+    "ast_hash": "253d20d3ea2d7a1e0576e23be485064b",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\types\\semantic.ts": {
@@ -1730,12 +1730,12 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\vercel.json": {
-    "mtime": 1778373214.261845,
+    "mtime": 1781299199.0002446,
     "ast_hash": "0db7ccb3aff36e97aa469126e9e17f99",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\vite.config.ts": {
-    "mtime": 1780874540.6573498,
+    "mtime": 1781299104.2577264,
     "ast_hash": "f4502a2db2fb7bfceffbfa15a69d8631",
     "semantic_hash": ""
   },
@@ -1852,6 +1852,11 @@
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\public\\screenshots\\mobile.png": {
     "mtime": 1773416945.3433964,
     "ast_hash": "b08109ddedeaca30ca65e6a22e173ac1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\docs\\supabase_guide.md": {
+    "mtime": 1781308465.1139252,
+    "ast_hash": "57bc7ebbf93ab0ec6502fc3307456fb4",
     "semantic_hash": ""
   }
 }
