@@ -1,16 +1,16 @@
 # Graph Report - Minutas  (2026-06-16)
 
 ## Corpus Check
-- 373 files · ~235,687 words
+- 373 files · ~235,658 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1933 nodes · 5569 edges · 111 communities (104 shown, 7 thin omitted)
+- 1933 nodes · 5571 edges · 110 communities (103 shown, 7 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 7 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d019f9e6`
+- Built from commit: `3c0c62c7`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -111,11 +111,10 @@
 - [[_COMMUNITY_Community 107|Community 107]]
 - [[_COMMUNITY_Community 108|Community 108]]
 - [[_COMMUNITY_Community 109|Community 109]]
-- [[_COMMUNITY_Community 110|Community 110]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 155 edges
-2. `Button` - 112 edges
+2. `Button` - 113 edges
 3. `useWorkspaceManager()` - 85 edges
 4. `ScrollArea` - 54 edges
 5. `Card` - 49 edges
@@ -140,15 +139,15 @@
 ## Import Cycles
 - None detected.
 
-## Communities (111 total, 7 thin omitted)
+## Communities (110 total, 7 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.08
 Nodes (35): closeDatabase(), ConfigItem, ConfigsCollection, created_atabase(), ensureDevMode(), getInternalState(), getStorage(), _global (+27 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.18
-Nodes (16): NovedadFilters(), NovedadGroupItem, NovedadGroupItemProps, formatReportDate(), NovedadItem, NovedadItemProps, getReportTimeStr(), getTimeRange() (+8 more)
+Cohesion: 0.17
+Nodes (15): NovedadFilters(), NovedadGroupItem, NovedadGroupItemProps, formatReportDate(), NovedadItem, NovedadItemProps, getReportTimeStr(), getTimeRange() (+7 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.13
@@ -159,8 +158,8 @@ Cohesion: 0.04
 Nodes (47): [1.0.0] - 2026-04-07, [1.0.1] - 2026-04-22, [1.1.0] - 2026-04-23, [1.1.1] - 2026-04-23, [1.2.0] - 2026-04-24, [1.3.0] - 2026-04-28, [1.3.1] - 2026-04-28, [1.3.2] - 2026-05-11 (+39 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.10
-Nodes (25): AddressInput, MultiInput, calcularEstadisticasDia(), formatearEstadisticasDia(), EstadisticasField(), useActiveGuard(), useConfigRepo(), defaultDefinitions (+17 more)
+Cohesion: 0.12
+Nodes (24): AddressInput, MultiInput, calcularEstadisticasDia(), formatearEstadisticasDia(), EstadisticasField(), NoGuardBanner(), useActiveGuard(), useConfigRepo() (+16 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.04
@@ -171,8 +170,8 @@ Cohesion: 0.23
 Nodes (11): DEPARTMENT_IDS, DEPARTMENT_NAMES, LEADER_ROLES, OPERATIONAL_ROLES, SPECIAL_ROLES, STATUS_ROLES, DEFAULT_DEPARTMENTS, DEFAULT_ROLES (+3 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.18
-Nodes (7): DEFAULT_STATISTICS_CATEGORIES, StatisticsSection, calcularEstadisticasMensuales(), MonthlyStats, AddressFormDialogProps, AddressMapProps, Address
+Cohesion: 0.16
+Nodes (8): calcularEstadisticasMensuales(), resolverCategoriaTraslado(), resolverTipoDesdeDirectorio(), TRANSFER_TYPE_MAP, normalizeString(), AddressFormDialogProps, AddressMapProps, Address
 
 ### Community 8 - "Community 8"
 Cohesion: 0.24
@@ -183,16 +182,16 @@ Cohesion: 0.08
 Nodes (24): MobileHeader(), MobileHeaderProps, NovedadMainContent(), NovedadMainContentProps, NovedadModals, NovedadSidebar(), SearchInput(), SearchInputProps (+16 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.19
-Nodes (26): useDatabase(), useWorkspaceManager(), useReportForm(), useDepartments(), useGuardHistory(), defaultGuards, useGuards(), ActivityStatus (+18 more)
+Cohesion: 0.20
+Nodes (25): useDatabase(), useWorkspaceManager(), useReportForm(), useDepartments(), defaultGuards, useGuards(), ActivityStatus, PendingActivity (+17 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.05
 Nodes (35): 10. Escapado, 11. Orden de resolución de valores, 12. Limpieza final del reporte, 1. Campos `{FieldName}`, 2. Acceso a propiedades de personal `{Campo.propiedad}`, 3. Campos Repetibles `{Campo}*`, 4. Secciones `[Label]...[/]`, 5. Secciones Auto-contenidas `["Título" {Campo}]` (+27 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.05
-Nodes (49): AdminRoute(), ProtectedRoute(), PlantillasHeader(), AdminConfigPage(), NoGuardBanner(), useAdmin(), useAuth(), GlobalConfigProvider() (+41 more)
+Cohesion: 0.06
+Nodes (46): AdminRoute(), ProtectedRoute(), AdminConfigPage(), useAuth(), GlobalConfigProvider(), useGlobalConfig(), tryRemove(), trySet() (+38 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.18
@@ -227,16 +226,16 @@ Cohesion: 0.07
 Nodes (29): devDependencies, autoprefixer, @babel/core, babel-plugin-react-compiler, eslint, eslint-config-prettier, jsdom, postcss (+21 more)
 
 ### Community 21 - "Community 21"
-Cohesion: 0.40
-Nodes (10): findPointsWithTypes(), obtenerBaseIdYVirtual(), obtenerCategoriasReporte(), obtenerValoresConSoporteVirtual(), TransferPoint, evaluarCondicion(), buscarValores(), normalizarCategoria() (+2 more)
+Cohesion: 0.27
+Nodes (13): DEFAULT_STATISTICS_CATEGORIES, StatisticsSection, MonthlyStats, findPointsWithTypes(), obtenerBaseIdYVirtual(), obtenerCategoriasReporte(), obtenerValoresConSoporteVirtual(), TransferPoint (+5 more)
 
 ### Community 22 - "Community 22"
 Cohesion: 0.50
 Nodes (3): useSyncPagina(), SyncPage(), useSyncContext()
 
 ### Community 23 - "Community 23"
-Cohesion: 0.16
-Nodes (18): SyncContext, SyncContextValue, createChannel(), deleteChannel(), fetchPendingReports(), generateChannelCode(), joinChannelByCode(), markReportReceived() (+10 more)
+Cohesion: 0.17
+Nodes (19): SyncContext, SyncContextValue, createChannel(), deleteChannel(), fetchPendingReports(), generateChannelCode(), joinChannelByCode(), markReportReceived() (+11 more)
 
 ### Community 24 - "Community 24"
 Cohesion: 0.04
@@ -259,16 +258,16 @@ Cohesion: 0.17
 Nodes (13): CedulaInput, CedulaInputProps, NavUserMenuProps, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioItem (+5 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.17
-Nodes (15): defaultProfile, useProfile(), UserProfile, MobileNav(), NotificationBell(), ALL_NAV_ITEMS, SideNav(), useNotifications() (+7 more)
+Cohesion: 0.16
+Nodes (16): defaultProfile, useProfile(), UserProfile, MobileNav(), NotificationBell(), ALL_NAV_ITEMS, SideNav(), useNotifications() (+8 more)
 
 ### Community 31 - "Community 31"
 Cohesion: 0.15
 Nodes (14): SetupPage(), PasoBienvenida(), PasoAreaTrabajo(), DEF_MODULOS, PasoModulos(), PRESET_ESCRITORIO, PRESET_MOVIL, PasoEstructura() (+6 more)
 
 ### Community 32 - "Community 32"
-Cohesion: 0.08
-Nodes (19): ScheduledMessagesWorker(), SyncWhatsApp(), NotificationItem, useOfflineUpload(), ScheduledMessage, useScheduledMessages(), BotState, listeners (+11 more)
+Cohesion: 0.07
+Nodes (18): ErrorBoundary, Props, State, ScheduledMessagesWorker(), SyncWhatsApp(), useOfflineUpload(), ScheduledMessage, useScheduledMessages() (+10 more)
 
 ### Community 33 - "Community 33"
 Cohesion: 0.10
@@ -359,8 +358,8 @@ Cohesion: 0.07
 Nodes (28): Additional Resources, As a Reviewer, As an Author, Before Submitting, Branch Naming, Code Review Guidelines, Code Style, Commit Messages (+20 more)
 
 ### Community 59 - "Community 59"
-Cohesion: 0.12
-Nodes (23): DEFAULT_ADDRESSES, useAddresses(), useDirecciones(), ModoEstadistica, useEstadisticas(), usePlantillas(), usePrecacheImages(), useReports() (+15 more)
+Cohesion: 0.13
+Nodes (18): DEFAULT_ADDRESSES, useAddresses(), useDirecciones(), ModoEstadistica, useEstadisticas(), useGuardHistory(), usePrecacheImages(), useReports() (+10 more)
 
 ### Community 61 - "Community 61"
 Cohesion: 0.20
@@ -459,8 +458,8 @@ Cohesion: 0.20
 Nodes (11): PERSONNEL_STATUS, CSVPersonnelRow, CSVPersonnelRowSchema, formatZodError(), Guardform_data, PERSONNEL_VALIDATION, Personnelform_data, PersonnelSchema (+3 more)
 
 ### Community 97 - "Community 97"
-Cohesion: 0.35
-Nodes (8): DatabaseContext, useReportGenerator(), useDrafts(), useNovedades(), useOrdenDelDiaDraft(), ReportGeneratorRef, createConfigRepository(), ReportDraft
+Cohesion: 0.17
+Nodes (17): PlantillasHeader(), DatabaseContext, useReportGenerator(), useAdmin(), useDrafts(), useNovedades(), useOrdenDelDiaDraft(), usePlantillas() (+9 more)
 
 ### Community 98 - "Community 98"
 Cohesion: 0.38
@@ -491,16 +490,12 @@ Cohesion: 0.15
 Nodes (14): AdminDashboardPage(), NavCard(), NavCardProps, Separator(), DatabaseProvider(), AdminUser, useAdminUsers(), CloudTemplate (+6 more)
 
 ### Community 107 - "Community 107"
-Cohesion: 0.29
-Nodes (3): ErrorBoundary, Props, State
+Cohesion: 0.50
+Nodes (4): NotificationItem, NotificationsContext, NotificationsContextType, NotificationsProvider()
 
 ### Community 108 - "Community 108"
 Cohesion: 0.18
 Nodes (9): PlantillasSidebar(), PlantillasSidebarProps, OnboardingTour(), TOUR_STEPS, TourStep, DebouncedFunction, getTemplateIcon(), RANK_HIERARCHY (+1 more)
-
-### Community 110 - "Community 110"
-Cohesion: 0.47
-Nodes (4): resolverCategoriaTraslado(), resolverTipoDesdeDirectorio(), TRANSFER_TYPE_MAP, normalizeString()
 
 ## Knowledge Gaps
 - **762 isolated node(s):** `extends`, `@typescript-eslint/no-explicit-any`, `@typescript-eslint/no-unused-vars`, `no-console`, `prefer-const` (+757 more)
@@ -512,9 +507,9 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `cn()` connect `Community 9` to `Community 1`, `Community 2`, `Community 4`, `Community 6`, `Community 10`, `Community 12`, `Community 13`, `Community 14`, `Community 16`, `Community 17`, `Community 22`, `Community 28`, `Community 29`, `Community 31`, `Community 32`, `Community 34`, `Community 36`, `Community 40`, `Community 43`, `Community 45`, `Community 46`, `Community 61`, `Community 63`, `Community 64`, `Community 83`, `Community 85`, `Community 89`, `Community 91`, `Community 92`, `Community 98`, `Community 99`, `Community 100`, `Community 106`, `Community 108`?**
   _High betweenness centrality (0.045) - this node is a cross-community bridge._
-- **Why does `Button` connect `Community 14` to `Community 1`, `Community 2`, `Community 4`, `Community 8`, `Community 9`, `Community 10`, `Community 12`, `Community 13`, `Community 16`, `Community 17`, `Community 25`, `Community 26`, `Community 28`, `Community 31`, `Community 34`, `Community 36`, `Community 40`, `Community 43`, `Community 45`, `Community 46`, `Community 61`, `Community 63`, `Community 64`, `Community 83`, `Community 85`, `Community 87`, `Community 89`, `Community 91`, `Community 92`, `Community 98`, `Community 99`, `Community 100`, `Community 107`, `Community 108`, `Community 109`?**
+- **Why does `Button` connect `Community 14` to `Community 1`, `Community 2`, `Community 4`, `Community 8`, `Community 9`, `Community 10`, `Community 12`, `Community 13`, `Community 16`, `Community 17`, `Community 25`, `Community 26`, `Community 28`, `Community 31`, `Community 32`, `Community 34`, `Community 36`, `Community 40`, `Community 43`, `Community 45`, `Community 46`, `Community 61`, `Community 63`, `Community 64`, `Community 83`, `Community 85`, `Community 87`, `Community 89`, `Community 91`, `Community 92`, `Community 98`, `Community 99`, `Community 100`, `Community 108`, `Community 109`?**
   _High betweenness centrality (0.029) - this node is a cross-community bridge._
-- **Why does `obtenerCategoriasReporte()` connect `Community 21` to `Community 17`, `Community 69`, `Community 110`, `Community 7`?**
+- **Why does `obtenerCategoriasReporte()` connect `Community 21` to `Community 17`, `Community 69`, `Community 7`?**
   _High betweenness centrality (0.015) - this node is a cross-community bridge._
 - **What connects `extends`, `@typescript-eslint/no-explicit-any`, `@typescript-eslint/no-unused-vars` to the rest of the system?**
   _762 weakly-connected nodes found - possible documentation gaps or missing edges._
