@@ -79,6 +79,7 @@ export function useNovedades() {
   const manejarEliminarReporte = useCallback(async (id: string) => {
     setReporteAEliminar(null);
     await removeReport(id);
+    toast.success('Reporte eliminado.');
     if (idReporteSeleccionado === id) {
       navigate('/');
       setIdReporteSeleccionado(null);

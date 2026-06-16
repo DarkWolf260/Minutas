@@ -277,29 +277,8 @@ export function useReporteFinalGenerator({
       .filter((item) => item.sortDate)
       .sort((a, b) => a.sortDate!.getTime() - b.sortDate!.getTime());
 
-    const templateCounters: Record<string, number> = {};
-    let manualCounter = 0;
-    let generalCounter = 0;
-
     const contenidoReporte = todasNovedadesOrdenadas
       .map((item) => {
-        generalCounter++;
-        let numText = '';
-        if (settings.enable_report_numbering) {
-          if (settings.report_numbering_type === 'template') {
-            if (item.type === 'report') {
-              const r = item.data as Report;
-              templateCounters[r.template_id] = (templateCounters[r.template_id] || 0) + 1;
-              numText = `Nº ${templateCounters[r.template_id]}) `;
-            } else {
-              manualCounter++;
-              numText = `Nº ${manualCounter}) `;
-            }
-          } else {
-            numText = `Nº ${generalCounter}) `;
-          }
-        }
-
         if (item.type === 'report') {
           const report = item.data as Report;
           const sortDate = item.sortDate!;
@@ -334,7 +313,7 @@ export function useReporteFinalGenerator({
             );
           }
 
-          const textoTitulo = ` - *${numText}${timestampText}* - *${report.title}*`;
+          const textoTitulo = ` - *${timestampText}* - *${report.title}*`;
           return textoContenido ? `${textoTitulo}\n\n${textoContenido}` : textoTitulo;
         } else {
           const novedad = item.data;
@@ -345,7 +324,7 @@ export function useReporteFinalGenerator({
             year: 'numeric',
           }).format(sortDate);
           const timestampText = `${fechaFormateada} ${novedad.time}`;
-          return ` - *${numText}${timestampText}* - *${novedad.text}*`;
+          return ` - *${timestampText}* - *${novedad.text}*`;
         }
       })
       .filter(Boolean)

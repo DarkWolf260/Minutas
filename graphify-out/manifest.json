@@ -20,7 +20,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\ast.json": {
-    "mtime": 1781620081.9018412,
+    "mtime": 1781620554.3035455,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -45,7 +45,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\report.json": {
-    "mtime": 1781620081.9008424,
+    "mtime": 1781620554.3035455,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -815,8 +815,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\use-novedades.ts": {
-    "mtime": 1781253171.529665,
-    "ast_hash": "60660590f83487a86710c996918013a3",
+    "mtime": 1781620511.2518704,
+    "ast_hash": "ecb7c72388416761eb9a5aa5f13c5714",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\use-offline-upload.ts": {
@@ -1150,8 +1150,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\repositories\\report.repository.ts": {
-    "mtime": 1778740834.3689158,
-    "ast_hash": "b38d7966616a843e9a36ee0822343560",
+    "mtime": 1781620468.2885032,
+    "ast_hash": "fe3c0a2cc9b19b54399925e2103a17d7",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\repositories\\supabase.repository.ts": {
