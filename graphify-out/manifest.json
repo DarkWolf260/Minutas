@@ -20,7 +20,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\ast.json": {
-    "mtime": 1781628545.880263,
+    "mtime": 1781630877.771396,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -45,7 +45,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\report.json": {
-    "mtime": 1781628545.8797374,
+    "mtime": 1781630877.7703931,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -90,8 +90,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\App.tsx": {
-    "mtime": 1781628483.8797312,
-    "ast_hash": "e8a2559c7678550e5d14c0500e315112",
+    "mtime": 1781630609.417132,
+    "ast_hash": "abad4ce8ac0675d60edfc7780559f29a",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\auth\\admin-route.tsx": {
@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\orden-del-dia\\index.tsx": {
-    "mtime": 1779749665.554855,
-    "ast_hash": "80e3e9f1350b22cc6b8fbca4f91c3c7a",
+    "mtime": 1781629842.2076633,
+    "ast_hash": "f3980e6f02f51538479113e6a3eeefe1",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\orden-del-dia\\note-item.tsx": {
@@ -405,8 +405,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\shared\\ajustes-generales.tsx": {
-    "mtime": 1781299199.0002446,
-    "ast_hash": "26d8e30d95d2c0c159338ebe190b311a",
+    "mtime": 1781630776.2624974,
+    "ast_hash": "d9d2199c5a9b0d54e89fc6e8aba45406",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\shared\\workspace-selection-dialog.tsx": {
@@ -635,8 +635,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\ui\\scroll-area.tsx": {
-    "mtime": 1774758721.1019025,
-    "ast_hash": "db0a90b2fa0bba170698fd6adadbcfbd",
+    "mtime": 1781629462.404152,
+    "ast_hash": "0558ed80f77afc79ce2793ea9791dc1e",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\ui\\select.tsx": {
@@ -1430,13 +1430,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\orden-del-dia.tsx": {
-    "mtime": 1781628169.3144276,
-    "ast_hash": "54d7e63854cf4a813e9157dac1a173ff",
+    "mtime": 1781629693.4761536,
+    "ast_hash": "57b9e31052e231dc4326bc145c469c31",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\orden-del-dia\\components\\guard-config-card.tsx": {
-    "mtime": 1778729421.6372116,
-    "ast_hash": "01117ddc8c4422ed85c505ff5299a617",
+    "mtime": 1781629821.857263,
+    "ast_hash": "2adfcd3894f197577b871ac81159a795",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\orden-del-dia\\components\\orden-empty-state.tsx": {
@@ -1580,8 +1580,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\index.tsx": {
-    "mtime": 1781628162.526238,
-    "ast_hash": "dcd0aa36566c145bb1cbb9cf19d354f0",
+    "mtime": 1781630827.356083,
+    "ast_hash": "b3634ca16f38c9099d8686fb01bf9a53",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\modules.tsx": {

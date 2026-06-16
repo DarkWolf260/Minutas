@@ -84,7 +84,7 @@ export default function SettingsPage() {
           <div className="lg:col-span-5 flex flex-col h-auto md:h-full min-h-0">
 
             {/* Tarjeta Consolidada: Otros Ajustes */}
-            <Card className="shadow-lg border-muted/50 flex flex-col h-full min-h-0">
+            <Card className="border shadow-sm bg-card flex flex-col h-full min-h-0 overflow-hidden">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Settings2 className="h-5 w-5 text-primary" />
@@ -95,7 +95,7 @@ export default function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0 flex-1 min-h-0 flex flex-col">
-                <ScrollArea className="flex-1" type="always">
+                <ScrollArea className="flex-1" type="hover">
                   <div className="space-y-2 p-4 pt-0">
 
                     <Link

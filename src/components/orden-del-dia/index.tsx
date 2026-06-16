@@ -28,6 +28,7 @@ interface OrdenDelDiaFormProps {
   periodo: string;
   initialData?: Staff;
   isGuardOpen?: boolean;
+  configCard?: React.ReactNode;
 }
 
 export interface OrdenDelDiaFormRef {
@@ -35,7 +36,7 @@ export interface OrdenDelDiaFormRef {
 }
 
 export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormProps>(
-  ({ selectedGuard, periodo, initialData, isGuardOpen = false }, ref) => {
+  ({ selectedGuard, periodo, initialData, isGuardOpen = false, configCard }, ref) => {
     const hook = useOrdenDelDia(selectedGuard, periodo, initialData, isGuardOpen);
     const isMobile = useIsMobile();
 
@@ -47,9 +48,19 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
       <div className="md:h-full flex flex-col min-h-0">
         <div className="space-y-6 flex-1 md:flex md:flex-col min-h-0">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 pb-2 md:flex-1 min-h-0">
-            <SeccionDistribucionPersonal hook={hook} />
-            <SeccionActividadesDia hook={hook} />
-            <SeccionNotasAdm hook={hook} />
+            {/* Columna 1: Distribución de Personal */}
+            <div className="xl:col-span-1 h-full min-h-0 flex flex-col">
+              <SeccionDistribucionPersonal hook={hook} />
+            </div>
+
+            {/* Columnas 2 y 3: Configuración arriba + Actividades y Notas abajo */}
+            <div className="xl:col-span-2 flex flex-col gap-6 h-full min-h-0">
+              {configCard && <div className="shrink-0">{configCard}</div>}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 min-h-0">
+                <SeccionActividadesDia hook={hook} />
+                <SeccionNotasAdm hook={hook} />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -82,7 +93,7 @@ function SeccionDistribucionPersonal({ hook }: { hook: any }) {
   } = hook;
 
   return (
-    <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/50 min-h-[400px] h-auto">
+    <Card className="border shadow-sm bg-card flex flex-col md:flex-1 md:h-full overflow-hidden min-h-[400px] h-auto">
       <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
         <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
           <GripVertical className="h-3.5 w-3.5 text-primary" />
@@ -164,7 +175,7 @@ function SeccionActividadesDia({ hook }: { hook: any }) {
   } = hook;
 
   return (
-    <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/50 min-h-[400px] h-auto">
+    <Card className="border shadow-sm bg-card flex flex-col md:flex-1 md:h-full overflow-hidden min-h-[400px] h-auto">
       <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -214,7 +225,7 @@ function SeccionNotasAdm({ hook }: { hook: any }) {
   } = hook;
 
   return (
-    <Card className="shadow-sm flex flex-col md:flex-1 md:h-full overflow-hidden border-muted/50 min-h-[400px] h-auto">
+    <Card className="border shadow-sm bg-card flex flex-col md:flex-1 md:h-full overflow-hidden min-h-[400px] h-auto">
       <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

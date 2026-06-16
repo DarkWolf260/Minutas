@@ -91,6 +91,38 @@ function AppLayout() {
   
   // Background upload sync for offline captured photos
   useOfflineUpload();
+
+  // Dynamic Text Size adjustment effect
+  useEffect(() => {
+    const factors: Record<string, number> = {
+      small: 0.875,
+      normal: 1.0,
+      large: 1.125,
+      xlarge: 1.25
+    };
+    
+    const applySize = () => {
+      const savedSize = localStorage.getItem('minutas-text-size') || 'normal';
+      const factor = factors[savedSize] ?? 1.0;
+      const isDesktop = window.innerWidth >= 640;
+      const baseSize = isDesktop ? 16 : 14;
+      document.documentElement.style.fontSize = `${baseSize * factor}px`;
+    };
+    
+    applySize();
+    window.addEventListener('resize', applySize);
+    
+    // Listen for custom events to update size instantly
+    const handleTextSizeChange = () => {
+      applySize();
+    };
+    window.addEventListener('minutas-text-size-changed', handleTextSizeChange);
+    
+    return () => {
+      window.removeEventListener('resize', applySize);
+      window.removeEventListener('minutas-text-size-changed', handleTextSizeChange);
+    };
+  }, []);
   
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
   // Si el usuario está autenticado pero no está aprobado, ocultamos la navegación por completo.
