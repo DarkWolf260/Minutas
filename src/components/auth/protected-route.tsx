@@ -12,6 +12,15 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isCloud } = useWorkspaceManager();
   const location = useLocation();
 
+  // Optimización offline: si estamos en un entorno local y no hay token de Supabase guardado en localStorage,
+  // no hay ninguna sesión activa que validar. Saltamos la carga y damos acceso inmediato sin bloqueos.
+  const hasLocalSession = typeof window !== 'undefined' &&
+    Object.keys(localStorage).some(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
+
+  if (!isCloud && !hasLocalSession) {
+    return <>{children}</>;
+  }
+
   if (authLoading || statusLoading) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-background gap-4">

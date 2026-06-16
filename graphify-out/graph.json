@@ -3247,7 +3247,7 @@
       "label": "useAuthContext()",
       "file_type": "code",
       "source_file": "src/components/providers/auth-provider.tsx",
-      "source_location": "L76",
+      "source_location": "L81",
       "id": "providers_auth_provider_useauthcontext",
       "community": 12,
       "norm_label": "useauthcontext()"
@@ -19018,9 +19018,9 @@
       "source_file": "package.json",
       "source_location": "L93",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "package_devdependencies",
-      "target": "package_devdependencies_autoprefixer",
-      "confidence_score": 1.0
+      "target": "package_devdependencies_autoprefixer"
     },
     {
       "relation": "contains",
@@ -73300,9 +73300,9 @@
       "source_file": "vite.config.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "vite_config",
-      "target": "vite_config_forcemanifestcontenttype",
-      "confidence_score": 1.0
+      "target": "vite_config_forcemanifestcontenttype"
     },
     {
       "relation": "contains",
@@ -77096,5 +77096,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "4dcc6d57e835aad677c2a3eca7b18684cff088c8"
+  "built_at_commit": "b00651b874e90f1c7fc329b8fb4eaf309eb15d74"
 }
