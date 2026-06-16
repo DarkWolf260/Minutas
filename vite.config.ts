@@ -3,9 +3,27 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// Custom plugin to force correct Content-Type for manifest.json to satisfy PWA installation checks
+const forceManifestContentType = () => ({
+  name: 'force-manifest-content-type',
+  configureServer(server: any) {
+    server.middlewares.use((req: any, res: any, next: any) => {
+      if (req.url && req.url.includes('manifest.json')) {
+        const originalWriteHead = res.writeHead;
+        res.writeHead = function (statusCode: any, ...args: any[]) {
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          return originalWriteHead.apply(this, [statusCode, ...args] as any);
+        };
+      }
+      next();
+    });
+  },
+});
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
+    forceManifestContentType(),
     react({
       babel: {
         plugins: [
