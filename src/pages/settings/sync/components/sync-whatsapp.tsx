@@ -111,6 +111,16 @@ export function SyncWhatsApp() {
             <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
             <span>Verificando estado del bot local...</span>
           </div>
+        ) : !bot.isAvailable ? (
+          <div className="flex flex-col items-center justify-center py-8 text-sm text-muted-foreground gap-3 px-4 text-center">
+            <div className="p-3 bg-amber-500/10 rounded-full text-amber-500">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <span className="font-bold text-foreground">Servidor no disponible</span>
+            <p className="text-xs text-muted-foreground max-w-[250px]">
+              Asegúrate de que el bot de WhatsApp esté encendido y que la URL configurada sea correcta.
+            </p>
+          </div>
         ) : bot.status.isReady ? (
           <div className="space-y-4">
             <div className="space-y-2">

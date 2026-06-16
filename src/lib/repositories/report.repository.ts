@@ -49,12 +49,12 @@ export function createReportRepository(db: MinutasDatabase | null, workspace_id:
     );
 
   const remove = async (reportId: string) =>
-    safeWrite(
+    silentWrite(
       async () => {
         const doc = await db.reports.findOne(reportId).exec();
         if (doc) await doc.remove();
       },
-      { feature: 'Reports', successMessage: 'Reporte eliminado.' }
+      { feature: 'Reports' }
     );
 
   const clearAll = async () =>

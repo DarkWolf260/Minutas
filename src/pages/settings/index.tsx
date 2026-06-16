@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { AjustesGenerales } from '@/components/shared/ajustes-generales';
 import { useSettings } from '@/hooks/use-settings';
 import { useUnits } from '@/hooks/use-units';
@@ -13,6 +14,7 @@ import {
   Layers,
   FileText,
   ChevronRight,
+  ChevronLeft,
   AlertTriangle,
   Settings2,
   MapPin,
@@ -38,7 +40,7 @@ export default function SettingsPage() {
 
   if (!isLoaded) {
     return (
-      <div className="max-w-[1700px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 space-y-8">
+      <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 space-y-8">
         <div className="space-y-2">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-4 w-96" />
@@ -56,26 +58,33 @@ export default function SettingsPage() {
   }
 
   return (
-    <ScrollArea className="h-full w-full bg-background" type="always">
-      <div className="max-w-[1700px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-32 sm:pb-10 flex flex-col min-h-screen md:h-full md:overflow-hidden">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Configuración</h1>
-          <p className="text-muted-foreground mt-1">
+    <div className="h-full w-full bg-background overflow-y-auto md:overflow-hidden">
+      <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-24 md:pb-6 flex flex-col h-auto md:h-full min-h-0">
+        <div className="shrink-0">
+          <div className="flex items-center gap-4 mb-2">
+            <Link to="/" className="shrink-0">
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <h1 className="text-3xl font-bold tracking-tight">Configuración</h1>
+          </div>
+          <p className="text-muted-foreground">
             Gestiona las preferencias de la aplicación y el área de trabajo activa.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start flex-1 min-h-0 mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch md:items-start flex-1 min-h-0 mt-8 overflow-y-auto md:overflow-hidden pb-8 md:pb-0">
           {/* Lado Izquierdo: Ajustes Generales */}
-          <div className="lg:col-span-7 h-full flex flex-col min-h-0">
+          <div className="lg:col-span-7 h-auto md:h-full flex flex-col min-h-0">
             <AjustesGenerales />
           </div>
 
           {/* Lado Derecho: Otros Ajustes */}
-          <div className="lg:col-span-5 flex flex-col h-full min-h-0">
+          <div className="lg:col-span-5 flex flex-col h-auto md:h-full min-h-0">
 
             {/* Tarjeta Consolidada: Otros Ajustes */}
-            <Card className="shadow-lg border-muted/50 flex flex-col flex-1 min-h-0">
+            <Card className="border shadow-sm bg-card flex flex-col h-full min-h-0 overflow-hidden">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Settings2 className="h-5 w-5 text-primary" />
@@ -86,7 +95,7 @@ export default function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0 flex-1 min-h-0 flex flex-col">
-                <ScrollArea className="flex-1" type="always">
+                <ScrollArea className="flex-1" type="hover">
                   <div className="space-y-2 p-4 pt-0">
 
                     <Link
@@ -120,25 +129,6 @@ export default function SettingsPage() {
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                     </Link>
-
-                    <div
-                      title="Función futura..."
-                      className="flex items-center justify-between p-3 rounded-lg border opacity-50 cursor-not-allowed group bg-muted/20"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600">
-                          <User className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium">Perfil de Usuario</p>
-                            <span className="text-[10px] bg-background border px-1.5 py-0.5 rounded text-muted-foreground font-bold">PRÓXIMAMENTE</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">Administra tu identidad local y firma</p>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
 
                     <Link
                       to="/plantillas"
@@ -264,7 +254,7 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-    </ScrollArea>
+    </div>
   );
 }
 

@@ -11,6 +11,8 @@
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior: none;
     overflow-x: hidden;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
   }
 
   /* Only lock scrolling on desktop to maintain app-like feel */
@@ -49,8 +51,8 @@
 
   :root {
     --font-sans: 'Outfit', sans-serif;
-    --background: 210 33% 97%;
-    /* Light gray (#F0F4F8) */
+    --background: 216 24% 97%;
+    /* Light gray (#f5f7fa) */
     --foreground: 224 71% 4%;
     --card: 0 0% 100%;
     --card-foreground: 224 71% 4%;
@@ -175,14 +177,18 @@
 }
 
 /* Firefox */
-* {
-  scrollbar-width: auto;
-  scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
+@supports (scrollbar-width: auto) {
+  * {
+    scrollbar-width: auto;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
+  }
 }
 
 /* Force Radix ScrollArea to hide native scrollbar so its custom one shows */
-[data-radix-scroll-area-viewport] {
-  scrollbar-width: none !important;
+@supports (scrollbar-width: none) {
+  [data-radix-scroll-area-viewport] {
+    scrollbar-width: none !important;
+  }
 }
 
 [data-radix-scroll-area-viewport]::-webkit-scrollbar {
@@ -214,7 +220,18 @@
 
   .no-scrollbar {
     -ms-overflow-style: none;
-    scrollbar-width: none;
+  }
+
+  @supports (scrollbar-width: none) {
+    .no-scrollbar {
+      scrollbar-width: none;
+    }
+  }
+
+  @supports (text-wrap: balance) {
+    .text-balance {
+      text-wrap: balance;
+    }
   }
 
   .pb-safe {

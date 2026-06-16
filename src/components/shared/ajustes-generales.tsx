@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trash2, ChevronUp, ChevronDown, Save } from 'lucide-react';
+import { Trash2, ChevronUp, ChevronDown, Save, Layers, Folders, ListOrdered, Hash, FileText, Type } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AjustesGeneralesForm } from './ajustes-generales-form';
 import { Switch } from '@/components/ui/switch';
@@ -43,6 +43,24 @@ export function AjustesGenerales() {
   const { isCloud, currentWorkspace } = useWorkspaceManager();
 
   const isBlocked = isCloud && !isAdmin;
+
+  const [textSize, setTextSize] = useState(() => {
+    try {
+      return localStorage.getItem('minutas-text-size') || 'normal';
+    } catch (e) {
+      return 'normal';
+    }
+  });
+
+  const handleUpdateTextSize = (size: string) => {
+    try {
+      localStorage.setItem('minutas-text-size', size);
+      setTextSize(size);
+      window.dispatchEvent(new Event('minutas-text-size-changed'));
+    } catch (e) {
+      // ignore
+    }
+  };
 
   // Use local state to avoid saving on every keystroke
   const [localValues, setLocalValues] = useState<Record<string, string>>({});
@@ -158,8 +176,8 @@ export function AjustesGenerales() {
         const existingRoleNames = new Set(roles.map(r => r.name));
         const cleanedReportaRoles = localReportaRoles.filter(role => existingRoleNames.has(role));
         promises.push(
-          saveSettings({ 
-            ...settings, 
+          saveSettings({
+            ...settings,
             reportarole_ids: cleanedReportaRoles,
             group_consecutive_reports: localGroupConsecutive,
             group_by_template_type: localGroupByTemplateType,
@@ -171,8 +189,8 @@ export function AjustesGenerales() {
       } else {
         // Cloud non-admin user: only save visualization settings to prevent RLS/sync errors
         promises.push(
-          saveSettings({ 
-            ...settings, 
+          saveSettings({
+            ...settings,
             group_consecutive_reports: localGroupConsecutive,
             group_by_template_type: localGroupByTemplateType,
             grouped_template_ids: localGroupedTemplateIds,
@@ -196,7 +214,7 @@ export function AjustesGenerales() {
         lastSavedReportaRoles.current = cleanedReportaRoles;
         setLocalReportaRoles(cleanedReportaRoles);
       }
-      
+
       lastSavedGroupConsecutive.current = localGroupConsecutive;
       lastSavedGroupByTemplateType.current = localGroupByTemplateType;
       lastSavedGroupedTemplateIds.current = localGroupedTemplateIds;
@@ -315,7 +333,7 @@ export function AjustesGenerales() {
   }
 
   return (
-    <Card className="shadow-lg border-muted/50 h-full flex flex-col overflow-hidden">
+    <Card className="border shadow-sm bg-card h-full flex flex-col overflow-hidden">
       <CardHeader className="relative">
         <div className="flex items-center justify-between">
           <div>
@@ -324,18 +342,10 @@ export function AjustesGenerales() {
               Define los valores globales que se utilizarán automáticamente en tus reportes.
             </CardDescription>
           </div>
-          <div className="hidden sm:flex flex-col items-end gap-1">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-2 py-0.5 bg-muted rounded-full">
-              Área de Trabajo
-            </span>
-            <span className="text-sm font-bold text-primary truncate max-w-[200px]">
-              {currentWorkspace}
-            </span>
-          </div>
         </div>
       </CardHeader>
       <CardContent className="p-0 flex-1 min-h-0 flex flex-col">
-        <ScrollArea className="flex-1" type="always">
+        <ScrollArea className="flex-1" type="hover">
           <div className="p-6 space-y-6">
             {isBlocked && (
               <Alert className="bg-amber-500/5 border-amber-500/20 text-amber-600 rounded-2xl mb-2">
@@ -473,13 +483,18 @@ export function AjustesGenerales() {
               </div>
 
               <div className="flex items-center justify-between rounded-xl border p-4 bg-muted/5 shadow-sm">
-                <div className="space-y-0.5">
-                  <Label htmlFor="group-reports-toggle" className="text-sm font-semibold cursor-pointer">
-                    Agrupar novedades consecutivas
-                  </Label>
-                  <p className="text-xs text-muted-foreground max-w-md">
-                    Agrupa los reportes adyacentes del mismo tipo/plantilla en una sola tarjeta expandible.
-                  </p>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
+                    <Layers className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <Label htmlFor="group-reports-toggle" className="text-sm font-semibold cursor-pointer">
+                      Agrupar novedades consecutivas
+                    </Label>
+                    <p className="text-xs text-muted-foreground max-w-md">
+                      Agrupa los reportes adyacentes del mismo tipo/plantilla en una sola tarjeta expandible.
+                    </p>
+                  </div>
                 </div>
                 <Switch
                   id="group-reports-toggle"
@@ -494,13 +509,18 @@ export function AjustesGenerales() {
               </div>
 
               <div className="flex items-center justify-between rounded-xl border p-4 bg-muted/5 shadow-sm">
-                <div className="space-y-0.5">
-                  <Label htmlFor="group-by-template-toggle" className="text-sm font-semibold cursor-pointer">
-                    Agrupar por tipo de plantilla
-                  </Label>
-                  <p className="text-xs text-muted-foreground max-w-md">
-                    Agrupa todas las novedades del mismo tipo de plantilla en carpetas globales en la barra lateral.
-                  </p>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
+                    <Folders className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <Label htmlFor="group-by-template-toggle" className="text-sm font-semibold cursor-pointer">
+                      Agrupar por tipo de plantilla
+                    </Label>
+                    <p className="text-xs text-muted-foreground max-w-md">
+                      Agrupa todas las novedades del mismo tipo de plantilla en carpetas globales en la barra lateral.
+                    </p>
+                  </div>
                 </div>
                 <Switch
                   id="group-by-template-toggle"
@@ -548,7 +568,10 @@ export function AjustesGenerales() {
                             <SelectContent className="z-[200]">
                               {availableTemplates.map(template => (
                                 <SelectItem key={template.id} value={template.id}>
-                                  {template.name.replace(/\{.*?\}/g, '').trim()}
+                                  <span className="flex items-center gap-2">
+                                    <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                    <span>{template.name.replace(/\{.*?\}/g, '').trim()}</span>
+                                  </span>
                                 </SelectItem>
                               ))}
                               {availableTemplates.length === 0 && (
@@ -581,7 +604,10 @@ export function AjustesGenerales() {
                                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
                                     {index + 1}
                                   </span>
-                                  <span className="text-xs font-semibold">{displayName}</span>
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                    <span className="text-xs font-semibold truncate">{displayName}</span>
+                                  </div>
                                 </div>
                                 <Button
                                   variant="ghost"
@@ -608,13 +634,18 @@ export function AjustesGenerales() {
               )}
 
               <div className="flex items-center justify-between rounded-xl border p-4 bg-muted/5 shadow-sm">
-                <div className="space-y-0.5">
-                  <Label htmlFor="numbering-toggle" className="text-sm font-semibold cursor-pointer">
-                    Numeración de novedades
-                  </Label>
-                  <p className="text-xs text-muted-foreground max-w-md">
-                    Enumera automáticamente las novedades en el reporte final y al exportar a Word.
-                  </p>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
+                    <ListOrdered className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <Label htmlFor="numbering-toggle" className="text-sm font-semibold cursor-pointer">
+                      Numeración de novedades
+                    </Label>
+                    <p className="text-xs text-muted-foreground max-w-md">
+                      Enumera automáticamente las novedades en el reporte final y al exportar a Word.
+                    </p>
+                  </div>
                 </div>
                 <Switch
                   id="numbering-toggle"
@@ -641,12 +672,73 @@ export function AjustesGenerales() {
                       <SelectValue placeholder="Selecciona..." />
                     </SelectTrigger>
                     <SelectContent className="z-[200]">
-                      <SelectItem value="general">General (1, 2, 3...)</SelectItem>
-                      <SelectItem value="template">Por tipo de plantilla</SelectItem>
+                      <SelectItem value="general">
+                        <span className="flex items-center gap-2">
+                          <Hash className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span>General (1, 2, 3...)</span>
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="template">
+                        <span className="flex items-center gap-2">
+                          <Folders className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span>Por tipo de plantilla</span>
+                        </span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               )}
+            </div>
+
+            <Separator className="my-2" />
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <h4 className="text-sm font-semibold">Interfaz y Accesibilidad</h4>
+                <p className="text-xs text-muted-foreground">
+                  Personaliza la apariencia general de la aplicación.
+                </p>
+              </div>
+
+              {/* Selector de Tamaño de Texto */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border p-4 bg-muted/5 shadow-sm gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
+                    <Type className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-semibold">Tamaño del texto</Label>
+                    <p className="text-xs text-muted-foreground max-w-md">
+                      Ajusta la escala de tamaño de las letras de la interfaz.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 gap-1 p-1 bg-muted/30 rounded-xl border border-muted/50 w-full sm:w-[320px] shrink-0 bg-background">
+                  {(['small', 'normal', 'large', 'xlarge'] as const).map((size) => {
+                    const labels: Record<string, string> = {
+                      small: 'Pequeño',
+                      normal: 'Normal',
+                      large: 'Grande',
+                      xlarge: 'Extra'
+                    };
+                    const isActive = textSize === size;
+                    return (
+                      <Button
+                        key={size}
+                        variant={isActive ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => handleUpdateTextSize(size)}
+                        className={cn(
+                          "h-7 text-[10px] uppercase font-black rounded-lg transition-all",
+                          isActive ? "shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        )}
+                      >
+                        {labels[size]}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-end pt-2">

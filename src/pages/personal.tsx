@@ -26,7 +26,7 @@ function PersonnelPageContent() {
   }
 
   return (
-    <div className="flex flex-col w-full md:flex-1 md:flex md:min-h-0 md:overflow-hidden relative">
+    <div className="flex flex-col w-full md:flex-1 md:flex md:min-h-0 md:overflow-hidden relative bg-background">
       {/* Barra de Acciones Masivas (DIP) */}
       <MassActionsBar 
         selectedCount={idsSeleccionados.length} 

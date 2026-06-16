@@ -32,11 +32,17 @@ export function GlobalConfigProvider({ children }: { children: React.ReactNode }
   const fetchConfig = async () => {
     try {
       setLoading(true);
-      const { data, error } = await callWithTokenRefresh<any[]>(() => 
+      const fetchPromise = callWithTokenRefresh<any[]>(() => 
         supabase
           .from('global_config')
           .select('key, value')
       );
+
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('TIMEOUT')), 2500)
+      );
+
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
 
       if (error) throw error;
 
