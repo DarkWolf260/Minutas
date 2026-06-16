@@ -47,7 +47,16 @@ let botState: BotState = {
 const listeners = new Set<(state: BotState) => void>();
 
 function updateBotState(updates: Partial<BotState>) {
-  botState = { ...botState, ...updates };
+  const newState = { ...botState, ...updates };
+  
+  // Guard: If neither the local bot is ready nor the cloud bot is active, chats must be empty
+  const hasLocalBot = newState.isAvailable && newState.status.isReady;
+  const hasCloudBot = newState.isCloudActive;
+  if (!hasLocalBot && !hasCloudBot) {
+    newState.chats = [];
+  }
+  
+  botState = newState;
   listeners.forEach(listener => listener(botState));
 }
 
@@ -166,26 +175,44 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       
       updateBotState({
         status: data,
-        isAvailable: true
+        isAvailable: true,
+        chats: data.isReady ? botState.chats : []
       });
 
       // Report active status to the database (heartbeat) - throttled to once every 45 seconds to avoid excessive RxDB push/pull replication network spam
-      if (db && currentWorkspace && isCloud && data.isReady) {
+      if (db && currentWorkspace && isCloud) {
         const statusId = `whatsapp_bot_status:${currentWorkspace}`;
-        const shouldWrite = force || (Date.now() - lastHeartbeatTime > 45000);
+        const isReadyChanged = botState.status.isReady !== data.isReady;
+        const shouldWrite = force || isReadyChanged || (data.isReady && Date.now() - lastHeartbeatTime > 45000);
         
         if (shouldWrite) {
-          lastHeartbeatTime = Date.now();
+          if (data.isReady) {
+            lastHeartbeatTime = Date.now();
+          }
           db.configs.upsert({
             id: statusId,
             workspace_id: currentWorkspace,
             type: 'whatsapp_bot_status',
             data: {
-              isReady: true,
+              isReady: data.isReady,
               lastSeen: new Date().toISOString(),
               botId: localUrl
             }
           }).catch(err => logger.error('Error writing bot heartbeat:', err));
+
+          // Clear chats in DB immediately if local bot becomes not ready
+          if (!data.isReady) {
+            const chatsId = `whatsapp_chats:${currentWorkspace}`;
+            db.configs.upsert({
+              id: chatsId,
+              workspace_id: currentWorkspace,
+              type: 'whatsapp_bot_status',
+              data: {
+                chats: [],
+                updatedAt: new Date().toISOString()
+              }
+            }).catch(err => console.error('Error clearing chats in DB:', err));
+          }
         }
       }
       
@@ -208,7 +235,8 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       
       updateBotState({
         isAvailable: false,
-        status: { isReady: false, needsAuth: false, qr: null, statusMessage: 'Servidor no disponible' }
+        status: { isReady: false, needsAuth: false, qr: null, statusMessage: 'Servidor no disponible' },
+        chats: []
       });
       return false;
     } finally {
@@ -414,15 +442,15 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     const sub = db.configs.findOne(chatsId).$.subscribe((doc) => {
       // Solo aplicar la actualización de la base de datos si NO tenemos el bot local corriendo
       if (!botState.isAvailable || !botState.status.isReady) {
-        if (doc) {
+        if (botState.isCloudActive && doc) {
           const item = doc.toJSON();
           const data = item.data || {};
           if (Array.isArray(data.chats)) {
             updateBotState({ chats: data.chats });
+            return;
           }
-        } else {
-          updateBotState({ chats: [] });
         }
+        updateBotState({ chats: [] });
       }
     });
 

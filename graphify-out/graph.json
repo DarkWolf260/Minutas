@@ -6534,7 +6534,7 @@
       "source_file": "src/hooks/reporte-final/use-reporte-final-history.ts",
       "source_location": "L1",
       "id": "reporte_final_use_reporte_final_history",
-      "community": 59,
+      "community": 4,
       "norm_label": "use-reporte-final-history.ts"
     },
     {
@@ -6543,7 +6543,7 @@
       "source_file": "src/hooks/reporte-final/use-reporte-final-history.ts",
       "source_location": "L6",
       "id": "reporte_final_use_reporte_final_history_usereportefinalhistory",
-      "community": 59,
+      "community": 4,
       "norm_label": "usereportefinalhistory()"
     },
     {
@@ -6606,7 +6606,7 @@
       "source_file": "src/hooks/use-addresses.ts",
       "source_location": "L1",
       "id": "hooks_use_addresses",
-      "community": 10,
+      "community": 59,
       "norm_label": "use-addresses.ts"
     },
     {
@@ -6939,7 +6939,7 @@
       "source_file": "src/hooks/use-guard-history.ts",
       "source_location": "L1",
       "id": "hooks_use_guard_history",
-      "community": 59,
+      "community": 10,
       "norm_label": "use-guard-history.ts"
     },
     {
@@ -6948,7 +6948,7 @@
       "source_file": "src/hooks/use-guard-history.ts",
       "source_location": "L13",
       "id": "hooks_use_guard_history_useguardhistory",
-      "community": 59,
+      "community": 10,
       "norm_label": "useguardhistory()"
     },
     {
@@ -7209,7 +7209,7 @@
       "source_file": "src/hooks/use-plantillas.ts",
       "source_location": "L1",
       "id": "hooks_use_plantillas",
-      "community": 12,
+      "community": 59,
       "norm_label": "use-plantillas.ts"
     },
     {
@@ -7218,7 +7218,7 @@
       "source_file": "src/hooks/use-plantillas.ts",
       "source_location": "L12",
       "id": "hooks_use_plantillas_useplantillas",
-      "community": 12,
+      "community": 59,
       "norm_label": "useplantillas()"
     },
     {
@@ -7515,7 +7515,7 @@
       "source_file": "src/hooks/use-sync-templates.ts",
       "source_location": "L1",
       "id": "hooks_use_sync_templates",
-      "community": 12,
+      "community": 59,
       "norm_label": "use-sync-templates.ts"
     },
     {
@@ -7524,7 +7524,7 @@
       "source_file": "src/hooks/use-sync-templates.ts",
       "source_location": "L7",
       "id": "hooks_use_sync_templates_usesynctemplates",
-      "community": 12,
+      "community": 59,
       "norm_label": "usesynctemplates()"
     },
     {
@@ -7542,7 +7542,7 @@
       "source_file": "src/hooks/use-templates.ts",
       "source_location": "L1",
       "id": "hooks_use_templates",
-      "community": 4,
+      "community": 59,
       "norm_label": "use-templates.ts"
     },
     {
@@ -7551,7 +7551,7 @@
       "source_file": "src/hooks/use-templates.ts",
       "source_location": "L51",
       "id": "hooks_use_templates_bootstraplocks",
-      "community": 4,
+      "community": 59,
       "norm_label": "bootstraplocks"
     },
     {
@@ -7596,7 +7596,7 @@
       "source_file": "src/hooks/use-upload-template.ts",
       "source_location": "L6",
       "id": "hooks_use_upload_template_useuploadtemplate",
-      "community": 12,
+      "community": 59,
       "norm_label": "useuploadtemplate()"
     },
     {
@@ -7684,7 +7684,7 @@
       "label": "convertPhotoToBase64()",
       "file_type": "code",
       "source_file": "src/hooks/use-whatsapp-bot.ts",
-      "source_location": "L54",
+      "source_location": "L63",
       "id": "hooks_use_whatsapp_bot_convertphototobase64",
       "community": 32,
       "norm_label": "convertphototobase64()"
@@ -7693,7 +7693,7 @@
       "label": "useWhatsAppBot()",
       "file_type": "code",
       "source_file": "src/hooks/use-whatsapp-bot.ts",
-      "source_location": "L105",
+      "source_location": "L114",
       "id": "hooks_use_whatsapp_bot_usewhatsappbot",
       "community": 32,
       "norm_label": "usewhatsappbot()"
@@ -7794,7 +7794,7 @@
       "source_file": "src/lib/constants/addresses.ts",
       "source_location": "L1",
       "id": "constants_addresses",
-      "community": 10,
+      "community": 59,
       "norm_label": "addresses.ts"
     },
     {
@@ -7803,7 +7803,7 @@
       "source_file": "src/lib/constants/addresses.ts",
       "source_location": "L1",
       "id": "constants_addresses_default_addresses",
-      "community": 10,
+      "community": 59,
       "norm_label": "default_addresses"
     },
     {
@@ -7947,7 +7947,7 @@
       "source_file": "src/lib/constants/statistics.ts",
       "source_location": "L1",
       "id": "constants_statistics",
-      "community": 21,
+      "community": 7,
       "norm_label": "statistics.ts"
     },
     {
@@ -7956,7 +7956,7 @@
       "source_file": "src/lib/constants/statistics.ts",
       "source_location": "L1",
       "id": "constants_statistics_statisticssection",
-      "community": 21,
+      "community": 7,
       "norm_label": "statisticssection"
     },
     {
@@ -7974,7 +7974,7 @@
       "source_file": "src/lib/constants/statistics.ts",
       "source_location": "L214",
       "id": "constants_statistics_default_statistics_categories",
-      "community": 21,
+      "community": 7,
       "norm_label": "default_statistics_categories"
     },
     {
@@ -8559,7 +8559,7 @@
       "source_file": "src/lib/estadisticas/calculator.ts",
       "source_location": "L1",
       "id": "estadisticas_calculator",
-      "community": 21,
+      "community": 7,
       "norm_label": "calculator.ts"
     },
     {
@@ -8568,7 +8568,7 @@
       "source_file": "src/lib/estadisticas/calculator.ts",
       "source_location": "L9",
       "id": "estadisticas_calculator_monthlystats",
-      "community": 21,
+      "community": 7,
       "norm_label": "monthlystats"
     },
     {
@@ -8694,7 +8694,7 @@
       "source_file": "src/lib/estadisticas/transfer-type-resolver.ts",
       "source_location": "L1",
       "id": "estadisticas_transfer_type_resolver",
-      "community": 7,
+      "community": 110,
       "norm_label": "transfer-type-resolver.ts"
     },
     {
@@ -8703,7 +8703,7 @@
       "source_file": "src/lib/estadisticas/transfer-type-resolver.ts",
       "source_location": "L7",
       "id": "estadisticas_transfer_type_resolver_formataddresstostring",
-      "community": 7,
+      "community": 110,
       "norm_label": "formataddresstostring()"
     },
     {
@@ -8712,7 +8712,7 @@
       "source_file": "src/lib/estadisticas/transfer-type-resolver.ts",
       "source_location": "L21",
       "id": "estadisticas_transfer_type_resolver_transfer_type_map",
-      "community": 7,
+      "community": 110,
       "norm_label": "transfer_type_map"
     },
     {
@@ -8721,7 +8721,7 @@
       "source_file": "src/lib/estadisticas/transfer-type-resolver.ts",
       "source_location": "L46",
       "id": "estadisticas_transfer_type_resolver_resolvertipodesdedirectorio",
-      "community": 7,
+      "community": 110,
       "norm_label": "resolvertipodesdedirectorio()"
     },
     {
@@ -8730,7 +8730,7 @@
       "source_file": "src/lib/estadisticas/transfer-type-resolver.ts",
       "source_location": "L69",
       "id": "estadisticas_transfer_type_resolver_resolvercategoriatraslado",
-      "community": 7,
+      "community": 110,
       "norm_label": "resolvercategoriatraslado()"
     },
     {
@@ -10278,7 +10278,7 @@
       "source_file": "src/lib/types/index.ts",
       "source_location": "L122",
       "id": "types_index_report",
-      "community": 23,
+      "community": 1,
       "norm_label": "report"
     },
     {
@@ -10593,7 +10593,7 @@
       "source_file": "src/lib/utils.ts",
       "source_location": "L161",
       "id": "lib_utils_normalizestring",
-      "community": 7,
+      "community": 110,
       "norm_label": "normalizestring()"
     },
     {
@@ -10602,7 +10602,7 @@
       "source_file": "src/lib/utils/id.ts",
       "source_location": "L1",
       "id": "utils_id",
-      "community": 4,
+      "community": 59,
       "norm_label": "id.ts"
     },
     {
@@ -10611,7 +10611,7 @@
       "source_file": "src/lib/utils/id.ts",
       "source_location": "L13",
       "id": "utils_id_generateid",
-      "community": 4,
+      "community": 59,
       "norm_label": "generateid()"
     },
     {
@@ -77096,5 +77096,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "981fba48e29f8345b8183fd5016ce95e39f42468"
+  "built_at_commit": "d019f9e61b6f40a614a9e88902c6c359a57c4cd9"
 }

@@ -243,6 +243,16 @@ export function QuickChatSelector({ className }: QuickChatSelectorProps) {
                   Verificar estado
                 </Button>
               </div>
+            ) : !bot.status.isReady ? (
+              <div className="flex flex-col items-center justify-center py-10 px-4 text-center gap-3">
+                <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
+                <p className="text-xs font-bold text-foreground">
+                  {bot.status.statusMessage || 'Conectando con WhatsApp...'}
+                </p>
+                <p className="text-[10px] text-muted-foreground leading-normal">
+                  Espera a que se establezca la sesión de WhatsApp en el servidor.
+                </p>
+              </div>
             ) : bot.chats.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 gap-2">
                 <Loader2 className="h-5 w-5 animate-spin text-emerald-500" />

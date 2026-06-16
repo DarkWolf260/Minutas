@@ -20,7 +20,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\ast.json": {
-    "mtime": 1781625179.125193,
+    "mtime": 1781626563.7560017,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -45,7 +45,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\report.json": {
-    "mtime": 1781625179.124193,
+    "mtime": 1781626563.755001,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -165,8 +165,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\layout\\quick-chat-selector.tsx": {
-    "mtime": 1780371880.1280968,
-    "ast_hash": "847c2bd3dfda6d19f2d5c67eaaa6c24a",
+    "mtime": 1781626519.3532908,
+    "ast_hash": "2bce0e96ec4d6726fce7274f1e01ac26",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\layout\\side-nav.tsx": {
@@ -950,8 +950,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\use-whatsapp-bot.ts": {
-    "mtime": 1780956605.6624947,
-    "ast_hash": "39e90525cc4f32340b118024f922edd6",
+    "mtime": 1781626511.689137,
+    "ast_hash": "f2dd66c4064412742143f245fdee2512",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\__tests__\\estadisticas-utils.test.ts": {
@@ -1625,8 +1625,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\sync\\components\\sync-whatsapp.tsx": {
-    "mtime": 1780031285.3244421,
-    "ast_hash": "60b439087a2533379b6f62c63556fb14",
+    "mtime": 1781626531.5732589,
+    "ast_hash": "bdd16f84c87346dcefb5bae9483e9b85",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\workspaces.tsx": {
@@ -1755,7 +1755,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\whatsapp-bot\\server.js": {
-    "mtime": 1781244581.3150096,
+    "mtime": 1781626459.7678778,
     "ast_hash": "deb7f4647c8eeee3404510623f32e0b1",
     "semantic_hash": ""
   },
