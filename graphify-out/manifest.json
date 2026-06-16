@@ -20,7 +20,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\ast.json": {
-    "mtime": 1781306987.4989543,
+    "mtime": 1781581845.9135444,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -35,8 +35,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\package.json": {
-    "mtime": 1781308519.29284,
-    "ast_hash": "1d0b705cdc161c9d23f1f661d956381a",
+    "mtime": 1781318668.5900261,
+    "ast_hash": "2fc6ebf2bdcf9faefae70e8ebefe38b5",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\postcss.config.mjs": {
@@ -45,7 +45,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\report.json": {
-    "mtime": 1781306987.4984446,
+    "mtime": 1781581845.9135444,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -265,8 +265,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\providers\\auth-provider.tsx": {
-    "mtime": 1779837359.9541914,
-    "ast_hash": "3ed6502f09b411f0feea1283c1b80ea2",
+    "mtime": 1781581814.304884,
+    "ast_hash": "cd0a76dd78557c75c3c7678f736805a1",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\providers\\pwa-provider.tsx": {
@@ -280,8 +280,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\providers\\user-provider.tsx": {
-    "mtime": 1779831614.255214,
-    "ast_hash": "cabc5841bb48293326207424d9919640",
+    "mtime": 1781581821.315493,
+    "ast_hash": "acfeb645dd585cd73a956005e14461f7",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\field-renderer.tsx": {
@@ -1857,6 +1857,56 @@
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\docs\\supabase_guide.md": {
     "mtime": 1781308465.1139252,
     "ast_hash": "57bc7ebbf93ab0ec6502fc3307456fb4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\supabase\\.temp\\linked-project.json": {
+    "mtime": 1781313129.0250123,
+    "ast_hash": "ce0e7d2127e6a93cf96dcf33cdf21ee1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\supabase\\migrations\\20260526225626_migration.sql": {
+    "mtime": 1781313165.9117703,
+    "ast_hash": "9f67461af586ef6a2b4ca73475fb0641",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\supabase\\migrations\\20260526225653_migration.sql": {
+    "mtime": 1781313172.4703228,
+    "ast_hash": "d3176229f5b78b3583d513a9f61bb8d8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\supabase\\migrations\\20260526230627_migration.sql": {
+    "mtime": 1781313178.692766,
+    "ast_hash": "e98923704a93d6af17c44bff163b6def",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\supabase\\migrations\\20260526230634_migration.sql": {
+    "mtime": 1781313184.841544,
+    "ast_hash": "0516a234149e3a73deb5330d62076678",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\supabase\\migrations\\20260605054200_migration.sql": {
+    "mtime": 1781313191.3532033,
+    "ast_hash": "30312c09327f6da92cc9908455394396",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\supabase\\migrations\\20260605054705_migration.sql": {
+    "mtime": 1781313198.0212064,
+    "ast_hash": "4891dd616cc8ab4c322d04d3c69ae5e0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\supabase\\migrations\\20260605061312_migration.sql": {
+    "mtime": 1781313204.3256512,
+    "ast_hash": "0a241c5fe87162e70d3507b28cc903ad",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\supabase\\migrations\\20260612234632_migration.sql": {
+    "mtime": 1781314010.6570835,
+    "ast_hash": "ae6c733798f6b4f2468e4472e56d77cd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\supabase\\migrations\\20260613012703_remote_schema.sql": {
+    "mtime": 1781579388.0191984,
+    "ast_hash": "143547fec08ca916d18827dd8ea1e895",
     "semantic_hash": ""
   }
 }

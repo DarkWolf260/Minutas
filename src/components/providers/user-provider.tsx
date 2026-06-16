@@ -31,13 +31,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const { data, error } = await callWithTokenRefresh<any>(() => 
+      // Fetch status with a 4-second timeout to prevent hangs when offline or server is down
+      const fetchPromise = callWithTokenRefresh<any>(() => 
         supabase
           .from('profiles')
           .select('is_admin, is_approved')
           .eq('id', user.id)
           .single()
       );
+
+      const timeoutPromise = new Promise<{data: null, error: any}>((_, reject) => 
+        setTimeout(() => reject(new Error('TIMEOUT')), 4000)
+      );
+
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
 
       if (error) {
         if (error.code === 'PGRST116') { // Not found
@@ -64,7 +71,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       });
     } catch (err) {
       console.error('Error fetching user status:', err);
-      setStatus(prev => ({ ...prev, loading: false }));
+      
+      // Fallback: Check if we have status cached in user metadata to prevent offline lockouts
+      const metadataAdmin = user.user_metadata?.is_admin === true;
+      const metadataApproved = user.user_metadata?.is_approved === true;
+      
+      setStatus({
+        isAdmin: metadataAdmin,
+        isApproved: metadataApproved,
+        loading: false, // Ensure loading is set to false to unblock UI
+        exists: false
+      });
     }
   };
 
