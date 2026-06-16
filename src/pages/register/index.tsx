@@ -125,7 +125,7 @@ export default function RegisterPage() {
           </div>
           <h1 className="text-3xl font-bold tracking-tight">Crear Cuenta</h1>
           <p className="text-muted-foreground mt-2 text-sm">
-            {config.allow_registration ? 'Únete a la comunidad de Minutas Cloud' : 'Registros temporalmente cerrados'}
+            {config.allow_registration ? 'Únete a la comunidad de Minutas Sync' : 'Registros temporalmente cerrados'}
           </p>
         </div>
 

@@ -2709,7 +2709,7 @@
       "source_file": "src/components/orden-del-dia/add-activity-form.tsx",
       "source_location": "L1",
       "id": "orden_del_dia_add_activity_form",
-      "community": 64,
+      "community": 14,
       "norm_label": "add-activity-form.tsx"
     },
     {
@@ -4437,7 +4437,7 @@
       "source_file": "src/components/structure/role-sorter.tsx",
       "source_location": "L1",
       "id": "structure_role_sorter",
-      "community": 2,
+      "community": 63,
       "norm_label": "role-sorter.tsx"
     },
     {
@@ -4455,7 +4455,7 @@
       "source_file": "src/components/structure/role-sorter.tsx",
       "source_location": "L42",
       "id": "structure_role_sorter_sortableroleitem",
-      "community": 2,
+      "community": 63,
       "norm_label": "sortableroleitem"
     },
     {
@@ -5409,7 +5409,7 @@
       "source_file": "src/components/ui/custom/onboarding-tour.tsx",
       "source_location": "L1",
       "id": "custom_onboarding_tour",
-      "community": 64,
+      "community": 108,
       "norm_label": "onboarding-tour.tsx"
     },
     {
@@ -5418,7 +5418,7 @@
       "source_file": "src/components/ui/custom/onboarding-tour.tsx",
       "source_location": "L7",
       "id": "custom_onboarding_tour_tourstep",
-      "community": 64,
+      "community": 108,
       "norm_label": "tourstep"
     },
     {
@@ -5427,7 +5427,7 @@
       "source_file": "src/components/ui/custom/onboarding-tour.tsx",
       "source_location": "L16",
       "id": "custom_onboarding_tour_tour_steps",
-      "community": 64,
+      "community": 108,
       "norm_label": "tour_steps"
     },
     {
@@ -5436,7 +5436,7 @@
       "source_file": "src/components/ui/custom/onboarding-tour.tsx",
       "source_location": "L55",
       "id": "custom_onboarding_tour_onboardingtour",
-      "community": 64,
+      "community": 108,
       "norm_label": "onboardingtour()"
     },
     {
@@ -5526,7 +5526,7 @@
       "source_file": "src/components/ui/custom/time-hlv-input.tsx",
       "source_location": "L1",
       "id": "custom_time_hlv_input",
-      "community": 64,
+      "community": 13,
       "norm_label": "time-hlv-input.tsx"
     },
     {
@@ -5535,7 +5535,7 @@
       "source_file": "src/components/ui/custom/time-hlv-input.tsx",
       "source_location": "L10",
       "id": "custom_time_hlv_input_formathlv",
-      "community": 64,
+      "community": 13,
       "norm_label": "formathlv()"
     },
     {
@@ -5544,7 +5544,7 @@
       "source_file": "src/components/ui/custom/time-hlv-input.tsx",
       "source_location": "L34",
       "id": "custom_time_hlv_input_getcursorposition",
-      "community": 64,
+      "community": 13,
       "norm_label": "getcursorposition()"
     },
     {
@@ -5553,7 +5553,7 @@
       "source_file": "src/components/ui/custom/time-hlv-input.tsx",
       "source_location": "L48",
       "id": "custom_time_hlv_input_timehlvinputprops",
-      "community": 64,
+      "community": 13,
       "norm_label": "timehlvinputprops"
     },
     {
@@ -5562,7 +5562,7 @@
       "source_file": "src/components/ui/custom/time-hlv-input.tsx",
       "source_location": "L58",
       "id": "custom_time_hlv_input_timehlvinput",
-      "community": 64,
+      "community": 13,
       "norm_label": "timehlvinput"
     },
     {
@@ -5895,7 +5895,7 @@
       "source_file": "src/components/ui/progress.tsx",
       "source_location": "L1",
       "id": "ui_progress",
-      "community": 64,
+      "community": 13,
       "norm_label": "progress.tsx"
     },
     {
@@ -5904,7 +5904,7 @@
       "source_file": "src/components/ui/progress.tsx",
       "source_location": "L8",
       "id": "ui_progress_progress",
-      "community": 64,
+      "community": 13,
       "norm_label": "progress"
     },
     {
@@ -6928,7 +6928,7 @@
       "label": "useGlobalConfig()",
       "file_type": "code",
       "source_file": "src/hooks/use-global-config.ts",
-      "source_location": "L150",
+      "source_location": "L156",
       "id": "hooks_use_global_config_useglobalconfig",
       "community": 12,
       "norm_label": "useglobalconfig()"
@@ -7947,7 +7947,7 @@
       "source_file": "src/lib/constants/statistics.ts",
       "source_location": "L1",
       "id": "constants_statistics",
-      "community": 7,
+      "community": 21,
       "norm_label": "statistics.ts"
     },
     {
@@ -7956,7 +7956,7 @@
       "source_file": "src/lib/constants/statistics.ts",
       "source_location": "L1",
       "id": "constants_statistics_statisticssection",
-      "community": 7,
+      "community": 21,
       "norm_label": "statisticssection"
     },
     {
@@ -7974,7 +7974,7 @@
       "source_file": "src/lib/constants/statistics.ts",
       "source_location": "L214",
       "id": "constants_statistics_default_statistics_categories",
-      "community": 7,
+      "community": 21,
       "norm_label": "default_statistics_categories"
     },
     {
@@ -8559,7 +8559,7 @@
       "source_file": "src/lib/estadisticas/calculator.ts",
       "source_location": "L1",
       "id": "estadisticas_calculator",
-      "community": 7,
+      "community": 21,
       "norm_label": "calculator.ts"
     },
     {
@@ -8568,7 +8568,7 @@
       "source_file": "src/lib/estadisticas/calculator.ts",
       "source_location": "L9",
       "id": "estadisticas_calculator_monthlystats",
-      "community": 7,
+      "community": 21,
       "norm_label": "monthlystats"
     },
     {
@@ -8694,7 +8694,7 @@
       "source_file": "src/lib/estadisticas/transfer-type-resolver.ts",
       "source_location": "L1",
       "id": "estadisticas_transfer_type_resolver",
-      "community": 13,
+      "community": 7,
       "norm_label": "transfer-type-resolver.ts"
     },
     {
@@ -8703,7 +8703,7 @@
       "source_file": "src/lib/estadisticas/transfer-type-resolver.ts",
       "source_location": "L7",
       "id": "estadisticas_transfer_type_resolver_formataddresstostring",
-      "community": 13,
+      "community": 7,
       "norm_label": "formataddresstostring()"
     },
     {
@@ -8712,7 +8712,7 @@
       "source_file": "src/lib/estadisticas/transfer-type-resolver.ts",
       "source_location": "L21",
       "id": "estadisticas_transfer_type_resolver_transfer_type_map",
-      "community": 13,
+      "community": 7,
       "norm_label": "transfer_type_map"
     },
     {
@@ -8721,7 +8721,7 @@
       "source_file": "src/lib/estadisticas/transfer-type-resolver.ts",
       "source_location": "L46",
       "id": "estadisticas_transfer_type_resolver_resolvertipodesdedirectorio",
-      "community": 13,
+      "community": 7,
       "norm_label": "resolvertipodesdedirectorio()"
     },
     {
@@ -8730,7 +8730,7 @@
       "source_file": "src/lib/estadisticas/transfer-type-resolver.ts",
       "source_location": "L69",
       "id": "estadisticas_transfer_type_resolver_resolvercategoriatraslado",
-      "community": 13,
+      "community": 7,
       "norm_label": "resolvercategoriatraslado()"
     },
     {
@@ -10278,7 +10278,7 @@
       "source_file": "src/lib/types/index.ts",
       "source_location": "L122",
       "id": "types_index_report",
-      "community": 1,
+      "community": 23,
       "norm_label": "report"
     },
     {
@@ -10512,7 +10512,7 @@
       "source_file": "src/lib/utils.ts",
       "source_location": "L1",
       "id": "lib_utils",
-      "community": 64,
+      "community": 108,
       "norm_label": "utils.ts"
     },
     {
@@ -10530,7 +10530,7 @@
       "source_file": "src/lib/utils.ts",
       "source_location": "L20",
       "id": "lib_utils_debouncedfunction",
-      "community": 64,
+      "community": 108,
       "norm_label": "debouncedfunction"
     },
     {
@@ -10548,7 +10548,7 @@
       "source_file": "src/lib/utils.ts",
       "source_location": "L60",
       "id": "lib_utils_rank_hierarchy",
-      "community": 64,
+      "community": 108,
       "norm_label": "rank_hierarchy"
     },
     {
@@ -10557,7 +10557,7 @@
       "source_file": "src/lib/utils.ts",
       "source_location": "L77",
       "id": "lib_utils_compareranks",
-      "community": 64,
+      "community": 108,
       "norm_label": "compareranks()"
     },
     {
@@ -10593,7 +10593,7 @@
       "source_file": "src/lib/utils.ts",
       "source_location": "L161",
       "id": "lib_utils_normalizestring",
-      "community": 13,
+      "community": 7,
       "norm_label": "normalizestring()"
     },
     {
@@ -10998,7 +10998,7 @@
       "source_file": "src/pages/actividades.tsx",
       "source_location": "L1",
       "id": "pages_actividades",
-      "community": 64,
+      "community": 13,
       "norm_label": "actividades.tsx"
     },
     {
@@ -11007,7 +11007,7 @@
       "source_file": "src/pages/actividades.tsx",
       "source_location": "L65",
       "id": "pages_actividades_categories",
-      "community": 64,
+      "community": 13,
       "norm_label": "categories"
     },
     {
@@ -11016,7 +11016,7 @@
       "source_file": "src/pages/actividades.tsx",
       "source_location": "L74",
       "id": "pages_actividades_priorities",
-      "community": 64,
+      "community": 13,
       "norm_label": "priorities"
     },
     {
@@ -11025,7 +11025,7 @@
       "source_file": "src/pages/actividades.tsx",
       "source_location": "L80",
       "id": "pages_actividades_columns",
-      "community": 64,
+      "community": 13,
       "norm_label": "columns"
     },
     {
@@ -11043,7 +11043,7 @@
       "source_file": "src/pages/actividades.tsx",
       "source_location": "L94",
       "id": "pages_actividades_formatdatereadable",
-      "community": 64,
+      "community": 13,
       "norm_label": "formatdatereadable()"
     },
     {
@@ -11070,7 +11070,7 @@
       "source_file": "src/pages/actividades.tsx",
       "source_location": "L1496",
       "id": "pages_actividades_actividadespage",
-      "community": 64,
+      "community": 13,
       "norm_label": "actividadespage()"
     },
     {
@@ -11970,7 +11970,7 @@
       "source_file": "src/pages/plantillas.tsx",
       "source_location": "L1",
       "id": "pages_plantillas",
-      "community": 63,
+      "community": 108,
       "norm_label": "plantillas.tsx"
     },
     {
@@ -12636,7 +12636,7 @@
       "source_file": "src/pages/settings/profile.tsx",
       "source_location": "L1",
       "id": "settings_profile",
-      "community": 14,
+      "community": 2,
       "norm_label": "profile.tsx"
     },
     {
@@ -77096,5 +77096,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "b00651b874e90f1c7fc329b8fb4eaf309eb15d74"
+  "built_at_commit": "981fba48e29f8345b8183fd5016ce95e39f42468"
 }

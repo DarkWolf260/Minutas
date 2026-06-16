@@ -76,7 +76,7 @@ export default function LoginPage() {
           <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 ring-1 ring-primary/20 shadow-[0_0_40px_-10px_rgba(var(--primary),0.5)]">
             <img src="/icons/icon-192x192.png" alt="Minutas Logo" className="h-10 w-10 object-contain" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Minutas Cloud</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Minutas Sync</h1>
           <p className="text-muted-foreground mt-2 text-sm">
             Sincroniza tus datos y accede a la comunidad
           </p>

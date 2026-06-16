@@ -20,7 +20,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\ast.json": {
-    "mtime": 1781621132.9116569,
+    "mtime": 1781625179.125193,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -45,7 +45,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\report.json": {
-    "mtime": 1781621132.9106543,
+    "mtime": 1781625179.124193,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -115,8 +115,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\common\\loading-screen.tsx": {
-    "mtime": 1779432239.8251042,
-    "ast_hash": "2fa1e069e5225e5167d2a0f48ae5d44a",
+    "mtime": 1781623139.793097,
+    "ast_hash": "bd872dd15011ea91b6c93f10464f0568",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\guards\\guard-selector.tsx": {
@@ -795,8 +795,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\use-global-config.ts": {
-    "mtime": 1780469469.6928494,
-    "ast_hash": "f84b83869651e2fa36f407b1ccfae025",
+    "mtime": 1781625149.9182682,
+    "ast_hash": "789dce0b94a0ba7e4749d1c9de0ee88c",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\use-guard-history.ts": {
@@ -1365,8 +1365,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\login\\index.tsx": {
-    "mtime": 1778716466.2391796,
-    "ast_hash": "d640752ed216286dd728e936aecdb885",
+    "mtime": 1781623605.5242286,
+    "ast_hash": "890145d8da2b310295bbf1902c567ffb",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\maintenance\\index.tsx": {
@@ -1495,8 +1495,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\register\\index.tsx": {
-    "mtime": 1778712779.280341,
-    "ast_hash": "eac2b544c186b066f45b5cb82f8037ce",
+    "mtime": 1781623624.98967,
+    "ast_hash": "1e8e89401cb11af05762cf28e6323860",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\reporte-final.tsx": {
