@@ -158,8 +158,8 @@ export function AjustesGenerales() {
         const existingRoleNames = new Set(roles.map(r => r.name));
         const cleanedReportaRoles = localReportaRoles.filter(role => existingRoleNames.has(role));
         promises.push(
-          saveSettings({ 
-            ...settings, 
+          saveSettings({
+            ...settings,
             reportarole_ids: cleanedReportaRoles,
             group_consecutive_reports: localGroupConsecutive,
             group_by_template_type: localGroupByTemplateType,
@@ -171,8 +171,8 @@ export function AjustesGenerales() {
       } else {
         // Cloud non-admin user: only save visualization settings to prevent RLS/sync errors
         promises.push(
-          saveSettings({ 
-            ...settings, 
+          saveSettings({
+            ...settings,
             group_consecutive_reports: localGroupConsecutive,
             group_by_template_type: localGroupByTemplateType,
             grouped_template_ids: localGroupedTemplateIds,
@@ -196,7 +196,7 @@ export function AjustesGenerales() {
         lastSavedReportaRoles.current = cleanedReportaRoles;
         setLocalReportaRoles(cleanedReportaRoles);
       }
-      
+
       lastSavedGroupConsecutive.current = localGroupConsecutive;
       lastSavedGroupByTemplateType.current = localGroupByTemplateType;
       lastSavedGroupedTemplateIds.current = localGroupedTemplateIds;
@@ -323,14 +323,6 @@ export function AjustesGenerales() {
             <CardDescription className="mt-1">
               Define los valores globales que se utilizarán automáticamente en tus reportes.
             </CardDescription>
-          </div>
-          <div className="hidden sm:flex flex-col items-end gap-1">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 px-2 py-0.5 bg-muted rounded-full">
-              Área de Trabajo
-            </span>
-            <span className="text-sm font-bold text-primary truncate max-w-[200px]">
-              {currentWorkspace}
-            </span>
           </div>
         </div>
       </CardHeader>
