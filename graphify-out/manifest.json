@@ -20,7 +20,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\ast.json": {
-    "mtime": 1781620554.3035455,
+    "mtime": 1781621132.9116569,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -45,7 +45,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\report.json": {
-    "mtime": 1781620554.3035455,
+    "mtime": 1781621132.9106543,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -715,8 +715,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\reporte-final\\use-reporte-final-generator.ts": {
-    "mtime": 1781249588.5841045,
-    "ast_hash": "17f0e8945bda83fe459338d9a0d48fe6",
+    "mtime": 1781621083.7569995,
+    "ast_hash": "f8444a75c5ac1fcce06c2ac42c133fe9",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\reporte-final\\use-reporte-final-history.ts": {
@@ -1245,7 +1245,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\renderer.ts": {
-    "mtime": 1781617625.770462,
+    "mtime": 1781621066.4324105,
     "ast_hash": "30e70ae8bb1987e6f6b32a429ff44c53",
     "semantic_hash": ""
   },
