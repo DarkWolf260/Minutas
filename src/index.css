@@ -51,8 +51,8 @@
 
   :root {
     --font-sans: 'Outfit', sans-serif;
-    --background: 210 33% 97%;
-    /* Light gray (#F0F4F8) */
+    --background: 216 24% 97%;
+    /* Light gray (#f5f7fa) */
     --foreground: 224 71% 4%;
     --card: 0 0% 100%;
     --card-foreground: 224 71% 4%;

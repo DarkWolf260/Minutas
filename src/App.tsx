@@ -161,7 +161,7 @@ function AppLayout() {
           </div>
         )}
 
-        <main className="flex-1 md:overflow-hidden flex flex-col min-h-0 min-w-0 relative bg-muted/30 overflow-x-hidden">
+        <main className="flex-1 md:overflow-hidden flex flex-col min-h-0 min-w-0 relative bg-background overflow-x-hidden">
           {config.maintenance_mode && !isAdmin && location.pathname !== '/login' ? (
             <Suspense fallback={<PageLoader />}>
               <MaintenancePage />

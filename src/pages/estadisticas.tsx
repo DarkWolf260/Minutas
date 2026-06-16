@@ -14,7 +14,7 @@ export default function EstadisticasPage() {
   const { mes, anio, modo, nombresMeses } = hook;
 
   return (
-    <ScrollArea className="h-full w-full" type="always">
+    <ScrollArea className="h-full w-full bg-background" type="always">
       <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-32 sm:pb-16 space-y-8 h-full flex flex-col">
         {/* Cabecera y Filtros (SRP) */}
         <StatsHeader hook={hook} />
