@@ -218,6 +218,8 @@ alter table "public"."personnel" enable row level security;
     "role" text default 'user'::text,
     "is_admin" boolean default false,
     "is_approved" boolean default false,
+    "workspace_id" text,
+    "is_verified" boolean default false,
     "allowed_workspaces" text[] default '{}'::text[],
     "created_at" timestamp with time zone default now(),
     "updated_at" timestamp with time zone default now()
@@ -747,7 +749,7 @@ $function$
 CREATE OR REPLACE FUNCTION public.get_user_role(user_id uuid)
  RETURNS text
  LANGUAGE plpgsql
- SECURITY DEFINER
+ SECURITY INVOKER
  SET search_path TO 'public'
 AS $function$
 BEGIN
@@ -844,7 +846,7 @@ $function$
 CREATE OR REPLACE FUNCTION public.is_user_approved(user_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
- SECURITY DEFINER
+ SECURITY INVOKER
  SET search_path TO 'public'
 AS $function$
 BEGIN
@@ -856,7 +858,7 @@ $function$
 CREATE OR REPLACE FUNCTION public.is_user_verified(user_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
- SECURITY DEFINER
+ SECURITY INVOKER
  SET search_path TO 'public', 'pg_temp'
 AS $function$
 BEGIN
@@ -1914,50 +1916,13 @@ grant truncate on table "public"."workspaces" to "service_role";
 grant update on table "public"."workspaces" to "service_role";
 
 
-  create policy "Solo admins ven actividad"
+  create policy "Acceso total personal aprobado"
   on "public"."activities"
   as permissive
   for all
-  to public
-using (internal.is_admin());
-
-
-
-  create policy "Users can delete activities"
-  on "public"."activities"
-  as permissive
-  for delete
   to authenticated
-using (true);
-
-
-
-  create policy "Users can insert activities"
-  on "public"."activities"
-  as permissive
-  for insert
-  to authenticated
-with check (true);
-
-
-
-  create policy "Users can update activities"
-  on "public"."activities"
-  as permissive
-  for update
-  to authenticated
-using (true)
-with check (true);
-
-
-
-  create policy "Users can view activities"
-  on "public"."activities"
-  as permissive
-  for select
-  to authenticated
-using (true);
-
+  using ((public.is_user_approved((select auth.uid())) = true))
+  with check ((public.is_user_approved((select auth.uid())) = true));
 
 
   create policy "Solo admins ven actividad"
@@ -1976,7 +1941,7 @@ using (internal.is_admin());
   to authenticated
 using ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
    FROM public.profiles
-  WHERE ((profiles.id = auth.uid()) AND (profiles.is_approved = true))))));
+  WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))));
 
 
 
@@ -1989,49 +1954,89 @@ using (internal.is_admin());
 
 
 
-  create policy "Admin/Jefe: Gestión Cronograma"
+  create policy "Admin/Jefe: Gestión Cronograma (Insert)"
   on "public"."fuel_schedules"
   as permissive
-  for all
+  for insert
   to authenticated
-using (((public.is_user_approved(auth.uid()) = true) AND (public.get_user_role(auth.uid()) = ANY (ARRAY['admin'::text, 'service_chief'::text]))));
+  with check (((public.is_user_approved((select auth.uid())) = true) AND (public.get_user_role((select auth.uid())) = ANY (ARRAY['admin'::text, 'service_chief'::text]))));
 
+  create policy "Admin/Jefe: Gestión Cronograma (Update)"
+  on "public"."fuel_schedules"
+  as permissive
+  for update
+  to authenticated
+  using (((public.is_user_approved((select auth.uid())) = true) AND (public.get_user_role((select auth.uid())) = ANY (ARRAY['admin'::text, 'service_chief'::text]))))
+  with check (((public.is_user_approved((select auth.uid())) = true) AND (public.get_user_role((select auth.uid())) = ANY (ARRAY['admin'::text, 'service_chief'::text]))));
 
+  create policy "Admin/Jefe: Gestión Cronograma (Delete)"
+  on "public"."fuel_schedules"
+  as permissive
+  for delete
+  to authenticated
+  using (((public.is_user_approved((select auth.uid())) = true) AND (public.get_user_role((select auth.uid())) = ANY (ARRAY['admin'::text, 'service_chief'::text]))));
 
   create policy "Todo Personal: Ver Cronograma"
   on "public"."fuel_schedules"
   as permissive
   for select
   to authenticated
-using ((public.is_user_approved(auth.uid()) = true));
+  using ((public.is_user_approved((select auth.uid())) = true));
 
 
 
-  create policy "Admin/Jefe: Gestión Combustible"
+  create policy "Admin/Jefe: Gestión Combustible (Insert)"
   on "public"."fuel_transactions"
   as permissive
-  for all
+  for insert
   to authenticated
-using (((public.is_user_approved(auth.uid()) = true) AND (public.get_user_role(auth.uid()) = ANY (ARRAY['admin'::text, 'service_chief'::text]))));
+  with check (((public.is_user_approved((select auth.uid())) = true) AND (public.get_user_role((select auth.uid())) = ANY (ARRAY['admin'::text, 'service_chief'::text]))));
 
+  create policy "Admin/Jefe: Gestión Combustible (Update)"
+  on "public"."fuel_transactions"
+  as permissive
+  for update
+  to authenticated
+  using (((public.is_user_approved((select auth.uid())) = true) AND (public.get_user_role((select auth.uid())) = ANY (ARRAY['admin'::text, 'service_chief'::text]))))
+  with check (((public.is_user_approved((select auth.uid())) = true) AND (public.get_user_role((select auth.uid())) = ANY (ARRAY['admin'::text, 'service_chief'::text]))));
 
+  create policy "Admin/Jefe: Gestión Combustible (Delete)"
+  on "public"."fuel_transactions"
+  as permissive
+  for delete
+  to authenticated
+  using (((public.is_user_approved((select auth.uid())) = true) AND (public.get_user_role((select auth.uid())) = ANY (ARRAY['admin'::text, 'service_chief'::text]))));
 
   create policy "Todo Personal: Ver Combustible"
   on "public"."fuel_transactions"
   as permissive
   for select
   to authenticated
-using ((public.is_user_approved(auth.uid()) = true));
+  using ((public.is_user_approved((select auth.uid())) = true));
 
 
 
-  create policy "Escritura de configuración reservada a admins"
+  create policy "Escritura de configuración reservada a admins (Insert)"
   on "public"."global_config"
   as permissive
-  for all
+  for insert
   to authenticated
-using (internal.is_admin())
-with check (internal.is_admin());
+  with check (internal.is_admin());
+
+  create policy "Escritura de configuración reservada a admins (Update)"
+  on "public"."global_config"
+  as permissive
+  for update
+  to authenticated
+  using (internal.is_admin())
+  with check (internal.is_admin());
+
+  create policy "Escritura de configuración reservada a admins (Delete)"
+  on "public"."global_config"
+  as permissive
+  for delete
+  to authenticated
+  using (internal.is_admin());
 
 
 
@@ -2051,62 +2056,19 @@ using (true);
   to authenticated
 using ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
    FROM public.profiles
-  WHERE ((profiles.id = auth.uid()) AND (profiles.is_approved = true))))));
+  WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))));
 
 
 
-  create policy "Solo admins ven actividad"
+
+
+  create policy "Acceso total personal aprobado"
   on "public"."loans"
   as permissive
   for all
-  to public
-using (internal.is_admin());
-
-
-
-  create policy "Users can delete loans"
-  on "public"."loans"
-  as permissive
-  for delete
   to authenticated
-using (true);
-
-
-
-  create policy "Users can insert loans"
-  on "public"."loans"
-  as permissive
-  for insert
-  to authenticated
-with check (true);
-
-
-
-  create policy "Users can update loans"
-  on "public"."loans"
-  as permissive
-  for update
-  to authenticated
-using (true)
-with check (true);
-
-
-
-  create policy "Users can view all loans"
-  on "public"."loans"
-  as permissive
-  for select
-  to authenticated
-using (true);
-
-
-
-  create policy "Users can view loans"
-  on "public"."loans"
-  as permissive
-  for select
-  to authenticated
-using (true);
+  using ((public.is_user_approved((select auth.uid())) = true))
+  with check ((public.is_user_approved((select auth.uid())) = true));
 
 
 
@@ -2117,7 +2079,7 @@ using (true);
   to authenticated
 using ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
    FROM public.profiles
-  WHERE ((profiles.id = auth.uid()) AND (profiles.is_approved = true))))));
+  WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))));
 
 
 
@@ -2130,12 +2092,27 @@ using (true);
 
 
 
-  create policy "Solo admin gestiona"
+  create policy "Solo admin gestiona (Insert)"
   on "public"."municipalities"
   as permissive
-  for all
+  for insert
   to public
-using (internal.is_admin());
+  with check (internal.is_admin());
+
+  create policy "Solo admin gestiona (Update)"
+  on "public"."municipalities"
+  as permissive
+  for update
+  to public
+  using (internal.is_admin())
+  with check (internal.is_admin());
+
+  create policy "Solo admin gestiona (Delete)"
+  on "public"."municipalities"
+  as permissive
+  for delete
+  to public
+  using (internal.is_admin());
 
 
 
@@ -2146,10 +2123,10 @@ using (internal.is_admin());
   to authenticated
 using ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
    FROM public.profiles
-  WHERE ((profiles.id = auth.uid()) AND (profiles.is_approved = true))))))
+  WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))))
 with check ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
    FROM public.profiles
-  WHERE ((profiles.id = auth.uid()) AND (profiles.is_approved = true))))));
+  WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))));
 
 
 
@@ -2160,7 +2137,7 @@ with check ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.al
   to authenticated
 using ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
    FROM public.profiles
-  WHERE ((profiles.id = auth.uid()) AND (profiles.is_approved = true))))));
+  WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))));
 
 
 
@@ -2173,21 +2150,12 @@ using (internal.is_admin());
 
 
 
-  create policy "Permitir a administradores ver todos los perfiles"
+  create policy "Permitir lectura de perfiles"
   on "public"."profiles"
   as permissive
   for select
   to authenticated
-using (internal.is_admin());
-
-
-
-  create policy "Permitir lectura del propio perfil"
-  on "public"."profiles"
-  as permissive
-  for select
-  to authenticated
-using ((( SELECT auth.uid() AS uid) = id));
+  using ((internal.is_admin() OR ((select auth.uid()) = id)));
 
 
 
@@ -2198,7 +2166,7 @@ using ((( SELECT auth.uid() AS uid) = id));
   to authenticated
 using ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
    FROM public.profiles
-  WHERE ((profiles.id = auth.uid()) AND (profiles.is_approved = true))))));
+  WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))));
 
 
 
@@ -2209,10 +2177,10 @@ using ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed
   to authenticated
 using ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
    FROM public.profiles
-  WHERE ((profiles.id = auth.uid()) AND (profiles.is_approved = true))))))
+  WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))))
 with check ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
    FROM public.profiles
-  WHERE ((profiles.id = auth.uid()) AND (profiles.is_approved = true))))));
+  WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))));
 
 
 
@@ -2225,30 +2193,27 @@ using (true);
 
 
 
-  create policy "Solo admin gestiona"
+  create policy "Solo admin gestiona (Insert)"
   on "public"."states"
   as permissive
-  for all
-  to public
-using (internal.is_admin());
-
-
-
-  create policy "Permitir creación a dueños"
-  on "public"."sync_channels"
-  as permissive
   for insert
-  to authenticated
-with check ((( SELECT auth.uid() AS uid) = owner_user_id));
+  to public
+  with check (internal.is_admin());
 
-
-
-  create policy "Permitir gestión completa al dueño"
-  on "public"."sync_channels"
+  create policy "Solo admin gestiona (Update)"
+  on "public"."states"
   as permissive
-  for all
-  to authenticated
-using ((( SELECT auth.uid() AS uid) = owner_user_id));
+  for update
+  to public
+  using (internal.is_admin())
+  with check (internal.is_admin());
+
+  create policy "Solo admin gestiona (Delete)"
+  on "public"."states"
+  as permissive
+  for delete
+  to public
+  using (internal.is_admin());
 
 
 
@@ -2257,68 +2222,58 @@ using ((( SELECT auth.uid() AS uid) = owner_user_id));
   as permissive
   for select
   to authenticated
-using (true);
+  using (true);
 
-
-
-  create policy "Solo admins ven actividad"
+  create policy "Permitir insercion de canales"
   on "public"."sync_channels"
   as permissive
-  for all
-  to public
-using (internal.is_admin());
+  for insert
+  to authenticated
+  with check (((select auth.uid()) = owner_user_id) OR internal.is_admin());
+
+  create policy "Permitir modificacion de canales"
+  on "public"."sync_channels"
+  as permissive
+  for update
+  to authenticated
+  using (((select auth.uid()) = owner_user_id) OR internal.is_admin())
+  with check (((select auth.uid()) = owner_user_id) OR internal.is_admin());
+
+  create policy "Permitir eliminacion de canales"
+  on "public"."sync_channels"
+  as permissive
+  for delete
+  to authenticated
+  using (((select auth.uid()) = owner_user_id) OR internal.is_admin());
 
 
 
-  create policy "Eliminación de reportes reservada al dueño"
+  create policy "Eliminación de reportes reservada al dueño o admin"
   on "public"."sync_reports"
   as permissive
   for delete
   to authenticated
-using ((EXISTS ( SELECT 1
+  using ((internal.is_admin() OR (EXISTS ( SELECT 1
    FROM public.sync_channels
-  WHERE ((sync_channels.id = sync_reports.channel_id) AND (sync_channels.owner_user_id = ( SELECT auth.uid() AS uid))))));
+  WHERE ((sync_channels.id = sync_reports.channel_id) AND (sync_channels.owner_user_id = (select auth.uid())))))));
 
-
-
-  create policy "Lectura de reportes reservada al dueño"
+  create policy "Lectura de reportes reservada al dueño o admin"
   on "public"."sync_reports"
   as permissive
   for select
   to authenticated
-using ((EXISTS ( SELECT 1
+  using ((internal.is_admin() OR (EXISTS ( SELECT 1
    FROM public.sync_channels
-  WHERE ((sync_channels.id = sync_reports.channel_id) AND (sync_channels.owner_user_id = ( SELECT auth.uid() AS uid))))));
+  WHERE ((sync_channels.id = sync_reports.channel_id) AND (sync_channels.owner_user_id = (select auth.uid())))))));
 
-
-
-  create policy "Permitir envío de reportes"
+  create policy "Permitir envío de reportes o admin"
   on "public"."sync_reports"
   as permissive
   for insert
   to authenticated
-with check ((EXISTS ( SELECT 1
+  with check ((internal.is_admin() OR (EXISTS ( SELECT 1
    FROM public.sync_channels
-  WHERE (sync_channels.id = sync_reports.channel_id))));
-
-
-
-  create policy "Solo admins ven actividad"
-  on "public"."sync_reports"
-  as permissive
-  for all
-  to public
-using (internal.is_admin());
-
-
-
-  create policy "Acceso total para usuarios autenticados"
-  on "public"."templates"
-  as permissive
-  for all
-  to authenticated
-using ((( SELECT auth.role() AS role) = 'authenticated'::text))
-with check ((( SELECT auth.role() AS role) = 'authenticated'::text));
+  WHERE (sync_channels.id = sync_reports.channel_id)))));
 
 
 
@@ -2327,7 +2282,29 @@ with check ((( SELECT auth.role() AS role) = 'authenticated'::text));
   as permissive
   for select
   to public
-using (true);
+  using (true);
+
+  create policy "Acceso total para usuarios autenticados (Insert)"
+  on "public"."templates"
+  as permissive
+  for insert
+  to authenticated
+  with check (((select auth.role()) = 'authenticated'::text));
+
+  create policy "Acceso total para usuarios autenticados (Update)"
+  on "public"."templates"
+  as permissive
+  for update
+  to authenticated
+  using (((select auth.role()) = 'authenticated'::text))
+  with check (((select auth.role()) = 'authenticated'::text));
+
+  create policy "Acceso total para usuarios autenticados (Delete)"
+  on "public"."templates"
+  as permissive
+  for delete
+  to authenticated
+  using (((select auth.role()) = 'authenticated'::text));
 
 
 
@@ -2340,23 +2317,36 @@ using (internal.is_admin());
 
 
 
-  create policy "Escritura de workspaces reservada a admins"
+  create policy "Escritura de workspaces reservada a admins (Insert)"
   on "public"."workspaces"
   as permissive
-  for all
+  for insert
   to authenticated
-using (internal.is_admin());
+  with check (internal.is_admin());
 
+  create policy "Escritura de workspaces reservada a admins (Update)"
+  on "public"."workspaces"
+  as permissive
+  for update
+  to authenticated
+  using (internal.is_admin())
+  with check (internal.is_admin());
 
+  create policy "Escritura de workspaces reservada a admins (Delete)"
+  on "public"."workspaces"
+  as permissive
+  for delete
+  to authenticated
+  using (internal.is_admin());
 
   create policy "Lectura segmentada de workspaces"
   on "public"."workspaces"
   as permissive
   for select
   to authenticated
-using ((internal.is_admin() OR (id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
+  using ((internal.is_admin() OR (id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
    FROM public.profiles
-  WHERE (profiles.id = ( SELECT auth.uid() AS uid))))));
+  WHERE (profiles.id = (SELECT auth.uid()))))));
 
 
 CREATE TRIGGER audit_activities AFTER INSERT OR DELETE OR UPDATE ON public.activities FOR EACH ROW EXECUTE FUNCTION public.create_audit_log();
@@ -2414,3 +2404,6 @@ using (((bucket_id = 'activity-images'::text) AND (owner = auth.uid())));
 
 
 
+CREATE INDEX IF NOT EXISTS fuel_schedules_created_by_idx ON public.fuel_schedules(created_by);
+CREATE INDEX IF NOT EXISTS pending_activities_workspace_id_idx ON public.pending_activities(workspace_id);
+CREATE INDEX IF NOT EXISTS scheduled_messages_workspace_id_idx ON public.scheduled_messages(workspace_id);
