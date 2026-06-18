@@ -20,13 +20,16 @@ echo.
 rem 2. Iniciar base de datos de Supabase local
 echo [2/4] Iniciando contenedores locales de Supabase...
 call npx supabase start --ignore-health-check
+
+rem Verificar si el contenedor de la base de datos realmente quedó corriendo
+docker ps --filter "name=supabase_db_Minutas" --filter "status=running" | findstr supabase_db_Minutas >nul 2>&1
 if %errorlevel% neq 0 (
     echo.
     echo [ERROR] No se pudo iniciar Supabase. Revisa si Docker esta corriendo bien.
     pause
-    exit /b %errorlevel%
+    exit /b 1
 )
-echo [OK] Supabase iniciado correctamente.
+echo [OK] Supabase esta corriendo correctamente.
 echo.
 
 rem 3. Iniciar el Bot de WhatsApp en una ventana independiente
@@ -36,8 +39,8 @@ echo [OK] Comando del bot lanzado.
 echo.
 
 rem 4. Iniciar el servidor Frontend (Vite Preview) en modo Produccion
-echo [4/4] Levantando servidor web local en el puerto 3000...
-start "Servidor Web - Minutas" cmd /k "npx vite preview --port 3000 --host"
+echo [4/4] Levantando servidor web local en el puerto 4173...
+start "Servidor Web - Minutas" cmd /k "npx vite preview --port 4173 --host"
 echo [OK] Servidor web lanzado.
 echo.
 
@@ -46,5 +49,5 @@ echo [LISTO] Todos los servicios han sido lanzados.
 echo Abriendo la aplicacion en el navegador...
 echo ====================================================
 timeout /t 3 /nobreak >nul
-start http://localhost:3000
+start http://localhost:4173
 exit
