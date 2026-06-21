@@ -8,18 +8,18 @@ const port = 3001;
 
 // Middleware para CORS y Private Network Access (PNA) con Orígenes Permitidos Seguros
 const allowedOrigins = [
-  'http://localhost:5173', // Vite Local Dev
+  'http://localhost:4173', // Vite Local Dev
   'http://localhost:3000', // Local Alternativo
   'https://minutas.vercel.app' // Hosting de Producción (Reemplazar con tu dominio real)
 ];
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  
+
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
-  
+
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-requested-with');
   res.setHeader('Access-Control-Allow-Private-Network', 'true');
@@ -213,7 +213,7 @@ setInterval(async () => {
   if (!isReady) return;
   const messages = getScheduledMessages();
   const pendingCount = messages.filter(m => m.status === 'pending').length;
-  
+
   if (pendingCount > 0) {
     console.log(`[Programado] Revisando cola: ${pendingCount} mensaje(s) pendiente(s)`);
   }
@@ -277,13 +277,13 @@ app.post('/api/whatsapp/schedule', (req, res) => {
   const messages = getScheduledMessages();
   const existingIndex = messages.findIndex(m => m.id === id);
   const newMsg = { id, chatId, message, scheduledTime, title, media, status: 'pending' };
-  
+
   if (existingIndex >= 0) {
     messages[existingIndex] = newMsg; // Actualiza existente
   } else {
     messages.push(newMsg); // Nuevo
   }
-  
+
   saveScheduledMessages(messages);
   const pendingCount = messages.filter(m => m.status === 'pending').length;
   console.log(`\n[Programado] Mensaje programado añadido/actualizado. Total pendientes: ${pendingCount}`);
@@ -295,7 +295,7 @@ app.delete('/api/whatsapp/schedule/:id', (req, res) => {
   let messages = getScheduledMessages();
   const initialLength = messages.length;
   messages = messages.filter(m => m.id !== id);
-  
+
   if (messages.length !== initialLength) {
     saveScheduledMessages(messages);
     const pendingCount = messages.filter(m => m.status === 'pending').length;
