@@ -72,5 +72,9 @@ describe('Template Evaluator', () => {
             expect(applyModifiers('hello', 'hidden')).toBe('');
             expect(applyModifiers('hello', ['upper', 'hidden'])).toBe('');
         });
+
+        it('should handle default modifier with line breaks', () => {
+            expect(applyModifiers('', 'default("line1\\nline2")')).toBe('line1\nline2');
+        });
     });
 });

@@ -121,7 +121,7 @@ export function applyModifiers(value: unknown, modifiers: string | string[]): st
             if (!result || result.trim() === '') {
                 const match = mod.match(/default\("?(.*?)"?\)/i);
                 if (match && match[1]) {
-                    result = match[1];
+                    result = match[1].replace(/\\n/g, '\n');
                 }
             }
         }

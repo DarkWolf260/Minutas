@@ -191,7 +191,8 @@ export function resolveTemplateTitle(
  * E.g., "accidente de tránsito {Tipo de accidente}" -> "accidente de tránsito"
  */
 export function cleanTemplateName(name: string): string {
-  if (!name) return '';
-  return name.replace(/\{[^}]+\}/g, '').replace(/\s+/g, ' ').trim();
+  if (!name) return 'Personalizado';
+  const cleaned = name.replace(/\{[^}]+\}/g, '').replace(/\s+/g, ' ').trim();
+  return cleaned || 'Personalizado';
 }
 

@@ -20,6 +20,41 @@ const AUTOMATIC_FIELD_TYPES: Record<string, FieldType> = {
  * - {Nombre:text:full:req|title} → required full-width text with title case
  * - {Tipo:dropdown(A=Val1|B=Val2)} → dropdown with inline options
  */
+/**
+ * Splits a string by a delimiter only when that delimiter is outside parentheses
+ */
+function splitOutsideParentheses(str: string, delimiter: string): string[] {
+    const parts: string[] = [];
+    let current = '';
+    let parenDepth = 0;
+    let inSingleQuote = false;
+    let inDoubleQuote = false;
+
+    for (let i = 0; i < str.length; i++) {
+        const char = str[i];
+        if (char === "'" && !inDoubleQuote) {
+            inSingleQuote = !inSingleQuote;
+            current += char;
+        } else if (char === '"' && !inSingleQuote) {
+            inDoubleQuote = !inDoubleQuote;
+            current += char;
+        } else if (char === '(' && !inSingleQuote && !inDoubleQuote) {
+            parenDepth++;
+            current += char;
+        } else if (char === ')' && !inSingleQuote && !inDoubleQuote) {
+            parenDepth = Math.max(0, parenDepth - 1);
+            current += char;
+        } else if (char === delimiter && parenDepth === 0 && !inSingleQuote && !inDoubleQuote) {
+            parts.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    parts.push(current);
+    return parts;
+}
+
 export function parseFieldTag(
     tagContent: string,
     templateOptions: Map<string, SnippetOption[]>
@@ -32,7 +67,7 @@ export function parseFieldTag(
     default_value?: string;
     value?: string;
 } {
-    const segments = tagContent.split(':').map((s) => s.trim());
+    const segments = splitOutsideParentheses(tagContent, ':').map((s) => s.trim());
     const field_id = segments[0] || '';
     const otherSegments = segments.slice(1);
 
@@ -91,12 +126,12 @@ export function parseFieldTag(
         } else if (VALID_TEXT_MODS.has(segment)) {
             modifiers.push(segment);
         } else {
-            const pipeParts = segment.split('|');
+            const pipeParts = splitOutsideParentheses(segment, '|');
             pipeParts.forEach((part) => {
                 const trimmed = part.trim();
                 const defMatch = trimmed.match(/^def=\((.*)\)$/);
                 if (defMatch) {
-                    default_value = defMatch[1];
+                    default_value = defMatch[1]?.replace(/\\n/g, '\n');
                 } else if (trimmed === 'full') is_full_width = true;
                 else if (trimmed === 'req') is_required = true;
                 else if (VALID_TEXT_MODS.has(trimmed)) modifiers.push(trimmed);

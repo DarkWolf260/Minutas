@@ -18,7 +18,7 @@ export const TemplateList = ({ templates, onSelect, onNavigateToTemplates }: Tem
   const activas = React.useMemo(() => templates.filter(t => t.is_active), [templates]);
   
   const filteredTemplates = React.useMemo(() => 
-    activas.filter(t => t.name.toLowerCase().includes(search.toLowerCase())),
+    activas.filter(t => cleanTemplateName(t.name).toLowerCase().includes(search.toLowerCase())),
     [activas, search]
   );
   

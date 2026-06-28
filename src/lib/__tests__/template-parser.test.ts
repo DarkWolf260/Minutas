@@ -115,6 +115,14 @@ describe('Template Parser', () => {
             expect(result.fieldWidths.get('campo')).toBe(true);
             expect(result.requiredFields.get('campo')).toBe(true);
         });
+
+        it('should parse default value modifier containing colons and pipes', () => {
+            const template = 'Campo: {campo:textarea | def=(Hora: 10:00 | Tipo: A)}';
+            const result = parseTemplate(template);
+
+            expect(result.errors).toHaveLength(0);
+            expect(result.defaultValues.get('campo')).toBe('Hora: 10:00 | Tipo: A');
+        });
     });
 
     describe('Conditional Sections', () => {
