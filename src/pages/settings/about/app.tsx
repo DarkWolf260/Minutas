@@ -102,7 +102,7 @@ export default function AboutAppPage() {
                   <span className="text-xs font-bold uppercase tracking-wider">Base de Datos</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Almacenamiento local avanzado con <strong>RxDB</strong>. Tus datos nunca salen de tu dispositivo sin tu permiso.
+                  Almacenamiento reactivo local con <strong>RxDB</strong> y sincronización en la nube opcional mediante <strong>Supabase</strong>.
                 </p>
               </div>
               <div className="p-4 rounded-xl border bg-muted/10 space-y-2">

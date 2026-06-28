@@ -8,6 +8,8 @@ import {
   Sparkles,
   Bug,
   Zap,
+  LayoutGrid,
+  Database,
 } from 'lucide-react';
 
 // ─── Workflow guide ───────────────────────────────────────────────────────────
@@ -45,6 +47,22 @@ export const WORKFLOW_STEPS = [
     link: '/orden-del-dia',
     linkLabel: 'Abrir Guardia',
   },
+  {
+    icon: LayoutGrid,
+    color: 'bg-indigo-500/10 text-indigo-600',
+    title: '5. Gestionar Módulos',
+    desc: 'Activa o desactiva herramientas (Estadísticas, Actividades, Plantillas, etc.) desde Ajustes → Módulos para adaptar la app a tu flujo.',
+    link: '/settings/modules',
+    linkLabel: 'Configurar Módulos',
+  },
+  {
+    icon: Database,
+    color: 'bg-emerald-500/10 text-emerald-600',
+    title: '6. Sincronización y Respaldo',
+    desc: 'Vincula dispositivos usando QR o inicia sesión en la nube (Supabase) desde Ajustes → Sincronización para habilitar copias de seguridad automáticas.',
+    link: '/settings/sync',
+    linkLabel: 'Ir a Sincronización',
+  },
 ];
 
 // ─── Changelog ────────────────────────────────────────────────────────────────
@@ -62,9 +80,16 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.8.5';
+export const APP_VERSION = '1.9.0';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.9.0',
+    date: '28/06/2026',
+    changes: [
+      { type: 'nueva', text: 'Configuración de Módulos Local-First: La página de Módulos ya no se bloquea en modo local. Ahora los usuarios sin conexión pueden habilitar o deshabilitar herramientas de forma independiente en su dispositivo, mientras que el control centralizado por administradores se conserva en entornos en la nube.' },
+    ],
+  },
   {
     version: '1.8.5',
     date: '12/06/2026',

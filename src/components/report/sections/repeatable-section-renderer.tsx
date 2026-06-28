@@ -228,7 +228,7 @@ export function RepeatableSectionRenderer(props: SectionRendererProps) {
                                     if (field_id.includes('.')) return null;
 
                                     // Skip system/dynamic fields (enc, pie, usuario, estatus)
-                                    const SYSTEM_TAGS = new Set(['enc', 'pie', 'usuario', 'estatus']);
+                                    const SYSTEM_TAGS = new Set(['enc', 'estatus']);
                                     if (SYSTEM_TAGS.has(field_id.toLowerCase())) return null;
 
                                     const fieldConfig = (config.fields || {})[field_id];

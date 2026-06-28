@@ -1,14 +1,15 @@
-# Minutas - Generador de Reportes Policiales
+# Minutas - Generador de Reportes de Protección Civil Local-First
 
-Una aplicación web moderna construida con **Next.js 16**, **React 19** y **Tailwind CSS** para la generación dinámica de reportes policiales y minutas.
+Una aplicación web moderna construida con **Vite 7**, **React 19** y **Tailwind CSS** para la generación dinámica de reportes de incidentes, novedades y minutas para cuerpos de Protección Civil (paramédicos, rescatistas, bomberos) y administradores de guardia.
 
 ## 🚀 Características Principales
 
--   **Sistema de Plantillas Dinámicas**: Crea formularios complejos definiendo simples archivos de texto.
--   **Persistencia Local**: Todos los datos se guardan de forma segura en el navegador (`localStorage`).
--   **Mapas Interactivos**: Integración con Leaflet para geolocalización precisa de direcciones.
--   **Modo Oscuro/Claro**: Interfaz adaptativa usando `shadcn/ui`.
--   **Validación Inteligente**: Formularios robustos con tipos de datos estrictos.
+-   **Sistema de Plantillas Dinámicas**: Crea formularios complejos definiendo simples archivos de texto con campos de fecha, hora, dropdowns y lógica condicional.
+-   **Persistencia Local-First**: Todos los datos se guardan de forma local en el navegador usando RxDB y almacenamiento reactivo, permitiendo el uso 100% offline.
+-   **Modo Nube Integrado**: Sincronización en la nube opcional mediante Supabase para equipos de trabajo que requieran administración centralizada.
+-   **Mapas Interactivos**: Integración con Leaflet para geolocalización precisa de direcciones e incidentes.
+-   **Modo Oscuro/Claro (OLED y Slate)**: Interfaz adaptativa usando `shadcn/ui` y optimizada para reducir la fatiga visual nocturna (modo OLED profundo).
+-   **Validación Inteligente**: Formularios robustos con tipos de datos estrictos y validación reactiva.
 
 ---
 
@@ -103,24 +104,56 @@ Para obtener más información y ver ejemplos detallados sobre el funcionamiento
 
 ## 🛠️ Tecnologías
 
--   **Framework**: [Next.js](https://nextjs.org) (App Router)
+-   **Entorno/Bundler**: [Vite 7](https://vite.dev)
+-   **Librería Principal**: [React 19](https://react.dev)
+-   **Base de Datos Local**: [RxDB](https://rxdb.info) con persistencia local reactiva.
+-   **Sincronización en la Nube**: [Supabase](https://supabase.com) (Opcional, configurable por Workspace).
 -   **UI**: [Shadcn UI](https://ui.shadcn.com) + [Radix UI](https://www.radix-ui.com)
 -   **Estilos**: [Tailwind CSS](https://tailwindcss.com)
 -   **Mapas**: [React Leaflet](https://react-leaflet.js.org) + [Leaflet](https://leafletjs.com)
 -   **Iconos**: [Lucide React](https://lucide.dev)
 
-## 📦 Instalación
+## 📦 Instalación y Uso
 
+### Requisitos previos
+- Node.js 18+ instalado.
+- Administrador de paquetes `pnpm` (recomendado) o `npm`.
+
+### Pasos
 ```bash
-# Instalar dependencias
+# 1. Instalar dependencias
+pnpm install
+# o con npm
 npm install --legacy-peer-deps
 
-# Iniciar servidor de desarrollo
+# 2. Iniciar servidor de desarrollo
+pnpm run dev
+# o con npm
 npm run dev
 ```
 
-## 🔒 Seguridad
-Este proyecto no utiliza base de datos en la nube. Toda la información sensible reside únicamente en el dispositivo del usuario.
+El servidor local se levantará por defecto en `http://localhost:5173`.
+
+---
+
+## 🔒 Privacidad y Sincronización
+
+Este proyecto prioriza la privacidad operacional:
+* **En Modo Local (`isCloud = false`)**: Todos los datos residen exclusivamente en tu navegador. Ninguna información de incidentes o personal es transmitida al exterior.
+* **En Modo Nube (`isCloud = true`)**: Requiere autenticación de usuario. Permite sincronizar las novedades de guardia e incidentes con la base de datos Supabase configurada por los administradores. Los ajustes de módulos activos se manejan centralmente.
+
+---
+
+## 🌱 Desarrollo Guiado por Especificaciones (Spec Kit)
+
+El desarrollo del proyecto se realiza bajo la metodología **Spec-Driven Development (SDD)**. La configuración se encuentra en la carpeta `.agents/skills/spec-kit`.
+
+Puedes utilizar los comandos de Spec Kit para trabajar en nuevas funcionalidades:
+- **`speckit-constitution`**: Consulta las directrices de código en [`.specify/memory/constitution.md`](file:///.specify/memory/constitution.md) (SOLID, WCAG AAA, etc.).
+- **`speckit-specify`**: Describe los requerimientos y el alcance funcional de la característica en `specs/<id>/spec.md`.
+- **`speckit-plan`**: Diseña el plan de arquitectura técnica en `specs/<id>/plan.md`.
+- **`speckit-tasks`**: Genera la lista de tareas en `specs/<id>/tasks.md`.
+- **`speckit-implement`**: Ejecuta las tareas de implementación de forma secuencial y ordenada.
 
 ## 📄 Licencia
-Privado. Uso interno.
+Privado. Uso interno y oficial de Protección Civil.

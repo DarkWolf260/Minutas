@@ -60,7 +60,7 @@ export function SingleSectionRenderer(props: SectionRendererProps) {
             <>
                 {layoutItems
                     .filter((fid: string) => !fid.includes('.'))
-                    .filter((fid: string) => !['enc', 'pie', 'usuario', 'estatus'].includes(fid.toLowerCase()))
+                    .filter((fid: string) => !['enc', 'estatus'].includes(fid.toLowerCase()))
                     .map((field_id: string, fIdx: number) => {
                         const fieldConfig = (config.fields || {})[field_id];
                         if (!fieldConfig) return null;
@@ -151,7 +151,7 @@ export function SingleSectionRenderer(props: SectionRendererProps) {
                         if (field_id.includes('.')) return null;
 
                         // Skip system/dynamic fields (enc, pie, usuario, estatus)
-                        const SYSTEM_TAGS = new Set(['enc', 'pie', 'usuario', 'estatus']);
+                        const SYSTEM_TAGS = new Set(['enc', 'estatus']);
                         if (SYSTEM_TAGS.has(field_id.toLowerCase())) return null;
 
                         const fieldConfig = (config.fields || {})[field_id];

@@ -127,7 +127,7 @@ export const FieldRenderer = memo(
             if (field_id.includes('.')) return null;
 
             // System/dynamic fields are injected at render time and must never appear in the form.
-            const SYSTEM_TAGS = new Set(['enc', 'pie', 'usuario', 'estatus']);
+            const SYSTEM_TAGS = new Set(['enc', 'estatus']);
             if (SYSTEM_TAGS.has(lowerfield_id)) return null;
 
             // Check for Reporta field (Analista is discarded)

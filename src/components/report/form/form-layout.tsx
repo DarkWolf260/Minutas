@@ -66,7 +66,7 @@ export const FormLayout = ({
         }
         chunks.push('section_separator');
       } else {
-        const systemTags = ['enc', 'pie', 'usuario', 'estatus'];
+        const systemTags = ['enc', 'estatus'];
         const isControlled = (controlledValues && Object.keys(controlledValues).some(
           (k) => k.toLowerCase() === id.toLowerCase()
         )) || systemTags.includes(id.toLowerCase());
