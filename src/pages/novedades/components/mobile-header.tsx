@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cleanTemplateName } from '@/lib/template-parser';
 
 interface MobileHeaderProps {
   hook: any;
@@ -36,7 +37,7 @@ export const MobileHeader = ({ hook, isMobile }: MobileHeaderProps) => {
         Volver
       </Button>
       <div className="text-sm font-medium truncate ml-2">
-        {creandoReporte ? creandoReporte.name : reporteSeleccionado?.title}
+        {creandoReporte ? cleanTemplateName(creandoReporte.name) : (reporteSeleccionado?.title || '')}
       </div>
     </div>
   );

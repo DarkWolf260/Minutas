@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn, getTemplateIcon } from '@/lib/utils';
-import { parseTemplate } from '@/lib/template-parser';
+import { parseTemplate, cleanTemplateName } from '@/lib/template-parser';
 import type { Template } from '@/lib/types';
 
 interface PlantillasSidebarProps {
@@ -149,7 +149,7 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
                       onClick={() => setIdPlantillaSeleccionada(template.id)}
                     >
                       <p className="font-medium truncate text-xs sm:text-sm leading-tight text-foreground/90">
-                        {template.name}
+                        {cleanTemplateName(template.name)}
                       </p>
                       {!isValid && (
                         <div className="flex items-center gap-1 mt-0.5">

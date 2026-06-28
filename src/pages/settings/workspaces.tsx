@@ -29,7 +29,7 @@ export default function WorkspacesPage() {
 
   return (
     <ScrollArea className="h-full w-full" type="always">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-10 py-8 pb-32 sm:pb-16 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-10 py-8 pb-32 sm:pb-16 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
         {/* Header section (SRP) */}
         <WorkspacesHeader />
@@ -45,7 +45,7 @@ export default function WorkspacesPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4">
+            <div className="grid gap-4 md:grid-cols-2">
               {workspaces.map((workspace: string) => {
                 const cloudInfo = cloudWorkspaces?.find((cw: any) => cw.id === workspace);
                 return (

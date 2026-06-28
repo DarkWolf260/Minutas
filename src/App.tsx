@@ -58,7 +58,6 @@ const SettingsModulesPage = lazy(() => import('@/pages/settings/modules'));
 const AboutAppPage = lazy(() => import('@/pages/settings/about/app'));
 const AboutGuidePage = lazy(() => import('@/pages/settings/about/guide'));
 const AboutChangelogPage = lazy(() => import('@/pages/settings/about/changelog'));
-const AboutTemplatesPage = lazy(() => import('@/pages/settings/about/templates'));
 const RegisterPage = lazy(() => import('@/pages/register'));
 const AdminDashboardPage = lazy(() => import('@/pages/admin'));
 const AdminUsersPage = lazy(() => import('@/pages/admin/users'));
@@ -301,11 +300,6 @@ function AppLayout() {
                   <Route path="/settings/about/changelog" element={
                     <ProtectedRoute>
                       <AboutChangelogPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/about/templates" element={
-                    <ProtectedRoute>
-                      <AboutTemplatesPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/offline" element={<OfflinePage />} />

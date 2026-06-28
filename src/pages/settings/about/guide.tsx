@@ -93,7 +93,7 @@ function TagRow({
 export default function AboutGuidePage() {
   return (
     <ScrollArea className="h-full w-full" type="always">
-      <div className="max-w-[700px] mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-32 sm:pb-16 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-32 sm:pb-16 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Link to="/settings/about" className="shrink-0">

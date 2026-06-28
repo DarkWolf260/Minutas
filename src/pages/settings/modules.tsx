@@ -106,7 +106,7 @@ export default function SettingsModulesPage() {
 
   return (
     <ScrollArea className="h-full w-full" type="always">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 pb-32 sm:pb-16 space-y-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 pb-32 sm:pb-16 space-y-8">
 
         {/* Header */}
         <div className="flex items-center gap-3">
@@ -205,7 +205,7 @@ export default function SettingsModulesPage() {
           <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-1">
             Módulos individuales
           </p>
-          <div className="rounded-2xl border overflow-hidden divide-y shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {MODULE_DEFS.map(({ id, label, description, icon: Icon, color }) => {
               const enabled = isEnabled(id);
               const locked = id === 'novedades';
@@ -213,8 +213,8 @@ export default function SettingsModulesPage() {
                 <div
                   key={id}
                   className={cn(
-                    'flex items-center justify-between px-4 py-3.5 transition-colors',
-                    enabled ? 'bg-card hover:bg-muted/20' : 'bg-muted/30'
+                    'flex items-center justify-between p-4 rounded-2xl border transition-all shadow-sm',
+                    enabled ? 'bg-card hover:bg-muted/10' : 'bg-muted/25 border-muted-foreground/10'
                   )}
                 >
                   <div className="flex items-center gap-3">
