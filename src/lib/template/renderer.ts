@@ -449,19 +449,20 @@ function renderValue(
     // Array rendering
     else if (Array.isArray(value)) {
         if (value.length > 0) {
-            if (typeof value[0] === 'object' && value[0] !== null && 'name' in value[0]) {
-                const isReporta = field_id.toLowerCase() === 'reporta';
-                if (isReporta) {
-                    rendered = value.map((member) => formatStaffReporta(member as import('@/lib/types').StaffMember)).join(' / ');
-                } else {
-                    const showCedula = field_id.toLowerCase() === 'analista';
-                    rendered = value.map((member) => formatStaffMember(member as import('@/lib/types').StaffMember, showCedula)).join(' / ');
+            const isReporta = field_id.toLowerCase() === 'reporta';
+            const showCedula = field_id.toLowerCase() === 'analista';
+            rendered = value.map((item) => {
+                if (typeof item === 'object' && item !== null && 'name' in item) {
+                    if (isReporta) {
+                        return formatStaffReporta(item as import('@/lib/types').StaffMember);
+                    } else {
+                        return formatStaffMember(item as import('@/lib/types').StaffMember, showCedula);
+                    }
                 }
-            } else {
-                rendered = value.join(' / ');
-            }
+                return String(item || '');
+            }).join(' / ');
         } else {
-            rendered = value.join(' / ');
+            rendered = '';
         }
     }
     // Semantic field rendering
