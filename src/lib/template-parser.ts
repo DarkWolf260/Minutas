@@ -133,7 +133,7 @@ export function resolveTemplateTitle(
   config?: { fields: Record<string, FieldConfig> }
 ): string {
   if (!templateName) return '';
-  return templateName.replace(/\{([^}]+)\}/g, (match, fieldName) => {
+  const resolved = templateName.replace(/\{([^}]+)\}/g, (match, fieldName) => {
     // Split by pipe for text transformations, e.g., {FieldName:value|upper}
     const pipeParts = fieldName.split('|').map((s: string) => s.trim());
     const basePart = pipeParts[0] || '';
@@ -184,6 +184,8 @@ export function resolveTemplateTitle(
 
     return resolvedVal;
   }).replace(/\s+/g, ' ').trim();
+
+  return resolved || cleanTemplateName(templateName);
 }
 
 /**

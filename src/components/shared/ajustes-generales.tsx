@@ -32,6 +32,7 @@ import { AjustesGeneralesForm } from './ajustes-generales-form';
 import { Switch } from '@/components/ui/switch';
 import { useTemplates } from '@/hooks/use-templates';
 import { cn } from '@/lib/utils';
+import { cleanTemplateName } from '@/lib/template-parser';
 
 export function AjustesGenerales() {
   const { definitions, saveDefinitions, isLoaded: definitionsLoaded } = useFieldDefinitions();
@@ -570,7 +571,7 @@ export function AjustesGenerales() {
                                 <SelectItem key={template.id} value={template.id}>
                                   <span className="flex items-center gap-2">
                                     <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                    <span>{template.name.replace(/\{.*?\}/g, '').trim()}</span>
+                                    <span>{cleanTemplateName(template.name)}</span>
                                   </span>
                                 </SelectItem>
                               ))}
@@ -594,7 +595,7 @@ export function AjustesGenerales() {
                         {localGroupedTemplateIds.length > 0 ? (
                           localGroupedTemplateIds.map((templateId, index) => {
                             const template = activeTemplates.find(t => t.id === templateId);
-                            const displayName = template ? template.name.replace(/\{.*?\}/g, '').trim() : 'Plantilla Desconocida';
+                            const displayName = template ? cleanTemplateName(template.name) : 'Plantilla Desconocida';
                             return (
                               <div
                                 key={templateId}

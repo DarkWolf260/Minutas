@@ -20,7 +20,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\ast.json": {
-    "mtime": 1782626346.350321,
+    "mtime": 1782653645.1102424,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -45,7 +45,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\report.json": {
-    "mtime": 1782626346.350321,
+    "mtime": 1782653645.1102424,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -410,8 +410,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\shared\\ajustes-generales.tsx": {
-    "mtime": 1782622762.7135417,
-    "ast_hash": "d9d2199c5a9b0d54e89fc6e8aba45406",
+    "mtime": 1782653437.5894403,
+    "ast_hash": "5458f913cd5e5f48ff7202e8b42189b1",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\shared\\workspace-selection-dialog.tsx": {
@@ -1190,8 +1190,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template-parser.ts": {
-    "mtime": 1782626189.6827805,
-    "ast_hash": "b8d707a1de563c622a38c01fa8bf68d4",
+    "mtime": 1782653172.4344873,
+    "ast_hash": "98781a4a03c0e82fded4ea1bb3c0e32c",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\bug.test.ts": {
@@ -1400,8 +1400,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\novedad-group-item.tsx": {
-    "mtime": 1781251657.912087,
-    "ast_hash": "33d47d81aabce2f1868cf965c84d940a",
+    "mtime": 1782653577.935677,
+    "ast_hash": "81518724bf16e9729fa0b133daffe1c3",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\novedad-item.tsx": {
@@ -1420,8 +1420,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\novedad-sidebar.tsx": {
-    "mtime": 1781252833.4514601,
-    "ast_hash": "f4f1aee2ace6dd58de38dde3900d1da9",
+    "mtime": 1782653450.7776217,
+    "ast_hash": "8b4e4945fab63d633c9139394197cfa9",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\template-list.tsx": {

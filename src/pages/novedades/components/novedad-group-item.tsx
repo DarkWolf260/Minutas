@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, Pin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Report } from '@/lib/types';
 import { NovedadItem } from './novedad-item';
+import { cleanTemplateName } from '@/lib/template-parser';
 
 interface NovedadGroupItemProps {
   id: string;
@@ -41,7 +42,7 @@ export const NovedadGroupItem = React.memo(({
   
   // Check if any report in this group is currently selected
   const hasSelectedChild = reports.some(r => r.id === idReporteSeleccionado && !creandoReporte);
-  const displayName = templateName.replace(/\{.*?\}/g, '').trim();
+  const displayName = cleanTemplateName(templateName);
 
   return (
     <div className="space-y-1">

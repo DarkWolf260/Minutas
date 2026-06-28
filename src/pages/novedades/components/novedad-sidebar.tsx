@@ -10,6 +10,7 @@ import { NovedadGroupItem } from './novedad-group-item';
 import type { Report, Template } from '@/lib/types';
 import { useSettings } from '@/hooks/use-settings';
 import { getReportDateTime, findValueInform_data } from '@/lib/report-sorter';
+import { cleanTemplateName } from '@/lib/template-parser';
 
 interface NovedadSidebarProps {
   hook: any;
@@ -279,8 +280,8 @@ export const NovedadSidebar = ({ hook, isMobile }: NovedadSidebarProps) => {
     const pinnedIds = settings.pinned_template_ids || [];
 
     const sortGroupsAlphabetically = (a: ReportGroup, b: ReportGroup) => {
-      const nameA = a.templateName.replace(/\{.*?\}/g, '').trim().toLowerCase();
-      const nameB = b.templateName.replace(/\{.*?\}/g, '').trim().toLowerCase();
+      const nameA = cleanTemplateName(a.templateName).toLowerCase();
+      const nameB = cleanTemplateName(b.templateName).toLowerCase();
       return nameA.localeCompare(nameB);
     };
 
