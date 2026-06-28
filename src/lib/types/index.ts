@@ -90,6 +90,7 @@ export interface AppSettings {
   disabled_modules?: AppModuleId[];
   whatsapp_default_chat_ids?: string[];
   whatsapp_local_url?: string;
+  show_whatsapp_bot?: boolean;
   orden_del_dia_draft?: {
     staff: Staff;
     activities: ManualNovedad[];
@@ -136,6 +137,7 @@ export interface Report {
   }>;
   photos?: ReportPhoto[];
   modified?: string | null;
+  whatsapp_message_ids?: Record<string, string>;
 }
 
 export interface GuardReport {

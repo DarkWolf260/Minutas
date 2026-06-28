@@ -20,7 +20,7 @@ export const SyncHeader = ({ usuario, esPrincipal, esSecundario, modoSimple = fa
         </Button>
       </Link>
       <div className="flex-1 min-w-0">
-        <h1 className="text-xl font-bold tracking-tight">Sincronización</h1>
+        <h1 className="text-xl font-bold tracking-tight">Conexiones</h1>
         {modoSimple ? (
           <p className="text-sm text-muted-foreground">
             Conecta dispositivos para compartir reportes en tiempo real.

@@ -31,7 +31,7 @@ export const personnelSchema = {
 
 export const reportsSchema = {
     title: 'reports schema',
-    version: 3,
+    version: 4,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -70,7 +70,8 @@ export const reportsSchema = {
             }
         },
         modified: { type: ['string', 'null'] },
-        _deleted: { type: 'boolean' }
+        _deleted: { type: 'boolean' },
+        whatsapp_message_ids: { type: 'object' }
     },
     required: ['id', 'workspace_id', 'template_id', 'title', 'timestamp', 'content', 'is_relevant'],
     indexes: ['workspace_id']

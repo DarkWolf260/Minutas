@@ -176,6 +176,30 @@ app.post('/api/whatsapp/send', async (req, res) => {
   }
 });
 
+app.post('/api/whatsapp/edit', async (req, res) => {
+  if (!isReady) {
+    return res.status(400).json({ error: 'WhatsApp client is not ready' });
+  }
+
+  const { messageId, message } = req.body;
+
+  if (!messageId || !message) {
+    return res.status(400).json({ error: 'Faltan parámetros: messageId y message son requeridos' });
+  }
+
+  try {
+    const msg = await client.getMessageById(messageId);
+    if (!msg) {
+      return res.status(404).json({ error: 'No se encontró el mensaje original' });
+    }
+    const editedMsg = await msg.edit(message);
+    res.json({ success: true, messageId: editedMsg.id._serialized });
+  } catch (error) {
+    console.error('Error al editar mensaje:', error);
+    res.status(500).json({ error: error.toString() });
+  }
+});
+
 
 // === SISTEMA DE PROGRAMACIÓN EN SEGUNDO PLANO ===
 const fs = require('fs');

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, Monitor, Smartphone, Camera, Wifi, RefreshCw } from 'lucide-react';
+import { Monitor, Smartphone, Camera, Wifi, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -17,9 +17,6 @@ interface SyncSetupProps {
 export const SyncSetup = ({ hook, setEsQRScannerOpen, whatsappComponent }: SyncSetupProps) => {
   const navigate = useNavigate();
   const {
-    estaAutenticado,
-    usuario,
-    signOut,
     modo,
     setModo,
     nombreDispositivo,
@@ -35,51 +32,8 @@ export const SyncSetup = ({ hook, setEsQRScannerOpen, whatsappComponent }: SyncS
       <SyncHeader modoSimple={true} />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mt-6">
-        {/* Lado Izquierdo: Cuenta y Modo de dispositivo */}
+        {/* Lado Izquierdo: Modo de dispositivo */}
         <div className="lg:col-span-7 space-y-6">
-          {/* Autenticación (SRP) */}
-          <div className="space-y-4">
-            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Cuenta</Label>
-            {!estaAutenticado ? (
-              <Card className="border-blue-500/30 bg-blue-500/5 shadow-sm overflow-hidden group">
-                <CardContent className="flex items-center gap-4 p-5">
-                  <div className="h-10 w-10 rounded-xl bg-blue-500/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
-                    <LogIn className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold tracking-tight text-blue-900 dark:text-blue-200">Inicio de sesión requerido</p>
-                    <p className="text-[11px] text-blue-800/60 dark:text-blue-300/60 leading-snug">
-                      Necesitas una cuenta para habilitar la sincronización en la nube.
-                    </p>
-                  </div>
-                  <Button size="sm" onClick={() => navigate('/login?redirect=/settings/sync')} className="bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-600/20">
-                    Iniciar sesión
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="border-green-500/20 bg-green-500/5 shadow-sm overflow-hidden">
-                <CardContent className="flex items-center gap-4 p-4">
-                  <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center border border-green-500/20">
-                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold truncate">{usuario?.email}</p>
-                    <p className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Sesión Activa</p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={signOut}
-                    className="h-8 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-destructive"
-                  >
-                    Cerrar sesión
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
           {/* Selección de Modo (OCP) */}
           <div className="space-y-4">
             <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Modo de dispositivo</Label>

@@ -136,7 +136,7 @@ export function SideNav() {
         </nav>
         
         <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">
-          <QuickChatSelector />
+          {settings?.show_whatsapp_bot && <QuickChatSelector />}
           <NotificationBell />
           
           <DropdownMenu>

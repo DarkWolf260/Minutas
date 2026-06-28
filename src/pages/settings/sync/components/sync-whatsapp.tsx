@@ -8,6 +8,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Input } from '@/components/ui/input';
 import { useWhatsAppBot } from '@/hooks/use-whatsapp-bot';
 import { useSettings } from '@/hooks/use-settings';
+import { Switch } from '@/components/ui/switch';
 
 export function SyncWhatsApp() {
   const { settings, saveSettings } = useSettings();
@@ -42,7 +43,7 @@ export function SyncWhatsApp() {
   return (
     <Card className="border-emerald-500/20 bg-gradient-to-b from-emerald-500/5 to-transparent rounded-2xl overflow-hidden">
       <CardHeader className="pb-4 border-b border-emerald-500/10 bg-gradient-to-r from-emerald-500/10 to-transparent">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between w-full">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
             <div className="p-1.5 bg-emerald-500/20 rounded-lg">
               <MessageSquare className="h-4 w-4" />
@@ -50,23 +51,33 @@ export function SyncWhatsApp() {
             Bot de WhatsApp
           </CardTitle>
           
-          {bot.isAvailable && (
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-              bot.status.isReady 
-                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' 
-                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-            }`}>
-              <div className={`h-1.5 w-1.5 rounded-full ${
-                bot.status.isReady ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-              }`} />
-              {bot.status.isReady ? 'Conectado' : 'Pendiente'}
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {bot.isAvailable && settings?.show_whatsapp_bot && (
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                bot.status.isReady 
+                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' 
+                  : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+              }`}>
+                <div className={`h-1.5 w-1.5 rounded-full ${
+                  bot.status.isReady ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                }`} />
+                {bot.status.isReady ? 'Conectado' : 'Pendiente'}
+              </div>
+            )}
+            <Switch
+              checked={!!settings?.show_whatsapp_bot}
+              onCheckedChange={async (checked) => {
+                await saveSettings({ show_whatsapp_bot: checked });
+              }}
+            />
+          </div>
         </div>
       </CardHeader>
       
-      <CardContent className="pt-5 space-y-4">
-        {bot.conflictBotUrl && (
+      <CardContent className="pt-5 space-y-4 relative">
+        {settings?.show_whatsapp_bot ? (
+          <>
+            {bot.conflictBotUrl && (
           <div className="flex items-start gap-3 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl text-xs leading-relaxed animate-in fade-in slide-in-from-top-2 duration-300">
             <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 animate-pulse text-rose-500" />
             <div>
@@ -273,6 +284,12 @@ export function SyncWhatsApp() {
                 Entendido
               </Button>
             </div>
+          </div>
+        )}
+          </>
+        ) : (
+          <div className="text-xs text-muted-foreground leading-relaxed py-2 font-medium">
+            Activa esta opción para configurar el bot local de WhatsApp, escanear el código QR y seleccionar los destinatarios de los reportes. Una vez activo, se mostrará el panel rápido del bot en la barra de navegación para envío directo.
           </div>
         )}
       </CardContent>

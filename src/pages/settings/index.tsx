@@ -171,8 +171,8 @@ export default function SettingsPage() {
                           <Wifi className="h-4 w-4" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium">Sincronización</p>
-                          <p className="text-xs text-muted-foreground">Enviar reportes entre dispositivos en tiempo real</p>
+                          <p className="text-sm font-medium">Conexiones</p>
+                          <p className="text-xs text-muted-foreground">Configura la sincronización entre dispositivos y el bot de WhatsApp</p>
                         </div>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />

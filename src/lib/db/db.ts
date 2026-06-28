@@ -385,6 +385,10 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
             // New fields (pending_upload, local_blob_id) are optional/nullable.
             // No data transformation is required, return as is.
             return oldDoc;
+          },
+          4: function (oldDoc: any) {
+            oldDoc.whatsapp_message_ids = oldDoc.whatsapp_message_ids || {};
+            return oldDoc;
           }
         }
       },

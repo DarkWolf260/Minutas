@@ -360,6 +360,26 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     }
   }, [localUrl, isCloud, db, currentWorkspace]);
 
+  const editMessage = useCallback(async (messageId: string, message: string) => {
+    try {
+      const response = await fetch(`${localUrl}/api/whatsapp/edit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId, message }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error editing message');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error in editMessage:', error);
+      throw error;
+    }
+  }, [localUrl]);
+
   // Polling for status with dynamic interval
   useEffect(() => {
     const now = Date.now();
@@ -479,6 +499,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     checkStatus,
     loadChats,
     sendMessage,
+    editMessage,
     localUrl,
     isCloudActive: state.isCloudActive,
     conflictBotUrl: state.conflictBotUrl

@@ -4,10 +4,12 @@ import React from 'react';
 import { NotificationBell } from '@/components/layout/notification-bell';
 import { QuickChatSelector } from '@/components/layout/quick-chat-selector';
 import { useMobileNav } from './mobile-nav/use-mobile-nav';
+import { useSettings } from '@/hooks/use-settings';
 import { NavBrand } from './mobile-nav/nav-brand';
 import { NavUserMenu } from './mobile-nav/nav-user-menu';
 
 export function MobileNav() {
+  const { settings } = useSettings();
   const {
     profile,
     analyst,
@@ -23,7 +25,7 @@ export function MobileNav() {
 
       <div className="flex items-center gap-2">
         {/* Chats de WhatsApp */}
-        <QuickChatSelector />
+        {settings?.show_whatsapp_bot && <QuickChatSelector />}
 
         {/* Notificaciones */}
         <NotificationBell />

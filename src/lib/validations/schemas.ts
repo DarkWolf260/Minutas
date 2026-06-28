@@ -178,6 +178,7 @@ export const AppSettingsSchema = z.object({
     final_report_start_date: z.string().optional(),
     final_report_end_date: z.string().optional(),
     reportarole_ids: z.array(z.string()).optional(),
+    show_whatsapp_bot: z.boolean().optional(),
 });
 
 export type ValidatedAppSettings = z.infer<typeof AppSettingsSchema>;
