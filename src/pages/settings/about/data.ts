@@ -80,9 +80,17 @@ export interface ChangelogEntry {
   changes: ChangeEntry[];
 }
 
-export const APP_VERSION = '1.9.0';
+export const APP_VERSION = '1.10.0';
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.10.0',
+    date: '04/07/2026',
+    changes: [
+      { type: 'nueva', text: 'Duplicación de Novedades: Añadido botón y diálogo de confirmación para duplicar novedades directamente en la guardia activa con asignación de ID único y limpio.' },
+      { type: 'corrección', text: 'Estabilidad en Local: Deshabilitado el envío en segundo plano a Supabase Storage en espacios de trabajo locales y silenciado el registro de depuración de la consola.' },
+    ],
+  },
   {
     version: '1.9.0',
     date: '28/06/2026',
