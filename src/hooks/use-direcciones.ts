@@ -92,7 +92,7 @@ export function useDirecciones() {
     }
 
     partes.push(direccion.name);
-    partes.push(`Cuadrante de Paz ${direccion.peaceQuadrant}`);
+    partes.push(`Cuadrante de Paz ${direccion.peaceQuadrant}${direccion.entity ? ` (${direccion.entity})` : ''}`);
 
     let texto = partes.join(', ');
 
@@ -126,7 +126,8 @@ export function useDirecciones() {
           (addr.houseNumber && addr.houseNumber.toLowerCase().includes(busquedaBaja)) ||
           addr.parish.toLowerCase().includes(busquedaBaja) ||
           (addr.sector && addr.sector.toLowerCase().includes(busquedaBaja)) ||
-          addr.peaceQuadrant.toLowerCase().includes(busquedaBaja)
+          addr.peaceQuadrant.toLowerCase().includes(busquedaBaja) ||
+          (addr.entity && addr.entity.toLowerCase().includes(busquedaBaja))
         );
       });
   }, [direcciones, busqueda, filtroMunicipio]);

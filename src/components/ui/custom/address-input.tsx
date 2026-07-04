@@ -62,7 +62,7 @@ export const formatAddressToString = (address: Address): string => {
   }
 
   parts.push(address.name);
-  parts.push(`Cuadrante de Paz ${address.peaceQuadrant}`);
+  parts.push(`Cuadrante de Paz ${address.peaceQuadrant}${address.entity ? ` (${address.entity})` : ''}`);
 
   return parts.join(', ');
 };

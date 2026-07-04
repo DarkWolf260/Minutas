@@ -280,6 +280,7 @@ export interface Address {
   parish: string;
   sector?: string;
   peaceQuadrant: string;
+  entity?: string;
   latitude?: string;
   longitude?: string;
   details?: string;

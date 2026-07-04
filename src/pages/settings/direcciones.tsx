@@ -23,6 +23,7 @@ import {
   Globe,
   Navigation,
   ChevronLeft,
+  MoreVertical,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddressFormDialog } from '@/components/shared/address-form-dialog';
@@ -41,6 +42,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
@@ -77,6 +79,21 @@ const LOCATION_TYPE_CONFIG: Record<string, { label: string; className: string }>
     label: 'Sede',
     className: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/25',
   },
+};
+
+const parseQuadrant = (peaceQuadrant: string, entity?: string) => {
+  if (entity) {
+    return { quadrant: peaceQuadrant, entity };
+  }
+  if (!peaceQuadrant) return { quadrant: '', entity: '' };
+  const match = peaceQuadrant.match(/^(.*?)\s*\((.*?)\)\s*$/);
+  if (match) {
+    return {
+      quadrant: (match[1] || '').trim(),
+      entity: (match[2] || '').trim()
+    };
+  }
+  return { quadrant: peaceQuadrant, entity: '' };
 };
 
 const AddressMap = lazy(() => import('@/components/shared/address-map').then((mod) => ({ default: mod.AddressMap })));
@@ -129,6 +146,17 @@ export default function DireccionesPage() {
         </Tabs>
       </div>
 
+      {/* Floating action button at bottom on mobile devices, floating above BottomNav */}
+      <div className="md:hidden fixed bottom-20 left-0 right-0 px-4 z-[45] pointer-events-none flex justify-center">
+        <Button
+          onClick={() => manejarAbrirForm()}
+          className="w-full max-w-sm pointer-events-auto shadow-2xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold h-12 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-all border border-primary-foreground/10"
+        >
+          <PlusCircle className="h-5 w-5" />
+          Nueva Dirección
+        </Button>
+      </div>
+
       <ModalesDirecciones hook={hook} />
     </div>
   );
@@ -148,7 +176,7 @@ function CabeceraDirecciones({ alAbrirForm }: { alAbrirForm: () => void }) {
           <p className="text-muted-foreground mt-1 text-sm sm:text-base">Administración central de puntos de interés y ubicaciones.</p>
         </div>
       </div>
-      <Button onClick={() => alAbrirForm()} className="w-full sm:w-auto shadow-md hover:shadow-lg transition-all active:scale-95 gap-2 h-10">
+      <Button onClick={() => alAbrirForm()} className="hidden md:flex shadow-md hover:shadow-lg transition-all active:scale-95 gap-2 h-10">
         <PlusCircle className="h-4 w-4" />
         Nueva Dirección
       </Button>
@@ -236,35 +264,46 @@ function ListaDirecciones({ hook }: { hook: any }) {
               </div>
             </div>
           </div>
+
+          <div className="border-t border-border/30 pt-4 mb-2 shrink-0">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Todas las ubicaciones ({direccionesFiltradas.length})
+            </span>
+          </div>
+
           <ScrollArea className="flex-1 -mx-2 px-2" type="always">
             {direccionesFiltradas.length > 0 ? (
-              <div className="space-y-4 pb-4">
-                {direccionesFiltradas.map((direccion: any) => (
-                  <Card
-                    key={direccion.id}
-                    className={cn(
-                      'group flex flex-col transition-all duration-300 overflow-hidden shadow-sm hover:shadow-md border-muted/60',
-                      seleccionadaParaMapa?.id === direccion.id
-                        ? 'border-primary ring-1 ring-primary bg-primary/5'
-                        : 'hover:border-primary/40'
-                    )}
-                  >
-                    <CardHeader className="p-4 bg-muted/10 group-hover:bg-muted/20 transition-colors">
-                      <div className="flex justify-between items-start gap-3">
-                        <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                          <CardTitle className="flex items-start gap-2.5 text-base font-bold tracking-tight leading-snug">
-                            <MapPin className={cn(
-                              "h-4 w-4 mt-0.5 shrink-0 transition-colors",
-                              seleccionadaParaMapa?.id === direccion.id ? "text-primary" : "text-muted-foreground/70"
-                            )} />
-                            <span className="flex-1">{direccion.name}</span>
-                          </CardTitle>
+              <div className="divide-y divide-border/40 pb-4">
+                {direccionesFiltradas.map((direccion: any) => {
+                  const esSeleccionada = seleccionadaParaMapa?.id === direccion.id;
+                  return (
+                    <div
+                      key={direccion.id}
+                      className={cn(
+                        "flex flex-col sm:flex-row sm:items-center justify-between py-4 px-3 gap-3 transition-all duration-200 hover:bg-muted/40 cursor-pointer relative rounded-lg my-0.5",
+                        esSeleccionada ? "bg-primary/5 pl-7" : ""
+                      )}
+                      onClick={() => {
+                        if (direccion.latitude && direccion.longitude) {
+                          setSeleccionadaParaMapa(direccion);
+                          if (window.innerWidth < 768) setTabActiva('map');
+                        }
+                      }}
+                    >
+                      {esSeleccionada && (
+                        <div className="absolute left-2.5 top-3.5 bottom-3.5 w-1 bg-primary rounded-full" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                          <span className="font-bold text-base text-foreground tracking-tight leading-snug">
+                            {direccion.name}
+                          </span>
                           {direccion.locationType && (() => {
                             const typeConfig = LOCATION_TYPE_CONFIG[direccion.locationType!];
                             if (!typeConfig) return null;
                             return (
                               <span className={cn(
-                                'ml-6 inline-flex self-start items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase transition-all duration-200',
+                                'inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wide uppercase',
                                 typeConfig.className
                               )}>
                                 {typeConfig.label}
@@ -272,117 +311,107 @@ function ListaDirecciones({ hook }: { hook: any }) {
                             );
                           })()}
                         </div>
-                        {direccion.latitude && direccion.longitude && (
-                          <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] mt-1.5 shrink-0" title="Coordenadas disponibles" />
-                        )}
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-4 text-sm text-muted-foreground space-y-3">
-                      {(direccion.street || direccion.houseNumber) && (
-                        <div className="space-y-0.5">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Dirección</p>
-                          <p className="text-foreground/90 font-medium">
-                            {`${direccion.street || ''}${direccion.street && direccion.houseNumber ? ', ' : ''}${direccion.houseNumber || ''}`}
-                          </p>
-                        </div>
-                      )}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-0.5">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Ubicación</p>
-                          <p className="text-foreground/80 text-xs">
+                        
+                        <div className="flex flex-col space-y-0.5 text-sm">
+                          {(direccion.street || direccion.houseNumber) && (
+                            <p className="text-foreground/90 font-medium leading-normal">
+                              {`${direccion.street || ''}${direccion.street && direccion.houseNumber ? ', ' : ''}${direccion.houseNumber || ''}`}
+                            </p>
+                          )}
+                          <p className="text-muted-foreground leading-normal">
                             {[
                               `Mcp. ${direccion.municipality}`,
                               `Pqa. ${direccion.parish}`,
                               direccion.sector ? `Sctor. ${direccion.sector}` : null,
-                            ]
-                              .filter(Boolean)
-                              .join(', ')}
+                            ].filter(Boolean).join(', ')}
                           </p>
-                        </div>
-                        <div className="space-y-0.5">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Cuadrante</p>
-                          <p className="text-foreground/80 text-xs">
-                            {direccion.peaceQuadrant}
-                          </p>
+                          {direccion.peaceQuadrant && (() => {
+                            const { quadrant, entity } = parseQuadrant(direccion.peaceQuadrant, direccion.entity);
+                            return (
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground/80 pt-0.5">
+                                <span>
+                                  Cuadrante: <span className="text-foreground/85 font-medium">{quadrant}</span>
+                                </span>
+                                {entity && (
+                                  <>
+                                    <span className="hidden sm:inline text-muted-foreground/45">•</span>
+                                    <span>
+                                      Ente encargado: <span className="text-foreground/85 font-medium">{entity}</span>
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
-                    </CardContent>
-                    <CardFooter className="flex flex-wrap justify-end gap-2 bg-muted/10 p-2.5 border-t border-muted/30">
-                      <div className="mr-auto flex items-center gap-1">
+                      
+                      <div className="flex items-center justify-end gap-1 shrink-0 self-end sm:self-center" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 px-2 hover:bg-background/80">
-                              {idCopiado === direccion.id ? (
-                                <Check className="h-3.5 w-3.5 text-emerald-500" />
-                              ) : (
-                                <ClipboardCopy className="h-3.5 w-3.5" />
-                              )}
+                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/80 rounded-full" title="Opciones de dirección">
+                              <MoreVertical className="h-4.5 w-4.5 text-muted-foreground" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start" className="backdrop-blur-xl">
+                          <DropdownMenuContent align="end" className="w-56 backdrop-blur-xl">
+                            {direccion.latitude && direccion.longitude && (
+                              <>
+                                <DropdownMenuItem
+                                  onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${direccion.latitude},${direccion.longitude}`, '_blank')}
+                                  className="gap-2 cursor-pointer text-blue-500 hover:text-blue-600 focus:text-blue-500"
+                                >
+                                  <Globe className="h-4 w-4" />
+                                  <span>Abrir en Google Maps</span>
+                                </DropdownMenuItem>
+                                
+                                <DropdownMenuSeparator className="opacity-45 my-1" />
+                              </>
+                            )}
+
                             <DropdownMenuItem
                               onClick={() => manejarCopiarDireccion(direccion, false)}
-                              className="text-xs"
+                              className="gap-2 cursor-pointer"
                             >
-                              Copiar dirección texto
+                              {idCopiado === direccion.id ? (
+                                <Check className="h-4 w-4 text-emerald-500" />
+                              ) : (
+                                <ClipboardCopy className="h-4 w-4 text-muted-foreground" />
+                              )}
+                              <span>{idCopiado === direccion.id ? '¡Copiado!' : 'Copiar dirección texto'}</span>
                             </DropdownMenuItem>
+
                             <DropdownMenuItem
                               onClick={() => manejarCopiarDireccion(direccion, true)}
                               disabled={!direccion.latitude || !direccion.longitude}
-                              className="text-xs"
+                              className="gap-2 cursor-pointer"
                             >
-                              Copiar con coordenadas
+                              <ClipboardCopy className="h-4 w-4 text-muted-foreground" />
+                              <span>Copiar con coordenadas</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuSeparator className="opacity-45 my-1" />
+
+                            <DropdownMenuItem
+                              onClick={() => manejarAbrirForm(direccion)}
+                              className="gap-2 cursor-pointer"
+                            >
+                              <Edit className="h-4 w-4 text-muted-foreground" />
+                              <span>Editar dirección</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              onClick={() => setDireccionAEliminar(direccion)}
+                              className="gap-2 cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              <span>Eliminar dirección</span>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-
-                        {direccion.latitude && direccion.longitude && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2 hover:bg-background/80 text-blue-500"
-                            onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${direccion.latitude},${direccion.longitude}`, '_blank')}
-                            title="Abrir en Google Maps"
-                          >
-                            <Globe className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
                       </div>
-
-                      <Button
-                        variant={seleccionadaParaMapa?.id === direccion.id ? "secondary" : "outline"}
-                        size="sm"
-                        className={cn(
-                          "h-8 text-xs font-semibold px-3 transition-all",
-                          seleccionadaParaMapa?.id === direccion.id ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""
-                        )}
-                        onClick={() => {
-                          setSeleccionadaParaMapa(direccion);
-                          if (window.innerWidth < 768) setTabActiva('map');
-                        }}
-                        disabled={!direccion.latitude || !direccion.longitude}
-                      >
-                        <Eye className="mr-1.5 h-3.5 w-3.5" /> Ver
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-xs px-3 bg-background hover:bg-muted"
-                        onClick={() => manejarAbrirForm(direccion)}
-                      >
-                        <Edit className="mr-1.5 h-3.5 w-3.5" /> Editar
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
-                        onClick={() => setDireccionAEliminar(direccion)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-16 border-2 border-dashed rounded-lg">

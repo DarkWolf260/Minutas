@@ -21,22 +21,12 @@ export function normalizarCategoria(rawCat: string): string {
   if (!rawCat) return '';
   const cat = rawCat.trim().toUpperCase();
   const catNorm = normalizarParaComp(cat);
-  const catCode = cat.split(' ')[0];
 
+  // Look for an exact or alphanumeric match across all categories
   const standardKey = DEFAULT_STATISTICS_CATEGORIES.find((dk) => {
     const sdk = dk.toUpperCase();
-
-    // 1. Coincidencia exacta
     if (sdk === cat) return true;
-
-    // 2. Coincidencia alfanumérica (ignora espacios, acentos, guiones, barras)
     if (normalizarParaComp(sdk) === catNorm) return true;
-
-    // 3. Coincidencia por parte del código (ej. "5.5")
-    const sdkParts = sdk.split(' ');
-    const sdkCode = sdkParts[0];
-    if (sdkCode && sdkCode === catCode && sdkCode.includes('.')) return true;
-
     return false;
   });
 

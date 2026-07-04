@@ -22,6 +22,9 @@ interface NovedadModalsProps {
   estaMontado: boolean;
   reporteAEliminar: string | null;
   setReporteAEliminar: (val: string | null) => void;
+  reporteADuplicar: string | null;
+  setReporteADuplicar: (val: string | null) => void;
+  manejarConfirmarDuplicacion: () => void;
   manejarLimpiarTodo: () => void;
   manejarEliminarReporte: (id: string) => void;
   esDialogOpenCrear: boolean;
@@ -39,6 +42,9 @@ export const NovedadModals = React.memo(({
   estaMontado,
   reporteAEliminar,
   setReporteAEliminar,
+  reporteADuplicar,
+  setReporteADuplicar,
+  manejarConfirmarDuplicacion,
   manejarLimpiarTodo,
   manejarEliminarReporte,
   esDialogOpenCrear,
@@ -54,6 +60,16 @@ export const NovedadModals = React.memo(({
 
   return (
     <>
+      <ConfirmDialog
+        open={!!reporteADuplicar}
+        onOpenChange={(open) => !open && setReporteADuplicar(null)}
+        onConfirm={manejarConfirmarDuplicacion}
+        title="¿Duplicar Novedad?"
+        message="Esta acción creará una copia idéntica del reporte seleccionado con un identificador único diferente en tu guardia activa."
+        confirmText="Sí, duplicar"
+        variant="default"
+      />
+
       <ConfirmDialog
         open={isConfirmExportOpen}
         onOpenChange={setIsConfirmExportOpen}

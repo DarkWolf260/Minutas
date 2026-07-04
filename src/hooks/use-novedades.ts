@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useReports } from '@/hooks/use-reports';
 import { toast } from 'sonner';
+import { generateId } from '@/lib/utils/id';
 import { useTemplates } from '@/hooks/use-templates';
 import { useDrafts } from '@/hooks/use-drafts';
 import { useActiveGuard } from '@/hooks/use-active-guard';
@@ -41,6 +42,7 @@ export function useNovedades() {
   const [estaNavegandoAtras, setEstaNavegandoAtras] = useState(false);
   const [ordenamiento, setOrdenamiento] = useState<'asc' | 'desc'>('desc');
   const [isConfirmExportOpen, setIsConfirmExportOpen] = useState(false);
+  const [reporteADuplicar, setReporteADuplicar] = useState<string | null>(null);
   const manualSelectionRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -85,6 +87,30 @@ export function useNovedades() {
       setIdReporteSeleccionado(null);
     }
   }, [removeReport, idReporteSeleccionado, navigate]);
+
+  const manejarDuplicarReporte = useCallback((id: string) => {
+    setReporteADuplicar(id);
+  }, []);
+
+  const manejarConfirmarDuplicacion = useCallback(async () => {
+    if (reporteADuplicar) {
+      const original = reports.find(r => r.id === reporteADuplicar);
+      if (original) {
+        const newId = generateId();
+        const duplicated: Report = {
+          ...original,
+          id: newId,
+          timestamp: new Date().toISOString(),
+          whatsapp_message_ids: undefined
+        };
+        await addReport(duplicated);
+        toast.success('Reporte duplicado con éxito.');
+        navigate(`/?selected=${newId}`);
+        setIdReporteSeleccionado(newId);
+      }
+      setReporteADuplicar(null);
+    }
+  }, [reporteADuplicar, reports, addReport, navigate]);
 
   const manejarLimpiarTodo = useCallback(async () => {
     setReporteAEliminar(null);
@@ -516,6 +542,10 @@ export function useNovedades() {
     }, [reportesFiltrados, templates, configs, definitions, settings, activeGuard]),
     updateReport,
     navigate,
+    reporteADuplicar,
+    setReporteADuplicar,
+    manejarDuplicarReporte,
+    manejarConfirmarDuplicacion
   };
 }
 

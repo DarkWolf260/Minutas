@@ -63,6 +63,9 @@ function NovedadesPageContent() {
         estaMontado={hook.estaMontado}
         reporteAEliminar={hook.reporteAEliminar}
         setReporteAEliminar={hook.setReporteAEliminar}
+        reporteADuplicar={hook.reporteADuplicar}
+        setReporteADuplicar={hook.setReporteADuplicar}
+        manejarConfirmarDuplicacion={hook.manejarConfirmarDuplicacion}
         manejarLimpiarTodo={hook.manejarLimpiarTodo}
         manejarEliminarReporte={hook.manejarEliminarReporte}
         esDialogOpenCrear={hook.esDialogOpenCrear}

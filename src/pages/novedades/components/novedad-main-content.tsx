@@ -18,6 +18,7 @@ export const NovedadMainContent = ({ hook }: NovedadMainContentProps) => {
     reporteSeleccionado,
     updateReport,
     setReporteAEliminar,
+    manejarDuplicarReporte,
     generatorRef,
     idReporteSeleccionado,
     manejarSeleccionarReporte
@@ -42,6 +43,7 @@ export const NovedadMainContent = ({ hook }: NovedadMainContentProps) => {
             report={reporteSeleccionado}
             onSave={updateReport}
             onDelete={(id: string) => setReporteAEliminar(id)}
+            onDuplicate={manejarDuplicarReporte}
             onClose={() => manejarSeleccionarReporte(null)}
           />
         </div>

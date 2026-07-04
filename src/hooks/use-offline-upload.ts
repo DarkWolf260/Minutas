@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useDatabase } from '@/lib/db/db-context';
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { OfflinePhotosDB } from '@/lib/offline-photos';
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
@@ -23,10 +23,12 @@ function sanitizeFilename(name: string): string {
  */
 export function useOfflineUpload() {
   const db = useDatabase();
+  const { isCloud } = useWorkspaceManager();
   const uploadingRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!db) return;
+    if (!isCloud) return;
 
     let active = true;
 
@@ -145,5 +147,5 @@ export function useOfflineUpload() {
       sub.unsubscribe();
       window.removeEventListener('online', handleOnline);
     };
-  }, [db]);
+  }, [db, isCloud]);
 }

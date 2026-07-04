@@ -1,4 +1,4 @@
-import { Trash2, Eye, Save, CheckIcon, Send, X, MessageSquare, ChevronDown, Clock } from 'lucide-react';
+import { Trash2, Eye, Save, CheckIcon, Send, X, MessageSquare, ChevronDown, Clock, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -28,6 +28,7 @@ interface ViewerHeaderProps {
   status: 'En proceso' | 'Finalizado';
   onStatusChange: (status: 'En proceso' | 'Finalizado') => void;
   onDelete: () => void;
+  onDuplicate?: () => void;
   onPreview: () => void;
   onSave: () => void;
   onClose?: () => void;
@@ -46,6 +47,7 @@ export const ViewerHeader = ({
   status,
   onStatusChange,
   onDelete,
+  onDuplicate,
   onPreview,
   onSave,
   onClose,
@@ -104,6 +106,17 @@ export const ViewerHeader = ({
             title="Cerrar reporte"
           >
             <X className="h-5 w-5" />
+          </Button>
+        )}
+        {onDuplicate && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-primary hover:bg-primary/10 h-9 w-9"
+            onClick={onDuplicate}
+            title="Duplicar reporte"
+          >
+            <Copy className="h-4 w-4" />
           </Button>
         )}
         <Button

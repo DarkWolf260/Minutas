@@ -28,6 +28,34 @@ export function useAddresses() {
         // Extract custom user-added addresses (IDs not starting with 'default_')
         const customAddresses = dbAddresses.filter((addr) => !addr.id.startsWith('default_'));
 
+        // Check if any custom addresses need migration (have parentheses in peaceQuadrant but no entity field)
+        const customAddressesToMigrate = customAddresses.filter(
+          (addr) => !addr.entity && addr.peaceQuadrant && addr.peaceQuadrant.includes('(') && addr.peaceQuadrant.includes(')')
+        );
+
+        if (customAddressesToMigrate.length > 0) {
+          // Perform lazy background migration
+          setTimeout(async () => {
+            const repo = createLookupRepository(db, currentWorkspace, isCloud);
+            for (const addr of customAddressesToMigrate) {
+              const match = addr.peaceQuadrant.match(/^(.*?)\s*\((.*?)\)\s*$/);
+              if (match) {
+                const migrated: Address = {
+                  ...addr,
+                  peaceQuadrant: (match[1] || '').trim(),
+                  entity: (match[2] || '').trim()
+                };
+                try {
+                  await repo.updateAddress(migrated);
+                  logger.info(`Migrated address ${addr.id} peaceQuadrant: ${migrated.peaceQuadrant}, entity: ${migrated.entity}`);
+                } catch (err) {
+                  logger.error('Failed to migrate address:', err);
+                }
+              }
+            }
+          }, 100);
+        }
+
         // Extract default address overrides (IDs starting with 'default_' and not marked as deleted)
         const dbDefaultOverrides = dbAddresses.filter((addr) => addr.id.startsWith('default_') && !addr.isDeleted);
 

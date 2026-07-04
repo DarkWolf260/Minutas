@@ -105,6 +105,7 @@ export function obtenerCategoriasReporte(
   predefinedValues: Record<string, string> = {},
   addresses: Address[] = []
 ): string[] {
+  const ENABLE_STATS_DEBUG = false; // Toggle to true if debugging statistic rules
   if (!template) return [];
 
   // Extract meta-options if stored in statistics_rules
@@ -174,11 +175,11 @@ export function obtenerCategoriasReporte(
     });
   }
 
-  // 2. Procesar Reglas Condicionales
+  // 2. Event rule evaluation
   if (Array.isArray(template.statistics_rules) && template.statistics_rules.length > 0) {
     const rulesByCat = new Map<string, number>();
 
-    if (import.meta.env.DEV) {
+    if (ENABLE_STATS_DEBUG) {
       console.log(`[STATS DEBUG] === Evaluando reporte "${report.title}" (ID: ${report.id}) con plantilla "${template.name}" ===`);
       console.log(`[STATS DEBUG] predefinedValues:`, predefinedValues);
       console.log(`[STATS DEBUG] form_data:`, report.form_data);
@@ -318,7 +319,7 @@ export function obtenerCategoriasReporte(
               primaryMatch = primaryMatch && prevMatch;
             }
 
-            if (import.meta.env.DEV) {
+            if (ENABLE_STATS_DEBUG) {
               console.log(`[STATS DEBUG] Evaluando tramo de ruta secuencial (Leg ${i}): "${items[i - 1]}" -> "${item}" contra "${legCondition}" (${rule.operator}). Resultado: ${primaryMatch}`);
             }
           }
@@ -500,7 +501,7 @@ export function obtenerCategoriasReporte(
         });
       }
 
-      if (import.meta.env.DEV) {
+      if (ENABLE_STATS_DEBUG) {
         console.log(`[STATS DEBUG] Regla para campo "${rule.field_id}" (${rule.operator} "${rule.condition}") -> Matches found: ${matches}. Categorías:`, ruleCategories);
       }
 
@@ -565,7 +566,7 @@ export function obtenerCategoriasReporte(
         if (categoria) {
           const normCat = normalizarCategoria(categoria);
           transferCounts.set(normCat, (transferCounts.get(normCat) || 0) + 1);
-          if (import.meta.env.DEV) {
+          if (ENABLE_STATS_DEBUG) {
             console.log(`[STATS DEBUG] Tipo traslado Tramo ${i}: "${origen.value}" (${origen.type}) -> "${destino.value}" (${destino.type}) => ${categoria}`);
           }
         }

@@ -39,11 +39,11 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
     textoBotonCopiar,
     manejarCopiarAlPortapapeles,
     setEsDialogOpenConfirmarGuardar,
+    esDialogOpenConfirmarGuardar,
     esDialogOpenVista,
     setEsDialogOpenVista,
     reporteGuardadoSeleccionado,
     manejarCopiarReporte,
-    esDialogOpenConfirmarGuardar,
     manejarFinalizarYGuardar,
     esDialogOpenConfirmarEliminar,
     setEsDialogOpenConfirmarEliminar,
@@ -272,7 +272,7 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
         onOpenChange={setEsDialogOpenConfirmarEliminar}
         onConfirm={manejarConfirmarEliminacionHistorial}
         title="¿Eliminar del Historial?"
-        message="Esta acción eliminará permanentemente el reporte archivado del historial local. No se puede deshacer."
+        message="Esta action eliminará permanentemente el reporte archivado del historial local. No se puede deshacer."
         confirmText="Sí, eliminar reporte"
         variant="destructive"
       />

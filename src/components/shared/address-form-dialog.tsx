@@ -81,6 +81,7 @@ const addressSchema = z.object({
   parish: z.string().min(1, { message: 'La parroquia es requerida.' }),
   sector: z.string().optional(),
   peaceQuadrant: z.string().min(1, { message: 'El cuadrante de paz es requerido.' }),
+  entity: z.string().optional(),
   latitude: z.string().optional(),
   longitude: z.string().optional(),
   details: z.string().optional(),
@@ -105,6 +106,7 @@ export function AddressFormDialog({
       parish: '',
       sector: '',
       peaceQuadrant: '',
+      entity: '',
       latitude: '',
       longitude: '',
       details: '',
@@ -117,6 +119,7 @@ export function AddressFormDialog({
         form.reset({
           ...address,
           locationType: address.locationType || '',
+          entity: address.entity || '',
         });
       } else {
         form.reset({
@@ -129,6 +132,7 @@ export function AddressFormDialog({
           parish: '',
           sector: '',
           peaceQuadrant: '',
+          entity: '',
           latitude: initialCoords?.lat || '',
           longitude: initialCoords?.lng || '',
           details: '',
@@ -283,20 +287,20 @@ export function AddressFormDialog({
                   )}
                 />
               </div>
+              <FormField
+                control={form.control}
+                name="sector"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold">Sector / Barrio</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: Casco Central" className="bg-background border-2 border-muted/30 h-10 rounded-xl px-4" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="sector"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">Sector / Barrio</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej: Casco Central" className="bg-background border-2 border-muted/30 h-10 rounded-xl px-4" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <FormField
                   control={form.control}
                   name="peaceQuadrant"
@@ -308,6 +312,22 @@ export function AddressFormDialog({
                       </div>
                       <FormControl>
                         <Input placeholder="Ej: 14" className="bg-background border-2 border-muted/30 h-10 rounded-xl px-4" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="entity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Shield className="h-3 w-3 text-primary/70" />
+                        <FormLabel className="text-xs font-semibold m-0">Ente Encargado</FormLabel>
+                      </div>
+                      <FormControl>
+                        <Input placeholder="Ej: CPNB o PoliSotillo" className="bg-background border-2 border-muted/30 h-10 rounded-xl px-4" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -421,22 +441,15 @@ export function AddressFormDialog({
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <SheetContent side="bottom" className="h-[92vh] p-0 rounded-t-[2.5rem] overflow-hidden border-none shadow-2xl">
-          <div className="w-12 h-1.5 bg-muted/30 rounded-full mx-auto mt-3 mb-1" />
-          <SheetHeader className="px-6 py-4 text-left border-b border-muted/10">
-            <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <SheetTitle className="text-2xl font-bold tracking-tight">{title}</SheetTitle>
-                <SheetDescription className="text-xs">{description}</SheetDescription>
-              </div>
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon" className="rounded-full bg-muted/20 h-10 w-10">
-                  <X className="h-5 w-5" />
-                </Button>
-              </SheetClose>
+        <SheetContent side="bottom" className="h-[92vh] p-0 rounded-t-[2.5rem] flex flex-col overflow-hidden border-none shadow-2xl">
+          <div className="w-12 h-1.5 bg-muted/30 rounded-full mx-auto mt-3 mb-1 shrink-0" />
+          <SheetHeader className="px-6 py-4 text-left border-b border-muted/10 shrink-0">
+            <div className="space-y-1">
+              <SheetTitle className="text-2xl font-bold tracking-tight">{title}</SheetTitle>
+              <SheetDescription className="text-xs">{description}</SheetDescription>
             </div>
           </SheetHeader>
-          <div className="flex-1 overflow-hidden h-full">
+          <div className="flex-1 min-h-0 overflow-hidden">
             <FormContent />
           </div>
         </SheetContent>
@@ -448,21 +461,13 @@ export function AddressFormDialog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-2xl bg-background/95 backdrop-blur-xl border-muted/50 shadow-2xl overflow-hidden p-0 rounded-3xl">
         <DialogHeader className="p-8 pb-4 bg-muted/5 border-b border-muted/20">
-          <div className="flex justify-between items-start">
-            <div className="space-y-1">
-              <DialogTitle className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">
-                {title}
-              </DialogTitle>
-              <DialogDescription className="text-sm">
-                {description}
-              </DialogDescription>
-            </div>
-            <div className={cn(
-              "p-3 rounded-2xl",
-              address ? "bg-amber-500/10 text-amber-500" : "bg-primary/10 text-primary"
-            )}>
-              {address ? <Building2 className="h-6 w-6" /> : <MapPin className="h-6 w-6" />}
-            </div>
+          <div className="space-y-1">
+            <DialogTitle className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">
+              {title}
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              {description}
+            </DialogDescription>
           </div>
         </DialogHeader>
         <div className="max-h-[75vh]">
