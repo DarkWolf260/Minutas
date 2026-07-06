@@ -15,7 +15,7 @@ import { useRoles } from '@/hooks/use-roles';
 import { useAdmin } from '@/hooks/use-admin';
 import { useGlobalConfig } from '@/hooks/use-global-config';
 import { LEADER_ROLES } from '@/lib/constants/roles';
-import type { Report, Template, StaffMember } from '@/lib/types';
+import type { Report, Template, StaffMember, form_dataValue } from '@/lib/types';
 import type { ReportGeneratorRef } from '@/components/report/report-generator';
 
 export function useNovedades() {
@@ -97,16 +97,56 @@ export function useNovedades() {
       const original = reports.find(r => r.id === reporteADuplicar);
       if (original) {
         const newId = generateId();
+        const now = new Date();
+
+        // Update the "Fecha" field (case-insensitive) in form_data to today's date,
+        // preserving the original format (DD/MM/YYYY or YYYY-MM-DD).
+        // Only create a new form_data object if a Fecha field is actually found,
+        // so reference equality is preserved when there is nothing to change.
+        const updateFechaInFormData = (fd: typeof original.form_data): typeof original.form_data => {
+          if (!fd) return fd;
+          const pad = (n: number) => String(n).padStart(2, '0');
+          const todaySlash = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`; // DD/MM/YYYY
+          const todayDash = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`; // YYYY-MM-DD
+          const toToday = (existing: unknown): string =>
+            typeof existing === 'string' && existing.includes('/') ? todaySlash : todayDash;
+
+          // Check top-level Fecha
+          for (const key of Object.keys(fd)) {
+            if (key.toLowerCase() === 'fecha') {
+              return { ...fd, [key]: toToday(fd[key]) } as typeof fd;
+            }
+          }
+
+          // Check nested Fecha (one level deep)
+          for (const key of Object.keys(fd)) {
+            const val = fd[key];
+            if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
+              const section = val as Record<string, form_dataValue>;
+              for (const nestedKey of Object.keys(section)) {
+                if (nestedKey.toLowerCase() === 'fecha') {
+                  const updatedSection: Record<string, form_dataValue> = { ...section, [nestedKey]: toToday(section[nestedKey]) };
+                  return { ...fd, [key]: updatedSection } as typeof fd;
+                }
+              }
+            }
+          }
+
+          return fd; // No Fecha found — return the original reference unchanged
+        };
+
         const duplicated: Report = {
           ...original,
           id: newId,
-          timestamp: new Date().toISOString(),
+          timestamp: now.toISOString(),
+          form_data: updateFechaInFormData(original.form_data),
           whatsapp_message_ids: undefined
         };
         await addReport(duplicated);
         toast.success('Reporte duplicado con éxito.');
-        navigate(`/?selected=${newId}`);
+        manualSelectionRef.current = newId;
         setIdReporteSeleccionado(newId);
+        navigate(`/?selected=${newId}`);
       }
       setReporteADuplicar(null);
     }
