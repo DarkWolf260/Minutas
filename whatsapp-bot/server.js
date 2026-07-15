@@ -41,9 +41,22 @@ let statusMessage = 'Iniciando cliente...';
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: './session' }),
   puppeteer: {
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
+    headless: 'new',
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-gpu',
+      '--disable-dev-shm-usage',
+      '--disable-site-isolation-trials',
+      '--no-zygote'
+    ],
   },
-  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+  // Fijar versión estable de WhatsApp Web para evitar navegaciones inesperadas
+  // que destruyen el contexto de Puppeteer durante la inyección (Client.js:inject)
+  webVersionCache: {
+    type: 'remote',
+    remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1043159177-alpha.html',
+  },
 });
 
 client.on('qr', (qr) => {
@@ -89,7 +102,36 @@ client.on('disconnected', (reason) => {
   statusMessage = 'Desconectado';
 });
 
-client.initialize();
+// Inicializar con reintentos automáticos para sobrevivir a "Execution context was destroyed"
+async function startClient(attempt = 1) {
+  const MAX_ATTEMPTS = 3;
+  try {
+    console.log(`[Init] Iniciando cliente WhatsApp (intento ${attempt}/${MAX_ATTEMPTS})...`);
+    await client.initialize();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[Init] Fallo en intento ${attempt}: ${msg}`);
+    
+    // Destruir el cliente para cerrar el proceso de Chromium y liberar el lock sobre la carpeta ./session
+    try {
+      console.log('[Init] Cerrando navegador para liberar session lock...');
+      await client.destroy();
+    } catch (destroyErr) {
+      // Ignorar fallos de destrucción si ya estaba cerrado o no inicializado
+    }
+
+    if (attempt < MAX_ATTEMPTS) {
+      console.log(`[Init] Reintentando en 3 segundos...`);
+      await new Promise(r => setTimeout(r, 3000));
+      await startClient(attempt + 1);
+    } else {
+      console.error('[Init] Se agotaron los reintentos. Saliendo.');
+      process.exit(1);
+    }
+  }
+}
+
+startClient();
 
 // Rutas de la API
 app.get('/api/whatsapp/status', (req, res) => {
@@ -108,7 +150,10 @@ app.get('/api/whatsapp/chats', async (req, res) => {
 
   try {
     const chats = await client.getChats();
-    // Filtramos solo grupos o permitimos todo? El usuario quiere enviar a grupos.
+    const errors = chats.filter(c => c.error);
+    if (errors.length > 0) {
+      console.warn(`[chats] ${errors.length} chats fallaron al serializarse por completo. Ejemplo:`, errors[0].name, "-", errors[0].error);
+    }
     const formattedChats = chats.map(chat => ({
       id: chat.id._serialized,
       name: chat.name,
@@ -117,7 +162,11 @@ app.get('/api/whatsapp/chats', async (req, res) => {
 
     res.json(formattedChats);
   } catch (error) {
-    res.status(500).json({ error: error.toString() });
+    const errMsg = error instanceof Error ? error.message : String(error);
+    const errStack = error instanceof Error ? error.stack : '';
+    console.error('[chats] getChats() FAILED:', errMsg);
+    if (errStack) console.error('[chats] Stack:', errStack);
+    res.status(500).json({ error: errMsg, detail: errStack });
   }
 });
 
@@ -140,7 +189,7 @@ app.post('/api/whatsapp/send', async (req, res) => {
     // Solo enviar texto si hay contenido (WhatsApp no acepta mensajes vacíos)
     if (message && message.trim()) {
       const response = await client.sendMessage(chatId, message);
-      textMsgId = response.id._serialized;
+      textMsgId = response && response.id ? response.id._serialized : null;
     }
 
     // Responder inmediatamente — el browser no espera que las fotos terminen de enviarse.
@@ -193,7 +242,7 @@ app.post('/api/whatsapp/edit', async (req, res) => {
       return res.status(404).json({ error: 'No se encontró el mensaje original' });
     }
     const editedMsg = await msg.edit(message);
-    res.json({ success: true, messageId: editedMsg.id._serialized });
+    res.json({ success: true, messageId: editedMsg && editedMsg.id ? editedMsg.id._serialized : null });
   } catch (error) {
     console.error('Error al editar mensaje:', error);
     res.status(500).json({ error: error.toString() });
