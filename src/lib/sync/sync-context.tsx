@@ -21,10 +21,10 @@ import React, {
   useRef,
 } from 'react';
 import { toast } from 'sonner';
-import { useSettings } from '@/hooks/use-settings';
-import { useAuth } from '@/hooks/use-auth';
-import { useReports } from '@/hooks/use-reports';
-import { useTemplates } from '@/hooks/use-templates';
+import { useSettings } from '@/hooks/configuracion';
+import { useAuth } from '@/hooks/admin';
+import { useReports } from '@/hooks/novedades';
+import { useTemplates } from '@/hooks/plantillas';
 import { useNotifications } from '@/lib/notifications-provider';
 import {
   createChannel,

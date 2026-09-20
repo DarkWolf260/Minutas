@@ -66,7 +66,7 @@ import {
   SheetDescription,
   SheetFooter
 } from '@/components/ui/sheet';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/ui';
 import { cn } from '@/lib/utils';
 import { Department, StaffRole, StaffMember } from '@/lib/types';
 import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';

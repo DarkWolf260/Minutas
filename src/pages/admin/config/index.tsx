@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useGlobalConfig } from '@/hooks/use-global-config';
+import { useGlobalConfig } from '@/hooks/configuracion';
 import {
   ChevronLeft,
   ShieldAlert,

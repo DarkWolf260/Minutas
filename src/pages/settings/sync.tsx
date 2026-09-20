@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { useSyncPagina } from '@/hooks/use-sync-pagina';
+import { useSyncPagina } from '@/hooks/sync';
 
 // Componentes extraídos (SOLID)
 import { SyncHeader } from './sync/components/sync-header';

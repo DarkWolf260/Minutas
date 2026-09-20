@@ -1,22 +1,22 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/ui';
 import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
-import { useSettings } from '@/hooks/use-settings';
-import { useUnits } from '@/hooks/use-units';
-import { useRoles } from '@/hooks/use-roles';
-import { useReports } from '@/hooks/use-reports';
-import { useTemplates } from '@/hooks/use-templates';
-import { useGuards } from '@/hooks/use-guards';
-import { useDrafts } from '@/hooks/use-drafts';
-import { useFieldDefinitions } from '@/hooks/use-field-definitions';
-import { useDepartments } from '@/hooks/use-departments';
-import { usePersonnel } from '@/hooks/use-personnel';
-import { useAddresses } from '@/hooks/use-addresses';
-import { useGuardHistory } from '@/hooks/use-guard-history';
-import { usePersonnelHistory } from '@/hooks/use-personnel-history';
-import { useProfile } from '@/hooks/use-profile';
+import { useSettings } from '@/hooks/configuracion';
+import { useUnits } from '@/hooks/configuracion';
+import { useRoles } from '@/hooks/personal';
+import { useReports } from '@/hooks/novedades';
+import { useTemplates } from '@/hooks/plantillas';
+import { useGuards } from '@/hooks/guardias';
+import { useDrafts } from '@/hooks/novedades';
+import { useFieldDefinitions } from '@/hooks/configuracion';
+import { useDepartments } from '@/hooks/personal';
+import { usePersonnel } from '@/hooks/personal';
+import { useAddresses } from '@/hooks/direcciones';
+import { useGuardHistory } from '@/hooks/guardias';
+import { usePersonnelHistory } from '@/hooks/personal';
+import { useProfile } from '@/hooks/configuracion';
 import { getInstitutionalData } from '@/components/structure/institutional-data'; // Añadido
 import {
   Trash2,

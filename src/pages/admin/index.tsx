@@ -11,9 +11,9 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
-import { useAdminUsers } from '@/hooks/use-admin-users';
-import { useCloudWorkspaces } from '@/hooks/use-cloud-workspaces';
-import { useGlobalConfig } from '@/hooks/use-global-config';
+import { useAdminUsers } from '@/hooks/admin';
+import { useCloudWorkspaces } from '@/hooks/sync';
+import { useGlobalConfig } from '@/hooks/configuracion';
 import { APP_VERSION } from '@/pages/settings/about/data';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';

@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { DatePicker } from '@/components/ui/custom/date-picker';
 import { useState } from 'react';
-import { useScheduledMessages } from '@/hooks/use-scheduled-messages';
+import { useScheduledMessages } from '@/hooks/whatsapp';
 
 interface ViewerHeaderProps {
   status: 'En proceso' | 'Finalizado';

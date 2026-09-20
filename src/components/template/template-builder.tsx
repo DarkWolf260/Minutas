@@ -19,7 +19,7 @@ import { ReportPreview } from '@/components/report/report-preview';
 import { cn } from '@/lib/utils';
 import { generateId } from '@/lib/utils/id';
 import { useWorkspaceManager } from '@/lib/db/db-context';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/ui';
 
 interface TemplateBuilderProps {
   onOpenInfoDialog: () => void;

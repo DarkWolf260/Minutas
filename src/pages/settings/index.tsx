@@ -2,11 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { AjustesGenerales } from '@/components/shared/ajustes-generales';
-import { useSettings } from '@/hooks/use-settings';
-import { useUnits } from '@/hooks/use-units';
-import { useRoles } from '@/hooks/use-roles';
-import { useDepartments } from '@/hooks/use-departments';
-import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+import { useSettings } from '@/hooks/configuracion';
+import { useUnits } from '@/hooks/configuracion';
+import { useRoles } from '@/hooks/personal';
+import { useDepartments } from '@/hooks/personal';
+import { useFieldDefinitions } from '@/hooks/configuracion';
 import { useUser } from '@/components/providers/user-provider';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import {

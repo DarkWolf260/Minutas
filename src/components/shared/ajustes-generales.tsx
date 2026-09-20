@@ -4,13 +4,13 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useFieldDefinitions } from '@/hooks/use-field-definitions';
-import { useRoles } from '@/hooks/use-roles';
+import { useFieldDefinitions } from '@/hooks/configuracion';
+import { useRoles } from '@/hooks/personal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { useSettings } from '@/hooks/use-settings';
-import { useDepartments } from '@/hooks/use-departments';
+import { useSettings } from '@/hooks/configuracion';
+import { useDepartments } from '@/hooks/personal';
 import { Separator } from '@/components/ui/separator';
 import { useUser } from '@/components/providers/user-provider';
 import { useWorkspaceManager } from '@/lib/db/db-context';
@@ -30,7 +30,7 @@ import { Trash2, ChevronUp, ChevronDown, Save, Layers, Folders, ListOrdered, Has
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AjustesGeneralesForm } from './ajustes-generales-form';
 import { Switch } from '@/components/ui/switch';
-import { useTemplates } from '@/hooks/use-templates';
+import { useTemplates } from '@/hooks/plantillas';
 import { cn } from '@/lib/utils';
 
 export function AjustesGenerales() {

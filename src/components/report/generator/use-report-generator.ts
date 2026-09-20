@@ -1,12 +1,12 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import type { Template, TemplateConfig, Report, ReportDraft, StaffMember, ReportPhoto } from '@/lib/types';
-import { useDrafts } from '@/hooks/use-drafts';
+import { useDrafts } from '@/hooks/novedades';
 import { debounce } from '@/lib/utils';
 import { generateId } from '@/lib/utils/id';
-import { useSettings } from '@/hooks/use-settings';
-import { useOrdenDelDiaDraft } from '@/hooks/use-orden-del-dia-draft';
-import { useGuards } from '@/hooks/use-guards';
-import { usePersonnel } from '@/hooks/use-personnel';
+import { useSettings } from '@/hooks/configuracion';
+import { useOrdenDelDiaDraft } from '@/hooks/orden-del-dia';
+import { useGuards } from '@/hooks/guardias';
+import { usePersonnel } from '@/hooks/personal';
 import { parseTemplate } from '@/lib/template-parser';
 import { toast } from 'sonner';
 import type { ReportFormRef } from '../report-form';

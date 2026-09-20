@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/custom/date-picker';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { createReportRepository } from '@/lib/repositories';
-import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+import { useFieldDefinitions } from '@/hooks/configuracion';
 import { calcularEstadisticasDia, formatearEstadisticasDia } from '@/lib/estadisticas-utils';
 import { findValueInform_data, getReportDateTime } from '@/lib/report-sorter';
 import { toast } from 'sonner';

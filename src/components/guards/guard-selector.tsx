@@ -25,9 +25,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useActiveGuard } from '@/hooks/use-active-guard';
-import { useAdmin } from '@/hooks/use-admin';
-import { useGlobalConfig } from '@/hooks/use-global-config';
+import { useActiveGuard } from '@/hooks/guardias';
+import { useAdmin } from '@/hooks/admin';
+import { useGlobalConfig } from '@/hooks/configuracion';
 import { Link } from 'react-router-dom';
 
 interface GuardSelectorProps {

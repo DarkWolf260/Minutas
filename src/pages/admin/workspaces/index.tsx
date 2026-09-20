@@ -30,7 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DbKeys } from '@/lib/repositories';
-import { useCloudWorkspaces } from '@/hooks/use-cloud-workspaces';
+import { useCloudWorkspaces } from '@/hooks/sync';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';

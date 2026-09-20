@@ -7,9 +7,9 @@ import { renderFinalReport } from '@/lib/template-parser';
 import { LEADER_ROLES } from '@/lib/constants/roles';
 import { calcularEstadisticasDia } from '@/lib/estadisticas-utils';
 import type { StaffMember, Report } from '@/lib/types';
-import { useOrdenDelDiaDraft } from '@/hooks/use-orden-del-dia-draft';
-import { useAdmin } from '@/hooks/use-admin';
-import { useGlobalConfig } from '@/hooks/use-global-config';
+import { useOrdenDelDiaDraft } from '@/hooks/orden-del-dia';
+import { useAdmin } from '@/hooks/admin';
+import { useGlobalConfig } from '@/hooks/configuracion';
 
 interface UseReporteFinalGeneratorProps {
   reportesFinalizados: any[];

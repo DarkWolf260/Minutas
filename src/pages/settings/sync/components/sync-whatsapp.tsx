@@ -6,8 +6,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { QRCodeSVG } from 'qrcode.react';
 import { Input } from '@/components/ui/input';
-import { useWhatsAppBot } from '@/hooks/use-whatsapp-bot';
-import { useSettings } from '@/hooks/use-settings';
+import { useWhatsAppBot } from '@/hooks/whatsapp';
+import { useSettings } from '@/hooks/configuracion';
 
 export function SyncWhatsApp() {
   const { settings, saveSettings } = useSettings();

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useUser } from '@/components/providers/user-provider';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/admin';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { Loader2, ShieldAlert, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';

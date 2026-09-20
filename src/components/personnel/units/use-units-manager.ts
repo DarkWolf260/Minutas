@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useUnits } from '@/hooks/use-units';
+import { useUnits } from '@/hooks/configuracion';
 import { toast } from 'sonner';
 
 export function useUnitsManager() {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/ui';
 import {
     Sheet,
     SheetContent,
@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { History, Calendar, Shield, User } from 'lucide-react';
-import { usePersonnelHistory } from '@/hooks/use-personnel-history';
+import { usePersonnelHistory } from '@/hooks/personal';
 import type { StaffMember, PersonnelAssignment } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';

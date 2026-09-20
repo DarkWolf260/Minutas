@@ -8,7 +8,7 @@ import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { TemplateEditor } from '@/components/template/template-editor';
 import { TemplateBuilder } from '@/components/template/template-builder';
-import { usePlantillas } from '@/hooks/use-plantillas';
+import { usePlantillas } from '@/hooks/plantillas';
 
 // Componentes extraídos (SOLID)
 import { PlantillasHeader } from './plantillas/components/plantillas-header';

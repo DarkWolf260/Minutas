@@ -14,7 +14,7 @@ import { validateTimeHlv } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { useAddresses } from '@/hooks/use-addresses';
+import { useAddresses } from '@/hooks/direcciones';
 import { obtenerCategoriasReporte } from '@/lib/estadisticas-utils';
 
 // Componentes y Hooks extraídos (SOLID)

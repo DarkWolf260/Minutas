@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAdminUsers, AdminUser } from '@/hooks/use-admin-users';
+import { useAdminUsers, AdminUser } from '@/hooks/admin';
 import {
   Search,
   Trash2,

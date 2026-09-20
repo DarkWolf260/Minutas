@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useSetup } from '@/hooks/use-setup';
+import { useSetup } from '@/hooks/configuracion';
 import { 
   PasoBienvenida, 
   PasoAreaTrabajo, 

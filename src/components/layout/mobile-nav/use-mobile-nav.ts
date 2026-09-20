@@ -1,6 +1,6 @@
-import { useProfile } from '@/hooks/use-profile';
-import { useSettings } from '@/hooks/use-settings';
-import { useAuth } from '@/hooks/use-auth';
+import { useProfile } from '@/hooks/configuracion';
+import { useSettings } from '@/hooks/configuracion';
+import { useAuth } from '@/hooks/admin';
 import { getInitials } from '@/lib/utils';
 
 export function useMobileNav() {

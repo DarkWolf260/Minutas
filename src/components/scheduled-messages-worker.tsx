@@ -1,6 +1,6 @@
 'use client';
 
-import { useScheduledMessages } from '@/hooks/use-scheduled-messages';
+import { useScheduledMessages } from '@/hooks/whatsapp';
 
 export function ScheduledMessagesWorker() {
   // This hook runs the background worker to check and send messages

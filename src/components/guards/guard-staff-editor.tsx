@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import type { Guard, Staff, StaffRole, Department, StaffMember } from '@/lib/types';
 import { Trash2, Search, Check, Save } from 'lucide-react';
 import { cn, normalizeString } from '@/lib/utils';
-import { usePersonnel } from '@/hooks/use-personnel';
-import { usePersonnelHistory } from '@/hooks/use-personnel-history';
+import { usePersonnel } from '@/hooks/personal';
+import { usePersonnelHistory } from '@/hooks/personal';
 
 import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover';

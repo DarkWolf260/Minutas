@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OrdenDelDiaForm } from '@/components/orden-del-dia/index';
-import { useOrdenDelDiaPagina } from '@/hooks/use-orden-del-dia-pagina';
+import { useOrdenDelDiaPagina } from '@/hooks/orden-del-dia';
 
 // Componentes extraídos (SOLID)
 import { OrdenHeader } from './orden-del-dia/components/orden-header';

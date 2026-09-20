@@ -10,8 +10,8 @@ import {
 import { Settings2, Sun, Moon, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/providers/theme-provider';
-import { useFieldDefinitions } from '@/hooks/use-field-definitions';
-import { useSettings } from '@/hooks/use-settings';
+import { useFieldDefinitions } from '@/hooks/configuracion';
+import { useSettings } from '@/hooks/configuracion';
 import { toast } from 'sonner';
 import { SetupStepLayout } from './layout';
 import { AjustesGeneralesForm } from '@/components/shared/ajustes-generales-form';

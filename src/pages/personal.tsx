@@ -1,6 +1,6 @@
 'use client';
 
-import { usePersonal } from '@/hooks/use-personal';
+import { usePersonal } from '@/hooks/personal';
 import { FeatureErrorBoundary } from '@/components/common/error-boundary-feature';
 
 // Componentes extraídos (SOLID)

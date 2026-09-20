@@ -1,6 +1,6 @@
 import React, { Suspense, memo } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useNovedades } from '@/hooks/use-novedades';
+import { useIsMobile } from '@/hooks/ui';
+import { useNovedades } from '@/hooks/novedades';
 import { cn } from '@/lib/utils';
 import { NoGuardBanner } from '@/components/guards/guard-selector';
 

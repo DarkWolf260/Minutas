@@ -8,16 +8,16 @@ import type {
   StaffMember,
   form_dataRecord,
 } from '@/lib/types';
-import { useFieldDefinitions } from '@/hooks/use-field-definitions';
+import { useFieldDefinitions } from '@/hooks/configuracion';
 import { parseTemplate } from '@/lib/template-parser';
 import { logger } from '@/lib/logger';
 import { stableStringify } from '@/lib/utils';
-import { useRoles } from '@/hooks/use-roles';
-import { useGuards } from '@/hooks/use-guards';
-import { useUnits } from '@/hooks/use-units';
-import { useSettings } from '@/hooks/use-settings';
-import { usePersonnel } from '@/hooks/use-personnel';
-import { useOrdenDelDiaDraft } from '@/hooks/use-orden-del-dia-draft';
+import { useRoles } from '@/hooks/personal';
+import { useGuards } from '@/hooks/guardias';
+import { useUnits } from '@/hooks/configuracion';
+import { useSettings } from '@/hooks/configuracion';
+import { usePersonnel } from '@/hooks/personal';
+import { useOrdenDelDiaDraft } from '@/hooks/orden-del-dia';
 import { formatStaffMember } from '@/lib/formatters';
 
 interface UseReportFormProps {

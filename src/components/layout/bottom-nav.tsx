@@ -15,9 +15,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useSettings } from '@/hooks/use-settings';
-import { useAdmin } from '@/hooks/use-admin';
-import { useGlobalConfig } from '@/hooks/use-global-config';
+import { useSettings } from '@/hooks/configuracion';
+import { useAdmin } from '@/hooks/admin';
+import { useGlobalConfig } from '@/hooks/configuracion';
 import type { AppModuleId } from '@/lib/types';
 
 const ALL_NAV_ITEMS: { href: string; label: string; icon: any; moduleId: AppModuleId }[] = [

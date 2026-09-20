@@ -54,7 +54,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useDirecciones } from '@/hooks/use-direcciones';
+import { useDirecciones } from '@/hooks/direcciones';
 
 const LOCATION_TYPE_CONFIG: Record<string, { label: string; className: string }> = {
   centro_asistencial: {

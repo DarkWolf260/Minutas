@@ -2,7 +2,7 @@
 
 import { Toaster as Sonner } from 'sonner';
 import { useTheme } from '@/components/providers/theme-provider';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/ui';
 
 export function Toaster() {
   const { theme = 'system' } = useTheme();

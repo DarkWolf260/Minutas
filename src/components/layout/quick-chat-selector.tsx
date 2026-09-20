@@ -7,9 +7,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import { useWhatsAppBot } from '@/hooks/use-whatsapp-bot';
-import { useSettings } from '@/hooks/use-settings';
-import { useScheduledMessages } from '@/hooks/use-scheduled-messages';
+import { useWhatsAppBot } from '@/hooks/whatsapp';
+import { useSettings } from '@/hooks/configuracion';
+import { useScheduledMessages } from '@/hooks/whatsapp';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';

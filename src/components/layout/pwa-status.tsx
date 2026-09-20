@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { RefreshCw, Download, MonitorSmartphone } from 'lucide-react';
 import { usePwa } from '@/components/providers/pwa-provider';
 import { Button } from '@/components/ui/button';
-import { SETUP_DONE_KEY, tryGet } from '@/hooks/use-setup';
+import { SETUP_DONE_KEY, tryGet } from '@/hooks/configuracion';
 import { toast } from 'sonner';
 
 export function PWAStatus() {

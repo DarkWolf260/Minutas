@@ -12,7 +12,7 @@ import {
   DragOverlay,
   defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/ui';
 import type { Staff, StaffMember, StaffRole } from '@/lib/types';
 import { StaffListEditor } from '@/components/guards/guard-staff-editor';
 
@@ -21,7 +21,7 @@ import { ActivityItem } from './activity-item';
 import { NoteItem } from './note-item';
 import { ResultDialog } from './result-dialog';
 import { AddActivityForm } from './add-activity-form';
-import { useOrdenDelDia, Nota } from '@/hooks/use-orden-del-dia';
+import { useOrdenDelDia, Nota } from '@/hooks/orden-del-dia';
 
 interface OrdenDelDiaFormProps {
   selectedGuard: string;

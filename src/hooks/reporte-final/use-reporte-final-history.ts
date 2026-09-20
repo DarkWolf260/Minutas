@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { useGuardHistory } from '@/hooks/use-guard-history';
+import { useGuardHistory } from '@/hooks/guardias';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 

@@ -3,9 +3,9 @@
 import { useNavigate } from 'react-router-dom';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { useSettings } from '@/hooks/use-settings';
-import { useAdmin } from '@/hooks/use-admin';
-import { useGlobalConfig } from '@/hooks/use-global-config';
+import { useSettings } from '@/hooks/configuracion';
+import { useAdmin } from '@/hooks/admin';
+import { useGlobalConfig } from '@/hooks/configuracion';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import type { AppModuleId } from '@/lib/types';
 import {

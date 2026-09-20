@@ -13,8 +13,8 @@ import {
   DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/components/providers/theme-provider';
-import { useAuth } from '@/hooks/use-auth';
-import { useAdmin } from '@/hooks/use-admin';
+import { useAuth } from '@/hooks/admin';
+import { useAdmin } from '@/hooks/admin';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { Briefcase } from 'lucide-react';
 

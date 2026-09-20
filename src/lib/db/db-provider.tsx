@@ -9,8 +9,8 @@ import { DatabaseContext } from './db-context';
 import { cn } from '@/lib/utils';
 
 import { LoadingScreen } from '@/components/common/loading-screen';
-import { useAuth } from '@/hooks/use-auth';
-import { useCloudWorkspaces } from '@/hooks/use-cloud-workspaces';
+import { useAuth } from '@/hooks/admin';
+import { useCloudWorkspaces } from '@/hooks/sync';
 import { WorkspaceSelectionDialog } from '@/components/shared/workspace-selection-dialog';
 
 interface DatabaseProviderProps {

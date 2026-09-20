@@ -2,9 +2,9 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { debounce, validateTimeHlv } from '@/lib/utils';
 import { renderFinalReport, resolveTemplateTitle } from '@/lib/template-parser';
-import { useTemplates } from '@/hooks/use-templates';
-import { useSettings } from '@/hooks/use-settings';
-import { useSyncManager } from '@/hooks/use-sync';
+import { useTemplates } from '@/hooks/plantillas';
+import { useSettings } from '@/hooks/configuracion';
+import { useSyncManager } from '@/hooks/sync';
 import type { Report, TemplateConfig, Template, ReportPhoto } from '@/lib/types';
 import type { ReportFormRef } from '../report-form';
 

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { useWorkspaceManager } from '@/lib/db/db-context';
-import { useAdmin } from '@/hooks/use-admin';
+import { useAdmin } from '@/hooks/admin';
 
 export const PlantillasHeader = () => {
   const { isCloud } = useWorkspaceManager();

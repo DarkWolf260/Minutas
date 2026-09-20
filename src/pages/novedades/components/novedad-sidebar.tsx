@@ -8,7 +8,7 @@ import { NovedadItem } from './novedad-item';
 import { NovedadFilters } from './novedad-filters';
 import { NovedadGroupItem } from './novedad-group-item';
 import type { Report, Template } from '@/lib/types';
-import { useSettings } from '@/hooks/use-settings';
+import { useSettings } from '@/hooks/configuracion';
 import { getReportDateTime, findValueInform_data } from '@/lib/report-sorter';
 
 interface NovedadSidebarProps {

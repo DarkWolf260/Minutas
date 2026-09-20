@@ -7,7 +7,7 @@ import { ChevronsUpDown } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger, PopoverAnchor } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useAddresses } from '@/hooks/use-addresses';
+import { useAddresses } from '@/hooks/direcciones';
 import type { Address } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, normalizeString } from '@/lib/utils';

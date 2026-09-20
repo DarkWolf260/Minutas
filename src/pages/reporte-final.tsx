@@ -2,8 +2,8 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useReporteFinal } from '@/hooks/use-reporte-final';
+import { useIsMobile } from '@/hooks/ui';
+import { useReporteFinal } from '@/hooks/reporte-final';
 
 // Componentes extraídos (SOLID) - DISEÑO PRESERVADO AL 100%
 import { ReporteHeader } from './reporte-final/components/reporte-header';

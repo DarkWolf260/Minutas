@@ -22,15 +22,15 @@ import { cn } from '@/lib/utils';
 
 // Setup helpers
 import SetupPage from '@/pages/setup';
-import { SETUP_DONE_KEY, tryGet, trySet, tryRemove } from '@/hooks/use-setup';
+import { SETUP_DONE_KEY, tryGet, trySet, tryRemove } from '@/hooks/configuracion';
 import { APP_VERSION } from '@/pages/settings/about/data';
 import { AdminRoute } from '@/components/auth/admin-route';
 import { ProtectedRoute } from '@/components/auth/protected-route';
-import { useAuth } from '@/hooks/use-auth';
-import { useGlobalConfig, GlobalConfigProvider } from '@/hooks/use-global-config';
+import { useAuth } from '@/hooks/admin';
+import { useGlobalConfig, GlobalConfigProvider } from '@/hooks/configuracion';
 import { useWorkspaceManager } from '@/lib/db/db-context';
-import { usePrecacheImages } from '@/hooks/use-precache-images';
-import { useOfflineUpload } from '@/hooks/use-offline-upload';
+import { usePrecacheImages } from '@/hooks/ui';
+import { useOfflineUpload } from '@/hooks/novedades';
 
 // ─── Lazy-load app pages ──────────────────────────────────────────────────────
 

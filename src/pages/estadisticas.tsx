@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useEstadisticas } from '@/hooks/use-estadisticas';
+import { useEstadisticas } from '@/hooks/estadisticas';
 
 // Componentes extraídos (SOLID)
 import { StatsHeader } from './estadisticas/components/stats-header';

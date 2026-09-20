@@ -27,14 +27,14 @@ import {
   Download,
   Layers
 } from 'lucide-react';
-import { useCloudTemplates } from '@/hooks/use-cloud-templates';
-import { useTemplates } from '@/hooks/use-templates';
+import { useCloudTemplates } from '@/hooks/plantillas';
+import { useTemplates } from '@/hooks/plantillas';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { generateId } from '@/lib/utils/id';
 import { Template } from '@/lib/types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/ui';
 
 interface CloudTemplatesDialogProps {
   open: boolean;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '@/hooks/use-auth';
-import { useGlobalConfig } from '@/hooks/use-global-config';
+import { useAuth } from '@/hooks/admin';
+import { useGlobalConfig } from '@/hooks/configuracion';
 import { toast } from 'sonner';
 import { Mail, Lock, Loader2, UserPlus, ArrowLeft, IdCard, ShieldX } from 'lucide-react';
 import { Button } from '@/components/ui/button';

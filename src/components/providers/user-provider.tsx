@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/admin';
 import { supabase, callWithTokenRefresh } from '@/lib/supabase';
 
 interface UserStatus {

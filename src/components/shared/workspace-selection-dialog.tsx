@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useWorkspaceManager } from '@/lib/db/db-context';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/admin';
 import {
   Dialog,
   DialogContent,

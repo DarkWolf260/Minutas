@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/admin';
 import { toast } from 'sonner';
 import { Mail, Lock, Loader2, LogIn, ArrowLeft, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useGlobalConfig } from '@/hooks/use-global-config';
+import { useGlobalConfig } from '@/hooks/configuracion';
 
 export default function LoginPage() {
   const [searchParams] = useSearchParams();
