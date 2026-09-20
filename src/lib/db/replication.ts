@@ -30,8 +30,6 @@ async function startCollectionReplication(
     id: string;
   };
 
-  const pullTrigger$ = new Subject<any>();
-
   const replicationState = replicateRxCollection<any, Checkpoint>({
     collection: collection as any,
     replicationIdentifier: `supabase-custom-v3-${collectionName}-${workspace_id}`,

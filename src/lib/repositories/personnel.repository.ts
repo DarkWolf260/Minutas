@@ -1,17 +1,11 @@
 import type { MinutasDatabase } from '@/lib/db/db';
 import type { StaffMember } from '@/lib/types';
 import { silentWrite } from './base.repository';
-import { createSupabaseWatchAll, supabaseRepoUtils } from './supabase.repository';
 import { map } from 'rxjs';
 
-export function createPersonnelRepository(db: MinutasDatabase | null, workspace_id: string, isCloud: boolean = false) {
+export function createPersonnelRepository(db: MinutasDatabase | null, workspace_id: string) {
   const ws = workspace_id;
-  const TABLE = 'personnel';
 
-  // Unified implementation using RxDB
-  // (Replication is handled at the DatabaseProvider level)
-
-  // RxDB Implementation (Default)
   if (!db) throw new Error('Database not initialized for RxDB repository');
 
   const watchAll = () =>

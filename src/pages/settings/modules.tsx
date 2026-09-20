@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useSettings } from '@/hooks/use-settings';
 import { useAdmin } from '@/hooks/use-admin';
 import { useGlobalConfig } from '@/hooks/use-global-config';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import type { AppModuleId } from '@/lib/types';
 import {
   ChevronLeft,
@@ -62,32 +63,44 @@ function matchesPreset(disabled: AppModuleId[], preset: AppModuleId[]) {
 
 export default function SettingsModulesPage() {
   const navigate = useNavigate();
-  const { settings, isLoaded } = useSettings();
+  const { settings, saveSettings, isLoaded } = useSettings();
   const { isAdmin } = useAdmin();
+  const { isCloud } = useWorkspaceManager();
   const { config: globalConfig, loading: globalConfigLoading, updateConfig } = useGlobalConfig();
 
-  // If user is admin, they configure disabled_modules_admins.
-  // Otherwise, they view disabled_modules.
-  const disabled_modules: AppModuleId[] = isAdmin
+  const canEdit = !isCloud || isAdmin;
+
+  // In cloud mode with admin, we configure globalConfig.disabled_modules_admins.
+  // In local mode (or non-admin cloud), we configure/view settings.disabled_modules.
+  const disabled_modules: AppModuleId[] = (isCloud && isAdmin)
     ? (globalConfig.disabled_modules_admins || [])
     : (settings.disabled_modules || []);
 
   const isEnabled = (id: AppModuleId) => !disabled_modules.includes(id);
 
   const toggle = (id: AppModuleId) => {
-    if (!isAdmin) return;
+    if (!canEdit) return;
     const next = disabled_modules.includes(id)
       ? disabled_modules.filter((m) => m !== id)
       : [...disabled_modules, id];
-    updateConfig('disabled_modules_admins', next);
+
+    if (isCloud && isAdmin) {
+      updateConfig('disabled_modules_admins', next);
+    } else {
+      saveSettings({ disabled_modules: next });
+    }
   };
 
   const applyPreset = (preset: AppModuleId[]) => {
-    if (!isAdmin) return;
-    updateConfig('disabled_modules_admins', preset);
+    if (!canEdit) return;
+    if (isCloud && isAdmin) {
+      updateConfig('disabled_modules_admins', preset);
+    } else {
+      saveSettings({ disabled_modules: preset });
+    }
   };
 
-  const isLoadedCombined = isLoaded && !globalConfigLoading;
+  const isLoadedCombined = isLoaded && (!isCloud || !globalConfigLoading);
 
   return (
     <ScrollArea className="h-full w-full" type="always">
@@ -114,21 +127,21 @@ export default function SettingsModulesPage() {
           </div>
         </div>
 
-        {/* Warning banner for non-admins */}
-        {!isAdmin && isLoaded && (
+        {/* Warning banner for non-admins in cloud mode */}
+        {isCloud && !isAdmin && isLoaded && (
           <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 animate-in fade-in duration-300">
             <ShieldAlert className="h-5 w-5 shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-sm">Vista de solo lectura</p>
+              <p className="font-semibold text-sm">Vista de solo lectura (Nube)</p>
               <p className="text-xs text-amber-600/80 leading-relaxed mt-0.5">
-                La configuración de módulos para tu área de trabajo es administrada centralmente. Comunícate con un administrador si necesitas habilitar o deshabilitar alguna herramienta.
+                La configuración de módulos en áreas sincronizadas con la nube es administrada centralmente. Comunícate con un administrador si necesitas habilitar o deshabilitar alguna herramienta.
               </p>
             </div>
           </div>
         )}
 
-        {/* Presets (Only visible to Admins) */}
-        {isAdmin && (
+        {/* Presets (Visible when editing is allowed: local mode or cloud admin) */}
+        {canEdit && (
           <div className="space-y-2">
             <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-1">
               Configuración rápida
@@ -224,7 +237,7 @@ export default function SettingsModulesPage() {
                     id={`module-${id}`}
                     checked={enabled}
                     onCheckedChange={() => toggle(id)}
-                    disabled={locked || !isLoadedCombined || !isAdmin}
+                    disabled={locked || !isLoadedCombined || !canEdit}
                   />
                 </div>
               );

@@ -3,17 +3,11 @@ import type { Template } from '@/lib/types';
 import { safeWrite, silentWrite } from './base.repository';
 import { DbKeys } from './keys';
 import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
-import { createSupabaseWatchAll, supabaseRepoUtils } from './supabase.repository';
 import { map } from 'rxjs';
 
-export function createTemplateRepository(db: MinutasDatabase | null, workspace_id: string, isCloud: boolean = false) {
+export function createTemplateRepository(db: MinutasDatabase | null, workspace_id: string, _isCloud?: boolean) {
   const ws = workspace_id;
-  const TABLE = 'templates';
 
-  // Unified implementation using RxDB
-  // (Replication is handled at the DatabaseProvider level)
-
-  // RxDB Implementation
   if (!db) throw new Error('Database not initialized');
 
   const isLocalOnly = !ws || ws === 'minutasdb';

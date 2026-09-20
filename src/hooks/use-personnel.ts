@@ -25,14 +25,14 @@ import { createPersonnelRepository } from '@/lib/repositories';
 
 export function usePersonnel() {
   const db = useDatabase();
-  const { currentWorkspace, isCloud } = useWorkspaceManager();
+  const { currentWorkspace } = useWorkspaceManager();
   const [personnel, setPersonnel] = useState<StaffMember[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     if (!db || !currentWorkspace) return;
 
-    const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
+    const repo = createPersonnelRepository(db, currentWorkspace);
     const sub = repo.watchAll().subscribe({
       next: (data) => {
         setPersonnel(data);
@@ -41,7 +41,7 @@ export function usePersonnel() {
     });
 
     return () => sub.unsubscribe();
-  }, [db, currentWorkspace, isCloud]);
+  }, [db, currentWorkspace]);
 
   const addMember = useCallback(
     async (newMember: Omit<StaffMember, 'id'>) => {
@@ -54,7 +54,7 @@ export function usePersonnel() {
         } as any;
 
         const validatedMember = StaffMemberSchema.parse(memberWithId) as StaffMember;
-        const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
+        const repo = createPersonnelRepository(db, currentWorkspace);
         await repo.add(validatedMember);
         logger.info('Personnel added', {
           id: validatedMember.id,
@@ -66,7 +66,7 @@ export function usePersonnel() {
         throw error;
       }
     },
-    [db, currentWorkspace, isCloud]
+    [db, currentWorkspace]
   );
 
   const addMembers = useCallback(
@@ -90,20 +90,20 @@ export function usePersonnel() {
       });
 
       if (newMembers.length > 0) {
-        const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
+        const repo = createPersonnelRepository(db, currentWorkspace);
         await repo.bulkAdd(newMembers);
       }
 
       return { added: newMembers, skipped: skippedCount };
     },
-    [db, currentWorkspace, personnel, isCloud]
+    [db, currentWorkspace, personnel]
   );
 
   const updateMember = useCallback(
     async (id: string, updates: Partial<StaffMember>) => {
       if (!db || !currentWorkspace) return;
       try {
-        const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
+        const repo = createPersonnelRepository(db, currentWorkspace);
         await repo.update(id, updates);
         logger.info('Personnel updated', { id, updates, workspace_id: currentWorkspace });
       } catch (error) {
@@ -113,34 +113,34 @@ export function usePersonnel() {
         throw error;
       }
     },
-    [db, currentWorkspace, isCloud]
+    [db, currentWorkspace]
   );
 
   const removeMember = useCallback(
     async (id: string) => {
       if (!db || !currentWorkspace) return;
-      const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
+      const repo = createPersonnelRepository(db, currentWorkspace);
       await repo.remove(id);
     },
-    [db, currentWorkspace, isCloud]
+    [db, currentWorkspace]
   );
 
   const removeMembers = useCallback(
     async (ids: string[]) => {
       if (!db || !currentWorkspace) return;
-      const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
+      const repo = createPersonnelRepository(db, currentWorkspace);
       await repo.bulkRemove(ids);
     },
-    [db, currentWorkspace, isCloud]
+    [db, currentWorkspace]
   );
 
   const savePersonnel = useCallback(
     async (newPersonnel: StaffMember[]) => {
       if (!db || !currentWorkspace) return;
-      const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
+      const repo = createPersonnelRepository(db, currentWorkspace);
       await repo.syncAll(newPersonnel);
     },
-    [db, currentWorkspace, isCloud]
+    [db, currentWorkspace]
   );
 
   const isCedulaDuplicate = useCallback(
@@ -153,7 +153,7 @@ export function usePersonnel() {
 
   const clearAllPersonnel = useCallback(async () => {
     if (!db || !currentWorkspace) return;
-    const repo = createPersonnelRepository(db, currentWorkspace, isCloud);
+    const repo = createPersonnelRepository(db, currentWorkspace);
     await repo.clearAll();
     logger.info('All personnel cleared', { workspace_id: currentWorkspace });
   }, [db, currentWorkspace]);

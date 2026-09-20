@@ -2,18 +2,11 @@ import type { MinutasDatabase } from '@/lib/db/db';
 import type { GuardReport } from '@/lib/types';
 import { DbKeys } from './keys';
 import { safeWrite, silentWrite } from './base.repository';
-import { createSupabaseWatchAll, supabaseRepoUtils } from './supabase.repository';
-import { supabase } from '@/lib/supabase';
 import { map } from 'rxjs';
 
-export function createHistoryRepository(db: MinutasDatabase | null, workspace_id: string, isCloud: boolean = false) {
+export function createHistoryRepository(db: MinutasDatabase | null, workspace_id: string, _isCloud?: boolean) {
   const ws = workspace_id;
-  const TABLE = 'history';
 
-  // Unified implementation using RxDB
-  // (Replication is handled at the DatabaseProvider level)
-
-  // RxDB Implementation
   if (!db) throw new Error('Database not initialized');
 
   const watchGuardHistory = () =>

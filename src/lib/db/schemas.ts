@@ -31,7 +31,7 @@ export const personnelSchema = {
 
 export const reportsSchema = {
     title: 'reports schema',
-    version: 3,
+    version: 4,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -39,7 +39,7 @@ export const reportsSchema = {
         workspace_id: { type: 'string', maxLength: 50 },
         template_id: { type: 'string' },
         title: { type: 'string' },
-        timestamp: { type: 'string' },
+        timestamp: { type: 'string', maxLength: 50 },
         content: { type: 'string' },
         is_relevant: { type: 'boolean' },
         status: { type: 'string' },
@@ -73,7 +73,7 @@ export const reportsSchema = {
         _deleted: { type: 'boolean' }
     },
     required: ['id', 'workspace_id', 'template_id', 'title', 'timestamp', 'content', 'is_relevant'],
-    indexes: ['workspace_id']
+    indexes: ['workspace_id', ['workspace_id', 'timestamp']]
 };
 
 export const templatesSchema = {

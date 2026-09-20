@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { MinutasDatabase, getDatabase, removeRxDatabase, getRxStorageDexie } from './db';
+import { MinutasDatabase, getDatabase, closeDatabase, removeRxDatabase, getRxStorageDexie } from './db';
 import { startWorkspaceReplication, triggerCloudSync } from './replication';
 import { logger } from '../logger';
 import { DatabaseContext } from './db-context';
@@ -318,7 +318,23 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
   const deleteWorkspace = async (name: string) => {
     if (name === DEFAULT_WORKSPACE) return; // Don't delete default
     
-    // Physical deletion from IndexedDB to free space and protect privacy
+    // Purge records via RxDB collections if active to maintain reactive state & memory cache
+    if (db && db.collections) {
+      try {
+        const collections = Object.values(db.collections);
+        await Promise.all(
+          collections.map((col: any) =>
+            col.find({ selector: { workspace_id: name } }).remove().catch((e: any) => {
+              logger.warn(`Error removing workspace ${name} docs from ${col.name}:`, e);
+            })
+          )
+        );
+      } catch (err) {
+        logger.error(`Error purging workspace ${name} from RxDB collections:`, err);
+      }
+    }
+
+    // Physical deletion fallback from IndexedDB to ensure no orphaned records remain
     await wipeWorkspaceLocalData(name);
     
     const newList = workspaces.filter((w: string) => w !== name);
@@ -448,20 +464,23 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
     if (!confirm('¿Estás seguro? Esto borrará todos los datos locales de la aplicación.')) return;
     
     try {
-      // Use the version name we know is causing issues or just a general wipe if possible
-      // RxDB removeRxDatabase is very effective.
-      // We don't have the DB_NAME constant here but we can try to guess or use the one from db.ts if exported.
-      // For now, we'll use a more general approach or try to import it.
-      // Actually, I'll just reload and hope the v2_resync logic handles it, 
-      // but a "Hard Reset" should really wipe IndexedDB.
-      
-      // I'll export DB_NAME from db.ts too for this.
       logger.info('Performing hard reset of all local databases...');
       
-      // This is a bit of a hack but effective for IndexedDB
-      const dbs = await window.indexedDB.databases();
-      for (const dbInfo of dbs) {
-        if (dbInfo.name) window.indexedDB.deleteDatabase(dbInfo.name);
+      // Close active RxDB connections first so deleteDatabase doesn't block
+      try {
+        await closeDatabase();
+      } catch (closeErr) {
+        logger.warn('Error closing RxDB before hard reset:', closeErr);
+      }
+
+      // Delete all IndexedDB databases
+      if (window.indexedDB?.databases) {
+        const dbs = await window.indexedDB.databases();
+        for (const dbInfo of dbs) {
+          if (dbInfo.name) window.indexedDB.deleteDatabase(dbInfo.name);
+        }
+      } else {
+        window.indexedDB.deleteDatabase('minutas');
       }
       
       localStorage.clear();

@@ -2,19 +2,12 @@ import type { MinutasDatabase } from '@/lib/db/db';
 import type { AppSettings, ReportDraft, FieldConfig, Guard, TemplateConfig } from '@/lib/types';
 import { DbKeys } from './keys';
 import { silentWrite, safeWrite } from './base.repository';
-import { createSupabaseWatchAll, createSupabaseWatchOne, supabaseRepoUtils } from './supabase.repository';
-import { supabase } from '@/lib/supabase';
 import { map } from 'rxjs';
 import { stableStringify } from '@/lib/db/db';
 
-export function createConfigRepository(db: MinutasDatabase | null, workspace_id: string, isCloud: boolean = false) {
+export function createConfigRepository(db: MinutasDatabase | null, workspace_id: string, _isCloud?: boolean) {
   const ws = workspace_id;
-  const TABLE = 'configs';
 
-  // Unified implementation using RxDB
-  // (Replication is handled at the DatabaseProvider level)
-
-  // RxDB Implementation
   if (!db) throw new Error('Database not initialized');
 
   const watchUnits = () =>

@@ -27,7 +27,7 @@ import { createReportRepository } from '@/lib/repositories';
 
 export function useReports() {
   const db = useDatabase();
-  const { currentWorkspace, isCloud } = useWorkspaceManager();
+  const { currentWorkspace } = useWorkspaceManager();
   const { configs } = useTemplates();
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -35,7 +35,7 @@ export function useReports() {
   useEffect(() => {
     if (!db || !currentWorkspace) return;
 
-    const repo = createReportRepository(db, currentWorkspace, isCloud);
+    const repo = createReportRepository(db, currentWorkspace);
     const sub = repo.watchAll().subscribe({
       next: (data) => {
         setReports(data);
@@ -48,9 +48,9 @@ export function useReports() {
 
   const getLatestReports = useCallback(async (): Promise<Report[]> => {
     if (!db || !currentWorkspace) return [];
-    const repo = createReportRepository(db, currentWorkspace, isCloud);
+    const repo = createReportRepository(db, currentWorkspace);
     return await repo.findAll();
-  }, [db, currentWorkspace, isCloud]);
+  }, [db, currentWorkspace]);
 
   const validateReportContent = useCallback(
     (report: Report) => {
@@ -100,7 +100,7 @@ export function useReports() {
       if (!db || !currentWorkspace) return;
       try {
         const validatedReport = validateReportContent(newReport);
-        const repo = createReportRepository(db, currentWorkspace, isCloud);
+        const repo = createReportRepository(db, currentWorkspace);
         await repo.add(validatedReport);
         logger.info('Report added', {
           id: validatedReport.id,
@@ -116,7 +116,7 @@ export function useReports() {
         toast.error(getUserFriendlyErrorMessage(error));
       }
     },
-    [db, validateReportContent, currentWorkspace, isCloud]
+    [db, validateReportContent, currentWorkspace]
   );
 
   const updateReport = useCallback(
@@ -124,7 +124,7 @@ export function useReports() {
       if (!db || !currentWorkspace) return;
       try {
         const validatedReport = validateReportContent(updatedReport);
-        const repo = createReportRepository(db, currentWorkspace, isCloud);
+        const repo = createReportRepository(db, currentWorkspace);
         await repo.update(validatedReport);
         logger.info('Report updated', {
           id: validatedReport.id,
@@ -138,22 +138,22 @@ export function useReports() {
         toast.error(getUserFriendlyErrorMessage(error));
       }
     },
-    [db, validateReportContent, currentWorkspace, isCloud]
+    [db, validateReportContent, currentWorkspace]
   );
 
   const removeReport = useCallback(
     async (reportId: string) => {
       if (!db || !currentWorkspace) return;
-      const repo = createReportRepository(db, currentWorkspace, isCloud);
+      const repo = createReportRepository(db, currentWorkspace);
       await repo.remove(reportId);
       logger.info('Report removed', { id: reportId });
     },
-    [db, currentWorkspace, isCloud]
+    [db, currentWorkspace]
   );
 
   const clearAllReports = useCallback(async () => {
     if (!db || !currentWorkspace) return;
-    const repo = createReportRepository(db, currentWorkspace, isCloud);
+    const repo = createReportRepository(db, currentWorkspace);
     await repo.clearAll();
   }, [db, currentWorkspace]);
 

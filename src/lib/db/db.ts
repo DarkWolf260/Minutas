@@ -191,7 +191,116 @@ const ensureDevMode = async () => {
   }
 };
 
-const created_atabase = async (): Promise<MinutasDatabase> => {
+export const getLogicalState = (obj: any) => {
+  if (!obj) return null;
+  const raw = obj.toJSON ? obj.toJSON() : obj;
+
+  const recursiveClean = (item: any): any => {
+    if (item === null || item === undefined) return undefined;
+    if (Array.isArray(item)) return item.map(recursiveClean).filter(v => v !== undefined);
+    if (typeof item === 'object') {
+      const cleaned: any = {};
+      Object.keys(item).forEach(k => {
+        // Skip internal metadata but KEEP _deleted so sync knows when something is removed
+        if (['_rev', '_meta', 'modified', '_modified', 'updated_at', 'created_at'].includes(k)) return;
+
+        let val = item[k];
+        // Normalize JSON strings
+        if (typeof val === 'string' && (k === 'data' || k === 'form_data' || k === 'statistics_rules' || k === 'statistics_sub_categories' || k === 'sections' || k === 'photos' || k === 'subtasks' || k === 'media')) {
+          try { val = JSON.parse(val); } catch (e) { }
+        }
+
+        const cleanedVal = recursiveClean(val);
+        if (cleanedVal !== undefined) cleaned[k] = cleanedVal;
+      });
+      return Object.keys(cleaned).length > 0 ? cleaned : {};
+    }
+    return item;
+  };
+
+  return recursiveClean(raw);
+};
+
+export const ensureParsed = (obj: any) => {
+  if (!obj) return obj;
+  const result = { ...obj };
+  const jsonFields = ['data', 'form_data', 'sections', 'statistics_rules', 'statistics_sub_categories', 'photos', 'subtasks', 'media'];
+  jsonFields.forEach(key => {
+    if (typeof result[key] === 'string') {
+      try {
+        const parsed = JSON.parse(result[key]);
+        if (parsed && typeof parsed === 'object') result[key] = parsed;
+      } catch (e) { }
+    }
+  });
+  return result;
+};
+
+export const commonConflictHandler = {
+  isEqual: (a: any, b: any) => {
+    const stateA = getLogicalState(a);
+    const stateB = getLogicalState(b);
+    return stableStringify(stateA) === stableStringify(stateB);
+  },
+  resolve: (i: any) => {
+    const master = i.realMasterState;
+    const local = i.newDocumentState;
+
+    if (import.meta.env.DEV) {
+      console.log(`[Conflict] Resolving for ${master?.id}`, { master, local });
+    }
+
+    const logicalMaster = getLogicalState(master);
+    const logicalLocal = getLogicalState(local);
+    if (areEqual(logicalMaster, logicalLocal)) {
+      return Promise.resolve(ensureParsed(i.realMasterState));
+    }
+
+    // AGGRESSIVE LOCAL WINS with object/data merging
+    // We take everything from local, but we MUST keep the cloud's 'modified'
+    // timestamp exactly as it came to pass the optimistic lock check.
+    // For objects with a 'data' field (like configs, lookups), we merge the objects
+    // so that workspace settings/configurations from the cloud are not wiped out
+    // by local client initializations.
+    const resolved = {
+      ...local,
+      modified: master?.modified || local?.modified || null
+    };
+
+    if (local.data !== undefined || master?.data !== undefined) {
+      let mergedData = local.data;
+      if (local.data && typeof local.data === 'object' && master?.data && typeof master.data === 'object') {
+        // Smart Merge during initial sync (modified is null/undefined)
+        if (!local.modified || local.modified === null) {
+          const isEmptyOrDefault = (val: any) => {
+            if (val === null || val === undefined) return true;
+            if (typeof val === 'string' && val.trim() === '') return true;
+            if (Array.isArray(val) && val.length === 0) return true;
+            if (typeof val === 'object' && Object.keys(val).length === 0) return true;
+            return false;
+          };
+
+          mergedData = { ...master.data };
+          Object.keys(local.data).forEach((key) => {
+            const localVal = local.data[key];
+            const masterVal = master.data[key];
+            if (!isEmptyOrDefault(localVal) || isEmptyOrDefault(masterVal)) {
+              mergedData[key] = localVal;
+            }
+          });
+        } else {
+          // Normal merge
+          mergedData = { ...master.data, ...local.data };
+        }
+      }
+      resolved.data = mergedData;
+    }
+
+    return Promise.resolve(ensureParsed(resolved));
+  }
+};
+
+const createDatabase = async (): Promise<MinutasDatabase> => {
   const name = DB_NAME;
   const state = getInternalState();
 
@@ -237,115 +346,6 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
   logger.info(`Central database [${name}] initialized successfully.`);
 
   try {
-    const getLogicalState = (obj: any) => {
-      if (!obj) return null;
-      const raw = obj.toJSON ? obj.toJSON() : obj;
-
-      const recursiveClean = (item: any): any => {
-        if (item === null || item === undefined) return undefined;
-        if (Array.isArray(item)) return item.map(recursiveClean).filter(v => v !== undefined);
-        if (typeof item === 'object') {
-          const cleaned: any = {};
-          Object.keys(item).forEach(k => {
-            // Skip internal metadata but KEEP _deleted so sync knows when something is removed
-            if (['_rev', '_meta', 'modified', '_modified', 'updated_at', 'created_at'].includes(k)) return;
-
-            let val = item[k];
-            // Normalize JSON strings
-            if (typeof val === 'string' && (k === 'data' || k === 'form_data' || k === 'statistics_rules' || k === 'statistics_sub_categories' || k === 'sections' || k === 'photos' || k === 'subtasks' || k === 'media')) {
-              try { val = JSON.parse(val); } catch (e) { }
-            }
-
-            const cleanedVal = recursiveClean(val);
-            if (cleanedVal !== undefined) cleaned[k] = cleanedVal;
-          });
-          return Object.keys(cleaned).length > 0 ? cleaned : {};
-        }
-        return item;
-      };
-
-      return recursiveClean(raw);
-    };
-
-    const ensureParsed = (obj: any) => {
-      if (!obj) return obj;
-      const result = { ...obj };
-      const jsonFields = ['data', 'form_data', 'sections', 'statistics_rules', 'statistics_sub_categories', 'photos', 'subtasks', 'media'];
-      jsonFields.forEach(key => {
-        if (typeof result[key] === 'string') {
-          try {
-            const parsed = JSON.parse(result[key]);
-            if (parsed && typeof parsed === 'object') result[key] = parsed;
-          } catch (e) { }
-        }
-      });
-      return result;
-    };
-
-    const commonConflictHandler = {
-      isEqual: (a: any, b: any) => {
-        const stateA = getLogicalState(a);
-        const stateB = getLogicalState(b);
-        return stableStringify(stateA) === stableStringify(stateB);
-      },
-      resolve: (i: any) => {
-        const master = i.realMasterState;
-        const local = i.newDocumentState;
-
-        if (import.meta.env.DEV) {
-          console.log(`[Conflict] Resolving for ${master?.id}`, { master, local });
-        }
-
-        if (areEqual(getLogicalState(master), getLogicalState(local))) {
-          return Promise.resolve(ensureParsed(i.realMasterState));
-        }
-
-        // AGGRESSIVE LOCAL WINS with object/data merging
-        // We take everything from local, but we MUST keep the cloud's 'modified'
-        // timestamp exactly as it came to pass the optimistic lock check.
-        // For objects with a 'data' field (like configs, lookups), we merge the objects
-        // so that workspace settings/configurations from the cloud are not wiped out
-        // by local client initializations.
-        const resolved = {
-          ...local,
-          modified: master?.modified || local?.modified || null
-        };
-
-        if (local.data !== undefined || master?.data !== undefined) {
-          let mergedData = local.data;
-          if (local.data && typeof local.data === 'object' && master?.data && typeof master.data === 'object') {
-            // Smart Merge during initial sync (modified is null/undefined)
-            if (!local.modified || local.modified === null) {
-              const isEmptyOrDefault = (val: any) => {
-                if (val === null || val === undefined) return true;
-                if (typeof val === 'string' && val.trim() === '') return true;
-                if (Array.isArray(val) && val.length === 0) return true;
-                if (typeof val === 'object' && Object.keys(val).length === 0) return true;
-                return false;
-              };
-
-              mergedData = { ...master.data };
-              Object.keys(local.data).forEach((key) => {
-                const localVal = local.data[key];
-                const masterVal = master.data[key];
-                if (!isEmptyOrDefault(localVal) || isEmptyOrDefault(masterVal)) {
-                  mergedData[key] = localVal;
-                }
-              });
-            } else {
-              // Normal merge
-              mergedData = { ...master.data, ...local.data };
-            }
-          }
-          resolved.data = mergedData;
-        }
-
-        return Promise.resolve(ensureParsed(resolved));
-      }
-    };
-
-
-
     const collectionsConfig: Record<string, any> = {
       personnel: {
         schema: personnelSchema,
@@ -366,6 +366,10 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
           3: function (oldDoc: any) {
             // New fields (pending_upload, local_blob_id) are optional/nullable.
             // No data transformation is required, return as is.
+            return oldDoc;
+          },
+          4: function (oldDoc: any) {
+            // Version 4 adds compound index ['workspace_id', 'timestamp'] and maxLength: 50.
             return oldDoc;
           }
         }
@@ -513,7 +517,7 @@ export const getDatabase = async (workspaceName: string = 'minutasdb'): Promise<
 
     // Initialize the central database
     try {
-      const db = await created_atabase();
+      const db = await createDatabase();
       state.activeDatabase = db;
       state.activeDatabaseName = dbName;
       return db;

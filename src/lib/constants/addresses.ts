@@ -1,17 +1,5 @@
 export const DEFAULT_ADDRESSES = [
   {
-    id: 'default_1',
-    name: 'Sede de Protección Civil Guanta',
-    street: 'Av. Arizaleta con Calle Oriente',
-    locationType: 'sede',
-    municipality: 'Guanta',
-    parish: 'Guanta',
-    sector: 'La Picha',
-    peaceQuadrant: 'Circuito Comunal Socioproductivo Aldea Maracapana (Policía municipal)',
-    latitude: '10.237117',
-    longitude: '-64.601718',
-  },
-  {
     id: 'default_2',
     name: 'Clínica Popular Dr. José David Sambrano',
     locationType: 'centro_asistencial',
@@ -366,17 +354,6 @@ export const DEFAULT_ADDRESSES = [
     longitude: '-64.685383',
   },
   {
-    id: 'default_34',
-    name: 'IPASME',
-    street: 'Av. Fraternidad',
-    locationType: 'centro_asistencial',
-    municipality: 'Simón Bolívar',
-    parish: 'El Carmen',
-    peaceQuadrant: '# 02 (CPNB)',
-    latitude: '10.175450',
-    longitude: '-64.679699',
-  },
-  {
     id: 'default_35',
     name: 'CDI Alberto Lovera',
     street: 'Carrera 7',
@@ -410,16 +387,5 @@ export const DEFAULT_ADDRESSES = [
     peaceQuadrant: 'Circuito Comunal Alberto Lovera (Polícia del estado)',
     latitude: '10.175319',
     longitude: '-64.684251',
-  },
-  {
-    id: 'default_38',
-    name: 'Plaza Miranda',
-    locationType: 'lugar_publico',
-    municipality: 'Guanta',
-    parish: 'Guanta',
-    sector: 'Casco Central',
-    peaceQuadrant: 'Circuito Comunal Turistico Cultural Francisco de Miranda (Policía municipal)',
-    latitude: '10.241556',
-    longitude: '-64.591694',
   },
 ];
