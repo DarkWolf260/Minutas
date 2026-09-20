@@ -13,18 +13,18 @@ Esta guía explica cómo utilizar **Supabase CLI** en este proyecto para gestion
 
 1. **Instalar dependencias:**
    ```bash
-   pnpm install
+   npm install
    ```
 
 2. **Inicializar Supabase localmente:**
    ```bash
-   pnpm run supabase:init
+   npm run supabase:init
    ```
    *Esto creará la carpeta `./supabase/` en la raíz del proyecto.*
 
 3. **Vincular con el proyecto en la nube:**
    ```bash
-   pnpm run supabase:link
+   npm run supabase:link
    ```
    * Te solicitará la contraseña de la base de datos de tu proyecto remoto (`dcsmijbstwndaorigqyb`).
    * Al finalizar, el archivo `./supabase/config.toml` se actualizará con la referencia del proyecto.
@@ -36,7 +36,7 @@ Esta guía explica cómo utilizar **Supabase CLI** en este proyecto para gestion
 ### Arrancar la base de datos local
 Para iniciar los contenedores locales de PostgreSQL, Auth, Realtime, etc.:
 ```bash
-pnpm run supabase:start
+npm run supabase:start
 ```
 * Una vez que termine, mostrará en consola las URLs locales y claves (anon, service_role).
 * Puedes copiar la `anon key` y la `API URL` local (`http://127.0.0.1:54321`) a tu archivo `.env`.
@@ -44,13 +44,13 @@ pnpm run supabase:start
 ### Ver estado
 Para ver los puertos y las credenciales activas del entorno local:
 ```bash
-pnpm run supabase:status
+npm run supabase:status
 ```
 
 ### Detener la base de datos local
-Para pausar los contenedores locales y liberar recursos en tu PC:
+Para pausar los contenedores locales de PostgreSQL y liberar recursos en tu PC:
 ```bash
-pnpm run supabase:stop
+npm run supabase:stop
 ```
 
 ---
@@ -60,10 +60,10 @@ pnpm run supabase:stop
 ### Obtener el esquema actual de producción (DB Pull)
 Para sincronizar tu entorno local con las tablas reales que ya existen en producción (incluyendo las tablas de `reports`, `personnel`, etc.), ejecuta:
 ```bash
-pnpm run supabase:pull
+npm run supabase:pull
 ```
 * Esto creará un archivo SQL en `./supabase/migrations/<timestamp>_init.sql` que representa la base de datos de producción tal y como está hoy.
-* La próxima vez que ejecutes `pnpm run supabase:start`, tu base de datos local se inicializará automáticamente con todas las tablas correctas y RLS.
+* La próxima vez que ejecutes `npm run supabase:start`, tu base de datos local se inicializará automáticamente con todas las tablas correctas y RLS.
 
 ### Crear una nueva migración
 Si deseas añadir una nueva tabla o columna (por ejemplo, agregar una columna a una tabla existente):
