@@ -1948,15 +1948,6 @@
       "norm_label": "app.tsx"
     },
     {
-      "label": "ActividadesPage",
-      "file_type": "code",
-      "source_file": "src/App.tsx",
-      "source_location": "L47",
-      "id": "src_app_actividadespage",
-      "community": 12,
-      "norm_label": "actividadespage"
-    },
-    {
       "label": "DireccionesPage",
       "file_type": "code",
       "source_file": "src/App.tsx",
@@ -7105,51 +7096,6 @@
       "norm_label": "useordendeldia()"
     },
     {
-      "label": "use-pending-activities.ts",
-      "file_type": "code",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L1",
-      "id": "hooks_use_pending_activities",
-      "community": 10,
-      "norm_label": "use-pending-activities.ts"
-    },
-    {
-      "label": "ActivityStatus",
-      "file_type": "code",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L6",
-      "id": "hooks_use_pending_activities_activitystatus",
-      "community": 10,
-      "norm_label": "activitystatus"
-    },
-    {
-      "label": "SubTask",
-      "file_type": "code",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L8",
-      "id": "hooks_use_pending_activities_subtask",
-      "community": 10,
-      "norm_label": "subtask"
-    },
-    {
-      "label": "PendingActivity",
-      "file_type": "code",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L14",
-      "id": "hooks_use_pending_activities_pendingactivity",
-      "community": 10,
-      "norm_label": "pendingactivity"
-    },
-    {
-      "label": "usePendingActivities()",
-      "file_type": "code",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L26",
-      "id": "hooks_use_pending_activities_usependingactivities",
-      "community": 10,
-      "norm_label": "usependingactivities()"
-    },
-    {
       "label": "use-personal.ts",
       "file_type": "code",
       "source_file": "src/hooks/use-personal.ts",
@@ -8167,15 +8113,6 @@
       "norm_label": "historyitem"
     },
     {
-      "label": "PendingActivityDoc",
-      "file_type": "code",
-      "source_file": "src/lib/db/db.ts",
-      "source_location": "L88",
-      "id": "db_db_pendingactivitydoc",
-      "community": 0,
-      "norm_label": "pendingactivitydoc"
-    },
-    {
       "label": "ScheduledMessageDoc",
       "file_type": "code",
       "source_file": "src/lib/db/db.ts",
@@ -8210,15 +8147,6 @@
       "id": "db_db_historycollection",
       "community": 0,
       "norm_label": "historycollection"
-    },
-    {
-      "label": "PendingActivitiesCollection",
-      "file_type": "code",
-      "source_file": "src/lib/db/db.ts",
-      "source_location": "L120",
-      "id": "db_db_pendingactivitiescollection",
-      "community": 0,
-      "norm_label": "pendingactivitiescollection"
     },
     {
       "label": "ScheduledMessagesCollection",
@@ -8462,15 +8390,6 @@
       "id": "db_schemas_notificationsschema",
       "community": 0,
       "norm_label": "notificationsschema"
-    },
-    {
-      "label": "pendingActivitiesSchema",
-      "file_type": "code",
-      "source_file": "src/lib/db/schemas.ts",
-      "source_location": "L235",
-      "id": "db_schemas_pendingactivitiesschema",
-      "community": 0,
-      "norm_label": "pendingactivitiesschema"
     },
     {
       "label": "scheduledMessagesSchema",
@@ -10991,87 +10910,6 @@
       "id": "src_main",
       "community": 12,
       "norm_label": "main.tsx"
-    },
-    {
-      "label": "actividades.tsx",
-      "file_type": "code",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L1",
-      "id": "pages_actividades",
-      "community": 13,
-      "norm_label": "actividades.tsx"
-    },
-    {
-      "label": "CATEGORIES",
-      "file_type": "code",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L65",
-      "id": "pages_actividades_categories",
-      "community": 13,
-      "norm_label": "categories"
-    },
-    {
-      "label": "PRIORITIES",
-      "file_type": "code",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L74",
-      "id": "pages_actividades_priorities",
-      "community": 13,
-      "norm_label": "priorities"
-    },
-    {
-      "label": "COLUMNS",
-      "file_type": "code",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L80",
-      "id": "pages_actividades_columns",
-      "community": 13,
-      "norm_label": "columns"
-    },
-    {
-      "label": "getLocalTodayString()",
-      "file_type": "code",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L86",
-      "id": "pages_actividades_getlocaltodaystring",
-      "community": 23,
-      "norm_label": "getlocaltodaystring()"
-    },
-    {
-      "label": "formatDateReadable()",
-      "file_type": "code",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L94",
-      "id": "pages_actividades_formatdatereadable",
-      "community": 13,
-      "norm_label": "formatdatereadable()"
-    },
-    {
-      "label": "getDateStatus()",
-      "file_type": "code",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L108",
-      "id": "pages_actividades_getdatestatus",
-      "community": 23,
-      "norm_label": "getdatestatus()"
-    },
-    {
-      "label": "ActividadesPageContent()",
-      "file_type": "code",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L138",
-      "id": "pages_actividades_actividadespagecontent",
-      "community": 10,
-      "norm_label": "actividadespagecontent()"
-    },
-    {
-      "label": "ActividadesPage()",
-      "file_type": "code",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L1496",
-      "id": "pages_actividades_actividadespage",
-      "community": 13,
-      "norm_label": "actividadespage()"
     },
     {
       "label": "index.tsx",
@@ -13945,11 +13783,11 @@
       "norm_label": "[1.8.1] - 2026-05-31"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/CHANGELOG.md",
       "source_location": "L5",
-      "id": "minutas_changelog_a\u00f1adido",
+      "id": "minutas_changelog_añadido",
       "community": 24,
       "norm_label": "anadido"
     },
@@ -13963,11 +13801,11 @@
       "norm_label": "[1.8.0] - 2026-05-29"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/CHANGELOG.md",
       "source_location": "L13",
-      "id": "minutas_changelog_a\u00f1adido_13",
+      "id": "minutas_changelog_añadido_13",
       "community": 24,
       "norm_label": "anadido"
     },
@@ -13990,11 +13828,11 @@
       "norm_label": "[1.7.5] - 2026-05-24"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/CHANGELOG.md",
       "source_location": "L31",
-      "id": "minutas_changelog_a\u00f1adido_31",
+      "id": "minutas_changelog_añadido_31",
       "community": 24,
       "norm_label": "anadido"
     },
@@ -14008,11 +13846,11 @@
       "norm_label": "[1.6.5] - 2026-05-18"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/CHANGELOG.md",
       "source_location": "L41",
-      "id": "minutas_changelog_a\u00f1adido_41",
+      "id": "minutas_changelog_añadido_41",
       "community": 24,
       "norm_label": "anadido"
     },
@@ -14035,11 +13873,11 @@
       "norm_label": "[1.6.0] - 2026-05-17"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/CHANGELOG.md",
       "source_location": "L54",
-      "id": "minutas_changelog_a\u00f1adido_54",
+      "id": "minutas_changelog_añadido_54",
       "community": 24,
       "norm_label": "anadido"
     },
@@ -14053,11 +13891,11 @@
       "norm_label": "[1.5.0] - 2026-05-14"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/CHANGELOG.md",
       "source_location": "L66",
-      "id": "minutas_changelog_a\u00f1adido_66",
+      "id": "minutas_changelog_añadido_66",
       "community": 24,
       "norm_label": "anadido"
     },
@@ -14089,11 +13927,11 @@
       "norm_label": "[1.4.0] - 2026-05-13"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/CHANGELOG.md",
       "source_location": "L83",
-      "id": "minutas_changelog_a\u00f1adido_83",
+      "id": "minutas_changelog_añadido_83",
       "community": 24,
       "norm_label": "anadido"
     },
@@ -14170,11 +14008,11 @@
       "norm_label": "[1.3.0] - 2026-04-28"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/CHANGELOG.md",
       "source_location": "L121",
-      "id": "minutas_changelog_a\u00f1adido_121",
+      "id": "minutas_changelog_añadido_121",
       "community": 24,
       "norm_label": "anadido"
     },
@@ -14206,11 +14044,11 @@
       "norm_label": "[1.2.0] - 2026-04-24"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/CHANGELOG.md",
       "source_location": "L138",
-      "id": "minutas_changelog_a\u00f1adido_138",
+      "id": "minutas_changelog_añadido_138",
       "community": 24,
       "norm_label": "anadido"
     },
@@ -14269,11 +14107,11 @@
       "norm_label": "[1.1.0] - 2026-04-23"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/CHANGELOG.md",
       "source_location": "L170",
-      "id": "minutas_changelog_a\u00f1adido_170",
+      "id": "minutas_changelog_añadido_170",
       "community": 24,
       "norm_label": "anadido"
     },
@@ -14305,11 +14143,11 @@
       "norm_label": "[1.0.1] - 2026-04-22"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/CHANGELOG.md",
       "source_location": "L187",
-      "id": "minutas_changelog_a\u00f1adido_187",
+      "id": "minutas_changelog_añadido_187",
       "community": 24,
       "norm_label": "anadido"
     },
@@ -14341,11 +14179,11 @@
       "norm_label": "[1.0.0] - 2026-04-07"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/CHANGELOG.md",
       "source_location": "L205",
-      "id": "minutas_changelog_a\u00f1adido_205",
+      "id": "minutas_changelog_añadido_205",
       "community": 24,
       "norm_label": "anadido"
     },
@@ -14890,29 +14728,29 @@
       "norm_label": "minutas - generador de reportes policiales"
     },
     {
-      "label": "\ud83d\ude80 Caracter\u00edsticas Principales",
+      "label": "🚀 Características Principales",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/README.md",
       "source_location": "L5",
-      "id": "minutas_readme_caracter\u00edsticas_principales",
+      "id": "minutas_readme_características_principales",
       "community": 88,
-      "norm_label": "\ud83d\ude80 caracteristicas principales"
+      "norm_label": "🚀 caracteristicas principales"
     },
     {
-      "label": "\ud83d\udcd6 Sistema de Plantillas",
+      "label": "📖 Sistema de Plantillas",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/README.md",
       "source_location": "L15",
       "id": "minutas_readme_sistema_de_plantillas",
       "community": 88,
-      "norm_label": "\ud83d\udcd6 sistema de plantillas"
+      "norm_label": "📖 sistema de plantillas"
     },
     {
-      "label": "1. Variables B\u00e1sicas",
+      "label": "1. Variables Básicas",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/README.md",
       "source_location": "L19",
-      "id": "minutas_readme_1_variables_b\u00e1sicas",
+      "id": "minutas_readme_1_variables_básicas",
       "community": 88,
       "norm_label": "1. variables basicas"
     },
@@ -14944,20 +14782,20 @@
       "norm_label": "4. secciones"
     },
     {
-      "label": "5. L\u00f3gica Condicional",
+      "label": "5. Lógica Condicional",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/README.md",
       "source_location": "L70",
-      "id": "minutas_readme_5_l\u00f3gica_condicional",
+      "id": "minutas_readme_5_lógica_condicional",
       "community": 88,
       "norm_label": "5. logica condicional"
     },
     {
-      "label": "6. Resumen Autom\u00e1tico",
+      "label": "6. Resumen Automático",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/README.md",
       "source_location": "L84",
-      "id": "minutas_readme_6_resumen_autom\u00e1tico",
+      "id": "minutas_readme_6_resumen_automático",
       "community": 88,
       "norm_label": "6. resumen automatico"
     },
@@ -14971,49 +14809,49 @@
       "norm_label": "7. separadores"
     },
     {
-      "label": "8. Reglas Estad\u00edsticas y Etiquetas Especiales (`*` y ` (1)`)",
+      "label": "8. Reglas Estadísticas y Etiquetas Especiales (`*` y ` (1)`)",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/README.md",
       "source_location": "L95",
-      "id": "minutas_readme_8_reglas_estad\u00edsticas_y_etiquetas_especiales_y_1",
+      "id": "minutas_readme_8_reglas_estadísticas_y_etiquetas_especiales_y_1",
       "community": 88,
       "norm_label": "8. reglas estadisticas y etiquetas especiales (`*` y ` (1)`)"
     },
     {
-      "label": "\ud83d\udee0\ufe0f Tecnolog\u00edas",
+      "label": "🛠️ Tecnologías",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/README.md",
       "source_location": "L104",
-      "id": "minutas_readme_tecnolog\u00edas",
+      "id": "minutas_readme_tecnologías",
       "community": 88,
-      "norm_label": "\ud83d\udee0\ufe0f tecnologias"
+      "norm_label": "🛠️ tecnologias"
     },
     {
-      "label": "\ud83d\udce6 Instalaci\u00f3n",
+      "label": "📦 Instalación",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/README.md",
       "source_location": "L112",
-      "id": "minutas_readme_instalaci\u00f3n",
+      "id": "minutas_readme_instalación",
       "community": 88,
-      "norm_label": "\ud83d\udce6 instalacion"
+      "norm_label": "📦 instalacion"
     },
     {
-      "label": "\ud83d\udd12 Seguridad",
+      "label": "🔒 Seguridad",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/README.md",
       "source_location": "L122",
       "id": "minutas_readme_seguridad",
       "community": 88,
-      "norm_label": "\ud83d\udd12 seguridad"
+      "norm_label": "🔒 seguridad"
     },
     {
-      "label": "\ud83d\udcc4 Licencia",
+      "label": "📄 Licencia",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/README.md",
       "source_location": "L125",
       "id": "minutas_readme_licencia",
       "community": 88,
-      "norm_label": "\ud83d\udcc4 licencia"
+      "norm_label": "📄 licencia"
     },
     {
       "label": "SECURITY.md",
@@ -15178,11 +15016,11 @@
       "norm_label": "performance-guide.md"
     },
     {
-      "label": "Gu\u00eda de Rendimiento y Unificaci\u00f3n de Interfaces (RxDB + DnD)",
+      "label": "Guía de Rendimiento y Unificación de Interfaces (RxDB + DnD)",
       "file_type": "document",
       "source_file": "docs/performance-guide.md",
       "source_location": "L1",
-      "id": "docs_performance_guide_gu\u00eda_de_rendimiento_y_unificaci\u00f3n_de_interfaces_rxdb_dnd",
+      "id": "docs_performance_guide_guía_de_rendimiento_y_unificación_de_interfaces_rxdb_dnd",
       "community": 55,
       "norm_label": "guia de rendimiento y unificacion de interfaces (rxdb + dnd)"
     },
@@ -15196,29 +15034,29 @@
       "norm_label": "1. el problema: rebote de estado (flickering)"
     },
     {
-      "label": "2. Soluci\u00f3n: Estado Local Optimista",
+      "label": "2. Solución: Estado Local Optimista",
       "file_type": "document",
       "source_file": "docs/performance-guide.md",
       "source_location": "L15",
-      "id": "docs_performance_guide_2_soluci\u00f3n_estado_local_optimista",
+      "id": "docs_performance_guide_2_solución_estado_local_optimista",
       "community": 55,
       "norm_label": "2. solucion: estado local optimista"
     },
     {
-      "label": "3. Prevenci\u00f3n de Re-renderizados Causales",
+      "label": "3. Prevención de Re-renderizados Causales",
       "file_type": "document",
       "source_file": "docs/performance-guide.md",
       "source_location": "L44",
-      "id": "docs_performance_guide_3_prevenci\u00f3n_de_re_renderizados_causales",
+      "id": "docs_performance_guide_3_prevención_de_re_renderizados_causales",
       "community": 55,
       "norm_label": "3. prevencion de re-renderizados causales"
     },
     {
-      "label": "Memoizaci\u00f3n Obligatoria",
+      "label": "Memoización Obligatoria",
       "file_type": "document",
       "source_file": "docs/performance-guide.md",
       "source_location": "L48",
-      "id": "docs_performance_guide_memoizaci\u00f3n_obligatoria",
+      "id": "docs_performance_guide_memoización_obligatoria",
       "community": 55,
       "norm_label": "memoizacion obligatoria"
     },
@@ -15250,38 +15088,38 @@
       "norm_label": "statistics-rules-guide.md"
     },
     {
-      "label": "Gu\u00eda del Motor de Reglas Estad\u00edsticas y Etiquetas Especiales",
+      "label": "Guía del Motor de Reglas Estadísticas y Etiquetas Especiales",
       "file_type": "document",
       "source_file": "docs/statistics-rules-guide.md",
       "source_location": "L1",
-      "id": "docs_statistics_rules_guide_gu\u00eda_del_motor_de_reglas_estad\u00edsticas_y_etiquetas_especiales",
+      "id": "docs_statistics_rules_guide_guía_del_motor_de_reglas_estadísticas_y_etiquetas_especiales",
       "community": 47,
       "norm_label": "guia del motor de reglas estadisticas y etiquetas especiales"
     },
     {
-      "label": "1. El Asterisco (`*`) - Evaluaci\u00f3n Secuencial Repetible",
+      "label": "1. El Asterisco (`*`) - Evaluación Secuencial Repetible",
       "file_type": "document",
       "source_file": "docs/statistics-rules-guide.md",
       "source_location": "L9",
-      "id": "docs_statistics_rules_guide_1_el_asterisco_evaluaci\u00f3n_secuencial_repetible",
+      "id": "docs_statistics_rules_guide_1_el_asterisco_evaluación_secuencial_repetible",
       "community": 47,
       "norm_label": "1. el asterisco (`*`) - evaluacion secuencial repetible"
     },
     {
-      "label": "\u00bfC\u00f3mo funciona?",
+      "label": "¿Cómo funciona?",
       "file_type": "document",
       "source_file": "docs/statistics-rules-guide.md",
       "source_location": "L11",
-      "id": "docs_statistics_rules_guide_c\u00f3mo_funciona",
+      "id": "docs_statistics_rules_guide_cómo_funciona",
       "community": 47,
-      "norm_label": "\u00bfcomo funciona?"
+      "norm_label": "¿como funciona?"
     },
     {
-      "label": "Correlaci\u00f3n con condiciones secundarias (Y / O)",
+      "label": "Correlación con condiciones secundarias (Y / O)",
       "file_type": "document",
       "source_file": "docs/statistics-rules-guide.md",
       "source_location": "L17",
-      "id": "docs_statistics_rules_guide_correlaci\u00f3n_con_condiciones_secundarias_y_o",
+      "id": "docs_statistics_rules_guide_correlación_con_condiciones_secundarias_y_o",
       "community": 47,
       "norm_label": "correlacion con condiciones secundarias (y / o)"
     },
@@ -15295,22 +15133,22 @@
       "norm_label": "ejemplo de caso de uso"
     },
     {
-      "label": "2. El Par\u00e9ntesis Uno (` (1)`) - Primera Coincidencia",
+      "label": "2. El Paréntesis Uno (` (1)`) - Primera Coincidencia",
       "file_type": "document",
       "source_file": "docs/statistics-rules-guide.md",
       "source_location": "L36",
-      "id": "docs_statistics_rules_guide_2_el_par\u00e9ntesis_uno_1_primera_coincidencia",
+      "id": "docs_statistics_rules_guide_2_el_paréntesis_uno_1_primera_coincidencia",
       "community": 47,
       "norm_label": "2. el parentesis uno (` (1)`) - primera coincidencia"
     },
     {
-      "label": "\u00bfC\u00f3mo funciona?",
+      "label": "¿Cómo funciona?",
       "file_type": "document",
       "source_file": "docs/statistics-rules-guide.md",
       "source_location": "L38",
-      "id": "docs_statistics_rules_guide_c\u00f3mo_funciona_38",
+      "id": "docs_statistics_rules_guide_cómo_funciona_38",
       "community": 47,
-      "norm_label": "\u00bfcomo funciona?"
+      "norm_label": "¿como funciona?"
     },
     {
       "label": "Ejemplo de Caso de Uso",
@@ -15322,31 +15160,31 @@
       "norm_label": "ejemplo de caso de uso"
     },
     {
-      "label": "Resumen de Comportamiento T\u00e9cnico",
+      "label": "Resumen de Comportamiento Técnico",
       "file_type": "document",
       "source_file": "docs/statistics-rules-guide.md",
       "source_location": "L57",
-      "id": "docs_statistics_rules_guide_resumen_de_comportamiento_t\u00e9cnico",
+      "id": "docs_statistics_rules_guide_resumen_de_comportamiento_técnico",
       "community": 47,
       "norm_label": "resumen de comportamiento tecnico"
     },
     {
-      "label": "3. El Sufijo Virtual de Origen (`-Origen*`) - Evaluaci\u00f3n de Trayectos o Rutas",
+      "label": "3. El Sufijo Virtual de Origen (`-Origen*`) - Evaluación de Trayectos o Rutas",
       "file_type": "document",
       "source_file": "docs/statistics-rules-guide.md",
       "source_location": "L85",
-      "id": "docs_statistics_rules_guide_3_el_sufijo_virtual_de_origen_origen_evaluaci\u00f3n_de_trayectos_o_rutas",
+      "id": "docs_statistics_rules_guide_3_el_sufijo_virtual_de_origen_origen_evaluación_de_trayectos_o_rutas",
       "community": 47,
       "norm_label": "3. el sufijo virtual de origen (`-origen*`) - evaluacion de trayectos o rutas"
     },
     {
-      "label": "\u00bfC\u00f3mo funciona?",
+      "label": "¿Cómo funciona?",
       "file_type": "document",
       "source_file": "docs/statistics-rules-guide.md",
       "source_location": "L87",
-      "id": "docs_statistics_rules_guide_c\u00f3mo_funciona_87",
+      "id": "docs_statistics_rules_guide_cómo_funciona_87",
       "community": 47,
-      "norm_label": "\u00bfcomo funciona?"
+      "norm_label": "¿como funciona?"
     },
     {
       "label": "Ejemplo de Caso de Uso (Traslados)",
@@ -15367,11 +15205,11 @@
       "norm_label": "supabase_guide.md"
     },
     {
-      "label": "Gu\u00eda de Desarrollo Local con Supabase CLI",
+      "label": "Guía de Desarrollo Local con Supabase CLI",
       "file_type": "document",
       "source_file": "docs/supabase_guide.md",
       "source_location": "L1",
-      "id": "docs_supabase_guide_gu\u00eda_de_desarrollo_local_con_supabase_cli",
+      "id": "docs_supabase_guide_guía_de_desarrollo_local_con_supabase_cli",
       "community": 35,
       "norm_label": "guia de desarrollo local con supabase cli"
     },
@@ -15385,11 +15223,11 @@
       "norm_label": "requisitos previos"
     },
     {
-      "label": "1. Configuraci\u00f3n Inicial (Una sola vez)",
+      "label": "1. Configuración Inicial (Una sola vez)",
       "file_type": "document",
       "source_file": "docs/supabase_guide.md",
       "source_location": "L12",
-      "id": "docs_supabase_guide_1_configuraci\u00f3n_inicial_una_sola_vez",
+      "id": "docs_supabase_guide_1_configuración_inicial_una_sola_vez",
       "community": 35,
       "norm_label": "1. configuracion inicial (una sola vez)"
     },
@@ -15430,38 +15268,38 @@
       "norm_label": "detener la base de datos local"
     },
     {
-      "label": "3. Gesti\u00f3n de Esquemas y Migraciones",
+      "label": "3. Gestión de Esquemas y Migraciones",
       "file_type": "document",
       "source_file": "docs/supabase_guide.md",
       "source_location": "L58",
-      "id": "docs_supabase_guide_3_gesti\u00f3n_de_esquemas_y_migraciones",
+      "id": "docs_supabase_guide_3_gestión_de_esquemas_y_migraciones",
       "community": 35,
       "norm_label": "3. gestion de esquemas y migraciones"
     },
     {
-      "label": "Obtener el esquema actual de producci\u00f3n (DB Pull)",
+      "label": "Obtener el esquema actual de producción (DB Pull)",
       "file_type": "document",
       "source_file": "docs/supabase_guide.md",
       "source_location": "L60",
-      "id": "docs_supabase_guide_obtener_el_esquema_actual_de_producci\u00f3n_db_pull",
+      "id": "docs_supabase_guide_obtener_el_esquema_actual_de_producción_db_pull",
       "community": 35,
       "norm_label": "obtener el esquema actual de produccion (db pull)"
     },
     {
-      "label": "Crear una nueva migraci\u00f3n",
+      "label": "Crear una nueva migración",
       "file_type": "document",
       "source_file": "docs/supabase_guide.md",
       "source_location": "L68",
-      "id": "docs_supabase_guide_crear_una_nueva_migraci\u00f3n",
+      "id": "docs_supabase_guide_crear_una_nueva_migración",
       "community": 35,
       "norm_label": "crear una nueva migracion"
     },
     {
-      "label": "Subir migraciones locales a producci\u00f3n",
+      "label": "Subir migraciones locales a producción",
       "file_type": "document",
       "source_file": "docs/supabase_guide.md",
       "source_location": "L84",
-      "id": "docs_supabase_guide_subir_migraciones_locales_a_producci\u00f3n",
+      "id": "docs_supabase_guide_subir_migraciones_locales_a_producción",
       "community": 35,
       "norm_label": "subir migraciones locales a produccion"
     },
@@ -15475,13 +15313,13 @@
       "norm_label": "template_engine.md"
     },
     {
-      "label": "Motor de Plantillas \u2014 Referencia de Sintaxis",
+      "label": "Motor de Plantillas — Referencia de Sintaxis",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/src/lib/template/TEMPLATE_ENGINE.md",
       "source_location": "L1",
       "id": "template_template_engine_motor_de_plantillas_referencia_de_sintaxis",
       "community": 11,
-      "norm_label": "motor de plantillas \u2014 referencia de sintaxis"
+      "norm_label": "motor de plantillas — referencia de sintaxis"
     },
     {
       "label": "1. Campos `{FieldName}`",
@@ -15493,11 +15331,11 @@
       "norm_label": "1. campos `{fieldname}`"
     },
     {
-      "label": "Sintaxis b\u00e1sica",
+      "label": "Sintaxis básica",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/src/lib/template/TEMPLATE_ENGINE.md",
       "source_location": "L9",
-      "id": "template_template_engine_sintaxis_b\u00e1sica",
+      "id": "template_template_engine_sintaxis_básica",
       "community": 11,
       "norm_label": "sintaxis basica"
     },
@@ -15583,11 +15421,11 @@
       "norm_label": "uso en texto"
     },
     {
-      "label": "Uso en condicionales (caso de g\u00e9nero)",
+      "label": "Uso en condicionales (caso de género)",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/src/lib/template/TEMPLATE_ENGINE.md",
       "source_location": "L104",
-      "id": "template_template_engine_uso_en_condicionales_caso_de_g\u00e9nero",
+      "id": "template_template_engine_uso_en_condicionales_caso_de_género",
       "community": 11,
       "norm_label": "uso en condicionales (caso de genero)"
     },
@@ -15610,38 +15448,38 @@
       "norm_label": "4. secciones `[label]...[/]`"
     },
     {
-      "label": "Secci\u00f3n simple",
+      "label": "Sección simple",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/src/lib/template/TEMPLATE_ENGINE.md",
       "source_location": "L145",
-      "id": "template_template_engine_secci\u00f3n_simple",
+      "id": "template_template_engine_sección_simple",
       "community": 11,
       "norm_label": "seccion simple"
     },
     {
-      "label": "Secci\u00f3n repetible",
+      "label": "Sección repetible",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/src/lib/template/TEMPLATE_ENGINE.md",
       "source_location": "L156",
-      "id": "template_template_engine_secci\u00f3n_repetible",
+      "id": "template_template_engine_sección_repetible",
       "community": 11,
       "norm_label": "seccion repetible"
     },
     {
-      "label": "Secci\u00f3n repetible con etiquetas singulares/plurales",
+      "label": "Sección repetible con etiquetas singulares/plurales",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/src/lib/template/TEMPLATE_ENGINE.md",
       "source_location": "L167",
-      "id": "template_template_engine_secci\u00f3n_repetible_con_etiquetas_singulares_plurales",
+      "id": "template_template_engine_sección_repetible_con_etiquetas_singulares_plurales",
       "community": 11,
       "norm_label": "seccion repetible con etiquetas singulares/plurales"
     },
     {
-      "label": "5. Secciones Auto-contenidas `[\"T\u00edtulo\" {Campo}]`",
+      "label": "5. Secciones Auto-contenidas `[\"Título\" {Campo}]`",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/src/lib/template/TEMPLATE_ENGINE.md",
       "source_location": "L183",
-      "id": "template_template_engine_5_secciones_auto_contenidas_t\u00edtulo_campo",
+      "id": "template_template_engine_5_secciones_auto_contenidas_título_campo",
       "community": 11,
       "norm_label": "5. secciones auto-contenidas `[\"titulo\" {campo}]`"
     },
@@ -15700,11 +15538,11 @@
       "norm_label": "verificar si un campo tiene contenido"
     },
     {
-      "label": "Comparaci\u00f3n de valores",
+      "label": "Comparación de valores",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/src/lib/template/TEMPLATE_ENGINE.md",
       "source_location": "L260",
-      "id": "template_template_engine_comparaci\u00f3n_de_valores",
+      "id": "template_template_engine_comparación_de_valores",
       "community": 11,
       "norm_label": "comparacion de valores"
     },
@@ -15718,11 +15556,11 @@
       "norm_label": "condicional con dropdown"
     },
     {
-      "label": "Condicional de g\u00e9nero (uso t\u00edpico con personal)",
+      "label": "Condicional de género (uso típico con personal)",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/src/lib/template/TEMPLATE_ENGINE.md",
       "source_location": "L282",
-      "id": "template_template_engine_condicional_de_g\u00e9nero_uso_t\u00edpico_con_personal",
+      "id": "template_template_engine_condicional_de_género_uso_típico_con_personal",
       "community": 11,
       "norm_label": "condicional de genero (uso tipico con personal)"
     },
@@ -15763,11 +15601,11 @@
       "norm_label": "10. escapado"
     },
     {
-      "label": "11. Orden de resoluci\u00f3n de valores",
+      "label": "11. Orden de resolución de valores",
       "file_type": "document",
       "source_file": "C:/Users/SPIDERTECH/Documents/GitHub/Minutas/src/lib/template/TEMPLATE_ENGINE.md",
       "source_location": "L350",
-      "id": "template_template_engine_11_orden_de_resoluci\u00f3n_de_valores",
+      "id": "template_template_engine_11_orden_de_resolución_de_valores",
       "community": 11,
       "norm_label": "11. orden de resolucion de valores"
     },
@@ -16456,13 +16294,13 @@
       "id": "changelog_1_8_1_2026_05_31"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L5",
       "community": 3,
       "norm_label": "anadido",
-      "id": "changelog_a\u00f1adido"
+      "id": "changelog_añadido"
     },
     {
       "label": "[1.8.0] - 2026-05-29",
@@ -16474,13 +16312,13 @@
       "id": "changelog_1_8_0_2026_05_29"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L13",
       "community": 3,
       "norm_label": "anadido",
-      "id": "changelog_a\u00f1adido_13"
+      "id": "changelog_añadido_13"
     },
     {
       "label": "Cambiado",
@@ -16501,13 +16339,13 @@
       "id": "changelog_1_7_5_2026_05_24"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L31",
       "community": 3,
       "norm_label": "anadido",
-      "id": "changelog_a\u00f1adido_31"
+      "id": "changelog_añadido_31"
     },
     {
       "label": "[1.6.5] - 2026-05-18",
@@ -16519,13 +16357,13 @@
       "id": "changelog_1_6_5_2026_05_18"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L41",
       "community": 3,
       "norm_label": "anadido",
-      "id": "changelog_a\u00f1adido_41"
+      "id": "changelog_añadido_41"
     },
     {
       "label": "Cambiado",
@@ -16546,13 +16384,13 @@
       "id": "changelog_1_6_0_2026_05_17"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L54",
       "community": 3,
       "norm_label": "anadido",
-      "id": "changelog_a\u00f1adido_54"
+      "id": "changelog_añadido_54"
     },
     {
       "label": "[1.5.0] - 2026-05-14",
@@ -16564,13 +16402,13 @@
       "id": "changelog_1_5_0_2026_05_14"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L66",
       "community": 3,
       "norm_label": "anadido",
-      "id": "changelog_a\u00f1adido_66"
+      "id": "changelog_añadido_66"
     },
     {
       "label": "Cambiado",
@@ -16600,13 +16438,13 @@
       "id": "changelog_1_4_0_2026_05_13"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L83",
       "community": 3,
       "norm_label": "anadido",
-      "id": "changelog_a\u00f1adido_83"
+      "id": "changelog_añadido_83"
     },
     {
       "label": "Cambiado",
@@ -16681,13 +16519,13 @@
       "id": "changelog_1_3_0_2026_04_28"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L121",
       "community": 3,
       "norm_label": "anadido",
-      "id": "changelog_a\u00f1adido_121"
+      "id": "changelog_añadido_121"
     },
     {
       "label": "Cambiado",
@@ -16717,13 +16555,13 @@
       "id": "changelog_1_2_0_2026_04_24"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L138",
       "community": 3,
       "norm_label": "anadido",
-      "id": "changelog_a\u00f1adido_138"
+      "id": "changelog_añadido_138"
     },
     {
       "label": "Cambiado",
@@ -16780,13 +16618,13 @@
       "id": "changelog_1_1_0_2026_04_23"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L170",
       "community": 3,
       "norm_label": "anadido",
-      "id": "changelog_a\u00f1adido_170"
+      "id": "changelog_añadido_170"
     },
     {
       "label": "Cambiado",
@@ -16816,13 +16654,13 @@
       "id": "changelog_1_0_1_2026_04_22"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L187",
       "community": 3,
       "norm_label": "anadido",
-      "id": "changelog_a\u00f1adido_187"
+      "id": "changelog_añadido_187"
     },
     {
       "label": "Cambiado",
@@ -16852,13 +16690,13 @@
       "id": "changelog_1_0_0_2026_04_07"
     },
     {
-      "label": "A\u00f1adido",
+      "label": "Añadido",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L205",
       "community": 3,
       "norm_label": "anadido",
-      "id": "changelog_a\u00f1adido_205"
+      "id": "changelog_añadido_205"
     },
     {
       "label": "CONTRIBUTING.md",
@@ -17140,31 +16978,31 @@
       "id": "readme_minutas_generador_de_reportes_policiales"
     },
     {
-      "label": "\ud83d\ude80 Caracter\u00edsticas Principales",
+      "label": "🚀 Características Principales",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L5",
       "community": 41,
-      "norm_label": "\ud83d\ude80 caracteristicas principales",
-      "id": "readme_caracter\u00edsticas_principales"
+      "norm_label": "🚀 caracteristicas principales",
+      "id": "readme_características_principales"
     },
     {
-      "label": "\ud83d\udcd6 Sistema de Plantillas",
+      "label": "📖 Sistema de Plantillas",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L15",
       "community": 41,
-      "norm_label": "\ud83d\udcd6 sistema de plantillas",
+      "norm_label": "📖 sistema de plantillas",
       "id": "readme_sistema_de_plantillas"
     },
     {
-      "label": "1. Variables B\u00e1sicas",
+      "label": "1. Variables Básicas",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L19",
       "community": 41,
       "norm_label": "1. variables basicas",
-      "id": "readme_1_variables_b\u00e1sicas"
+      "id": "readme_1_variables_básicas"
     },
     {
       "label": "2. Tipos de Campos",
@@ -17194,22 +17032,22 @@
       "id": "readme_4_secciones"
     },
     {
-      "label": "5. L\u00f3gica Condicional",
+      "label": "5. Lógica Condicional",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L70",
       "community": 41,
       "norm_label": "5. logica condicional",
-      "id": "readme_5_l\u00f3gica_condicional"
+      "id": "readme_5_lógica_condicional"
     },
     {
-      "label": "6. Resumen Autom\u00e1tico",
+      "label": "6. Resumen Automático",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L84",
       "community": 41,
       "norm_label": "6. resumen automatico",
-      "id": "readme_6_resumen_autom\u00e1tico"
+      "id": "readme_6_resumen_automático"
     },
     {
       "label": "7. Separadores",
@@ -17221,48 +17059,48 @@
       "id": "readme_7_separadores"
     },
     {
-      "label": "8. Reglas Estad\u00edsticas y Etiquetas Especiales (`*` y ` (1)`)",
+      "label": "8. Reglas Estadísticas y Etiquetas Especiales (`*` y ` (1)`)",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L95",
       "community": 41,
       "norm_label": "8. reglas estadisticas y etiquetas especiales (`*` y ` (1)`)",
-      "id": "readme_8_reglas_estad\u00edsticas_y_etiquetas_especiales_y_1"
+      "id": "readme_8_reglas_estadísticas_y_etiquetas_especiales_y_1"
     },
     {
-      "label": "\ud83d\udee0\ufe0f Tecnolog\u00edas",
+      "label": "🛠️ Tecnologías",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L104",
       "community": 41,
-      "norm_label": "\ud83d\udee0\ufe0f tecnologias",
-      "id": "readme_tecnolog\u00edas"
+      "norm_label": "🛠️ tecnologias",
+      "id": "readme_tecnologías"
     },
     {
-      "label": "\ud83d\udce6 Instalaci\u00f3n",
+      "label": "📦 Instalación",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L112",
       "community": 41,
-      "norm_label": "\ud83d\udce6 instalacion",
-      "id": "readme_instalaci\u00f3n"
+      "norm_label": "📦 instalacion",
+      "id": "readme_instalación"
     },
     {
-      "label": "\ud83d\udd12 Seguridad",
+      "label": "🔒 Seguridad",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L122",
       "community": 41,
-      "norm_label": "\ud83d\udd12 seguridad",
+      "norm_label": "🔒 seguridad",
       "id": "readme_seguridad"
     },
     {
-      "label": "\ud83d\udcc4 Licencia",
+      "label": "📄 Licencia",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L125",
       "community": 41,
-      "norm_label": "\ud83d\udcc4 licencia",
+      "norm_label": "📄 licencia",
       "id": "readme_licencia"
     },
     {
@@ -20167,16 +20005,6 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/App.tsx",
-      "source_location": "L45",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_app",
-      "target": "src_app_actividadespage"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/App.tsx",
       "source_location": "L62",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -20810,17 +20638,6 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L14",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "common_error_boundary_feature"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/personal.tsx",
       "source_location": "L4",
       "weight": 1.0,
@@ -20867,17 +20684,6 @@
       "confidence_score": 1.0,
       "source": "common_error_boundary_feature_featureerrorboundary",
       "target": "common_error_boundary_feature_featureerrorboundary_render"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L14",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "common_error_boundary_feature_featureerrorboundary"
     },
     {
       "relation": "imports",
@@ -33188,17 +32994,6 @@
       "target": "hooks_use_scheduled_messages_usescheduledmessages"
     },
     {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/components/report/viewer/viewer-header.tsx",
-      "source_location": "L73",
-      "weight": 1.0,
-      "source": "viewer_viewer_header_viewerheader",
-      "target": "pages_actividades_getlocaltodaystring"
-    },
-    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -40172,17 +39967,6 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L11",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_badge"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/components/ui/badge.tsx",
       "source_location": "L4",
       "weight": 1.0,
@@ -40383,17 +40167,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "feedback_index",
-      "target": "ui_badge_badge"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L11",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
       "target": "ui_badge_badge"
     },
     {
@@ -40889,17 +40662,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "maintenance_index",
-      "target": "ui_button"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L9",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
       "target": "ui_button"
     },
     {
@@ -41662,17 +41424,6 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L9",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_button_button"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/not-found.tsx",
       "source_location": "L4",
       "weight": 1.0,
@@ -42144,17 +41895,6 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L6",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_card"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/estadisticas.tsx",
       "source_location": "L4",
       "weight": 1.0,
@@ -42523,17 +42263,6 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L6",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_card_card"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/estadisticas.tsx",
       "source_location": "L4",
       "weight": 1.0,
@@ -43551,17 +43280,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "feedback_index",
-      "target": "ui_card_cardcontent"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L6",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
       "target": "ui_card_cardcontent"
     },
     {
@@ -44520,17 +44238,6 @@
       "target": "ui_popover_popovercontent"
     },
     {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L12",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "custom_date_picker"
-    },
-    {
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -44550,17 +44257,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "components_reporte_generar",
-      "target": "custom_date_picker_datepicker"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L12",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
       "target": "custom_date_picker_datepicker"
     },
     {
@@ -45368,17 +45064,6 @@
       "target": "ui_input_input"
     },
     {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L13",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "custom_time_hlv_input"
-    },
-    {
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -45387,17 +45072,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "components_reporte_generar",
-      "target": "custom_time_hlv_input_timehlvinput"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L13",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
       "target": "custom_time_hlv_input_timehlvinput"
     },
     {
@@ -45453,17 +45127,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "feedback_index",
-      "target": "ui_dialog"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L15",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
       "target": "ui_dialog"
     },
     {
@@ -45629,17 +45292,6 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L15",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_dialog_dialogcontent"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/admin/users/index.tsx",
       "source_location": "L35",
       "weight": 1.0,
@@ -45714,17 +45366,6 @@
       "target": "ui_dialog_dialogheader"
     },
     {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L15",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_dialog_dialogheader"
-    },
-    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -45788,17 +45429,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "feedback_index",
-      "target": "ui_dialog_dialogfooter"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L15",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
       "target": "ui_dialog_dialogfooter"
     },
     {
@@ -45887,17 +45517,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "feedback_index",
-      "target": "ui_dialog_dialogtitle"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L15",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
       "target": "ui_dialog_dialogtitle"
     },
     {
@@ -46467,17 +46086,6 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L8",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_input"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/register/index.tsx",
       "source_location": "L9",
       "weight": 1.0,
@@ -46664,17 +46272,6 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L8",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_input_input"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/register/index.tsx",
       "source_location": "L9",
       "weight": 1.0,
@@ -46812,17 +46409,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "login_index",
-      "target": "ui_label"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L22",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
       "target": "ui_label"
     },
     {
@@ -47014,17 +46600,6 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L22",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_label_label"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/register/index.tsx",
       "source_location": "L10",
       "weight": 1.0,
@@ -47145,17 +46720,6 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L10",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_progress"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/components/ui/progress.tsx",
       "source_location": "L6",
       "weight": 1.0,
@@ -47182,17 +46746,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "ui_progress",
-      "target": "ui_progress_progress"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L10",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
       "target": "ui_progress_progress"
     },
     {
@@ -47378,17 +46931,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "components_sync_whatsapp",
-      "target": "ui_scroll_area"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L7",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
       "target": "ui_scroll_area"
     },
     {
@@ -47723,17 +47265,6 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L7",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_scroll_area_scrollarea"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/estadisticas.tsx",
       "source_location": "L5",
       "weight": 1.0,
@@ -47899,17 +47430,6 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L24",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_select"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/settings/direcciones.tsx",
       "source_location": "L46",
       "weight": 1.0,
@@ -48068,17 +47588,6 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L24",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_select_selecttrigger"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/settings/direcciones.tsx",
       "source_location": "L46",
       "weight": 1.0,
@@ -48145,17 +47654,6 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L24",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_select_selectcontent"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/settings/direcciones.tsx",
       "source_location": "L46",
       "weight": 1.0,
@@ -48216,17 +47714,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "components_stats_header",
-      "target": "ui_select_selectitem"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L24",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
       "target": "ui_select_selectitem"
     },
     {
@@ -49226,17 +48713,6 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L16",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_tabs"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/plantillas.tsx",
       "source_location": "L7",
       "weight": 1.0,
@@ -49366,17 +48842,6 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L16",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_tabs_tabslist"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/settings/direcciones.tsx",
       "source_location": "L56",
       "weight": 1.0,
@@ -49432,17 +48897,6 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L16",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "ui_tabs_tabstrigger"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/settings/direcciones.tsx",
       "source_location": "L56",
       "weight": 1.0,
@@ -49470,17 +48924,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "components_personnel_tabs",
-      "target": "ui_tabs_tabscontent"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L16",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
       "target": "ui_tabs_tabscontent"
     },
     {
@@ -49536,17 +48979,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "components_reporte_modals",
-      "target": "ui_textarea"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L23",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
       "target": "ui_textarea"
     },
     {
@@ -49622,17 +49054,6 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "components_reporte_modals",
-      "target": "ui_textarea_textarea"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L23",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
       "target": "ui_textarea_textarea"
     },
     {
@@ -50946,17 +50367,6 @@
       "target": "hooks_use_active_guard"
     },
     {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L6",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "hooks_use_active_guard"
-    },
-    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -51053,28 +50463,6 @@
       "source_location": "L27",
       "weight": 1.0,
       "source": "hooks_use_reporte_final_usereportefinal",
-      "target": "hooks_use_active_guard_useactiveguard"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L6",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "hooks_use_active_guard_useactiveguard"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L150",
-      "weight": 1.0,
-      "source": "pages_actividades_actividadespagecontent",
       "target": "hooks_use_active_guard_useactiveguard"
     },
     {
@@ -55133,211 +54521,6 @@
       "weight": 1.0,
       "source": "hooks_use_orden_del_dia_useordendeldia",
       "target": "hooks_use_settings_usesettings"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L2",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "hooks_use_pending_activities",
-      "target": "db_db_context"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L2",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "hooks_use_pending_activities",
-      "target": "db_db_context_usedatabase"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L2",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "hooks_use_pending_activities",
-      "target": "db_db_context_useworkspacemanager"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L6",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "hooks_use_pending_activities",
-      "target": "hooks_use_pending_activities_activitystatus"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L14",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "hooks_use_pending_activities",
-      "target": "hooks_use_pending_activities_pendingactivity"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L8",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "hooks_use_pending_activities",
-      "target": "hooks_use_pending_activities_subtask"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L26",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "hooks_use_pending_activities",
-      "target": "hooks_use_pending_activities_usependingactivities"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "hooks_use_pending_activities",
-      "target": "lib_logger"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "hooks_use_pending_activities",
-      "target": "lib_logger_logger"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L3",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "hooks_use_pending_activities",
-      "target": "repositories_keys"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L3",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "hooks_use_pending_activities",
-      "target": "repositories_keys_dbkeys"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L5",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "hooks_use_pending_activities"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L5",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "hooks_use_pending_activities_activitystatus"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L5",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "hooks_use_pending_activities_subtask"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L5",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "hooks_use_pending_activities_pendingactivity"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L27",
-      "weight": 1.0,
-      "source": "hooks_use_pending_activities_usependingactivities",
-      "target": "db_db_context_usedatabase"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/hooks/use-pending-activities.ts",
-      "source_location": "L28",
-      "weight": 1.0,
-      "source": "hooks_use_pending_activities_usependingactivities",
-      "target": "db_db_context_useworkspacemanager"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L5",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "hooks_use_pending_activities_usependingactivities"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L145",
-      "weight": 1.0,
-      "source": "pages_actividades_actividadespagecontent",
-      "target": "hooks_use_pending_activities_usependingactivities"
     },
     {
       "relation": "imports_from",
@@ -60655,26 +59838,6 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/db/db.ts",
-      "source_location": "L120",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "db_db",
-      "target": "db_db_pendingactivitiescollection"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/lib/db/db.ts",
-      "source_location": "L88",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "db_db",
-      "target": "db_db_pendingactivitydoc"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/lib/db/db.ts",
       "source_location": "L56",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -60795,17 +59958,6 @@
       "confidence_score": 1.0,
       "source": "db_db",
       "target": "db_schemas_notificationsschema"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/lib/db/db.ts",
-      "source_location": "L39",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "db_db",
-      "target": "db_schemas_pendingactivitiesschema"
     },
     {
       "relation": "imports",
@@ -61535,16 +60687,6 @@
       "confidence_score": 1.0,
       "source": "db_schemas",
       "target": "db_schemas_notificationsschema"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/lib/db/schemas.ts",
-      "source_location": "L234",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "db_schemas",
-      "target": "db_schemas_pendingactivitiesschema"
     },
     {
       "relation": "contains",
@@ -68453,17 +67595,6 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L59",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "lib_utils"
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
       "source_file": "src/pages/novedades.tsx",
       "source_location": "L4",
       "weight": 1.0,
@@ -68909,28 +68040,6 @@
       "source_location": "L146",
       "weight": 1.0,
       "source": "feedback_index_adminfeedbackpage",
-      "target": "lib_utils_cn"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L59",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "lib_utils_cn"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L576",
-      "weight": 1.0,
-      "source": "pages_actividades_actividadespagecontent",
       "target": "lib_utils_cn"
     },
     {
@@ -69741,108 +68850,6 @@
       "confidence_score": 1.0,
       "source": "lib_validators",
       "target": "lib_validators_validatetemplatesyntax"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L1121",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "pages_actividades_actividadespage"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L134",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "pages_actividades_actividadespagecontent"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L61",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "pages_actividades_categories"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L76",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "pages_actividades_columns"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L90",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "pages_actividades_formatdatereadable"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L104",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "pages_actividades_getdatestatus"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L82",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "pages_actividades_getlocaltodaystring"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L70",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades",
-      "target": "pages_actividades_priorities"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L164",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades_actividadespagecontent",
-      "target": "pages_actividades_getlocaltodaystring"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/pages/actividades.tsx",
-      "source_location": "L107",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "pages_actividades_getdatestatus",
-      "target": "pages_actividades_getlocaltodaystring"
     },
     {
       "relation": "contains",
@@ -73756,7 +72763,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_changelog_1_8_1_2026_05_31",
-      "target": "minutas_changelog_a\u00f1adido"
+      "target": "minutas_changelog_añadido"
     },
     {
       "relation": "contains",
@@ -73766,7 +72773,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_changelog_1_8_0_2026_05_29",
-      "target": "minutas_changelog_a\u00f1adido_13"
+      "target": "minutas_changelog_añadido_13"
     },
     {
       "relation": "contains",
@@ -73786,7 +72793,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_changelog_1_7_5_2026_05_24",
-      "target": "minutas_changelog_a\u00f1adido_31"
+      "target": "minutas_changelog_añadido_31"
     },
     {
       "relation": "contains",
@@ -73796,7 +72803,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_changelog_1_6_5_2026_05_18",
-      "target": "minutas_changelog_a\u00f1adido_41"
+      "target": "minutas_changelog_añadido_41"
     },
     {
       "relation": "contains",
@@ -73816,7 +72823,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_changelog_1_6_0_2026_05_17",
-      "target": "minutas_changelog_a\u00f1adido_54"
+      "target": "minutas_changelog_añadido_54"
     },
     {
       "relation": "contains",
@@ -73826,7 +72833,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_changelog_1_5_0_2026_05_14",
-      "target": "minutas_changelog_a\u00f1adido_66"
+      "target": "minutas_changelog_añadido_66"
     },
     {
       "relation": "contains",
@@ -73856,7 +72863,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_changelog_1_4_0_2026_05_13",
-      "target": "minutas_changelog_a\u00f1adido_83"
+      "target": "minutas_changelog_añadido_83"
     },
     {
       "relation": "contains",
@@ -73916,7 +72923,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_changelog_1_3_0_2026_04_28",
-      "target": "minutas_changelog_a\u00f1adido_121"
+      "target": "minutas_changelog_añadido_121"
     },
     {
       "relation": "contains",
@@ -73946,7 +72953,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_changelog_1_2_0_2026_04_24",
-      "target": "minutas_changelog_a\u00f1adido_138"
+      "target": "minutas_changelog_añadido_138"
     },
     {
       "relation": "contains",
@@ -73996,7 +73003,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_changelog_1_1_0_2026_04_23",
-      "target": "minutas_changelog_a\u00f1adido_170"
+      "target": "minutas_changelog_añadido_170"
     },
     {
       "relation": "contains",
@@ -74026,7 +73033,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_changelog_1_0_1_2026_04_22",
-      "target": "minutas_changelog_a\u00f1adido_187"
+      "target": "minutas_changelog_añadido_187"
     },
     {
       "relation": "contains",
@@ -74056,7 +73063,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_changelog_1_0_0_2026_04_07",
-      "target": "minutas_changelog_a\u00f1adido_205"
+      "target": "minutas_changelog_añadido_205"
     },
     {
       "relation": "contains",
@@ -74626,7 +73633,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_readme_minutas_generador_de_reportes_policiales",
-      "target": "minutas_readme_caracter\u00edsticas_principales"
+      "target": "minutas_readme_características_principales"
     },
     {
       "relation": "contains",
@@ -74636,7 +73643,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_readme_minutas_generador_de_reportes_policiales",
-      "target": "minutas_readme_instalaci\u00f3n"
+      "target": "minutas_readme_instalación"
     },
     {
       "relation": "contains",
@@ -74676,7 +73683,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_readme_minutas_generador_de_reportes_policiales",
-      "target": "minutas_readme_tecnolog\u00edas"
+      "target": "minutas_readme_tecnologías"
     },
     {
       "relation": "contains",
@@ -74686,7 +73693,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_readme_sistema_de_plantillas",
-      "target": "minutas_readme_1_variables_b\u00e1sicas"
+      "target": "minutas_readme_1_variables_básicas"
     },
     {
       "relation": "contains",
@@ -74726,7 +73733,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_readme_sistema_de_plantillas",
-      "target": "minutas_readme_5_l\u00f3gica_condicional"
+      "target": "minutas_readme_5_lógica_condicional"
     },
     {
       "relation": "contains",
@@ -74736,7 +73743,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_readme_sistema_de_plantillas",
-      "target": "minutas_readme_6_resumen_autom\u00e1tico"
+      "target": "minutas_readme_6_resumen_automático"
     },
     {
       "relation": "contains",
@@ -74756,7 +73763,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "minutas_readme_sistema_de_plantillas",
-      "target": "minutas_readme_8_reglas_estad\u00edsticas_y_etiquetas_especiales_y_1"
+      "target": "minutas_readme_8_reglas_estadísticas_y_etiquetas_especiales_y_1"
     },
     {
       "relation": "contains",
@@ -74916,7 +73923,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "docs_performance_guide",
-      "target": "docs_performance_guide_gu\u00eda_de_rendimiento_y_unificaci\u00f3n_de_interfaces_rxdb_dnd"
+      "target": "docs_performance_guide_guía_de_rendimiento_y_unificación_de_interfaces_rxdb_dnd"
     },
     {
       "relation": "contains",
@@ -74925,7 +73932,7 @@
       "source_location": "L5",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_performance_guide_gu\u00eda_de_rendimiento_y_unificaci\u00f3n_de_interfaces_rxdb_dnd",
+      "source": "docs_performance_guide_guía_de_rendimiento_y_unificación_de_interfaces_rxdb_dnd",
       "target": "docs_performance_guide_1_el_problema_rebote_de_estado_flickering"
     },
     {
@@ -74935,8 +73942,8 @@
       "source_location": "L15",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_performance_guide_gu\u00eda_de_rendimiento_y_unificaci\u00f3n_de_interfaces_rxdb_dnd",
-      "target": "docs_performance_guide_2_soluci\u00f3n_estado_local_optimista"
+      "source": "docs_performance_guide_guía_de_rendimiento_y_unificación_de_interfaces_rxdb_dnd",
+      "target": "docs_performance_guide_2_solución_estado_local_optimista"
     },
     {
       "relation": "contains",
@@ -74945,8 +73952,8 @@
       "source_location": "L44",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_performance_guide_gu\u00eda_de_rendimiento_y_unificaci\u00f3n_de_interfaces_rxdb_dnd",
-      "target": "docs_performance_guide_3_prevenci\u00f3n_de_re_renderizados_causales"
+      "source": "docs_performance_guide_guía_de_rendimiento_y_unificación_de_interfaces_rxdb_dnd",
+      "target": "docs_performance_guide_3_prevención_de_re_renderizados_causales"
     },
     {
       "relation": "contains",
@@ -74955,7 +73962,7 @@
       "source_location": "L69",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_performance_guide_gu\u00eda_de_rendimiento_y_unificaci\u00f3n_de_interfaces_rxdb_dnd",
+      "source": "docs_performance_guide_guía_de_rendimiento_y_unificación_de_interfaces_rxdb_dnd",
       "target": "docs_performance_guide_4_check_list_para_nuevas_interfaces"
     },
     {
@@ -74965,7 +73972,7 @@
       "source_location": "L57",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_performance_guide_3_prevenci\u00f3n_de_re_renderizados_causales",
+      "source": "docs_performance_guide_3_prevención_de_re_renderizados_causales",
       "target": "docs_performance_guide_funciones_estables_usecallback"
     },
     {
@@ -74975,8 +73982,8 @@
       "source_location": "L48",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_performance_guide_3_prevenci\u00f3n_de_re_renderizados_causales",
-      "target": "docs_performance_guide_memoizaci\u00f3n_obligatoria"
+      "source": "docs_performance_guide_3_prevención_de_re_renderizados_causales",
+      "target": "docs_performance_guide_memoización_obligatoria"
     },
     {
       "relation": "contains",
@@ -74986,7 +73993,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "docs_statistics_rules_guide",
-      "target": "docs_statistics_rules_guide_gu\u00eda_del_motor_de_reglas_estad\u00edsticas_y_etiquetas_especiales"
+      "target": "docs_statistics_rules_guide_guía_del_motor_de_reglas_estadísticas_y_etiquetas_especiales"
     },
     {
       "relation": "contains",
@@ -74995,8 +74002,8 @@
       "source_location": "L9",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_statistics_rules_guide_gu\u00eda_del_motor_de_reglas_estad\u00edsticas_y_etiquetas_especiales",
-      "target": "docs_statistics_rules_guide_1_el_asterisco_evaluaci\u00f3n_secuencial_repetible"
+      "source": "docs_statistics_rules_guide_guía_del_motor_de_reglas_estadísticas_y_etiquetas_especiales",
+      "target": "docs_statistics_rules_guide_1_el_asterisco_evaluación_secuencial_repetible"
     },
     {
       "relation": "contains",
@@ -75005,8 +74012,8 @@
       "source_location": "L36",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_statistics_rules_guide_gu\u00eda_del_motor_de_reglas_estad\u00edsticas_y_etiquetas_especiales",
-      "target": "docs_statistics_rules_guide_2_el_par\u00e9ntesis_uno_1_primera_coincidencia"
+      "source": "docs_statistics_rules_guide_guía_del_motor_de_reglas_estadísticas_y_etiquetas_especiales",
+      "target": "docs_statistics_rules_guide_2_el_paréntesis_uno_1_primera_coincidencia"
     },
     {
       "relation": "contains",
@@ -75015,8 +74022,8 @@
       "source_location": "L85",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_statistics_rules_guide_gu\u00eda_del_motor_de_reglas_estad\u00edsticas_y_etiquetas_especiales",
-      "target": "docs_statistics_rules_guide_3_el_sufijo_virtual_de_origen_origen_evaluaci\u00f3n_de_trayectos_o_rutas"
+      "source": "docs_statistics_rules_guide_guía_del_motor_de_reglas_estadísticas_y_etiquetas_especiales",
+      "target": "docs_statistics_rules_guide_3_el_sufijo_virtual_de_origen_origen_evaluación_de_trayectos_o_rutas"
     },
     {
       "relation": "contains",
@@ -75025,8 +74032,8 @@
       "source_location": "L57",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_statistics_rules_guide_gu\u00eda_del_motor_de_reglas_estad\u00edsticas_y_etiquetas_especiales",
-      "target": "docs_statistics_rules_guide_resumen_de_comportamiento_t\u00e9cnico"
+      "source": "docs_statistics_rules_guide_guía_del_motor_de_reglas_estadísticas_y_etiquetas_especiales",
+      "target": "docs_statistics_rules_guide_resumen_de_comportamiento_técnico"
     },
     {
       "relation": "contains",
@@ -75035,8 +74042,8 @@
       "source_location": "L17",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_statistics_rules_guide_1_el_asterisco_evaluaci\u00f3n_secuencial_repetible",
-      "target": "docs_statistics_rules_guide_correlaci\u00f3n_con_condiciones_secundarias_y_o"
+      "source": "docs_statistics_rules_guide_1_el_asterisco_evaluación_secuencial_repetible",
+      "target": "docs_statistics_rules_guide_correlación_con_condiciones_secundarias_y_o"
     },
     {
       "relation": "contains",
@@ -75045,8 +74052,8 @@
       "source_location": "L11",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_statistics_rules_guide_1_el_asterisco_evaluaci\u00f3n_secuencial_repetible",
-      "target": "docs_statistics_rules_guide_c\u00f3mo_funciona"
+      "source": "docs_statistics_rules_guide_1_el_asterisco_evaluación_secuencial_repetible",
+      "target": "docs_statistics_rules_guide_cómo_funciona"
     },
     {
       "relation": "contains",
@@ -75055,7 +74062,7 @@
       "source_location": "L22",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_statistics_rules_guide_1_el_asterisco_evaluaci\u00f3n_secuencial_repetible",
+      "source": "docs_statistics_rules_guide_1_el_asterisco_evaluación_secuencial_repetible",
       "target": "docs_statistics_rules_guide_ejemplo_de_caso_de_uso"
     },
     {
@@ -75065,8 +74072,8 @@
       "source_location": "L38",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_statistics_rules_guide_2_el_par\u00e9ntesis_uno_1_primera_coincidencia",
-      "target": "docs_statistics_rules_guide_c\u00f3mo_funciona_38"
+      "source": "docs_statistics_rules_guide_2_el_paréntesis_uno_1_primera_coincidencia",
+      "target": "docs_statistics_rules_guide_cómo_funciona_38"
     },
     {
       "relation": "contains",
@@ -75075,7 +74082,7 @@
       "source_location": "L44",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_statistics_rules_guide_2_el_par\u00e9ntesis_uno_1_primera_coincidencia",
+      "source": "docs_statistics_rules_guide_2_el_paréntesis_uno_1_primera_coincidencia",
       "target": "docs_statistics_rules_guide_ejemplo_de_caso_de_uso_44"
     },
     {
@@ -75085,8 +74092,8 @@
       "source_location": "L87",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_statistics_rules_guide_3_el_sufijo_virtual_de_origen_origen_evaluaci\u00f3n_de_trayectos_o_rutas",
-      "target": "docs_statistics_rules_guide_c\u00f3mo_funciona_87"
+      "source": "docs_statistics_rules_guide_3_el_sufijo_virtual_de_origen_origen_evaluación_de_trayectos_o_rutas",
+      "target": "docs_statistics_rules_guide_cómo_funciona_87"
     },
     {
       "relation": "contains",
@@ -75095,7 +74102,7 @@
       "source_location": "L99",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_statistics_rules_guide_3_el_sufijo_virtual_de_origen_origen_evaluaci\u00f3n_de_trayectos_o_rutas",
+      "source": "docs_statistics_rules_guide_3_el_sufijo_virtual_de_origen_origen_evaluación_de_trayectos_o_rutas",
       "target": "docs_statistics_rules_guide_ejemplo_de_caso_de_uso_traslados"
     },
     {
@@ -75106,7 +74113,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "docs_supabase_guide",
-      "target": "docs_supabase_guide_gu\u00eda_de_desarrollo_local_con_supabase_cli"
+      "target": "docs_supabase_guide_guía_de_desarrollo_local_con_supabase_cli"
     },
     {
       "relation": "contains",
@@ -75115,8 +74122,8 @@
       "source_location": "L12",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_supabase_guide_gu\u00eda_de_desarrollo_local_con_supabase_cli",
-      "target": "docs_supabase_guide_1_configuraci\u00f3n_inicial_una_sola_vez"
+      "source": "docs_supabase_guide_guía_de_desarrollo_local_con_supabase_cli",
+      "target": "docs_supabase_guide_1_configuración_inicial_una_sola_vez"
     },
     {
       "relation": "contains",
@@ -75125,7 +74132,7 @@
       "source_location": "L34",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_supabase_guide_gu\u00eda_de_desarrollo_local_con_supabase_cli",
+      "source": "docs_supabase_guide_guía_de_desarrollo_local_con_supabase_cli",
       "target": "docs_supabase_guide_2_flujo_de_trabajo_en_desarrollo"
     },
     {
@@ -75135,8 +74142,8 @@
       "source_location": "L58",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_supabase_guide_gu\u00eda_de_desarrollo_local_con_supabase_cli",
-      "target": "docs_supabase_guide_3_gesti\u00f3n_de_esquemas_y_migraciones"
+      "source": "docs_supabase_guide_guía_de_desarrollo_local_con_supabase_cli",
+      "target": "docs_supabase_guide_3_gestión_de_esquemas_y_migraciones"
     },
     {
       "relation": "contains",
@@ -75145,7 +74152,7 @@
       "source_location": "L5",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_supabase_guide_gu\u00eda_de_desarrollo_local_con_supabase_cli",
+      "source": "docs_supabase_guide_guía_de_desarrollo_local_con_supabase_cli",
       "target": "docs_supabase_guide_requisitos_previos"
     },
     {
@@ -75185,8 +74192,8 @@
       "source_location": "L68",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_supabase_guide_3_gesti\u00f3n_de_esquemas_y_migraciones",
-      "target": "docs_supabase_guide_crear_una_nueva_migraci\u00f3n"
+      "source": "docs_supabase_guide_3_gestión_de_esquemas_y_migraciones",
+      "target": "docs_supabase_guide_crear_una_nueva_migración"
     },
     {
       "relation": "contains",
@@ -75195,8 +74202,8 @@
       "source_location": "L60",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_supabase_guide_3_gesti\u00f3n_de_esquemas_y_migraciones",
-      "target": "docs_supabase_guide_obtener_el_esquema_actual_de_producci\u00f3n_db_pull"
+      "source": "docs_supabase_guide_3_gestión_de_esquemas_y_migraciones",
+      "target": "docs_supabase_guide_obtener_el_esquema_actual_de_producción_db_pull"
     },
     {
       "relation": "contains",
@@ -75205,8 +74212,8 @@
       "source_location": "L84",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "docs_supabase_guide_3_gesti\u00f3n_de_esquemas_y_migraciones",
-      "target": "docs_supabase_guide_subir_migraciones_locales_a_producci\u00f3n"
+      "source": "docs_supabase_guide_3_gestión_de_esquemas_y_migraciones",
+      "target": "docs_supabase_guide_subir_migraciones_locales_a_producción"
     },
     {
       "relation": "contains",
@@ -75246,7 +74253,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "template_template_engine_motor_de_plantillas_referencia_de_sintaxis",
-      "target": "template_template_engine_11_orden_de_resoluci\u00f3n_de_valores"
+      "target": "template_template_engine_11_orden_de_resolución_de_valores"
     },
     {
       "relation": "contains",
@@ -75306,7 +74313,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "template_template_engine_motor_de_plantillas_referencia_de_sintaxis",
-      "target": "template_template_engine_5_secciones_auto_contenidas_t\u00edtulo_campo"
+      "target": "template_template_engine_5_secciones_auto_contenidas_título_campo"
     },
     {
       "relation": "contains",
@@ -75366,7 +74373,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "template_template_engine_1_campos_fieldname",
-      "target": "template_template_engine_sintaxis_b\u00e1sica"
+      "target": "template_template_engine_sintaxis_básica"
     },
     {
       "relation": "contains",
@@ -75446,7 +74453,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "template_template_engine_2_acceso_a_propiedades_de_personal_campo_propiedad",
-      "target": "template_template_engine_uso_en_condicionales_caso_de_g\u00e9nero"
+      "target": "template_template_engine_uso_en_condicionales_caso_de_género"
     },
     {
       "relation": "contains",
@@ -75466,7 +74473,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "template_template_engine_4_secciones_label",
-      "target": "template_template_engine_secci\u00f3n_repetible"
+      "target": "template_template_engine_sección_repetible"
     },
     {
       "relation": "contains",
@@ -75476,7 +74483,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "template_template_engine_4_secciones_label",
-      "target": "template_template_engine_secci\u00f3n_repetible_con_etiquetas_singulares_plurales"
+      "target": "template_template_engine_sección_repetible_con_etiquetas_singulares_plurales"
     },
     {
       "relation": "contains",
@@ -75486,7 +74493,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "template_template_engine_4_secciones_label",
-      "target": "template_template_engine_secci\u00f3n_simple"
+      "target": "template_template_engine_sección_simple"
     },
     {
       "relation": "contains",
@@ -75496,7 +74503,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "template_template_engine_7_condicionales_campo_op_valor",
-      "target": "template_template_engine_comparaci\u00f3n_de_valores"
+      "target": "template_template_engine_comparación_de_valores"
     },
     {
       "relation": "contains",
@@ -75526,7 +74533,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "template_template_engine_7_condicionales_campo_op_valor",
-      "target": "template_template_engine_condicional_de_g\u00e9nero_uso_t\u00edpico_con_personal"
+      "target": "template_template_engine_condicional_de_género_uso_típico_con_personal"
     },
     {
       "relation": "contains",
@@ -76376,7 +75383,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "changelog_1_8_1_2026_05_31",
-      "target": "changelog_a\u00f1adido"
+      "target": "changelog_añadido"
     },
     {
       "relation": "contains",
@@ -76386,7 +75393,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "changelog_1_8_0_2026_05_29",
-      "target": "changelog_a\u00f1adido_13"
+      "target": "changelog_añadido_13"
     },
     {
       "relation": "contains",
@@ -76406,7 +75413,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "changelog_1_7_5_2026_05_24",
-      "target": "changelog_a\u00f1adido_31"
+      "target": "changelog_añadido_31"
     },
     {
       "relation": "contains",
@@ -76416,7 +75423,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "changelog_1_6_5_2026_05_18",
-      "target": "changelog_a\u00f1adido_41"
+      "target": "changelog_añadido_41"
     },
     {
       "relation": "contains",
@@ -76436,7 +75443,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "changelog_1_6_0_2026_05_17",
-      "target": "changelog_a\u00f1adido_54"
+      "target": "changelog_añadido_54"
     },
     {
       "relation": "contains",
@@ -76446,7 +75453,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "changelog_1_5_0_2026_05_14",
-      "target": "changelog_a\u00f1adido_66"
+      "target": "changelog_añadido_66"
     },
     {
       "relation": "contains",
@@ -76476,7 +75483,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "changelog_1_4_0_2026_05_13",
-      "target": "changelog_a\u00f1adido_83"
+      "target": "changelog_añadido_83"
     },
     {
       "relation": "contains",
@@ -76536,7 +75543,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "changelog_1_3_0_2026_04_28",
-      "target": "changelog_a\u00f1adido_121"
+      "target": "changelog_añadido_121"
     },
     {
       "relation": "contains",
@@ -76566,7 +75573,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "changelog_1_2_0_2026_04_24",
-      "target": "changelog_a\u00f1adido_138"
+      "target": "changelog_añadido_138"
     },
     {
       "relation": "contains",
@@ -76616,7 +75623,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "changelog_1_1_0_2026_04_23",
-      "target": "changelog_a\u00f1adido_170"
+      "target": "changelog_añadido_170"
     },
     {
       "relation": "contains",
@@ -76646,7 +75653,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "changelog_1_0_1_2026_04_22",
-      "target": "changelog_a\u00f1adido_187"
+      "target": "changelog_añadido_187"
     },
     {
       "relation": "contains",
@@ -76676,7 +75683,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "changelog_1_0_0_2026_04_07",
-      "target": "changelog_a\u00f1adido_205"
+      "target": "changelog_añadido_205"
     },
     {
       "relation": "contains",
@@ -76976,7 +75983,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "readme_minutas_generador_de_reportes_policiales",
-      "target": "readme_caracter\u00edsticas_principales"
+      "target": "readme_características_principales"
     },
     {
       "relation": "contains",
@@ -76986,7 +75993,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "readme_minutas_generador_de_reportes_policiales",
-      "target": "readme_instalaci\u00f3n"
+      "target": "readme_instalación"
     },
     {
       "relation": "contains",
@@ -77026,7 +76033,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "readme_minutas_generador_de_reportes_policiales",
-      "target": "readme_tecnolog\u00edas"
+      "target": "readme_tecnologías"
     },
     {
       "relation": "contains",
@@ -77036,7 +76043,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "readme_sistema_de_plantillas",
-      "target": "readme_1_variables_b\u00e1sicas"
+      "target": "readme_1_variables_básicas"
     },
     {
       "relation": "contains",
@@ -77076,7 +76083,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "readme_sistema_de_plantillas",
-      "target": "readme_5_l\u00f3gica_condicional"
+      "target": "readme_5_lógica_condicional"
     },
     {
       "relation": "contains",
@@ -77086,7 +76093,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "readme_sistema_de_plantillas",
-      "target": "readme_6_resumen_autom\u00e1tico"
+      "target": "readme_6_resumen_automático"
     },
     {
       "relation": "contains",
@@ -77106,7 +76113,7 @@
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "readme_sistema_de_plantillas",
-      "target": "readme_8_reglas_estad\u00edsticas_y_etiquetas_especiales_y_1"
+      "target": "readme_8_reglas_estadísticas_y_etiquetas_especiales_y_1"
     },
     {
       "relation": "contains",

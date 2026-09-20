@@ -229,41 +229,7 @@ export const notificationsSchema = {
     },
 };
 
-/**
- * Collection for pending activities / Kanban tasks.
- */
-export const pendingActivitiesSchema = {
-    title: 'pending activities schema',
-    version: 0,
-    primaryKey: 'id',
-    type: 'object',
-    properties: {
-        id: { type: 'string', maxLength: 150 },
-        workspace_id: { type: 'string', maxLength: 50 },
-        date: { type: 'string', maxLength: 20 },
-        time: { type: 'string' },
-        text: { type: 'string' },
-        category: { type: 'string' },
-        status: { type: 'string', enum: ['pending', 'in_progress', 'completed'], maxLength: 50 },
-        completed: { type: 'boolean' },
-        priority: { type: 'string', enum: ['low', 'medium', 'high'] },
-        subtasks: {
-            type: 'array',
-            items: {
-                type: 'object',
-                properties: {
-                    id: { type: 'string' },
-                    text: { type: 'string' },
-                    completed: { type: 'boolean' }
-                }
-            }
-        },
-        modified: { type: ['string', 'null'] },
-        _deleted: { type: 'boolean' }
-    },
-    required: ['id', 'workspace_id', 'date', 'time', 'text', 'category', 'status'],
-    indexes: ['workspace_id', 'status', 'date']
-};
+
 
 /**
  * Collection for WhatsApp scheduled messages.

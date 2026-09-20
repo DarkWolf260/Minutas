@@ -19,7 +19,6 @@ import {
   Laptop,
   Smartphone,
   ShieldAlert,
-  CalendarClock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -39,7 +38,6 @@ export const MODULE_DEFS: {
     { id: 'personal', label: 'Personal', description: 'Gestiona efectivos y asignación de guardias', icon: Users, color: 'text-amber-600 bg-amber-500/10' },
     { id: 'estadisticas', label: 'Estadísticas', description: 'Panel de métricas e indicadores históricos', icon: BarChart2, color: 'text-rose-600 bg-rose-500/10' },
     { id: 'plantillas', label: 'Plantillas', description: 'Crea y gestiona plantillas de novedades', icon: FileText, color: 'text-slate-600 bg-slate-500/10' },
-    { id: 'actividades', label: 'Tablón de Actividades', description: 'Visualiza y gestiona las actividades planificadas, preventivos y tareas del área', icon: CalendarClock, color: 'text-orange-600 bg-orange-500/10' },
   ];
 
 const COMING_SOON_MODULES: {

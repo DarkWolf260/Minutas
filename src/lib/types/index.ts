@@ -73,8 +73,7 @@ export type AppModuleId =
   | 'reporte-final'
   | 'personal'
   | 'estadisticas'
-  | 'plantillas'
-  | 'actividades';
+  | 'plantillas';
 
 export interface AppSettings {
   id?: string;

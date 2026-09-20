@@ -44,7 +44,6 @@ import {
   configsSchema,
   historySchema,
   notificationsSchema,
-  pendingActivitiesSchema,
   scheduledMessagesSchema,
 } from './schemas';
 
@@ -85,21 +84,6 @@ export type HistoryItem = {
   data: any;
 };
 
-export type PendingActivityDoc = {
-  id: string;
-  workspace_id: string;
-  date: string;
-  time: string;
-  text: string;
-  category: string;
-  status: 'pending' | 'in_progress' | 'completed';
-  completed: boolean;
-  priority?: 'low' | 'medium' | 'high';
-  subtasks?: { id: string; text: string; completed: boolean; }[];
-  modified?: string | null;
-  _deleted?: boolean;
-};
-
 export type ScheduledMessageDoc = {
   id: string;
   workspace_id: string;
@@ -117,7 +101,6 @@ export type ScheduledMessageDoc = {
 export type LookupsCollection = RxCollection<LookupItem>;
 export type ConfigsCollection = RxCollection<ConfigItem>;
 export type HistoryCollection = RxCollection<HistoryItem>;
-export type PendingActivitiesCollection = RxCollection<PendingActivityDoc>;
 export type ScheduledMessagesCollection = RxCollection<ScheduledMessageDoc>;
 
 export type NotificationItem = {
@@ -142,7 +125,6 @@ export type MinutasDatabaseCollections = {
   configs: ConfigsCollection;
   history: HistoryCollection;
   notifications: NotificationsCollection;
-  pending_activities: PendingActivitiesCollection;
   scheduled_messages: ScheduledMessagesCollection;
 };
 
@@ -431,10 +413,6 @@ const created_atabase = async (): Promise<MinutasDatabase> => {
       },
       notifications: {
         schema: notificationsSchema,
-      },
-      pending_activities: {
-        schema: pendingActivitiesSchema,
-        conflictHandler: commonConflictHandler,
       },
       scheduled_messages: {
         schema: scheduledMessagesSchema,

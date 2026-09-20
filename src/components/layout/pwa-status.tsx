@@ -88,7 +88,7 @@ export function PWAStatus() {
 
     return (
         <div
-            className="fixed bottom-20 sm:bottom-4 right-4 z-[100] flex flex-col items-end gap-2 pointer-events-none"
+            className="fixed bottom-20 sm:bottom-4 left-4 sm:left-auto sm:right-4 z-[45] flex flex-col items-start sm:items-end gap-2 pointer-events-none"
             suppressHydrationWarning
         >
             {/* Install Prompt - Only show if available and no update is pending */}

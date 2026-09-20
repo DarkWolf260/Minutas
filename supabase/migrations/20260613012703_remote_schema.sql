@@ -169,23 +169,6 @@ alter table "public"."lookups" enable row level security;
 alter table "public"."municipalities" enable row level security;
 
 
-  create table "public"."pending_activities" (
-    "id" text not null,
-    "workspace_id" text not null,
-    "date" text not null,
-    "time" text not null,
-    "text" text not null,
-    "category" text not null,
-    "status" text not null,
-    "completed" boolean not null default false,
-    "priority" text not null,
-    "subtasks" jsonb not null default '[]'::jsonb,
-    "modified" timestamp with time zone not null default timezone('utc'::text, now()),
-    "_deleted" boolean not null default false
-      );
-
-
-alter table "public"."pending_activities" enable row level security;
 
 
   create table "public"."personnel" (
@@ -404,7 +387,6 @@ CREATE UNIQUE INDEX municipalities_pkey ON public.municipalities USING btree (id
 
 CREATE UNIQUE INDEX municipalities_state_id_name_key ON public.municipalities USING btree (state_id, name);
 
-CREATE UNIQUE INDEX pending_activities_pkey ON public.pending_activities USING btree (id);
 
 CREATE UNIQUE INDEX personnel_pkey ON public.personnel USING btree (id);
 
@@ -456,7 +438,6 @@ alter table "public"."lookups" add constraint "lookups_pkey" PRIMARY KEY using i
 
 alter table "public"."municipalities" add constraint "municipalities_pkey" PRIMARY KEY using index "municipalities_pkey";
 
-alter table "public"."pending_activities" add constraint "pending_activities_pkey" PRIMARY KEY using index "pending_activities_pkey";
 
 alter table "public"."personnel" add constraint "personnel_pkey" PRIMARY KEY using index "personnel_pkey";
 
@@ -532,17 +513,6 @@ alter table "public"."municipalities" validate constraint "municipalities_state_
 
 alter table "public"."municipalities" add constraint "municipalities_state_id_name_key" UNIQUE using index "municipalities_state_id_name_key";
 
-alter table "public"."pending_activities" add constraint "pending_activities_priority_check" CHECK ((priority = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text]))) not valid;
-
-alter table "public"."pending_activities" validate constraint "pending_activities_priority_check";
-
-alter table "public"."pending_activities" add constraint "pending_activities_status_check" CHECK ((status = ANY (ARRAY['pending'::text, 'in_progress'::text, 'completed'::text]))) not valid;
-
-alter table "public"."pending_activities" validate constraint "pending_activities_status_check";
-
-alter table "public"."pending_activities" add constraint "pending_activities_workspace_id_fkey" FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE not valid;
-
-alter table "public"."pending_activities" validate constraint "pending_activities_workspace_id_fkey";
 
 alter table "public"."personnel" add constraint "personnel_workspace_id_fkey" FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE not valid;
 
@@ -1453,47 +1423,6 @@ grant truncate on table "public"."municipalities" to "service_role";
 
 grant update on table "public"."municipalities" to "service_role";
 
-grant delete on table "public"."pending_activities" to "anon";
-
-grant insert on table "public"."pending_activities" to "anon";
-
-grant references on table "public"."pending_activities" to "anon";
-
-grant select on table "public"."pending_activities" to "anon";
-
-grant trigger on table "public"."pending_activities" to "anon";
-
-grant truncate on table "public"."pending_activities" to "anon";
-
-grant update on table "public"."pending_activities" to "anon";
-
-grant delete on table "public"."pending_activities" to "authenticated";
-
-grant insert on table "public"."pending_activities" to "authenticated";
-
-grant references on table "public"."pending_activities" to "authenticated";
-
-grant select on table "public"."pending_activities" to "authenticated";
-
-grant trigger on table "public"."pending_activities" to "authenticated";
-
-grant truncate on table "public"."pending_activities" to "authenticated";
-
-grant update on table "public"."pending_activities" to "authenticated";
-
-grant delete on table "public"."pending_activities" to "service_role";
-
-grant insert on table "public"."pending_activities" to "service_role";
-
-grant references on table "public"."pending_activities" to "service_role";
-
-grant select on table "public"."pending_activities" to "service_role";
-
-grant trigger on table "public"."pending_activities" to "service_role";
-
-grant truncate on table "public"."pending_activities" to "service_role";
-
-grant update on table "public"."pending_activities" to "service_role";
 
 grant delete on table "public"."personnel" to "anon";
 
@@ -2116,17 +2045,6 @@ using (true);
 
 
 
-  create policy "Acceso por workspace"
-  on "public"."pending_activities"
-  as permissive
-  for all
-  to authenticated
-using ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
-   FROM public.profiles
-  WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))))
-with check ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
-   FROM public.profiles
-  WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))));
 
 
 
@@ -2284,27 +2202,35 @@ using (true);
   to public
   using (true);
 
-  create policy "Acceso total para usuarios autenticados (Insert)"
+  create policy "Gestion de plantillas por admin o miembros del workspace (Insert)"
   on "public"."templates"
   as permissive
   for insert
   to authenticated
-  with check (((select auth.role()) = 'authenticated'::text));
+  with check ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
+   FROM public.profiles
+  WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))));
 
-  create policy "Acceso total para usuarios autenticados (Update)"
+  create policy "Gestion de plantillas por admin o miembros del workspace (Update)"
   on "public"."templates"
   as permissive
   for update
   to authenticated
-  using (((select auth.role()) = 'authenticated'::text))
-  with check (((select auth.role()) = 'authenticated'::text));
+  using ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
+   FROM public.profiles
+  WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))))
+  with check ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
+   FROM public.profiles
+  WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))));
 
-  create policy "Acceso total para usuarios autenticados (Delete)"
+  create policy "Gestion de plantillas por admin o miembros del workspace (Delete)"
   on "public"."templates"
   as permissive
   for delete
   to authenticated
-  using (((select auth.role()) = 'authenticated'::text));
+  using ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed_workspaces) AS unnest
+   FROM public.profiles
+  WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))));
 
 
 
@@ -2405,5 +2331,4 @@ using (((bucket_id = 'activity-images'::text) AND (owner = auth.uid())));
 
 
 CREATE INDEX IF NOT EXISTS fuel_schedules_created_by_idx ON public.fuel_schedules(created_by);
-CREATE INDEX IF NOT EXISTS pending_activities_workspace_id_idx ON public.pending_activities(workspace_id);
 CREATE INDEX IF NOT EXISTS scheduled_messages_workspace_id_idx ON public.scheduled_messages(workspace_id);

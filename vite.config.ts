@@ -134,7 +134,7 @@ export default defineConfig({
         ],
       },
       devOptions: {
-        enabled: true,
+        enabled: false,
       },
     }),
   ],
@@ -168,6 +168,24 @@ export default defineConfig({
             }
             if (id.includes('@radix-ui')) {
               return '@ui';
+            }
+            if (id.includes('rxdb') || id.includes('rxjs')) {
+              return '@vendor-db';
+            }
+            if (id.includes('@supabase')) {
+              return '@vendor-supabase';
+            }
+            if (id.includes('leaflet')) {
+              return '@vendor-maps';
+            }
+            if (id.includes('docx')) {
+              return '@vendor-docx';
+            }
+            if (id.includes('date-fns')) {
+              return '@vendor-date';
+            }
+            if (id.includes('html5-qrcode') || id.includes('qrcode.react')) {
+              return '@vendor-qr';
             }
           }
         },

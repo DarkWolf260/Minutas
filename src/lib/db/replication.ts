@@ -145,7 +145,6 @@ async function startCollectionReplication(
           lookups: ['id', 'workspace_id', 'type', 'name', 'data', '_deleted'],
           configs: ['id', 'workspace_id', 'type', 'name', 'data', '_deleted'],
           history: ['id', 'workspace_id', 'type', 'date', 'personnel_id', 'data', '_deleted'],
-          pending_activities: ['id', 'workspace_id', 'date', 'time', 'text', 'category', 'status', 'completed', 'priority', 'subtasks', '_deleted'],
           scheduled_messages: ['id', 'workspace_id', 'chatId', 'message', 'title', 'scheduledTime', 'status', 'error', 'media', '_deleted']
         };
 
@@ -303,7 +302,7 @@ export async function startWorkspaceReplication(db: MinutasDatabase, workspace_i
 
   const collectionsToSync: (keyof typeof db.collections)[] = isLocalOnly 
     ? ['templates'] 
-    : ['personnel', 'reports', 'templates', 'lookups', 'configs', 'history', 'pending_activities', 'scheduled_messages'];
+    : ['personnel', 'reports', 'templates', 'lookups', 'configs', 'history', 'scheduled_messages'];
 
   if (isLocalOnly) {
     logger.info('Starting community-only replication for local workspace');

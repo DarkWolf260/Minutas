@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Arquitectura del Sistema Minutas",
+    "output": "docs/architecture.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "offline-path",
+        "label": "Operación Offline-First",
+        "focus": ["users", "ui", "templates", "local_db"],
+        "note": "Operatividad completa local sin requerir conexión a internet."
+      },
+      {
+        "id": "cloud-sync",
+        "label": "Sincronización Cloud",
+        "focus": ["local_db", "auth", "db", "storage"],
+        "note": "Replicación hacia PostgreSQL y Supabase con RLS."
+      },
+      {
+        "id": "distribution",
+        "label": "Exportación y Difusión",
+        "focus": ["ui", "exporter", "bot", "whatsapp"],
+        "note": "Generación de minutas en Word y despacho vía WhatsApp."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "users",
+      "type": "external",
+      "label": "Funcionario",
+      "sublabel": "Navegador Web / PWA",
+      "pos": [40, 300],
+      "size": [130, 60]
+    },
+    {
+      "id": "ui",
+      "type": "frontend",
+      "label": "Minutas PWA",
+      "sublabel": "React 19 + Vite + Tailwind",
+      "pos": [260, 300],
+      "size": [140, 60]
+    },
+    {
+      "id": "templates",
+      "type": "frontend",
+      "label": "Motor de Plantillas",
+      "sublabel": "Parser AST + Reglas",
+      "pos": [260, 120],
+      "size": [140, 60],
+      "tag": "Declarativo"
+    },
+    {
+      "id": "exporter",
+      "type": "frontend",
+      "label": "Generador Word",
+      "sublabel": "Documentos (.docx)",
+      "pos": [260, 480],
+      "size": [140, 60]
+    },
+    {
+      "id": "local_db",
+      "type": "database",
+      "label": "RxDB Local",
+      "sublabel": "IndexedDB + RxJS",
+      "pos": [490, 300],
+      "size": [140, 60],
+      "tag": "Offline-First"
+    },
+    {
+      "id": "bot",
+      "type": "backend",
+      "label": "Bot de WhatsApp",
+      "sublabel": "Node.js Webhook & QR",
+      "pos": [490, 480],
+      "size": [140, 60]
+    },
+    {
+      "id": "auth",
+      "type": "security",
+      "label": "Supabase Auth",
+      "sublabel": "JWT & Sessions",
+      "pos": [730, 120],
+      "size": [140, 60],
+      "tag": "Seguridad"
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "PostgreSQL Cloud",
+      "sublabel": "Supabase DB + RLS",
+      "pos": [730, 300],
+      "size": [140, 60]
+    },
+    {
+      "id": "storage",
+      "type": "cloud",
+      "label": "Supabase Storage",
+      "sublabel": "Adjuntos y Plantillas",
+      "pos": [730, 480],
+      "size": [140, 60]
+    },
+    {
+      "id": "whatsapp",
+      "type": "external",
+      "label": "Red WhatsApp",
+      "sublabel": "Grupos de Guardia",
+      "pos": [490, 640],
+      "size": [140, 60]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Entorno Local del Dispositivo (Offline)",
+      "wraps": ["ui", "templates", "exporter", "local_db", "bot"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Infraestructura Supabase Cloud",
+      "wraps": ["auth", "db", "storage"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "users-to-ui",
+      "from": "users",
+      "to": "ui",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "ui-to-templates",
+      "from": "ui",
+      "to": "templates",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "ui-to-db",
+      "from": "ui",
+      "to": "local_db"
+    },
+    {
+      "id": "ui-to-exporter",
+      "from": "ui",
+      "to": "exporter",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "local-to-cloud",
+      "from": "local_db",
+      "to": "db",
+      "label": "Replicación",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "auth-to-db",
+      "from": "auth",
+      "to": "db",
+      "label": "Políticas RLS",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 30
+    },
+    {
+      "id": "db-to-storage",
+      "from": "db",
+      "to": "storage",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "local-to-bot",
+      "from": "local_db",
+      "to": "bot",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "bot-to-wa",
+      "from": "bot",
+      "to": "whatsapp",
+      "label": "Despacho",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 30
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Capa Cliente (Offline-First)",
+      "items": [
+        "PWA interactiva desarrollada con React 19 y Vite",
+        "Motor propio de parseo de plantillas con sintaxis declarativa",
+        "Base de datos local RxDB (IndexedDB) para operación sin internet"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Capa Cloud (Supabase)",
+      "items": [
+        "PostgreSQL con políticas de seguridad a nivel de fila (RLS)",
+        "Autenticación JWT para funcionarios y administradores",
+        "Replicación en tiempo real cuando hay conexión disponible"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Integración y Exportación",
+      "items": [
+        "Exportación estructurada directa a documentos Microsoft Word (.docx)",
+        "Gateway local con WhatsApp Web para despacho de novedades operativas"
+      ]
+    }
+  ]
+}

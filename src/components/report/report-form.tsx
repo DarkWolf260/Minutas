@@ -166,7 +166,7 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
 
         handleSubmit(handleFormSubmit, (errors) => {
           logger.error('Form validation errors', new Error('Validation failed'), { feature: 'ReportForm', metadata: { errors } });
-          toast.success('Por favor, corrige los errores en el formulario antes de guardar.');
+          toast.error('Por favor, corrige los errores en el formulario antes de guardar.');
         })();
       },
       save: () => {
