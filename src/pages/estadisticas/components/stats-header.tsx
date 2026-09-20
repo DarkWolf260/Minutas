@@ -10,8 +10,22 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-interface StatsHeaderProps {
-  hook: any;
+import type { UseEstadisticasReturn } from '@/hooks/estadisticas';
+
+export interface StatsHeaderProps {
+  hook: Pick<
+    UseEstadisticasReturn,
+    | 'mes'
+    | 'setMes'
+    | 'anio'
+    | 'setAnio'
+    | 'modo'
+    | 'setModo'
+    | 'aniosDisponibles'
+    | 'nombresMeses'
+    | 'manejarMesAnterior'
+    | 'manejarMesSiguiente'
+  >;
 }
 
 export const StatsHeader = ({ hook }: StatsHeaderProps) => {

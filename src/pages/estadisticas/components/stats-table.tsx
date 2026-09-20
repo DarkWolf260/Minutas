@@ -8,11 +8,12 @@ import {
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { STATISTICS_SECTIONS } from '@/lib/constants/statistics';
+import type { UseEstadisticasReturn } from '@/hooks/estadisticas';
 import { StatsSectionRow } from './stats-section-row';
 import { StatsTotalRow } from './stats-total-row';
 
-interface StatsTableProps {
-  hook: any;
+export interface StatsTableProps {
+  hook: Pick<UseEstadisticasReturn, 'arregloDias' | 'estadisticas'>;
 }
 
 export const StatsTable = ({ hook }: StatsTableProps) => {

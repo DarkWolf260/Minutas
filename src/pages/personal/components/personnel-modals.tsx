@@ -1,9 +1,22 @@
 import React from 'react';
 import { AddEditPersonnelDialog } from '@/components/personnel/add-edit-personnel-dialog';
 import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
+import type { UsePersonalReturn } from '@/hooks/personal';
 
-interface PersonnelModalsProps {
-  hook: any;
+export interface PersonnelModalsProps {
+  hook: Pick<
+    UsePersonalReturn,
+    | 'esDialogOpen'
+    | 'miembroEditando'
+    | 'roles'
+    | 'departamentos'
+    | 'manejarGuardar'
+    | 'manejarCancelar'
+    | 'esDialogOpenConfirmarEliminarMasivo'
+    | 'setEsDialogOpenConfirmarEliminarMasivo'
+    | 'idsSeleccionados'
+    | 'manejarEliminacionMasiva'
+  >;
 }
 
 export const PersonnelModals = ({ hook }: PersonnelModalsProps) => {

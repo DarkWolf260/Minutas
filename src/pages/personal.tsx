@@ -27,22 +27,22 @@ function PersonnelPageContent() {
 
   return (
     <div className="flex flex-col w-full md:flex-1 md:flex md:min-h-0 md:overflow-hidden relative bg-background">
-      {/* Barra de Acciones Masivas (DIP) */}
+      {/* Barra de Acciones Masivas */}
       <MassActionsBar 
         selectedCount={idsSeleccionados.length} 
         onDeleteRequest={() => setEsDialogOpenConfirmarEliminarMasivo(true)} 
       />
 
       <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-28 sm:pb-6 flex flex-col md:flex-1 md:min-h-0">
-        {/* Cabecera (SRP) */}
+        {/* Cabecera */}
         <PersonnelHeader />
 
-        {/* Contenido de Pestañas (OCP) */}
+        {/* Contenido de Pestañas */}
         <div className="w-full flex flex-col gap-6 md:flex-1 md:min-h-0">
           <PersonnelTabs hook={hook} />
         </div>
 
-        {/* Capa de Modales (SRP) */}
+        {/* Modales y Diálogos */}
         <PersonnelModals hook={hook} />
       </div>
     </div>

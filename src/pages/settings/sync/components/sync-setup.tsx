@@ -7,9 +7,23 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { SyncHeader } from './sync-header';
+import type { UseSyncPaginaReturn } from '@/hooks/sync';
 
-interface SyncSetupProps {
-  hook: any;
+export interface SyncSetupProps {
+  hook: Pick<
+    UseSyncPaginaReturn,
+    | 'estaAutenticado'
+    | 'usuario'
+    | 'signOut'
+    | 'modo'
+    | 'setModo'
+    | 'nombreDispositivo'
+    | 'setNombreDispositivo'
+    | 'codigoUnion'
+    | 'setCodigoUnion'
+    | 'manejarConfiguracion'
+    | 'sincronizando'
+  >;
   setEsQRScannerOpen: (v: boolean) => void;
 }
 
@@ -33,7 +47,7 @@ export const SyncSetup = ({ hook, setEsQRScannerOpen }: SyncSetupProps) => {
     <div className="max-w-2xl mx-auto w-full px-4 pt-8 pb-4 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <SyncHeader modoSimple={true} />
 
-      {/* Autenticación (SRP) */}
+      {/* Estado de Cuenta y Autenticación */}
       <div className="space-y-4">
         <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Cuenta</Label>
         {!estaAutenticado ? (
@@ -76,7 +90,7 @@ export const SyncSetup = ({ hook, setEsQRScannerOpen }: SyncSetupProps) => {
         )}
       </div>
 
-      {/* Selección de Modo (OCP) */}
+      {/* Selección de Modo de Dispositivo */}
       <div className="space-y-4">
         <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Modo de dispositivo</Label>
         <div className="grid grid-cols-2 gap-4">

@@ -14,9 +14,29 @@ import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { NovedadManual } from '@/hooks/reporte-final/use-manual-novedades';
 import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
+import type { UseReporteFinalReturn } from '@/hooks/reporte-final';
 
-interface ReporteGenerarProps {
-  hook: any;
+export interface ReporteGenerarProps {
+  hook: Pick<
+    UseReporteFinalReturn,
+    | 'estaCargado'
+    | 'reportesFinalizados'
+    | 'estadisticasLocal'
+    | 'setEstadisticasLocal'
+    | 'manejarCalcularEstadisticas'
+    | 'novedadesManualesOrdenadas'
+    | 'idEditandoManual'
+    | 'nuevaNovedadFecha'
+    | 'setNuevaNovedadFecha'
+    | 'nuevaNovedadHora'
+    | 'setNuevaNovedadHora'
+    | 'nuevaNovedadTexto'
+    | 'setNuevaNovedadTexto'
+    | 'manejarAgregarNovedadManual'
+    | 'manejarEditarNovedadManual'
+    | 'manejarCancelarEdicion'
+    | 'manejarEliminarNovedadManual'
+  >;
 }
 
 export function ReporteGenerar({ hook }: ReporteGenerarProps) {

@@ -22,7 +22,7 @@ export default function SyncPage() {
 
   const [esQRScannerOpen, setEsQRScannerOpen] = useState(false);
 
-  // Vista de configuración (SRP)
+  // Vista de configuración cuando no está sincronizado
   if (!estaConfigurado) {
     return (
       <div className="flex flex-col h-full bg-background overflow-y-auto px-4 pb-32">
@@ -77,7 +77,7 @@ export default function SyncPage() {
             </CardContent>
           </Card>
 
-          {/* Sección de Vinculación (QR Directo - SRP) */}
+          {/* Sección de Vinculación (QR Directo) */}
           {hook.esPrincipal && (
             <SyncQRDisplay 
               channelCode={hook.configSync.channelCode || ''} 
@@ -85,7 +85,7 @@ export default function SyncPage() {
             />
           )}
 
-          {/* Bandeja de Entrada (SRP) */}
+          {/* Bandeja de Entrada */}
           {hook.esPrincipal && <SyncInbox hook={hook} />}
 
           {/* Guía para Secundarios */}

@@ -16,10 +16,10 @@ export default function EstadisticasPage() {
   return (
     <ScrollArea className="h-full w-full bg-background" type="always">
       <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-32 sm:pb-16 space-y-8 h-full flex flex-col">
-        {/* Cabecera y Filtros (SRP) */}
+        {/* Cabecera y Controles de Filtro */}
         <StatsHeader hook={hook} />
 
-        {/* Card Principal de Datos (OCP) */}
+        {/* Contenedor Principal de Estadística Mensual */}
         <Card className="overflow-hidden border-2 shadow-sm">
           <CardHeader className="bg-muted/30 py-4 border-b">
             <CardTitle className="text-lg font-bold text-center uppercase tracking-wide flex flex-col gap-1">
@@ -30,7 +30,7 @@ export default function EstadisticasPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 overflow-hidden">
-            {/* Tabla de Datos (SRP) */}
+            {/* Grilla de Datos Diarios */}
             <StatsTable hook={hook} />
           </CardContent>
         </Card>

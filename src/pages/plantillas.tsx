@@ -38,14 +38,14 @@ export default function PlantillasPage() {
         className="flex-1 flex flex-col md:overflow-hidden"
       >
         <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-32 sm:pb-10 flex flex-col md:flex-1 md:min-h-0">
-          {/* Cabecera (SRP) */}
+          {/* Cabecera */}
           <PlantillasHeader />
 
           <TabsContent
             value="editor"
             className="mt-0 focus-visible:outline-none ring-offset-background data-[state=active]:flex data-[state=active]:flex-col sm:data-[state=active]:flex-row md:data-[state=active]:flex-1 md:min-h-0 bg-transparent animate-in fade-in slide-in-from-left-4 duration-500 ease-in-out gap-6"
           >
-            {/* Sidebar (SRP) */}
+            {/* Sidebar de Selección y Acciones */}
             <PlantillasSidebar hook={hook} />
 
             <main
@@ -114,7 +114,7 @@ export default function PlantillasPage() {
         </div>
       </Tabs>
 
-      {/* Capa de Modales (SRP) */}
+      {/* Modales y Diálogos */}
       <PlantillasModals hook={hook} />
     </div>
   );

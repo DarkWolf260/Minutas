@@ -123,3 +123,5 @@ export function useEstadisticas() {
     manejarMesSiguiente,
   };
 }
+
+export type UseEstadisticasReturn = ReturnType<typeof useEstadisticas>;

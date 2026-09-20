@@ -17,9 +17,17 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { QRScanner } from '@/components/sync/qr-scanner';
+import type { UseSyncPaginaReturn } from '@/hooks/sync';
 
-interface SyncModalsProps {
-  hook: any;
+export interface SyncModalsProps {
+  hook: Pick<
+    UseSyncPaginaReturn,
+    | 'esConfirmarReinicioOpen'
+    | 'setEsConfirmarReinicioOpen'
+    | 'esPrincipal'
+    | 'reiniciarSync'
+    | 'setCodigoUnion'
+  >;
   esQRScannerOpen: boolean;
   setEsQRScannerOpen: (v: boolean) => void;
 }

@@ -18,7 +18,7 @@ export function MobileNav() {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/90 backdrop-blur-md px-3 sm:hidden shadow-sm shadow-black/5 animate-in slide-in-from-top duration-500 ease-out">
-      {/* Branding (SRP) */}
+      {/* Identidad / Logotipo */}
       <NavBrand />
 
       <div className="flex items-center gap-2">
@@ -28,7 +28,7 @@ export function MobileNav() {
         {/* Notificaciones */}
         <NotificationBell />
 
-        {/* Menú de Usuario (SRP) */}
+        {/* Menú de Usuario */}
         <NavUserMenu
           profile={profile}
           analyst={analyst}

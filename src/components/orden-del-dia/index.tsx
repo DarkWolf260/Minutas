@@ -21,7 +21,7 @@ import { ActivityItem } from './activity-item';
 import { NoteItem } from './note-item';
 import { ResultDialog } from './result-dialog';
 import { AddActivityForm } from './add-activity-form';
-import { useOrdenDelDia, Nota } from '@/hooks/orden-del-dia';
+import { useOrdenDelDia, type UseOrdenDelDiaReturn, Nota } from '@/hooks/orden-del-dia';
 
 interface OrdenDelDiaFormProps {
   selectedGuard: string;
@@ -77,7 +77,24 @@ export const OrdenDelDiaForm = forwardRef<OrdenDelDiaFormRef, OrdenDelDiaFormPro
   }
 );
 
-function SeccionDistribucionPersonal({ hook }: { hook: any }) {
+interface SeccionDistribucionPersonalProps {
+  hook: Pick<
+    UseOrdenDelDiaReturn,
+    | 'sensores'
+    | 'collisionDetection'
+    | 'manejarDragStart'
+    | 'manejarDragEnd'
+    | 'roles'
+    | 'personalAsignado'
+    | 'manejarUpdatePersonalRol'
+    | 'esJefeEncargado'
+    | 'setEsJefeEncargado'
+    | 'idActivoDnd'
+    | 'miembroActivoDnd'
+  >;
+}
+
+function SeccionDistribucionPersonal({ hook }: SeccionDistribucionPersonalProps) {
   const { 
     sensores, 
     collisionDetection, 
@@ -161,7 +178,21 @@ function SeccionDistribucionPersonal({ hook }: { hook: any }) {
   );
 }
 
-function SeccionActividadesDia({ hook }: { hook: any }) {
+interface SeccionActividadesDiaProps {
+  hook: Pick<
+    UseOrdenDelDiaReturn,
+    | 'manejarRestaurarActividades'
+    | 'manejarAñadirActividad'
+    | 'idActividadEditando'
+    | 'actividades'
+    | 'manejarGuardarEdicionActividad'
+    | 'manejarCancelarEdicionActividad'
+    | 'manejarEditarActividad'
+    | 'manejarEliminarActividad'
+  >;
+}
+
+function SeccionActividadesDia({ hook }: SeccionActividadesDiaProps) {
   const { 
     manejarRestaurarActividades, 
     manejarAñadirActividad, 
@@ -169,7 +200,6 @@ function SeccionActividadesDia({ hook }: { hook: any }) {
     actividades, 
     manejarGuardarEdicionActividad, 
     manejarCancelarEdicionActividad, 
-    manejarEditActivity, 
     manejarEditarActividad,
     manejarEliminarActividad 
   } = hook;
@@ -215,7 +245,18 @@ function SeccionActividadesDia({ hook }: { hook: any }) {
   );
 }
 
-function SeccionNotasAdm({ hook }: { hook: any }) {
+interface SeccionNotasAdmProps {
+  hook: Pick<
+    UseOrdenDelDiaReturn,
+    | 'manejarRestaurarNotas'
+    | 'manejarAñadirNota'
+    | 'notas'
+    | 'manejarUpdateNota'
+    | 'manejarEliminarNota'
+  >;
+}
+
+function SeccionNotasAdm({ hook }: SeccionNotasAdmProps) {
   const { 
     manejarRestaurarNotas, 
     manejarAñadirNota, 

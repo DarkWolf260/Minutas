@@ -96,3 +96,4 @@ export function usePersonnelForm({ member, roles, departments, onSave, open }: U
   };
 }
 
+export type UsePersonnelFormReturn = ReturnType<typeof usePersonnelForm>;

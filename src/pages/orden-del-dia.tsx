@@ -41,7 +41,7 @@ export default function OrdenDelDiaPage() {
     <div className="flex flex-col min-h-screen md:h-full bg-background overflow-y-auto md:overflow-hidden relative">
       <div className="flex-1 flex flex-col md:h-full md:overflow-hidden">
         <div className="pt-6 pb-24 md:pb-6 px-4 sm:px-6 lg:px-10 w-full max-w-[1600px] mx-auto md:h-full flex flex-col gap-6 min-h-0">
-          {/* Cabecera (SRP) */}
+          {/* Cabecera */}
           <OrdenHeader
             guardiaAbierta={guardiaAbierta}
             idGuardiaSeleccionada={idGuardiaSeleccionada}

@@ -5,9 +5,16 @@ import { Trash2, Users, Calendar, Clock, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import type { UseReporteFinalReturn } from '@/hooks/reporte-final';
 
-interface ReporteHistorialProps {
-  hook: any;
+export interface ReporteHistorialProps {
+  hook: Pick<
+    UseReporteFinalReturn,
+    | 'estaCargado'
+    | 'reportesGuardadosOrdenados'
+    | 'manejarVerReporteGuardado'
+    | 'manejarEliminarReporteGuardado'
+  >;
 }
 
 export function ReporteHistorial({ hook }: ReporteHistorialProps) {

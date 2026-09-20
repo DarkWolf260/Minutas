@@ -257,3 +257,4 @@ export function usePlantillas() {
   };
 }
 
+export type UsePlantillasReturn = ReturnType<typeof usePlantillas>;

@@ -21,9 +21,10 @@ import {
   ChevronDown 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { UsePersonnelFormReturn } from './use-personnel-form';
 
 interface PersonnelFormFieldsProps {
-  hook: any;
+  hook: UsePersonnelFormReturn;
   roles: StaffRole[];
   departments: Department[];
 }

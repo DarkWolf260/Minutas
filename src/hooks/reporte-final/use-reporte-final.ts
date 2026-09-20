@@ -133,3 +133,4 @@ export function useReporteFinal() {
   };
 }
 
+export type UseReporteFinalReturn = ReturnType<typeof useReporteFinal>;

@@ -42,7 +42,7 @@ export default function ReporteFinalPage() {
       <Tabs value={tabActiva} onValueChange={setTabActiva} className="flex-1 flex flex-col md:overflow-hidden">
         <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-32 sm:pb-10 flex flex-col md:flex-1 md:min-h-0">
           
-          {/* Header Modular (SRP) */}
+          {/* Cabecera */}
           <ReporteHeader hook={hook} isMobile={isMobile} />
 
           <TabsContent
@@ -61,7 +61,7 @@ export default function ReporteFinalPage() {
         </div>
       </Tabs>
 
-      {/* Modales y Diálogos Centralizados (SRP) */}
+      {/* Modales y Diálogos */}
       <ReporteModals hook={hook} isMobile={isMobile} />
     </div>
   );

@@ -11,8 +11,24 @@ import type { Report, Template } from '@/lib/types';
 import { useSettings } from '@/hooks/configuracion';
 import { getReportDateTime, findValueInform_data } from '@/lib/report-sorter';
 
-interface NovedadSidebarProps {
-  hook: any;
+import type { UseNovedadesReturn } from '@/hooks/novedades';
+
+export interface NovedadSidebarProps {
+  hook: Pick<
+    UseNovedadesReturn,
+    | 'idReporteSeleccionado'
+    | 'creandoReporte'
+    | 'guardiaAbierta'
+    | 'setEsDialogOpenCrear'
+    | 'busqueda'
+    | 'setBusqueda'
+    | 'ordenamiento'
+    | 'setOrdenamiento'
+    | 'reportesFiltrados'
+    | 'manejarSeleccionarReporte'
+    | 'manejarExportarTodasWord'
+    | 'templates'
+  >;
   isMobile: boolean;
 }
 
@@ -307,8 +323,8 @@ export const NovedadSidebar = ({ hook, isMobile }: NovedadSidebarProps) => {
 
     // Sort all filtered reports chronologically (ascending)
     const sorted = [...reportesFiltrados].sort((a, b) => {
-      const timeA = getReportDateTime(a)?.getTime() || a.timestamp || 0;
-      const timeB = getReportDateTime(b)?.getTime() || b.timestamp || 0;
+      const timeA = getReportDateTime(a)?.getTime() || (a.timestamp ? new Date(a.timestamp).getTime() : 0);
+      const timeB = getReportDateTime(b)?.getTime() || (b.timestamp ? new Date(b.timestamp).getTime() : 0);
       return timeA - timeB;
     });
 

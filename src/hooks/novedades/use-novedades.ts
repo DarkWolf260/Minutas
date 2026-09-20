@@ -519,3 +519,4 @@ export function useNovedades() {
   };
 }
 
+export type UseNovedadesReturn = ReturnType<typeof useNovedades>;

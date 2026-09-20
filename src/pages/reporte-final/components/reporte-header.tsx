@@ -3,9 +3,17 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft, RotateCcw, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { UseReporteFinalReturn } from '@/hooks/reporte-final';
 
-interface ReporteHeaderProps {
-  hook: any;
+export interface ReporteHeaderProps {
+  hook: Pick<
+    UseReporteFinalReturn,
+    | 'tabActiva'
+    | 'reportesGuardadosOrdenados'
+    | 'manejarCorregirFechasHistorial'
+    | 'manejarGenerarReporte'
+    | 'estaCargado'
+  >;
   isMobile: boolean;
 }
 

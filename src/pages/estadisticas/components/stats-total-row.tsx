@@ -1,8 +1,9 @@
 import React from 'react';
 import { TableRow, TableCell } from '@/components/ui/table';
+import type { UseEstadisticasReturn } from '@/hooks/estadisticas';
 
-interface StatsTotalRowProps {
-  hook: any;
+export interface StatsTotalRowProps {
+  hook: Pick<UseEstadisticasReturn, 'arregloDias' | 'estadisticas'>;
 }
 
 export const StatsTotalRow = ({ hook }: StatsTotalRowProps) => {

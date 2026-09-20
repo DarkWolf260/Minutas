@@ -25,9 +25,29 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import type { UseReporteFinalReturn } from '@/hooks/reporte-final';
 
-interface ReporteModalsProps {
-  hook: any;
+export interface ReporteModalsProps {
+  hook: Pick<
+    UseReporteFinalReturn,
+    | 'esDialogOpenResultado'
+    | 'setEsDialogOpenResultado'
+    | 'reporteGenerado'
+    | 'textoBotonCopiar'
+    | 'manejarCopiarAlPortapapeles'
+    | 'setEsDialogOpenConfirmarGuardar'
+    | 'esDialogOpenVista'
+    | 'setEsDialogOpenVista'
+    | 'reporteGuardadoSeleccionado'
+    | 'manejarCopiarReporte'
+    | 'esDialogOpenConfirmarGuardar'
+    | 'manejarFinalizarYGuardar'
+    | 'esDialogOpenConfirmarEliminar'
+    | 'setEsDialogOpenConfirmarEliminar'
+    | 'manejarConfirmarEliminacionHistorial'
+    | 'manejarExportarWord'
+    | 'manejarExportarWordHistorial'
+  >;
   isMobile: boolean;
 }
 
@@ -170,7 +190,7 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
             <SheetHeader className="pb-4 border-b">
               <SheetTitle className="text-xl font-bold line-clamp-1">{reporteGuardadoSeleccionado?.summary}</SheetTitle>
               <SheetDescription className="flex items-center gap-2">
-                <Badge variant="outline" className="font-bold">Grupo {reporteGuardadoSeleccionado?.guardGroup}</Badge>
+                <Badge variant="outline" className="font-bold">Grupo {reporteGuardadoSeleccionado?.guard_group}</Badge>
                 <span className="text-[10px] uppercase font-bold text-muted-foreground">
                   {reporteGuardadoSeleccionado && format(new Date(reporteGuardadoSeleccionado.date), 'dd/MM/yyyy', { locale: es })}
                 </span>
@@ -217,7 +237,7 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
                     <DialogTitle className="text-xl font-bold">{reporteGuardadoSeleccionado?.summary}</DialogTitle>
                     <DialogDescription className="flex items-center gap-3 mt-0.5">
                       <Badge variant="outline" className="font-bold border-primary/20 text-primary bg-primary/5">
-                        Grupo {reporteGuardadoSeleccionado?.guardGroup}
+                        Grupo {reporteGuardadoSeleccionado?.guard_group}
                       </Badge>
                       <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
                         {reporteGuardadoSeleccionado && format(new Date(reporteGuardadoSeleccionado.date), 'dd/MM/yyyy', { locale: es })}

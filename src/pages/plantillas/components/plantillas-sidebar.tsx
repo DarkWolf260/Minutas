@@ -13,9 +13,30 @@ import {
 import { cn, getTemplateIcon } from '@/lib/utils';
 import { parseTemplate } from '@/lib/template-parser';
 import type { Template } from '@/lib/types';
+import type { UsePlantillasReturn } from '@/hooks/plantillas';
 
-interface PlantillasSidebarProps {
-  hook: any;
+export interface PlantillasSidebarProps {
+  hook: Pick<
+    UsePlantillasReturn,
+    | 'idPlantillaSeleccionada'
+    | 'setIdPlantillaSeleccionada'
+    | 'templates'
+    | 'manejarClickSubirLocal'
+    | 'inputArchivoRef'
+    | 'manejarCambioArchivo'
+    | 'manejarClickEditarContenido'
+    | 'estaAutenticado'
+    | 'isAdmin'
+    | 'isCloud'
+    | 'manejarSubirANube'
+    | 'estaSubiendo'
+    | 'manejarClickEliminar'
+    | 'sincronizarDesdeNube'
+    | 'estaSincronizando'
+    | 'manejarDescargarTodasTXT'
+    | 'manejarDescargarBackupJSON'
+    | 'manejarDescargarPlantilla'
+  >;
 }
 
 export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {

@@ -112,7 +112,7 @@ export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewer
     }
   };
 
-  // Estados Excepcionales (SRP)
+  // Estados de carga, vacío o error
   if (!report) return <ViewerEmpty />;
   if (!isLoaded) return <ViewerLoading />;
   if (!template) return <ViewerError report={report} onDelete={onDelete} />;

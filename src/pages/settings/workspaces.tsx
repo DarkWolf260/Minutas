@@ -31,7 +31,7 @@ export default function WorkspacesPage() {
     <ScrollArea className="h-full w-full" type="always">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-10 py-8 pb-32 sm:pb-16 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-        {/* Header section (SRP) */}
+        {/* Cabecera */}
         <WorkspacesHeader />
 
         <Card className="shadow-lg border-muted/50">
@@ -62,7 +62,7 @@ export default function WorkspacesPage() {
               })}
             </div>
 
-            {/* Controles de Acción (SRP) */}
+            {/* Controles de Creación e Importación */}
             <WorkspaceControls 
               onCreate={createWorkspace} 
               onImport={importWorkspace} 

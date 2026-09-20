@@ -10,8 +10,31 @@ import { StructureManager } from '@/components/structure/structure-manager';
 import { GuardAssignmentPanel } from '@/components/personnel/guard-assignment-panel';
 import { UnitsManager } from '@/components/personnel/units-manager';
 
-interface PersonnelTabsProps {
-  hook: any;
+import type { UsePersonalReturn } from '@/hooks/personal';
+
+export interface PersonnelTabsProps {
+  hook: Pick<
+    UsePersonalReturn,
+    | 'tabActiva'
+    | 'setTabActiva'
+    | 'setIdsSeleccionados'
+    | 'personal'
+    | 'departamentos'
+    | 'roles'
+    | 'guardias'
+    | 'añadirMiembros'
+    | 'manejarAñadirNuevo'
+    | 'manejarEditar'
+    | 'manejarEliminar'
+    | 'manejarVerHistorial'
+    | 'idsSeleccionados'
+    | 'guardarRoles'
+    | 'guardarDepartamentos'
+    | 'guardarPersonal'
+    | 'rolesCargados'
+    | 'departamentosCargados'
+    | 'guardarGuardias'
+  >;
 }
 
 export const PersonnelTabs = ({ hook }: PersonnelTabsProps) => {

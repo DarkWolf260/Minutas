@@ -54,7 +54,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useDirecciones } from '@/hooks/direcciones';
+import { useDirecciones, type UseDireccionesReturn } from '@/hooks/direcciones';
 
 const LOCATION_TYPE_CONFIG: Record<string, { label: string; className: string }> = {
   centro_asistencial: {
@@ -156,7 +156,27 @@ function CabeceraDirecciones({ alAbrirForm }: { alAbrirForm: () => void }) {
   );
 }
 
-function ListaDirecciones({ hook }: { hook: any }) {
+interface ListaDireccionesProps {
+  hook: Pick<
+    UseDireccionesReturn,
+    | 'tabActiva'
+    | 'busqueda'
+    | 'setBusqueda'
+    | 'filtroMunicipio'
+    | 'setFiltroMunicipio'
+    | 'municipiosUnicos'
+    | 'direccionesFiltradas'
+    | 'seleccionadaParaMapa'
+    | 'setSeleccionadaParaMapa'
+    | 'setTabActiva'
+    | 'manejarAbrirForm'
+    | 'manejarCopiarDireccion'
+    | 'setDireccionAEliminar'
+    | 'idCopiado'
+  >;
+}
+
+function ListaDirecciones({ hook }: ListaDireccionesProps) {
   const { 
     tabActiva, 
     busqueda, 
@@ -402,7 +422,14 @@ function ListaDirecciones({ hook }: { hook: any }) {
   );
 }
 
-function MapaDirecciones({ hook }: { hook: any }) {
+interface MapaDireccionesProps {
+  hook: Pick<
+    UseDireccionesReturn,
+    'tabActiva' | 'seleccionadaParaMapa' | 'direcciones' | 'manejarClickMapa'
+  >;
+}
+
+function MapaDirecciones({ hook }: MapaDireccionesProps) {
   const { tabActiva, seleccionadaParaMapa, direcciones, manejarClickMapa } = hook;
 
   return (
@@ -434,7 +461,21 @@ function MapaDirecciones({ hook }: { hook: any }) {
   );
 }
 
-function ModalesDirecciones({ hook }: { hook: any }) {
+interface ModalesDireccionesProps {
+  hook: Pick<
+    UseDireccionesReturn,
+    | 'esFormOpen'
+    | 'manejarCerrarForm'
+    | 'manejarGuardarDireccion'
+    | 'direccionEditando'
+    | 'coordenadasIniciales'
+    | 'direccionAEliminar'
+    | 'setDireccionAEliminar'
+    | 'manejarConfirmarEliminacion'
+  >;
+}
+
+function ModalesDirecciones({ hook }: ModalesDireccionesProps) {
   const { 
     esFormOpen, 
     manejarCerrarForm, 

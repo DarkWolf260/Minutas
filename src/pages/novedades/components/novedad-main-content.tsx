@@ -3,9 +3,23 @@ import { FileText } from 'lucide-react';
 import { ReportViewer } from '@/components/report/report-viewer';
 import { ReportGenerator } from '@/components/report/report-generator';
 import { cn } from '@/lib/utils';
+import type { UseNovedadesReturn } from '@/hooks/novedades';
 
-interface NovedadMainContentProps {
-  hook: any;
+export interface NovedadMainContentProps {
+  hook: Pick<
+    UseNovedadesReturn,
+    | 'creandoReporte'
+    | 'configs'
+    | 'datosBorradorInicial'
+    | 'manejarCancelarCreacion'
+    | 'manejarGuardarNuevoReporte'
+    | 'reporteSeleccionado'
+    | 'updateReport'
+    | 'setReporteAEliminar'
+    | 'generatorRef'
+    | 'idReporteSeleccionado'
+    | 'manejarSeleccionarReporte'
+  >;
 }
 
 export const NovedadMainContent = ({ hook }: NovedadMainContentProps) => {

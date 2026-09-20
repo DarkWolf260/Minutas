@@ -79,14 +79,14 @@ export function UnitsManager() {
           <ScrollArea className="md:flex-1" type="always">
             <div className="p-4 sm:p-8 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-start">
-                {/* Formulario (SRP) */}
+                {/* Formulario */}
                 <UnitForm 
                   newUnitName={newUnitName} 
                   setNewUnitName={setNewUnitName} 
                   onAdd={handleAddUnit} 
                 />
 
-                {/* Listado (SRP) */}
+                {/* Listado */}
                 <UnitList 
                   units={localUnits} 
                   onDeleteRequest={setConfirmDeleteUnit} 

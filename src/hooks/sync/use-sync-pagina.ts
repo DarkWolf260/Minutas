@@ -81,3 +81,5 @@ export function useSyncPagina() {
     setModoImportacion,
   };
 }
+
+export type UseSyncPaginaReturn = ReturnType<typeof useSyncPagina>;

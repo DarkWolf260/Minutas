@@ -225,3 +225,4 @@ export function useOrdenDelDia(selectedGuard: string, periodo: string, initialDa
   };
 }
 
+export type UseOrdenDelDiaReturn = ReturnType<typeof useOrdenDelDia>;

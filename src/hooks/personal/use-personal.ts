@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { usePersonnel } from './use-personnel';
-import { useRoles } from './use-roles';
-import { useDepartments } from './use-departments';
+import { usePersonnel } from '@/hooks/personal/use-personnel';
+import { useRoles } from '@/hooks/personal/use-roles';
+import { useDepartments } from '@/hooks/personal/use-departments';
 import { useGuards } from '@/hooks/guardias';
 import { useUnits } from '@/hooks/configuracion';
 import { useWorkspaceManager } from '@/lib/db/db-context';
@@ -148,3 +148,5 @@ export function usePersonal() {
     guardarGuardias,
   };
 }
+
+export type UsePersonalReturn = ReturnType<typeof usePersonal>;

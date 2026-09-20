@@ -6,9 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import type { UseSyncPaginaReturn } from '@/hooks/sync';
 
-interface SyncInboxProps {
-  hook: any;
+export interface SyncInboxProps {
+  hook: Pick<
+    UseSyncPaginaReturn,
+    | 'configSync'
+    | 'setModoImportacion'
+    | 'reportesBandeja'
+    | 'importarDeBandeja'
+    | 'descartarDeBandeja'
+    | 'sincronizando'
+  >;
 }
 
 export const SyncInbox = ({ hook }: SyncInboxProps) => {

@@ -161,3 +161,5 @@ export function useDirecciones() {
     manejarCopiarDireccion,
   };
 }
+
+export type UseDireccionesReturn = ReturnType<typeof useDirecciones>;

@@ -1,9 +1,17 @@
 import React from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import type { UseNovedadesReturn } from '@/hooks/novedades';
 
-interface MobileHeaderProps {
-  hook: any;
+export interface MobileHeaderProps {
+  hook: Pick<
+    UseNovedadesReturn,
+    | 'estaMontado'
+    | 'creandoReporte'
+    | 'reporteSeleccionado'
+    | 'manejarCancelarCreacion'
+    | 'manejarSeleccionarReporte'
+  >;
   isMobile: boolean;
 }
 

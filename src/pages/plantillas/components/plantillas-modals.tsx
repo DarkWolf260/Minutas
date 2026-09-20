@@ -12,9 +12,19 @@ import {
 } from '@/components/ui/dialog';
 import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
 import { CloudTemplatesDialog } from '@/components/template/cloud-templates-dialog';
+import type { UsePlantillasReturn } from '@/hooks/plantillas';
 
-interface PlantillasModalsProps {
-  hook: any;
+export interface PlantillasModalsProps {
+  hook: Pick<
+    UsePlantillasReturn,
+    | 'plantillaAEliminar'
+    | 'setPlantillaAEliminar'
+    | 'manejarConfirmarEliminacion'
+    | 'esDialogOpenNube'
+    | 'setEsDialogOpenNube'
+    | 'esDialogOpenInfo'
+    | 'setEsDialogOpenInfo'
+  >;
 }
 
 export const PlantillasModals = ({ hook }: PlantillasModalsProps) => {
