@@ -218,9 +218,9 @@ export function parse(tokens: Token[]): TemplateParserResult {
                 let baseLabel = token.label || '';
  
                 const originalLabel = baseLabel;
-                const is_separator = baseLabel.trim() === '""';
                 // firstBraceIdx uses the original label (before any quote stripping)
                 const firstBraceIdx = baseLabel.indexOf('{');
+                const is_separator = !token.is_repeatable && (baseLabel.trim() === '""' || (originalLabel.trim().startsWith('"') && originalLabel.trim().endsWith('"') && firstBraceIdx === -1));
 
                 // If the label starts with ", extract ONLY the quoted portion as the title.
                 // Text after the closing " (and before ]) is ignored as part of the label.
@@ -239,7 +239,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                 if ((firstBraceIdx !== -1 && !token.condition) || is_separator) {
                     isSelfContained = true;
                     if (is_separator) {
-                        baseLabel = 'separator';
+                        baseLabel = originalLabel.trim() === '""' ? 'separator' : baseLabel;
                         inner = [];
                     } else {
                         if (originalLabel.startsWith('"')) {
@@ -378,7 +378,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                 const section: SectionConfig = {
                     id: sectionId,
                     parent_id,
-                    label: (is_separator || token.condition) ? '' : (baseLabel || `Sección ${subSections.length + 1}`),
+                    label: is_separator ? (baseLabel === 'separator' ? '' : baseLabel) : (token.condition ? '' : (baseLabel || `Sección ${subSections.length + 1}`)),
                     is_repeatable,
 
                     field_ids: Array.from(innerResult.subFieldNames),

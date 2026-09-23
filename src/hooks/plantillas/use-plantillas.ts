@@ -164,6 +164,14 @@ export function usePlantillas() {
   const manejarClickEditarContenido = (e: React.MouseEvent, plantilla: Template) => {
     e.stopPropagation();
     setPlantillaEditando(plantilla);
+    setIdPlantillaSeleccionada(plantilla.id);
+    setTabActiva('creator');
+  };
+
+  const manejarClickEditarEnBuilder = (e: React.MouseEvent, plantilla: Template) => {
+    e.stopPropagation();
+    setPlantillaEditando(plantilla);
+    setIdPlantillaSeleccionada(plantilla.id);
     setTabActiva('builder');
   };
 
@@ -244,6 +252,7 @@ export function usePlantillas() {
     manejarDescargarTodasTXT,
     manejarDescargarBackupJSON,
     manejarClickEditarContenido,
+    manejarClickEditarEnBuilder,
     manejarSubirANube,
     manejarConfirmarEliminacion,
     manejarActualizarContenidoPlantilla,

@@ -24,8 +24,8 @@
     "semantic_hash": ""
   },
   "ast.json": {
-    "mtime": 1789961247.7538393,
-    "seen": 1789961279.4746804,
+    "mtime": 1790025085.817135,
+    "seen": 1790025129.7785692,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -54,8 +54,8 @@
     "semantic_hash": ""
   },
   "report.json": {
-    "mtime": 1789961247.7528396,
-    "seen": 1789961279.4754145,
+    "mtime": 1790025085.8161361,
+    "seen": 1790025129.7792203,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -600,9 +600,9 @@
     "semantic_hash": ""
   },
   "src/components/template/template-editor.tsx": {
-    "mtime": 1789917362.0525024,
-    "seen": 1789932802.0633812,
-    "ast_hash": "5245dd92c256f239776b057df4331af3",
+    "mtime": 1790024736.7754347,
+    "seen": 1790025129.795459,
+    "ast_hash": "1611d765cb94b4c7d1edb57f578f2aec",
     "semantic_hash": ""
   },
   "src/components/template/template-preview.tsx": {
@@ -1224,9 +1224,9 @@
     "semantic_hash": ""
   },
   "src/lib/template/parser.ts": {
-    "mtime": 1789917362.1198502,
-    "seen": 1789932802.0635371,
-    "ast_hash": "bf4c0808f7d08b0cbec794fe8e8b118f",
+    "mtime": 1790025072.3204508,
+    "seen": 1790025129.8217325,
+    "ast_hash": "836943d94a4e34fc579e38b86cb3280d",
     "semantic_hash": ""
   },
   "src/lib/template/renderer.ts": {
@@ -1500,9 +1500,9 @@
     "semantic_hash": ""
   },
   "src/pages/plantillas.tsx": {
-    "mtime": 1789959525.4998057,
-    "seen": 1789959651.4140162,
-    "ast_hash": "986281097217afe6189d8b4ec716bf65",
+    "mtime": 1790024748.773354,
+    "seen": 1790025129.829788,
+    "ast_hash": "616eded7d4acb00cddf9f104e7517236",
     "semantic_hash": ""
   },
   "src/pages/plantillas/components/plantillas-header.tsx": {
@@ -1518,9 +1518,9 @@
     "semantic_hash": ""
   },
   "src/pages/plantillas/components/plantillas-sidebar.tsx": {
-    "mtime": 1789936495.8917954,
-    "seen": 1789936881.3569207,
-    "ast_hash": "9c0332ff9a8909cf190f7333b11ed821",
+    "mtime": 1790024790.1950772,
+    "seen": 1790025129.8301435,
+    "ast_hash": "c95240d0f3fa07e90682ed60d8ba5302",
     "semantic_hash": ""
   },
   "src/pages/register/index.tsx": {
@@ -2214,9 +2214,9 @@
     "semantic_hash": ""
   },
   "src/hooks/plantillas/use-plantillas.ts": {
-    "mtime": 1789936489.4941642,
-    "seen": 1789936881.332829,
-    "ast_hash": "9577f88a3f0edb15baf7a628cbd5b10a",
+    "mtime": 1790024767.464514,
+    "seen": 1790025129.8089874,
+    "ast_hash": "f8336d60f1d0fa818c4ff652fe5b7f5a",
     "semantic_hash": ""
   },
   "src/hooks/plantillas/use-sync-templates.ts": {
@@ -2316,21 +2316,21 @@
     "semantic_hash": ""
   },
   "src/components/template/form-creator/__tests__/template-compiler.test.ts": {
-    "mtime": 1789960312.734097,
-    "seen": 1789960392.5467238,
-    "ast_hash": "0c1f7723aa872bc3eda6893db392baaf",
+    "mtime": 1790024937.5307128,
+    "seen": 1790025129.794468,
+    "ast_hash": "8adc415413228a06344b13c17a4aba36",
     "semantic_hash": ""
   },
   "src/components/template/form-creator/field-card.tsx": {
-    "mtime": 1789959202.550717,
-    "seen": 1789959314.978457,
-    "ast_hash": "55254b82e5caf8f573b6146c9f1a0467",
+    "mtime": 1790020984.0570025,
+    "seen": 1790021195.4021297,
+    "ast_hash": "a2d8568be2a34ec0f266c9f5179cab4b",
     "semantic_hash": ""
   },
   "src/components/template/form-creator/form-creator.tsx": {
-    "mtime": 1789961207.91019,
-    "seen": 1789961279.4918892,
-    "ast_hash": "3de4ce75ad3bd943dda7a71aaa163966",
+    "mtime": 1790024823.6712282,
+    "seen": 1790025129.794638,
+    "ast_hash": "6708ca26853c8dfe1c993b11db443c6b",
     "semantic_hash": ""
   },
   "src/components/template/form-creator/index.ts": {
@@ -2340,15 +2340,15 @@
     "semantic_hash": ""
   },
   "src/components/template/form-creator/section-card.tsx": {
-    "mtime": 1789959213.0375488,
-    "seen": 1789959314.9786296,
-    "ast_hash": "b6d6d62c0638892d734297d300ed515f",
+    "mtime": 1790021008.231351,
+    "seen": 1790021195.402301,
+    "ast_hash": "06861e68cb14baad109de16923482f45",
     "semantic_hash": ""
   },
   "src/components/template/form-creator/template-compiler.ts": {
-    "mtime": 1789960994.1658008,
-    "seen": 1789961093.0037906,
-    "ast_hash": "90051817a8192994836ba37de3506049",
+    "mtime": 1790022579.2544477,
+    "seen": 1790022658.84123,
+    "ast_hash": "14ab2d5065f50af79685c6d3adfdb64d",
     "semantic_hash": ""
   }
 }

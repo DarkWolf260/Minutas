@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useImperativeHandle, useState, useEffect } from 'react';
+import { forwardRef, useImperativeHandle, useState, useEffect, useCallback, useMemo } from 'react';
 import { FormProvider } from 'react-hook-form';
 import type {
   Template,
@@ -12,7 +12,6 @@ import { renderFinalReport, resolveTemplateTitle, parseTemplate } from '@/lib/te
 import { logger } from '@/lib/logger';
 import { validateTimeHlv } from '@/lib/utils';
 import { toast } from 'sonner';
-import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useAddresses } from '@/hooks/direcciones';
 import { obtenerCategoriasReporte } from '@/lib/estadisticas-utils';
@@ -59,19 +58,6 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       }
     }, [initialPhotos]);
 
-    const handlePhotosChange = (newPhotos: ReportPhoto[]) => {
-      setPhotos(newPhotos);
-      if (onDataChange) {
-        onDataChange(getValues(), newPhotos);
-      }
-    };
-
-    const handleFormValuesChange = (form_data: form_dataRecord) => {
-      if (onDataChange) {
-        onDataChange(form_data, photos);
-      }
-    };
-
     const supportsPhotos = useMemo(() => {
       if (!template?.content) return false;
       const parsed = parseTemplate(template.content);
@@ -84,7 +70,9 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       config,
       initialData,
       controlledValues,
-      onDataChange: onDataChange ? handleFormValuesChange : undefined
+      onDataChange: onDataChange ? (form_data: form_dataRecord) => {
+        onDataChange(form_data, photos);
+      } : undefined
     });
 
     const {
@@ -105,6 +93,12 @@ export const ReportForm = forwardRef<ReportFormRef, ReportFormProps>(
       isLoaded
     } = hook;
 
+    const handlePhotosChange = useCallback((newPhotos: ReportPhoto[]) => {
+      setPhotos(newPhotos);
+      if (onDataChange) {
+        onDataChange(getValues(), newPhotos);
+      }
+    }, [onDataChange, getValues]);
     const { handleSubmit } = methods;
     const { addresses } = useAddresses();
 
