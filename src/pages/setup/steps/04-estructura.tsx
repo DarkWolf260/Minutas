@@ -7,6 +7,7 @@ import { StructureManager } from '@/components/structure/structure-manager';
 import type { StaffRole, Department } from '@/lib/types';
 import { SetupStepLayout } from './layout';
 import { DEFAULT_DEPARTMENTS, DEFAULT_ROLES, EXTENDED_DEPARTMENTS, EXTENDED_ROLES } from '@/lib/constants/structure';
+import { DEPARTMENT_IDS, generateDepartmentId } from '@/lib/constants/departments';
 
 
 
@@ -34,12 +35,15 @@ export function PasoEstructura({
       setDepartamentos(DEFAULT_DEPARTMENTS);
       setRoles(DEFAULT_ROLES);
     } else {
+      const cemupradId = DEPARTMENT_IDS.CEMUPRAD;
+      const nuevoId = generateDepartmentId(nombreActual);
       const deptsPersonalizados = EXTENDED_DEPARTMENTS.map(d => 
-        d.id === 'cemuprad' ? { ...d, name: nombreActual } : d
+        d.id === cemupradId ? { ...d, id: nuevoId, name: nombreActual } : d
       );
       const rolesPersonalizados = EXTENDED_ROLES.map(r => ({
         ...r,
-        name: r.name.replace('CEMUPRAD', nombreActual)
+        name: r.name.replace('CEMUPRAD', nombreActual),
+        department_scope: r.department_scope.map(scope => scope === cemupradId ? nuevoId : scope)
       }));
       setDepartamentos(deptsPersonalizados);
       setRoles(rolesPersonalizados);

@@ -39,6 +39,26 @@ export interface FormCreatorModel {
 }
 
 /**
+ * Reserved system tags that are dynamically injected at runtime by the system
+ * and must NEVER be treated as interactive form fields in the template creator.
+ */
+export const SYSTEM_TAGS = new Set(['enc', 'pie', 'usuario', 'estatus', 'photos']);
+
+/**
+ * Checks whether a tag, field ID, or label represents a system-controlled special tag
+ * (e.g. Enc, Pie, Usuario, Estatus, photos) or a dot-notation property (e.g. Director.sex).
+ */
+export function isSystemFieldTag(tagOrLabel: string): boolean {
+  if (!tagOrLabel) return false;
+  const rawId = tagOrLabel.replace(/[{}[\]]/g, '').trim().split(/[:|=]/)[0]?.trim() || '';
+  if (!rawId) return false;
+  const clean = sanitizeFieldId(rawId).toLowerCase();
+  if (SYSTEM_TAGS.has(clean)) return true;
+  if (clean.includes('.')) return true;
+  return false;
+}
+
+/**
  * Normalizes a field label to be used inside placeholder tokens {Label:...}
  * Cleans colons, braces, brackets, and extra spaces.
  */
@@ -94,7 +114,10 @@ export function compileFieldToken(field: FormCreatorField): string {
 
   // Default value
   if (field.defaultValue && field.defaultValue.trim()) {
-    parts.push(`default(${field.defaultValue.trim()})`);
+    const cleanDef = field.defaultValue.replace(/[{}]/g, '').trim();
+    if (cleanDef) {
+      parts.push(`default(${cleanDef})`);
+    }
   }
 
   // Text case modifier
@@ -182,25 +205,27 @@ export function extractSectionsFromTemplateText(text: string): FormCreatorSectio
     const plural = sec.plural_title || `${singular}S`;
     const sub = sec.repeatable_item_label || singular;
 
-    const fields: FormCreatorField[] = sec.field_ids.map((fieldId, fIdx) => {
-      const fieldType = parsed.fieldTypes.get(fieldId) || 'text';
-      const options = parsed.templateOptions.get(fieldId)?.map((o) => o.value);
-      const isReq = parsed.requiredFields.get(fieldId) || false;
-      const isFull = parsed.fieldWidths.get(fieldId) || false;
-      const modifier = (parsed.fieldModifiers.get(fieldId)?.[0] as FormCreatorField['modifier']) || 'none';
-      const defaultValue = parsed.defaultValues.get(fieldId);
+    const fields: FormCreatorField[] = (sec.field_ids || [])
+      .filter((fieldId) => !isSystemFieldTag(fieldId))
+      .map((fieldId, fIdx) => {
+        const fieldType = parsed.fieldTypes.get(fieldId) || 'text';
+        const options = parsed.templateOptions.get(fieldId)?.map((o) => o.value);
+        const isReq = parsed.requiredFields.get(fieldId) || false;
+        const isFull = parsed.fieldWidths.get(fieldId) || false;
+        const modifier = (parsed.fieldModifiers.get(fieldId)?.[0] as FormCreatorField['modifier']) || 'none';
+        const defaultValue = parsed.defaultValues.get(fieldId);
 
-      return {
-        id: `sec_f_${idx}_${fIdx}_${Date.now()}`,
-        label: fieldId,
-        type: fieldType as FormCreatorFieldType,
-        required: isReq,
-        isFullWidth: isFull,
-        modifier: modifier,
-        options: options && options.length > 0 ? options : (fieldType === 'dropdown' ? ['Opción 1', 'Opción 2'] : undefined),
-        defaultValue: defaultValue,
-      };
-    });
+        return {
+          id: `sec_f_${idx}_${fIdx}_${Date.now()}`,
+          label: fieldId,
+          type: fieldType as FormCreatorFieldType,
+          required: isReq,
+          isFullWidth: isFull,
+          modifier: modifier,
+          options: options && options.length > 0 ? options : (fieldType === 'dropdown' ? ['Opción 1', 'Opción 2'] : undefined),
+          defaultValue: defaultValue,
+        };
+      });
 
     return {
       id: `sec_${idx}_${Date.now()}`,
@@ -230,6 +255,8 @@ export function getAllFieldsFlat(fields: FormCreatorField[]): FormCreatorField[]
 /**
  * Parses a template text string into an array of FormCreatorField,
  * preserving the exact sequential order of root fields, separators, and repeatable sections.
+ * Automatically excludes special system tags ({Enc}, {pie}, {usuario}, {estatus}, {photos}, etc.)
+ * and derived property tags ({Director.sex}) so they never appear as interactive form fields.
  */
 export function parseTemplateToFields(text: string): FormCreatorField[] {
   if (!text || !text.trim()) return [];
@@ -247,6 +274,12 @@ export function parseTemplateToFields(text: string): FormCreatorField[] {
 
   // Process items in layout order
   parsed.layout.forEach((itemId, idx) => {
+    // Special system tags (Enc, Pie, Usuario, Estatus, photos) and dot-notation property tags
+    // must NOT be turned into user questions/fields in the form creator
+    if (isSystemFieldTag(itemId)) {
+      return;
+    }
+
     const matchedSection = sectionsMap.get(itemId) || sectionsMap.get(itemId.toLowerCase());
 
     if (matchedSection) {
@@ -264,28 +297,30 @@ export function parseTemplateToFields(text: string): FormCreatorField[] {
       const plural = matchedSection.plural_title || `${singular}S`;
       const sub = matchedSection.repeatable_item_label || singular;
 
-      const innerFields: FormCreatorField[] = (matchedSection.field_ids || []).map((innerId: string, fIdx: number) => {
-        processedFieldIds.add(innerId);
-        const rawId = innerId.split('|')[0]?.split(':')[0] || innerId;
-        const cleanLabel = sanitizeFieldId(rawId);
-        const fieldType = parsed.fieldTypes.get(innerId) || parsed.fieldTypes.get(cleanLabel) || 'text';
-        const options = (parsed.templateOptions.get(innerId) || parsed.templateOptions.get(cleanLabel))?.map((o) => o.value);
-        const isReq = parsed.requiredFields.get(innerId) || parsed.requiredFields.get(cleanLabel) || false;
-        const isFull = parsed.fieldWidths.get(innerId) || parsed.fieldWidths.get(cleanLabel) || false;
-        const modifier = ((parsed.fieldModifiers.get(innerId) || parsed.fieldModifiers.get(cleanLabel))?.[0] as FormCreatorField['modifier']) || (innerId.includes('|') ? (innerId.split('|')[1] as any) : 'none');
-        const defaultValue = parsed.defaultValues.get(innerId) || parsed.defaultValues.get(cleanLabel);
+      const innerFields: FormCreatorField[] = (matchedSection.field_ids || [])
+        .filter((innerId: string) => !isSystemFieldTag(innerId))
+        .map((innerId: string, fIdx: number) => {
+          processedFieldIds.add(innerId);
+          const rawId = innerId.split('|')[0]?.split(':')[0] || innerId;
+          const cleanLabel = sanitizeFieldId(rawId);
+          const fieldType = parsed.fieldTypes.get(innerId) || parsed.fieldTypes.get(cleanLabel) || 'text';
+          const options = (parsed.templateOptions.get(innerId) || parsed.templateOptions.get(cleanLabel))?.map((o) => o.value);
+          const isReq = parsed.requiredFields.get(innerId) || parsed.requiredFields.get(cleanLabel) || false;
+          const isFull = parsed.fieldWidths.get(innerId) || parsed.fieldWidths.get(cleanLabel) || false;
+          const modifier = ((parsed.fieldModifiers.get(innerId) || parsed.fieldModifiers.get(cleanLabel))?.[0] as FormCreatorField['modifier']) || (innerId.includes('|') ? (innerId.split('|')[1] as any) : 'none');
+          const defaultValue = parsed.defaultValues.get(innerId) || parsed.defaultValues.get(cleanLabel);
 
-        return {
-          id: `f_inner_${idx}_${fIdx}_${Date.now()}`,
-          label: cleanLabel,
-          type: fieldType as FormCreatorFieldType,
-          required: isReq,
-          isFullWidth: isFull,
-          modifier: modifier || 'none',
-          options: options && options.length > 0 ? options : (fieldType === 'dropdown' ? ['Opción 1', 'Opción 2'] : undefined),
-          defaultValue,
-        };
-      });
+          return {
+            id: `f_inner_${idx}_${fIdx}_${Date.now()}`,
+            label: cleanLabel,
+            type: fieldType as FormCreatorFieldType,
+            required: isReq,
+            isFullWidth: isFull,
+            modifier: modifier || 'none',
+            options: options && options.length > 0 ? options : (fieldType === 'dropdown' ? ['Opción 1', 'Opción 2'] : undefined),
+            defaultValue,
+          };
+        });
 
       fields.push({
         id: `sec_${idx}_${Date.now()}`,
@@ -323,12 +358,17 @@ export function parseTemplateToFields(text: string): FormCreatorField[] {
 
   // Check any orphaned fields that were not in parsed.layout
   parsed.fieldNames.forEach((fieldName, fIdx) => {
+    if (isSystemFieldTag(fieldName)) {
+      return;
+    }
     if (!processedFieldIds.has(fieldName)) {
       const fieldType = parsed.fieldTypes.get(fieldName) || 'text';
+      const defaultValue = parsed.defaultValues.get(fieldName);
       fields.push({
         id: `f_orphan_${fIdx}_${Date.now()}`,
         label: fieldName,
         type: fieldType as FormCreatorFieldType,
+        defaultValue,
       });
     }
   });
@@ -392,6 +432,10 @@ export function compileFormToTemplateString(model: FormCreatorModel): string {
  * Checks if a field's token tag (or separator or section) is present in the template text.
  */
 export function isFieldTagInText(text: string, field: FormCreatorField): boolean {
+  if (isSystemFieldTag(field.label)) {
+    return false;
+  }
+
   if (field.type === 'section') {
     if (field.isRepeatable === false) {
       const title = (field.label || 'SECCIÓN').toUpperCase().trim();
@@ -418,7 +462,7 @@ export function isFieldTagInText(text: string, field: FormCreatorField): boolean
 
   const id = sanitizeFieldId(field.label);
   const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const regex = new RegExp(`\\{\\s*${escaped}(\\s*[:|\\}][^}]*)?\\}`, 'i');
+  const regex = new RegExp(`\\{\\s*${escaped}(?:\\s*[:|][^}\\r\\n]*)?\\}`, 'i');
   return regex.test(text);
 }
 
@@ -467,9 +511,21 @@ export function updateFieldTagInText(
 
   const oldId = sanitizeFieldId(oldLabel);
   const escaped = oldId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const regex = new RegExp(`\\{\\s*${escaped}(\\s*[:|\\}][^}]*)?\\}`, 'gi');
   const newToken = compileFieldToken(newField);
-  return text.replace(regex, newToken);
+  const newLabelUpper = sanitizeFieldId(newField.label).toUpperCase();
+
+  // 1. Try updating a full bullet line "- *OLD:* {Old...}" so the bullet label is also refreshed
+  const lineRegex = new RegExp(
+    `^[ \\t]*-[ \\t]*\\*[^*\\r\\n]+?\\*[ \\t]*:?[ \\t]*\\{\\s*${escaped}(?:\\s*[:|][^}\\r\\n]*)?\\}[^\\r\\n]*$`,
+    'mi'
+  );
+  if (lineRegex.test(text)) {
+    return text.replace(lineRegex, `- *${newLabelUpper}:* ${newToken}`);
+  }
+
+  // 2. Otherwise replace the token itself without crossing line boundaries
+  const tokenRegex = new RegExp(`\\{\\s*${escaped}(?:\\s*[:|][^}\\r\\n]*)?\\}`, 'gi');
+  return text.replace(tokenRegex, newToken);
 }
 
 /**
@@ -503,11 +559,15 @@ export function removeFieldTagFromText(text: string, field: FormCreatorField): s
 
   const id = sanitizeFieldId(field.label);
   const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const lineRegex = new RegExp(`^.*\\{\\s*${escaped}(\\s*[:|\\}][^}]*)?\\}.*\\r?\\n?`, 'gmi');
-  const tokenRegex = new RegExp(`\\{\\s*${escaped}(\\s*[:|\\}][^}]*)?\\}`, 'gi');
+  const lineRegex = new RegExp(`^[ \\t]*-[ \\t]*\\*[^*\\r\\n]+?\\*[ \\t]*:?[ \\t]*\\{\\s*${escaped}(?:\\s*[:|][^}\\r\\n]*)?\\}[^\\r\\n]*\\r?\\n?`, 'gmi');
+  const fallbackLineRegex = new RegExp(`^[^\r\n]*\\{\\s*${escaped}(?:\\s*[:|][^}\\r\\n]*)?\\}[^\r\n]*\\r?\\n?`, 'gmi');
+  const tokenRegex = new RegExp(`\\{\\s*${escaped}(?:\\s*[:|][^}\\r\\n]*)?\\}`, 'gi');
 
   if (lineRegex.test(text)) {
     return text.replace(lineRegex, '').trimEnd();
+  }
+  if (fallbackLineRegex.test(text)) {
+    return text.replace(fallbackLineRegex, '').trimEnd();
   }
   return text.replace(tokenRegex, '').trimEnd();
 }
@@ -536,7 +596,7 @@ export function appendFieldTagToText(text: string, field: FormCreatorField): str
  * Identifies which fields from the list are missing their tag in the text.
  */
 export function getMissingFieldTags(text: string, fields: FormCreatorField[]): FormCreatorField[] {
-  return fields.filter((f) => !isFieldTagInText(text, f));
+  return fields.filter((f) => !isSystemFieldTag(f.label) && !isFieldTagInText(text, f));
 }
 
 export interface ProtectedTagRange {
@@ -552,7 +612,7 @@ export interface ProtectedTagRange {
 export function getProtectedTagRanges(text: string, fields: FormCreatorField[]): ProtectedTagRange[] {
   const ranges: ProtectedTagRange[] = [];
 
-  fields.forEach((field) => {
+  fields.filter((f) => !isSystemFieldTag(f.label)).forEach((field) => {
     if (field.type === 'section') {
       // Tags inside the section fields are protected via getAllFieldsFlat
       return;
@@ -581,7 +641,7 @@ export function getProtectedTagRanges(text: string, fields: FormCreatorField[]):
 
     const id = sanitizeFieldId(field.label);
     const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`\\{\\s*${escaped}(\\s*[:|\\}][^}]*)?\\}`, 'gi');
+    const regex = new RegExp(`\\{\\s*${escaped}(?:\\s*[:|][^}\\r\\n]*)?\\}`, 'gi');
     let match: RegExpExecArray | null;
     while ((match = regex.exec(text)) !== null) {
       ranges.push({
@@ -627,10 +687,12 @@ export function reorderFieldsInTemplateText(
     } else {
       const id = sanitizeFieldId(field.label);
       const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const lineRegex = new RegExp(`^.*\\{\\s*${escaped}(\\s*[:|\\}][^}]*)?\\}.*$`, 'mi');
+      const lineRegex = new RegExp(`^[^\r\n]*\\{\\s*${escaped}(?:\\s*[:|][^}\\r\\n]*)?\\}[^\r\n]*$`, 'mi');
       const match = text.match(lineRegex);
       if (match) {
-        fieldBlocks.push({ fieldId: field.id, block: match[0] });
+        const tokenRegex = new RegExp(`\\{\\s*${escaped}(?:\\s*[:|][^}\\r\\n]*)?\\}`, 'i');
+        const updatedBlock = match[0].replace(tokenRegex, compileFieldToken(field));
+        fieldBlocks.push({ fieldId: field.id, block: updatedBlock });
         matchedLines.add(match[0]);
       } else {
         const token = compileFieldToken(field);
@@ -640,11 +702,12 @@ export function reorderFieldsInTemplateText(
     }
   });
 
-  // Extract non-field headers from original text (lines before the first field/separator/section)
+  // Extract non-field headers and footers from original text
   const lines = text.split(/\r?\n/);
   const headerLines: string[] = [];
   let foundFirstField = false;
   let inSection = false;
+  let lastFieldLineIdx = -1;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]!;
@@ -662,24 +725,38 @@ export function reorderFieldsInTemplateText(
     if (isSectionStart) {
       inSection = true;
       foundFirstField = true;
+      lastFieldLineIdx = i;
       continue;
     }
     if (inSection) {
+      lastFieldLineIdx = i;
       if (trimmed === ']' || trimmed === '[/]') {
         inSection = false;
       }
       continue;
     }
 
-    const isFieldLine =
-      matchedLines.has(line) ||
-      /\{[^{}\n\r]+\}/.test(line) ||
-      /^\["".*\]/.test(trimmed);
+    const isMatched = matchedLines.has(line);
+    const isVisualFieldLine = isMatched || newFields.some((f) => isFieldTagInText(line, f));
 
-    if (!foundFirstField && !isFieldLine) {
-      headerLines.push(line);
-    } else if (isFieldLine) {
+    if (isVisualFieldLine) {
       foundFirstField = true;
+      lastFieldLineIdx = i;
+    } else if (!foundFirstField) {
+      headerLines.push(line);
+    }
+  }
+
+  // Trailing footer lines (lines after the last field or section line, e.g. {pie}, {photos}, closing remarks)
+  const footerLines: string[] = [];
+  if (lastFieldLineIdx >= 0 && lastFieldLineIdx < lines.length - 1) {
+    for (let i = lastFieldLineIdx + 1; i < lines.length; i++) {
+      const line = lines[i]!;
+      const isMatched = matchedLines.has(line);
+      const isVisualFieldLine = isMatched || newFields.some((f) => isFieldTagInText(line, f));
+      if (!isVisualFieldLine) {
+        footerLines.push(line);
+      }
     }
   }
 
@@ -697,6 +774,12 @@ export function reorderFieldsInTemplateText(
       resultParts.push(cleanBlock);
     }
   });
+
+  const cleanFooter = footerLines.join('\n').trim();
+  if (cleanFooter) {
+    resultParts.push('');
+    resultParts.push(cleanFooter);
+  }
 
   return resultParts.join('\n').replace(/\n{3,}/g, '\n\n');
 }

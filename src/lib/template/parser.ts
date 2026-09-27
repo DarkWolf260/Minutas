@@ -32,7 +32,24 @@ export function parseFieldTag(
     default_value?: string;
     value?: string;
 } {
-    const segments = tagContent.split(':').map((s) => s.trim());
+    // Split segments by colon, but respect parentheses e.g. default(12:30) or dropdown(...)
+    const segments: string[] = [];
+    let currentSegment = '';
+    let parenDepth = 0;
+    for (let i = 0; i < tagContent.length; i++) {
+        const char = tagContent[i];
+        if (char === '(') parenDepth++;
+        else if (char === ')') parenDepth = Math.max(0, parenDepth - 1);
+
+        if (char === ':' && parenDepth === 0) {
+            segments.push(currentSegment.trim());
+            currentSegment = '';
+        } else {
+            currentSegment += char;
+        }
+    }
+    segments.push(currentSegment.trim());
+
     const field_id = segments[0] || '';
     const otherSegments = segments.slice(1);
 
@@ -82,6 +99,12 @@ export function parseFieldTag(
             return;
         }
 
+        const directDefMatch = segment.match(/^(?:default\("?(.*?)"?\)|def=\((.*?)\))$/i);
+        if (directDefMatch) {
+            default_value = directDefMatch[1] ?? directDefMatch[2];
+            return;
+        }
+
         if (segment === 'full') {
             is_full_width = true;
         } else if (segment === 'req') {
@@ -94,9 +117,9 @@ export function parseFieldTag(
             const pipeParts = segment.split('|');
             pipeParts.forEach((part) => {
                 const trimmed = part.trim();
-                const defMatch = trimmed.match(/^def=\((.*)\)$/);
+                const defMatch = trimmed.match(/^(?:default\("?(.*?)"?\)|def=\((.*?)\))$/i);
                 if (defMatch) {
-                    default_value = defMatch[1];
+                    default_value = defMatch[1] ?? defMatch[2];
                 } else if (trimmed === 'full') is_full_width = true;
                 else if (trimmed === 'req') is_required = true;
                 else if (VALID_TEXT_MODS.has(trimmed)) modifiers.push(trimmed);

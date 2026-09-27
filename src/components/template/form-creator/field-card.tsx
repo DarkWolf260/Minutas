@@ -178,45 +178,90 @@ export function FieldCard({
         {/* Middle: Visual representation of the question preview */}
         <div className="pt-1">
           {field.type === 'text' && (
-            <div className="border-b border-dashed border-muted-foreground/40 py-2 max-w-sm">
-              <span className="text-sm text-muted-foreground/60 italic select-none">
-                Texto de respuesta corta
+            <div className="border-b border-dashed border-muted-foreground/40 py-2 max-w-sm flex items-center justify-between gap-2">
+              <span
+                className={`text-sm select-none truncate ${
+                  field.defaultValue ? 'text-foreground font-normal' : 'text-muted-foreground/60 italic'
+                }`}
+              >
+                {field.defaultValue || 'Texto de respuesta corta'}
               </span>
+              {field.defaultValue && (
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary shrink-0 select-none">
+                  Por defecto
+                </span>
+              )}
             </div>
           )}
 
           {field.type === 'textarea' && (
-            <div className="border-b border-dashed border-muted-foreground/40 py-4 max-w-lg">
-              <span className="text-sm text-muted-foreground/60 italic select-none">
-                Texto de respuesta larga (párrafo)
+            <div className="border-b border-dashed border-muted-foreground/40 py-3 max-w-lg flex flex-col gap-1.5">
+              <span
+                className={`text-sm select-none break-words ${
+                  field.defaultValue ? 'text-foreground font-normal' : 'text-muted-foreground/60 italic'
+                }`}
+              >
+                {field.defaultValue || 'Texto de respuesta larga (párrafo)'}
               </span>
+              {field.defaultValue && (
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary w-fit select-none">
+                  Por defecto
+                </span>
+              )}
             </div>
           )}
 
           {field.type === 'date' && (
             <div className="flex items-center gap-2 border-b border-dashed border-muted-foreground/40 py-2 max-w-xs">
               <Calendar className="h-4 w-4 text-muted-foreground/60" />
-              <span className="text-sm text-muted-foreground/60 italic select-none">
-                dd / mm / aaaa
+              <span
+                className={`text-sm select-none ${
+                  field.defaultValue ? 'text-foreground font-normal' : 'text-muted-foreground/60 italic'
+                }`}
+              >
+                {field.defaultValue || 'dd / mm / aaaa'}
               </span>
+              {field.defaultValue && (
+                <span className="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary shrink-0 select-none">
+                  Por defecto
+                </span>
+              )}
             </div>
           )}
 
           {field.type === 'time-hlv' && (
             <div className="flex items-center gap-2 border-b border-dashed border-muted-foreground/40 py-2 max-w-xs">
               <Clock className="h-4 w-4 text-muted-foreground/60" />
-              <span className="text-sm text-muted-foreground/60 italic select-none">
-                Hora (ej. 14:30)
+              <span
+                className={`text-sm select-none ${
+                  field.defaultValue ? 'text-foreground font-normal' : 'text-muted-foreground/60 italic'
+                }`}
+              >
+                {field.defaultValue || 'Hora (ej. 14:30)'}
               </span>
+              {field.defaultValue && (
+                <span className="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary shrink-0 select-none">
+                  Por defecto
+                </span>
+              )}
             </div>
           )}
 
           {field.type === 'cedula' && (
             <div className="flex items-center gap-2 border-b border-dashed border-muted-foreground/40 py-2 max-w-xs">
               <Fingerprint className="h-4 w-4 text-muted-foreground/60" />
-              <span className="text-sm text-muted-foreground/60 italic select-none">
-                V- / E- Número de cédula
+              <span
+                className={`text-sm select-none ${
+                  field.defaultValue ? 'text-foreground font-normal' : 'text-muted-foreground/60 italic'
+                }`}
+              >
+                {field.defaultValue || 'V- / E- Número de cédula'}
               </span>
+              {field.defaultValue && (
+                <span className="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary shrink-0 select-none">
+                  Por defecto
+                </span>
+              )}
             </div>
           )}
 
@@ -266,6 +311,15 @@ export function FieldCard({
                 <Plus className="h-3.5 w-3.5" />
                 Añadir opción
               </Button>
+
+              {field.defaultValue && (
+                <div className="text-xs text-muted-foreground pt-1 flex items-center gap-1.5">
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary select-none">
+                    Por defecto:
+                  </span>
+                  <span className="font-medium text-foreground">{field.defaultValue}</span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -306,6 +360,50 @@ export function FieldCard({
                 onCheckedChange={(checked) => onChange({ ...field, isFullWidth: checked })}
               />
             </div>
+
+            {/* Texto por defecto */}
+            {field.type !== 'predefined' && (
+              <div className="space-y-1.5 sm:col-span-2 pt-1 border-t border-border/40">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground">
+                    Texto o valor por defecto
+                  </Label>
+                  {field.defaultValue && (
+                    <button
+                      type="button"
+                      onClick={() => onChange({ ...field, defaultValue: undefined })}
+                      className="text-[10px] text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+                <Input
+                  value={field.defaultValue || ''}
+                  onChange={(e) =>
+                    onChange({
+                      ...field,
+                      defaultValue: e.target.value.trim() ? e.target.value : undefined,
+                    })
+                  }
+                  placeholder={
+                    field.type === 'dropdown'
+                      ? (field.options?.[0] ? `Ej: ${field.options[0]}` : 'Ej: Opción 1')
+                      : field.type === 'time-hlv'
+                      ? 'Ej: 08:00'
+                      : field.type === 'date'
+                      ? 'Ej: 2026-09-25'
+                      : field.type === 'textarea'
+                      ? 'Ej: Sin novedades...'
+                      : 'Ej: Sin novedad'
+                  }
+                  className="h-8 text-xs bg-background"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Valor precargado que aparecerá en esta pregunta al iniciar un nuevo reporte
+                </p>
+              </div>
+            )}
           </div>
         )}
 

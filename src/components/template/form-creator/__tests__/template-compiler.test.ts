@@ -13,6 +13,8 @@ import {
   getMissingFieldTags,
   appendFieldTagToText,
   reorderFieldsInTemplateText,
+  isSystemFieldTag,
+  SYSTEM_TAGS,
   FormCreatorModel,
   FormCreatorField,
 } from '../template-compiler';
@@ -432,5 +434,198 @@ describe('template-compiler', () => {
     expect(removedTemplate).not.toContain('[INFORMACIÓN PERSONAL]');
     expect(removedTemplate).toContain('- *FECHA:* {Fecha:date}');
   });
+
+  it('correctly identifies special system tags with isSystemFieldTag', () => {
+    // Exact system tags and with braces
+    expect(isSystemFieldTag('Enc')).toBe(true);
+    expect(isSystemFieldTag('{Enc}')).toBe(true);
+    expect(isSystemFieldTag('enc')).toBe(true);
+    expect(isSystemFieldTag('{pie}')).toBe(true);
+    expect(isSystemFieldTag('Pie')).toBe(true);
+    expect(isSystemFieldTag('{usuario}')).toBe(true);
+    expect(isSystemFieldTag('Usuario')).toBe(true);
+    expect(isSystemFieldTag('{Estatus}')).toBe(true);
+    expect(isSystemFieldTag('estatus')).toBe(true);
+    expect(isSystemFieldTag('{photos}')).toBe(true);
+    expect(isSystemFieldTag('photos')).toBe(true);
+
+    // Dot-notation property accesses (personnel fields)
+    expect(isSystemFieldTag('Director.sex')).toBe(true);
+    expect(isSystemFieldTag('{Director.sex}')).toBe(true);
+    expect(isSystemFieldTag('Director.cargo')).toBe(true);
+    expect(isSystemFieldTag('Reporta.cedula')).toBe(true);
+
+    // Normal user input fields must NOT be marked as system tags
+    expect(isSystemFieldTag('Director')).toBe(false);
+    expect(isSystemFieldTag('{Director}')).toBe(false);
+    expect(isSystemFieldTag('Jefe de los servicios')).toBe(false);
+    expect(isSystemFieldTag('{Jefe de los servicios}')).toBe(false);
+    expect(isSystemFieldTag('Fecha')).toBe(false);
+    expect(isSystemFieldTag('Hora')).toBe(false);
+    expect(isSystemFieldTag('Observaciones')).toBe(false);
+  });
+
+  it('does NOT treat special tags like {Enc} or {pie} as form fields in parseTemplateToFields', () => {
+    const templateWithSpecialTags = `*MINUTA DE GUARDIA*
+
+- *FECHA:* {Fecha:date:req}
+- *HORA:* {Hora:time-hlv:req}
+- *JEFE DE LOS SERVICIOS:* {Jefe de los servicios} {Enc}
+- *DESCRIPCIÓN:* {Descripcion:textarea:full}
+
+[?{Director.sex} = F]
+*DIRECTORA-PRESIDENTA:* {Director}
+[/]
+
+{pie}
+`;
+
+    const parsedFields = parseTemplateToFields(templateWithSpecialTags);
+
+    // Should contain regular fields
+    const fieldLabels = parsedFields.map((f) => f.label);
+    expect(fieldLabels).toContain('Fecha');
+    expect(fieldLabels).toContain('Hora');
+    expect(fieldLabels).toContain('Jefe de los servicios');
+    expect(fieldLabels).toContain('Descripcion');
+
+    // Must NOT contain Enc, pie, or Director.sex as fields!
+    expect(fieldLabels).not.toContain('Enc');
+    expect(fieldLabels).not.toContain('enc');
+    expect(fieldLabels).not.toContain('pie');
+    expect(fieldLabels).not.toContain('Director.sex');
+    expect(parsedFields.some((f) => isSystemFieldTag(f.label))).toBe(false);
+  });
+
+  it('preserves {Enc} inline and {pie} in the footer when fields are reordered', () => {
+    const originalText = `*MINUTA DE GUARDIA*
+
+- *FECHA:* {Fecha:date:req}
+- *HORA:* {Hora:time-hlv:req}
+- *JEFE DE LOS SERVICIOS:* {Jefe de los servicios} {Enc}
+- *DESCRIPCIÓN:* {Descripcion:textarea:full}
+
+{pie}`;
+
+    const fields = parseTemplateToFields(originalText);
+    expect(fields).toHaveLength(4); // Fecha, Hora, Jefe de los servicios, Descripcion
+
+    // Reorder: put Descripcion first, then Fecha, then Jefe de los servicios
+    const reordered = [fields[3]!, fields[0]!, fields[2]!];
+    const newText = reorderFieldsInTemplateText(originalText, reordered, 'MINUTA DE GUARDIA');
+
+    // {Enc} must be preserved on the Jefe de los servicios line
+    expect(newText).toContain('- *JEFE DE LOS SERVICIOS:* {Jefe de los servicios} {Enc}');
+    // {pie} must be preserved in the footer
+    expect(newText).toContain('{pie}');
+    // Descripcion comes before Fecha
+    expect(newText.indexOf('DESCRIPCIÓN')).toBeLessThan(newText.indexOf('FECHA'));
+  });
+
+  it('supports compiling and parsing default text (defaultValue) for fields', () => {
+    // 1. Compile field token with defaultValue
+    const fieldWithDefault: FormCreatorField = {
+      id: 'f1',
+      label: 'Observaciones',
+      type: 'textarea',
+      defaultValue: 'Sin novedades que reportar',
+    };
+    expect(compileFieldToken(fieldWithDefault)).toBe('{Observaciones:textarea:default(Sin novedades que reportar)}');
+
+    // 2. Field token with time and colon in default value e.g. 08:00
+    const timeField: FormCreatorField = {
+      id: 'f2',
+      label: 'Hora',
+      type: 'time-hlv',
+      defaultValue: '08:00',
+    };
+    expect(compileFieldToken(timeField)).toBe('{Hora:time-hlv:default(08:00)}');
+
+    // 3. Parse template containing default(...) back to FormCreatorField
+    const templateContent = `*REPORTE*
+- *OBSERVACIONES:* {Observaciones:textarea:default(Sin novedades que reportar)}
+- *HORA:* {Hora:time-hlv:default(08:00)}
+- *ESTADO:* {Estado:dropdown(Activo=Activo|Inactivo=Inactivo):default(Activo)}`;
+
+    const parsedFields = parseTemplateToFields(templateContent);
+    expect(parsedFields).toHaveLength(3);
+
+    const obsField = parsedFields.find((f) => f.label.toLowerCase() === 'observaciones');
+    expect(obsField?.defaultValue).toBe('Sin novedades que reportar');
+
+    const horaField = parsedFields.find((f) => f.label.toLowerCase() === 'hora');
+    expect(horaField?.defaultValue).toBe('08:00');
+
+    const estadoField = parsedFields.find((f) => f.label.toLowerCase() === 'estado');
+    expect(estadoField?.defaultValue).toBe('Activo');
+
+    // 4. Update field tag in template text when defaultValue is modified
+    const updatedObs: FormCreatorField = {
+      ...obsField!,
+      defaultValue: 'Turno normal sin incidentes',
+    };
+    const updatedText = updateFieldTagInText(templateContent, 'Observaciones', updatedObs);
+    expect(updatedText).toContain('{Observaciones:textarea:default(Turno normal sin incidentes)}');
+  });
+
+  it('prevents repeated/duplicated fields when updating labels, duplicating fields, or reordering', () => {
+    let fields: FormCreatorField[] = [
+      { id: 'f_init_1', label: 'Pregunta 1', type: 'text', required: true },
+      { id: 'f_init_2', label: 'Pregunta 2', type: 'text', required: false },
+    ];
+
+    let text = compileFormToTemplateString({
+      name: 'Formulario sin título',
+      type: 'normal',
+      headerTitle: 'FORMULARIO SIN TÍTULO',
+      fields,
+    });
+
+    // 1. User updates Pregunta 1 to "Fecha"
+    const oldLabel = fields[0]!.label;
+    fields[0] = { ...fields[0]!, label: 'Fecha', type: 'date', defaultValue: '25/09/2026' };
+    text = updateFieldTagInText(text, oldLabel, fields[0]);
+
+    // Check that bullet label and tag are properly updated
+    expect(text).toContain('- *FECHA:* {Fecha:date:req:default(25/09/2026)}');
+    expect(text).not.toContain('PREGUNTA 1');
+
+    // 2. User adds a new field "Hora"
+    const newField: FormCreatorField = {
+      id: 'f_3',
+      label: 'Hora',
+      type: 'time-hlv',
+      defaultValue: '08:00',
+    };
+    fields = [...fields, newField];
+    text = reorderFieldsInTemplateText(text, fields, 'Formulario sin título');
+
+    // 3. User duplicates "Hora"
+    const dupField: FormCreatorField = {
+      ...newField,
+      id: 'f_4',
+      label: 'Hora 2',
+    };
+    fields = [...fields, dupField];
+    text = reorderFieldsInTemplateText(text, fields, 'Formulario sin título');
+
+    // Check count of Hora occurrences in text
+    const horaMatches = text.match(/\{Hora:time-hlv/g);
+    expect(horaMatches?.length).toBe(1);
+
+    const hora2Matches = text.match(/\{Hora 2:time-hlv/g);
+    expect(hora2Matches?.length).toBe(1);
+
+    // 4. User moves Hora 2 up
+    fields = [fields[0]!, fields[1]!, fields[3]!, fields[2]!];
+    text = reorderFieldsInTemplateText(text, fields, 'Formulario sin título');
+
+    const horaMatchesAfterReorder = text.match(/\{Hora:time-hlv/g);
+    expect(horaMatchesAfterReorder?.length).toBe(1);
+
+    const hora2MatchesAfterReorder = text.match(/\{Hora 2:time-hlv/g);
+    expect(hora2MatchesAfterReorder?.length).toBe(1);
+  });
 });
+
 
