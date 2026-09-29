@@ -2372,7 +2372,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\ast.json": {
-    "mtime": 1782655701.2555513,
+    "mtime": 1790655929.6949964,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -2397,7 +2397,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\report.json": {
-    "mtime": 1782655701.2545507,
+    "mtime": 1790655929.6949964,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -3687,8 +3687,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template-parser.ts": {
-    "mtime": 1790545985.7974215,
-    "ast_hash": "cfa70c5d34cb93650af5209e59246ea0",
+    "mtime": 1790655208.9141,
+    "ast_hash": "e371792b66f8beffaa2b09d4a01e6984",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\bug.test.ts": {
@@ -3727,8 +3727,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\evaluator.ts": {
-    "mtime": 1790545985.8034165,
-    "ast_hash": "de44b9307d862b47e2dc77b4ef81d2c2",
+    "mtime": 1790655203.8074043,
+    "ast_hash": "f09e9ef417a32ead5f116eeb7e75aa8a",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\index.ts": {
@@ -3742,13 +3742,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\parser.ts": {
-    "mtime": 1790545985.8104126,
-    "ast_hash": "a02e3ad9a2b3bdee8c9ba2047c47832f",
+    "mtime": 1790655899.0776474,
+    "ast_hash": "a0dc446d4a0332e0849880a8862fb6f2",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\renderer.ts": {
-    "mtime": 1790545985.8254025,
-    "ast_hash": "30e70ae8bb1987e6f6b32a429ff44c53",
+    "mtime": 1790655883.6723385,
+    "ast_hash": "833a14e5570e3272d75d5787acab563c",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\types.ts": {
@@ -3757,8 +3757,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\validator.ts": {
-    "mtime": 1778373213.9546454,
-    "ast_hash": "69e76da9ad9d3b098339fdaae8b04415",
+    "mtime": 1790655810.2754614,
+    "ast_hash": "1acc32efcddd9c275e6d4fad5bc9ce3d",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\types\\index.ts": {

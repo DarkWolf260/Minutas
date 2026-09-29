@@ -8,19 +8,16 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { TemplateParserResult, SectionConfig, FieldConfig, FieldType, SnippetOption, form_dataRecord, form_dataValue } from '@/lib/types';
 import { formatStaffMember, formatStaffReporta } from '../formatters';
-/** Inline type for semantic resolution results (previously in integration-engine.ts) */
+/** Inline type for resolution results (retained for backward compatibility) */
 export interface ResolutionResult {
     concept: string;
     value: string;
     source: string;
 }
 
-/** Inline stub: resolves a semantic concept to its string value */
-function resolveSemanticConcept(concept: string): ResolutionResult {
-    return { concept, value: concept, source: 'inline' };
-}
 import { evaluateCondition, applyModifiers as applyTextModifier } from './evaluator';
-import { parseFieldTag } from './parser';
+import { tokenize } from './lexer';
+import { parse, parseFieldTag } from './parser';
 import { logger } from '../logger';
 
 /** Internal config shape used during rendering (combines parsed template + field definitions) */
@@ -56,114 +53,19 @@ export function renderContent(
 ): string {
     if (!content) return '';
     const localData = (data || {}) as form_dataRecord;
-
-    // First pass: collect all mapping results for fields
-    const mappingResults: Record<string, string> = {};
-    const mappingRegex = /\[\?\s*\{[\s\S]+?\}\s*(?:(?:!=|>=|<=|>|<|=)\s*(?:"[^"]*"|\S+?))?\s*\]([\s\S]*?)\[\/\s*\]/g;
-
-    let mappingMatch;
-    while ((mappingMatch = mappingRegex.exec(content)) !== null) {
-        const block = mappingMatch[0];
-        const innerContent = mappingMatch[1];
-        const condMatch = block.match(/^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(?:(!=|>=|<=|>|<|=)\s*("(.*?)"|(\S+?)))?\s*\]/);
-
-        if (condMatch && condMatch[1]) {
-            const condfield_id = condMatch[1].trim();
-            const operator = condMatch[2];
-
-            // Re-use findValueForField for robust case-insensitive lookup
-            const actualValue = findValueForField(
-                condfield_id,
-                localData,
-                config.sections || [],
-                {},
-                {}
-            );
-
-            const options = config.templateOptions.get(condfield_id);
-
-            if (!operator) {
-                let keyToCompare = actualValue;
-                if (options && typeof actualValue === 'string') {
-                    const opt = options.find((o: SnippetOption) => o.value === actualValue || o.label === actualValue);
-                    if (opt) keyToCompare = opt.label;
-                }
-
-                const lines = (innerContent || '').split('\n');
-                for (const line of lines) {
-                    const eqIdx = line.indexOf('=');
-                    if (eqIdx > -1) {
-                        const key = line.substring(0, eqIdx).trim();
-                        const val = line.substring(eqIdx + 1).trim();
-                        if (evaluateCondition(keyToCompare, '=', key)) {
-                            mappingResults[condfield_id] = val;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    const blockRegex =
-        /(\{[^{}]+?\}|\[\?\s*\{[^{}]+?\}\s*(?:(?:!=|>=|<=|>|<|=)\s*(?:"[^"]*"|\S+?))?\s*\][\s\S]*?\[\/\s*\])/g;
-
-    return content.replace(blockRegex, (block) => {
-        if (block.startsWith('{')) {
-            const tag = block.slice(1, -1);
-            const { field_id, modifiers } = parseFieldTag(tag, new Map());
-
-            // If we have a mapping result for this field, use it
-            let val = mappingResults[field_id] !== undefined ? mappingResults[field_id] : localData[field_id];
-
-            // If not already mapped, handle standard dropdown value conversion
-            if (mappingResults[field_id] === undefined) {
-                const options = config.templateOptions.get(field_id);
-                if (options && typeof val === 'string' && /^\d+$/.test(val)) {
-                    const idx = parseInt(val, 10);
-                    if (options[idx]) val = options[idx].value;
-                }
-            }
-
-            // Unir modificadores de la etiqueta con los modificadores detectados globalmente
-            const globalModifiers = config.fieldModifiers.get(field_id) || [];
-            const allModifiers = [...globalModifiers, ...modifiers];
-
-            return applyTextModifier(val, allModifiers);
-        } else if (block.startsWith('[?')) {
-            const condMatch = block.match(
-                /^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(?:(!=|>=|<=|>|<|=)\s*("(.*?)"|(\S+?)))?\s*\]([\s\S]*?)\[\/\s*\]$/
-            );
-            if (condMatch && condMatch[1] && condMatch[6]) {
-                const operator = condMatch[2];
-                if (operator) {
-                    // Standard condition
-                    const condfield_id = condMatch[1].trim();
-                    const targetValue = condMatch[4] || condMatch[5] || '';
-                    const innerContent = condMatch[6];
-                    const actualValue = localData[condfield_id];
-
-                    let valToCompare = actualValue;
-                    const options = config.templateOptions.get(condfield_id);
-                    if (options && /^\d+$/.test(String(actualValue))) {
-                        const idx = parseInt(String(actualValue), 10);
-                        const opt = options[idx];
-                        if (opt) valToCompare = opt.value;
-                    }
-
-                    if (evaluateCondition(valToCompare, operator, targetValue)) {
-                        return renderContent(innerContent, data, config);
-                    }
-                } else {
-                    // Mapping conditional is now handled by the {Field} tag
-                    // We return empty string here so the definition doesn't print itself.
-                    return '';
-                }
-            }
-            return '';
-        }
-        return block;
-    });
+    return renderContentWithSections(
+        content,
+        localData,
+        {
+            fields: {},
+            sections: config.sections || [],
+            layout: config.layout || [],
+            templateOptions: config.templateOptions || new Map(),
+            fieldModifiers: config.fieldModifiers || new Map(),
+        },
+        config.predefinedValues ? Object.fromEntries(config.predefinedValues) : {},
+        {}
+    );
 }
 
 /**
@@ -171,15 +73,6 @@ export function renderContent(
  */
 function escapeRegExp(string: string): string {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-/**
- * Helper: Determines if a section is "virtual" (just a placeholder for a field)
- */
-function isVirtualSection(content: string): boolean {
-    if (!content) return false;
-    const trimmed = content.trim();
-    return trimmed.startsWith('{') && trimmed.endsWith('}');
 }
 
 // Cache for section regexes to avoid repeated RegExp creation
@@ -250,9 +143,34 @@ function getSectionRegex(section: SectionConfig): RegExp {
         }
     }
 
-    if (sectionRegexCache.size > 500) sectionRegexCache.clear();
+    if (sectionRegexCache.size >= 500) {
+        const oldestKey = sectionRegexCache.keys().next().value;
+        if (oldestKey) sectionRegexCache.delete(oldestKey);
+    }
     sectionRegexCache.set(cacheKey, regex);
     return regex;
+}
+
+// WeakMap for O(1) case-insensitive key lookups without mutating or copying repeatedly
+const lowerKeyCache = new WeakMap<object, Map<string, any>>();
+
+function getFromObjectInsensitive(
+    obj: Record<string, any> | undefined | null,
+    lowerKey: string,
+    exactKey: string
+): form_dataValue {
+    if (!obj || typeof obj !== 'object') return undefined;
+    if (obj[exactKey] !== undefined) return obj[exactKey];
+
+    let map = lowerKeyCache.get(obj);
+    if (!map) {
+        map = new Map<string, any>();
+        for (const k of Object.keys(obj)) {
+            map.set(k.toLowerCase(), obj[k]);
+        }
+        lowerKeyCache.set(obj, map);
+    }
+    return map.get(lowerKey);
 }
 
 /**
@@ -327,7 +245,8 @@ function findValueForField(
 ): form_dataValue {
     // Dot-notation property access: {Director.sex}, {Reporta.cargo}, etc.
     if (field_id.includes('.')) {
-        const basefield_id = field_id.slice(0, field_id.indexOf('.'));
+        const dotIndex = field_id.indexOf('.');
+        const basefield_id = field_id.slice(0, dotIndex);
         const baseValue = findValueForField(basefield_id, data, sections, predefinedValues, dynamicPredefinedValues, itemData);
         // If the base field was found (even as empty array), attempt property resolution
         if (baseValue !== undefined) {
@@ -338,47 +257,34 @@ function findValueForField(
 
     const lowerCasefield_id = field_id.toLowerCase();
 
-
     // 1. Check dynamic predefined values
-    if (dynamicPredefinedValues[field_id] !== undefined) return dynamicPredefinedValues[field_id];
-    const foundKeyInDynamic = Object.keys(dynamicPredefinedValues).find(
-        (k) => k.toLowerCase() === lowerCasefield_id
-    );
-    if (foundKeyInDynamic) return dynamicPredefinedValues[foundKeyInDynamic];
+    const dynamicVal = getFromObjectInsensitive(dynamicPredefinedValues, lowerCasefield_id, field_id);
+    if (dynamicVal !== undefined) return dynamicVal;
 
     // 2. Check item data (for repeatable sections)
-    if (itemData && itemData[field_id] !== undefined) return itemData[field_id];
     if (itemData) {
-        const foundKeyInItem = Object.keys(itemData).find(
-            (k) => k.toLowerCase() === lowerCasefield_id
-        );
-        if (foundKeyInItem) return itemData[foundKeyInItem];
+        const itemVal = getFromObjectInsensitive(itemData, lowerCasefield_id, field_id);
+        if (itemVal !== undefined) return itemVal;
     }
 
     // 3. Check root data
-    if (data[field_id] !== undefined) return data[field_id];
-    const foundKeyInRoot = Object.keys(data).find((k) => k.toLowerCase() === lowerCasefield_id);
-    if (foundKeyInRoot) return data[foundKeyInRoot];
+    const rootVal = getFromObjectInsensitive(data, lowerCasefield_id, field_id);
+    if (rootVal !== undefined) return rootVal;
 
     // 4. Check non-repeatable section data
-    for (const section of sections.filter((s) => !s.is_repeatable && s.id in data)) {
-        const sectionData = data[section.id];
-        if (sectionData && typeof sectionData === 'object' && !Array.isArray(sectionData)) {
-            const dataObj = sectionData as Record<string, any>;
-            if (dataObj[field_id] !== undefined) return dataObj[field_id];
-            const foundKeyInSection = Object.keys(dataObj).find(
-                (k) => k.toLowerCase() === lowerCasefield_id
-            );
-            if (foundKeyInSection) return dataObj[foundKeyInSection];
+    for (const section of sections) {
+        if (!section.is_repeatable && section.id in data) {
+            const sectionData = data[section.id];
+            if (sectionData && typeof sectionData === 'object' && !Array.isArray(sectionData)) {
+                const secVal = getFromObjectInsensitive(sectionData as Record<string, any>, lowerCasefield_id, field_id);
+                if (secVal !== undefined) return secVal;
+            }
         }
     }
 
     // 5. Check predefined values
-    if (predefinedValues[field_id] !== undefined) return predefinedValues[field_id];
-    const foundKeyInPredefined = Object.keys(predefinedValues).find(
-        (k) => k.toLowerCase() === lowerCasefield_id
-    );
-    if (foundKeyInPredefined) return predefinedValues[foundKeyInPredefined];
+    const predefinedVal = getFromObjectInsensitive(predefinedValues, lowerCasefield_id, field_id);
+    if (predefinedVal !== undefined) return predefinedVal;
 
     return undefined;
 }
@@ -463,11 +369,6 @@ function renderValue(
         } else {
             rendered = value.join(' / ');
         }
-    }
-    // Semantic field rendering
-    else if (fieldConfig?.type === 'semantic') {
-        const result = resolveSemanticConcept(field_id);
-        rendered = String(result.value);
     }
     // Default rendering
     else {
@@ -693,10 +594,10 @@ function renderSection(
                     }
                 } else {
                     const baseVal = findValueForField(id, data, sections, predefinedValues, dynamicPredefinedValues, item);
-                    // Case-insensitive mapping results lookup
                     const lowerId = id.toLowerCase();
-                    const mappingKey = Object.keys(mappingResults).find(k => k.toLowerCase() === lowerId);
-                    const val = mappingKey !== undefined ? mappingResults[mappingKey] : baseVal;
+                    const val = mappingResults[lowerId] !== undefined
+                        ? mappingResults[lowerId]
+                        : (mappingResults[id] !== undefined ? mappingResults[id] : baseVal);
 
                     itemContent = itemContent.replace(
                         new RegExp(`\\{${escapeRegExp(id)}(:[^|}{]+)*(?:\\|[^{}]+?)?\\}(\\*)?`, 'gi'),
@@ -824,6 +725,7 @@ export function renderContentWithSections(
                         const val = line.substring(eqIdx + 1).trim();
                         if (evaluateCondition(keyToCompare, '=', key)) {
                             mappingResults[condfield_id] = val;
+                            mappingResults[condfield_id.toLowerCase()] = val;
                             break;
                         }
                     }
@@ -855,28 +757,18 @@ export function renderContentWithSections(
         }
     });
 
-
-
-
-
-
-
-
-    // Final cleanup of loose tags (omit semantic tags for post-processing).
-    // Regex extended to also handle dotted field names like {Director.sex}.
+    // Final cleanup of loose tags (handles normal and dotted field names like {Director.sex})
     finalContent = finalContent.replace(
         /\{([^:{}]+?(?:\.[^:{}]+?)?)(:[^|}{]+)*(?:\|[^{}]+?)?\}/g,
-        (match, field_id: string) => {
-            if (match.includes(':semantic')) return match;
+        (_, field_id: string) => {
             field_id = field_id.trim();
             const lowerfield_id = field_id.toLowerCase();
             const baseVal = findValueForField(field_id, data, sections, predefinedValues, dynamicPredefinedValues);
 
             // Mapping results are only applicable for non-dotted field names
-            const mappingKey = !field_id.includes('.')
-                ? Object.keys(mappingResults).find(k => k.toLowerCase() === lowerfield_id)
-                : undefined;
-            const formValue = mappingKey !== undefined ? mappingResults[mappingKey] : baseVal;
+            const formValue = (!field_id.includes('.') && mappingResults[lowerfield_id] !== undefined)
+                ? mappingResults[lowerfield_id]
+                : baseVal;
 
             return hasContent(formValue) ? renderValue(formValue, field_id, fields, config) : '';
         }
@@ -911,12 +803,13 @@ export function renderFinalReport(
     predefinedValues: Record<string, string>,
     summaryOnly: boolean = false,
     dynamicPredefinedValues: Record<string, string> = {},
-    parseTemplate: (template: string) => TemplateParserResult,
-    recordReportAudit: (reportId: string, audit: ResolutionResult[]) => void
+    parseTemplate?: (template: string) => TemplateParserResult,
+    _recordReportAudit?: (reportId: string, audit: ResolutionResult[]) => void
 ): string {
     try {
+        const parseFn = parseTemplate || ((t: string) => parse(tokenize(t)));
         const { sections, layout, fieldNames, fieldTypes, templateOptions, fieldModifiers } =
-            parseTemplate(template);
+            parseFn(template);
 
         // Build final config with all necessary data
         const finalConfig: TemplateRenderConfig = {
@@ -951,54 +844,27 @@ export function renderFinalReport(
             dynamicPredefinedValues
         );
 
-        // Replace photos/fotos markers with empty string (or clean spacing)
-        fullRenderedContent = fullRenderedContent
-            .replace(/\{photos\}/gi, '')
-            .replace(/\{fotos\}/gi, '');
+        // Replace photos/fotos markers in a single pass
+        fullRenderedContent = fullRenderedContent.replace(/\{(?:photos|fotos)\}/gi, '');
 
         // Extract summary if needed
-        let summaryContent = '';
         if (summaryOnly) {
             const summaryRegex = /<<([\s\S]*?)>>/g;
             const matches = Array.from(fullRenderedContent.matchAll(summaryRegex));
-            if (matches.length > 0) {
-                summaryContent = matches.map((match) => match[1]).join('\n\n');
-            }
-            fullRenderedContent = summaryContent;
+            fullRenderedContent = matches.length > 0
+                ? matches.map((match) => match[1]).join('\n\n')
+                : '';
         }
 
-        // Final cleanup and semantic post-processing
-        let finalOutput = fullRenderedContent
+        // Final cleanup
+        const finalOutput = fullRenderedContent
             .replace(/<<|>>/g, '') // Remove summary markers
             .replace(/\[\?.*?\][\s\S]*?\[\/\s*\]/g, '') // Remove unprocessed conditional blocks
             .replace(/\[""\]\s*/g, '') // Remove separators
-            .replace(/\[[\s\S]*?\](\*)?/g, ''); // Remove unprocessed section blocks (don't swallow trailing whitespace)
-
-        // Resolve literal semantic tags
-        const semanticRegex = /\{([\s\S]+?):semantic\}/g;
-        const semanticAudit: ResolutionResult[] = [];
-
-        finalOutput = finalOutput.replace(semanticRegex, (_, concept) => {
-            const result = resolveSemanticConcept(concept.trim());
-            semanticAudit.push(result);
-            return String(result.value);
-        });
-
-        // Record audit if there's semantic data
-        if (data.id && semanticAudit.length > 0) {
-            recordReportAudit(String(data.id), semanticAudit);
-        }
-
-        // Final unescaping of characters (e.g. \* -> *, \\ -> \)
-        finalOutput = finalOutput.replace(/\\([\*\{\}\[\]\\])/g, '$1');
-
-        // Collapse blank lines left by non-rendered conditional blocks.
-        // Reduces 3+ consecutive newlines to a maximum of 2 (one visible blank line).
-        finalOutput = finalOutput.replace(/\n{3,}/g, '\n\n');
-
-        // Remove lines that became entirely whitespace after substitution
-        // (e.g. a label line like "- *DIRECTOR:*" whose field resolved to empty).
-        finalOutput = finalOutput.replace(/^[\t ]+$/gm, '');
+            .replace(/\[[\s\S]*?\](\*)?/g, '') // Remove unprocessed section blocks
+            .replace(/\\([*{}[\\]])/g, '$1') // Final unescaping of characters (\* -> *, \\ -> \)
+            .replace(/^[\t ]+$/gm, '') // Remove whitespace-only lines
+            .replace(/\n{3,}/g, '\n\n'); // Collapse excessive blank lines
 
         return finalOutput.trim();
     } catch (error) {

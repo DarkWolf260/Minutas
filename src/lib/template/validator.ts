@@ -7,6 +7,8 @@
 import type { ParseResult, ValidationResult } from './types';
 import type { SectionConfig, FieldType, SnippetOption } from '@/lib/types';
 
+const VALID_OPERATORS = new Set(['=', '!=', '>', '<', '>=', '<=']);
+
 /**
  * Validates a template string for syntax errors
  * 
@@ -21,9 +23,14 @@ import type { SectionConfig, FieldType, SnippetOption } from '@/lib/types';
 export function validateSyntax(template: string): string[] {
     const errors: string[] = [];
 
-    // Check brace balance
-    const openBraces = (template.match(/\{/g) || []).length;
-    const closeBraces = (template.match(/\}/g) || []).length;
+    // Check brace balance in single pass without allocating match arrays
+    let openBraces = 0;
+    let closeBraces = 0;
+    for (let i = 0; i < template.length; i++) {
+        const char = template[i];
+        if (char === '{') openBraces++;
+        else if (char === '}') closeBraces++;
+    }
     if (openBraces !== closeBraces) {
         errors.push('Desbalance de llaves detectado.');
     }
@@ -108,15 +115,6 @@ export function validateSemantics(
  * @param parseResult - The parsed template to validate
  * @param originalTemplate - Original template string for syntax validation
  * @returns Validation result with errors and warnings
- * 
- * @example
- * ```typescript
- * const result = parse(tokens);
- * const validation = validate(result, template);
- * if (!validation.isValid) {
- *   console.error('Template errors:', validation.errors);
- * }
- * ```
  */
 export function validate(
     parseResult: ParseResult,
@@ -139,20 +137,6 @@ export function validate(
             parseResult.templateOptions
         )
     );
-
-    // Check for duplicate field names (warning, not error)
-    const fieldCount = new Map<string, number>();
-    parseResult.fieldNames.forEach((name) => {
-        fieldCount.set(name, (fieldCount.get(name) || 0) + 1);
-    });
-
-    fieldCount.forEach((count, name) => {
-        if (count > 1) {
-            warnings.push(
-                `El campo '{${name}}' aparece ${count} veces en la plantilla. Esto puede causar comportamiento inesperado.`
-            );
-        }
-    });
 
     return {
         isValid: errors.length === 0,
@@ -192,18 +176,6 @@ export function isValidOperatorForType(
     operator: string,
     _fieldType: FieldType
 ): boolean {
-    const validOperators = ['=', '!=', '>', '<', '>=', '<='];
-
-    if (!validOperators.includes(operator)) {
-        return false;
-    }
-
-    // Numeric comparisons only make sense for certain types
-    if (['>', '<', '>=', '<='].includes(operator)) {
-        // These are fine for text (alphabetical) and dates
-        return true;
-    }
-
-    return true;
+    return VALID_OPERATORS.has(operator);
 }
 

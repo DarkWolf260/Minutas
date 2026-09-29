@@ -130,12 +130,7 @@ export function applyModifiers(value: unknown, modifiers: string | string[]): st
     return result;
 }
 
-/**
- * Formats a value based on its field type (Reserved for future specialized formatting)
- */
-export function formatValue(value: unknown, _fieldType: string): string {
-    return String(value);
-}
+
 
 /**
  * Coerces values for comparison (handles numeric strings)

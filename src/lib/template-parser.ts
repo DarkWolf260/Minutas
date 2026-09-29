@@ -53,8 +53,11 @@ export function parseTemplate(templateContent: string): TemplateParserResult {
     errors: [...syntaxErrors, ...semanticErrors],
   };
 
-  // Store in cache (limit size if necessary, but templates are usually few)
-  if (parseCache.size > 100) parseCache.clear();
+  // Store in cache (FIFO eviction to keep cache warm)
+  if (parseCache.size >= 100) {
+    const oldestKey = parseCache.keys().next().value;
+    if (oldestKey) parseCache.delete(oldestKey);
+  }
   parseCache.set(templateContent, finalResult);
 
   return finalResult;

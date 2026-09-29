@@ -10,6 +10,20 @@ const AUTOMATIC_FIELD_TYPES: Record<string, FieldType> = {
     fecha: 'date',
 };
 
+const VALID_FIELD_TYPES = new Set<FieldType>([
+    'text',
+    'textarea',
+    'date',
+    'predefined',
+    'time-hlv',
+    'multi-text',
+    'dropdown',
+    'cedula',
+    'semantic',
+]);
+
+const VALID_TEXT_MODS = new Set(['upper', 'lower', 'title', 'single', 'hidden']);
+
 /**
  * Parses field tag content to extract configuration
  * 
@@ -59,19 +73,6 @@ export function parseFieldTag(
     let default_value: string | undefined = undefined;
     let value: string | undefined = undefined;
     const modifiers: string[] = [];
-
-    const VALID_FIELD_TYPES = new Set<FieldType>([
-        'text',
-        'textarea',
-        'date',
-        'predefined',
-        'time-hlv',
-        'multi-text',
-        'dropdown',
-        'cedula',
-        'semantic',
-    ]);
-    const VALID_TEXT_MODS = new Set(['upper', 'lower', 'title', 'single', 'hidden']);
 
     otherSegments.forEach((segment) => {
         const dropdownMatch = segment.match(/^dropdown\((.+)\)$/);
@@ -153,6 +154,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
     const defaultValues = new Map<string, string>();
     const predefinedValues = new Map<string, string>();
     const globalRenderedFields = new Set<string>();
+    const takenSectionIds = new Set<string>();
 
     // Refactored internal parser for recursion
     function parseInternal(tokenList: Token[], parent_id?: string): {
@@ -197,7 +199,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                 if (config.value !== undefined) predefinedValues.set(field_id, config.value);
 
                 if (token.raw.endsWith('}*')) {
-                    const sectionId = generateSectionId(field_id, [...sections, ...subSections]);
+                    const sectionId = generateSectionId(field_id, [...sections, ...subSections], takenSectionIds);
                     const sec: SectionConfig = {
                         id: sectionId,
                         parent_id,
@@ -345,7 +347,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
 
 
                 const baseId = baseLabel || (token.condition ? `cond_${token.condition.field_id}` : 'section');
-                const sectionId = generateSectionId(baseId, [...sections, ...subSections]);
+                const sectionId = generateSectionId(baseId, [...sections, ...subSections], takenSectionIds);
 
                 const innerResult = parseInternal(inner, sectionId);
 
@@ -505,7 +507,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
 /**
  * Generates a unique, stable section ID
  */
-function generateSectionId(base: string, existingSections: SectionConfig[]): string {
+function generateSectionId(base: string, existingSections: SectionConfig[], knownIds?: Set<string>): string {
     const prefix = base.startsWith('cond_') || base.startsWith('sec_') ? '' : 'sec_';
     // Normalize: lowercase, remove accents, replace non-alphanumeric with underscore
     const normalized = base.toLowerCase()
@@ -518,8 +520,15 @@ function generateSectionId(base: string, existingSections: SectionConfig[]): str
 
     let counter = 1;
     const originalId = id;
-    while (existingSections.some(s => s.id === id)) {
-        id = `${originalId}_${counter++}`;
+    if (knownIds) {
+        while (knownIds.has(id)) {
+            id = `${originalId}_${counter++}`;
+        }
+        knownIds.add(id);
+    } else {
+        while (existingSections.some(s => s.id === id)) {
+            id = `${originalId}_${counter++}`;
+        }
     }
     return id;
 }
