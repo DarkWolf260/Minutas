@@ -103,10 +103,10 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
             {/* Marco de escaneo centrado absolutamente */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px]">
               {/* Esquinas en Azul Primary */}
-              <div className="absolute -top-1 -left-1 w-10 h-10 border-t-4 border-l-4 border-primary rounded-tl-2xl shadow-[0_0_15px_rgba(var(--primary),0.4)]" />
-              <div className="absolute -top-1 -right-1 w-10 h-10 border-t-4 border-r-4 border-primary rounded-tr-2xl shadow-[0_0_15px_rgba(var(--primary),0.4)]" />
-              <div className="absolute -bottom-1 -left-1 w-10 h-10 border-b-4 border-l-4 border-primary rounded-bl-2xl shadow-[0_0_15px_rgba(var(--primary),0.4)]" />
-              <div className="absolute -bottom-1 -right-1 w-10 h-10 border-b-4 border-r-4 border-primary rounded-br-2xl shadow-[0_0_15px_rgba(var(--primary),0.4)]" />
+              <div className="absolute -top-1 -left-1 w-10 h-10 border-t-4 border-l-4 border-primary rounded-tl-2xl shadow-[0_0_15px_hsl(var(--primary)/0.35)]" />
+              <div className="absolute -top-1 -right-1 w-10 h-10 border-t-4 border-r-4 border-primary rounded-tr-2xl shadow-[0_0_15px_hsl(var(--primary)/0.35)]" />
+              <div className="absolute -bottom-1 -left-1 w-10 h-10 border-b-4 border-l-4 border-primary rounded-bl-2xl shadow-[0_0_15px_hsl(var(--primary)/0.35)]" />
+              <div className="absolute -bottom-1 -right-1 w-10 h-10 border-b-4 border-r-4 border-primary rounded-br-2xl shadow-[0_0_15px_hsl(var(--primary)/0.35)]" />
               
               {/* Resplandor central sutil */}
               <div className="absolute inset-0 bg-primary/5 rounded-2xl animate-pulse" />

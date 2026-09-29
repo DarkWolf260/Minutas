@@ -84,7 +84,7 @@ export function SideNav() {
         <nav className="flex flex-col items-center gap-6 px-2 py-5">
           <Link
             to="#"
-            className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20 shadow-[0_0_20px_-5px_rgba(var(--primary),0.4)] transition-all hover:shadow-[0_0_30px_-5px_rgba(var(--primary),0.6)] md:h-9 md:w-9"
+            className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.35)] transition-all hover:shadow-[0_0_30px_-5px_hsl(var(--primary)/0.5)] md:h-9 md:w-9"
           >
             <img src="/icons/icon-192x192.png" alt="App Icon" className="h-6 w-6 object-contain transition-all group-hover:scale-110" />
             <span className="sr-only">Minutas</span>
@@ -97,7 +97,7 @@ export function SideNav() {
                   className={cn(
                     'flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-300 md:h-9 md:w-9 ring-1 ring-transparent',
                     pathname.startsWith('/admin')
-                      ? 'bg-primary/10 text-primary ring-primary/20 shadow-[0_0_15px_-3px_rgba(var(--primary),0.3)]'
+                      ? 'bg-primary/10 text-primary ring-primary/20 shadow-[0_0_15px_-3px_hsl(var(--primary)/0.25)]'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   )}
                 >
@@ -119,7 +119,7 @@ export function SideNav() {
                     className={cn(
                       'flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-300 md:h-9 md:w-9 ring-1 ring-transparent',
                       isActive
-                        ? 'bg-primary/10 text-primary ring-primary/20 shadow-[0_0_15px_-3px_rgba(var(--primary),0.3)]'
+                        ? 'bg-primary/10 text-primary ring-primary/20 shadow-[0_0_15px_-3px_hsl(var(--primary)/0.25)]'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                     )}
                   >
@@ -143,7 +143,7 @@ export function SideNav() {
                 <DropdownMenuTrigger className={cn(
                   'flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-300 md:h-9 md:w-9 ring-1 ring-transparent focus:outline-none shadow-[0_0_15px_-5px_rgba(0,0,0,0.1)]',
                   pathname.startsWith('/settings') 
-                    ? 'bg-primary/10 ring-primary/20 shadow-[0_0_15px_-3px_rgba(var(--primary),0.3)]' 
+                    ? 'bg-primary/10 ring-primary/20 shadow-[0_0_15px_-3px_hsl(var(--primary)/0.25)]' 
                     : 'hover:ring-primary/20 hover:bg-muted/50'
                 )}>
                   <div className="h-7 w-7 shrink-0 rounded-full overflow-hidden shadow-sm ring-1 ring-border">

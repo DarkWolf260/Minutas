@@ -227,7 +227,7 @@ export function OnboardingTour({ onComplete }: { onComplete: () => void }) {
       {/* Highlight ring */}
       {targetRect && (
         <div 
-          className="absolute border-2 border-primary rounded-lg shadow-[0_0_0_4px_rgba(var(--primary),0.2)] transition-all duration-300 animate-pulse"
+          className="absolute border-2 border-primary rounded-lg shadow-[0_0_0_4px_hsl(var(--primary)/0.2)] transition-all duration-300 animate-pulse"
           style={{
             top: targetRect.top - 4,
             left: targetRect.left - 4,

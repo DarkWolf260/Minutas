@@ -35,19 +35,32 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement;
 
-    root.classList.remove('light', 'dark', 'facebook');
-
     if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
-        .matches
-        ? 'dark'
-        : 'light';
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-      root.classList.add(systemTheme);
-      return;
+      const applySystemTheme = () => {
+        root.classList.remove('light', 'dark', 'facebook');
+        const systemTheme = mediaQuery.matches ? 'dark' : 'light';
+        root.classList.add(systemTheme);
+        root.style.colorScheme = systemTheme;
+      };
+
+      applySystemTheme();
+
+      // Listen for system theme changes in real time
+      try {
+        mediaQuery.addEventListener('change', applySystemTheme);
+        return () => mediaQuery.removeEventListener('change', applySystemTheme);
+      } catch (e) {
+        // Fallback for older browsers
+        mediaQuery.addListener(applySystemTheme);
+        return () => mediaQuery.removeListener(applySystemTheme);
+      }
     }
 
+    root.classList.remove('light', 'dark', 'facebook');
     root.classList.add(theme);
+    root.style.colorScheme = theme === 'dark' || theme === 'facebook' ? 'dark' : 'light';
   }, [theme]);
 
   const value = {

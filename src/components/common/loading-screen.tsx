@@ -19,7 +19,7 @@ export function LoadingScreen({ message, isOverlay = false }: LoadingScreenProps
           : "min-h-screen bg-background"
       )}
     >
-      <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 ring-1 ring-primary/20 shadow-[0_0_40px_-10px_rgba(var(--primary),0.5)]">
+      <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 ring-1 ring-primary/20 shadow-[0_0_40px_-10px_hsl(var(--primary)/0.35)]">
         <img src="/icons/icon-192x192.png" alt="Logo" className="h-10 w-10 object-contain" />
       </div>
 

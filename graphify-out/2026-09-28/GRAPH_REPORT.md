@@ -1,11 +1,11 @@
 # Graph Report - Minutas  (2026-09-28)
 
 ## Corpus Check
-- 394 files · ~306,150 words
+- 394 files · ~306,083 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3549 nodes · 12381 edges · 259 communities (106 shown, 153 thin omitted)
+- 3549 nodes · 12381 edges · 260 communities (107 shown, 153 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 17 edges (avg confidence: 0.83)
 - Token cost: 0 input · 0 output
 
@@ -57,6 +57,7 @@
 - [[_COMMUNITY_scripts|scripts]]
 - [[_COMMUNITY_personnel-table.tsx|personnel-table.tsx]]
 - [[_COMMUNITY_📖 Sistema de Plantillas|📖 Sistema de Plantillas]]
+- [[_COMMUNITY_onboarding-tour.tsx|onboarding-tour.tsx]]
 - [[_COMMUNITY_reporte-generar.tsx|reporte-generar.tsx]]
 - [[_COMMUNITY_validationspersonnel.ts|validations/personnel.ts]]
 - [[_COMMUNITY_sync-context.tsx|sync-context.tsx]]
@@ -295,7 +296,7 @@
 - 1-file cycle: `src/pages/admin/index.tsx -> src/pages/admin/index.tsx`
 - 1-file cycle: `src/components/orden-del-dia/index.tsx -> src/components/orden-del-dia/index.tsx`
 
-## Communities (259 total, 153 thin omitted)
+## Communities (260 total, 153 thin omitted)
 
 ### Community 0 - "db.ts"
 Cohesion: 0.08
@@ -338,8 +339,8 @@ Cohesion: 0.09
 Nodes (22): validations/schemas.ts, AddressSchema, AppSettingsSchema, cedulaValidator, createFieldZodSchema(), dateValidator, DepartmentSchema, FieldConfigSchema (+14 more)
 
 ### Community 10 - "ajustes-generales.tsx"
-Cohesion: 0.08
-Nodes (52): GuardSelector(), GuardSelectorProps, NoGuardBanner(), NoGuardBannerProps, QuickChatSelectorProps, UnitForm(), UnitFormProps, ViewerHeaderProps (+44 more)
+Cohesion: 0.07
+Nodes (60): GuardSelector(), GuardSelectorProps, NoGuardBanner(), NoGuardBannerProps, QuickChatSelectorProps, AddActivityFormProps, UnitForm(), UnitFormProps (+52 more)
 
 ### Community 12 - "App.tsx"
 Cohesion: 0.05
@@ -358,7 +359,7 @@ Cohesion: 0.07
 Nodes (28): Additional Resources, As a Reviewer, As an Author, Before Submitting, Branch Naming, Code Review Guidelines, Code Style, Commit Messages (+20 more)
 
 ### Community 16 - "StaffRole"
-Cohesion: 0.08
+Cohesion: 0.07
 Nodes (48): @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, react-hook-form, GuardStaffEditor, GuardStaffEditorProps, SortableStaffItem(), StaffListEditor (+40 more)
 
 ### Community 17 - "borrar-datos.tsx"
@@ -370,8 +371,8 @@ Cohesion: 0.06
 Nodes (56): EstadisticasFieldProps, ReportFormFieldProps, formatStaffReporta(), cleanTemplateName(), parseCache, parseTemplate(), recordReportAudit(), renderContent() (+48 more)
 
 ### Community 19 - "address-map.tsx"
-Cohesion: 0.06
-Nodes (55): CHANGE_TYPE_CONFIG, ChangeEntry, CHANGELOG, ChangelogEntry, ChangeType, WORKFLOW_STEPS, TEMPLATE_LIST, NavCardProps (+47 more)
+Cohesion: 0.10
+Nodes (34): CHANGE_TYPE_CONFIG, ChangeEntry, CHANGELOG, ChangelogEntry, ChangeType, WORKFLOW_STEPS, TEMPLATE_LIST, NavCardProps (+26 more)
 
 ### Community 20 - "devDependencies"
 Cohesion: 0.07
@@ -382,12 +383,12 @@ Cohesion: 0.18
 Nodes (19): CSVManager(), orden-del-dia/index.ts, useOrdenDelDiaActivities(), OrdenDelDiaDraft, useOrdenDelDiaGenerator(), UseOrdenDelDiaGeneratorProps, Nota, NOTAS_POR_DEFECTO (+11 more)
 
 ### Community 22 - "orden-del-dia/index.tsx"
-Cohesion: 0.08
-Nodes (27): date-fns, ActivityItem, ActivityItemProps, AddActivityForm(), AddActivityFormProps, orden-del-dia/index.tsx, OrdenDelDiaForm, OrdenDelDiaFormProps (+19 more)
+Cohesion: 0.11
+Nodes (18): date-fns, ActivityItem, ActivityItemProps, AddActivityForm(), orden-del-dia/index.tsx, OrdenDelDiaFormProps, OrdenDelDiaFormRef, SeccionActividadesDiaProps (+10 more)
 
 ### Community 23 - "estadisticas-field.tsx"
-Cohesion: 0.07
-Nodes (45): useAdmin(), useAuth(), PlantillasModalsProps, PlantillasSidebar(), PlantillasSidebarProps, AdminConfigPage(), useGlobalConfig(), useProfile() (+37 more)
+Cohesion: 0.06
+Nodes (54): AdminDashboardPage(), useAdmin(), useAdminUsers(), useAuth(), PlantillasModalsProps, PlantillasSidebar(), PlantillasSidebarProps, AdminConfigPage() (+46 more)
 
 ### Community 25 - "template/index.ts"
 Cohesion: 0.17
@@ -453,9 +454,13 @@ Nodes (19): PersonnelTable(), Table, TableBody, TableCaption, TableCell, TableFo
 Cohesion: 0.12
 Nodes (15): 1. Variables Básicas, 2. Tipos de Campos, 3. Dropdowns (Listas Desplegables), 4. Secciones, 5. Lógica Condicional, 6. Resumen Automático, 7. Separadores, 8. Reglas Estadísticas y Etiquetas Especiales (`*` y ` (1)`) (+7 more)
 
+### Community 43 - "onboarding-tour.tsx"
+Cohesion: 0.07
+Nodes (28): AboutHeader(), AboutHeaderProps, NovedadFiltersProps, SyncHeader(), SyncHeaderProps, TemplateList(), TemplateListProps, WorkspaceControls() (+20 more)
+
 ### Community 45 - "reporte-generar.tsx"
-Cohesion: 0.05
-Nodes (57): AutoResizeTextarea(), FieldSettingsSidebar(), GuardConfigCard(), GuardConfigCardProps, StatsHeader(), GENDER_OPTIONS, AddressInput, AddressInputProps (+49 more)
+Cohesion: 0.08
+Nodes (37): GuardConfigCard(), GuardConfigCardProps, StatsHeader(), GENDER_OPTIONS, AddressInput, AddressInputProps, LOCATION_TYPE_BADGE, LOCATION_TYPES (+29 more)
 
 ### Community 46 - "validations/personnel.ts"
 Cohesion: 0.22
@@ -478,8 +483,8 @@ Cohesion: 0.05
 Nodes (39): name, private, type, version, autoprefixer, @babel/core, babel-plugin-react-compiler, clsx (+31 more)
 
 ### Community 52 - "use-novedades.ts"
-Cohesion: 0.07
-Nodes (24): TimeHlvInput, TimeHlvInputProps, ActivityItem, AddActivityForm(), OrdenDelDiaFormProps, OrdenDelDiaFormRef, SeccionActividadesDiaProps, SeccionDistribucionPersonalProps (+16 more)
+Cohesion: 0.06
+Nodes (30): TimeHlvInput, TimeHlvInputProps, GuardStaffEditor, GuardStaffEditorProps, SortableStaffItem(), StaffListEditor, StaffListEditorProps, normalizeString() (+22 more)
 
 ### Community 54 - "settings.json"
 Cohesion: 0.07
@@ -499,7 +504,7 @@ Nodes (12): FeatureErrorBoundary, src_hooks_personal_index_usepersonal, src_hook
 
 ### Community 59 - "sync-setup.tsx"
 Cohesion: 0.07
-Nodes (34): NavCard(), LoadingScreen(), LoadingScreenProps, FormCreatorHeader(), FormCreatorHeaderProps, MinutaResultPreview(), MinutaResultPreviewProps, NovedadFilters() (+26 more)
+Nodes (34): NavCard(), LoadingScreen(), LoadingScreenProps, AutoResizeTextarea(), FieldSettingsSidebar(), FormCreatorHeader(), FormCreatorHeaderProps, MinutaResultPreview() (+26 more)
 
 ### Community 60 - "Design System Master File (Original: Minutas)"
 Cohesion: 0.15
@@ -538,8 +543,8 @@ Cohesion: 0.22
 Nodes (5): ref_path, vite, vite-plugin-pwa, @vitejs/plugin-react, @vitejs/plugin-react-swc
 
 ### Community 77 - "address-form-dialog.tsx"
-Cohesion: 0.10
-Nodes (56): @radix-ui/react-dialog, ResultDialogProps, PersonnelHistoryDialog(), BRUSH_SIZES, COLORS, PhotoEditor(), PhotoEditorProps, base64ToBlob() (+48 more)
+Cohesion: 0.09
+Nodes (57): @radix-ui/react-dialog, OrdenDelDiaForm, ResultDialogProps, PersonnelHistoryDialog(), BRUSH_SIZES, COLORS, PhotoEditor(), PhotoEditorProps (+49 more)
 
 ### Community 78 - "configuracion/index.ts"
 Cohesion: 0.06
@@ -562,8 +567,8 @@ Cohesion: 0.15
 Nodes (13): vitest, result, TemplateBuilder(), generateMockData(), TemplatePreview(), parseTemplate(), resolveTemplateTitle(), generateMockData() (+5 more)
 
 ### Community 86 - "Minutas/components.json"
-Cohesion: 0.11
-Nodes (27): AdminDashboardPage(), useAdminUsers(), SyncModals(), ConfirmDialogProps, DatabaseProvider(), UseDireccionesReturn, AddressMap, ListaDirecciones() (+19 more)
+Cohesion: 0.12
+Nodes (25): SyncInboxProps, SyncModals(), SyncModalsProps, SyncSetupProps, ConfirmDialogProps, UseDireccionesReturn, AddressMap, ListaDirecciones() (+17 more)
 
 ### Community 87 - "RoleManagerDnD"
 Cohesion: 0.60
@@ -699,9 +704,9 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `setup/index.tsx` to `side-nav.tsx`, `form-creator.tsx`, `react`, `ajustes-generales.tsx`, `App.tsx`, `novedad-sidebar.tsx`, `StaffRole`, `borrar-datos.tsx`, `useSettings`, `orden-del-dia/index.tsx`, `iconLibrary`, `useWorkspaceManager`, `structure-tree.tsx`, `config`, `sonner`, `useAuth`, `personnel-table.tsx`, `template-list.tsx`, `use-save.ts`, `sync-context.tsx`, `types/index.ts`, `package.json`, `personal.tsx`, `address-form-dialog.tsx`, `Minutas/typedoc.json`, `workspaces/index.tsx`?**
   _High betweenness centrality (0.078) - this node is a cross-community bridge._
-- **Why does `cn()` connect `sync-setup.tsx` to `estadisticas-utils.test.ts`, `user-provider.tsx`, `report.json`, `App.tsx`, `reporte-generar.tsx`, `Minutas/tsconfig.json`, `address-map.tsx`, `use-novedades.ts`, `aliases`, `settings.json`, `estadisticas-field.tsx`, `Minutas/components.json`, `ui`, `$schema`, `use-plantillas.ts`, `useAuth`?**
+- **Why does `cn()` connect `sync-setup.tsx` to `estadisticas-utils.test.ts`, `user-provider.tsx`, `report.json`, `onboarding-tour.tsx`, `App.tsx`, `reporte-generar.tsx`, `Minutas/tsconfig.json`, `address-map.tsx`, `use-novedades.ts`, `aliases`, `settings.json`, `estadisticas-field.tsx`, `Minutas/components.json`, `ui`, `$schema`, `use-plantillas.ts`, `useAuth`?**
   _High betweenness centrality (0.069) - this node is a cross-community bridge._
-- **Why does `cn()` connect `side-nav.tsx` to `form-creator.tsx`, `setup/index.tsx`, `react`, `ajustes-generales.tsx`, `App.tsx`, `novedad-sidebar.tsx`, `StaffRole`, `orden-del-dia/index.tsx`, `iconLibrary`, `useWorkspaceManager`, `useAuth`, `sonner`, `personnel-table.tsx`, `template-list.tsx`, `sync-context.tsx`, `types/index.ts`, `address-form-dialog.tsx`, `parseTemplate`, `workspaces/index.tsx`?**
+- **Why does `cn()` connect `side-nav.tsx` to `sonner`, `form-creator.tsx`, `setup/index.tsx`, `react`, `personnel-table.tsx`, `ajustes-generales.tsx`, `App.tsx`, `template-list.tsx`, `address-form-dialog.tsx`, `sync-context.tsx`, `StaffRole`, `novedad-sidebar.tsx`, `types/index.ts`, `parseTemplate`, `iconLibrary`, `useWorkspaceManager`, `workspaces/index.tsx`, `useAuth`?**
   _High betweenness centrality (0.068) - this node is a cross-community bridge._
 - **What connects `@typescript-eslint/no-explicit-any`, `@typescript-eslint/no-unused-vars`, `no-console` to the rest of the system?**
   _985 weakly-connected nodes found - possible documentation gaps or missing edges._

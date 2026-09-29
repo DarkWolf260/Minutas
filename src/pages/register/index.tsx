@@ -120,7 +120,7 @@ export default function RegisterPage() {
       {/* Main Content */}
       <div className="relative z-10 w-full max-w-md p-6">
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 ring-1 ring-primary/20 shadow-[0_0_40px_-10px_rgba(var(--primary),0.5)]">
+          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 ring-1 ring-primary/20 shadow-[0_0_40px_-10px_hsl(var(--primary)/0.35)]">
             <img src="/icons/icon-192x192.png" alt="Minutas Logo" className="h-10 w-10 object-contain" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight">Crear Cuenta</h1>
