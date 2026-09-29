@@ -1,6 +1,6 @@
 # Motor de Plantillas — Referencia de Sintaxis
 
-Documento generado desde el código fuente (`lexer.ts`, `parser.ts`, `evaluator.ts`, `renderer.ts`).
+Documento generado desde el código fuente (`lexer.ts`, `parser.ts`, `validator.ts`, `evaluator.ts`, `renderer.ts`, `titles.ts`).
 
 ---
 
@@ -374,15 +374,13 @@ Para campos con notación de punto (`{Director.sex}`), primero se resuelve el ca
 
 Después del renderizado, el motor aplica automáticamente:
 
-1. Elimina marcadores de resumen `<<` y `>>`
-2. Elimina bloques condicionales no procesados `[?...][/]`
-3. Elimina separadores `[""]`
-4. Elimina otras secciones `[...]` no procesadas
-5. Resuelve etiquetas semánticas `{campo:semantic}`
-6. Convierte `\*` en `*` (asterisco literal)
-7. **Colapsa 3+ saltos de línea consecutivos a máximo 2** (elimina líneas en blanco fantasma de bloques condicionales no renderizados)
-8. Elimina líneas que quedaron con solo espacios/tabulaciones tras la sustitución
-9. Hace `trim()` del resultado final
+1. Elimina marcadores de fotos `{photos}` y `{fotos}`
+2. Elimina marcadores de resumen `<<` y `>>`
+3. Elimina bloques condicionales y secciones residuales no procesadas `[?...][/]`, `[""]`, `[...]`
+4. Convierte `\*` en `*` (asterisco literal)
+5. **Colapsa 3+ saltos de línea consecutivos a máximo 2** (elimina líneas en blanco fantasma de bloques condicionales no renderizados)
+6. Elimina líneas que quedaron con solo espacios/tabulaciones tras la sustitución
+7. Hace `trim()` del resultado final
 
 ---
 
