@@ -7,21 +7,6 @@
 /**
  * Evaluates a conditional expression
  * 
- * @param fieldValue - The actual value of the field
- * @param operator - The comparison operator (=, !=, >, <, >=, <=)
- * @param targetValue - The value to compare against
- * @returns True if the condition is met
- * 
- * @example
- * ```typescript
- * evaluateCondition('Robo', '=', 'Robo') // true
- * evaluateCondition(5, '>', '3') // true
- * evaluateCondition('Active', '!=', 'Inactive') // true
- * ```
- */
-/**
- * Evaluates a conditional expression
- * 
  * Supports numeric and string comparisons using standard operators.
  * 
  * @param fieldValue - The actual value of the field

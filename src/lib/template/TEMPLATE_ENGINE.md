@@ -33,22 +33,25 @@ Los segmentos están separados por `:`. El orden de los segmentos después del n
 | `textarea` | Texto largo / multilinea |
 | `date` | Fecha (formato YYYY-MM-DD → se renderiza como DD/Mes/YYYY) |
 | `time-hlv` | Hora (HH:MM) |
-| `def` | Valor predefinido globalmente |
+| `predefined` | Campo con valor predefinido |
 | `multi-text` | Lista de textos |
-| `dropdown` | Selección de opciones |
+| `dropdown` | Selección de opciones desplegables |
 | `cedula` | Número de cédula venezolana (V-XX.XXX.XXX) con formato automático |
-| `semantic` | Concepto semántico (resuelto en post-proceso) |
+| `semantic` | Tipo semántico legado (retrocompatibilidad; tratado como texto) |
 
 #### Modificadores de campo
 
 | Modificador | Descripción |
 |-------------|-------------|
-| `full` | Campo ocupa ancho completo en el formulario |
-| `req` | Campo requerido |
-| `upper` | Convierte a MAYÚSCULAS al renderizar |
-| `lower` | Convierte a minúsculas al renderizar |
-| `title` | Convierte a Título (primera letra de cada palabra en mayúscula) |
-| `single` | Permite finalizar el reporte con una sola hora (sin rango) para campos `time-hlv` |
+| `full` | El campo ocupa el ancho completo (100%) en el formulario |
+| `req` | Campo obligatorio / requerido |
+| `upper` | Convierte el texto a MAYÚSCULAS al renderizar |
+| `lower` | Convierte el texto a minúsculas al renderizar |
+| `title` | Convierte a Formato Título (primera letra de cada palabra en mayúscula) |
+| `capitalize` | Convierte la primera letra del texto en mayúscula |
+| `hidden` | Oculta el campo en la salida del reporte renderizado |
+| `single` | Permite ingresar una sola hora (sin rango) para campos `time-hlv` |
+| `default("Valor")` / `def=(Valor)` | Asigna un valor predeterminado si el campo queda vacío |
 
 #### Dropdown con opciones inline
 
@@ -66,10 +69,14 @@ Ejemplo: {Estado:dropdown(A=Activo|I=Inactivo|S=Suspendido)}
 
 #### Combinando modificadores
 
+Los modificadores de presentación pueden combinarse con `:` o con tubería `|`:
+
 ```
 {Descripcion:textarea:full:req}
 {Reportante:text:upper}
 {Nombre:title:req:full}
+{Tipo:dropdown(A=Opción 1|B=Opción 2)|upper}
+{Estatus:default("Pendiente"):req}
 ```
 
 ---

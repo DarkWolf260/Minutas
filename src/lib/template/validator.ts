@@ -145,12 +145,6 @@ export function validate(
     };
 }
 
-/**
- * Checks if a section has any fields defined
- */
-export function sectionHasFields(section: SectionConfig): boolean {
-    return section.field_ids && section.field_ids.length > 0;
-}
 
 /**
  * Checks if a field name is valid (not empty, no special chars)

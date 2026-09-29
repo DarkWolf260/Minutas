@@ -63,12 +63,4 @@ export interface ValidationResult {
     warnings: string[];
 }
 
-/**
- * Render options
- */
-export interface RenderOptions {
-    predefinedValues?: Record<string, string>;
-    dynamicValues?: Record<string, string>;
-    summaryOnly?: boolean;
-}
 

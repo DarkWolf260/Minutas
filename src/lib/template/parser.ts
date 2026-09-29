@@ -1,6 +1,7 @@
 import type { Token } from './types';
 import type { SnippetOption, FieldType, SectionConfig, TemplateParserResult } from '@/lib/types';
 import { tokenize } from './lexer';
+import { validateSyntax, validateSemantics } from './validator';
 
 /**
  * Automatic field types based on field name
@@ -531,5 +532,54 @@ function generateSectionId(base: string, existingSections: SectionConfig[], know
         }
     }
     return id;
+}
+
+// Cache for parsed templates to avoid redundant work
+const parseCache = new Map<string, TemplateParserResult>();
+
+/**
+ * Parsea una plantilla completa y devuelve su configuración y errores
+ */
+export function parseTemplate(templateContent: string): TemplateParserResult {
+    if (!templateContent) {
+        return {
+            sections: [],
+            layout: [],
+            fieldNames: new Set(),
+            fieldTypes: new Map(),
+            templateOptions: new Map(),
+            fieldModifiers: new Map(),
+            fieldWidths: new Map(),
+            requiredFields: new Map(),
+            defaultValues: new Map(),
+            predefinedValues: new Map(),
+            errors: [],
+        };
+    }
+
+    // Check cache first
+    const cached = parseCache.get(templateContent);
+    if (cached) return cached;
+
+    const tokens = tokenize(templateContent);
+    const result = parse(tokens);
+
+    // Syntax and semantic validation
+    const syntaxErrors = validateSyntax(templateContent);
+    const semanticErrors = validateSemantics(result.sections, result.fieldNames, result.fieldTypes, result.templateOptions);
+
+    const finalResult: TemplateParserResult = {
+        ...result,
+        errors: [...syntaxErrors, ...semanticErrors],
+    };
+
+    // Store in cache (FIFO eviction to keep cache warm)
+    if (parseCache.size >= 100) {
+        const oldestKey = parseCache.keys().next().value;
+        if (oldestKey) parseCache.delete(oldestKey);
+    }
+    parseCache.set(templateContent, finalResult);
+
+    return finalResult;
 }
 
