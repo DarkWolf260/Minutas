@@ -1,7 +1,7 @@
 # Graph Report - Minutas  (2026-09-29)
 
 ## Corpus Check
-- 395 files · ~304,995 words
+- 395 files · ~304,994 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d6aa4ba5`
+- Built from commit: `deb59dea`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -203,6 +203,7 @@
 - [[_COMMUNITY_Writing Tests|Writing Tests]]
 - [[_COMMUNITY_extends|extends]]
 - [[_COMMUNITY_rules|rules]]
+- [[_COMMUNITY_Community 196|Community 196]]
 - [[_COMMUNITY_1. Variables Básicas|1. Variables Básicas]]
 - [[_COMMUNITY_2. Tipos de Campos|2. Tipos de Campos]]
 - [[_COMMUNITY_3. Dropdowns (Listas Desplegables)|3. Dropdowns (Listas Desplegables)]]
@@ -223,7 +224,6 @@
 - [[_COMMUNITY_Supported Versions|Supported Versions]]
 - [[_COMMUNITY_Community 219|Community 219]]
 - [[_COMMUNITY_Community 221|Community 221]]
-- [[_COMMUNITY_Community 222|Community 222]]
 - [[_COMMUNITY_Community 225|Community 225]]
 - [[_COMMUNITY_10. Escapado|10. Escapado]]
 - [[_COMMUNITY_css.lint.compatibleVendorPrefixes|css.lint.compatibleVendorPrefixes]]
@@ -287,14 +287,14 @@
 ## Surprising Connections (you probably didn't know these)
 - `Resumen de Comportamiento Técnico` --references--> `obtenerCategoriasReporte()`  [INFERRED]
   docs/statistics-rules-guide.md → src/lib/estadisticas/categories.ts
+- `renderFinalReport()` --calls--> `recordReportAudit()`  [INFERRED]
+  src/lib/template/renderer.ts → src/lib/template-parser.ts
 - `SortableStaffItem()` --calls--> `cn()`  [EXTRACTED]
   src/components/guards/guard-staff-editor.tsx → src/lib/utils.ts
 - `CSVManager()` --calls--> `useWorkspaceManager()`  [EXTRACTED]
   src/components/personnel/csv-manager.tsx → src/lib/db/db-context.tsx
 - `FormLayoutProps` --references--> `TemplateConfig`  [EXTRACTED]
   src/components/report/form/form-layout.tsx → src/lib/types/index.ts
-- `ReportViewerProps` --references--> `Report`  [EXTRACTED]
-  src/components/report/report-viewer.tsx → src/lib/types/index.ts
 
 ## Import Cycles
 - 1-file cycle: `src/pages/admin/index.tsx -> src/pages/admin/index.tsx`
@@ -328,8 +328,8 @@ Cohesion: 0.05
 Nodes (42): dependencies, class-variance-authority, clsx, date-fns, @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, docx (+34 more)
 
 ### Community 6 - "react"
-Cohesion: 0.08
-Nodes (50): class-variance-authority, date-fns, qrcode.react, SettingsAboutPage, UnitsManager(), UnitList(), UnitListProps, ReportGeneratorProps (+42 more)
+Cohesion: 0.09
+Nodes (47): class-variance-authority, qrcode.react, SettingsAboutPage, UnitList(), UnitListProps, ReportGeneratorProps, StatCardProps, QRGenerator() (+39 more)
 
 ### Community 7 - "structure-manager.tsx"
 Cohesion: 0.15
@@ -344,12 +344,12 @@ Cohesion: 0.06
 Nodes (36): zod, validations/personnel.ts, CSVPersonnelRow, CSVPersonnelRowSchema, formatZodError(), Guardform_data, PERSONNEL_VALIDATION, Personnelform_data (+28 more)
 
 ### Community 10 - "ajustes-generales.tsx"
-Cohesion: 0.09
-Nodes (42): GuardSelectorProps, NoGuardBannerProps, ViewerHeaderProps, AjustesGeneralesForm(), AjustesGeneralesFormProps, TAG_OPTIONS, FieldCard(), QUESTION_TYPES (+34 more)
+Cohesion: 0.07
+Nodes (53): GuardSelectorProps, NoGuardBannerProps, StaffListEditor, QuickChatSelectorProps, PersonnelTable(), ViewerHeaderProps, AjustesGeneralesForm(), AjustesGeneralesFormProps (+45 more)
 
 ### Community 12 - "App.tsx"
-Cohesion: 0.21
-Nodes (21): SectionCard(), SectionCardProps, appendFieldTagToText(), compileFieldToken(), compileFormToTemplateString(), compileSectionBlock(), extractSectionsFromTemplateText(), FormCreatorModel (+13 more)
+Cohesion: 0.13
+Nodes (30): CanvasFieldDragOverlay(), CanvasFieldDragOverlayProps, FieldSettingsSidebarProps, SortableCanvasFieldCardProps, TemplateTextEditor(), TemplateTextEditorProps, FieldCardProps, getFieldPillDisplay() (+22 more)
 
 ### Community 13 - "Motor de Plantillas — Referencia de Sintaxis"
 Cohesion: 0.06
@@ -365,15 +365,15 @@ Nodes (28): Additional Resources, As a Reviewer, As an Author, Before Submitting
 
 ### Community 16 - "StaffRole"
 Cohesion: 0.07
-Nodes (59): @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, react-hook-form, GuardStaffEditor, GuardStaffEditorProps, StaffListEditorProps, AddEditPersonnelDialog() (+51 more)
+Nodes (58): @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, react-hook-form, GuardStaffEditor, GuardStaffEditorProps, StaffListEditorProps, AddEditPersonnelDialog() (+50 more)
 
 ### Community 17 - "borrar-datos.tsx"
-Cohesion: 0.16
-Nodes (21): FormLayoutProps, UseReportFormProps, UseReportGeneratorProps, ReportForm, ReportFormProps, ReportFormRef, useReportViewer(), ViewerContentProps (+13 more)
+Cohesion: 0.10
+Nodes (29): lucide-react, StructureManager(), src_hooks_configuracion_index_usesetup, setup/index.tsx, PuntosProgreso(), PasoBienvenida(), PasoAreaTrabajo(), DEF_MODULOS (+21 more)
 
 ### Community 18 - "changelog.tsx"
-Cohesion: 0.12
-Nodes (28): parseCache, renderContent(), extractFieldToken(), extractSectionToken(), tokenize(), AUTOMATIC_FIELD_TYPES, parse(), parseCache (+20 more)
+Cohesion: 0.14
+Nodes (24): parseCache, recordReportAudit(), renderContent(), AUTOMATIC_FIELD_TYPES, parseCache, parseFieldTag(), VALID_FIELD_TYPES, VALID_TEXT_MODS (+16 more)
 
 ### Community 19 - "address-map.tsx"
 Cohesion: 0.06
@@ -384,12 +384,12 @@ Cohesion: 0.07
 Nodes (27): devDependencies, autoprefixer, @babel/core, babel-plugin-react-compiler, eslint, eslint-config-prettier, jsdom, postcss (+19 more)
 
 ### Community 21 - "useSettings"
-Cohesion: 0.11
-Nodes (38): ActivityItemProps, AddActivityFormProps, OrdenDelDiaFormProps, CSVManager(), useReportForm(), useReportGenerator(), SnippetOptionEditor(), src_hooks_configuracion_index_usesettings (+30 more)
+Cohesion: 0.15
+Nodes (22): ActivityItemProps, AddActivityFormProps, OrdenDelDiaFormProps, CSVManager(), SnippetOptionEditor(), useDirecciones(), orden-del-dia/index.ts, useOrdenDelDiaActivities() (+14 more)
 
 ### Community 22 - "orden-del-dia/index.tsx"
-Cohesion: 0.10
-Nodes (19): ActivityItem, AddActivityForm(), orden-del-dia/index.tsx, OrdenDelDiaFormRef, SeccionActividadesDiaProps, SeccionDistribucionPersonalProps, SeccionNotasAdmProps, Note (+11 more)
+Cohesion: 0.16
+Nodes (27): rxjs, DatabaseContextType, MinutasDatabase, src_lib_db_db_stablestringify, ErrorContext, ErrorSeverity, getUserFriendlyErrorMessage(), isQuotaExceededError() (+19 more)
 
 ### Community 23 - "estadisticas-field.tsx"
 Cohesion: 0.13
@@ -405,15 +405,15 @@ Nodes (27): template/index.ts, extractFieldToken(), extractSectionToken(), token
 
 ### Community 27 - "useWorkspaceManager"
 Cohesion: 0.10
-Nodes (49): AppLayout(), Root(), useUnitsManager(), useUser(), ReportGeneratorRef, AjustesGenerales(), src_hooks_configuracion_index_usefielddefinitions, src_hooks_configuracion_index_useunits (+41 more)
+Nodes (61): useUnitsManager(), useReportForm(), useReportGenerator(), ReportGeneratorRef, AjustesGenerales(), configuracion/index.ts, src_hooks_configuracion_index_usefielddefinitions, src_hooks_configuracion_index_usesettings (+53 more)
 
 ### Community 29 - "use-plantillas.ts"
 Cohesion: 0.06
 Nodes (49): AvailableFieldsSidebar(), AvailableFieldsSidebarProps, FormCreatorHeader(), FormCreatorHeaderProps, SortableCanvasFieldCard(), SortableCanvasSectionCard(), SortableCanvasSectionCardProps, AVAILABLE_FIELDS (+41 more)
 
 ### Community 30 - "structure-tree.tsx"
-Cohesion: 0.04
-Nodes (64): AboutAppPage(), NavCard(), LoadingScreen(), LoadingScreenProps, MinutaResultPreview(), MinutaResultPreviewProps, NovedadFilters(), NovedadFiltersProps (+56 more)
+Cohesion: 0.05
+Nodes (49): AboutAppPage(), NavCard(), LoadingScreen(), LoadingScreenProps, MinutaResultPreview(), MinutaResultPreviewProps, NovedadFilters(), NovedadFiltersProps (+41 more)
 
 ### Community 31 - "useAuth"
 Cohesion: 0.16
@@ -421,15 +421,15 @@ Nodes (16): formatStaffReporta(), applyModifiers(), coerceForComparison(), evalu
 
 ### Community 32 - "sonner"
 Cohesion: 0.07
-Nodes (48): rxjs, configuracion/index.ts, useConfigRepo(), defaultDefinitions, defaultProfile, UserProfile, defaultSettings, defaultGuards (+40 more)
+Nodes (45): QuickChatSelector(), ReportPreview(), ReportViewer(), ReportViewerProps, ViewerContent(), ViewerHeader(), ViewerEmpty(), ViewerError() (+37 more)
 
 ### Community 33 - "compilerOptions"
 Cohesion: 0.10
 Nodes (19): compilerOptions, allowJs, esModuleInterop, isolatedModules, jsx, lib, module, moduleResolution (+11 more)
 
 ### Community 34 - "estadisticas-utils.test.ts"
-Cohesion: 0.07
-Nodes (55): DatePicker, MultiInput, EstadisticasFieldProps, ReportFormField(), ReportFormFieldProps, FormLayout(), FormLayoutProps, PersonnelFormFields() (+47 more)
+Cohesion: 0.05
+Nodes (69): DatePicker, MultiInput, TimeHlvInput, TimeHlvInputProps, EstadisticasFieldProps, ReportFormField(), ReportFormFieldProps, FormLayout() (+61 more)
 
 ### Community 35 - "Guía de Desarrollo Local con Supabase CLI"
 Cohesion: 0.17
@@ -452,8 +452,8 @@ Cohesion: 0.09
 Nodes (23): scripts, bot, build, build:dev, caddy, caddy:reload, dev, docs:generate (+15 more)
 
 ### Community 40 - "personnel-table.tsx"
-Cohesion: 0.07
-Nodes (37): leaflet, react-leaflet, AddressMap(), MapType, TILE_LAYERS, src_components_ui_alert_dialog_alertdialog, AlertDialogAction, AlertDialogCancel (+29 more)
+Cohesion: 0.08
+Nodes (32): leaflet, react-leaflet, AddressMap(), MapType, TILE_LAYERS, QRScanner(), QRScannerProps, src_components_ui_alert_dialog_alertdialog (+24 more)
 
 ### Community 41 - "📖 Sistema de Plantillas"
 Cohesion: 0.12
@@ -461,19 +461,19 @@ Nodes (15): 1. Variables Básicas, 2. Tipos de Campos, 3. Dropdowns (Listas Desp
 
 ### Community 43 - "Community 43"
 Cohesion: 0.04
-Nodes (76): lucide-react, react, react-router-dom, Props, State, Props, State, CsvImportButton() (+68 more)
+Nodes (55): date-fns, react-router-dom, Props, State, Props, State, ActivityItem, AddActivityForm() (+47 more)
 
 ### Community 45 - "reporte-generar.tsx"
 Cohesion: 0.08
-Nodes (38): AutoResizeTextarea(), FieldSettingsSidebar(), GuardConfigCardProps, StatsHeader(), AddressInput, AddressInputProps, LOCATION_TYPE_BADGE, LOCATION_TYPES (+30 more)
+Nodes (40): AutoResizeTextarea(), FieldSettingsSidebar(), GuardConfigCardProps, StatsHeader(), AddressInput, AddressInputProps, LOCATION_TYPE_BADGE, LOCATION_TYPES (+32 more)
 
 ### Community 46 - "validations/personnel.ts"
-Cohesion: 0.28
-Nodes (10): parseTemplate(), recordReportAudit(), renderFinalReport(), result, parseTemplate(), renderFinalReport(), generateMockData(), previewRender() (+2 more)
+Cohesion: 0.25
+Nodes (12): extractSectionsFromTemplateText(), parseTemplateToFields(), parseTemplate(), renderFinalReport(), result, parse(), parseTemplate(), renderFinalReport() (+4 more)
 
 ### Community 47 - "sync-context.tsx"
-Cohesion: 0.13
-Nodes (28): UseReportViewerProps, NotificationItem, NotificationsContext, NotificationsContextType, NotificationsProvider(), useNotifications(), SyncContext, SyncContextValue (+20 more)
+Cohesion: 0.09
+Nodes (44): FormLayoutProps, UseReportFormProps, UseReportGeneratorProps, ReportForm, ReportFormProps, ReportFormRef, useReportViewer(), UseReportViewerProps (+36 more)
 
 ### Community 49 - "server.js"
 Cohesion: 0.07
@@ -492,8 +492,8 @@ Cohesion: 0.06
 Nodes (54): useAdmin(), MobileHeader(), MobileHeaderProps, NovedadGroupItem, NovedadGroupItemProps, formatReportDate(), NovedadItem, NovedadItemProps (+46 more)
 
 ### Community 54 - "settings.json"
-Cohesion: 0.19
-Nodes (11): CanvasFieldDragOverlay(), CanvasFieldDragOverlayProps, FieldSettingsSidebarProps, SortableCanvasFieldCardProps, TemplateTextEditor(), TemplateTextEditorProps, FieldCardProps, getFieldPillDisplay() (+3 more)
+Cohesion: 0.11
+Nodes (25): react, CsvImportButton(), CsvImportButtonProps, parseSex(), parseStatus(), GuardAssignmentPanel(), UnitsManager(), RoleSorter() (+17 more)
 
 ### Community 55 - "Guía de Rendimiento y Unificación de Interfaces (RxDB + DnD)"
 Cohesion: 0.25
@@ -548,12 +548,12 @@ Cohesion: 0.22
 Nodes (5): ref_path, vite, vite-plugin-pwa, @vitejs/plugin-react, @vitejs/plugin-react-swc
 
 ### Community 76 - "DebouncedFunction"
-Cohesion: 0.19
-Nodes (13): @radix-ui/react-label, @radix-ui/react-slot, FormControl, FormDescription, FormField(), FormFieldContext, FormFieldContextValue, FormItem (+5 more)
+Cohesion: 0.13
+Nodes (16): SetupPage(), PasoBienvenida(), PasoAreaTrabajo(), DEF_MODULOS, PasoModulos(), PRESET_ESCRITORIO, PRESET_MOVIL, PasoEstructura() (+8 more)
 
 ### Community 77 - "address-form-dialog.tsx"
 Cohesion: 0.09
-Nodes (60): @radix-ui/react-dialog, OrdenDelDiaForm, ResultDialogProps, PersonnelHistoryDialog(), BRUSH_SIZES, COLORS, PhotoEditor(), PhotoEditorProps (+52 more)
+Nodes (59): @radix-ui/react-dialog, ResultDialogProps, PersonnelHistoryDialog(), BRUSH_SIZES, COLORS, PhotoEditor(), PhotoEditorProps, base64ToBlob() (+51 more)
 
 ### Community 78 - "configuracion/index.ts"
 Cohesion: 0.06
@@ -601,15 +601,15 @@ Nodes (36): AdminUser, useAuth(), UserStatus, useUserStatus(), ARRAY_KEYS, BOOLE
 
 ### Community 93 - "workspaces/index.tsx"
 Cohesion: 0.04
-Nodes (75): SortableStaffItem(), StaffListEditor, QuickChatSelectorProps, GuardAssignmentPanel(), PersonnelTable(), FormLayout(), ReportGenerator, StatCard (+67 more)
+Nodes (73): @radix-ui/react-label, @radix-ui/react-slot, SortableStaffItem(), FormLayout(), ReportGenerator, StatCard, DepartmentCard(), SortableRoleItem (+65 more)
 
 ### Community 94 - "Product"
 Cohesion: 0.22
 Nodes (8): Accessibility & Inclusion, Anti-references, Brand Personality, Design Principles, Product, Product Purpose, Register, Users
 
 ### Community 95 - "Minutas/.eslintrc.json"
-Cohesion: 0.05
-Nodes (38): GuardConfigCard(), OrdenEmptyState(), OrdenEmptyStateProps, OrdenHeader(), OrdenHeaderProps, ReporteGenerar(), ReporteGenerarProps, ReporteHeader() (+30 more)
+Cohesion: 0.09
+Nodes (21): GuardConfigCard(), OrdenEmptyState(), OrdenEmptyStateProps, OrdenHeader(), OrdenHeaderProps, ReporteGenerar(), ReporteGenerarProps, ReporteHeader() (+13 more)
 
 ### Community 96 - "report-photos.tsx"
 Cohesion: 0.16
@@ -679,6 +679,10 @@ Nodes (4): name, organization_id, organization_slug, ref
 Cohesion: 0.40
 Nodes (4): AuditRecord, DataPoint, FixedDataCatalog, SemanticMapping
 
+### Community 196 - "Community 196"
+Cohesion: 0.53
+Nodes (4): extractFieldToken(), extractSectionToken(), tokenize(), ConditionalExpression
+
 ### Community 219 - "Community 219"
 Cohesion: 0.32
 Nodes (6): tryGet(), PWAStatus(), PwaContext, PwaContextType, PwaProvider(), usePwa()
@@ -686,10 +690,6 @@ Nodes (6): tryGet(), PWAStatus(), PwaContext, PwaContextType, PwaProvider(), use
 ### Community 221 - "Community 221"
 Cohesion: 0.50
 Nodes (3): 🧭 Concepto Creativo: "Next-Gen Tactical Command Hub", 🚀 Cómo Visualizarlo, Minutas Next-Gen: Diseño Alternativo "Command Hub"
-
-### Community 222 - "Community 222"
-Cohesion: 0.14
-Nodes (18): QuickChatSelector(), ReportPreview(), ReportViewer(), ReportViewerProps, ViewerContent(), ViewerHeader(), ViewerEmpty(), ViewerError() (+10 more)
 
 ### Community 225 - "Community 225"
 Cohesion: 0.50
@@ -705,7 +705,7 @@ Nodes (8): css.lint.compatibleVendorPrefixes, css.lint.propertyIgnoredByDisplay,
 
 ### Community 300 - "template-list.tsx"
 Cohesion: 0.03
-Nodes (107): ref_virtual_pwa_register, AboutAppPage, AboutChangelogPage, AboutGuidePage, AboutTemplatesPage, AdminConfigPage, AdminFeedbackPage, AdminUsersPage (+99 more)
+Nodes (110): ref_virtual_pwa_register, AboutAppPage, AboutChangelogPage, AboutGuidePage, AboutTemplatesPage, AdminConfigPage, AdminFeedbackPage, AdminUsersPage (+102 more)
 
 ## Knowledge Gaps
 - **989 isolated node(s):** `@typescript-eslint/no-explicit-any`, `@typescript-eslint/no-unused-vars`, `no-console`, `prefer-const`, `no-var` (+984 more)
@@ -715,11 +715,11 @@ Nodes (107): ref_virtual_pwa_register, AboutAppPage, AboutChangelogPage, AboutGu
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `Community 43` to `side-nav.tsx`, `form-creator.tsx`, `react`, `ajustes-generales.tsx`, `novedad-sidebar.tsx`, `StaffRole`, `borrar-datos.tsx`, `useSettings`, `orden-del-dia/index.tsx`, `useWorkspaceManager`, `tailwind`, `sonner`, `personnel-table.tsx`, `template-list.tsx`, `use-save.ts`, `sync-context.tsx`, `package.json`, `personal.tsx`, `DebouncedFunction`, `address-form-dialog.tsx`, `Minutas/tsconfig.json`, `workspaces/index.tsx`, `Community 222`, `Community 225`?**
+- **Why does `react` connect `settings.json` to `side-nav.tsx`, `form-creator.tsx`, `react`, `ajustes-generales.tsx`, `novedad-sidebar.tsx`, `StaffRole`, `borrar-datos.tsx`, `useSettings`, `useWorkspaceManager`, `tailwind`, `sonner`, `personnel-table.tsx`, `Community 43`, `template-list.tsx`, `use-save.ts`, `sync-context.tsx`, `package.json`, `personal.tsx`, `address-form-dialog.tsx`, `Minutas/tsconfig.json`, `workspaces/index.tsx`, `Community 225`?**
   _High betweenness centrality (0.095) - this node is a cross-community bridge._
-- **Why does `cn()` connect `structure-tree.tsx` to `estadisticas-utils.test.ts`, `setup/index.tsx`, `user-provider.tsx`, `report.json`, `template-list.tsx`, `reporte-generar.tsx`, `types/index.ts`, `address-map.tsx`, `use-novedades.ts`, `aliases`, `Minutas/components.json`, `estadisticas-field.tsx`, `useWorkspaceManager`, `form.tsx`, `use-plantillas.ts`, `Minutas/.eslintrc.json`?**
+- **Why does `cn()` connect `structure-tree.tsx` to `estadisticas-utils.test.ts`, `setup/index.tsx`, `user-provider.tsx`, `report.json`, `DebouncedFunction`, `reporte-generar.tsx`, `template-list.tsx`, `types/index.ts`, `address-map.tsx`, `use-novedades.ts`, `aliases`, `Minutas/components.json`, `estadisticas-field.tsx`, `form.tsx`, `use-plantillas.ts`, `Minutas/.eslintrc.json`?**
   _High betweenness centrality (0.056) - this node is a cross-community bridge._
-- **Why does `cn()` connect `workspaces/index.tsx` to `side-nav.tsx`, `form-creator.tsx`, `react`, `personnel-table.tsx`, `ajustes-generales.tsx`, `Community 43`, `template-list.tsx`, `address-form-dialog.tsx`, `DebouncedFunction`, `novedad-sidebar.tsx`, `StaffRole`, `orden-del-dia/index.tsx`, `personal.tsx`, `useWorkspaceManager`, `Community 222`?**
+- **Why does `cn()` connect `workspaces/index.tsx` to `sonner`, `side-nav.tsx`, `form-creator.tsx`, `react`, `personnel-table.tsx`, `ajustes-generales.tsx`, `Community 43`, `template-list.tsx`, `address-form-dialog.tsx`, `novedad-sidebar.tsx`, `StaffRole`, `borrar-datos.tsx`, `settings.json`, `personal.tsx`, `useWorkspaceManager`?**
   _High betweenness centrality (0.049) - this node is a cross-community bridge._
 - **What connects `@typescript-eslint/no-explicit-any`, `@typescript-eslint/no-unused-vars`, `no-console` to the rest of the system?**
   _993 weakly-connected nodes found - possible documentation gaps or missing edges._

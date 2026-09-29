@@ -384,7 +384,114 @@ Después del renderizado, el motor aplica automáticamente:
 
 ---
 
-## Ejemplo completo
+## 13. Campos Especiales y Etiquetas Reservadas
+
+El motor de plantillas y el sistema reconocen una serie de palabras clave, etiquetas delimitadoras y metacampos con comportamiento predefinido o reservado:
+
+### A. Etiquetas y Marcadores Estructurales Reservados
+
+| Etiqueta / Marcador | Tipo / Ámbito | Comportamiento en el Motor |
+|---------------------|---------------|----------------------------|
+| `{photos}` / `{fotos}` | Marcador de fotos | Indica el punto de inserción de las fotografías adjuntas. En `renderFinalReport` se elimina limpiamente del texto si no hay fotos. |
+| `<<` ... `>>` | Delimitador de resumen | Delimita texto de resumen ejecutivo. Con `summaryOnly: true`, el motor extrae únicamente lo encerrado aquí. En el reporte normal, los marcadores `<<` y `>>` se retiran automáticamente. |
+| `[""]` | Separador de bloque | Representa un divisor estructural horizontal o salto de sección limpio sin título. |
+| `["Título"]` | Separador con título | Sección estructural con título visible sin campos obligatorios. |
+| `["Título" {campo}]` | Sección auto-contenida | Contiene texto y campos inline; si el campo no tiene datos, todo el bloque de texto y corchetes desaparece. |
+| `[Label]*` | Sección repetible | Define un bloque de repetición múltiple (1 a N iteraciones). |
+| `{Campo}*` | Campo repetible inline | Atajo que crea una sección repetible virtual para un solo campo. |
+| `[singular="..." plural="..." sub="..."]*` | Atributos de sección repetible | `singular`: título con 1 elemento; `plural`: título con 2+ elementos; `sub`: prefijo/etiqueta para cada ítem iterado (`#01`, `#02`, etc.). |
+| `[?{Campo} = Valor] ... [/]` | Bloque condicional | Controla la visibilidad del bloque según el valor del campo. |
+| `[?{Campo} :show] ... [/]` | Condicional explícito | Fuerza la visibilidad del contenido cuando la condición se cumple. |
+| `[?{Campo} :hide] ... [/]` | Condicional invertido | Oculta el bloque cuando la condición se cumple. |
+| `[?{Campo}] Clave=Valor [/]` | Bloque de mapeo | Bloque de definición (no emite texto directo). Genera opciones desplegables dinámicas para `{Campo}` y traduce su valor en el reporte. |
+
+---
+
+### B. Campos con Detección Automática de Tipo
+
+Si no se les especifica un tipo mediante modificadores (`:tipo`), el motor infiere automáticamente su comportamiento:
+
+| Nombre del Campo | Tipo Asignado | Formateo y Comportamiento |
+|------------------|---------------|---------------------------|
+| `{hora}` / `{Hora}` | `time-hlv` | Valida y formatea hora militar en formato de 24 horas (HH:MM o HLV). |
+| `{fecha}` / `{Fecha}` | `date` | Valida formato `YYYY-MM-DD` y lo formatea automáticamente a lenguaje natural: `DD/Mes/YYYY` con el nombre del mes capitalizado en español. |
+
+---
+
+### C. Campos de Personal con Formato Institucional
+
+Al vincularse con registros de personal (`StaffMember`), ciertos nombres de campo activan un formateo protocolar automático:
+
+| Campo | Función Aplicada | Resultado en Reporte |
+|-------|------------------|----------------------|
+| `{Reporta}` | `formatStaffReporta()` | Formato protocolar para quien suscribe el informe (ej. Grado, Nombre, Apellido, Cargo). |
+| `{Analista}` | `formatStaffMember(showCedula = true)` | Formato que incluye obligatoriamente la Cédula de Identidad formateada del funcionario. |
+| `{Director}`, `{Conductor}`, u otros | `formatStaffMember(showCedula = false)` | Formato institucional estándar de funcionario sin cédula visible. |
+
+---
+
+### D. Propiedades de Notación de Punto `{Campo.propiedad}`
+
+Disponibles para campos que contienen objetos o listas de personal (`StaffMember`):
+
+| Propiedad | Descripción | Ejemplo de Uso |
+|-----------|-------------|----------------|
+| `.sex` | Sexo del funcionario (`M` o `F`). Usado frecuentemente para condicionales de tratamiento protocolar. | `[?{Director.sex} = F]*DIRECTORA:*[/]` |
+| `.name` | Nombre completo del funcionario. | `{Director.name}` |
+| `.cargo` | Cargo o rol institucional asignado (`role_id` o `roleId`). | `{Director.cargo}` |
+| `.rank` | Grado o jerarquía del funcionario. | `{Director.rank}` |
+| `.cedula` / `.ci` | Número de cédula de identidad formateado. | `{Director.cedula}` |
+| `.titulo` | Título profesional o de cortesía institucional. | `{Director.titulo}` |
+| `.role_id` | Identificador interno del rol. | `{Director.role_id}` |
+| `.observations` | Observaciones registradas para el funcionario. | `{Director.observations}` |
+| `.id` | Identificador único del registro de personal. | `{Director.id}` |
+
+---
+
+### E. Metacampos y Variables Globales Predefinidas (`predefinedValues`)
+
+Valores inyectados a nivel de Workspace, sistema y sesión activa, disponibles automáticamente para cualquier plantilla sin intervención manual:
+
+| Variable Global | Origen del Auto-llenado | Descripción y Formato |
+|-----------------|-------------------------|------------------------|
+| `{Fecha}` | Reloj del sistema / Backend | Inicializado con la fecha actual (`YYYY-MM-DD`). Se formatea a `DD/Mes/YYYY` en el reporte. |
+| `{Hora}` | Reloj del sistema | Hora actual en formato militar de 24 horas (`time-hlv`, HH:MM). |
+| `{Municipio}` | Configuración del Workspace | Nombre del municipio asignado a la base operativa activa (ej. `Guanta`, `Bolívar`). |
+| `{Estado}` | Configuración del Workspace | Entidad federal (`Anzoátegui`). |
+| `{REDAN}` | Configuración Institucional | Región Estratégica de Evaluación de Daños (`Oriente`). |
+| `{ZOEDAN}` | Configuración Institucional | Zona Operativa de Evaluación de Daños (`Anzoátegui`). |
+| `{Usuario}` | Sesión de usuario activa | Nombre o identificador del usuario que elabora la minuta. |
+
+---
+
+### F. Auto-llenado por Guardia Activa y Asignación de Personal (`activeStaff`)
+
+Al crear una minuta, el formulario inicializa automáticamente campos basados en el turno de guardia activo (`active_guard_id`) y su dotación de personal:
+
+#### 1. Identificación de la Guardia
+| Campo Reconocido | Comportamiento |
+|------------------|----------------|
+| `{Guardia}` / `{Grupo}` / `{Grupo de guardia}` / `{Guardia de servicio}` | Se completa automáticamente con el identificador o nombre del grupo de guardia en servicio según la Orden del Día. |
+
+#### 2. Carga Automática de Funcionarios por Rol
+| Campo de Personal | Lógica de Selección Automática |
+|-------------------|--------------------------------|
+| `{Reporta}` | Selecciona al primer funcionario disponible según la prioridad de roles configurada en el sistema (`settings.reportarole_ids`). |
+| `{Analista}` | Carga al funcionario asignado al rol de Analista de guardia, formateando e incluyendo su Cédula de Identidad en el reporte final. |
+| `{Director}`, `{Jefe de operaciones}`, `{Jefe de los servicios}` | Carga automáticamente al titular de la jefatura o dirección activa registrada en la institución. |
+| `{Técnico}`, `{Auxiliar}`, `{Conductor}` | **Excepción manual intencional**: Están definidos como campos manuales (`MANUAL_FIELDS`) para permitir al operador seleccionar específicamente a los integrantes de la tripulación de ese servicio puntual sin sobreescritura automática. |
+
+---
+
+### G. Valores por Defecto en la Plantilla (`default` / `def`)
+
+Cualquier campo en la plantilla puede definir un valor de auto-llenado por defecto:
+- Sintaxis: `{Campo:default("Valor")}` o `{Campo:def=(Valor)}`
+- Al abrir el formulario, el campo ya contendrá ese valor precargado a menos que el usuario lo modifique.
+
+---
+
+## 14. Ejemplo completo
 
 ```
 REPORTE DE INCIDENTE
