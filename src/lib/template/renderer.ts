@@ -9,8 +9,7 @@ import { es } from 'date-fns/locale';
 import type { TemplateParserResult, SectionConfig, FieldConfig, FieldType, SnippetOption, form_dataRecord, form_dataValue } from '@/lib/types';
 import { formatStaffMember, formatStaffReporta } from '../formatters';
 import { evaluateCondition, applyModifiers as applyTextModifier } from './evaluator';
-import { tokenize } from './lexer';
-import { parse, parseFieldTag, parseTemplate as defaultParseTemplate } from './parser';
+import { parseTemplate as defaultParseTemplate } from './parser';
 import { logger } from '../logger';
 
 /** Internal config shape used during rendering (combines parsed template + field definitions) */

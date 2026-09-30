@@ -216,46 +216,6 @@ export const FieldConfigSchema = z.object({
 
 export type ValidatedFieldConfig = z.infer<typeof FieldConfigSchema>;
 
-// ============================================================================
-// HELPER VALIDATORS
-// ============================================================================
-
-/**
- * Validate a partial update (all fields optional)
- */
-export function createPartialSchema<T extends z.ZodObject<any>>(schema: T) {
-    return schema.partial();
-}
-
-/**
- * Validate an array of items
- */
-export function createArraySchema<T extends z.ZodType>(schema: T) {
-    return z.array(schema);
-}
-
-/**
- * Custom validator for cedula format
- */
-export const cedulaValidator = z
-    .string()
-    .refine((val) => {
-        if (!val) return true;
-        const specialValues = ['No indicó', 'No posee', 'Se desconoce'];
-        if (specialValues.includes(val)) return true;
-        return /^[VE]-\d{1,2}(\.\d{3}){2}$/.test(val);
-    }, 'Formato de cédula inválido (Ej: V-12.345.678)');
-
-/**
- * Custom validator for time in HH:MM format
- */
-export const timeValidator = z.string().regex(/^\d{2}:\d{2}$/, 'Formato de hora inválido (HH:MM)');
-
-/**
- * Custom validator for date in YYYY-MM-DD format
- */
-export const dateValidator = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de fecha inválido (YYYY-MM-DD)');
-
 /**
  * Generates a dynamic Zod schema for report form data based on template configuration
  */

@@ -84,8 +84,6 @@ import { SortableCanvasFieldCard } from './components/sortable-canvas-field';
 import { SortableCanvasSectionCard } from './components/sortable-canvas-section';
 import { CanvasFieldDragOverlay } from './components/canvas-field-drag-overlay';
 
-export { SPECIAL_SYSTEM_TAGS, type SpecialSystemTag } from './form-creator-constants';
-
 export interface FormCreatorProps {
   onAdd: (newTemplate: Template) => void;
   onUpdate?: (updatedTemplate: Template) => void;

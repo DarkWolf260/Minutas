@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-export const TAG_OPTIONS: Record<string, { label: string; value: string }[]> = {
+const TAG_OPTIONS: Record<string, { label: string; value: string }[]> = {
   Estado: [{ label: 'Anzoátegui', value: 'Anzoátegui' }],
   ZOEDAN: [{ label: 'Anzoátegui', value: 'Anzoátegui' }],
   REDAN: [{ label: 'Oriente', value: 'Oriente' }],

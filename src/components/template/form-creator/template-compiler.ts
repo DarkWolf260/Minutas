@@ -167,7 +167,7 @@ export function compileSectionBlock(section: FormCreatorSection | FormCreatorFie
 /**
  * Removes all section blocks (standard and repeatable) from the template text, leaving headers and root fields.
  */
-export function removeAllSectionsFromText(text: string): string {
+function removeAllSectionsFromText(text: string): string {
   if (!text) return '';
   const repPattern = /\[\s*(?:singular|plural|sub)\s*=\s*"[^"]*"[\s\S]*?(?:\[\/\s*\]|\])/gi;
   let result = text.replace(repPattern, '');

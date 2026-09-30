@@ -257,22 +257,10 @@
     "ast_hash": "ffe027340503da22000e928aaa25af21",
     "semantic_hash": ""
   },
-  "src/components/personnel/attendance-manager.tsx": {
-    "mtime": 1789917362.020594,
-    "seen": 1789932802.0633183,
-    "ast_hash": "b63fa8fc368a725824b911021d318ac2",
-    "semantic_hash": ""
-  },
   "src/components/personnel/csv-import-button.tsx": {
     "mtime": 1789917362.0215852,
     "seen": 1789932802.0633192,
     "ast_hash": "b8369abeedb0ddc5e72b48f232273b74",
-    "semantic_hash": ""
-  },
-  "src/components/personnel/csv-manager.tsx": {
-    "mtime": 1789917362.0215852,
-    "seen": 1789932802.0633204,
-    "ast_hash": "0a7ddc169e6ddf0a295dcc89e3fb3a83",
     "semantic_hash": ""
   },
   "src/components/personnel/form/personnel-form-fields.tsx": {
@@ -509,52 +497,16 @@
     "ast_hash": "34fc175fed2250b39218d92f0744882b",
     "semantic_hash": ""
   },
-  "src/components/stats/stat-card.tsx": {
-    "mtime": 1789917362.044523,
-    "seen": 1789932802.0633636,
-    "ast_hash": "c5c886feb4ed10c1585198c96f7a1aa0",
-    "semantic_hash": ""
-  },
-  "src/components/structure/department-card.tsx": {
-    "mtime": 1789917362.0455208,
-    "seen": 1789932802.063366,
-    "ast_hash": "0f60589284ede6574cfbedc733a78ccc",
-    "semantic_hash": ""
-  },
   "src/components/structure/institutional-data.ts": {
     "mtime": 1789917362.0455208,
     "seen": 1789932802.063367,
     "ast_hash": "0cda53fcfbd1a077bd62ac4efdc9b18f",
     "semantic_hash": ""
   },
-  "src/components/structure/role-card.tsx": {
-    "mtime": 1789917362.0465186,
-    "seen": 1789932802.0633678,
-    "ast_hash": "e7571fcd22d52d3284156e2471023e4b",
-    "semantic_hash": ""
-  },
-  "src/components/structure/role-manager-dnd.tsx": {
-    "mtime": 1789917362.0465186,
-    "seen": 1789932802.063369,
-    "ast_hash": "2e6383ca33eaaf56edbdabea7f657c39",
-    "semantic_hash": ""
-  },
-  "src/components/structure/role-sortable-list.tsx": {
-    "mtime": 1789917362.0475152,
-    "seen": 1789932802.0633702,
-    "ast_hash": "5c54041aa6d8c5d897484937b4e04e80",
-    "semantic_hash": ""
-  },
   "src/components/structure/role-sorter.tsx": {
     "mtime": 1789917362.0475152,
     "seen": 1789932802.0633712,
     "ast_hash": "e0a504f752821f5276bea66d6c70c49a",
-    "semantic_hash": ""
-  },
-  "src/components/structure/sortable-role-item.tsx": {
-    "mtime": 1789917362.0485132,
-    "seen": 1789932802.0633724,
-    "ast_hash": "eb8ff71a4f9e54e9a0794cbefa566166",
     "semantic_hash": ""
   },
   "src/components/structure/structure-manager.tsx": {
@@ -587,12 +539,6 @@
     "ast_hash": "888558fa8490c5a0df451c17cc44002d",
     "semantic_hash": ""
   },
-  "src/components/template/snippet-option-editor.tsx": {
-    "mtime": 1789917362.0515049,
-    "seen": 1789932802.0633783,
-    "ast_hash": "857fd0dfd445114fe144059b2bc21d09",
-    "semantic_hash": ""
-  },
   "src/components/template/template-builder.tsx": {
     "mtime": 1789935947.8020077,
     "seen": 1789936014.517815,
@@ -603,12 +549,6 @@
     "mtime": 1790024736.7754347,
     "seen": 1790025129.795459,
     "ast_hash": "1611d765cb94b4c7d1edb57f578f2aec",
-    "semantic_hash": ""
-  },
-  "src/components/template/template-preview.tsx": {
-    "mtime": 1789917362.0534992,
-    "seen": 1789932802.0633824,
-    "ast_hash": "a24e0853e1a5a69aaf2a9447c9bb05b9",
     "semantic_hash": ""
   },
   "src/components/ui/accordion.tsx": {
@@ -683,12 +623,6 @@
     "ast_hash": "37e69c98173ddb5e8e9ae9564be3ca07",
     "semantic_hash": ""
   },
-  "src/components/ui/custom/loading-skeleton.tsx": {
-    "mtime": 1789917362.059484,
-    "seen": 1789932802.0633957,
-    "ast_hash": "04805580a4c76f19f658fb339ba41af8",
-    "semantic_hash": ""
-  },
   "src/components/ui/custom/multi-input.tsx": {
     "mtime": 1789917362.059484,
     "seen": 1789932802.0633972,
@@ -705,18 +639,6 @@
     "mtime": 1789935947.8156927,
     "seen": 1789936014.5204577,
     "ast_hash": "41b9b985b69f67df4ccc94e913fd1746",
-    "semantic_hash": ""
-  },
-  "src/components/ui/custom/search-input.tsx": {
-    "mtime": 1789917362.0604804,
-    "seen": 1789932802.0634,
-    "ast_hash": "984f033f4fd7abb7460488f06387eaac",
-    "semantic_hash": ""
-  },
-  "src/components/ui/custom/status-badge.tsx": {
-    "mtime": 1789917362.0604804,
-    "seen": 1789932802.063401,
-    "ast_hash": "7ffa8b7a550c49fa71b92cf69f585507",
     "semantic_hash": ""
   },
   "src/components/ui/custom/time-hlv-input.tsx": {
@@ -759,12 +681,6 @@
     "mtime": 1789917362.063472,
     "seen": 1789932802.0634089,
     "ast_hash": "f756abdebcaf79f3c1566e1da1b3e988",
-    "semantic_hash": ""
-  },
-  "src/components/ui/progress.tsx": {
-    "mtime": 1789917362.0644693,
-    "seen": 1789932802.0634098,
-    "ast_hash": "c6f2a221f35817587f75e3b32a855523",
     "semantic_hash": ""
   },
   "src/components/ui/scroll-area.tsx": {
@@ -915,12 +831,6 @@
     "mtime": 1789931218.108041,
     "seen": 1789932802.0634837,
     "ast_hash": "76ff5c2aa7612ba96a3f1bfb1fd7cfad",
-    "semantic_hash": ""
-  },
-  "src/lib/constants/attendance.ts": {
-    "mtime": 1789917362.0973816,
-    "seen": 1789932802.0634847,
-    "ast_hash": "559b16ecd1a73dc20a6a9ccd6c325e2f",
     "semantic_hash": ""
   },
   "src/lib/constants/departments.ts": {
@@ -1253,12 +1163,6 @@
     "ast_hash": "e6343c826e177fe5591e7e8e5f7f9ecc",
     "semantic_hash": ""
   },
-  "src/lib/types/semantic.ts": {
-    "mtime": 1789917362.122845,
-    "seen": 1789932802.0635424,
-    "ast_hash": "81185238cab9569f3709d9960dae0d81",
-    "semantic_hash": ""
-  },
   "src/lib/utils-pure.ts": {
     "mtime": 1789917362.122845,
     "seen": 1789932802.0635436,
@@ -1281,12 +1185,6 @@
     "mtime": 1789917362.1248372,
     "seen": 1789932802.0635467,
     "ast_hash": "599d3ba06f67daf44087a971061ecd77",
-    "semantic_hash": ""
-  },
-  "src/lib/validations/personnel.ts": {
-    "mtime": 1789917362.1258347,
-    "seen": 1789932802.0635476,
-    "ast_hash": "a4e6410b12b319e56143047beed5b68b",
     "semantic_hash": ""
   },
   "src/lib/validations/schemas.ts": {
@@ -1991,12 +1889,6 @@
     "ast_hash": "93f25b8076331c6136afd2a6db0a7800",
     "semantic_hash": ""
   },
-  "src/hooks/admin/use-user-status.ts": {
-    "mtime": 1789933049.9054968,
-    "seen": 1789935743.7513492,
-    "ast_hash": "7a1db55542cf96485d9b5e9ccf48f459",
-    "semantic_hash": ""
-  },
   "src/hooks/configuracion/index.ts": {
     "mtime": 1789935522.3234098,
     "seen": 1789935743.7513506,
@@ -2073,12 +1965,6 @@
     "mtime": 1789936366.384572,
     "seen": 1789936881.3243885,
     "ast_hash": "38b484c59fa613c25c93572a0c15d027",
-    "semantic_hash": ""
-  },
-  "src/hooks/estadisticas/use-stats.ts": {
-    "mtime": 1789935947.8606312,
-    "seen": 1789936014.5264943,
-    "ast_hash": "1cbe6a99d3b9e13b7cbdca722e28b2f7",
     "semantic_hash": ""
   },
   "src/hooks/guardias/index.ts": {
@@ -2291,12 +2177,6 @@
     "ast_hash": "09ce6e2bf16901c133311dc4aa7d1d7a",
     "semantic_hash": ""
   },
-  "src/hooks/ui/use-save.ts": {
-    "mtime": 1789917362.0874083,
-    "seen": 1789935743.7527354,
-    "ast_hash": "411259a9827a6973c16d453b26c58e65",
-    "semantic_hash": ""
-  },
   "src/hooks/whatsapp/index.ts": {
     "mtime": 1789935560.348707,
     "seen": 1789935743.752791,
@@ -2372,7 +2252,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\ast.json": {
-    "mtime": 1790657378.0440905,
+    "mtime": 1790706689.4390986,
     "ast_hash": "75989a3cf5ddbe4cd6f8573b1839a681",
     "semantic_hash": ""
   },
@@ -2397,7 +2277,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\report.json": {
-    "mtime": 1790657378.0430934,
+    "mtime": 1790706689.438099,
     "ast_hash": "d37fa49f4e6c99ad3ff15f03d62adbd6",
     "semantic_hash": ""
   },
@@ -2566,19 +2446,9 @@
     "ast_hash": "ffe027340503da22000e928aaa25af21",
     "semantic_hash": ""
   },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\attendance-manager.tsx": {
-    "mtime": 1775680051.0278108,
-    "ast_hash": "b63fa8fc368a725824b911021d318ac2",
-    "semantic_hash": ""
-  },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\csv-import-button.tsx": {
     "mtime": 1782622762.6645062,
     "ast_hash": "b8369abeedb0ddc5e72b48f232273b74",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\csv-manager.tsx": {
-    "mtime": 1782622762.6665065,
-    "ast_hash": "0a7ddc169e6ddf0a295dcc89e3fb3a83",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\form\\personnel-form-fields.tsx": {
@@ -2752,8 +2622,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\shared\\address-form-dialog.tsx": {
-    "mtime": 1790545983.4620955,
-    "ast_hash": "36ee4f3379e1c6c683a57887b83f0d04",
+    "mtime": 1790706323.6426022,
+    "ast_hash": "210443f3dfa7db0da357fb6d87050164",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\shared\\address-map.tsx": {
@@ -2762,8 +2632,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\shared\\ajustes-generales-form.tsx": {
-    "mtime": 1782622762.7125423,
-    "ast_hash": "523b6a5038bdfd61fc7d2d32560a964d",
+    "mtime": 1790706420.5103345,
+    "ast_hash": "a8564a71cbaedbf4c4712b878d020914",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\shared\\ajustes-generales.tsx": {
@@ -2776,44 +2646,14 @@
     "ast_hash": "34fc175fed2250b39218d92f0744882b",
     "semantic_hash": ""
   },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\stats\\stat-card.tsx": {
-    "mtime": 1769476015.0727792,
-    "ast_hash": "c5c886feb4ed10c1585198c96f7a1aa0",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\structure\\department-card.tsx": {
-    "mtime": 1775680051.0503511,
-    "ast_hash": "0f60589284ede6574cfbedc733a78ccc",
-    "semantic_hash": ""
-  },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\structure\\institutional-data.ts": {
     "mtime": 1776879066.9628403,
     "ast_hash": "0cda53fcfbd1a077bd62ac4efdc9b18f",
     "semantic_hash": ""
   },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\structure\\role-card.tsx": {
-    "mtime": 1778373212.9582415,
-    "ast_hash": "e7571fcd22d52d3284156e2471023e4b",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\structure\\role-manager-dnd.tsx": {
-    "mtime": 1782622762.7198164,
-    "ast_hash": "2e6383ca33eaaf56edbdabea7f657c39",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\structure\\role-sortable-list.tsx": {
-    "mtime": 1778373212.981063,
-    "ast_hash": "5c54041aa6d8c5d897484937b4e04e80",
-    "semantic_hash": ""
-  },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\structure\\role-sorter.tsx": {
     "mtime": 1782622762.7229073,
     "ast_hash": "e0a504f752821f5276bea66d6c70c49a",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\structure\\sortable-role-item.tsx": {
-    "mtime": 1782622762.7257955,
-    "ast_hash": "eb8ff71a4f9e54e9a0794cbefa566166",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\structure\\structure-manager.tsx": {
@@ -2866,11 +2706,6 @@
     "ast_hash": "2c933ac842503dac47c075b22a37ba01",
     "semantic_hash": ""
   },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\template\\form-creator\\components\\minuta-result-preview.tsx": {
-    "mtime": 1790545984.2543993,
-    "ast_hash": "28d778afefbeda7c0dbc1643542e28d2",
-    "semantic_hash": ""
-  },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\template\\form-creator\\components\\sortable-canvas-field.tsx": {
     "mtime": 1790545984.2553983,
     "ast_hash": "f946d42d4c2a171b8ee2040e47be9db7",
@@ -2887,8 +2722,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\template\\form-creator\\field-card.tsx": {
-    "mtime": 1790545984.2593977,
-    "ast_hash": "db3b17a3dee36714ae9afacb9c7c1946",
+    "mtime": 1790706408.879656,
+    "ast_hash": "032dd54e7308c8a7130086bc054730a5",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\template\\form-creator\\form-creator-constants.tsx": {
@@ -2897,8 +2732,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\template\\form-creator\\form-creator.tsx": {
-    "mtime": 1790545984.262394,
-    "ast_hash": "d0d481d8e7de5aacb60bd50b7f21bcdd",
+    "mtime": 1790706459.4980826,
+    "ast_hash": "cc50f2d41ca507806f3ad3159162248a",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\template\\form-creator\\index.ts": {
@@ -2912,13 +2747,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\template\\form-creator\\template-compiler.ts": {
-    "mtime": 1790545984.3721023,
-    "ast_hash": "90ae018511191b4b33f7f08ffbb89ba3",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\template\\snippet-option-editor.tsx": {
-    "mtime": 1778712779.2500982,
-    "ast_hash": "857fd0dfd445114fe144059b2bc21d09",
+    "mtime": 1790706381.741759,
+    "ast_hash": "611751f4a2f8d5909785ecb644ce6835",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\template\\template-builder.tsx": {
@@ -2929,11 +2759,6 @@
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\template\\template-editor.tsx": {
     "mtime": 1790545984.383104,
     "ast_hash": "1611d765cb94b4c7d1edb57f578f2aec",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\template\\template-preview.tsx": {
-    "mtime": 1778739878.5596786,
-    "ast_hash": "a24e0853e1a5a69aaf2a9447c9bb05b9",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\ui\\accordion.tsx": {
@@ -2977,8 +2802,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\address-input.tsx": {
-    "mtime": 1790545984.3926334,
-    "ast_hash": "8e01b6810c78e9f6645d3528828db23f",
+    "mtime": 1790706309.2931006,
+    "ast_hash": "7018839c8bc38bcb180480c110586996",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\cedula-input.tsx": {
@@ -2996,11 +2821,6 @@
     "ast_hash": "37e69c98173ddb5e8e9ae9564be3ca07",
     "semantic_hash": ""
   },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\loading-skeleton.tsx": {
-    "mtime": 1777662995.3018894,
-    "ast_hash": "04805580a4c76f19f658fb339ba41af8",
-    "semantic_hash": ""
-  },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\multi-input.tsx": {
     "mtime": 1779851647.4374893,
     "ast_hash": "b1ed4fa3478a43ae7caf212c715c81a1",
@@ -3014,16 +2834,6 @@
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\responsive-modal.tsx": {
     "mtime": 1790545984.409606,
     "ast_hash": "41b9b985b69f67df4ccc94e913fd1746",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\search-input.tsx": {
-    "mtime": 1782622762.7445772,
-    "ast_hash": "984f033f4fd7abb7460488f06387eaac",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\status-badge.tsx": {
-    "mtime": 1777662995.3290145,
-    "ast_hash": "7ffa8b7a550c49fa71b92cf69f585507",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\ui\\custom\\time-hlv-input.tsx": {
@@ -3059,11 +2869,6 @@
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\ui\\popover.tsx": {
     "mtime": 1778373344.6613376,
     "ast_hash": "f756abdebcaf79f3c1566e1da1b3e988",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\ui\\progress.tsx": {
-    "mtime": 1769476016.322862,
-    "ast_hash": "c6f2a221f35817587f75e3b32a855523",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\ui\\scroll-area.tsx": {
@@ -3122,8 +2927,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\admin\\index.ts": {
-    "mtime": 1790545984.420581,
-    "ast_hash": "677acec3f40780b58fd93a58536f4fbf",
+    "mtime": 1790706501.3640184,
+    "ast_hash": "5773e58ef7ec3319d48560f6c7b717d8",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\admin\\use-admin-users.ts": {
@@ -3139,11 +2944,6 @@
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\admin\\use-auth.ts": {
     "mtime": 1790545984.4730835,
     "ast_hash": "ad41ddbcb02610b889d5bd64e7ab4014",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\admin\\use-user-status.ts": {
-    "mtime": 1790545984.4740837,
-    "ast_hash": "583a21b6fe23b1dab20a553e1e98ff80",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\configuracion\\index.ts": {
@@ -3177,8 +2977,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\configuracion\\use-setup.ts": {
-    "mtime": 1790545984.6422417,
-    "ast_hash": "9915c25300ef2e086fb4b276b1ae150a",
+    "mtime": 1790706434.167181,
+    "ast_hash": "8ac8e18adbf2e2fb9ef18afd8e15c2a1",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\configuracion\\use-units.ts": {
@@ -3202,18 +3002,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\estadisticas\\index.ts": {
-    "mtime": 1790545984.6891491,
-    "ast_hash": "864a215d9e1b671b04df9c8d73bdf099",
+    "mtime": 1790706511.466109,
+    "ast_hash": "f6531ef7a01aa518901f72b4975cd92c",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\estadisticas\\use-estadisticas.ts": {
     "mtime": 1790545984.692148,
     "ast_hash": "38b484c59fa613c25c93572a0c15d027",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\estadisticas\\use-stats.ts": {
-    "mtime": 1790545984.6931472,
-    "ast_hash": "1cbe6a99d3b9e13b7cbdca722e28b2f7",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\guardias\\index.ts": {
@@ -3417,8 +3212,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\ui\\index.ts": {
-    "mtime": 1790545985.602589,
-    "ast_hash": "c3da5b8233048eaedee1a9a0f8f25ce6",
+    "mtime": 1790706525.5613556,
+    "ast_hash": "f269e958874cf321d7e01c0a382de670",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\ui\\use-mobile.tsx": {
@@ -3429,11 +3224,6 @@
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\ui\\use-precache-images.ts": {
     "mtime": 1790545985.6515915,
     "ast_hash": "09ce6e2bf16901c133311dc4aa7d1d7a",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\ui\\use-save.ts": {
-    "mtime": 1790545985.6525903,
-    "ast_hash": "411259a9827a6973c16d453b26c58e65",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\whatsapp\\index.ts": {
@@ -3482,13 +3272,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\constants\\addresses.ts": {
-    "mtime": 1790545985.6811125,
-    "ast_hash": "76ff5c2aa7612ba96a3f1bfb1fd7cfad",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\constants\\attendance.ts": {
-    "mtime": 1775680051.1039298,
-    "ast_hash": "559b16ecd1a73dc20a6a9ccd6c325e2f",
+    "mtime": 1790706284.640071,
+    "ast_hash": "1de5bccbb1ff34eec6960109d3ae3a95",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\constants\\departments.ts": {
@@ -3537,8 +3322,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\db\\replication.ts": {
-    "mtime": 1790545985.6901314,
-    "ast_hash": "46cc07ca80ea5491095456535b77f7c6",
+    "mtime": 1790706580.5753148,
+    "ast_hash": "352f4946248588ee6f50b532bae433e6",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\db\\schemas.ts": {
@@ -3582,8 +3367,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\estadisticas\\transfer-type-resolver.ts": {
-    "mtime": 1779517022.0162039,
-    "ast_hash": "153020b471c70c496fc8049c7039a693",
+    "mtime": 1790706293.8654332,
+    "ast_hash": "33bfb439ca70f0d9d1f1e6a3e037498f",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\estadisticas\\utils.ts": {
@@ -3677,8 +3462,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\sync\\sync-service.ts": {
-    "mtime": 1778373213.8169258,
-    "ast_hash": "ff2f59ff569ee6fe232fd8af746f0a36",
+    "mtime": 1790706397.8337438,
+    "ast_hash": "a7cdbe4f062fd4e1df4713afe119fd58",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\sync\\sync-types.ts": {
@@ -3742,13 +3527,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\parser.ts": {
-    "mtime": 1790657310.05235,
+    "mtime": 1790706597.0670896,
     "ast_hash": "e8567041824c798907ba5e2b32a09143",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\renderer.ts": {
-    "mtime": 1790657330.6174698,
-    "ast_hash": "fa1af9eaf3ceff86e7b8ece05fdd6e91",
+    "mtime": 1790706612.9715345,
+    "ast_hash": "faa8e20ee717ede7124d38945e3c526a",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\types.ts": {
@@ -3757,18 +3542,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\validator.ts": {
-    "mtime": 1790657283.3400614,
+    "mtime": 1790706634.027263,
     "ast_hash": "ff758137b52ff73be4597cd42932a7d2",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\types\\index.ts": {
-    "mtime": 1790545985.8284032,
-    "ast_hash": "e6343c826e177fe5591e7e8e5f7f9ecc",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\types\\semantic.ts": {
-    "mtime": 1775680051.1251957,
-    "ast_hash": "81185238cab9569f3709d9960dae0d81",
+    "mtime": 1790706349.0708063,
+    "ast_hash": "edbff2c9ae46f7cedcda339af7d7f5dd",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\utils-pure.ts": {
@@ -3777,8 +3557,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\utils.ts": {
-    "mtime": 1779058616.3699195,
-    "ast_hash": "02f78c668d455f6e11783d2e6bb8cc0d",
+    "mtime": 1790706361.7393475,
+    "ast_hash": "c3ecf6c252b7cebfcdfabec84f6aea36",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\utils\\id.ts": {
@@ -3791,14 +3571,9 @@
     "ast_hash": "599d3ba06f67daf44087a971061ecd77",
     "semantic_hash": ""
   },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\validations\\personnel.ts": {
-    "mtime": 1778373213.999995,
-    "ast_hash": "a4e6410b12b319e56143047beed5b68b",
-    "semantic_hash": ""
-  },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\validations\\schemas.ts": {
-    "mtime": 1790545985.838423,
-    "ast_hash": "8b4cbf1589c00b57212971bd6a42b3de",
+    "mtime": 1790706371.5516508,
+    "ast_hash": "3256b972cf118a0b096cd98f6c2683ad",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\validators.ts": {
@@ -3962,8 +3737,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\personal\\components\\personnel-modals.tsx": {
-    "mtime": 1790545986.0523572,
-    "ast_hash": "24446731ecb338b0ad9aa73afe77d7f8",
+    "mtime": 1790706338.6918025,
+    "ast_hash": "229002691d13d552e7819dad93ce5b19",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\personal\\components\\personnel-tabs.tsx": {
@@ -4342,8 +4117,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\TEMPLATE_ENGINE.md": {
-    "mtime": 1790659084.9000204,
-    "ast_hash": "7498320e6d8b0424dc06deb1dbb2ecb8",
+    "mtime": 1790659349.0786989,
+    "ast_hash": "4fa5d69bae6a35a2e7c9bec9c7d69319",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\public\\icons\\icon-192x192.png": {

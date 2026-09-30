@@ -18,7 +18,7 @@ import type { SyncChannel, SyncReport } from './sync-types';
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 /** Generates a random 6-character alphanumeric code (uppercase). */
-export function generateChannelCode(): string {
+function generateChannelCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no confusable chars
   return Array.from({ length: 6 }, () =>
     chars[Math.floor(Math.random() * chars.length)]

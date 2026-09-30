@@ -34,7 +34,7 @@ import {
 import type { FormCreatorField } from './template-compiler';
 import type { FieldType } from '@/lib/types';
 
-export const QUESTION_TYPES: {
+const QUESTION_TYPES: {
   type: FieldType;
   label: string;
   icon: React.ComponentType<{ className?: string }>;

@@ -8,10 +8,10 @@ import type { StaffRole, Department } from '@/lib/types';
 
 // Ayudantes de almacenamiento
 export const SETUP_DONE_KEY = 'minutas-setup-complete-v1';
-export const STEP_KEY = 'minutas-setup-step';
-export const WS_KEY = 'minutas-setup-workspace';
-export const ROLES_KEY = 'minutas-setup-roles-v1';
-export const DEPTOS_KEY = 'minutas-setup-depts-v1';
+const STEP_KEY = 'minutas-setup-step';
+const WS_KEY = 'minutas-setup-workspace';
+const ROLES_KEY = 'minutas-setup-roles-v1';
+const DEPTOS_KEY = 'minutas-setup-depts-v1';
 
 export function tryGet(key: string): string | null {
   try { return localStorage.getItem(key); }

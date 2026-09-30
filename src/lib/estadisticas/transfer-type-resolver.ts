@@ -1,18 +1,6 @@
 import type { Address } from '@/lib/types';
 import { normalizeString } from '@/lib/utils';
-
-/**
- * Genera el string formateado de una dirección (mismo formato que address-input.tsx)
- */
-function formatAddressToString(address: Address): string {
-  const parts = [`Municipio ${address.municipality}`, `parroquia ${address.parish}`];
-  if (address.sector) parts.push(`sector ${address.sector}`);
-  const calle = [address.street, address.houseNumber].filter(Boolean).join(' ');
-  if (calle) parts.push(`calle ${calle}`);
-  parts.push(address.name);
-  parts.push(`Cuadrante de Paz ${address.peaceQuadrant}`);
-  return parts.join(', ');
-}
+import { formatAddressToString } from '@/lib/constants/addresses';
 
 /**
  * Mapa de combinaciones origen→destino a sus categorías estadísticas.

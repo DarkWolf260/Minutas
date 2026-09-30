@@ -491,6 +491,28 @@ Cualquier campo en la plantilla puede definir un valor de auto-llenado por defec
 
 ---
 
+### H. Tabla de Tipos y Modificadores de Campos Reservados
+
+Cada campo especial o reservado posee un tipo base (`FieldType`) asignado en el sistema y es compatible con modificadores específicos:
+
+| Campo Reservado | Tipo de Dato (`FieldType`) | Modificadores Específicos | Modificadores de Texto Soportados | Modificadores de Estructura |
+|-----------------|----------------------------|---------------------------|-----------------------------------|-----------------------------|
+| `{Fecha}` / `{fecha}` | `date` | *(Formato natural DD/Mes/YYYY automático)* | `:upper` (ej. `29/SEPTIEMBRE/2026`), `:lower`, `:title`, `:hidden` | `:req`, `:full`, `:default("YYYY-MM-DD")` |
+| `{Hora}` / `{hora}` | `time-hlv` | `:single` *(fuerza hora única puntual en vez de rango)* | `:upper`, `:lower`, `:hidden` | `:req`, `:full`, `:default("HH:MM")` |
+| `{Municipio}` | `predefined` | *(Inyectado desde Workspace)* | `:upper` (ej. `GUANTA`), `:lower`, `:title`, `:capitalize`, `:hidden` | `:req`, `:full` |
+| `{Estado}` | `predefined` | *(Inyectado desde Workspace)* | `:upper`, `:lower`, `:title`, `:hidden` | `:req`, `:full` |
+| `{REDAN}` | `predefined` | *(Inyectado institucional)* | `:upper`, `:lower`, `:title`, `:hidden` | `:req`, `:full` |
+| `{ZOEDAN}` | `predefined` | *(Inyectado institucional)* | `:upper`, `:lower`, `:title`, `:hidden` | `:req`, `:full` |
+| `{Usuario}` | `predefined` / `text` | *(Sesión activa)* | `:upper`, `:lower`, `:title`, `:capitalize`, `:hidden` | `:req`, `:full` |
+| `{Reporta}` | `predefined` / `staff` | Formateo protocolar vía `formatStaffReporta()` | `:upper` (suscripción en mayúsculas), `:title`, `:hidden` | `:req`, `:full` |
+| `{Analista}` | `predefined` / `staff` | Formateo con Cédula obligatoria vía `formatStaffMember(showCedula = true)` | `:upper`, `:title`, `:hidden` | `:req`, `:full` |
+| `{Director}`, `{Jefe de operaciones}`, etc. | `staff` | Notación de punto: `.sex`, `.name`, `.cargo`, `.rank`, `.cedula`, `.titulo` | `:upper`, `:title`, `:hidden` | `:req`, `:full` |
+| `{Guardia}` / `{Grupo}` | `text` | *(Auto-rellenado con `active_guard_id`)* | `:upper`, `:lower`, `:title` | `:req`, `:full`, `:default("...")` |
+| `{photos}` / `{fotos}` | *Marcador estructural* | *(No es campo de datos; marcador de fotos)* | *(Ninguno)* | *(Ninguno)* |
+| `<<...>>` | *Marcador estructural* | *(Delimitador de resumen ejecutivo)* | *(Ninguno)* | *(Ninguno)* |
+
+---
+
 ## 14. Ejemplo completo
 
 ```
