@@ -219,38 +219,59 @@ export function FieldSettingsSidebar({
             />
           </div>
 
-          {/* Nombres singular y plural en grid compacto */}
+          {/* Nombres singular, plural y sub-rótulo */}
           {selectedField.isRepeatable !== false && (
-            <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl border border-border/70 bg-muted/20">
-              <div className="space-y-1">
-                <Label className="text-[11px] font-semibold text-foreground">
-                  Singular (1 ítem)
-                </Label>
-                <Input
-                  value={selectedField.singularTitle || ''}
-                  onChange={(e) =>
-                    onUpdateSelectedField({
-                      singularTitle: e.target.value.toUpperCase(),
-                      subLabel: e.target.value.toUpperCase(),
-                    })
-                  }
-                  placeholder="VEHICULO"
-                  className="h-8 rounded-lg text-xs uppercase bg-card"
-                />
+            <div className="space-y-2 p-2.5 rounded-xl border border-border/70 bg-muted/20">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-semibold text-foreground">
+                    Singular (1 ítem)
+                  </Label>
+                  <Input
+                    value={selectedField.singularTitle || ''}
+                    onChange={(e) => {
+                      const oldSingular = selectedField.singularTitle || '';
+                      const newSingular = e.target.value.toUpperCase();
+                      const shouldUpdateSub = !selectedField.subLabel || selectedField.subLabel === oldSingular;
+                      onUpdateSelectedField({
+                        singularTitle: newSingular,
+                        subLabel: shouldUpdateSub ? newSingular : selectedField.subLabel,
+                      });
+                    }}
+                    placeholder="DATOS DEL PACIENTE"
+                    className="h-8 rounded-lg text-xs uppercase bg-card"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-semibold text-foreground">
+                    Plural (+1 ítems)
+                  </Label>
+                  <Input
+                    value={selectedField.pluralTitle || ''}
+                    onChange={(e) =>
+                      onUpdateSelectedField({
+                        pluralTitle: e.target.value.toUpperCase(),
+                      })
+                    }
+                    placeholder="DATOS DE LOS PACIENTES"
+                    className="h-8 rounded-lg text-xs uppercase bg-card"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1">
                 <Label className="text-[11px] font-semibold text-foreground">
-                  Plural (+1 ítems)
+                  Sub-rótulo (#01, #02)
                 </Label>
                 <Input
-                  value={selectedField.pluralTitle || ''}
+                  value={selectedField.subLabel || ''}
                   onChange={(e) =>
                     onUpdateSelectedField({
-                      pluralTitle: e.target.value.toUpperCase(),
+                      subLabel: e.target.value.toUpperCase(),
                     })
                   }
-                  placeholder="VEHICULOS"
+                  placeholder="PACIENTE"
                   className="h-8 rounded-lg text-xs uppercase bg-card"
                 />
               </div>

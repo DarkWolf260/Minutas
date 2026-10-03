@@ -390,16 +390,72 @@ function parseDirectiveContent(
         };
     }
 
-    // Repeatable section: ::: section <Title>* ::: or ::: <Title>* ::: or ::: section <Plural> | <Singular>* :::
+    // Repeatable section: ::: section <Title>* ::: or ::: <Title>* ::: or ::: section <Plural> | <Singular>* ::: or ::: section <Plural> | <Singular> | <Sub>* :::
     const isRepeatable = trimmed.endsWith('*');
     if (isRepeatable) {
         let clean = trimmed.slice(0, -1).trim();
         if (clean.toLowerCase().startsWith('section ')) {
             clean = clean.slice(8).trim();
         }
-        const pipeIdx = clean.indexOf('|');
-        const pluralTitle = pipeIdx !== -1 ? clean.slice(0, pipeIdx).trim() : clean;
-        const singularTitle = pipeIdx !== -1 ? clean.slice(pipeIdx + 1).trim() : clean;
+
+        const parts = clean.split('|').map((p) => p.trim()).filter(Boolean);
+
+        let pluralTitle = 'ITEMS';
+        let singularTitle = 'ITEM';
+        let repeatable_item_label = 'ITEM';
+
+        if (parts.length >= 3) {
+            // 3 parts: [Plural, Singular, SubLabel] or [Singular, Plural, SubLabel]
+            const p0 = parts[0] ?? '';
+            const p1 = parts[1] ?? '';
+            const sub = parts[2] ?? '';
+
+            const p0Upper = p0.toUpperCase();
+            const p1Upper = p1.toUpperCase();
+
+            const p0HasSingularArticle =
+                p0Upper.includes(' DEL ') || p0Upper.includes(' DE LA ') || p0Upper.includes(' EL ') || p0Upper.includes(' LA ');
+            const p1HasPluralArticle =
+                p1Upper.includes(' DE LOS ') || p1Upper.includes(' DE LAS ') || p1Upper.includes(' LOS ') || p1Upper.includes(' LAS ');
+
+            const p1IsPlural = !p0Upper.endsWith('S') && p1Upper.endsWith('S');
+
+            if (p0HasSingularArticle && p1HasPluralArticle) {
+                singularTitle = p0;
+                pluralTitle = p1;
+            } else if (p1HasPluralArticle && !p0Upper.includes(' DE LOS ') && !p0Upper.includes(' DE LAS ')) {
+                singularTitle = p0;
+                pluralTitle = p1;
+            } else if (p1IsPlural && !p0Upper.includes(' DE LOS ') && !p0Upper.includes(' DE LAS ')) {
+                singularTitle = p0;
+                pluralTitle = p1;
+            } else {
+                pluralTitle = p0;
+                singularTitle = p1;
+            }
+            repeatable_item_label = sub;
+        } else if (parts.length === 2) {
+            const p0 = parts[0] ?? '';
+            const p1 = parts[1] ?? '';
+            pluralTitle = p0;
+            singularTitle = p1;
+            repeatable_item_label = p1;
+
+            // Smart singular derivation if p0 is a phrase like "DATOS DE LOS PACIENTES" and p1 is sub-label "PACIENTE"
+            const p0Upper = p0.toUpperCase();
+            if (p0Upper.includes(' DE LOS ') || p0Upper.includes(' DE LAS ')) {
+                const inferred = p0
+                    .replace(/\bDE LOS\b/gi, 'DEL')
+                    .replace(/\bDE LAS\b/gi, 'DE LA')
+                    .replace(new RegExp(`${p1}S\\b`, 'i'), p1);
+                singularTitle = inferred;
+            }
+        } else if (parts.length === 1) {
+            const p0 = parts[0] ?? '';
+            pluralTitle = p0;
+            singularTitle = p0;
+            repeatable_item_label = p0;
+        }
 
         return {
             tokens: [
@@ -409,7 +465,7 @@ function parseDirectiveContent(
                     is_repeatable: true,
                     plural_title: pluralTitle || 'ITEMS',
                     singular_title: singularTitle || pluralTitle || 'ITEM',
-                    repeatable_item_label: singularTitle || pluralTitle || 'ITEM',
+                    repeatable_item_label: repeatable_item_label || singularTitle || pluralTitle || 'ITEM',
                     raw,
                     position: startPos,
                 },

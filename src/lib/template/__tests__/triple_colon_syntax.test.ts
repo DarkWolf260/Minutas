@@ -208,6 +208,100 @@ Menor de edad: {Edad}
             expect(result).toContain('- *Novedad #02*');
             expect(result).toContain('Segunda novedad');
         });
+
+        it('renders Caso 1 and Caso 2 correctly with 3-part syntax ::: section DATOS DE LOS PACIENTES | DATOS DEL PACIENTE | PACIENTE* :::', () => {
+            const template = `::: section DATOS DE LOS PACIENTES | DATOS DEL PACIENTE | PACIENTE* :::
+- *NOMBRE Y APELLIDO:* {nombre}
+:::`;
+
+            const parsed = parseTemplate(template);
+            expect(parsed.sections).toHaveLength(1);
+            expect(parsed.sections[0]?.plural_title).toBe('DATOS DE LOS PACIENTES');
+            expect(parsed.sections[0]?.singular_title).toBe('DATOS DEL PACIENTE');
+            expect(parsed.sections[0]?.repeatable_item_label).toBe('PACIENTE');
+
+            const sectionId = parsed.sections[0]?.id || 'sec_datos_de_los_pacientes';
+
+            // Caso 1: 1 sola entrada (renders singular header, without item prefix)
+            const result1 = renderFinalReport(
+                template,
+                {
+                    [sectionId]: [
+                        { nombre: 'Juan Perez' },
+                    ],
+                },
+                { fields: {}, sections: parsed.sections, layout: parsed.layout },
+                {}
+            );
+
+            expect(result1.trim()).toBe(
+`- *DATOS DEL PACIENTE*
+- *NOMBRE Y APELLIDO:* Juan Perez`
+            );
+            expect(result1).not.toContain('PACIENTE #01');
+            expect(result1).not.toContain('DATOS DE LOS PACIENTES');
+
+            // Caso 2: Más de una entrada (renders plural header, with numbered item prefixes and blank lines)
+            const result2 = renderFinalReport(
+                template,
+                {
+                    [sectionId]: [
+                        { nombre: 'Juan Perez' },
+                        { nombre: 'Maria Gomez' },
+                    ],
+                },
+                { fields: {}, sections: parsed.sections, layout: parsed.layout },
+                {}
+            );
+
+            expect(result2.trim()).toBe(
+`- *DATOS DE LOS PACIENTES*
+- *PACIENTE #01*
+- *NOMBRE Y APELLIDO:* Juan Perez
+
+- *PACIENTE #02*
+- *NOMBRE Y APELLIDO:* Maria Gomez`
+            );
+        });
+
+        it('supports reversed 3-part syntax ::: section DATOS DEL PACIENTE | DATOS DE LOS PACIENTES | PACIENTE* :::', () => {
+            const template = `::: section DATOS DEL PACIENTE | DATOS DE LOS PACIENTES | PACIENTE* :::
+- *NOMBRE Y APELLIDO:* {nombre}
+:::`;
+
+            const parsed = parseTemplate(template);
+            expect(parsed.sections[0]?.plural_title).toBe('DATOS DE LOS PACIENTES');
+            expect(parsed.sections[0]?.singular_title).toBe('DATOS DEL PACIENTE');
+            expect(parsed.sections[0]?.repeatable_item_label).toBe('PACIENTE');
+        });
+
+        it('smartly infers singular title for 2-part syntax ::: section DATOS DE LOS PACIENTES | PACIENTE* :::', () => {
+            const template = `::: section DATOS DE LOS PACIENTES | PACIENTE* :::
+- *NOMBRE Y APELLIDO:* {nombre}
+:::`;
+
+            const parsed = parseTemplate(template);
+            expect(parsed.sections[0]?.plural_title).toBe('DATOS DE LOS PACIENTES');
+            expect(parsed.sections[0]?.singular_title).toBe('DATOS DEL PACIENTE');
+            expect(parsed.sections[0]?.repeatable_item_label).toBe('PACIENTE');
+
+            const sectionId = parsed.sections[0]?.id || 'sec_datos_de_los_pacientes';
+            const result1 = renderFinalReport(
+                template,
+                {
+                    [sectionId]: [
+                        { nombre: 'Juan Perez' },
+                    ],
+                },
+                { fields: {}, sections: parsed.sections, layout: parsed.layout },
+                {}
+            );
+
+            expect(result1.trim()).toBe(
+`- *DATOS DEL PACIENTE*
+- *NOMBRE Y APELLIDO:* Juan Perez`
+            );
+        });
     });
 
     describe('Separators', () => {

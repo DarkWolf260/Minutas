@@ -606,8 +606,8 @@ function renderSection(
                     // the top header is already rendered once, so do not repeat or number items.
                     if (hasDistinctSubLabel) {
                         const labelPrefix = `- *${section.repeatable_item_label} #${String(index + 1).padStart(2, '0')}*`;
-                        // Only trim leading newline if it was explicitly there to avoid triple newlines
-                        const cleaned = itemContent.startsWith('\n') ? itemContent.slice(1) : itemContent;
+                        // Only trim leading newlines to avoid extra blank line between prefix and first field
+                        const cleaned = itemContent.replace(/^\r?\n+/, '');
                         itemContent = `${labelPrefix}\n${cleaned}`;
                     }
                 }
@@ -643,7 +643,8 @@ function renderSection(
             ? section.plural_title
             : (section.singular_title || section.plural_title || section.label);
         const header = `- *${title}*`;
-        renderedItems = `${header}\n${renderedItems}`;
+        const cleanedItems = renderedItems.replace(/^\r?\n+/, '');
+        renderedItems = `${header}\n${cleanedItems}`;
     }
 
     return renderedItems;

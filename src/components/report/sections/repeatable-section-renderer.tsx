@@ -169,7 +169,8 @@ export function RepeatableSectionRenderer(props: SectionRendererProps) {
                         <div className="flex items-center justify-between">
                             <h4 className="font-medium">
                                 {section.repeatable_item_label &&
-                                section.repeatable_item_label.toLowerCase() !== (section.label || '').toLowerCase()
+                                section.repeatable_item_label.toLowerCase() !== (section.label || '').toLowerCase() &&
+                                section.repeatable_item_label.toLowerCase() !== (section.plural_title || '').toLowerCase()
                                     ? `${section.repeatable_item_label} #${String(
                                         index + 1
                                     ).padStart(2, '0')}`
@@ -287,7 +288,8 @@ export function RepeatableSectionRenderer(props: SectionRendererProps) {
                 >
                     <PlusCircle className="mr-2 h-4 w-4" /> Añadir{' '}
                     {section.repeatable_item_label &&
-                    section.repeatable_item_label.toLowerCase() !== (section.label || '').toLowerCase()
+                    section.repeatable_item_label.toLowerCase() !== (section.label || '').toLowerCase() &&
+                    section.repeatable_item_label.toLowerCase() !== (section.plural_title || '').toLowerCase()
                         ? section.repeatable_item_label
                         : 'registro'}
                 </Button>

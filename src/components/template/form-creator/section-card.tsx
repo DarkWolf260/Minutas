@@ -226,14 +226,17 @@ export function SectionCard({
                   <span className="text-muted-foreground font-medium">Nombre singular:</span>
                   <Input
                     value={section.singularTitle}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const oldSingular = section.singularTitle || '';
+                      const newSingular = e.target.value.toUpperCase();
+                      const shouldUpdateSub = !section.subLabel || section.subLabel === oldSingular;
                       onChange({
                         ...section,
-                        singularTitle: e.target.value.toUpperCase(),
-                        subLabel: e.target.value.toUpperCase(),
-                      })
-                    }
-                    placeholder="Ej. VEHICULO"
+                        singularTitle: newSingular,
+                        subLabel: shouldUpdateSub ? newSingular : section.subLabel,
+                      });
+                    }}
+                    placeholder="Ej. DATOS DEL PACIENTE"
                     className="h-8 text-xs bg-background"
                   />
                 </div>

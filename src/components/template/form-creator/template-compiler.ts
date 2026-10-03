@@ -154,9 +154,16 @@ export function compileSectionBlock(section: FormCreatorSection | FormCreatorFie
   const sub = (section.subLabel || singular).toUpperCase().trim();
 
   const lines: string[] = [];
-  const header = (plural !== sub && sub !== 'ITEM')
-    ? `::: section ${plural} | ${sub}* :::`
-    : `::: section ${plural}* :::`;
+  let header: string;
+  if (singular && singular !== plural && sub && sub !== singular && sub !== 'ITEM') {
+    header = `::: section ${plural} | ${singular} | ${sub}* :::`;
+  } else if (plural !== sub && sub !== 'ITEM') {
+    header = `::: section ${plural} | ${sub}* :::`;
+  } else if (singular && singular !== plural) {
+    header = `::: section ${plural} | ${singular}* :::`;
+  } else {
+    header = `::: section ${plural}* :::`;
+  }
   lines.push(header);
   (section.fields || []).forEach((field) => {
     const token = compileFieldToken(field);
@@ -449,7 +456,7 @@ export function isFieldTagInText(text: string, field: FormCreatorField): boolean
     const escapedPlural = plural.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const escapedSingular = singular.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const escapedSub = sub.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return new RegExp(`:::\\s*section\\s+(?:${escapedPlural}|${escapedSingular}|${escapedSub})(?:\\s*\\|[^:*]+)?\\*?\\s*:::`, 'i').test(text);
+    return new RegExp(`:::\\s*section\\s+(?:${escapedPlural}|${escapedSingular}|${escapedSub})(?:\\s*\\|[^:*]+)*\\*?\\s*:::`, 'i').test(text);
   }
 
   if (field.type === 'separator') {
@@ -483,7 +490,7 @@ export function updateFieldTagInText(
     const newBlock = compileSectionBlock(newField);
     const oldName = sanitizeFieldId(oldLabel).toUpperCase();
     const escapedOld = oldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const pattern = new RegExp(`:::\\s*(?:section\\s+)?${escapedOld}(?:\\s*\\|[^:*]+)?\\*?\\s*:::[\\s\\S]*?:::`, 'gi');
+    const pattern = new RegExp(`:::\\s*(?:section\\s+)?${escapedOld}(?:\\s*\\|[^:*]+)*\\*?\\s*:::[\\s\\S]*?:::`, 'gi');
     if (pattern.test(text)) {
       return text.replace(pattern, newBlock);
     }
@@ -530,7 +537,7 @@ export function removeFieldTagFromText(text: string, field: FormCreatorField): s
     const isRep = field.isRepeatable !== false;
     const name = (isRep ? (field.pluralTitle || field.singularTitle || field.label) : (field.label || 'SECCIÓN')) || 'ITEM';
     const escaped = name.toUpperCase().trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const secPattern = new RegExp(`\\r?\\n*:::\\s*(?:section\\s+)?${escaped}(?:\\s*\\|[^:*]+)?\\*?\\s*:::[\\s\\S]*?:::\\r?\\n*`, 'gi');
+    const secPattern = new RegExp(`\\r?\\n*:::\\s*(?:section\\s+)?${escaped}(?:\\s*\\|[^:*]+)*\\*?\\s*:::[\\s\\S]*?:::\\r?\\n*`, 'gi');
     return text.replace(secPattern, '\n\n').trim();
   }
 
