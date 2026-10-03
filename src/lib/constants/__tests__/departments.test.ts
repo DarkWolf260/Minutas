@@ -9,6 +9,7 @@ import {
 describe('Department ID Generator', () => {
   it('generates clean slug IDs removing common prefixes and accents', () => {
     expect(generateDepartmentId('Departamento de Operaciones')).toBe('operaciones');
+    expect(generateDepartmentId('Sala de Monitoreo')).toBe('sala-de-monitoreo');
     expect(generateDepartmentId('CEMUPRAD')).toBe('cemuprad');
     expect(generateDepartmentId('Departamento de Educación')).toBe('educacion');
     expect(generateDepartmentId('Departamento de Gestión de Riesgos')).toBe('gestion-de-riesgos');
@@ -44,7 +45,7 @@ describe('Department ID Generator', () => {
 
   it('matches DEPARTMENT_IDS to generated slugs from DEPARTMENT_NAMES', () => {
     expect(DEPARTMENT_IDS.OPERATIONS).toBe('operaciones');
-    expect(DEPARTMENT_IDS.CEMUPRAD).toBe('cemuprad');
+    expect(DEPARTMENT_IDS.SALA_MONITOREO).toBe('sala-de-monitoreo');
     expect(DEPARTMENT_IDS.EDUCATION).toBe('educacion');
     expect(DEPARTMENT_IDS.RISKS).toBe('gestion-de-riesgos');
     expect(DEPARTMENT_IDS.IT).toBe('informatica');

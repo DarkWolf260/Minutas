@@ -27,7 +27,7 @@ export function PasoEstructura({
   setDepartamentos: (d: Department[]) => void;
 }) {
   const [presetSeleccionado, setPresetSeleccionado] = useState<'base' | 'extendido'>('base');
-  const [nombreMonitoreo, setNombreMonitoreo] = useState('CEMUPRAD');
+  const [nombreMonitoreo, setNombreMonitoreo] = useState('Sala de Monitoreo');
 
   const aplicarPreset = (id: 'base' | 'extendido', customNombre?: string) => {
     const nombreActual = customNombre || nombreMonitoreo;
@@ -35,15 +35,15 @@ export function PasoEstructura({
       setDepartamentos(DEFAULT_DEPARTMENTS);
       setRoles(DEFAULT_ROLES);
     } else {
-      const cemupradId = DEPARTMENT_IDS.CEMUPRAD;
+      const cemupradId = DEPARTMENT_IDS.SALA_MONITOREO;
       const nuevoId = generateDepartmentId(nombreActual);
-      const deptsPersonalizados = EXTENDED_DEPARTMENTS.map(d => 
-        d.id === cemupradId ? { ...d, id: nuevoId, name: nombreActual } : d
+      const deptsPersonalizados = EXTENDED_DEPARTMENTS.map(d =>
+        (d.id === cemupradId || d.id === 'sala-de-monitoreo') ? { ...d, id: nuevoId, name: nombreActual } : d
       );
       const rolesPersonalizados = EXTENDED_ROLES.map(r => ({
         ...r,
-        name: r.name.replace('CEMUPRAD', nombreActual),
-        department_scope: r.department_scope.map(scope => scope === cemupradId ? nuevoId : scope)
+        name: r.name.replace(/Sala de Monitoreo/gi, nombreActual),
+        department_scope: r.department_scope.map(scope => (scope === cemupradId || scope === 'sala-de-monitoreo') ? nuevoId : scope)
       }));
       setDepartamentos(deptsPersonalizados);
       setRoles(rolesPersonalizados);
@@ -91,8 +91,8 @@ export function PasoEstructura({
             }}
             className={cn(
               "flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left",
-              presetSeleccionado === 'base' 
-                ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20" 
+              presetSeleccionado === 'base'
+                ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
                 : "border-border bg-muted/5 hover:border-muted-foreground/30"
             )}
           >
@@ -113,8 +113,8 @@ export function PasoEstructura({
             }}
             className={cn(
               "flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left",
-              presetSeleccionado === 'extendido' 
-                ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20" 
+              presetSeleccionado === 'extendido'
+                ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
                 : "border-border bg-muted/5 hover:border-muted-foreground/30"
             )}
           >
@@ -133,11 +133,11 @@ export function PasoEstructura({
           <div className="space-y-3 pt-2 animate-in slide-in-from-top-2 duration-300">
             <div className="space-y-1.5">
               <Label htmlFor="monitor-room-name" className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground ml-1">Nombre de la Sala de Monitoreo</Label>
-              <Input 
+              <Input
                 id="monitor-room-name"
                 value={nombreMonitoreo}
                 onChange={e => setNombreMonitoreo(e.target.value)}
-                placeholder="Ej: CEMUPRAD, Sala Situacional..."
+                placeholder="Ej: Sala de Monitoreo, Sala Situacional..."
                 className="h-11 bg-background focus-visible:ring-primary shadow-sm"
               />
             </div>
@@ -145,13 +145,13 @@ export function PasoEstructura({
         )}
 
         <div className="min-h-[300px]">
-          <StructureManager 
+          <StructureManager
             compact={true}
             roles={roles}
             departments={departamentos}
             onRolesChange={setRoles}
             onDepartmentsChange={setDepartamentos}
-            onSave={() => {}}
+            onSave={() => { }}
             rolesLoaded={true}
             deptsLoaded={true}
             initialTab="departments"

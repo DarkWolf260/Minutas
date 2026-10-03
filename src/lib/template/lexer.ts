@@ -1,39 +1,41 @@
 /**
  * Template Lexer - Tokenization
  * 
- * Converts template string into a stream of tokens for parsing
+ * Converts template strings into a stream of tokens for parsing.
  * 
  * Supported syntax:
- * - Fields: {FieldName}, {FieldName:type}, {FieldName|modifier}
+ * - Fields: {FieldName}, {FieldName:type}, {FieldName|modifier}, {FieldName:type:req:full}
  * - Repeatable fields: {FieldName}*
- * - Sections: [Label]content[/]
- * - Self-contained Sections: ["Title" {Field}]
- * - Visual Separators: [""]
- * - Repeatable sections: [Label]*content[/]
- * - Conditionals: [?{Field} op value]content[/]
- *   where op can be: =, !=, >, <, >=, <=
- * - Mapping Conditionals: [?{Field}] Key=Value [/]
- *   Implicitly defines dropdown options and report translation.
+ * - Sections:
+ *     ::: DATOS GENERALES :::
+ *     - *FECHA:* {Fecha}
+ *     :::
+ * - Repeatable sections:
+ *     ::: section Novedades* :::
+ *     - *DESCRIPCIÓN:* {descripcion:textarea}
+ *     :::
+ *   or with singular/item label:
+ *     ::: section Novedades | Novedad* :::
+ *     :::
+ * - Visual Separators:
+ *     ::: separator :::
+ *     ::: separator: TITULO :::
+ *     ::: --- :::
+ * - Conditionals (inline and multiline blocks):
+ *     ::: if Estatus == "En proceso": *PRELIMINAR* :::
+ *     ::: if Estatus == "Finalizado" :::
+ *     Contenido...
+ *     :::
+ * - Mapping Blocks:
+ *     ::: map Tipo :::
+ *     Robo=Se registró un evento de robo...
+ *     :::
  */
 
 import type { Token, ConditionalExpression } from './types';
 
 /**
  * Tokenizes a template string into a structured token stream
- * 
- * @param template - The template string to tokenize
- * @returns Array of tokens representing the template structure
- * 
- * @example
- * ```typescript
- * const tokens = tokenize('Hello {Name}, today is {Fecha:date}');
- * // Returns: [
- * //   { type: 'text', content: 'Hello ', position: 0 },
- * //   { type: 'field', id: 'Name', raw: '{Name}', position: 6 },
- * //   { type: 'text', content: ', today is ', position: 12 },
- * //   { type: 'field', id: 'Fecha', raw: '{Fecha:date}', position: 24 }
- * // ]
- * ```
  */
 export function tokenize(template: string): Token[] {
     const tokens: Token[] = [];
@@ -67,19 +69,19 @@ export function tokenize(template: string): Token[] {
             }
         }
 
-        // Check for section/conditional start: [
-        if (char === '[' && next !== '[') {
+        // Check for ::: directives (sections, conditionals, separators, mapping)
+        if (char === ':' && template.slice(position, position + 3) === ':::') {
             flushText();
-            const sectionToken = extractSectionToken(template, position);
-            if (sectionToken) {
-                tokens.push(sectionToken);
-                position = sectionToken.endPos;
+            const directiveResult = extractTripleColonToken(template, position);
+            if (directiveResult) {
+                tokens.push(...directiveResult.tokens);
+                position = directiveResult.endPos;
                 continue;
             }
         }
 
-        // Handle escaped characters (e.g. \* means literal *, not repeatable marker)
-        if (char === '\\' && (next === '*' || next === '{' || next === '[' || next === '\\')) {
+        // Handle escaped characters (e.g. \* means literal *, \: means literal :)
+        if (char === '\\' && (next === '*' || next === '{' || next === ':' || next === '\\')) {
             flushText();
             tokens.push({
                 type: 'text',
@@ -101,8 +103,7 @@ export function tokenize(template: string): Token[] {
 }
 
 /**
- * Extracts a field token from the template
- * Returns the token and the position after the closing brace
+ * Extracts a field token from the template {FieldName:...}
  */
 function extractFieldToken(
     template: string,
@@ -112,7 +113,6 @@ function extractFieldToken(
     let depth = 1;
     let content = '';
 
-    // Find matching closing brace
     while (pos < template.length && depth > 0) {
         const char = template[pos];
         if (char === '{') depth++;
@@ -150,117 +150,384 @@ function extractFieldToken(
 }
 
 /**
- * Extracts a section or conditional token from the template
- * Returns the token and the position after the closing bracket
+ * Extracts directives and block markers enclosed by :::
  */
-function extractSectionToken(
+function extractTripleColonToken(
     template: string,
     startPos: number
-): (Token & { endPos: number }) | null {
-    let pos = startPos + 1; // Skip opening [
-    let content = '';
+): { tokens: Token[]; endPos: number } | null {
+    const afterThreeColons = startPos + 3;
 
-    // Find the MATCHING closing ] using depth counting so nested [...] blocks
-    // inside self-contained sections like ["TITLE" [?...][/] text] work correctly.
-    let depth = 1;
-    while (pos < template.length && depth > 0) {
-        const ch = template[pos];
-        // Handle [[ escape — treat as literal [, do not increment depth
-        if (ch === '[' && template[pos + 1] === '[') {
-            content += ch;
-            pos++;
-        } else if (ch === '[') {
-            depth++;
-            content += ch;
-        } else if (ch === ']') {
-            depth--;
-            if (depth > 0) {
-                // Still inside nested block — keep the ]
-                content += ch;
-            }
-            // depth === 0: this is OUR closing ] — don't add to content, just stop
-        } else {
-            content += ch;
+    // Check rest of the line
+    const nextNewline = template.indexOf('\n', afterThreeColons);
+    const lineEnd = nextNewline !== -1 ? nextNewline : template.length;
+    const lineRest = template.slice(afterThreeColons, lineEnd);
+    const nextTripleColonOnLine = lineRest.indexOf(':::');
+
+    // Case 1: Standalone ::: on a line (Closing tag for open block)
+    if (lineRest.trim() === '') {
+        const endPos = nextNewline !== -1 ? nextNewline + 1 : template.length;
+        return {
+            tokens: [
+                {
+                    type: 'section_end',
+                    raw: template.slice(startPos, endPos),
+                    position: startPos,
+                },
+            ],
+            endPos,
+        };
+    }
+
+    // Case 1b: Closing ::: immediately followed by >> summary end marker
+    if (lineRest.trim() === '>>') {
+        const endPos = startPos + 3;
+        return {
+            tokens: [
+                {
+                    type: 'section_end',
+                    raw: template.slice(startPos, endPos),
+                    position: startPos,
+                },
+            ],
+            endPos,
+        };
+    }
+
+    // Case 2: Directive closed on the same line (::: <content> :::)
+    if (nextTripleColonOnLine !== -1) {
+        const inside = lineRest.slice(0, nextTripleColonOnLine);
+        const fullEndPos = afterThreeColons + nextTripleColonOnLine + 3;
+        let endPos = fullEndPos;
+
+        // If the directive occupied the whole line, consume the trailing newline
+        const afterClosing = template.slice(fullEndPos, lineEnd);
+        if (afterClosing.trim() === '' && nextNewline !== -1) {
+            endPos = nextNewline + 1;
         }
-        pos++;
+
+        return parseDirectiveContent(inside, template.slice(startPos, endPos), startPos, endPos, fullEndPos);
     }
 
-    if (depth !== 0) {
-        // No matching closing bracket found
-        return null;
+    // Case 3: Line starts with ::: <content> without trailing ::: on the same line
+    const inside = lineRest.trim();
+    const lowerInside = inside.toLowerCase();
+    const isDirectiveKeyword =
+        lowerInside.startsWith('if ') ||
+        lowerInside.startsWith('if:') ||
+        lowerInside.startsWith('section ') ||
+        lowerInside.startsWith('map ') ||
+        lowerInside.startsWith('map:') ||
+        lowerInside.startsWith('separator') ||
+        inside === '---';
+
+    if (isDirectiveKeyword) {
+        const endPos = nextNewline !== -1 ? nextNewline + 1 : template.length;
+        return parseDirectiveContent(inside, template.slice(startPos, endPos), startPos, endPos, endPos);
     }
 
-
-    // Check if this is a section end marker: [/]
-    if (content.trim() === '/') {
-        const raw = template.substring(startPos, pos);
-        return {
-            type: 'section_end',
-            raw,
-            position: startPos,
-            endPos: pos,
-        };
-    }
-
-    // Capture optional * after ] for repeatable sections: [Label]*
-    let is_repeatable = false;
-    if (template[pos] === '*' && !content.trim().startsWith('?')) {
-        is_repeatable = true;
-        pos++; // include the * in the token
-    }
-
-
-    const raw = template.substring(startPos, pos);
-
-    // Check if this is a conditional: [?{Field} op value] or [?{Field}] or [?Field op value] or [?Field]
-    // Also support optional :show/:hide suffix: [?Field=Value:show]
-    let condition_mode: 'show' | 'hide' | undefined = undefined;
-    let condContent = content;
-    const showHideMatch = content.match(/:(show|hide)\s*$/i);
-    if (showHideMatch) {
-        condition_mode = showHideMatch[1]!.toLowerCase() as 'show' | 'hide';
-        condContent = content.slice(0, content.lastIndexOf(':' + showHideMatch[1]!)).trim();
-    }
-
-    const conditionalMatch = condContent.match(
-        /^\?\s*(?:\{\s*)?([^\}=!<>]+?)(?:\s*\})?\s*(?:(!=|>=|<=|>|<|=)\s*(.+))?$/
-    );
-
-    if (conditionalMatch) {
-        const [, field_id, operator, value] = conditionalMatch;
-        const cleanValue = value?.trim().replace(/^"|"$/g, '') || '';
-
-        return {
-            type: 'section_start',
-            label: undefined,
-            condition: {
-                field_id: field_id?.trim() || '',
-                operator: (operator as ConditionalExpression['operator']) || '=',
-                value: cleanValue,
-                condition_mode,
-                is_implicit: !operator,
-            },
-            raw,
-            position: startPos,
-            endPos: pos,
-        };
-    }
-
-    // Regular section: [Label] or [Label]*
-    // The label itself should NOT contain *, that's now captured above.
-    const label = content.trim();
-
+    // Otherwise, this ::: is a closing tag (section_end), and any following text is regular content
     return {
-        type: 'section_start',
-        label: label || undefined,
-        condition: undefined,
-        is_repeatable,
-        raw,
-        position: startPos,
-        endPos: pos,
+        tokens: [
+            {
+                type: 'section_end',
+                raw: template.slice(startPos, startPos + 3),
+                position: startPos,
+            },
+        ],
+        endPos: startPos + 3,
     };
 }
 
 
+/**
+ * Parses directive content inside ::: ... :::
+ */
+function parseDirectiveContent(
+    content: string,
+    raw: string,
+    startPos: number,
+    endPos: number,
+    fullTokenEndPos: number
+): { tokens: Token[]; endPos: number } | null {
+    const trimmed = content.trim();
+    if (!trimmed) {
+        // Empty ::: ::: -> treated as separator
+        return {
+            tokens: [
+                {
+                    type: 'section_start',
+                    label: '',
+                    is_separator: true,
+                    is_self_contained: true,
+                    raw,
+                    position: startPos,
+                },
+                {
+                    type: 'section_end',
+                    raw: '',
+                    position: endPos,
+                },
+            ],
+            endPos,
+        };
+    }
 
+    // Separators: ::: separator :::, ::: --- :::, ::: separator: Titulo :::
+    const lowerTrimmed = trimmed.toLowerCase();
+    if (lowerTrimmed === 'separator' || trimmed === '---') {
+        return {
+            tokens: [
+                {
+                    type: 'section_start',
+                    label: '',
+                    is_separator: true,
+                    is_self_contained: true,
+                    raw,
+                    position: startPos,
+                },
+                {
+                    type: 'section_end',
+                    raw: '',
+                    position: endPos,
+                },
+            ],
+            endPos,
+        };
+    }
 
+    if (lowerTrimmed.startsWith('separator:') || lowerTrimmed.startsWith('separator ')) {
+        const title = trimmed.slice(trimmed.indexOf(':') > -1 ? trimmed.indexOf(':') + 1 : 10).trim();
+        return {
+            tokens: [
+                {
+                    type: 'section_start',
+                    label: title,
+                    is_separator: true,
+                    is_self_contained: true,
+                    raw,
+                    position: startPos,
+                },
+                {
+                    type: 'section_end',
+                    raw: '',
+                    position: endPos,
+                },
+            ],
+            endPos,
+        };
+    }
+
+    // Conditionals: ::: if <condition> ::: or ::: if <condition>: <inlineBody> :::
+    const trimmedStart = content.trimStart();
+    const lowerTrimmedStart = trimmedStart.toLowerCase();
+    if (lowerTrimmedStart.startsWith('if ') || lowerTrimmedStart.startsWith('if:')) {
+        const rest = trimmedStart.slice(2).trimStart();
+        const { conditionPart, inlineBody } = splitConditionAndBody(rest);
+        const condition = parseConditionString(conditionPart) || {
+            field_id: conditionPart,
+            operator: '=',
+            value: '',
+        };
+
+        if (inlineBody !== undefined) {
+            // Inline conditional: ::: if condition: body :::
+            const innerTokens = tokenize(inlineBody);
+            return {
+                tokens: [
+                    {
+                        type: 'section_start',
+                        condition,
+                        is_self_contained: true,
+                        raw,
+                        position: startPos,
+                    },
+                    ...innerTokens,
+                    {
+                        type: 'section_end',
+                        raw: '',
+                        position: fullTokenEndPos,
+                    },
+                ],
+                endPos: fullTokenEndPos,
+            };
+        }
+
+        // Multiline conditional block start: ::: if condition :::
+        return {
+            tokens: [
+                {
+                    type: 'section_start',
+                    condition,
+                    raw,
+                    position: startPos,
+                },
+            ],
+            endPos,
+        };
+    }
+
+    // Mapping blocks: ::: map <Field> :::
+    if (lowerTrimmed.startsWith('map ') || lowerTrimmed.startsWith('map:')) {
+        const fieldId = trimmed.slice(trimmed.indexOf(':') > -1 ? trimmed.indexOf(':') + 1 : 4).trim();
+        return {
+            tokens: [
+                {
+                    type: 'section_start',
+                    label: `map_${fieldId}`,
+                    is_mapping: true,
+                    condition: {
+                        field_id: fieldId,
+                        operator: '=',
+                        value: '',
+                        is_implicit: true,
+                    },
+                    raw,
+                    position: startPos,
+                },
+            ],
+            endPos,
+        };
+    }
+
+    // Repeatable section: ::: section <Title>* ::: or ::: <Title>* ::: or ::: section <Plural> | <Singular>* :::
+    const isRepeatable = trimmed.endsWith('*');
+    if (isRepeatable) {
+        let clean = trimmed.slice(0, -1).trim();
+        if (clean.toLowerCase().startsWith('section ')) {
+            clean = clean.slice(8).trim();
+        }
+        const pipeIdx = clean.indexOf('|');
+        const pluralTitle = pipeIdx !== -1 ? clean.slice(0, pipeIdx).trim() : clean;
+        const singularTitle = pipeIdx !== -1 ? clean.slice(pipeIdx + 1).trim() : clean;
+
+        return {
+            tokens: [
+                {
+                    type: 'section_start',
+                    label: pluralTitle || 'ITEMS',
+                    is_repeatable: true,
+                    plural_title: pluralTitle || 'ITEMS',
+                    singular_title: singularTitle || pluralTitle || 'ITEM',
+                    repeatable_item_label: singularTitle || pluralTitle || 'ITEM',
+                    raw,
+                    position: startPos,
+                },
+            ],
+            endPos,
+        };
+    }
+
+    // Normal section: ::: <Title> ::: or ::: section <Title> :::
+    let sectionTitle = trimmed;
+    if (sectionTitle.toLowerCase().startsWith('section ')) {
+        sectionTitle = sectionTitle.slice(8).trim();
+    }
+
+    return {
+        tokens: [
+            {
+                type: 'section_start',
+                label: sectionTitle || 'SECCIÓN',
+                is_repeatable: false,
+                raw,
+                position: startPos,
+            },
+        ],
+        endPos,
+    };
+}
+
+/**
+ * Splits `condition: inlineBody` respecting quotes
+ */
+function splitConditionAndBody(str: string): { conditionPart: string; inlineBody?: string } {
+    let inQuotes = false;
+    let quoteChar = '';
+
+    for (let i = 0; i < str.length; i++) {
+        const c = str[i];
+        if (!inQuotes && (c === '"' || c === "'")) {
+            inQuotes = true;
+            quoteChar = c;
+        } else if (inQuotes && c === quoteChar) {
+            inQuotes = false;
+        } else if (!inQuotes && c === ':') {
+            const afterColon = str.slice(i + 1);
+            const afterColonTrimmed = afterColon.trim().toLowerCase();
+            // Check for :show or :hide flags on the condition itself
+            if (afterColonTrimmed.startsWith('show:') || afterColonTrimmed.startsWith('hide:')) {
+                continue;
+            }
+            if (afterColonTrimmed === 'show' || afterColonTrimmed === 'hide') {
+                return { conditionPart: str.trim(), inlineBody: undefined };
+            }
+
+            const conditionPart = str.slice(0, i).trim();
+            let inlineBody = str.slice(i + 1);
+            if (inlineBody.startsWith(' ')) {
+                inlineBody = inlineBody.slice(1);
+            }
+            return { conditionPart, inlineBody };
+        }
+    }
+
+    return { conditionPart: str.trim(), inlineBody: undefined };
+}
+
+/**
+ * Parses condition strings such as:
+ * - `Estatus == "En proceso"`
+ * - `tipo != "Robo"`
+ * - `edad >= 18`
+ * - `Director.sex = F`
+ * - `Observaciones != ""`
+ * - `Observaciones` (truthy check)
+ */
+export function parseConditionString(condStr: string): ConditionalExpression | null {
+    let mode: 'show' | 'hide' | undefined = undefined;
+    let str = condStr.trim();
+
+    // Check optional :show or :hide suffix
+    const modeMatch = str.match(/:(show|hide)\s*$/i);
+    if (modeMatch) {
+        mode = modeMatch[1]!.toLowerCase() as 'show' | 'hide';
+        str = str.slice(0, str.lastIndexOf(':' + modeMatch[1]!)).trim();
+    }
+
+    // Match: left operator right
+    const match = str.match(
+        /^(?:\{\s*)?([a-zA-Z0-9_.\s\-¿?áéíóúÁÉÍÓÚñÑ]+?)(?:\s*\})?\s*(==|!=|>=|<=|>|<|=)\s*(.+)$/
+    );
+
+    if (match) {
+        const field_id = match[1]!.trim();
+        const rawOp = match[2]!.trim();
+        const operator = (rawOp === '==' ? '=' : rawOp) as ConditionalExpression['operator'];
+        let val = match[3]!.trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+        }
+        return {
+            field_id,
+            operator,
+            value: val,
+            condition_mode: mode,
+            is_implicit: false,
+        };
+    }
+
+    // Single field presence check (truthy / not empty)
+    const singleField = str.replace(/[{}]/g, '').trim();
+    if (singleField) {
+        return {
+            field_id: singleField,
+            operator: '!=',
+            value: '',
+            condition_mode: mode,
+            is_implicit: true,
+        };
+    }
+
+    return null;
+}

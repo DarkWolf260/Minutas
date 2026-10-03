@@ -8,7 +8,7 @@
  *
  * @example
  * generateDepartmentId('Departamento de Operaciones') // "operaciones"
- * generateDepartmentId('CEMUPRAD')                   // "cemuprad"
+ * generateDepartmentId('Sala de Monitoreo')          // "sala-de-monitoreo"
  * generateDepartmentId('Departamento de Educación')   // "educacion"
  */
 export function generateDepartmentId(name: string): string {
@@ -59,7 +59,8 @@ export function generateUniqueDepartmentId(
 
 export const DEPARTMENT_NAMES = {
   OPERATIONS: 'Departamento de Operaciones',
-  CEMUPRAD: 'CEMUPRAD',
+  SALA_MONITOREO: 'Sala de Monitoreo',
+  CEMUPRAD: 'Sala de Monitoreo',
   EDUCATION: 'Departamento de Educación',
   RISKS: 'Departamento de Gestión de Riesgos',
   IT: 'Departamento de Informática',
@@ -68,7 +69,8 @@ export const DEPARTMENT_NAMES = {
 
 export const DEPARTMENT_IDS = {
   OPERATIONS: generateDepartmentId(DEPARTMENT_NAMES.OPERATIONS),
-  CEMUPRAD: generateDepartmentId(DEPARTMENT_NAMES.CEMUPRAD),
+  SALA_MONITOREO: generateDepartmentId(DEPARTMENT_NAMES.SALA_MONITOREO),
+  CEMUPRAD: generateDepartmentId(DEPARTMENT_NAMES.SALA_MONITOREO),
   EDUCATION: generateDepartmentId(DEPARTMENT_NAMES.EDUCATION),
   RISKS: generateDepartmentId(DEPARTMENT_NAMES.RISKS),
   IT: generateDepartmentId(DEPARTMENT_NAMES.IT),

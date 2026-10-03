@@ -17,9 +17,9 @@ export const OPERATIONAL_ROLES = {
 } as const;
 
 export const SPECIAL_ROLES = {
-  JEFE_CEMUPRAD: 'Jefe de CEMUPRAD',
-  ANALISTA_CEMUPRAD: 'Analista de CEMUPRAD',
-  AUXILIAR_CEMUPRAD: 'Auxiliar de CEMUPRAD',
+  JEFE_SALA_MONITOREO: 'Jefe de Sala de Monitoreo',
+  ANALISTA_SALA_MONITOREO: 'Analista de Sala de Monitoreo',
+  AUXILIAR_SALA_MONITOREO: 'Auxiliar de Sala de Monitoreo',
   JEFE_EDUCACION: 'Jefe de Educación',
   JEFE_RIESGOS: 'Jefe de Gestión de Riesgos',
   JEFE_INFORMATICA: 'Jefe de Informática',

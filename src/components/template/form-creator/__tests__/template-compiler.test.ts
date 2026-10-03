@@ -122,7 +122,7 @@ describe('template-compiler', () => {
     expect(compiled).toContain('- *FECHA:* {Fecha:date:req}');
     expect(compiled).toContain('- *INSPECTOR:* {Inspector:req|title}');
     expect(compiled).toContain('- *OBSERVACIONES:* {Observaciones:textarea:full}');
-    expect(compiled).toContain('[singular="VEHICULO" plural="VEHICULOS" sub="VEHICULO"');
+    expect(compiled).toContain('::: section VEHICULOS | VEHICULO* :::');
     expect(compiled).toContain('- *PLACA:* {Placa|upper}');
     expect(compiled).toContain('- *MODELO:* {Modelo}');
 
@@ -171,8 +171,8 @@ describe('template-compiler', () => {
     const sepSimple: FormCreatorField = { id: 'sep1', label: 'Separador', type: 'separator' };
     const sepTitled: FormCreatorField = { id: 'sep2', label: 'DATOS DE TRASLADO', type: 'separator' };
 
-    expect(compileFieldToken(sepSimple)).toBe('[""]');
-    expect(compileFieldToken(sepTitled)).toBe('["DATOS DE TRASLADO"]');
+    expect(compileFieldToken(sepSimple)).toBe('::: separator :::');
+    expect(compileFieldToken(sepTitled)).toBe('::: separator: DATOS DE TRASLADO :::');
 
     const model: FormCreatorModel = {
       name: 'Formulario',
@@ -188,8 +188,8 @@ describe('template-compiler', () => {
     };
 
     const compiled = compileFormToTemplateString(model);
-    expect(compiled).toContain('[""]');
-    expect(compiled).toContain('["DATOS DE TRASLADO"]');
+    expect(compiled).toContain('::: separator :::');
+    expect(compiled).toContain('::: separator: DATOS DE TRASLADO :::');
 
     const parsed = parseTemplate(compiled);
     expect(parsed.errors).toHaveLength(0);
@@ -211,16 +211,16 @@ describe('template-compiler', () => {
     };
 
     const compiledBlock = compileSectionBlock(sec1);
-    expect(compiledBlock).toContain('[singular="ACOMPAÑANTE" plural="ACOMPAÑANTES" sub="ACOMPAÑANTE"');
+    expect(compiledBlock).toContain('::: section ACOMPAÑANTES | ACOMPAÑANTE* :::');
     expect(compiledBlock).toContain('- *NOMBRE:* {Nombre:req}');
     expect(compiledBlock).toContain('- *CÉDULA:* {Cédula:cedula}');
-    expect(compiledBlock).toContain(']');
+    expect(compiledBlock).toContain(':::');
 
     let template = '*REPORTE DE PATRULLAJE*\n\n- *OFICIAL:* {Oficial}\n';
     template = syncSectionsInTemplateText(template, [sec1]);
     expect(template).toContain('*REPORTE DE PATRULLAJE*');
     expect(template).toContain('{Oficial}');
-    expect(template).toContain('[singular="ACOMPAÑANTE"');
+    expect(template).toContain('::: section ACOMPAÑANTES | ACOMPAÑANTE* :::');
 
     // Extracting sections back from template text
     const extracted = extractSectionsFromTemplateText(template);
@@ -271,13 +271,13 @@ describe('template-compiler', () => {
 
     const compiled = compileFormToTemplateString(model);
     expect(compiled).toContain('- *FECHA:* {Fecha:date}');
-    expect(compiled).toContain('[singular="VEHICULO" plural="VEHICULOS" sub="VEHICULO"');
+    expect(compiled).toContain('::: section VEHICULOS | VEHICULO* :::');
     expect(compiled).toContain('- *PLACA:* {Placa|upper}');
     expect(compiled).toContain('- *OBSERVACIONES:* {Observaciones:textarea}');
 
     // Verify sequential order in compiled text
     const idxFecha = compiled.indexOf('FECHA');
-    const idxSec = compiled.indexOf('singular="VEHICULO"');
+    const idxSec = compiled.indexOf('::: section VEHICULOS | VEHICULO* :::');
     const idxObs = compiled.indexOf('OBSERVACIONES');
     expect(idxFecha).toBeLessThan(idxSec);
     expect(idxSec).toBeLessThan(idxObs);
@@ -287,7 +287,7 @@ describe('template-compiler', () => {
     expect(fieldsParsed).toHaveLength(3);
     expect(fieldsParsed[0]?.label).toBe('Fecha');
     expect(fieldsParsed[1]?.type).toBe('section');
-    expect(fieldsParsed[1]?.label).toBe('VEHICULO');
+    expect(fieldsParsed[1]?.label).toBe('VEHICULOS');
     expect(fieldsParsed[1]?.fields).toHaveLength(2);
     expect(fieldsParsed[1]?.fields?.[0]?.label).toBe('Placa');
     expect(fieldsParsed[2]?.label).toBe('Observaciones');
@@ -295,7 +295,7 @@ describe('template-compiler', () => {
     // Verify reordering fields puts section first
     const reorderedFields = [model.fields[1]!, model.fields[0]!, model.fields[2]!];
     const reorderedText = reorderFieldsInTemplateText(compiled, reorderedFields);
-    const newIdxSec = reorderedText.indexOf('singular="VEHICULO"');
+    const newIdxSec = reorderedText.indexOf('::: section VEHICULOS | VEHICULO* :::');
     const newIdxFecha = reorderedText.indexOf('FECHA');
     expect(newIdxSec).toBeLessThan(newIdxFecha);
   });
@@ -307,15 +307,15 @@ describe('template-compiler', () => {
 - *HORA:* {Hora:time:req}
 - *TURNO:* {Turno:dropdown(Mañana=Mañana|Tarde=Tarde|Noche=Noche)}
 
-["PERSONAL DE GUARDIA"]
+::: separator: PERSONAL DE GUARDIA :::
 
-[singular="FUNCIONARIO" plural="FUNCIONARIOS" sub="FUNCIONARIO"
+::: section FUNCIONARIOS | FUNCIONARIO* :::
 - *NOMBRE:* {Nombre:req}
 - *RANGO:* {Rango}
 - *CÉDULA:* {Cédula:cedula}
-]
+:::
 
----
+::: separator :::
 
 - *RESUMEN DE NOVEDADES:* {Novedades:textarea:full}
 `;
@@ -368,11 +368,10 @@ describe('template-compiler', () => {
     };
 
     const compiledBlock = compileSectionBlock(standardSection);
-    expect(compiledBlock).toContain('[DATOS GENERALES]');
+    expect(compiledBlock).toContain('::: DATOS GENERALES :::');
     expect(compiledBlock).toContain('- *NOMBRE:* {Nombre:req}');
     expect(compiledBlock).toContain('- *EDAD:* {Edad}');
-    expect(compiledBlock).toContain('[/]');
-    expect(compiledBlock).not.toContain('singular=');
+    expect(compiledBlock).toContain(':::');
 
     // 2. Compilation of full model with standard section
     const model: FormCreatorModel = {
@@ -398,9 +397,9 @@ describe('template-compiler', () => {
     const compiledTemplate = compileFormToTemplateString(model);
     expect(compiledTemplate).toContain('*REPORTE GENERAL*');
     expect(compiledTemplate).toContain('- *FECHA:* {Fecha:date}');
-    expect(compiledTemplate).toContain('[DATOS GENERALES]');
-    expect(compiledTemplate).toContain('[/]');
-    expect(compiledTemplate).toContain('[singular="VEHICULO"');
+    expect(compiledTemplate).toContain('::: DATOS GENERALES :::');
+    expect(compiledTemplate).toContain(':::');
+    expect(compiledTemplate).toContain('::: section VEHICULOS | VEHICULO* :::');
 
     // 3. Parsing standard section back into FormCreatorField
     const parsed = parseTemplateToFields(compiledTemplate);
@@ -427,11 +426,11 @@ describe('template-compiler', () => {
       label: 'INFORMACIÓN PERSONAL',
     };
     const updatedTemplate = updateFieldTagInText(compiledTemplate, standardSection.label, updatedSection);
-    expect(updatedTemplate).toContain('[INFORMACIÓN PERSONAL]');
-    expect(updatedTemplate).not.toContain('[DATOS GENERALES]');
+    expect(updatedTemplate).toContain('::: INFORMACIÓN PERSONAL :::');
+    expect(updatedTemplate).not.toContain('::: DATOS GENERALES :::');
 
     const removedTemplate = removeFieldTagFromText(updatedTemplate, updatedSection);
-    expect(removedTemplate).not.toContain('[INFORMACIÓN PERSONAL]');
+    expect(removedTemplate).not.toContain('::: INFORMACIÓN PERSONAL :::');
     expect(removedTemplate).toContain('- *FECHA:* {Fecha:date}');
   });
 
@@ -473,9 +472,7 @@ describe('template-compiler', () => {
 - *JEFE DE LOS SERVICIOS:* {Jefe de los servicios} {Enc}
 - *DESCRIPCIÓN:* {Descripcion:textarea:full}
 
-[?{Director.sex} = F]
-*DIRECTORA-PRESIDENTA:* {Director}
-[/]
+::: if Director.sex == "F": *DIRECTORA-PRESIDENTA:* {Director} :::
 
 {pie}
 `;

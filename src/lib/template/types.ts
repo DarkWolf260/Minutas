@@ -15,7 +15,20 @@ export type { FieldType, SectionConfig, SnippetOption };
 export type Token =
     | { type: 'text'; content: string; raw: string; position: number }
     | { type: 'field'; id: string; raw: string; position: number }
-    | { type: 'section_start'; label?: string; condition?: ConditionalExpression; is_repeatable?: boolean; raw: string; position: number }
+    | {
+        type: 'section_start';
+        label?: string;
+        condition?: ConditionalExpression;
+        is_repeatable?: boolean;
+        singular_title?: string;
+        plural_title?: string;
+        repeatable_item_label?: string;
+        is_separator?: boolean;
+        is_mapping?: boolean;
+        is_self_contained?: boolean;
+        raw: string;
+        position: number;
+    }
     | { type: 'section_end'; raw: string; position: number };
 
 /**

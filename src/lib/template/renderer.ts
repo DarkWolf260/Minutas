@@ -404,6 +404,10 @@ function renderSection(
     const section = sections.find((s) => s.id === sectionId);
     if (!section) return '';
 
+    if (section.is_separator) {
+        return section.label ? `- *${section.label}*` : '';
+    }
+
     // Evaluate condition if present
     if (section.condition) {
         let valToCompare = findValueForField(
@@ -542,18 +546,34 @@ function renderSection(
                 }
             });
 
-            if (section.is_self_contained && !section.is_repeatable) {
-                // For non-repeatable self-contained sections, we preserve all static text lines
-                // to avoid stripping intentional headers that don't have fields on the same line.
-                // The final cleanup will handle empty fields.
+            if (section.is_repeatable) {
+                const originalLines = (section.original_content || '').split(/\r?\n/);
+                const lines = itemContent.split(/\r?\n/);
+                const filteredLines = lines.filter((line, lineIdx) => {
+                    // Blank/whitespace-only line: always keep (intentional spacing)
+                    if (line.trim().length === 0) return true;
+
+                    const origLine = originalLines[lineIdx] ?? '';
+                    const hadField = /\{[^{}]+\}/.test(origLine);
+
+                    // If the line never had a field, it's a static label/header -> keep it!
+                    if (!hadField) return true;
+
+                    // If the line had a field, check if any alphanumeric content remains
+                    const alphanumeric = line
+                        .replace(/^[ \t]*(?:-[ \t]*)?(?:\*{1,2}[^*:]+:\*{1,2}|"[^"]*")/g, '')
+                        .replace(/[*:\-\s"']/g, '')
+                        .trim();
+
+                    return alphanumeric.length > 0;
+                });
+                itemContent = filteredLines.join('\n');
             } else if (section.is_self_contained) {
                 const lines = itemContent.split(/\r?\n/);
                 const filteredLines = lines.filter(line => {
                     // Blank/whitespace-only line: always keep (intentional spacing)
                     if (line.trim().length === 0) return true;
 
-                    // Check if any non-decorative alphanumeric content remains.
-                    // If nothing remains, this was a "- *LABEL:* {empty-field}" line → remove it.
                     const alphanumeric = line
                         .replace(/^[ \t]*(?:-[ \t]*)?(?:\*{1,2}[^*:]+:\*{1,2}|"[^"]*")/g, '')
                         .replace(/[*:\-\s"']/g, '')
@@ -577,36 +597,51 @@ function renderSection(
                         itemContent = `${labelPrefix} ${itemContent.replace(/^\s+/, '')}`;
                     }
                 } else if (itemsWithContent.length > 1) {
-                    // Format: - *NOVEDAD #01*\ncontent — only when multiple items
-                    const labelPrefix = `- *${section.repeatable_item_label} #${String(index + 1).padStart(2, '0')}*`;
-                    // Only trim leading newline if it was explicitly there to avoid triple newlines
-                    const cleaned = itemContent.startsWith('\n') ? itemContent.slice(1) : itemContent;
-                    itemContent = `${labelPrefix}\n${cleaned}`;
+                    const hasDistinctSubLabel =
+                        section.repeatable_item_label.toLowerCase() !== (section.label || '').toLowerCase() &&
+                        section.repeatable_item_label.toLowerCase() !== (section.plural_title || '').toLowerCase();
+
+                    // Only add prefix if there is an explicit distinct sub-label (e.g. ::: section DATOS DE LOS PACIENTES | PACIENTE* :::)
+                    // If there is NO distinct sub-label (e.g. ::: section DATOS OPERACIONALES* :::),
+                    // the top header is already rendered once, so do not repeat or number items.
+                    if (hasDistinctSubLabel) {
+                        const labelPrefix = `- *${section.repeatable_item_label} #${String(index + 1).padStart(2, '0')}*`;
+                        // Only trim leading newline if it was explicitly there to avoid triple newlines
+                        const cleaned = itemContent.startsWith('\n') ? itemContent.slice(1) : itemContent;
+                        itemContent = `${labelPrefix}\n${cleaned}`;
+                    }
                 }
             }
-            return section.condition ? itemContent.trim() : itemContent;
+            if (section.condition) {
+                const isInline = !section.original_content?.includes('\n') && !section.full_raw?.includes('\n');
+                if (isInline) {
+                    return itemContent;
+                }
+                const hasTrailingNewline = (section.original_content || '').endsWith('\n') || (section.full_raw || '').endsWith('\n');
+                const trimmed = itemContent.trim();
+                return trimmed ? (hasTrailingNewline ? `${trimmed}\n` : trimmed) : '';
+            }
+            return itemContent;
         });
 
+
+
     // Determine appropriate joiner: 
-    // If original_content was virtual, always join with \n. 
-    // Otherwise, join with \n ONLY if items don't already end with a newline.
+    // 1. Virtual items -> joined by single \n
+    // 2. Multiline items -> joined by \n\n (for clean blank line separation between records)
+    // 3. Single line items -> joined by \n
     const isVirtual = section.is_virtual;
     const hasInternalNewlines = renderedItemsArray.some(item => (item || '').trim().includes('\n'));
-    const anyEndsWithNewline = renderedItemsArray.some(item => (item || '').endsWith('\n'));
+    const joiner = isVirtual ? '\n' : (hasInternalNewlines ? '\n\n' : '\n');
+    renderedItems = hasInternalNewlines
+        ? renderedItemsArray.map(item => item.trimEnd()).join(joiner)
+        : renderedItemsArray.join(joiner);
 
-    // Choose joiner:
-    // 1. Virtual items -> joined by single \n
-    // 2. Multiline items that don't already end in \n -> joined by \n\n (for separation)
-    // 3. Items already ending in \n -> joined by '' (respect template)
-    // 4. Single line items -> joined by \n
-    const joiner = isVirtual ? '\n' : (anyEndsWithNewline ? '' : (hasInternalNewlines ? '\n\n' : '\n'));
-    renderedItems = renderedItemsArray.join(joiner);
-
-    // Add section title only for singular/plural sections (not plain labeled ones)
-    if (section.singular_title || section.plural_title) {
+    // Add section title only for repeatable sections (or sections with singular/plural titles)
+    if (section.is_repeatable && (section.singular_title || section.plural_title || section.label)) {
         const title = itemsWithContent.length > 1 && section.plural_title
             ? section.plural_title
-            : (section.singular_title || section.plural_title!);
+            : (section.singular_title || section.plural_title || section.label);
         const header = `- *${title}*`;
         renderedItems = `${header}\n${renderedItems}`;
     }
@@ -630,44 +665,35 @@ export function renderContentWithSections(
     const { sections = [], fields = {} } = config;
     let finalContent = template;
 
-    // First pass: collect all mapping results for fields
+    // First pass: collect all mapping results for fields from mapping sections
     const mappingResults: Record<string, string> = {};
-    const mappingRegex = /\[\?\s*\{[\s\S]+?\}\s*(?:(?:!=|>=|<=|>|<|=)\s*(?:"[^"]*"|\S+?))?\s*\]([\s\S]*?)\[\/\s*\]/g;
-    let mappingMatch;
-    while ((mappingMatch = mappingRegex.exec(template)) !== null) {
-        const block = mappingMatch[0];
-        const innerContent = mappingMatch[1];
-        const condMatch = block.match(/^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(?:(!=|>=|<=|>|<|=)\s*("(.*?)"|(\S+?)))?\s*\]/);
-        if (condMatch && condMatch[1]) {
-            const condfield_id = condMatch[1].trim();
-            const operator = condMatch[2];
-            const actualValue = findValueForField(condfield_id, data, sections, predefinedValues, dynamicPredefinedValues);
-            if (!operator) {
-                let keyToCompare = actualValue;
-                const options = config.templateOptions?.get(condfield_id);
-                if (options && typeof actualValue === 'string') {
-                    const opt = options.find((o) => o.value === actualValue || o.label === actualValue);
-                    if (opt) keyToCompare = opt.label;
-                }
-                const lines = (innerContent || '').split('\n');
-                for (const line of lines) {
-                    const eqIdx = line.indexOf('=');
-                    if (eqIdx > -1) {
-                        const key = line.substring(0, eqIdx).trim();
-                        const val = line.substring(eqIdx + 1).trim();
-                        if (evaluateCondition(keyToCompare, '=', key)) {
-                            mappingResults[condfield_id] = val;
-                            mappingResults[condfield_id.toLowerCase()] = val;
-                            break;
-                        }
-                    }
+    sections.filter((s) => s.is_mapping).forEach((s) => {
+        const condfield_id = s.condition?.field_id;
+        if (!condfield_id) return;
+        const actualValue = findValueForField(condfield_id, data, sections, predefinedValues, dynamicPredefinedValues);
+        let keyToCompare = actualValue;
+        const options = config.templateOptions?.get(condfield_id);
+        if (options && typeof actualValue === 'string') {
+            const opt = options.find((o) => o.value === actualValue || o.label === actualValue);
+            if (opt) keyToCompare = opt.label;
+        }
+        const lines = (s.original_content || '').split('\n');
+        for (const line of lines) {
+            const eqIdx = line.indexOf('=');
+            if (eqIdx > -1) {
+                const key = line.substring(0, eqIdx).trim();
+                const val = line.substring(eqIdx + 1).trim();
+                if (evaluateCondition(keyToCompare, '=', key)) {
+                    mappingResults[condfield_id] = val;
+                    mappingResults[condfield_id.toLowerCase()] = val;
+                    break;
                 }
             }
         }
-    }
+    });
 
     const topLevelSections = sections.filter((s: SectionConfig) => {
-        return config.layout.includes(s.id);
+        return !s.parent_id;
     });
 
     topLevelSections.forEach((section: SectionConfig) => {
@@ -791,10 +817,9 @@ export function renderFinalReport(
         // Final cleanup
         const finalOutput = fullRenderedContent
             .replace(/<<|>>/g, '') // Remove summary markers
-            .replace(/\[\?.*?\][\s\S]*?\[\/\s*\]/g, '') // Remove unprocessed conditional blocks
-            .replace(/\[""\]\s*/g, '') // Remove separators
-            .replace(/\[[\s\S]*?\](\*)?/g, '') // Remove unprocessed section blocks
-            .replace(/\\([*{}[\\]])/g, '$1') // Final unescaping of characters (\* -> *, \\ -> \)
+            .replace(/:::[^:\n\r]*:::/g, '') // Remove unrendered single-line ::: directives
+            .replace(/:::[\s\S]*?:::/g, '') // Remove unprocessed multiline ::: blocks
+            .replace(/\\([*{}:[\]\\])/g, '$1') // Final unescaping of characters (\* -> *, \: -> :)
             .replace(/^[\t ]+$/gm, '') // Remove whitespace-only lines
             .replace(/\n{3,}/g, '\n\n'); // Collapse excessive blank lines
 

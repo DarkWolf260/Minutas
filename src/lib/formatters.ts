@@ -81,7 +81,7 @@ export function formatStaffMember(
  * Format: [Cargo] [Hierarchy] [Name] [Cédula]
  * 
  * @param member - Staff member object
- * @returns Formatted string: "Analista de CEMUPRAD OPC I Rubén Rojas V-28.702.206"
+ * @returns Formatted string: "Analista de Sala de Monitoreo OPC I Rubén Rojas V-28.702.206"
  */
 export function formatStaffReporta(member: StaffMember | string): string {
   if (!member) return '';

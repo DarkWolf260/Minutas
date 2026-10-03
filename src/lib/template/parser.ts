@@ -239,123 +239,43 @@ export function parse(tokens: Token[]): TemplateParserResult {
                 idx++;
             } else if (token.type === 'section_start') {
                 let inner: Token[] = [];
-                let is_repeatable = token.is_repeatable || false;
-                let isSelfContained = false;
-                let baseLabel = token.label || '';
- 
-                const originalLabel = baseLabel;
-                // firstBraceIdx uses the original label (before any quote stripping)
-                const firstBraceIdx = baseLabel.indexOf('{');
-                const is_separator = !token.is_repeatable && (baseLabel.trim() === '""' || (originalLabel.trim().startsWith('"') && originalLabel.trim().endsWith('"') && firstBraceIdx === -1));
+                const is_repeatable = !!token.is_repeatable;
+                const isSelfContained = !!token.is_self_contained;
+                const is_separator = !!token.is_separator;
+                const is_mapping = !!token.is_mapping;
+                const baseLabel = token.label || '';
+                const singular_title = token.singular_title || '';
+                const plural_title = token.plural_title || '';
+                const sub_label = token.repeatable_item_label || '';
 
-                // If the label starts with ", extract ONLY the quoted portion as the title.
-                // Text after the closing " (and before ]) is ignored as part of the label.
-                //   "NOVEDADES"          → NOVEDADES
-                //   "Título" texto extra → Título  (texto extra discarded)
-                // Do NOT apply to attribute-style labels like: singular="X" plural="Y"
-                if (baseLabel.startsWith('"')) {
-                    const closingQuote = baseLabel.indexOf('"', 1);
-                    if (closingQuote !== -1) {
-                        baseLabel = baseLabel.slice(1, closingQuote).trim();
-                    } else {
-                        baseLabel = baseLabel.slice(1).trim();
-                    }
-                }
-
-                if ((firstBraceIdx !== -1 && !token.condition) || is_separator) {
-                    isSelfContained = true;
-                    if (is_separator) {
-                        baseLabel = originalLabel.trim() === '""' ? 'separator' : baseLabel;
-                        inner = [];
-                    } else {
-                        if (originalLabel.startsWith('"')) {
-                            const closingQuoteIdx = originalLabel.indexOf('"', 1);
-                            if (closingQuoteIdx !== -1) {
-                                // Extract the title from between the quotes
-                                baseLabel = originalLabel.slice(1, closingQuoteIdx).trim();
-                                // Body is everything after the closing quote
-                                const bodyStart = closingQuoteIdx + 1;
-                                inner = tokenize(originalLabel.slice(bodyStart));
-                            } else {
-                                baseLabel = originalLabel.slice(1).trim();
-                                inner = [];
-                            }
-                        } else {
-                            // No quotes: derive label from before the first {
-                            // ... (rest of the attribute match logic)
-                            const attrPattern = /^((?:singular\s*=\s*"[^"]*"\s*|plural\s*=\s*"[^"]*"\s*|sub\s*=\s*"[^"]*"\s*)+)/i;
-                            const attrMatch = originalLabel.match(attrPattern);
-                            if (attrMatch) {
-                                // Body is everything after the attribute block
-                                const bodyStart = attrMatch[0].length;
-                                const bodyContent = originalLabel.slice(bodyStart);
-                                baseLabel = attrMatch[0].trim();
-                                inner = tokenize(bodyContent);
-                            } else {
-                                const inlineContent = originalLabel.substring(firstBraceIdx);
-                                baseLabel = originalLabel.substring(0, firstBraceIdx).trim();
-                                inner = tokenize(inlineContent);
-                            }
-                        }
-                    }
-                }
                 idx++;
-                if (!isSelfContained) {
-                    let depth = 1;
-                    while (idx < tokenList.length && depth > 0) {
-                        const currentToken = tokenList[idx];
-                        if (!currentToken) {
-                            idx++;
-                            continue;
-                        }
-
-                        if (currentToken.type === 'section_start') {
-                            const rawLabel = currentToken.label || '';
-                            const isSep = rawLabel.trim() === '""';
-                            const hasBrace = rawLabel.includes('{');
-                            const isSelfContainedInner = (hasBrace && !currentToken.condition) || isSep;
-                            if (!isSelfContainedInner) depth++;
-                        } else if (currentToken.type === 'section_end') {
-                            depth--;
-                        }
-
-                        if (depth > 0) {
-                            inner.push(currentToken);
-                        }
+                let depth = 1;
+                while (idx < tokenList.length && depth > 0) {
+                    const currentToken = tokenList[idx];
+                    if (!currentToken) {
                         idx++;
+                        continue;
                     }
+
+                    if (currentToken.type === 'section_start') {
+                        depth++;
+                    } else if (currentToken.type === 'section_end') {
+                        depth--;
+                    }
+
+                    if (depth > 0) {
+                        inner.push(currentToken);
+                    }
+                    idx++;
                 }
 
-                // Parse attributes from label: [singular="X" plural="Y" sub="Z"]
-                let singular_title = '';
-                let plural_title = '';
-                let sub_label = '';
-                if (baseLabel) {
-                    const singularMatch = baseLabel.match(/singular\s*=\s*"([^"]*)"/i);
-                    const pluralMatch = baseLabel.match(/plural\s*=\s*"([^"]*)"/i);
-                    const subMatch = baseLabel.match(/sub\s*=\s*"([^"]*)"/i);
-
-                    if (singularMatch) singular_title = singularMatch[1] || '';
-                    if (pluralMatch) plural_title = pluralMatch[1] || '';
-                    if (subMatch) sub_label = subMatch[1] || '';
-
-                    // If it has attributes, the label itself shouldn't be used as title directly 
-                    // unless no attributes were found.
-                    if (singularMatch || pluralMatch || subMatch) {
-                        baseLabel = singular_title || '';
-                    }
-                }
-
-
-                const baseId = baseLabel || (token.condition ? `cond_${token.condition.field_id}` : 'section');
+                const baseId = baseLabel || (token.condition ? `cond_${token.condition.field_id}` : (is_separator ? 'separator' : 'section'));
                 const sectionId = generateSectionId(baseId, [...sections, ...subSections], takenSectionIds);
 
                 const innerResult = parseInternal(inner, sectionId);
 
-                const isMappingConditional = token.condition && token.condition.is_implicit && inner.length > 0;
-
-                if (isMappingConditional) {
-                    const field_id = token.condition!.field_id;
+                if (is_mapping && token.condition) {
+                    const field_id = token.condition.field_id;
                     const options: SnippetOption[] = [];
                     inner.forEach((t, i) => {
                         if (t.type === 'text') {
@@ -368,11 +288,9 @@ export function parse(tokens: Token[]): TemplateParserResult {
                                     if (key) {
                                         options.push({
                                             id: `tpl_opt_${field_id}_implicit_${i}_${options.length}`,
-                                            label: key, // The Key: what the user selects in the dropdown
-                                            value: val, // The Value: what goes into the report (long text)
+                                            label: key,
+                                            value: val,
                                         });
-                                        // Extract {campo} references from the mapped value
-                                        // so they appear in the form as input fields
                                         const refMatches = val.matchAll(/\{([^}:]+)(?::[^}]*)?\}/g);
                                         for (const ref of refMatches) {
                                             const refId = ref[1]?.trim();
@@ -389,8 +307,8 @@ export function parse(tokens: Token[]): TemplateParserResult {
                     if (options.length > 0) {
                         const existing = templateOptions.get(field_id) || [];
                         const merged = [...existing];
-                        options.forEach(opt => {
-                            if (!merged.some(m => m.label === opt.label)) {
+                        options.forEach((opt) => {
+                            if (!merged.some((m) => m.label === opt.label)) {
                                 merged.push(opt);
                             }
                         });
@@ -406,7 +324,6 @@ export function parse(tokens: Token[]): TemplateParserResult {
                     parent_id,
                     label: is_separator ? (baseLabel === 'separator' ? '' : baseLabel) : (token.condition ? '' : (baseLabel || `Sección ${subSections.length + 1}`)),
                     is_repeatable,
-
                     field_ids: Array.from(innerResult.subFieldNames),
                     layout: innerResult.subLayout,
                     condition: token.condition ? {
@@ -415,30 +332,27 @@ export function parse(tokens: Token[]): TemplateParserResult {
                         value: token.condition.value,
                         condition_mode: token.condition.condition_mode,
                     } : undefined,
-                    original_content: inner.map(t => t.raw).join(''),
+                    original_content: inner.map((t) => t.raw).join(''),
                     full_raw: (() => {
                         if (isSelfContained) return token.raw;
                         const lastToken = idx > 0 ? tokenList[idx - 1] : undefined;
                         const closingRaw = (lastToken?.type === 'section_end') ? lastToken.raw : '';
-                        return [token.raw, ...inner.map(t => t.raw), closingRaw].join('');
+                        return [token.raw, ...inner.map((t) => t.raw), closingRaw].join('');
                     })(),
                     is_separator: is_separator,
-                    is_mapping: isMappingConditional || false,
+                    is_mapping: is_mapping,
                     is_self_contained: isSelfContained && !is_separator,
-                    has_static_content: inner.some(t => t.type === 'text' && t.raw.replace(/[\s\n\r\t]/g, '').length > 0),
+                    has_static_content: inner.some((t) => t.type === 'text' && t.raw.replace(/[\s\n\r\t]/g, '').length > 0),
                 };
-
-
 
                 if (singular_title) section.singular_title = singular_title;
                 if (plural_title) section.plural_title = plural_title;
                 if (sub_label) section.repeatable_item_label = sub_label;
-                // Sections with singular/plural titles are implicitly repeatable
                 if (singular_title || plural_title) section.is_repeatable = true;
 
                 subSections.push(section);
                 subLayout.push(sectionId);
-                innerResult.subFieldNames.forEach(fn => subFieldNames.add(fn));
+                innerResult.subFieldNames.forEach((fn) => subFieldNames.add(fn));
             } else {
                 idx++;
             }
@@ -479,7 +393,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
     const absorbedItems = new Set<string>();
     sections.forEach(sec => {
         // Mapping sections don't have a visual layout to absorb into
-        if (!sec.is_mapping) {
+        if (!sec.is_mapping && sec.parent_id) {
             sec.field_ids.forEach(id => absorbedItems.add(id));
             if (sec.layout) sec.layout.forEach(id => absorbedItems.add(id));
         }

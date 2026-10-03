@@ -79,7 +79,7 @@ import {
 import { FormCreatorHeader } from './components/form-creator-header';
 import { AvailableFieldsSidebar } from './components/available-fields-sidebar';
 import { FieldSettingsSidebar } from './components/field-settings-sidebar';
-import { TemplateTextEditor } from './components/template-text-editor';
+import { TemplateSyntaxEditor } from '../template-syntax-editor';
 import { SortableCanvasFieldCard } from './components/sortable-canvas-field';
 import { SortableCanvasSectionCard } from './components/sortable-canvas-section';
 import { CanvasFieldDragOverlay } from './components/canvas-field-drag-overlay';
@@ -924,27 +924,24 @@ export function FormCreator({
                     </div>
                   </div>
 
-                  {/* Editor Area - Identical to constructor (TemplateBuilder) */}
-                  <div className="flex-1 flex flex-col min-h-[420px] rounded-md border shadow-sm bg-background">
-                    <Textarea
-                      ref={textareaRef}
-                      value={templateText}
-                      onChange={(e) => {
-                        const newText = e.target.value;
-                        setTemplateText(newText);
-                        try {
-                          const parsed = parseTemplateToFields(newText);
-                          if (parsed.length > 0) {
-                            setFields(parsed);
-                          }
-                        } catch {
-                          // Allow syntax during typing
+                  {/* Editor Area with Syntax Highlighting */}
+                  <TemplateSyntaxEditor
+                    textareaRef={textareaRef}
+                    value={templateText}
+                    onChange={(newText) => {
+                      setTemplateText(newText);
+                      try {
+                        const parsed = parseTemplateToFields(newText);
+                        if (parsed.length > 0) {
+                          setFields(parsed);
                         }
-                      }}
-                      className="flex-1 w-full font-mono text-sm leading-relaxed resize-none p-4 border-0 focus-visible:ring-0 overflow-y-auto"
-                      placeholder="Escribe el contenido de tu plantilla aquí..."
-                    />
-                  </div>
+                      } catch {
+                        // Allow syntax during typing
+                      }
+                    }}
+                    className="flex-1 min-h-[420px]"
+                    placeholder="Escribe el contenido de tu plantilla aquí..."
+                  />
                 </div>
 
                 {/* Sub-view 2: Formulario Final */}
@@ -1120,13 +1117,24 @@ export function FormCreator({
                 </div>
               </div>
             ) : (
-              <TemplateTextEditor
-                templateText={templateText}
-                allCurrentFields={allCurrentFields}
-                onTextChange={setTemplateText}
-                onResetStandardFormat={handleResetStandardFormat}
+              <TemplateSyntaxEditor
                 textareaRef={textareaRef}
+                value={templateText}
+                onChange={(newText) => {
+                  setTemplateText(newText);
+                  try {
+                    const parsed = parseTemplateToFields(newText);
+                    if (parsed.length > 0) {
+                      setFields(parsed);
+                    }
+                  } catch {
+                    // Allow syntax during typing
+                  }
+                }}
+                className="flex-1 min-h-[420px]"
+                placeholder="Escribe el contenido de tu plantilla aquí..."
               />
+
             )}
           </div>
         </div>

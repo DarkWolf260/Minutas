@@ -83,7 +83,7 @@ export function compileFieldToken(field: FormCreatorField): string {
       field.label.trim() &&
       field.label.trim().toLowerCase() !== 'separador' &&
       field.label.trim().toLowerCase() !== 'divisor';
-    return isCustomTitle ? `["${field.label.trim().toUpperCase()}"]` : '[""]';
+    return isCustomTitle ? `::: separator: ${field.label.trim().toUpperCase()} :::` : '::: separator :::';
   }
 
   const id = sanitizeFieldId(field.label);
@@ -139,13 +139,13 @@ export function compileSectionBlock(section: FormCreatorSection | FormCreatorFie
   if (!isRep) {
     const title = (labelOrTitle || 'SECCIÓN').toUpperCase().trim();
     const lines: string[] = [];
-    lines.push(`[${title}]`);
+    lines.push(`::: ${title} :::`);
     (section.fields || []).forEach((field) => {
       const token = compileFieldToken(field);
       const labelUpper = sanitizeFieldId(field.label).toUpperCase();
       lines.push(`- *${labelUpper}:* ${token}`);
     });
-    lines.push('[/]');
+    lines.push(':::');
     return lines.join('\n');
   }
 
@@ -154,13 +154,16 @@ export function compileSectionBlock(section: FormCreatorSection | FormCreatorFie
   const sub = (section.subLabel || singular).toUpperCase().trim();
 
   const lines: string[] = [];
-  lines.push(`[singular="${singular}" plural="${plural}" sub="${sub}"`);
+  const header = (plural !== sub && sub !== 'ITEM')
+    ? `::: section ${plural} | ${sub}* :::`
+    : `::: section ${plural}* :::`;
+  lines.push(header);
   (section.fields || []).forEach((field) => {
     const token = compileFieldToken(field);
     const labelUpper = sanitizeFieldId(field.label).toUpperCase();
     lines.push(`- *${labelUpper}:* ${token}`);
   });
-  lines.push(']');
+  lines.push(':::');
   return lines.join('\n');
 }
 
@@ -169,11 +172,8 @@ export function compileSectionBlock(section: FormCreatorSection | FormCreatorFie
  */
 function removeAllSectionsFromText(text: string): string {
   if (!text) return '';
-  const repPattern = /\[\s*(?:singular|plural|sub)\s*=\s*"[^"]*"[\s\S]*?(?:\[\/\s*\]|\])/gi;
-  let result = text.replace(repPattern, '');
-  const stdPattern = /\[(?!\?)(?!"|\/)[^\]\r\n]+\][\s\S]*?\[\/\s*\]/gi;
-  result = result.replace(stdPattern, '');
-  return result.replace(/\n{3,}/g, '\n\n').trim();
+  const pattern = /:::\s*(?:section\s+[\s\S]*?|[^:\r\n]+)\s*:::[\s\S]*?:::/gi;
+  return text.replace(pattern, '').replace(/\n{3,}/g, '\n\n').trim();
 }
 
 /**
@@ -400,7 +400,7 @@ export function compileFormToTemplateString(model: FormCreatorModel): string {
       if (lines.length > 0 && lines[lines.length - 1] !== '') {
         lines.push('');
       }
-      lines.push(isCustomTitle ? `["${field.label.trim().toUpperCase()}"]` : '[""]');
+      lines.push(isCustomTitle ? `::: separator: ${field.label.trim().toUpperCase()} :::` : '::: separator :::');
       lines.push('');
     } else if (field.type === 'section') {
       if (lines.length > 0 && lines[lines.length - 1] !== '') {
@@ -437,14 +437,19 @@ export function isFieldTagInText(text: string, field: FormCreatorField): boolean
   }
 
   if (field.type === 'section') {
-    if (field.isRepeatable === false) {
+    const isRep = field.isRepeatable !== false;
+    if (!isRep) {
       const title = (field.label || 'SECCIÓN').toUpperCase().trim();
       const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      return new RegExp(`\\[\\s*${escaped}\\s*\\]`, 'i').test(text);
+      return new RegExp(`:::\\s*(?:section\\s+)?${escaped}\\s*:::`, 'i').test(text);
     }
     const singular = (field.singularTitle || field.label || 'ITEM').toUpperCase().trim();
-    const escaped = singular.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return new RegExp(`\\[\\s*singular\\s*=\\s*"${escaped}"`, 'i').test(text);
+    const plural = (field.pluralTitle || `${singular}S`).toUpperCase().trim();
+    const sub = (field.subLabel || singular).toUpperCase().trim();
+    const escapedPlural = plural.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedSingular = singular.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedSub = sub.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`:::\\s*section\\s+(?:${escapedPlural}|${escapedSingular}|${escapedSub})(?:\\s*\\|[^:*]+)?\\*?\\s*:::`, 'i').test(text);
   }
 
   if (field.type === 'separator') {
@@ -455,9 +460,9 @@ export function isFieldTagInText(text: string, field: FormCreatorField): boolean
       field.label.trim().toLowerCase() !== 'divisor';
     if (isCustomTitle) {
       const escaped = field.label.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      return new RegExp(`\\["${escaped}"\\]`, 'i').test(text);
+      return new RegExp(`:::\\s*separator:\\s*${escaped}\\s*:::`, 'i').test(text);
     }
-    return /\[""\]/.test(text);
+    return /:::\s*(?:separator|---)\s*:::/i.test(text);
   }
 
   const id = sanitizeFieldId(field.label);
@@ -476,23 +481,12 @@ export function updateFieldTagInText(
 ): string {
   if (newField.type === 'section') {
     const newBlock = compileSectionBlock(newField);
-    // 1. Try matching repeatable pattern with oldLabel / oldSingular
-    const oldSingular = sanitizeFieldId(oldLabel).toUpperCase();
-    const escapedSingular = oldSingular.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const repPattern = new RegExp(`\\[\\s*singular\\s*=\\s*"${escapedSingular}"[\\s\\S]*?(?:\\[\\/\\s*\\]|\\])`, 'gi');
-    if (repPattern.test(text)) {
-      return text.replace(repPattern, newBlock);
+    const oldName = sanitizeFieldId(oldLabel).toUpperCase();
+    const escapedOld = oldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = new RegExp(`:::\\s*(?:section\\s+)?${escapedOld}(?:\\s*\\|[^:*]+)?\\*?\\s*:::[\\s\\S]*?:::`, 'gi');
+    if (pattern.test(text)) {
+      return text.replace(pattern, newBlock);
     }
-
-    // 2. Try matching standard section pattern with oldLabel
-    const oldTitle = (oldLabel || 'SECCIÓN').toUpperCase().trim();
-    const escapedTitle = oldTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const stdPattern = new RegExp(`\\[\\s*${escapedTitle}\\s*\\][\\s\\S]*?(?:\\[\\/\\s*\\])`, 'gi');
-    if (stdPattern.test(text)) {
-      return text.replace(stdPattern, newBlock);
-    }
-
-    // 3. Fallback
     return syncSectionsInTemplateText(text, [newField]);
   }
 
@@ -503,8 +497,8 @@ export function updateFieldTagInText(
       oldLabel.trim().toLowerCase() !== 'separador' &&
       oldLabel.trim().toLowerCase() !== 'divisor';
     const oldPattern = oldIsCustom
-      ? new RegExp(`\\["${oldLabel.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"\\]`, 'gi')
-      : /\[""\]/gi;
+      ? new RegExp(`:::\\s*separator:\\s*${oldLabel.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:::`, 'gi')
+      : /:::\s*(?:separator|---)\s*:::/gi;
     const newTag = compileFieldToken(newField);
     return text.replace(oldPattern, newTag);
   }
@@ -533,15 +527,10 @@ export function updateFieldTagInText(
  */
 export function removeFieldTagFromText(text: string, field: FormCreatorField): string {
   if (field.type === 'section') {
-    if (field.isRepeatable === false) {
-      const title = (field.label || 'SECCIÓN').toUpperCase().trim();
-      const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const secPattern = new RegExp(`\\r?\\n*\\[\\s*${escaped}\\s*\\][\\s\\S]*?(?:\\[\\/\\s*\\])\\r?\\n*`, 'gi');
-      return text.replace(secPattern, '\n\n').trim();
-    }
-    const singular = (field.singularTitle || field.label || 'ITEM').toUpperCase().trim();
-    const escaped = singular.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const secPattern = new RegExp(`\\r?\\n*\\[\\s*singular\\s*=\\s*"${escaped}"[\\s\\S]*?(?:\\[\\/\\s*\\]|\\])\\r?\\n*`, 'gi');
+    const isRep = field.isRepeatable !== false;
+    const name = (isRep ? (field.pluralTitle || field.singularTitle || field.label) : (field.label || 'SECCIÓN')) || 'ITEM';
+    const escaped = name.toUpperCase().trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const secPattern = new RegExp(`\\r?\\n*:::\\s*(?:section\\s+)?${escaped}(?:\\s*\\|[^:*]+)?\\*?\\s*:::[\\s\\S]*?:::\\r?\\n*`, 'gi');
     return text.replace(secPattern, '\n\n').trim();
   }
 
@@ -552,8 +541,8 @@ export function removeFieldTagFromText(text: string, field: FormCreatorField): s
       field.label.trim().toLowerCase() !== 'separador' &&
       field.label.trim().toLowerCase() !== 'divisor';
     const sepPattern = isCustomTitle
-      ? new RegExp(`\\r?\\n*\\["${field.label.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"\\]\\r?\\n*`, 'gi')
-      : /\r?\n*\[""\]\r?\n*/gi;
+      ? new RegExp(`\\r?\\n*:::\\s*separator:\\s*${field.label.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:::\\r?\\n*`, 'gi')
+      : /\r?\n*:::\s*(?:separator|---)\s*:::\r?\n*/gi;
     return text.replace(sepPattern, '\n\n').trim();
   }
 
@@ -625,8 +614,8 @@ export function getProtectedTagRanges(text: string, fields: FormCreatorField[]):
         field.label.trim().toLowerCase() !== 'separador' &&
         field.label.trim().toLowerCase() !== 'divisor';
       const regex = isCustomTitle
-        ? new RegExp(`\\["${field.label.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"\\]`, 'gi')
-        : /\[""\]/g;
+        ? new RegExp(`:::\\s*separator:\\s*${field.label.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:::`, 'gi')
+        : /:::\s*(?:separator|---)\s*:::/gi;
       let match: RegExpExecArray | null;
       while ((match = regex.exec(text)) !== null) {
         ranges.push({
@@ -714,13 +703,13 @@ export function reorderFieldsInTemplateText(
     const trimmed = line.trim();
 
     const isSectionStart =
-      trimmed.startsWith('[singular=') ||
-      trimmed.startsWith('[plural=') ||
-      (trimmed.startsWith('[') &&
-        !trimmed.startsWith('["') &&
-        !trimmed.startsWith('[?') &&
-        !trimmed.startsWith('[/') &&
-        trimmed.endsWith(']'));
+      trimmed.startsWith(':::') &&
+      (trimmed.toLowerCase().includes('section ') ||
+        trimmed.endsWith('* :::') ||
+        trimmed.endsWith('*') ||
+        (!trimmed.toLowerCase().includes('separator') &&
+          !trimmed.toLowerCase().includes('if ') &&
+          trimmed !== ':::'));
 
     if (isSectionStart) {
       inSection = true;
@@ -730,7 +719,7 @@ export function reorderFieldsInTemplateText(
     }
     if (inSection) {
       lastFieldLineIdx = i;
-      if (trimmed === ']' || trimmed === '[/]') {
+      if (trimmed === ':::') {
         inSection = false;
       }
       continue;

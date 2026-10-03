@@ -7,6 +7,8 @@
 import type { ParseResult, ValidationResult } from './types';
 import type { SectionConfig, FieldType, SnippetOption } from '@/lib/types';
 
+import { tokenize } from './lexer';
+
 const VALID_OPERATORS = new Set(['=', '!=', '>', '<', '>=', '<=']);
 
 /**
@@ -14,8 +16,7 @@ const VALID_OPERATORS = new Set(['=', '!=', '>', '<', '>=', '<=']);
  * 
  * Checks for:
  * - Balanced braces { }
- * - Balanced brackets [ ]
- * - Properly closed conditionals [? ... [/]
+ * - Properly closed ::: blocks
  * 
  * @param template - The template string to validate
  * @returns Array of syntax error messages
@@ -35,14 +36,22 @@ export function validateSyntax(template: string): string[] {
         errors.push('Desbalance de llaves detectado.');
     }
 
-    // Check bracket balance
-    if (template.includes('[') && !template.includes(']')) {
-        errors.push('Desbalance de Corchetes detectado.');
-    }
-
-    // Check unclosed conditionals
-    if (template.includes('[?') && !template.includes('[/]')) {
-        errors.push('Condicionales sin cerrar detectados.');
+    // Check unclosed ::: blocks
+    try {
+        const tokens = tokenize(template);
+        let openBlocks = 0;
+        for (const t of tokens) {
+            if (t.type === 'section_start' && !t.is_self_contained) {
+                openBlocks++;
+            } else if (t.type === 'section_end') {
+                openBlocks--;
+            }
+        }
+        if (openBlocks > 0) {
+            errors.push('Bloques ::: sin cerrar detectados.');
+        }
+    } catch {
+        // Tokenize error fallback
     }
 
     return errors;

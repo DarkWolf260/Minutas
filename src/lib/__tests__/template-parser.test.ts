@@ -120,9 +120,9 @@ describe('Template Parser', () => {
     describe('Conditional Sections', () => {
         it('should parse advanced conditional with curly braces and operator', () => {
             const template = `Tipo: {tipo:dropdown(A=Opción A|B=Opción B)}
-[?{tipo} = 0]
+::: if tipo == "0" :::
 Contenido para opción A
-[/]`;
+:::`;
             const result = parseTemplate(template);
 
             expect(result.errors).toHaveLength(0);
@@ -138,12 +138,12 @@ Contenido para opción A
 
         it('should parse multiple conditional sections with different operators', () => {
             const template = `Tipo: {tipo:dropdown(A=Opción A|B=Opción B)}
-[?{tipo} = 0]
+::: if tipo == "0" :::
 Contenido A
-[/]
-[?{tipo} != 0]
+:::
+::: if tipo != "0" :::
 Contenido B
-[/]`;
+:::`;
             const result = parseTemplate(template);
 
             expect(result.errors).toHaveLength(0);
@@ -161,12 +161,12 @@ Contenido B
 
         it('should parse conditional with comparison operators', () => {
             const template = `Edad: {edad}
-[?{edad} >= 18]
+::: if edad >= 18 :::
 Es mayor de edad
-[/]
-[?{edad} < 18]
+:::
+::: if edad < 18 :::
 Es menor de edad
-[/]`;
+:::`;
             const result = parseTemplate(template);
 
             expect(result.errors).toHaveLength(0);
@@ -182,9 +182,9 @@ Es menor de edad
 
         it('should parse conditional with quoted string values', () => {
             const template = `Estado: {estado}
-[?{estado} = "activo"]
+::: if estado == "activo" :::
 Sistema activo
-[/]`;
+:::`;
             const result = parseTemplate(template);
 
             expect(result.errors).toHaveLength(0);
@@ -203,20 +203,12 @@ Sistema activo
             expect(result.errors[0]).toContain('llaves');
         });
 
-        it('should detect unbalanced brackets', () => {
-            const template = '[?{campo} = valor';
+        it('should detect unclosed blocks', () => {
+            const template = '::: if campo == "valor" :::\nContenido';
             const result = parseTemplate(template);
 
             expect(result.errors.length).toBeGreaterThan(0);
-            expect(result.errors[0]).toContain('Corchetes');
-        });
-
-        it('should detect unclosed conditionals', () => {
-            const template = '[?{campo} = valor]Contenido';
-            const result = parseTemplate(template);
-
-            expect(result.errors.length).toBeGreaterThan(0);
-            expect(result.errors[0]).toContain('Condicionales sin cerrar');
+            expect(result.errors[0]).toContain('Bloques ::: sin cerrar');
         });
     });
 
@@ -228,15 +220,15 @@ Fecha: {fecha}
 Hora: {hora}
 Tipo: {tipo:dropdown(1=Robo|2=Vandalismo|3=Otro)}
 
-[?{tipo} = 0]
+::: if tipo == "0" :::
 DETALLES DE ROBO
 Monto: {monto}
-[/]
+:::
 
-[?{tipo} = 1]
+::: if tipo == "1" :::
 DETALLES DE VANDALISMO
 Área afectada: {area:textarea:full}
-[/]
+:::
 
 Descripción General: {descripcion:textarea:full:req}
 Reportado por: {reportante:upper}`;

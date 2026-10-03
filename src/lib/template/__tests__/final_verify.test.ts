@@ -6,9 +6,11 @@ import type { SectionConfig, FieldConfig } from '@/lib/types';
 describe('Nested Sections in Conditional Blocks', () => {
     it('should correctly handle the user reported case', () => {
         const template = `
-[?Estatus=Finalizado:show]
-["Section1" {Field1}]
-[/]`;
+::: if Estatus == "Finalizado":show :::
+::: Section1 :::
+{Field1}
+:::
+:::`;
         const data = {
             sec_section1: {
                 Field1: 'Value1'
@@ -25,11 +27,11 @@ describe('Nested Sections in Conditional Blocks', () => {
         const result = renderFinalReport(template, data, renderConfig, { Estatus: 'Finalizado' }, false, {}, parseTemplate, () => {});
 
         expect(result).toContain('Value1');
-        expect(result).not.toContain('[?Estatus');
+        expect(result).not.toContain(':::');
     });
 
     it('should resolve dropdown labels in conditions', () => {
-        const template = '[?Status=Done]Ok[/]';
+        const template = '::: if Status == "Done" :::Ok:::';
         const data = { Status: '1' }; // Value is internal ID
         const renderConfig = {
             fields: {

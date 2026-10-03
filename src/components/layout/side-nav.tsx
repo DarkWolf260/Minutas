@@ -69,13 +69,15 @@ export function SideNav() {
   ];
   const navItems = ALL_NAV_ITEMS.filter((item) => !disabled_modules.includes(item.moduleId));
 
-  // Dynamic name logic: Use Analista de CEMUPRAD if a guard is active
+  // Dynamic name logic: Use Analista de Sala de Monitoreo if a guard is active
   const analyst = settings.is_guard_open
-    ? settings.orden_del_dia_draft?.staff?.['Analista de CEMUPRAD']?.[0]
+    ? (settings.orden_del_dia_draft?.staff?.['Analista de Sala de Monitoreo']?.[0]
+      || settings.orden_del_dia_draft?.staff?.['Analista de Sala de Monitoreo']?.[0]
+      || Object.entries(settings.orden_del_dia_draft?.staff || {}).find(([k]) => k.toLowerCase().includes('analista'))?.[1]?.[0])
     : null;
 
   const displayName = analyst?.name || profile.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario';
-  const displayDepartment = analyst ? 'Analista CEMUPRAD' : (profile.department || 'Área no asignada');
+  const displayDepartment = analyst ? 'Analista Sala de Monitoreo' : (profile.department || 'Área no asignada');
   const initials = getInitials(displayName);
 
   return (
@@ -132,18 +134,18 @@ export function SideNav() {
             );
           })}
         </nav>
-        
+
         <nav className="mt-auto flex flex-col items-center gap-4 px-2 py-4">
           <QuickChatSelector />
           <NotificationBell />
-          
+
           <DropdownMenu>
             <Tooltip>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger className={cn(
                   'flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-300 md:h-9 md:w-9 ring-1 ring-transparent focus:outline-none shadow-[0_0_15px_-5px_rgba(0,0,0,0.1)]',
-                  pathname.startsWith('/settings') 
-                    ? 'bg-primary/10 ring-primary/20 shadow-[0_0_15px_-3px_hsl(var(--primary)/0.25)]' 
+                  pathname.startsWith('/settings')
+                    ? 'bg-primary/10 ring-primary/20 shadow-[0_0_15px_-3px_hsl(var(--primary)/0.25)]'
                     : 'hover:ring-primary/20 hover:bg-muted/50'
                 )}>
                   <div className="h-7 w-7 shrink-0 rounded-full overflow-hidden shadow-sm ring-1 ring-border">

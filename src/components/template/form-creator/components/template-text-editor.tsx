@@ -118,7 +118,10 @@ export function TemplateTextEditor({
   const renderHighlightedTemplateText = (text: string, currentFields: FormCreatorField[]) => {
     if (!text) return null;
 
-    const tagRegex = /\{[^{}\n\r]+\}|\[""\]|\["[^"\n\r]+"\]/g;
+    const tagRegex =
+      /(:::[^\n\r]*?:::|:::|<<|>>|\\[*{}[\]:\\]|\{[^{}\n\r]+\}\*?|\[""\]|\["[^"\n\r]+"\])/g;
+
+
     const elements: React.ReactNode[] = [];
     let lastIdx = 0;
     let match: RegExpExecArray | null;
@@ -130,8 +133,81 @@ export function TemplateTextEditor({
 
       const token = match[0];
       const matchedField = currentFields.find((f) => isFieldTagInText(token, f));
+      const lower = token.toLowerCase();
 
-      if (token.startsWith('["')) {
+      if (token.startsWith(':::')) {
+        if (lower.includes('if ') || lower.includes('if:')) {
+          elements.push(
+            <mark
+              key={match.index}
+              title="Condicional lógico ::: if :::"
+              className="bg-amber-500/20 dark:bg-amber-400/25 text-amber-700 dark:text-amber-300 font-semibold rounded-xs p-0 m-0 border-b border-amber-500/50"
+            >
+              {token}
+            </mark>
+          );
+        } else if (lower.includes('separator') || token.includes('---')) {
+          elements.push(
+            <mark
+              key={match.index}
+              title="Separador visual"
+              className="bg-sky-500/20 dark:bg-sky-400/25 text-sky-700 dark:text-sky-300 font-medium rounded-xs p-0 m-0 border-b border-sky-500/50"
+            >
+              {token}
+            </mark>
+          );
+        } else if (lower.includes('map ') || lower.includes('map:')) {
+          elements.push(
+            <mark
+              key={match.index}
+              title="Bloque de mapeo de opciones"
+              className="bg-pink-500/20 dark:bg-pink-400/25 text-pink-700 dark:text-pink-300 font-semibold rounded-xs p-0 m-0 border-b border-pink-500/50"
+            >
+              {token}
+            </mark>
+          );
+        } else if (token.includes('*')) {
+          elements.push(
+            <mark
+              key={match.index}
+              title="Sección repetible ::: section ...* :::"
+              className="bg-violet-500/20 dark:bg-violet-400/25 text-violet-700 dark:text-violet-300 font-bold rounded-xs p-0 m-0 border-b border-violet-500/50"
+            >
+              {token}
+            </mark>
+          );
+        } else {
+          elements.push(
+            <mark
+              key={match.index}
+              title="Directiva de sección ::: NOMBRE :::"
+              className="bg-purple-500/20 dark:bg-purple-400/25 text-purple-700 dark:text-purple-300 font-bold rounded-xs p-0 m-0 border-b border-purple-500/50"
+            >
+              {token}
+            </mark>
+          );
+        }
+      } else if (token === '<<' || token === '>>') {
+        elements.push(
+          <mark
+            key={match.index}
+            title="Marcador de Resumen Ejecutivo"
+            className="bg-blue-500/20 dark:bg-blue-400/25 text-blue-700 dark:text-blue-300 font-extrabold rounded-xs p-0 m-0 border border-blue-500/40"
+          >
+            {token}
+          </mark>
+        );
+      } else if (token.startsWith('\\')) {
+        elements.push(
+          <mark
+            key={match.index}
+            title={`Carácter escapado literal: ${token.slice(1)}`}
+            className="bg-muted text-muted-foreground font-mono font-bold rounded-xs p-0 m-0 border border-muted-foreground/30"
+          >
+            {token}
+          </mark>
+        );
+      } else if (token.startsWith('["')) {
         elements.push(
           <mark
             key={match.index}
@@ -163,7 +239,7 @@ export function TemplateTextEditor({
         elements.push(
           <mark
             key={match.index}
-            className="bg-amber-500/20 dark:bg-amber-400/25 text-amber-700 dark:text-amber-300 font-semibold rounded-xs p-0 m-0"
+            className="bg-indigo-500/15 dark:bg-indigo-400/20 text-indigo-700 dark:text-indigo-300 font-semibold rounded-xs p-0 m-0"
           >
             {token}
           </mark>

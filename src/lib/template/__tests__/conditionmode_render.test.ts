@@ -4,15 +4,19 @@
 import { renderFinalReport } from '../renderer';
 import { parseTemplate } from '../../template-parser';
 
-const TEMPLATE = `[?Estatus=Finalizado:show]
-["Comisiones en sitio"- *COMISIONES EN SITIO:*
-{Comisiones:textarea}]
+const TEMPLATE = `::: if Estatus == "Finalizado":show :::
+::: Comisiones en sitio :::
+- *COMISIONES EN SITIO:*
+{Comisiones:textarea}
+:::
 
-- *DATOS OPERACIONALES:*["Datos operacionales"
+::: section Datos operacionales* :::
+- *DATOS OPERACIONALES:*
 - *UNIDAD:* {Unidad}
 - *TÉCNICO:* {Técnico}
-- *CONDUCTOR:* {Conductor}]*
-[/]
+- *CONDUCTOR:* {Conductor}
+:::
+:::
 - *ESTATUS:* {Estatus}`;
 
 test('self-contained nested sections inside :show conditional render when condition is met', () => {

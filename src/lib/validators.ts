@@ -2,6 +2,8 @@
  * Validation utilities for JSON and template syntax
  */
 
+import { validateSyntax } from '@/lib/template';
+
 /**
  * Validates if a string is valid JSON.
  * 
@@ -26,60 +28,18 @@ export function isValidJson(str: string): boolean {
 }
 
 /**
- * Performs basic syntax validation on template content.
- * Checks for balanced braces, brackets, and conditional markers.
- * 
- * @param content - Template content to validate
- * @returns Validation result with status and optional error message
- * 
- * @example
- * ```typescript
- * const template = '{Fecha} {Hora} [?{Status}=activo] Content [/]';
- * const result = validateTemplateSyntax(template);
- * if (!result.valid) {
- *   console.error('Template error:', result.error);
- * }
- * ```
- * 
- * @remarks
- * Validates:
- * - Balanced braces `{}` for fields
- * - Balanced brackets `[]` for sections and conditionals
- * - Matching conditional markers `[?{...}]` with `[/]`
+ * Validates the basic syntax of a template string.
+ *
+ * @param content - The template string to validate
+ * @returns Object indicating if the template is valid and an optional error message
  */
 export function validateTemplateSyntax(content: string): { valid: boolean; error?: string } {
-  // Count braces
-  const openBraces = (content.match(/{/g) || []).length;
-  const closeBraces = (content.match(/}/g) || []).length;
-
-  if (openBraces !== closeBraces) {
+  const errors = validateSyntax(content);
+  if (errors.length > 0) {
     return {
       valid: false,
-      error: 'Llaves de campos { } no están balanceadas.',
+      error: errors[0],
     };
   }
-
-  // Count brackets
-  const openBrackets = (content.match(/\[/g) || []).length;
-  const closeBrackets = (content.match(/\]/g) || []).length;
-
-  if (openBrackets !== closeBrackets) {
-    return {
-      valid: false,
-      error: 'Corchetes de secciones [ ] no están balanceados.',
-    };
-  }
-
-  // Count conditional markers
-  const openCond = (content.match(/\[\?/g) || []).length;
-  const closeCond = (content.match(/\[\/\s*\]/g) || []).length;
-
-  if (openCond !== closeCond) {
-    return {
-      valid: false,
-      error: 'Secciones condicionales [?...] no están cerradas correctamente con [/].',
-    };
-  }
-
   return { valid: true };
 }

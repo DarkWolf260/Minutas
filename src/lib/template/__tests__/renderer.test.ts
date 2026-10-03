@@ -88,8 +88,8 @@ describe('Template Renderer - Secciones Repetibles', () => {
         expect(result).toContain('Dato novedad');
     });
 
-    it('should render a repeatable section with [Label]*...[/]', () => {
-        const template = '[Novedades]*\n{descripcion}\n[/]';
+    it('should render a repeatable section with ::: section Label* :::', () => {
+        const template = '::: section Novedades* :::\n{descripcion}\n:::';
         const parsed = parseTemplate(template);
 
         console.log('Sections:', JSON.stringify(parsed.sections, null, 2));
@@ -104,7 +104,7 @@ describe('Template Renderer - Secciones Repetibles', () => {
     });
 
     it('should render a repeatable section with singular/plural attributes', () => {
-        const template = '[singular="Novedad" plural="Novedades" sub="NOVEDAD"]*\n{descripcion}\n[/]';
+        const template = '::: section Novedades | Novedad* :::\n{descripcion}\n:::';
         const parsed = parseTemplate(template);
 
         console.log('Sections:', JSON.stringify(parsed.sections, null, 2));
@@ -119,7 +119,7 @@ describe('Template Renderer - Secciones Repetibles', () => {
     });
 
     it('should correctly parse and render the Destino repeatable textarea field', () => {
-        const template = '["INFORMACIÓN GEOGRÁFICA"\n- *UBICACIÓN:* {Ubicación:textarea:req}\n- *DESTINO:* {Destino:textarea:req}*\n]';
+        const template = '::: INFORMACIÓN GEOGRÁFICA :::\n- *UBICACIÓN:* {Ubicación:textarea:req}\n- *DESTINO:* {Destino:textarea:req}*\n:::';
         const parsed = parseTemplate(template);
         
         expect(parsed.fieldNames.has('Ubicación')).toBe(true);
@@ -148,8 +148,8 @@ describe('Template Renderer - Secciones Repetibles', () => {
 });
 
 describe('Template Renderer - Secciones Auto-Contenidas', () => {
-    it('should render a self-contained section ["Título" {campo}]', () => {
-        const template = 'Texto antes\n["Título de sección" {campo}]\nTexto después';
+    it('should render a self-contained section', () => {
+        const template = 'Texto antes\n::: Título de sección :::\n{campo}\n:::\nTexto después';
         const data = { campo: 'valor de prueba' };
 
         const result = render(template, data);
@@ -159,7 +159,7 @@ describe('Template Renderer - Secciones Auto-Contenidas', () => {
     });
 
     it('should render multiple fields in a self-contained section', () => {
-        const template = '["Info" {nombre} - {cargo}]';
+        const template = '::: Info :::\n{nombre} - {cargo}\n:::';
         const data = { nombre: 'Juan Pérez', cargo: 'Inspector' };
 
         const result = render(template, data);
@@ -170,7 +170,7 @@ describe('Template Renderer - Secciones Auto-Contenidas', () => {
     });
 
     it('should render repeatable self-contained section without leaving a trailing asterix', () => {
-        const template = '["Título de ejemplo" {campo1} {campo2}]*';
+        const template = '::: section Título de ejemplo* :::\n{campo1} {campo2}\n:::';
         const parsed = parseTemplate(template);
 
         const data: Record<string, unknown> = {
@@ -192,7 +192,7 @@ describe('Template Renderer - Secciones Auto-Contenidas', () => {
 
 describe('Template Renderer - Condicionales con Campos', () => {
     it('should render field inside a top-level conditional section', () => {
-        const template = 'Tipo: {tipo}\n[?{tipo} = Robo]\nMonto: {monto}\n[/]';
+        const template = 'Tipo: {tipo}\n::: if tipo == "Robo" :::\nMonto: {monto}\n:::';
         const data = { tipo: 'Robo', monto: '500 USD' };
         const result = render(template, data);
         console.log('Conditional field result:', result);
@@ -200,7 +200,7 @@ describe('Template Renderer - Condicionales con Campos', () => {
     });
 
     it('should NOT render content when condition is false', () => {
-        const template = 'Tipo: {tipo}\n[?{tipo} = Robo]\nMonto: {monto}\n[/]';
+        const template = 'Tipo: {tipo}\n::: if tipo == "Robo" :::\nMonto: {monto}\n:::';
         const data = { tipo: 'Accidente', monto: '500 USD' };
         const result = render(template, data);
         expect(result).not.toContain('500 USD');
@@ -210,13 +210,13 @@ describe('Template Renderer - Condicionales con Campos', () => {
     it('DIAGNOSTIC: sections for nested conditional dropdown', () => {
         const template = [
             '{Vía de información}',
-            '[?{¿Quien informó?}]',
+            '::: map ¿Quien informó? :::',
             'Personal=el personal de la institución',
             'Funcionario=el funcionario externo',
-            '[/]',
-            '[?{Vía de información} = Llamada]',
+            ':::',
+            '::: if Vía de información == "Llamada" :::',
             '{¿Quien informó?}',
-            '[/]',
+            ':::',
         ].join('\n');
 
         const parsed = parseTemplate(template);
@@ -259,6 +259,15 @@ describe('Template Renderer - Modifiers', () => {
         expect(result).toContain('Inicio: \n');
         expect(result).not.toContain('31/Mayo/2026');
         expect(result).not.toContain('2026-05-31');
+    });
+
+    it('should unescape \\* to * without treating {Field} as repeatable', () => {
+        const template = '*MUNICIPIO {Municipio:upper}, ESTADO {Estado:upper}\\*';
+        const data = {};
+        const predefined = { Municipio: 'Guanta', Estado: 'Anzoátegui' };
+        const result = render(template, data, predefined);
+
+        expect(result).toBe('*MUNICIPIO GUANTA, ESTADO ANZOÁTEGUI*');
     });
 });
 

@@ -111,14 +111,14 @@ El {Director.cargo} {Director} se reunió con...
 ### Uso en condicionales (caso de género)
 
 ```
-[?{Director.sex} = F]
+::: if Director.sex == "F" :::
 *DIRECTORA*
 {Director}
-[/]
-[?{Director.sex} = M]
+:::
+::: if Director.sex == "M" :::
 *DIRECTOR*
 {Director}
-[/]
+:::
 ```
 
 Si el Director es femenino (`sex = "F"`), solo se renderiza el primer bloque. El segundo se suprime sin dejar líneas en blanco extra.
@@ -129,7 +129,7 @@ Si el Director es femenino (`sex = "F"`), solo se renderiza el primer bloque. El
 
 ## 3. Campos Repetibles `{Campo}*`
 
-Un campo seguido de `*` genera automáticamente una sección repetible.
+Un campo seguido de `*` genera automáticamente una sección repetible virtual.
 
 ```
 Novedades: {novedad}*
@@ -139,110 +139,118 @@ Esto crea una sección repetible donde el campo `novedad` puede tener múltiples
 
 Ejemplo con campos de direcciones repetibles:
 ```text
-["INFORMACIÓN GEOGRÁFICA"
+::: INFORMACIÓN GEOGRÁFICA :::
 - *UBICACIÓN:* {Ubicación:textarea:req}
 - *DESTINO:* {Destino:textarea:req}*
-]
+:::
 ```
 
 ---
 
-## 4. Secciones `[Label]...[/]`
+## 4. Secciones `::: Nombre ::: ... :::`
 
 ### Sección simple
 
 ```
-[Título de la sección]
+::: DATOS GENERALES :::
 Contenido con {campos}
-[/]
+:::
 ```
 
 - La sección se incluye en el reporte si tiene al menos un campo con valor.
-- El título aparece como encabezado si se incluye.
+- También se admite el prefijo opcional `section`: `::: section DATOS GENERALES ::: ... :::`
 
 ### Sección repetible
 
 ```
-[Label]*
+::: section Novedades* :::
 {campo1}
 {campo2}
-[/]
+:::
 ```
 
-El `*` al final del `[Label]*` marca la sección como repetible.
+El `*` al final del nombre marca la sección como repetible.
 
-### Sección repetible con etiquetas singulares/plurales
+### Sección repetible con etiquetas singulares y plurales
 
 ```
-[singular="Novedad" plural="Novedades" sub="NOVEDAD"]
+::: section Novedades | Novedad* :::
 {descripcion:textarea}
-[/]
+:::
 ```
 
-| Atributo | Descripción |
-|----------|-------------|
-| `singular` | Título cuando hay 1 ítem |
-| `plural` | Título cuando hay más de 1 ítem |
-| `sub` | Prefijo para cada ítem (e.g. `NOVEDAD #01`) |
+| Parte | Descripción |
+|-------|-------------|
+| Antes de `\|` (`Novedades`) | Título plural (cuando hay 2+ ítems) |
+| Después de `\|` (`Novedad*`) | Título singular (cuando hay 1 ítem) y etiqueta de iteración (`- *Novedad #01*`) |
 
 ---
 
-## 5. Secciones Auto-contenidas `["Título" {Campo}]`
+## 5. Separadores Visuales `::: separator :::`
 
-Una sección completa en una sola línea (sin `[/]`):
+Para insertar separadores o títulos de sección visuales limpios:
 
 ```
-["Título de ejemplo" {campo1} {campo2}]
+::: separator :::
 ```
 
-El contenido entre `"Título"` y `]` son los campos de la sección.
+O con título:
+
+```
+::: separator: DATOS OPERACIONALES :::
+```
+
+También se admite el atajo de guiones:
+
+```
+::: --- :::
+```
 
 ---
 
-## 6. Separadores Visuales `[""]`
-
-Una sección vacía con comillas vacías actúa como separador visual:
-
-```
-[""]
-```
-
-Se elimina limpiamente en el reporte final (no genera texto).
-
----
-
-## 7. Condicionales `[?{Campo} op valor]...[/]`
+## 6. Condicionales `::: if Condición ::: ... :::`
 
 Muestra el contenido solo si la condición es verdadera.
 
-### Sintaxis
+### Sintaxis en bloque
 
 ```
-[?{Campo} = valor]
-Contenido visible si Campo = valor
-[/]
+::: if Campo == "valor" :::
+Contenido visible si Campo == "valor"
+:::
 ```
+
+### Sintaxis inline (en una sola línea)
+
+Para condicionales cortos en una misma línea o intercalados en párrafos:
+
+```
+- *TIPO DE NOVEDAD:* ::: if Estatus == "En proceso": Posible :::Incendio::: if Estatus == "Finalizado":  de {tipo de incendio}:::
+```
+
+- Si `Estatus == "En proceso"`: produce `- *TIPO DE NOVEDAD:* Posible Incendio`
+- Si `Estatus == "Finalizado"`: produce `- *TIPO DE NOVEDAD:* Incendio de Vegetación`
 
 ### Modo del condicional (conditionMode)
 
 Por defecto, los campos dentro de un condicional **se ocultan en el formulario** hasta que la condición se cumpla. Puedes cambiar este comportamiento con el sufijo `:show`:
 
 ```
-[?{Campo} = valor:show]
+::: if Campo == "valor":show :::
 Contenido siempre visible en el formulario, pero solo en el reporte si se cumple
-[/]
+:::
 ```
 
 | Sintaxis | Formulario | Reporte |
 |---|---|---|
-| `[?{Estatus}=Finalizado]` | Oculto hasta que se cumpla | Solo si condición es verdadera |
-| `[?{Estatus}=Finalizado:show]` | **Siempre visible** (con indicador visual) | Solo si condición es verdadera |
+| `::: if Estatus == "Finalizado" :::` | Oculto hasta que se cumpla | Solo si condición es verdadera |
+| `::: if Estatus == "Finalizado":show :::` | **Siempre visible** (con indicador visual) | Solo si condición es verdadera |
 
 ### Operadores disponibles
 
 | Operador | Descripción |
 |----------|-------------|
-| `=` | Igual (case-insensitive para texto) |
+| `==` o `=` | Igual (case-insensitive para texto) |
 | `!=` | Diferente |
 | `>` | Mayor que |
 | `<` | Menor que |
@@ -254,9 +262,9 @@ Contenido siempre visible en el formulario, pero solo en el reporte si se cumple
 Usando `!= ""` el condicional solo renderiza si el campo tiene algún valor:
 
 ```
-[?{Observaciones} != ""]
+::: if Observaciones != "" :::
 - *OBSERVACIONES:* {Observaciones}
-[/]
+:::
 ```
 
 Funciona con:
@@ -268,70 +276,70 @@ Funciona con:
 
 - Si ambos valores son numéricos, la comparación es **numérica**.
 - Si alguno no es numérico, la comparación es **de texto** (case-insensitive).
-- Los valores pueden ir entre **comillas dobles opcionales**: `[?{Estado} = "activo"]`
+- Los valores de texto pueden ir entre comillas dobles: `::: if Estado == "activo" :::`
 
 ### Condicional con dropdown
 
-Cuando el campo es un dropdown, la comparación se hace contra el **label** (la clave visible), no contra el valor interno.
+Cuando el campo es un dropdown, la comparación se hace contra el **label** (la clave visible) o su valor.
 
 ```
 {Tipo:dropdown(Robo=Descripción de robo|Vandalismo=Descripción de vandalismo)}
 
-[?{Tipo} = Robo]
+::: if Tipo == "Robo" :::
 Monto robado: {monto}
-[/]
+:::
 
-[?{Tipo} = Vandalismo]
+::: if Tipo == "Vandalismo" :::
 Área dañada: {area}
-[/]
+:::
 ```
 
 ### Condicional de género (uso típico con personal)
 
 ```
-[?{Director.sex} = F]
+::: if Director.sex == "F" :::
 *DIRECTORA-PRESIDENTA:* {Director}
-[/]
-[?{Director.sex} = M]
+:::
+::: if Director.sex == "M" :::
 *DIRECTOR-PRESIDENTE:* {Director}
-[/]
+:::
 ```
 
-El bloque cuya condición sea falsa se suprime automáticamente. Los saltos de línea extra que quedarían se colapsan en la limpieza final.
+El bloque cuya condición sea falsa se suprime automáticamente sin dejar líneas vacías innecesarias.
 
 ### Condicional anidado
 
 Los condicionales pueden anidarse dentro de secciones:
 
 ```
-[Sección Principal]
+::: Sección Principal :::
 {campo1}
-[?{tipo} = Robo]
+::: if tipo == "Robo" :::
 {monto}
-[/]
-[/]
+:::
+:::
 ```
 
 ---
 
-## 8. Condicionales de Mapeo `[?{Campo}]...[/]`
+## 7. Bloques de Mapeo `::: map Campo ::: ... :::`
 
-Un condicional **sin operador ni valor** es un bloque de mapeo. Define una tabla de traducción para un campo.
+Define una tabla de traducción y opciones para un campo:
 
 ```
-[?{Tipo}]
+::: map Tipo :::
 Robo=El día de hoy se registró un robo de...
 Vandalismo=Se reportó acto vandálico en...
 Accidente=Ocurrió un accidente de tránsito en...
-[/]
+:::
 ```
 
 **Comportamiento:**
-- El bloque en sí **no genera texto** en el reporte.
-- Cuando el campo `{Tipo}` se renderiza en cualquier otro lugar de la plantilla, se sustituye por el **valor** (el texto después de `=`) que corresponda al **label seleccionado**.
+- El bloque en sí **no genera texto** directo en el reporte.
+- Cuando el campo `{Tipo}` se renderiza en cualquier otro lugar de la plantilla, se sustituye por el **valor** (el texto después de `=`) que corresponda a la **opción seleccionada**.
 - Implícitamente convierte `{Tipo}` en un campo de tipo `dropdown`.
-- Las claves son los valores del dropdown que ve el usuario.
-- Los valores son los textos largos que van al reporte.
+- Las claves son las opciones que ve el usuario en el formulario.
+- Los valores son los textos que van al reporte final.
 
 ---
 
@@ -350,7 +358,8 @@ Si se renderiza con `summaryOnly: true`, solo se extrae el contenido de los marc
 ## 10. Escapado
 
 - `{{` → Literal `{` (no se interpreta como campo)
-- `[[` → Literal `[` (no se interpreta como sección)
+- `\:` → Literal `:` (no se interpreta como delimitador de directiva)
+- `\*` → Literal `*` (no se interpreta como marcador de repetición)
 
 ---
 
@@ -376,7 +385,7 @@ Después del renderizado, el motor aplica automáticamente:
 
 1. Elimina marcadores de fotos `{photos}` y `{fotos}`
 2. Elimina marcadores de resumen `<<` y `>>`
-3. Elimina bloques condicionales y secciones residuales no procesadas `[?...][/]`, `[""]`, `[...]`
+3. Elimina directivas residuales no procesadas `::: ... :::`
 4. Convierte `\*` en `*` (asterisco literal)
 5. **Colapsa 3+ saltos de línea consecutivos a máximo 2** (elimina líneas en blanco fantasma de bloques condicionales no renderizados)
 6. Elimina líneas que quedaron con solo espacios/tabulaciones tras la sustitución
@@ -394,16 +403,17 @@ El motor de plantillas y el sistema reconocen una serie de palabras clave, etiqu
 |---------------------|---------------|----------------------------|
 | `{photos}` / `{fotos}` | Marcador de fotos | Indica el punto de inserción de las fotografías adjuntas. En `renderFinalReport` se elimina limpiamente del texto si no hay fotos. |
 | `<<` ... `>>` | Delimitador de resumen | Delimita texto de resumen ejecutivo. Con `summaryOnly: true`, el motor extrae únicamente lo encerrado aquí. En el reporte normal, los marcadores `<<` y `>>` se retiran automáticamente. |
-| `[""]` | Separador de bloque | Representa un divisor estructural horizontal o salto de sección limpio sin título. |
-| `["Título"]` | Separador con título | Sección estructural con título visible sin campos obligatorios. |
-| `["Título" {campo}]` | Sección auto-contenida | Contiene texto y campos inline; si el campo no tiene datos, todo el bloque de texto y corchetes desaparece. |
-| `[Label]*` | Sección repetible | Define un bloque de repetición múltiple (1 a N iteraciones). |
+| `::: separator :::` / `::: --- :::` | Separador de bloque | Representa un divisor estructural horizontal o salto de sección limpio sin título. |
+| `::: separator: Título :::` | Separador con título | Sección estructural con título visible sin campos obligatorios. |
+| `::: Nombre ::: ... :::` | Sección estándar | Agrupa campos visualmente con título. Se omite si ninguno de sus campos tiene contenido. |
+| `::: section Label* ::: ... :::` | Sección repetible | Define un bloque de repetición múltiple (1 a N iteraciones). |
+| `::: section Plural \| Singular* ::: ... :::` | Sección repetible con sing./plur. | Título en plural con 2+ elementos; título singular con 1 elemento; etiqueta con prefijo numerado para cada ítem iterado (`#01`, `#02`, etc.). |
 | `{Campo}*` | Campo repetible inline | Atajo que crea una sección repetible virtual para un solo campo. |
-| `[singular="..." plural="..." sub="..."]*` | Atributos de sección repetible | `singular`: título con 1 elemento; `plural`: título con 2+ elementos; `sub`: prefijo/etiqueta para cada ítem iterado (`#01`, `#02`, etc.). |
-| `[?{Campo} = Valor] ... [/]` | Bloque condicional | Controla la visibilidad del bloque según el valor del campo. |
-| `[?{Campo} :show] ... [/]` | Condicional explícito | Fuerza la visibilidad del contenido cuando la condición se cumple. |
-| `[?{Campo} :hide] ... [/]` | Condicional invertido | Oculta el bloque cuando la condición se cumple. |
-| `[?{Campo}] Clave=Valor [/]` | Bloque de mapeo | Bloque de definición (no emite texto directo). Genera opciones desplegables dinámicas para `{Campo}` y traduce su valor en el reporte. |
+| `::: if Condición ::: ... :::` | Bloque condicional | Controla la visibilidad del bloque según el valor del campo (`==`, `!=`, `>`, `<`, `>=`, `<=`). |
+| `::: if Condición: texto :::` | Condicional inline | Emite texto en la misma línea o párrafo solo cuando la condición se cumple. |
+| `::: if Condición:show ::: ... :::` | Condicional explícito | El bloque es visible en el formulario, pero solo se emite en el reporte si la condición se cumple. |
+| `::: if Condición:hide ::: ... :::` | Condicional invertido | Oculta el bloque cuando la condición se cumple. |
+| `::: map Campo ::: ... :::` | Bloque de mapeo | Bloque de definición (no emite texto directo). Genera opciones desplegables dinámicas para `{Campo}` y traduce su valor en el reporte. |
 
 ---
 
@@ -436,7 +446,7 @@ Disponibles para campos que contienen objetos o listas de personal (`StaffMember
 
 | Propiedad | Descripción | Ejemplo de Uso |
 |-----------|-------------|----------------|
-| `.sex` | Sexo del funcionario (`M` o `F`). Usado frecuentemente para condicionales de tratamiento protocolar. | `[?{Director.sex} = F]*DIRECTORA:*[/]` |
+| `.sex` | Sexo del funcionario (`M` o `F`). Usado frecuentemente para condicionales de tratamiento protocolar. | `::: if Director.sex == "F": *DIRECTORA:* :::` |
 | `.name` | Nombre completo del funcionario. | `{Director.name}` |
 | `.cargo` | Cargo o rol institucional asignado (`role_id` o `roleId`). | `{Director.cargo}` |
 | `.rank` | Grado o jerarquía del funcionario. | `{Director.rank}` |
