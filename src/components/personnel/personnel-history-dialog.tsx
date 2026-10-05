@@ -126,7 +126,8 @@ export function PersonnelHistoryDialog({ member, isOpen, onClose }: PersonnelHis
     if (isMobile) {
         return (
             <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-                <SheetContent side="bottom" className="rounded-t-3xl border-t-2 border-primary/20 p-6 pb-10 flex flex-col max-h-[92vh] focus-visible:outline-none">
+                <SheetContent side="bottom" className="rounded-t-3xl border-t border-border p-6 pb-10 flex flex-col max-h-[92vh] focus-visible:outline-none">
+                    <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full mx-auto mb-3 shrink-0" />
                     <SheetHeader className="text-left mb-4 shrink-0">
                         <SheetTitle className="flex items-center gap-2 text-xl font-bold">
                             <History className="h-5 w-5 text-primary" />

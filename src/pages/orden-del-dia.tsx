@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Eye } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OrdenDelDiaForm } from '@/components/orden-del-dia/index';
 import { useOrdenDelDiaPagina } from '@/hooks/orden-del-dia';
@@ -24,6 +24,8 @@ export default function OrdenDelDiaPage() {
     guardias,
     periodo,
     setPeriodo,
+    duracion,
+    setDuracion,
     manejarAbrirGuardia,
     guardiaSeleccionadaParaForm
   } = hook;
@@ -66,6 +68,8 @@ export default function OrdenDelDiaPage() {
                       guardias={guardias}
                       periodo={periodo}
                       setPeriodo={setPeriodo}
+                      duracion={duracion}
+                      setDuracion={setDuracion}
                       manejarAbrirGuardia={manejarAbrirGuardia}
                     />
                   }
@@ -81,6 +85,8 @@ export default function OrdenDelDiaPage() {
                     guardias={guardias}
                     periodo={periodo}
                     setPeriodo={setPeriodo}
+                    duracion={duracion}
+                    setDuracion={setDuracion}
                     manejarAbrirGuardia={manejarAbrirGuardia}
                   />
                 </div>
@@ -102,7 +108,7 @@ export default function OrdenDelDiaPage() {
           className="h-14 w-14 rounded-2xl bg-primary text-primary-foreground shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-primary-foreground/10 hover:scale-105 active:scale-95 transition-all duration-300"
           title="Generar Orden del Día"
         >
-          <Eye className="h-7 w-7" />
+          <FileText className="h-7 w-7" />
         </Button>
       </div>
     </div>

@@ -11,7 +11,13 @@ import { PersonnelModals } from './personal/components/personnel-modals';
 
 function PersonnelPageContent() {
   const hook = usePersonal();
-  const { estaCargando, idsSeleccionados, setEsDialogOpenConfirmarEliminarMasivo } = hook;
+  const {
+    estaCargando,
+    idsSeleccionados,
+    setIdsSeleccionados,
+    setEsDialogOpenConfirmarEliminarMasivo,
+    manejarCambioEstadoMasivo,
+  } = hook;
 
   if (estaCargando) {
     return (
@@ -30,7 +36,9 @@ function PersonnelPageContent() {
       {/* Barra de Acciones Masivas */}
       <MassActionsBar 
         selectedCount={idsSeleccionados.length} 
-        onDeleteRequest={() => setEsDialogOpenConfirmarEliminarMasivo(true)} 
+        onDeleteRequest={() => setEsDialogOpenConfirmarEliminarMasivo(true)}
+        onUpdateStatusRequest={manejarCambioEstadoMasivo}
+        onClearSelection={() => setIdsSeleccionados([])}
       />
 
       <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-28 sm:pb-6 flex flex-col md:flex-1 md:min-h-0">

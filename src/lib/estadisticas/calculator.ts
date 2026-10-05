@@ -1,5 +1,5 @@
 import { DEFAULT_STATISTICS_CATEGORIES } from '@/lib/constants/statistics';
-import { getReportDateTime } from '@/lib/report-sorter';
+import { getReportDateTime, findValueInform_data } from '@/lib/report-sorter';
 import type { Report, Template, TemplateConfig, GuardReport, Address } from '@/lib/types';
 import { obtenerCategoriasReporte } from './categories';
 
@@ -170,4 +170,143 @@ export function calcularEstadisticasDia(
 
   return stats;
 }
+
+export interface DailyStatisticsGroup {
+  dayNumber: number; // 1, 2, ...
+  dateStr: string;   // "05/10/2026"
+  label: string;     // "DÍA 1 (05/10/2026)"
+  stats: Map<string, number>;
+}
+
+export interface PeriodStatisticsResult {
+  isMultiDay: boolean;
+  durationHours: number;
+  days: DailyStatisticsGroup[];
+  totalStats: Map<string, number>;
+}
+
+/**
+ * Agrega y calcula las estadísticas de una guardia, separando los reportes por cada día
+ * operativo si la guardia abarca múltiples días (por ejemplo, 48 horas).
+ */
+export function calcularEstadisticasPeriodo(
+  reports: Report[],
+  templates: Template[],
+  configs: Record<string, TemplateConfig>,
+  predefinedValues: Record<string, string> = {},
+  addresses: Address[] = [],
+  periodoStr?: string,
+  durationHours?: number
+): PeriodStatisticsResult {
+  const totalStats = new Map<string, number>();
+
+  // Analizar fechas del periodo
+  let d1Str = '';
+  let d2Str = '';
+  let shift2Start: Date | null = null;
+  let isMultiDay = false;
+  let durHours = durationHours || 24;
+
+  if (periodoStr) {
+    const matches = periodoStr.match(/(\d{2})\/(\d{2})\/(\d{4})/g);
+    if (matches && matches.length >= 2) {
+      d1Str = matches[0]!;
+      const [d1, m1, y1] = d1Str.split('/').map(Number);
+      const [dEnd, mEnd, yEnd] = matches[1]!.split('/').map(Number);
+      const startObj = new Date(y1!, m1! - 1, d1!, 8, 0, 0);
+      const endObj = new Date(yEnd!, mEnd! - 1, dEnd!, 8, 0, 0);
+      const diffDays = Math.round((endObj.getTime() - startObj.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (diffDays >= 2 || durationHours === 48) {
+        isMultiDay = true;
+        durHours = 48;
+        const day2Date = new Date(y1!, m1! - 1, d1! + 1);
+        d2Str = `${String(day2Date.getDate()).padStart(2, '0')}/${String(day2Date.getMonth() + 1).padStart(2, '0')}/${day2Date.getFullYear()}`;
+        shift2Start = new Date(day2Date.getFullYear(), day2Date.getMonth(), day2Date.getDate(), 8, 0, 0);
+      }
+    }
+  }
+
+  if (durationHours === 48 && !isMultiDay) {
+    isMultiDay = true;
+    durHours = 48;
+  }
+
+  if (!isMultiDay) {
+    const stats = calcularEstadisticasDia(reports, templates, configs, predefinedValues, addresses);
+    return {
+      isMultiDay: false,
+      durationHours: 24,
+      days: [
+        {
+          dayNumber: 1,
+          dateStr: d1Str || 'Día 1',
+          label: d1Str ? `DÍA 1 (${d1Str})` : 'DÍA 1',
+          stats,
+        },
+      ],
+      totalStats: stats,
+    };
+  }
+
+  // Guardia de 48 horas (multi-día)
+  const day1Stats = new Map<string, number>();
+  const day2Stats = new Map<string, number>();
+
+  reports.forEach((report) => {
+    if (report.status !== 'Finalizado') return;
+
+    let repDate = getReportDateTime(report);
+    if (!repDate && report.timestamp) {
+      const parsed = new Date(report.timestamp);
+      if (!isNaN(parsed.getTime())) repDate = parsed;
+    }
+
+    let targetDay = 1;
+    if (repDate && shift2Start) {
+      targetDay = repDate.getTime() >= shift2Start.getTime() ? 2 : 1;
+    } else {
+      const fechaVal = findValueInform_data(report.form_data, 'Fecha') as string | undefined;
+      if (fechaVal && d2Str && fechaVal.includes(d2Str)) {
+        targetDay = 2;
+      } else {
+        targetDay = 1;
+      }
+    }
+
+    const template = templates.find((t) => t.id === report.template_id);
+    const config = configs[report.template_id];
+    const reportCategories = obtenerCategoriasReporte(report, template, config, predefinedValues, addresses);
+
+    reportCategories.forEach((category) => {
+      totalStats.set(category, (totalStats.get(category) || 0) + 1);
+      if (targetDay === 1) {
+        day1Stats.set(category, (day1Stats.get(category) || 0) + 1);
+      } else {
+        day2Stats.set(category, (day2Stats.get(category) || 0) + 1);
+      }
+    });
+  });
+
+  return {
+    isMultiDay: true,
+    durationHours: durHours,
+    days: [
+      {
+        dayNumber: 1,
+        dateStr: d1Str,
+        label: d1Str ? `DÍA 1 (${d1Str})` : 'DÍA 1',
+        stats: day1Stats,
+      },
+      {
+        dayNumber: 2,
+        dateStr: d2Str,
+        label: d2Str ? `DÍA 2 (${d2Str})` : 'DÍA 2',
+        stats: day2Stats,
+      },
+    ],
+    totalStats,
+  };
+}
+
 

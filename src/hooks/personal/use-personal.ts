@@ -103,6 +103,19 @@ export function usePersonal() {
     toast.success(`${idsSeleccionados.length} personas eliminadas`);
   };
 
+  const manejarCambioEstadoMasivo = async (nuevoEstado: any) => {
+    if (idsSeleccionados.length === 0) return;
+    try {
+      await Promise.all(
+        idsSeleccionados.map((id) => actualizarMiembro(id, { status: nuevoEstado }))
+      );
+      toast.success(`Estado actualizado a "${nuevoEstado}" para ${idsSeleccionados.length} personas`);
+      setIdsSeleccionados([]);
+    } catch {
+      toast.error('Error al actualizar el estado del personal seleccionado');
+    }
+  };
+
   const manejarVerHistorial = (miembro: StaffMember) => {
     setMiembroVerHistorial(miembro);
     setEsDialogOpenHistorial(true);
@@ -140,6 +153,7 @@ export function usePersonal() {
     manejarCancelar,
     manejarEliminar,
     manejarEliminacionMasiva,
+    manejarCambioEstadoMasivo,
     manejarVerHistorial,
     añadirMiembros,
     guardarRoles,

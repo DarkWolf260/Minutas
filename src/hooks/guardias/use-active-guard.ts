@@ -13,6 +13,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGuards } from '@/hooks/guardias';
 import { useSettings } from '@/hooks/configuracion';
 import { useRoles } from '@/hooks/personal';
+import { getPeriodDurationHours } from '@/lib/formatters';
 
 function buildFallbackPeriod(): string {
   const today = new Date();
@@ -31,21 +32,29 @@ export function useActiveGuard() {
   // ── Local "pending" selection (user picked but hasn't opened the guard yet) ──
   const [selectedGuardId, setSelectedGuardIdState] = useState<string>('');
   const [periodo, setPeriodoState] = useState<string>('');
+  const [duracion, setDuracionState] = useState<number>(24);
 
   // Track last-synced values so we don't create infinite loops
   const lastSynced = useRef<{ active_guard_id?: string; guard_period?: string }>({});
 
-  // Sync `periodo` from settings on load / external change
+  // Sync `periodo` and `duracion` from settings on load / external change
   useEffect(() => {
     if (!settingsLoaded) return;
 
     const globalPeriod = settings.guard_period || '';
-    if (lastSynced.current.guard_period === globalPeriod) return;
+    if (lastSynced.current.guard_period !== globalPeriod) {
+      const effective = globalPeriod || buildFallbackPeriod();
+      setPeriodoState(effective);
+      lastSynced.current.guard_period = globalPeriod;
+    }
 
-    const effective = globalPeriod || buildFallbackPeriod();
-    setPeriodoState(effective);
-    lastSynced.current.guard_period = globalPeriod;
-  }, [settingsLoaded, settings.guard_period]);
+    const savedDuration = settings.guard_shift_duration;
+    if (savedDuration === 24 || savedDuration === 48) {
+      setDuracionState(savedDuration);
+    } else if (globalPeriod) {
+      setDuracionState(getPeriodDurationHours(globalPeriod));
+    }
+  }, [settingsLoaded, settings.guard_period, settings.guard_shift_duration]);
 
   // Sync `selectedGuardId` from settings on load / external change
   useEffect(() => {
@@ -83,19 +92,32 @@ export function useActiveGuard() {
   }, []);
 
   /**
+   * Change the guard duration (24 or 48 hours).
+   */
+  const setDuracion = useCallback((d: number) => {
+    setDuracionState(d);
+  }, []);
+
+  /**
    * Open / activate a guard for the current shift.
    * Optionally accepts overrides; falls back to the local pending state.
    */
   const openGuard = useCallback(
-    (guardId?: string, period?: string) => {
+    (guardId?: string, period?: string, duration?: number) => {
       const gId = guardId ?? selectedGuardId;
       const p = period ?? periodo;
+      const d = duration ?? duracion;
       if (!gId) return;
       lastSynced.current.active_guard_id = gId;
       lastSynced.current.guard_period = p;
-      saveSettings({ is_guard_open: true, active_guard_id: gId, guard_period: p });
+      saveSettings({
+        is_guard_open: true,
+        active_guard_id: gId,
+        guard_period: p,
+        guard_shift_duration: d,
+      });
     },
-    [selectedGuardId, periodo, saveSettings]
+    [selectedGuardId, periodo, duracion, saveSettings]
   );
 
   // ── Derived values ────────────────────────────────────────────────────────────
@@ -122,9 +144,11 @@ export function useActiveGuard() {
     setSelectedGuardId,
     selectedGuard,
 
-    // Period (local, synced from settings)
+    // Period & Duration (local, synced from settings)
     periodo,
     setPeriodo,
+    duracion,
+    setDuracion,
 
     // Committed / open guard state (from settings)
     isGuardOpen,

@@ -1,30 +1,93 @@
 import React from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, UserCheck, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { STATUS_OPTIONS } from '@/lib/constants/personnel';
+import type { PersonnelStatus } from '@/lib/types';
 
 interface MassActionsBarProps {
   selectedCount: number;
   onDeleteRequest: () => void;
+  onUpdateStatusRequest?: (status: PersonnelStatus) => void;
+  onClearSelection?: () => void;
 }
 
-export const MassActionsBar = ({ selectedCount, onDeleteRequest }: MassActionsBarProps) => {
+export const MassActionsBar = ({
+  selectedCount,
+  onDeleteRequest,
+  onUpdateStatusRequest,
+  onClearSelection,
+}: MassActionsBarProps) => {
   if (selectedCount === 0) return null;
 
   return (
-    <div className="sticky top-2 md:top-28 h-0 overflow-visible z-[45] w-full px-4 animate-in slide-in-from-top-4 duration-300 pointer-events-none shrink-0">
-      <div className="max-w-[1600px] mx-auto flex justify-center md:justify-end pointer-events-none">
-        <div className="w-full md:w-auto min-w-[300px] flex items-center justify-between gap-4 p-3 px-5 bg-[#fff1f1] dark:bg-[#2a0a0a] border border-destructive/20 shadow-2xl rounded-2xl ring-1 ring-destructive/10 backdrop-blur-md select-none pointer-events-auto">
-          <span className="text-sm font-bold text-destructive whitespace-nowrap">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-5 duration-200 pointer-events-auto">
+      <div className="flex items-center gap-3 p-2.5 px-4 bg-background/95 border border-border shadow-2xl rounded-2xl ring-1 ring-border/20 backdrop-blur-md select-none max-w-[95vw]">
+        <div className="flex items-center gap-2 pr-2 border-r border-border">
+          <span className="text-xs font-bold text-foreground whitespace-nowrap bg-muted px-2.5 py-1 rounded-lg">
             {selectedCount} seleccionados
           </span>
+          {onClearSelection && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClearSelection}
+              className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
+              title="Deseleccionar todos"
+              aria-label="Deseleccionar todos"
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {onUpdateStatusRequest && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 text-xs font-medium shadow-xs"
+                >
+                  <UserCheck className="h-3.5 w-3.5 text-primary" />
+                  <span>Cambiar Estado</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-48">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">
+                  Asignar nuevo estado
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {STATUS_OPTIONS.map((opt) => (
+                  <DropdownMenuItem
+                    key={opt.value}
+                    onClick={() => onUpdateStatusRequest(opt.value as PersonnelStatus)}
+                    className="gap-2 cursor-pointer text-xs"
+                  >
+                    <span className="h-2 w-2 rounded-full bg-primary" />
+                    <span>{opt.label}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           <Button
             variant="destructive"
             size="sm"
             onClick={onDeleteRequest}
-            className="shadow-md h-9 md:h-8 font-bold px-4 rounded-xl transition-all active:scale-95"
+            className="h-8 gap-1.5 text-xs font-bold shadow-xs active:scale-95 transition-all"
           >
-            <Trash2 className="mr-2 h-4 w-4" />
-            <span className="whitespace-nowrap">Eliminar</span>
+            <Trash2 className="h-3.5 w-3.5" />
+            <span>Eliminar</span>
           </Button>
         </div>
       </div>

@@ -70,22 +70,34 @@ export const PersonnelTabs = ({ hook }: PersonnelTabsProps) => {
       className="flex flex-col gap-4 sm:gap-6 md:flex-1 md:min-h-0"
     >
       <div className="shrink-0">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full sm:max-w-2xl bg-muted/20 p-1 h-auto gap-1 rounded-xl border ring-1 ring-border/5">
-          <TabsTrigger value="personnel" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 transition-all">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full sm:max-w-2xl bg-muted/80 dark:bg-muted/60 p-1.5 h-auto gap-1.5 rounded-xl border border-border shadow-xs">
+          <TabsTrigger 
+            value="personnel" 
+            className="flex items-center justify-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md px-3.5 py-2.5 transition-all font-bold text-[11px] sm:text-xs uppercase tracking-tight text-muted-foreground hover:text-foreground hover:bg-background/40"
+          >
             <User className="h-4 w-4 shrink-0" />
-            <span className="font-bold text-[11px] sm:text-xs uppercase tracking-tight">Funcionarios</span>
+            <span>Funcionarios</span>
           </TabsTrigger>
-          <TabsTrigger value="structure" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 transition-all">
+          <TabsTrigger 
+            value="structure" 
+            className="flex items-center justify-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md px-3.5 py-2.5 transition-all font-bold text-[11px] sm:text-xs uppercase tracking-tight text-muted-foreground hover:text-foreground hover:bg-background/40"
+          >
             <LayoutGrid className="h-4 w-4 shrink-0" />
-            <span className="font-bold text-[11px] sm:text-xs uppercase tracking-tight">Estructura</span>
+            <span>Estructura</span>
           </TabsTrigger>
-          <TabsTrigger value="guards" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 transition-all">
+          <TabsTrigger 
+            value="guards" 
+            className="flex items-center justify-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md px-3.5 py-2.5 transition-all font-bold text-[11px] sm:text-xs uppercase tracking-tight text-muted-foreground hover:text-foreground hover:bg-background/40"
+          >
             <ShieldCheck className="h-4 w-4 shrink-0" />
-            <span className="font-bold text-[11px] sm:text-xs uppercase tracking-tight">Guardias</span>
+            <span>Guardias</span>
           </TabsTrigger>
-          <TabsTrigger value="units" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 transition-all">
+          <TabsTrigger 
+            value="units" 
+            className="flex items-center justify-center gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md px-3.5 py-2.5 transition-all font-bold text-[11px] sm:text-xs uppercase tracking-tight text-muted-foreground hover:text-foreground hover:bg-background/40"
+          >
             <Car className="h-4 w-4 shrink-0" />
-            <span className="font-bold text-[11px] sm:text-xs uppercase tracking-tight">Unidades</span>
+            <span>Unidades</span>
           </TabsTrigger>
         </TabsList>
       </div>

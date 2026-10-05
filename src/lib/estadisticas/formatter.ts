@@ -1,3 +1,5 @@
+import type { PeriodStatisticsResult } from './calculator';
+
 /**
  * Formatea un mapa de estadísticas en una cadena legible para el reporte final.
  */
@@ -29,3 +31,38 @@ export function formatearEstadisticasDia(stats: Map<string, number>): string {
     })
     .join('\n');
 }
+
+/**
+ * Formatea el resultado estadístico de un periodo.
+ * Si es de múltiples días (ej. 48h), separa claramente las estadísticas de cada día y añade el total.
+ * Si es de un solo día (24h), retorna el formato clásico sin prefijos redundantes.
+ */
+export function formatearEstadisticasPeriodo(result: PeriodStatisticsResult): string {
+  if (!result.isMultiDay) {
+    return formatearEstadisticasDia(result.totalStats);
+  }
+
+  const sections: string[] = [];
+
+  result.days.forEach((day) => {
+    const formatted = formatearEstadisticasDia(day.stats);
+    sections.push(`*${day.label.toUpperCase()}:*`);
+    if (formatted) {
+      sections.push(formatted);
+    } else {
+      sections.push('- Sin novedades estadísticas registradas');
+    }
+    sections.push('');
+  });
+
+  const totalFormatted = formatearEstadisticasDia(result.totalStats);
+  sections.push(`*TOTAL GUARDIA (${result.durationHours} HORAS):*`);
+  if (totalFormatted) {
+    sections.push(totalFormatted);
+  } else {
+    sections.push('- Sin novedades estadísticas registradas');
+  }
+
+  return sections.join('\n').trim();
+}
+

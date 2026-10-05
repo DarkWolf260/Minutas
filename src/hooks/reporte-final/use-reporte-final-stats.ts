@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { debounce } from '@/lib/utils';
-import { calcularEstadisticasDia, formatearEstadisticasDia } from '@/lib/estadisticas-utils';
+import { calcularEstadisticasPeriodo, formatearEstadisticasPeriodo } from '@/lib/estadisticas-utils';
 import { toast } from 'sonner';
 
 interface UseReporteFinalStatsProps {
@@ -56,15 +56,27 @@ export function useReporteFinalStats({
       toast.error('No hay reportes finalizados para calcular estadísticas.');
       return;
     }
-    const dayStats = calcularEstadisticasDia(reportesFinalizados, templates, configs, configuracionesGlobales);
-    const formateado = formatearEstadisticasDia(dayStats);
+    const result = calcularEstadisticasPeriodo(
+      reportesFinalizados,
+      templates,
+      configs,
+      configuracionesGlobales,
+      [],
+      settings.guard_period,
+      settings.guard_shift_duration
+    );
+    const formateado = formatearEstadisticasPeriodo(result);
     
     if (formateado) {
       setEstadisticasLocal(formateado);
       guardarEstadisticasDebounced(formateado);
-      toast.success('Estadísticas calculadas correctamente.');
+      toast.success(
+        result.isMultiDay
+          ? `Estadísticas calculadas y separadas por día (${result.durationHours} Horas).`
+          : 'Estadísticas calculadas correctamente.'
+      );
     } else {
-      toast.info('No se encontraron categorías estadísticas en los reportes de hoy.');
+      toast.info('No se encontraron categorías estadísticas en los reportes de la guardia.');
     }
   };
 

@@ -100,17 +100,37 @@ export function formatStaffReporta(member: StaffMember | string): string {
 
 /**
  * Formats a date into the standard period string: "DD/MM/YYYY AL DD/MM/YYYY"
- * where the second date is the next day.
+ * where the second date is computed based on durationDays (default 1 day = 24h, 2 days = 48h).
  * 
  * @param date - The start date
+ * @param durationDays - Number of days the period spans (1 = 24h, 2 = 48h)
  * @returns Formatted period string
  */
-export function formatDateToPeriod(date: Date): string {
-  const tomorrow = new Date(date);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+export function formatDateToPeriod(date: Date, durationDays: number = 1): string {
+  const endDate = new Date(date);
+  endDate.setDate(endDate.getDate() + durationDays);
   const fmt = (d: Date) =>
     `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-  return `${fmt(date)} AL ${fmt(tomorrow)}`;
+  return `${fmt(date)} AL ${fmt(endDate)}`;
+}
+
+/**
+ * Calculates the duration in hours (24 or 48) based on a period string: "DD/MM/YYYY AL DD/MM/YYYY".
+ * 
+ * @param period - The period string
+ * @param fallbackHours - Fallback if period cannot be parsed (default: 24)
+ * @returns Duration in hours (24 or 48)
+ */
+export function getPeriodDurationHours(period: string, fallbackHours: number = 24): number {
+  if (!period) return fallbackHours;
+  const matches = period.match(/(\d{2})\/(\d{2})\/(\d{4})/g);
+  if (!matches || matches.length < 2) return fallbackHours;
+  const [d1, m1, y1] = matches[0]!.split('/').map(Number);
+  const [d2, m2, y2] = matches[1]!.split('/').map(Number);
+  const start = new Date(y1!, m1! - 1, d1!);
+  const end = new Date(y2!, m2! - 1, d2!);
+  const diffDays = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  return diffDays >= 2 ? 48 : 24;
 }
 
 /**
@@ -130,3 +150,4 @@ export function parsePeriodToDate(period: string): string {
   }
   return new Date().toISOString().split('T')[0]!;
 }
+

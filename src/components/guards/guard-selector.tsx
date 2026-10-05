@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/custom/date-picker';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { formatDateToPeriod, parsePeriodToDate } from '@/lib/formatters';
+import { formatDateToPeriod, parsePeriodToDate, getPeriodDurationHours } from '@/lib/formatters';
 import {
   Select,
   SelectContent,
@@ -56,10 +56,14 @@ export function GuardSelector({
     setSelectedGuardId,
     periodo,
     setPeriodo,
+    duracion,
+    setDuracion,
     isGuardOpen,
     openGuard,
     isLoaded,
   } = useActiveGuard();
+
+  const duracionActual = duracion || (periodo ? getPeriodDurationHours(periodo) : 24);
 
   const handleOpen = () => {
     openGuard();
@@ -106,6 +110,37 @@ export function GuardSelector({
           </Select>
         </div>
 
+        {/* Duración */}
+        <div className="space-y-2 max-w-xs flex-1 min-w-[140px]">
+          <Label
+            htmlFor="guard-selector-duration"
+            className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
+          >
+            Duración
+          </Label>
+          <Select
+            value={String(duracionActual)}
+            onValueChange={(val) => {
+              const d = parseInt(val, 10);
+              setDuracion(d);
+              const startDate = new Date(parsePeriodToDate(periodo) + 'T12:00:00');
+              setPeriodo(formatDateToPeriod(startDate, d === 48 ? 2 : 1));
+            }}
+            disabled={isGuardOpen}
+          >
+            <SelectTrigger
+              id="guard-selector-duration"
+              className={`h-10 rounded-lg shadow-sm ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}
+            >
+              <SelectValue placeholder="Duración..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="24">24 Horas</SelectItem>
+              <SelectItem value="48">48 Horas</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Periodo */}
         {showPeriod && (
           <div className="space-y-2 max-w-xs flex-1 min-w-[200px]">
@@ -113,14 +148,14 @@ export function GuardSelector({
               htmlFor="guard-selector-period"
               className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
             >
-              Periodo de Operaciones
+              Fecha Inicio
             </Label>
             <DatePicker
               id="guard-selector-period"
               value={parsePeriodToDate(periodo)}
               onChange={(newDateStr) => {
-                const date = new Date(newDateStr + 'T12:00:00'); // Use noon to avoid timezone issues
-                setPeriodo(formatDateToPeriod(date));
+                const date = new Date(newDateStr + 'T12:00:00');
+                setPeriodo(formatDateToPeriod(date, duracionActual === 48 ? 2 : 1));
               }}
               disabled={isGuardOpen}
               className={`h-10 rounded-lg shadow-sm ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}
@@ -187,10 +222,14 @@ export function NoGuardBanner({
     setSelectedGuardId,
     periodo,
     setPeriodo,
+    duracion,
+    setDuracion,
     openGuard,
     settings,
     isLoaded,
   } = useActiveGuard();
+
+  const duracionActual = duracion || (periodo ? getPeriodDurationHours(periodo) : 24);
 
   const { isAdmin } = useAdmin();
   const { config: globalConfig } = useGlobalConfig();
@@ -250,6 +289,33 @@ export function NoGuardBanner({
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Duración */}
+            <div className="w-full sm:w-28 space-y-1 sm:space-y-1.5 text-left">
+              <Label
+                htmlFor="no-guard-duration"
+                className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
+              >
+                Duración
+              </Label>
+              <Select
+                value={String(duracionActual)}
+                onValueChange={(val) => {
+                  const d = parseInt(val, 10);
+                  setDuracion(d);
+                  const startDate = new Date(parsePeriodToDate(periodo) + 'T12:00:00');
+                  setPeriodo(formatDateToPeriod(startDate, d === 48 ? 2 : 1));
+                }}
+              >
+                <SelectTrigger id="no-guard-duration" className="h-9 sm:h-10 rounded-lg bg-background text-xs sm:text-sm">
+                  <SelectValue placeholder="Duración" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="24">24h</SelectItem>
+                  <SelectItem value="48">48h</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
  
             {/* Periodo */}
             <div className="flex-1 space-y-1 sm:space-y-1.5 text-left">
@@ -257,14 +323,14 @@ export function NoGuardBanner({
                 htmlFor="no-guard-period"
                 className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
               >
-                Periodo
+                Fecha Inicio
               </Label>
               <DatePicker
                 id="no-guard-period"
                 value={parsePeriodToDate(periodo)}
                 onChange={(newDateStr) => {
-                  const date = new Date(newDateStr + 'T12:00:00'); // Use noon to avoid timezone issues
-                  setPeriodo(formatDateToPeriod(date));
+                  const date = new Date(newDateStr + 'T12:00:00');
+                  setPeriodo(formatDateToPeriod(date, duracionActual === 48 ? 2 : 1));
                 }}
                 className="h-9 sm:h-10 rounded-lg bg-background text-xs sm:text-sm"
               />
