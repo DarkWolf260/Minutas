@@ -438,7 +438,10 @@ Evento: {Tipo}`;
             };
 
             const rendered = renderFinalReport(template, data as any, { fields: {}, sections: [], layout: [] }, {});
-            console.log('RENDERED USER SNIPPET:\n' + rendered);
+            expect(rendered).toContain('Lic. Juan Perez');
+            expect(rendered).toContain('Cap. Pedro Gomez');
+            expect(rendered).toContain('Sgto. Ana Lopez');
+            expect(rendered).toContain('Guardia A');
         });
     });
 });

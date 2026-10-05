@@ -33,11 +33,9 @@ Los segmentos están separados por `:`. El orden de los segmentos después del n
 | `textarea` | Texto largo / multilinea |
 | `date` | Fecha (formato YYYY-MM-DD → se renderiza como DD/Mes/YYYY) |
 | `time-hlv` | Hora (HH:MM) |
-| `predefined` | Campo con valor predefinido |
 | `multi-text` | Lista de textos |
 | `dropdown` | Selección de opciones desplegables |
 | `cedula` | Número de cédula venezolana (V-XX.XXX.XXX) con formato automático |
-| `semantic` | Tipo semántico legado (retrocompatibilidad; tratado como texto) |
 
 #### Modificadores de campo
 
@@ -509,13 +507,13 @@ Cada campo especial o reservado posee un tipo base (`FieldType`) asignado en el 
 |-----------------|----------------------------|---------------------------|-----------------------------------|-----------------------------|
 | `{Fecha}` / `{fecha}` | `date` | *(Formato natural DD/Mes/YYYY automático)* | `:upper` (ej. `29/SEPTIEMBRE/2026`), `:lower`, `:title`, `:hidden` | `:req`, `:full`, `:default("YYYY-MM-DD")` |
 | `{Hora}` / `{hora}` | `time-hlv` | `:single` *(fuerza hora única puntual en vez de rango)* | `:upper`, `:lower`, `:hidden` | `:req`, `:full`, `:default("HH:MM")` |
-| `{Municipio}` | `predefined` | *(Inyectado desde Workspace)* | `:upper` (ej. `GUANTA`), `:lower`, `:title`, `:capitalize`, `:hidden` | `:req`, `:full` |
-| `{Estado}` | `predefined` | *(Inyectado desde Workspace)* | `:upper`, `:lower`, `:title`, `:hidden` | `:req`, `:full` |
-| `{REDAN}` | `predefined` | *(Inyectado institucional)* | `:upper`, `:lower`, `:title`, `:hidden` | `:req`, `:full` |
-| `{ZOEDAN}` | `predefined` | *(Inyectado institucional)* | `:upper`, `:lower`, `:title`, `:hidden` | `:req`, `:full` |
-| `{Usuario}` | `predefined` / `text` | *(Sesión activa)* | `:upper`, `:lower`, `:title`, `:capitalize`, `:hidden` | `:req`, `:full` |
-| `{Reporta}` | `predefined` / `staff` | Formateo protocolar vía `formatStaffReporta()` | `:upper` (suscripción en mayúsculas), `:title`, `:hidden` | `:req`, `:full` |
-| `{Analista}` | `predefined` / `staff` | Formateo con Cédula obligatoria vía `formatStaffMember(showCedula = true)` | `:upper`, `:title`, `:hidden` | `:req`, `:full` |
+| `{Municipio}` | `text` | *(Inyectado desde Workspace)* | `:upper` (ej. `GUANTA`), `:lower`, `:title`, `:capitalize`, `:hidden` | `:req`, `:full` |
+| `{Estado}` | `text` | *(Inyectado desde Workspace)* | `:upper`, `:lower`, `:title`, `:hidden` | `:req`, `:full` |
+| `{REDAN}` | `text` | *(Inyectado institucional)* | `:upper`, `:lower`, `:title`, `:hidden` | `:req`, `:full` |
+| `{ZOEDAN}` | `text` | *(Inyectado institucional)* | `:upper`, `:lower`, `:title`, `:hidden` | `:req`, `:full` |
+| `{Usuario}` | `text` | *(Sesión activa)* | `:upper`, `:lower`, `:title`, `:capitalize`, `:hidden` | `:req`, `:full` |
+| `{Reporta}` | `staff` | Formateo protocolar vía `formatStaffReporta()` | `:upper` (suscripción en mayúsculas), `:title`, `:hidden` | `:req`, `:full` |
+| `{Analista}` | `staff` | Formateo con Cédula obligatoria vía `formatStaffMember(showCedula = true)` | `:upper`, `:title`, `:hidden` | `:req`, `:full` |
 | `{Director}`, `{Jefe de operaciones}`, etc. | `staff` | Notación de punto: `.sex`, `.name`, `.cargo`, `.rank`, `.cedula`, `.titulo` | `:upper`, `:title`, `:hidden` | `:req`, `:full` |
 | `{Guardia}` / `{Grupo}` | `text` | *(Auto-rellenado con `active_guard_id`)* | `:upper`, `:lower`, `:title` | `:req`, `:full`, `:default("...")` |
 | `{photos}` / `{fotos}` | *Marcador estructural* | *(No es campo de datos; marcador de fotos)* | *(Ninguno)* | *(Ninguno)* |
@@ -531,41 +529,41 @@ Fecha: {fecha}
 Hora: {hora}
 Reportado por: {reportante:upper:req}
 
-[?{Director.sex} = F]
+::: if Director.sex == "F" :::
 *DIRECTORA-PRESIDENTA:* {Director}
-[/]
-[?{Director.sex} = M]
+:::
+::: if Director.sex == "M" :::
 *DIRECTOR-PRESIDENTE:* {Director}
-[/]
+:::
 
 Tipo de incidente: {tipo:dropdown(Robo=Robo|Vandalismo=Vandalismo|Accidente=Accidente)}
 
-[?{tipo}]
+::: map tipo :::
 Robo=Se registró un evento de robo en las instalaciones.
 Vandalismo=Se registraron actos de vandalismo.
 Accidente=Se registró un accidente de tránsito.
-[/]
+:::
 
-[?{tipo} = Robo]
+::: if tipo == "Robo" :::
 Monto aproximado: {monto}
 Objetos sustraídos: {objetos:textarea:full}
-[/]
+:::
 
-[?{tipo} = Vandalismo]
+::: if tipo == "Vandalismo" :::
 Área afectada: {area:textarea:full}
-[/]
+:::
 
-[?{Observaciones} != ""]
+::: if Observaciones != "" :::
 - *OBSERVACIONES:* {Observaciones}
-[/]
+:::
 
-[""]
+::: separator :::
 
 Descripción general: {descripcion:textarea:full:req}
 
 <<{descripcion}>>
 
-[singular="Novedad" plural="Novedades" sub="NOVEDAD"]*
+::: section Novedades | Novedad | NOVEDAD* :::
 {novedad:textarea:full}
-[/]
+:::
 ```

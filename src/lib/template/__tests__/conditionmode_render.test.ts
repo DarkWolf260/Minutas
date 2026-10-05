@@ -2,7 +2,7 @@
  * Test: secciones auto-contenidas dentro de bloque condicional :show se renderizan correctamente
  */
 import { renderFinalReport } from '../renderer';
-import { parseTemplate } from '../../template-parser';
+import { parseTemplate } from '../index';
 
 const TEMPLATE = `::: if Estatus == "Finalizado":show :::
 ::: Comisiones en sitio :::
@@ -37,8 +37,6 @@ test('self-contained nested sections inside :show conditional render when condit
         fields: {},
     }, {}, false, {}, parseTemplate, () => {});
 
-    console.log('Rendered:\n', rendered);
-
     // The conditional block content should appear since Estatus = 'Finalizado'
     expect(rendered).toContain('COMISIONES EN SITIO');
     expect(rendered).toContain('PC GUANTA al mando de John Doe');
@@ -65,8 +63,6 @@ test('self-contained nested sections inside a :show conditional are hidden from 
         layout: config.layout,
         fields: {},
     }, {}, false, {}, parseTemplate, () => {});
-
-    console.log('Rendered (condition NOT met):\n', rendered);
 
     // Conditional block should NOT appear since Estatus != 'Finalizado'
     expect(rendered).not.toContain('COMISIONES EN SITIO');

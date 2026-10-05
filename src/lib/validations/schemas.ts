@@ -194,7 +194,6 @@ export const FieldTypeSchema = z.enum([
     'predefined',
     'multi-text',
     'dropdown',
-    'semantic',
 ]);
 
 const SnippetOptionSchema = z.object({

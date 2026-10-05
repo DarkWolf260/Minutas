@@ -19,13 +19,14 @@ interface TemplateRenderConfig {
     layout: string[];
     templateOptions: Map<string, SnippetOption[]>;
     fieldModifiers: Map<string, string[]>;
+    defaultValues?: Map<string, string>;
 }
 
 /**
  * Renders template content with data substitution
  * 
  * Logic flow:
- * 1. Pass 1: Scan for mapping conditionals [?{Field}] Key=Value [/]
+ * 1. Pass 1: Scan for mapping blocks (::: map Field ::: Key=Value :::)
  *    - These are definition-only blocks (don't produce output).
  *    - Used to build a translation map for {Field} tags.
  * 2. Pass 2: Global substitution
@@ -54,6 +55,7 @@ export function renderContent(
             layout: config.layout || [],
             templateOptions: config.templateOptions || new Map(),
             fieldModifiers: config.fieldModifiers || new Map(),
+            defaultValues: config.defaultValues || new Map(),
         },
         config.predefinedValues ? Object.fromEntries(config.predefinedValues) : {},
         {}
@@ -74,12 +76,12 @@ const sectionRegexCache = new Map<string, RegExp>();
  * Helper: Generates a regex to match a section block in the template
  */
 function getSectionRegex(section: SectionConfig): RegExp {
-    // Stable key for caching: section ID + repeatable flag + self-contained flag
-    const cacheKey = `${section.id}_${section.is_repeatable}_${section.is_self_contained}_${section.full_raw?.length || 0}`;
-    const cached = sectionRegexCache.get(cacheKey);
+    const rawPattern = section.full_raw || section.original_content || '';
+    if (!rawPattern) return /(?:)/g;
+
+    const cached = sectionRegexCache.get(rawPattern);
     if (cached) return cached;
 
-    const rawPattern = section.full_raw || section.original_content || '';
     const escaped = escapeRegExp(rawPattern).replace(/\n/g, '\\r?\\n');
     const regex = new RegExp(escaped, 'g');
 
@@ -87,7 +89,7 @@ function getSectionRegex(section: SectionConfig): RegExp {
         const oldestKey = sectionRegexCache.keys().next().value;
         if (oldestKey) sectionRegexCache.delete(oldestKey);
     }
-    sectionRegexCache.set(cacheKey, regex);
+    sectionRegexCache.set(rawPattern, regex);
     return regex;
 }
 
@@ -534,10 +536,14 @@ function renderSection(
                     }
                 } else {
                     const baseVal = findValueForField(id, data, sections, predefinedValues, dynamicPredefinedValues, item);
+                    const defaultVal = config.defaultValues?.get(id) ?? config.fields[id]?.default_value;
                     const lowerId = id.toLowerCase();
-                    const val = mappingResults[lowerId] !== undefined
+                    const mappedVal = mappingResults[lowerId] !== undefined
                         ? mappingResults[lowerId]
-                        : (mappingResults[id] !== undefined ? mappingResults[id] : baseVal);
+                        : mappingResults[id];
+                    const val = mappedVal !== undefined
+                        ? mappedVal
+                        : (baseVal !== undefined && baseVal !== '' ? baseVal : defaultVal);
 
                     itemContent = itemContent.replace(
                         new RegExp(`\\{${escapeRegExp(id)}(:[^|}{]+)*(?:\\|[^{}]+?)?\\}(\\*)?`, 'gi'),
@@ -723,11 +729,12 @@ export function renderContentWithSections(
             field_id = field_id.trim();
             const lowerfield_id = field_id.toLowerCase();
             const baseVal = findValueForField(field_id, data, sections, predefinedValues, dynamicPredefinedValues);
+            const defaultVal = config.defaultValues?.get(field_id) ?? config.fields[field_id]?.default_value;
 
             // Mapping results are only applicable for non-dotted field names
             const formValue = (!field_id.includes('.') && mappingResults[lowerfield_id] !== undefined)
                 ? mappingResults[lowerfield_id]
-                : baseVal;
+                : (baseVal !== undefined && baseVal !== '' ? baseVal : defaultVal);
 
             return hasContent(formValue) ? renderValue(formValue, field_id, fields, config) : '';
         }
@@ -767,7 +774,7 @@ export function renderFinalReport(
 ): string {
     try {
         const parseFn = parseTemplateFn || defaultParseTemplate;
-        const { sections, layout, fieldNames, fieldTypes, templateOptions, fieldModifiers } =
+        const { sections, layout, fieldNames, fieldTypes, templateOptions, fieldModifiers, defaultValues } =
             parseFn(template);
 
         // Build final config with all necessary data
@@ -777,12 +784,17 @@ export function renderFinalReport(
             layout,
             templateOptions,
             fieldModifiers,
+            defaultValues,
         };
 
         fieldNames.forEach((fieldName: string) => {
             const fieldConfig: FieldConfig = config.fields[fieldName]
                 ? { ...config.fields[fieldName] }
                 : { type: 'text' as FieldType, label: fieldName };
+
+            if (defaultValues?.has(fieldName)) {
+                fieldConfig.default_value = defaultValues.get(fieldName);
+            }
 
             finalConfig.fields[fieldName] = fieldConfig;
             const options = templateOptions.get(fieldName);

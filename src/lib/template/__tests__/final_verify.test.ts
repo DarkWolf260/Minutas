@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderFinalReport } from '../renderer';
-import { parseTemplate } from '../../template-parser';
+import { parseTemplate } from '../index';
 import type { SectionConfig, FieldConfig } from '@/lib/types';
 
 describe('Nested Sections in Conditional Blocks', () => {

@@ -24,11 +24,29 @@ const VALID_OPERATORS = new Set(['=', '!=', '>', '<', '>=', '<=']);
 export function validateSyntax(template: string): string[] {
     const errors: string[] = [];
 
-    // Check brace balance in single pass without allocating match arrays
+    // Check brace balance in single pass, respecting escapes (\\{, \\}, {{, }})
     let openBraces = 0;
     let closeBraces = 0;
     for (let i = 0; i < template.length; i++) {
         const char = template[i];
+        const next = template[i + 1];
+
+        // Skip escaped braces
+        if (char === '\\' && (next === '{' || next === '}')) {
+            i++;
+            continue;
+        }
+
+        // Skip double braces (literal escaped braces {{ or }})
+        if (char === '{' && next === '{') {
+            i++;
+            continue;
+        }
+        if (char === '}' && next === '}') {
+            i++;
+            continue;
+        }
+
         if (char === '{') openBraces++;
         else if (char === '}') closeBraces++;
     }
@@ -36,7 +54,7 @@ export function validateSyntax(template: string): string[] {
         errors.push('Desbalance de llaves detectado.');
     }
 
-    // Check unclosed ::: blocks
+    // Check unclosed or orphan ::: blocks
     try {
         const tokens = tokenize(template);
         let openBlocks = 0;
@@ -49,6 +67,8 @@ export function validateSyntax(template: string): string[] {
         }
         if (openBlocks > 0) {
             errors.push('Bloques ::: sin cerrar detectados.');
+        } else if (openBlocks < 0) {
+            errors.push('Cierres de bloque ::: huérfanos o adicionales detectados.');
         }
     } catch {
         // Tokenize error fallback
@@ -56,6 +76,24 @@ export function validateSyntax(template: string): string[] {
 
     return errors;
 }
+
+const PREDEFINED_FIELD_NAMES = new Set([
+    'fecha',
+    'hora',
+    'municipio',
+    'estado',
+    'redan',
+    'zoedan',
+    'usuario',
+    'guardia',
+    'grupo',
+    'active_guard_id',
+    'director',
+    'analista',
+    'reporta',
+    'estatus',
+    'status',
+]);
 
 /**
  * Validates semantic aspects of a parsed template
@@ -89,7 +127,8 @@ export function validateSemantics(
             const basefield_id = field_id.includes('.')
                 ? field_id.slice(0, field_id.indexOf('.'))
                 : field_id;
-            if (!fieldNames.has(field_id) && !fieldNames.has(basefield_id)) {
+            const isPredefined = PREDEFINED_FIELD_NAMES.has(basefield_id.toLowerCase());
+            if (!fieldNames.has(field_id) && !fieldNames.has(basefield_id) && !isPredefined) {
                 errors.push(
                     `El condicional hace referencia al campo '{${field_id}}' que no está definido en la plantilla.`
                 );

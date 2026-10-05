@@ -4,10 +4,10 @@
  * Type definitions shared across all template modules
  */
 
-import { FieldType, SectionConfig, SnippetOption } from '@/lib/types';
+import type { FieldType, SectionConfig, SnippetOption, FieldConfig, TemplateParserResult } from '@/lib/types';
 
 // Re-export types from main types file for convenience
-export type { FieldType, SectionConfig, SnippetOption };
+export type { FieldType, SectionConfig, SnippetOption, FieldConfig, TemplateParserResult };
 
 /**
  * Token types for lexer
@@ -43,29 +43,9 @@ export interface ConditionalExpression {
 }
 
 /**
- * Field configuration after parsing
+ * Parse result type alias for backwards compatibility
  */
-export interface FieldConfig {
-    id: string;
-    type: FieldType;
-    label: string;
-    modifiers: string[];
-    is_full_width: boolean;
-    is_required: boolean;
-    options?: SnippetOption[];
-}
-
-/**
- * Parse result from parser
- */
-export interface ParseResult {
-    sections: SectionConfig[];
-    fields: Map<string, FieldConfig>;
-    layout: string[];
-    fieldNames: Set<string>;
-    fieldTypes: Map<string, FieldType>;
-    templateOptions: Map<string, SnippetOption[]>;
-}
+export type ParseResult = TemplateParserResult;
 
 /**
  * Validation result
@@ -75,5 +55,3 @@ export interface ValidationResult {
     errors: string[];
     warnings: string[];
 }
-
-

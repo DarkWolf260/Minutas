@@ -553,7 +553,7 @@ export function parseConditionString(condStr: string): ConditionalExpression | n
 
     // Match: left operator right
     const match = str.match(
-        /^(?:\{\s*)?([a-zA-Z0-9_.\s\-¿?áéíóúÁÉÍÓÚñÑ]+?)(?:\s*\})?\s*(==|!=|>=|<=|>|<|=)\s*(.+)$/
+        /^(?:\{\s*)?([a-zA-Z0-9_.\s\-¿?áéíóúÁÉÍÓÚñÑüÜ]+?)(?:\s*\})?\s*(==|!=|>=|<=|>|<|=)\s*(.+)$/
     );
 
     if (match) {

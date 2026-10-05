@@ -15,12 +15,10 @@ const VALID_FIELD_TYPES = new Set<FieldType>([
     'text',
     'textarea',
     'date',
-    'predefined',
     'time-hlv',
     'multi-text',
     'dropdown',
     'cedula',
-    'semantic',
 ]);
 
 const VALID_TEXT_MODS = new Set(['upper', 'lower', 'title', 'single', 'hidden']);
@@ -72,7 +70,6 @@ export function parseFieldTag(
     let is_full_width = false;
     let is_required = false;
     let default_value: string | undefined = undefined;
-    let value: string | undefined = undefined;
     const modifiers: string[] = [];
 
     otherSegments.forEach((segment) => {
@@ -124,20 +121,14 @@ export function parseFieldTag(
                     default_value = defMatch[1] ?? defMatch[2];
                 } else if (trimmed === 'full') is_full_width = true;
                 else if (trimmed === 'req') is_required = true;
-                else if (VALID_TEXT_MODS.has(trimmed)) modifiers.push(trimmed);
                 else if (trimmed) {
-                    // If it's not a known flag/modifier, it's likely the predefined value
-                    if (value === undefined) {
-                        value = trimmed;
-                    } else {
-                        modifiers.push(trimmed);
-                    }
+                    modifiers.push(trimmed);
                 }
             });
         }
     });
 
-    return { field_id, field_type, modifiers, is_full_width, is_required, default_value, value };
+    return { field_id, field_type, modifiers, is_full_width, is_required, default_value };
 }
 
 /**
@@ -197,7 +188,6 @@ export function parse(tokens: Token[]): TemplateParserResult {
                 if (config.is_full_width) fieldWidths.set(field_id, true);
                 if (config.is_required) requiredFields.set(field_id, true);
                 if (config.default_value !== undefined) defaultValues.set(field_id, config.default_value);
-                if (config.value !== undefined) predefinedValues.set(field_id, config.value);
 
                 if (token.raw.endsWith('}*')) {
                     const sectionId = generateSectionId(field_id, [...sections, ...subSections], takenSectionIds);
@@ -222,7 +212,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                     }
                 } else {
                     // Allow fields to appear in multiple sections, especially useful for 
-                    // mutually exclusive conditionals (e.g., [?{sex}=F]{Director}[/] [?{sex}=M]{Director}[/])
+                    // mutually exclusive conditionals (e.g., ::: if sex == "F" ::: {Director} ::: ::: if sex == "M" ::: {Director} :::)
                     // We only prevent duplicates at the same level if they are at the root.
                     if (!parent_id) {
                         if (!globalRenderedFields.has(field_id)) {
@@ -276,6 +266,8 @@ export function parse(tokens: Token[]): TemplateParserResult {
 
                 if (is_mapping && token.condition) {
                     const field_id = token.condition.field_id;
+                    subFieldNames.add(field_id);
+                    fieldNames.add(field_id);
                     const options: SnippetOption[] = [];
                     inner.forEach((t, i) => {
                         if (t.type === 'text') {
@@ -366,10 +358,19 @@ export function parse(tokens: Token[]): TemplateParserResult {
 
     finalResult.subFieldNames.forEach(fn => fieldNames.add(fn));
 
-    // Ensure fields used in conditions are also tracked in fieldNames
+    const predefinedFieldNames = new Set([
+        'fecha', 'hora', 'municipio', 'estado', 'redan', 'zoedan',
+        'usuario', 'guardia', 'grupo', 'active_guard_id',
+        'director', 'analista', 'reporta', 'estatus', 'status'
+    ]);
+
+    // Ensure valid fields used in conditions are also tracked in fieldNames
     sections.forEach(sec => {
         if (sec.condition) {
-            fieldNames.add(sec.condition.field_id);
+            const base = sec.condition.field_id.split('.')[0] || sec.condition.field_id;
+            if (fieldNames.has(sec.condition.field_id) || fieldNames.has(base) || predefinedFieldNames.has(base.toLowerCase())) {
+                fieldNames.add(sec.condition.field_id);
+            }
         }
     });
     // NOTE: Reconciliation of mapping conditional values was removed because 

@@ -155,8 +155,7 @@ export type FieldType =
   | 'time-hlv'
   | 'multi-text'
   | 'dropdown'
-  | 'cedula'
-  | 'semantic';
+  | 'cedula';
 
 export type TextModifier = 'upper' | 'lower' | 'title';
 

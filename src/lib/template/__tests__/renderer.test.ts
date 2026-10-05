@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTemplate, renderFinalReport } from '../../template-parser';
+import { parseTemplate, renderFinalReport } from '../index';
 import type { TemplateConfig, SnippetOption, FieldType, SectionConfig } from '@/lib/types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -53,16 +53,13 @@ function generateMockData(
                 data[fieldName] = `Ejemplo ${fieldName}`;
         }
     });
-    console.log('DEBUG: generateMockData sections count:', sections.length);
     sections.forEach((section: SectionConfig) => {
-        console.log(`DEBUG: Checking section ${section.id}, is_repeatable: ${section.is_repeatable}`);
         if (section.is_repeatable) {
             const itemData: Record<string, string> = {};
             section.field_ids.forEach((field_id: string) => {
                 itemData[field_id] = `Dato ${field_id}`;
             });
             data[section.id] = [{ ...itemData }, { ...itemData }];
-            console.log(`DEBUG: Added repeatable data for ${section.id}`);
         }
     });
     return data;
@@ -75,15 +72,10 @@ describe('Template Renderer - Secciones Repetibles', () => {
         const template = 'NOVEDADES:\n{novedad}*';
         const parsed = parseTemplate(template);
 
-        console.log('Sections:', JSON.stringify(parsed.sections, null, 2));
-        console.log('Layout:', parsed.layout);
-
         const data = generateMockData(parsed.sections, parsed.fieldNames, parsed.fieldTypes, parsed.templateOptions);
-        console.log('Mock data:', JSON.stringify(data, null, 2));
 
         const config = buildConfig(template);
         const result = renderFinalReport(template, data as never, config, {});
-        console.log('Result:', result);
 
         expect(result).toContain('Dato novedad');
     });
@@ -92,13 +84,10 @@ describe('Template Renderer - Secciones Repetibles', () => {
         const template = '::: section Novedades* :::\n{descripcion}\n:::';
         const parsed = parseTemplate(template);
 
-        console.log('Sections:', JSON.stringify(parsed.sections, null, 2));
         const data = generateMockData(parsed.sections, parsed.fieldNames, parsed.fieldTypes, parsed.templateOptions);
-        console.log('Mock data:', JSON.stringify(data, null, 2));
 
         const config = buildConfig(template);
         const result = renderFinalReport(template, data as never, config, {});
-        console.log('Result:', result);
 
         expect(result).toContain('Dato descripcion');
     });
@@ -107,13 +96,10 @@ describe('Template Renderer - Secciones Repetibles', () => {
         const template = '::: section Novedades | Novedad* :::\n{descripcion}\n:::';
         const parsed = parseTemplate(template);
 
-        console.log('Sections:', JSON.stringify(parsed.sections, null, 2));
         const data = generateMockData(parsed.sections, parsed.fieldNames, parsed.fieldTypes, parsed.templateOptions);
-        console.log('Mock data:', JSON.stringify(data, null, 2));
 
         const config = buildConfig(template);
         const result = renderFinalReport(template, data as never, config, {});
-        console.log('Result:', result);
 
         expect(result).toContain('Dato descripcion');
     });
@@ -153,8 +139,6 @@ describe('Template Renderer - Secciones Auto-Contenidas', () => {
         const data = { campo: 'valor de prueba' };
 
         const result = render(template, data);
-        console.log('Secciones auto-contenidas result:', result);
-
         expect(result).toContain('valor de prueba');
     });
 
@@ -163,7 +147,6 @@ describe('Template Renderer - Secciones Auto-Contenidas', () => {
         const data = { nombre: 'Juan Pérez', cargo: 'Inspector' };
 
         const result = render(template, data);
-        console.log('Multi-field self-contained result:', result);
 
         expect(result).toContain('Juan Pérez');
         expect(result).toContain('Inspector');
@@ -182,7 +165,6 @@ describe('Template Renderer - Secciones Auto-Contenidas', () => {
 
         const config = buildConfig(template);
         const result = renderFinalReport(template, data as never, config, {});
-        console.log('Repeatable self-contained result:', result);
 
         expect(result).toContain('respuesta1 respuesta2');
         expect(result).toContain('respuesta3 respuesta4');
@@ -195,7 +177,6 @@ describe('Template Renderer - Condicionales con Campos', () => {
         const template = 'Tipo: {tipo}\n::: if tipo == "Robo" :::\nMonto: {monto}\n:::';
         const data = { tipo: 'Robo', monto: '500 USD' };
         const result = render(template, data);
-        console.log('Conditional field result:', result);
         expect(result).toContain('500 USD');
     });
 
@@ -220,18 +201,11 @@ describe('Template Renderer - Condicionales con Campos', () => {
         ].join('\n');
 
         const parsed = parseTemplate(template);
-        console.log('fieldNames:', [...parsed.fieldNames]);
-        console.log('layout:', parsed.layout);
-        console.log('sections:', JSON.stringify(parsed.sections.map((s: any) => ({
-            id: s.id, condition: s.condition, field_ids: s.field_ids, is_mapping: s.is_mapping
-        })), null, 2));
-        console.log('templateOptions ¿Quien informó?:', parsed.templateOptions.get('¿Quien informó?'));
 
         expect(parsed.fieldNames.has('¿Quien informó?')).toBe(true);
         expect(parsed.templateOptions.get('¿Quien informó?')).toBeDefined();
 
         const condSection = parsed.sections.find((s: any) => s.condition?.value === 'Llamada');
-        console.log('condSection:', condSection);
         expect(condSection).toBeDefined();
         expect(condSection?.field_ids).toContain('¿Quien informó?');
     });

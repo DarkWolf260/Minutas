@@ -3460,8 +3460,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\conditionmode_render.test.ts": {
-    "mtime": 1791217421.4359262,
-    "ast_hash": "bd13674be0e5b7dc489d8246a5b0944a",
+    "mtime": 1791217096.6977513,
+    "ast_hash": "3ebd84e028a1a9fdd0cce2d3842cf1cc",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\evaluator.test.ts": {
@@ -3470,18 +3470,18 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\final_verify.test.ts": {
-    "mtime": 1791217429.7998333,
-    "ast_hash": "c7862d70e176454dc56af3dc3d15e19a",
+    "mtime": 1791042647.9840393,
+    "ast_hash": "2e10efc9a46b8599f8eead91f35a3acd",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\preview.test.ts": {
-    "mtime": 1791217437.5544174,
-    "ast_hash": "917c01fc09810ec06f59eb7aba49d2dc",
+    "mtime": 1791217080.8403766,
+    "ast_hash": "bcc9a51baccaecbde1ccab8b530b033a",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\renderer.test.ts": {
-    "mtime": 1791217458.5693288,
-    "ast_hash": "ee4e7e5a444caa9fcf1f5669e55b607c",
+    "mtime": 1791217063.4634123,
+    "ast_hash": "7f33d86e1ab473ac710e21c454f280e8",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\repro_lock.test.ts": {
@@ -3520,8 +3520,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\validator.ts": {
-    "mtime": 1791217410.6507752,
-    "ast_hash": "c4f2798a754fcc4f314a6e6f1b714956",
+    "mtime": 1791216944.018513,
+    "ast_hash": "431b899769870791bf59712837e1243b",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\types\\index.ts": {
@@ -4135,8 +4135,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\technical_debt_fixes.test.ts": {
-    "mtime": 1791217472.4262326,
-    "ast_hash": "b44d88b7300cf031f1d52cc5fcb21e68",
+    "mtime": 1791217193.871431,
+    "ast_hash": "40756f10dc2f321e91b7fd062f65c4e0",
     "semantic_hash": ""
   }
 }

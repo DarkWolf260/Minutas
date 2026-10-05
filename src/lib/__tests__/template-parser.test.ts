@@ -56,12 +56,22 @@ describe('Template Parser', () => {
             expect(result.fieldTypes.get('items')).toBe('multi-text');
         });
 
-        it('should parse semantic type', () => {
-            const template = 'Concepto: {concepto:semantic}';
+        it('should treat removed legacy semantic and predefined as text', () => {
+            const template = 'Concepto: {concepto:semantic}, Campo: {campo:predefined}';
             const result = parseTemplate(template);
 
             expect(result.errors).toHaveLength(0);
-            expect(result.fieldTypes.get('concepto')).toBe('semantic');
+            expect(result.fieldTypes.get('concepto')).toBe('text');
+            expect(result.fieldTypes.get('campo')).toBe('text');
+        });
+
+        it('should parse default values using def= and default()', () => {
+            const template = 'Obs: {obs:def=(Sin novedad)}, Nota: {nota:default("Pendiente")}';
+            const result = parseTemplate(template);
+
+            expect(result.errors).toHaveLength(0);
+            expect(result.defaultValues.get('obs')).toBe('Sin novedad');
+            expect(result.defaultValues.get('nota')).toBe('Pendiente');
         });
 
         it('should parse dropdown with inline options', () => {
