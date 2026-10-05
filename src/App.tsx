@@ -29,8 +29,9 @@ import { ProtectedRoute } from '@/components/auth/protected-route';
 import { useAuth } from '@/hooks/admin';
 import { useGlobalConfig, GlobalConfigProvider } from '@/hooks/configuracion';
 import { useWorkspaceManager } from '@/lib/db/db-context';
-import { usePrecacheImages } from '@/hooks/ui';
+import { usePrecacheImages, useSidebarExpanded } from '@/hooks/ui';
 import { useOfflineUpload } from '@/hooks/novedades';
+import { CommandMenu } from '@/components/layout/command-menu';
 
 // ─── Lazy-load app pages ──────────────────────────────────────────────────────
 
@@ -84,6 +85,7 @@ function AppLayout() {
   const { isApproved, isAdmin, loading: statusLoading } = useUser();
   const { config, loading: configLoading } = useGlobalConfig();
   const { isCloud, currentWorkspace } = useWorkspaceManager();
+  const { isExpanded } = useSidebarExpanded();
   
   // Pre-download all reports photos for offline availability
   usePrecacheImages();
@@ -168,7 +170,10 @@ function AppLayout() {
       suppressHydrationWarning
     >
       {showNav && <SideNav />}
-      <div className={cn("flex flex-1 flex-col md:overflow-hidden relative min-w-0 overflow-x-hidden", showNav && "sm:pl-14")}>
+      <div className={cn(
+        "flex flex-1 flex-col md:overflow-hidden relative min-w-0 overflow-x-hidden transition-[padding] duration-300 ease-out",
+        showNav && (isExpanded ? "sm:pl-56" : "sm:pl-14")
+      )}>
         {showNav && <MobileNav />}
 
         {(isOffline || showOnlineBar) && location.pathname !== '/offline' && (
@@ -350,18 +355,7 @@ function AppLayout() {
       </div>
 
       {showTour && <OnboardingTour onComplete={() => setShowTour(false)} />}
-      
-      {/* Desktop Version Indicator */}
-      <div className="hidden sm:flex fixed bottom-4 right-4 z-[40] pointer-events-none select-none opacity-80 hover:opacity-100 transition-opacity gap-2 items-center">
-        {currentWorkspace && (
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full backdrop-blur-md shadow-md">
-            {currentWorkspace}
-          </span>
-        )}
-        <span className="text-[10px] font-bold uppercase tracking-widest text-foreground bg-background/90 px-2.5 py-1 rounded-full border border-border backdrop-blur-md shadow-md">
-          v{APP_VERSION}
-        </span>
-      </div>
+      <CommandMenu />
     </div>
   );
 }

@@ -29,7 +29,12 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-export function NotificationBell() {
+interface NotificationBellProps {
+  className?: string;
+  showLabel?: boolean;
+}
+
+export function NotificationBell({ className, showLabel }: NotificationBellProps = {}) {
   const navigate = useNavigate();
   const [importingId, setImportingId] = useState<string | null>(null);
   const [discardingId, setDiscardingId] = useState<string | null>(null);
@@ -95,17 +100,28 @@ export function NotificationBell() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-lg">
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <Badge
-              variant="destructive"
-              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-[10px]"
-            >
-              {unreadCount > 9 ? '+9' : unreadCount}
-            </Badge>
+        <Button 
+          variant="ghost" 
+          size="default" 
+          className={cn(
+            "relative w-full h-9 p-0 rounded-xl transition-all hover:bg-muted font-medium text-sm flex items-center justify-start",
+            className
           )}
-          <span className="sr-only">Notificaciones</span>
+          title="Notificaciones"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center relative">
+            <Bell className="h-4 w-4" />
+            {unreadCount > 0 && (
+              <Badge
+                variant="destructive"
+                className="absolute right-1 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full p-0 text-[8px] font-bold"
+              >
+                {unreadCount > 9 ? '+9' : unreadCount}
+              </Badge>
+            )}
+          </div>
+          {showLabel && <span className="truncate flex-1 text-left whitespace-nowrap animate-slide-down pr-2">Notificaciones</span>}
+          {!showLabel && <span className="sr-only">Notificaciones</span>}
         </Button>
       </PopoverTrigger>
 

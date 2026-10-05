@@ -13,10 +13,11 @@ import {
   DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/components/providers/theme-provider';
-import { useAuth } from '@/hooks/admin';
-import { useAdmin } from '@/hooks/admin';
+import { useAuth, useAdmin } from '@/hooks/admin';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { Briefcase } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
+import { APP_VERSION } from '@/pages/settings/about/data';
 
 interface NavUserMenuProps {
   profile: any;
@@ -32,6 +33,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
   const { isAdmin } = useAdmin();
   const { workspaces, currentWorkspace, switchWorkspace } = useWorkspaceManager();
   const navigate = useNavigate();
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
 
   return (
     <DropdownMenu>
@@ -160,7 +162,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
         <DropdownMenuSeparator />
         
         {isAuthenticated ? (
-          <DropdownMenuItem onClick={() => signOut()} className="py-2.5 cursor-pointer text-red-500 focus:text-red-500 font-medium">
+          <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="py-2.5 cursor-pointer text-destructive focus:text-destructive font-medium">
             <LogOut className="mr-3 h-4 w-4" />
             <span className="text-sm font-medium">Cerrar Sesión</span>
           </DropdownMenuItem>
@@ -170,7 +172,24 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
             <span className="text-sm font-medium">Iniciar Sesión</span>
           </DropdownMenuItem>
         )}
+
+        <DropdownMenuSeparator />
+        <div className="px-3 py-2 text-[10px] text-muted-foreground flex items-center justify-between">
+          <span>Versión</span>
+          <span className="font-mono font-semibold">v{APP_VERSION}</span>
+        </div>
       </DropdownMenuContent>
+
+      <ConfirmDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        onConfirm={signOut}
+        title="¿Cerrar Sesión?"
+        message="¿Estás seguro de que deseas salir del sistema? Cualquier dato o borrador que no haya sido guardado podría perderse."
+        confirmText="Cerrar Sesión"
+        cancelText="Permanecer"
+        variant="destructive"
+      />
     </DropdownMenu>
   );
 };

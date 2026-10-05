@@ -16,9 +16,10 @@ import { cn } from '@/lib/utils';
 
 interface QuickChatSelectorProps {
   className?: string;
+  showLabel?: boolean;
 }
 
-export function QuickChatSelector({ className }: QuickChatSelectorProps) {
+export function QuickChatSelector({ className, showLabel }: QuickChatSelectorProps) {
   const { settings, saveSettings } = useSettings();
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
   const { scheduledMessages, cancelMessage, isLoading: isScheduledLoading } = useScheduledMessages();
@@ -115,22 +116,28 @@ export function QuickChatSelector({ className }: QuickChatSelectorProps) {
       <PopoverTrigger asChild>
         <Button 
           variant="ghost" 
-          size="icon" 
-          className={cn("relative h-9 w-9 rounded-lg transition-all hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400", className)}
+          size="default"
+          className={cn(
+            "relative w-full h-9 p-0 rounded-xl transition-all hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium text-sm flex items-center justify-start",
+            className
+          )}
           title="Gestión de WhatsApp"
         >
-          <MessageSquare className="h-5 w-5" />
-          {(selectedCount > 0 || pendingCount > 0) && (
-            <Badge
-              className={cn(
-                "absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-[10px] text-white font-bold animate-in zoom-in border border-background",
-                pendingCount > 0 ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"
-              )}
-            >
-              {pendingCount > 0 ? pendingCount : selectedCount}
-            </Badge>
-          )}
-          <span className="sr-only">Gestión de WhatsApp</span>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center relative">
+            <MessageSquare className="h-4 w-4" />
+            {(selectedCount > 0 || pendingCount > 0) && (
+              <Badge
+                className={cn(
+                  "absolute right-1 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full p-0 text-[8px] text-white font-bold animate-in zoom-in border border-background",
+                  pendingCount > 0 ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"
+                )}
+              >
+                {pendingCount > 0 ? pendingCount : selectedCount}
+              </Badge>
+            )}
+          </div>
+          {showLabel && <span className="truncate flex-1 text-left whitespace-nowrap animate-slide-down pr-2">Bot de WhatsApp</span>}
+          {!showLabel && <span className="sr-only">Gestión de WhatsApp</span>}
         </Button>
       </PopoverTrigger>
 

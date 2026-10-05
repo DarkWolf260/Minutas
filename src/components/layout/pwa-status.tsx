@@ -99,7 +99,7 @@ export function PWAStatus() {
                         onClick={handleInstall}
                         className="h-8 px-4 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl transition-all duration-300 backdrop-blur-xl bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 flex items-center gap-2 pr-2"
                     >
-                        <MonitorSmartphone className="h-3.5 w-3.5 animate-bounce" />
+                        <MonitorSmartphone className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
                         <span>Instalar PC Reportes</span>
                         <div className="h-4 w-px bg-primary/20 mx-1" />
                         <span
