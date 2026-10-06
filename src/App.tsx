@@ -172,7 +172,7 @@ function AppLayout() {
       {showNav && <SideNav />}
       <div className={cn(
         "flex flex-1 flex-col md:overflow-hidden relative min-w-0 overflow-x-hidden transition-[padding] duration-300 ease-out",
-        showNav && (isExpanded ? "sm:pl-56" : "sm:pl-14")
+        showNav && (isExpanded ? "sm:pl-64" : "sm:pl-16")
       )}>
         {showNav && <MobileNav />}
 

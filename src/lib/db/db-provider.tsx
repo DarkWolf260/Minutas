@@ -244,14 +244,15 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
     let cancelled = false;
     let replicationInstance: { cancel: () => void } | null = null;
 
-    // Solo iniciar la replicación si la base de datos está lista y no es el workspace local por defecto.
-    // Si el workspace es en la nube (isCloud), requerimos obligatoriamente que el usuario esté autenticado.
-    const shouldReplicate = db && 
-      currentWorkspace && 
+    // Solo iniciar la replicación si la base de datos está lista, el workspace es en la nube (isCloud) y el usuario está autenticado.
+    const shouldReplicate = 
+      db !== null && 
+      !!currentWorkspace && 
       currentWorkspace !== DEFAULT_WORKSPACE && 
-      (!isCloud || isAuthenticated);
+      isCloud && 
+      isAuthenticated;
 
-    if (shouldReplicate) {
+    if (shouldReplicate && db) {
       logger.info(`Starting cloud replication for content in workspace: ${currentWorkspace}`);
       startWorkspaceReplication(db, currentWorkspace).then((res) => {
         if (cancelled) {

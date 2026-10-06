@@ -2310,8 +2310,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\App.tsx": {
-    "mtime": 1791218637.5869484,
-    "ast_hash": "2fb4c9ec77db3aed93cbd883e71b29b0",
+    "mtime": 1791236185.5291367,
+    "ast_hash": "dc404095169196d5e66ff33bc208075a",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\auth\\admin-route.tsx": {
@@ -2375,8 +2375,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\layout\\notification-bell.tsx": {
-    "mtime": 1791221425.137552,
-    "ast_hash": "ac7383b6e1fcdf546baedb31a468711f",
+    "mtime": 1791237038.3955867,
+    "ast_hash": "45fc0072cac2be90cfe8c20556c2a4d0",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\layout\\pwa-status.tsx": {
@@ -2385,13 +2385,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\layout\\quick-chat-selector.tsx": {
-    "mtime": 1791221412.6109335,
-    "ast_hash": "b6566d4b504b16e5e2cd85af5c8d2b4d",
+    "mtime": 1791237027.8549027,
+    "ast_hash": "9750d96b730d09d9f28a22adac41131d",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\layout\\side-nav.tsx": {
-    "mtime": 1791221399.0802374,
-    "ast_hash": "168856e92e8344ff725912c91f7a3c85",
+    "mtime": 1791237871.186073,
+    "ast_hash": "cd3092c309b0e84ca1e060af6d278644",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\orden-del-dia\\activity-item.tsx": {
@@ -2425,8 +2425,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\csv-import-button.tsx": {
-    "mtime": 1782622762.6645062,
-    "ast_hash": "b8369abeedb0ddc5e72b48f232273b74",
+    "mtime": 1791230163.3018587,
+    "ast_hash": "5456c9f3c29bf6c1252e79fa43bd7b51",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\form\\personnel-form-fields.tsx": {
@@ -2445,13 +2445,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\personnel-history-dialog.tsx": {
-    "mtime": 1790545983.0981286,
-    "ast_hash": "08eedc040aaecafbbaabfbfbef2cfcc5",
+    "mtime": 1791230168.3485634,
+    "ast_hash": "ea52eb6d5edfcf71023fff1066a9e804",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\personnel-table.tsx": {
-    "mtime": 1778373212.813476,
-    "ast_hash": "f53e39057d827173f009050760c5c4bf",
+    "mtime": 1791230228.153968,
+    "ast_hash": "7554c84f5185f38406e4df68afa82998",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\personnel\\units-manager.tsx": {
@@ -2635,13 +2635,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\structure\\structure-manager.tsx": {
-    "mtime": 1790545983.4704485,
-    "ast_hash": "aa4f58041330708e1ddba50e9f1e5d44",
+    "mtime": 1791235993.6870563,
+    "ast_hash": "9535731a925d7e5c7dd88817751102b4",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\structure\\structure-tree.tsx": {
-    "mtime": 1790545983.4754448,
-    "ast_hash": "beb2ba9b40a3495f4c74290a0fd148cb",
+    "mtime": 1791236015.4000168,
+    "ast_hash": "42808cc02bf06f90c9ed8d123b1a70b9",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\sync\\qr-generator.tsx": {
@@ -3090,8 +3090,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\personal\\use-personal.ts": {
-    "mtime": 1790545985.5335953,
-    "ast_hash": "449dd87aa10217ad52e9195e7acfd9e3",
+    "mtime": 1791230251.9178302,
+    "ast_hash": "1c7191146cf0221cb992fa1b0dbe0b65",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\personal\\use-personnel-history.ts": {
@@ -3700,18 +3700,18 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\personal.tsx": {
-    "mtime": 1790545986.0493581,
-    "ast_hash": "439bf1d1fff7a21bf9160194c7239a3e",
+    "mtime": 1791230271.457179,
+    "ast_hash": "e8ed0d4c9efe09e3c0b5bbdd37bed103",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\personal\\components\\mass-actions-bar.tsx": {
-    "mtime": 1777662996.3216677,
-    "ast_hash": "629d22ff1a9fcb205bd4513f81dc0083",
+    "mtime": 1791230261.7621431,
+    "ast_hash": "8a92f688d3aa6c9a00f961498e3292fb",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\personal\\components\\personnel-header.tsx": {
-    "mtime": 1777662996.3307495,
-    "ast_hash": "072be2e185d363445d057f97d3f79325",
+    "mtime": 1791230179.7909226,
+    "ast_hash": "c2c20a2acd11482156274df31a2e602f",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\personal\\components\\personnel-modals.tsx": {
@@ -3720,8 +3720,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\personal\\components\\personnel-tabs.tsx": {
-    "mtime": 1790545986.054358,
-    "ast_hash": "0bcc5bbda3bbade0695b592f8b2f2a10",
+    "mtime": 1791235978.3013139,
+    "ast_hash": "0d8dfd112915be9abf8ebb742460ebd9",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\plantillas.tsx": {
@@ -4157,6 +4157,16 @@
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\.impeccable\\critique\\2026-10-05T18-58-05Z__src-pages-orden-del-dia-tsx.md": {
     "mtime": 1791226685.4190855,
     "ast_hash": "74dee3ffa3630882492e2b843950d3d3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\.impeccable\\critique\\2026-10-05T19-52-35Z__src-pages-personal-tsx.md": {
+    "mtime": 1791229955.3870153,
+    "ast_hash": "19455b1bacddd5d1e38a34989a689526",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\.impeccable\\critique\\2026-10-05T19-59-30Z__src-pages-personal-tsx.md": {
+    "mtime": 1791230370.8557293,
+    "ast_hash": "172353efce1367a243cabe65eddd2745",
     "semantic_hash": ""
   }
 }

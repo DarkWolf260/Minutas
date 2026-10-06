@@ -123,7 +123,7 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
           )}
           title="Gestión de WhatsApp"
         >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center relative">
+          <div className="flex h-9 w-10 shrink-0 items-center justify-center relative">
             <MessageSquare className="h-4 w-4" />
             {(selectedCount > 0 || pendingCount > 0) && (
               <Badge

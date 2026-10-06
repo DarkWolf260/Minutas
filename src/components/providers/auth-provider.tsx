@@ -32,7 +32,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
       })
       .catch(err => {
-        console.error('Error fetching initial session:', err);
+        if (err?.message !== 'TIMEOUT') {
+          console.warn('[Auth] Error fetching initial session (backend might be offline):', err);
+        }
       })
       .finally(() => {
         setLoading(false);

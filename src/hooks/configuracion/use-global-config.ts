@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase, callWithTokenRefresh } from '@/lib/supabase';
+import { supabase, callWithTokenRefresh, isSupabaseOnline } from '@/lib/supabase';
 import { toast } from 'sonner';
 import type { AppModuleId } from '@/lib/types';
 
@@ -76,40 +76,50 @@ export function GlobalConfigProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     fetchConfig();
 
-    // Subscribe to real-time changes
-    const channelId = `global-config-${Math.random().toString(36).substring(2, 9)}`;
-    const channel = supabase.channel(channelId);
-    
-    channel
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'global_config' },
-        (payload) => {
-          const newItem = payload.new as any;
-          if (!newItem || !newItem.key) return;
+    let channel: any = null;
+    let cancelled = false;
 
-          let val = newItem.value;
-          if (BOOLEAN_KEYS.includes(newItem.key)) {
-            val = String(val).toLowerCase() === 'true' || val === true || val === 1;
-          } else if (ARRAY_KEYS.includes(newItem.key)) {
-            if (typeof val === 'string') {
-              try { val = JSON.parse(val); } catch (e) { val = val ? val.split(',').map((s: string) => s.trim()) : []; }
+    // Only subscribe to real-time if Supabase is reachable
+    isSupabaseOnline().then((online) => {
+      if (!online || cancelled) return;
+
+      const channelId = `global-config-${Math.random().toString(36).substring(2, 9)}`;
+      channel = supabase.channel(channelId);
+      
+      channel
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'global_config' },
+          (payload: any) => {
+            const newItem = payload.new as any;
+            if (!newItem || !newItem.key) return;
+
+            let val = newItem.value;
+            if (BOOLEAN_KEYS.includes(newItem.key)) {
+              val = String(val).toLowerCase() === 'true' || val === true || val === 1;
+            } else if (ARRAY_KEYS.includes(newItem.key)) {
+              if (typeof val === 'string') {
+                try { val = JSON.parse(val); } catch (e) { val = val ? val.split(',').map((s: string) => s.trim()) : []; }
+              }
+              if (!Array.isArray(val)) val = [];
             }
-            if (!Array.isArray(val)) val = [];
+
+            setConfig(prev => {
+              if (newItem.key in prev) {
+                return { ...prev, [newItem.key]: val };
+              }
+              return prev;
+            });
           }
-
-          setConfig(prev => {
-            if (newItem.key in prev) {
-              return { ...prev, [newItem.key]: val };
-            }
-            return prev;
-          });
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 

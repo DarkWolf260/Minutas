@@ -109,7 +109,7 @@ export function NotificationBell({ className, showLabel }: NotificationBellProps
           )}
           title="Notificaciones"
         >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center relative">
+          <div className="flex h-9 w-10 shrink-0 items-center justify-center relative">
             <Bell className="h-4 w-4" />
             {unreadCount > 0 && (
               <Badge
