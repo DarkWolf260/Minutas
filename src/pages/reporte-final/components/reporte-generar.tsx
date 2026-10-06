@@ -4,11 +4,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { DatePicker } from '@/components/ui/custom/date-picker';
 import { TimeHlvInput } from '@/components/ui/custom/time-hlv-input';
-import { PlusCircle, Trash2, TrendingUp, History, ClipboardCheck, Clock, Pencil, Save, X, Eye, FileEdit, Sparkles } from 'lucide-react';
+import { PlusCircle, Trash2, TrendingUp, History, Clock, Pencil, Save, X, Eye, FileEdit, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -90,20 +89,6 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
 
   return (
     <div className="space-y-8 flex-1 flex flex-col md:min-h-0">
-      <Alert className="bg-primary/5 border-primary/20 shadow-sm animate-in zoom-in-95 duration-300">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-            <ClipboardCheck className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <AlertTitle className="text-primary font-bold">Estado de la Guardia</AlertTitle>
-            <AlertDescription className="text-primary/80 font-medium">
-              Hay <span className="font-bold underline decoration-2">{reportesFinalizados.length} novedades</span> finalizadas listas para procesar.
-            </AlertDescription>
-          </div>
-        </div>
-      </Alert>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 md:min-h-0">
         {/* Estadísticas Card */}
         <Card className="flex flex-col border-muted/50 shadow-sm hover:border-primary/20 transition-all duration-300 md:min-h-0">
@@ -197,11 +182,11 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
                             isDay2 && "text-blue-600",
                             isCierre && "text-purple-600"
                           )}>
-                            {isDay1 ? 'Día 1' : isDay2 ? 'Día 2' : 'Cierre'}
+                            {dayGroup.label || dayGroup.dateStr}
                           </span>
                         </div>
                         <span className="text-[10px] text-muted-foreground font-mono truncate">
-                          {isCierre ? '00:00 - Fin' : (dayGroup.dateStr || `Tramo ${idx + 1}`)}
+                          {isDay1 ? 'Inicio - 23:59' : isCierre ? '00:00 - Entrega' : '00:00 - 23:59'}
                         </span>
                       </div>
                       <div className="mt-2 flex items-baseline gap-1">

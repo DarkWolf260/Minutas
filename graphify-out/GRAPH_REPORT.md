@@ -1,7 +1,7 @@
 # Graph Report - Minutas  (2026-10-05)
 
 ## Corpus Check
-- 382 files · ~317,319 words
+- 382 files · ~317,384 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ec44a983`
+- Built from commit: `2672c62b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -234,7 +234,7 @@
 - [[_COMMUNITY_Community 222|Community 222]]
 - [[_COMMUNITY_Community 223|Community 223]]
 - [[_COMMUNITY_Community 224|Community 224]]
-- [[_COMMUNITY_Community 225|Community 225]]
+- [[_COMMUNITY_Community 227|Community 227]]
 - [[_COMMUNITY_10. Escapado|10. Escapado]]
 - [[_COMMUNITY_css.lint.compatibleVendorPrefixes|css.lint.compatibleVendorPrefixes]]
 - [[_COMMUNITY_src_hooks_use_active_guard_useactiveguard|src_hooks_use_active_guard_useactiveguard]]
@@ -340,8 +340,8 @@ Cohesion: 0.07
 Nodes (65): date-fns, qrcode.react, react-router-dom, SettingsAboutPage, UnitsManager(), UnitList(), UnitListProps, useUnitsManager() (+57 more)
 
 ### Community 7 - "structure-manager.tsx"
-Cohesion: 0.10
-Nodes (48): ProtectedRoute(), useConfigRepo(), defaultDefinitions, useFieldDefinitions(), defaultProfile, UserProfile, defaultSettings, useSettings() (+40 more)
+Cohesion: 0.09
+Nodes (49): AdminRoute(), ProtectedRoute(), useConfigRepo(), defaultDefinitions, useFieldDefinitions(), defaultProfile, UserProfile, defaultSettings (+41 more)
 
 ### Community 8 - "user-provider.tsx"
 Cohesion: 0.05
@@ -364,8 +364,8 @@ Cohesion: 0.06
 Nodes (36): src/lib/template/TEMPLATE_ENGINE.md, 10. Escapado, 11. Orden de resolución de valores, 12. Limpieza final del reporte, 1. Campos `{FieldName}`, 2. Acceso a propiedades de personal `{Campo.propiedad}`, 3. Campos Repetibles `{Campo}*`, 4. Secciones `[Label]...[/]` (+28 more)
 
 ### Community 14 - "novedad-sidebar.tsx"
-Cohesion: 0.22
-Nodes (14): DatabaseContext, ActivityItemProps, AddActivityFormProps, useOrdenDelDiaActivities(), OrdenDelDiaDraft, useOrdenDelDiaGenerator(), UseOrdenDelDiaGeneratorProps, Nota (+6 more)
+Cohesion: 0.16
+Nodes (19): DatabaseContext, useDirecciones(), areEqual(), stableStringify(), ActivityItemProps, AddActivityFormProps, useOrdenDelDiaActivities(), OrdenDelDiaDraft (+11 more)
 
 ### Community 15 - "Contributing to Minutas"
 Cohesion: 0.07
@@ -496,8 +496,8 @@ Cohesion: 0.19
 Nodes (13): @radix-ui/react-label, @radix-ui/react-slot, FormControl, FormDescription, FormField(), FormFieldContext, FormFieldContextValue, FormItem (+5 more)
 
 ### Community 54 - "settings.json"
-Cohesion: 0.06
-Nodes (34): ScheduledMessagesWorker(), tryRemove(), trySet(), OnboardingTour(), MobileNav(), AboutAppPage, AboutChangelogPage, AboutGuidePage (+26 more)
+Cohesion: 0.05
+Nodes (36): ScheduledMessagesWorker(), tryRemove(), trySet(), OnboardingTour(), MobileNav(), AboutAppPage, AboutChangelogPage, AboutGuidePage (+28 more)
 
 ### Community 55 - "Guía de Rendimiento y Unificación de Interfaces (RxDB + DnD)"
 Cohesion: 0.25
@@ -524,16 +524,16 @@ Cohesion: 0.17
 Nodes (24): formatStaffReporta(), template/evaluator.ts, applyModifiers(), coerceForComparison(), evaluateCondition(), parseCache, recordReportAudit(), renderContent() (+16 more)
 
 ### Community 66 - "Community 66"
-Cohesion: 0.12
-Nodes (18): useDirecciones(), calcularEstadisticasDia(), calcularEstadisticasPeriodo(), useActiveGuard(), NoGuardBanner(), useOrdenDelDiaPagina(), OrdenDelDiaPage(), NovedadManual (+10 more)
+Cohesion: 0.14
+Nodes (15): calcularEstadisticasDia(), calcularEstadisticasPeriodo(), useActiveGuard(), NoGuardBanner(), useOrdenDelDiaPagina(), OrdenDelDiaPage(), NovedadManual, useManualNovedades() (+7 more)
 
 ### Community 67 - "eslint.config.mjs"
 Cohesion: 0.29
 Nodes (6): eslintConfig, nextCoreWebVitals, require, ref_eslint_config_next, eslint-config-prettier, ref_module
 
 ### Community 69 - "categories.ts"
-Cohesion: 0.06
-Nodes (49): LoadingScreen(), LoadingScreenProps, closeDatabase(), commonConflictHandler, ConfigItem, ConfigsCollection, createDatabase(), ensureDevMode() (+41 more)
+Cohesion: 0.08
+Nodes (36): closeDatabase(), commonConflictHandler, ConfigItem, ConfigsCollection, createDatabase(), ensureDevMode(), ensureParsed(), getDatabase() (+28 more)
 
 ### Community 70 - "Security Policy"
 Cohesion: 0.50
@@ -609,7 +609,7 @@ Nodes (4): overrides, ajv, esbuild, serialize-javascript
 
 ### Community 92 - "form.tsx"
 Cohesion: 0.05
-Nodes (51): useAdmin(), AdminUser, useAuth(), AdminRoute(), PlantillasHeader(), AdminConfigPage(), ARRAY_KEYS, BOOLEAN_KEYS (+43 more)
+Nodes (59): useAdmin(), AdminUser, useAuth(), LoadingScreen(), LoadingScreenProps, PlantillasHeader(), AdminConfigPage(), ARRAY_KEYS (+51 more)
 
 ### Community 93 - "Community 93"
 Cohesion: 0.08
@@ -769,7 +769,7 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `personal.tsx` to `db.ts`, `side-nav.tsx`, `form-creator.tsx`, `setup/index.tsx`, `react`, `validations/schemas.ts`, `ajustes-generales.tsx`, `borrar-datos.tsx`, `Community 149`, `useSettings`, `estadisticas-field.tsx`, `template/index.ts`, `template-parser.ts`, `style`, `tailwind`, `personnel-table.tsx`, `validations/personnel.ts`, `sync-context.tsx`, `package.json`, `use-novedades.ts`, `settings.json`, `Community 198`, `address-form-dialog.tsx`, `Minutas/tsconfig.json`, `Community 83`, `Community 85`, `Community 90`, `Community 93`, `Community 223`, `Community 224`?**
   _High betweenness centrality (0.090) - this node is a cross-community bridge._
-- **Why does `Button` connect `report.json` to `structure-manager.tsx`, `user-provider.tsx`, `changelog.tsx`, `address-map.tsx`, `components`, `aliases`, `iconLibrary`, `Community 155`, `use-plantillas.ts`, `Community 158`, `estadisticas-utils.test.ts`, `reporte-generar.tsx`, `types/index.ts`, `settings.json`, `Community 194`, `categories.ts`, `Community 76`, `Minutas/typedoc.json`, `form.tsx`?**
+- **Why does `Button` connect `report.json` to `structure-manager.tsx`, `user-provider.tsx`, `changelog.tsx`, `address-map.tsx`, `components`, `aliases`, `iconLibrary`, `Community 155`, `use-plantillas.ts`, `Community 158`, `estadisticas-utils.test.ts`, `reporte-generar.tsx`, `types/index.ts`, `settings.json`, `Community 194`, `Community 76`, `Minutas/typedoc.json`, `form.tsx`, `Community 227`?**
   _High betweenness centrality (0.052) - this node is a cross-community bridge._
 - **Why does `cn()` connect `personnel-table.tsx` to `side-nav.tsx`, `form-creator.tsx`, `setup/index.tsx`, `react`, `ajustes-generales.tsx`, `borrar-datos.tsx`, `useSettings`, `estadisticas-field.tsx`, `template-parser.ts`, `style`, `use-novedades.ts`, `settings.json`, `personal.tsx`, `Community 198`, `address-form-dialog.tsx`, `Minutas/tsconfig.json`, `Community 83`, `Community 85`, `Community 90`, `Community 93`?**
   _High betweenness centrality (0.043) - this node is a cross-community bridge._

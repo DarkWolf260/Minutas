@@ -2322,7 +2322,7 @@
       "source_file": "src/App.tsx",
       "source_location": "L68",
       "id": "src_app_maintenancepage",
-      "community": 225,
+      "community": 54,
       "norm_label": "maintenancepage"
     },
     {
@@ -2367,7 +2367,7 @@
       "source_file": "src/components/auth/admin-route.tsx",
       "source_location": "L1",
       "id": "auth_admin_route",
-      "community": 92,
+      "community": 7,
       "norm_label": "admin-route.tsx"
     },
     {
@@ -2376,7 +2376,7 @@
       "source_file": "src/components/auth/admin-route.tsx",
       "source_location": "L5",
       "id": "auth_admin_route_adminroute",
-      "community": 92,
+      "community": 7,
       "norm_label": "adminroute()"
     },
     {
@@ -2538,7 +2538,7 @@
       "source_file": "src/components/common/loading-screen.tsx",
       "source_location": "L1",
       "id": "common_loading_screen",
-      "community": 69,
+      "community": 92,
       "norm_label": "loading-screen.tsx"
     },
     {
@@ -2547,7 +2547,7 @@
       "source_file": "src/components/common/loading-screen.tsx",
       "source_location": "L7",
       "id": "common_loading_screen_loadingscreenprops",
-      "community": 69,
+      "community": 92,
       "norm_label": "loadingscreenprops"
     },
     {
@@ -2556,7 +2556,7 @@
       "source_file": "src/components/common/loading-screen.tsx",
       "source_location": "L12",
       "id": "common_loading_screen_loadingscreen",
-      "community": 69,
+      "community": 92,
       "norm_label": "loadingscreen()"
     },
     {
@@ -3141,7 +3141,7 @@
       "source_file": "src/components/personnel/csv-import-button.tsx",
       "source_location": "L1",
       "id": "personnel_csv_import_button",
-      "community": 92,
+      "community": 227,
       "norm_label": "csv-import-button.tsx"
     },
     {
@@ -3150,7 +3150,7 @@
       "source_file": "src/components/personnel/csv-import-button.tsx",
       "source_location": "L10",
       "id": "personnel_csv_import_button_csvimportbuttonprops",
-      "community": 92,
+      "community": 227,
       "norm_label": "csvimportbuttonprops"
     },
     {
@@ -3159,7 +3159,7 @@
       "source_file": "src/components/personnel/csv-import-button.tsx",
       "source_location": "L15",
       "id": "personnel_csv_import_button_parsestatus",
-      "community": 92,
+      "community": 227,
       "norm_label": "parsestatus()"
     },
     {
@@ -3168,7 +3168,7 @@
       "source_file": "src/components/personnel/csv-import-button.tsx",
       "source_location": "L28",
       "id": "personnel_csv_import_button_parsesex",
-      "community": 92,
+      "community": 227,
       "norm_label": "parsesex()"
     },
     {
@@ -3177,7 +3177,7 @@
       "source_file": "src/components/personnel/csv-import-button.tsx",
       "source_location": "L41",
       "id": "personnel_csv_import_button_csvimportbutton",
-      "community": 92,
+      "community": 227,
       "norm_label": "csvimportbutton()"
     },
     {
@@ -4464,7 +4464,7 @@
       "source_file": "src/components/shared/workspace-selection-dialog.tsx",
       "source_location": "L20",
       "id": "shared_workspace_selection_dialog_workspaceselectiondialog",
-      "community": 69,
+      "community": 92,
       "norm_label": "workspaceselectiondialog()"
     },
     {
@@ -7236,7 +7236,7 @@
       "source_file": "src/hooks/direcciones/use-direcciones.ts",
       "source_location": "L1",
       "id": "direcciones_use_direcciones",
-      "community": 66,
+      "community": 14,
       "norm_label": "use-direcciones.ts"
     },
     {
@@ -7245,7 +7245,7 @@
       "source_file": "src/hooks/direcciones/use-direcciones.ts",
       "source_location": "L6",
       "id": "direcciones_use_direcciones_usedirecciones",
-      "community": 66,
+      "community": 14,
       "norm_label": "usedirecciones()"
     },
     {
@@ -8100,7 +8100,7 @@
       "source_file": "src/hooks/sync/use-cloud-workspaces.ts",
       "source_location": "L14",
       "id": "sync_use_cloud_workspaces_usecloudworkspaces",
-      "community": 69,
+      "community": 92,
       "norm_label": "usecloudworkspaces()"
     },
     {
@@ -8748,7 +8748,7 @@
       "source_file": "src/lib/db/db-provider.tsx",
       "source_location": "L1",
       "id": "db_db_provider",
-      "community": 69,
+      "community": 92,
       "norm_label": "db-provider.tsx"
     },
     {
@@ -8757,7 +8757,7 @@
       "source_file": "src/lib/db/db-provider.tsx",
       "source_location": "L16",
       "id": "db_db_provider_databaseproviderprops",
-      "community": 69,
+      "community": 92,
       "norm_label": "databaseproviderprops"
     },
     {
@@ -8766,7 +8766,7 @@
       "source_file": "src/lib/db/db-provider.tsx",
       "source_location": "L25",
       "id": "db_db_provider_wipeworkspacelocaldata",
-      "community": 69,
+      "community": 92,
       "norm_label": "wipeworkspacelocaldata()"
     },
     {
@@ -8775,7 +8775,7 @@
       "source_file": "src/lib/db/db-provider.tsx",
       "source_location": "L80",
       "id": "db_db_provider_databaseprovider",
-      "community": 69,
+      "community": 92,
       "norm_label": "databaseprovider()"
     },
     {
@@ -9036,7 +9036,7 @@
       "source_file": "src/lib/db/replication.ts",
       "source_location": "L1",
       "id": "db_replication",
-      "community": 69,
+      "community": 92,
       "norm_label": "replication.ts"
     },
     {
@@ -9045,7 +9045,7 @@
       "source_file": "src/lib/db/replication.ts",
       "source_location": "L10",
       "id": "db_replication_globalpulltrigger",
-      "community": 69,
+      "community": 92,
       "norm_label": "globalpulltrigger$"
     },
     {
@@ -9054,7 +9054,7 @@
       "source_file": "src/lib/db/replication.ts",
       "source_location": "L17",
       "id": "db_replication_startcollectionreplication",
-      "community": 69,
+      "community": 92,
       "norm_label": "startcollectionreplication()"
     },
     {
@@ -9063,7 +9063,7 @@
       "source_file": "src/lib/db/replication.ts",
       "source_location": "L288",
       "id": "db_replication_triggercloudsync",
-      "community": 69,
+      "community": 92,
       "norm_label": "triggercloudsync()"
     },
     {
@@ -9072,7 +9072,7 @@
       "source_file": "src/lib/db/replication.ts",
       "source_location": "L296",
       "id": "db_replication_startworkspacereplication",
-      "community": 69,
+      "community": 92,
       "norm_label": "startworkspacereplication()"
     },
     {
@@ -9286,7 +9286,7 @@
       "label": "calcularEstadisticasPeriodo()",
       "file_type": "code",
       "source_file": "src/lib/estadisticas/calculator.ts",
-      "source_location": "L192",
+      "source_location": "L196",
       "id": "estadisticas_calculator_calcularestadisticasperiodo",
       "community": 66,
       "norm_label": "calcularestadisticasperiodo()"
@@ -11124,7 +11124,7 @@
       "source_file": "src/lib/utils-pure.ts",
       "source_location": "L1",
       "id": "lib_utils_pure",
-      "community": 69,
+      "community": 14,
       "norm_label": "utils-pure.ts"
     },
     {
@@ -11133,7 +11133,7 @@
       "source_file": "src/lib/utils-pure.ts",
       "source_location": "L10",
       "id": "lib_utils_pure_stablestringify",
-      "community": 69,
+      "community": 14,
       "norm_label": "stablestringify()"
     },
     {
@@ -11142,7 +11142,7 @@
       "source_file": "src/lib/utils-pure.ts",
       "source_location": "L26",
       "id": "lib_utils_pure_areequal",
-      "community": 69,
+      "community": 14,
       "norm_label": "areequal()"
     },
     {
@@ -11223,7 +11223,7 @@
       "source_file": "src/lib/utils/id.ts",
       "source_location": "L1",
       "id": "utils_id",
-      "community": 66,
+      "community": 14,
       "norm_label": "id.ts"
     },
     {
@@ -11232,7 +11232,7 @@
       "source_file": "src/lib/utils/id.ts",
       "source_location": "L13",
       "id": "utils_id_generateid",
-      "community": 66,
+      "community": 14,
       "norm_label": "generateid()"
     },
     {
@@ -11619,7 +11619,7 @@
       "source_file": "src/pages/admin/workspaces/index.tsx",
       "source_location": "L67",
       "id": "workspaces_index_adminworkspacespage",
-      "community": 69,
+      "community": 92,
       "norm_label": "adminworkspacespage()"
     },
     {
@@ -12508,7 +12508,7 @@
       "label": "ReporteGenerarProps",
       "file_type": "code",
       "source_file": "src/pages/reporte-final/components/reporte-generar.tsx",
-      "source_location": "L20",
+      "source_location": "L19",
       "id": "components_reporte_generar_reportegenerarprops",
       "community": 148,
       "norm_label": "reportegenerarprops"
@@ -12517,7 +12517,7 @@
       "label": "ReporteGenerar()",
       "file_type": "code",
       "source_file": "src/pages/reporte-final/components/reporte-generar.tsx",
-      "source_location": "L44",
+      "source_location": "L43",
       "id": "components_reporte_generar_reportegenerar",
       "community": 148,
       "norm_label": "reportegenerar()"
@@ -12870,7 +12870,7 @@
       "source_file": "src/pages/settings/direcciones.tsx",
       "source_location": "L84",
       "id": "settings_direcciones_direccionespage",
-      "community": 66,
+      "community": 14,
       "norm_label": "direccionespage()"
     },
     {
@@ -23188,7 +23188,7 @@
       "label": "MaintenancePage()",
       "_callable": true,
       "_origin": "ast",
-      "community": 225,
+      "community": 54,
       "community_name": "lucide-react",
       "file_type": "code",
       "norm_label": "maintenancepage()",
@@ -29900,7 +29900,7 @@
     {
       "label": "maintenance/index.tsx",
       "_origin": "ast",
-      "community": 225,
+      "community": 54,
       "community_name": "lucide-react",
       "file_type": "code",
       "norm_label": "maintenance/index.tsx",
@@ -100517,9 +100517,9 @@
       "source_file": "src/lib/template/TEMPLATE_ENGINE.md",
       "source_location": "L187",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "template_template_engine_motor_de_plantillas_referencia_de_sintaxis",
-      "target": "template_template_engine_5_separadores_visuales",
-      "confidence_score": 1.0
+      "target": "template_template_engine_5_separadores_visuales"
     },
     {
       "relation": "contains",
@@ -173245,5 +173245,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "ec44a983a9077bd3d0163994b61e340943f8004e"
+  "built_at_commit": "2672c62b255f72a55e9a6eecbb9dda79ff73b7e6"
 }

@@ -174,7 +174,7 @@ export function calcularEstadisticasDia(
 export interface DailyStatisticsGroup {
   dayNumber: number; // 1, 2, ...
   dateStr: string;   // "05/10/2026"
-  label: string;     // "DÍA 1 (05/10/2026)"
+  label: string;     // "05/10/2026"
   stats: Map<string, number>;
 }
 
@@ -186,8 +186,12 @@ export interface PeriodStatisticsResult {
 }
 
 /**
- * Agrega y calcula las estadísticas de una guardia, separando los reportes por cada día
- * operativo si la guardia abarca múltiples días (por ejemplo, 48 horas).
+ * Agrega y calcula las estadísticas de una guardia, separando los reportes por cada fecha
+ * si la guardia abarca múltiples días (por ejemplo, 48 horas).
+ * Las estadísticas se calculan por día calendario respetando las horas de inicio y entrega:
+ * - Primer día: desde la hora de inicio de la guardia hasta las 23:59:59.
+ * - Días intermedios: desde las 00:00:00 hasta las 23:59:59.
+ * - Último día: desde las 00:00:00 hasta la hora de entrega de la guardia.
  */
 export function calcularEstadisticasPeriodo(
   reports: Report[],
@@ -200,36 +204,58 @@ export function calcularEstadisticasPeriodo(
 ): PeriodStatisticsResult {
   const totalStats = new Map<string, number>();
 
-  // Analizar fechas del periodo
   let d1Str = '';
-  let d2Str = '';
-  let d3Str = '';
-  let day2Start: Date | null = null;
-  let day3Start: Date | null = null;
+  let dEndStr = '';
   let isMultiDay = false;
   let durHours = durationHours || 24;
+
+  let startObj: Date | null = null;
+  let endObj: Date | null = null;
+  const calDays: { dayNumber: number; dateStr: string; label: string; date: Date }[] = [];
 
   if (periodoStr) {
     const matches = periodoStr.match(/(\d{2})\/(\d{2})\/(\d{4})/g);
     if (matches && matches.length >= 2) {
       d1Str = matches[0]!;
+      dEndStr = matches[matches.length - 1]!;
       const [d1, m1, y1] = d1Str.split('/').map(Number);
-      const [dEnd, mEnd, yEnd] = matches[1]!.split('/').map(Number);
-      const startObj = new Date(y1!, m1! - 1, d1!, 8, 0, 0);
-      const endObj = new Date(yEnd!, mEnd! - 1, dEnd!, 8, 0, 0);
-      const diffDays = Math.round((endObj.getTime() - startObj.getTime()) / (1000 * 60 * 60 * 24));
+      const [dEnd, mEnd, yEnd] = dEndStr.split('/').map(Number);
+
+      const timeMatches = periodoStr.match(/(\d{1,2}):(\d{2})/g);
+      let startHour = 8, startMin = 0;
+      let endHour = 8, endMin = 0;
+      if (timeMatches && timeMatches.length >= 2) {
+        const [sh, sm] = timeMatches[0]!.split(':').map(Number);
+        const [eh, em] = timeMatches[1]!.split(':').map(Number);
+        startHour = sh!; startMin = sm!;
+        endHour = eh!; endMin = em!;
+      } else if (timeMatches && timeMatches.length === 1) {
+        const [sh, sm] = timeMatches[0]!.split(':').map(Number);
+        startHour = sh!; startMin = sm!;
+        endHour = sh!; endMin = sm!;
+      }
+
+      startObj = new Date(y1!, m1! - 1, d1!, startHour, startMin, 0, 0);
+      endObj = new Date(yEnd!, mEnd! - 1, dEnd!, endHour, endMin, 0, 0);
+
+      const calStart = new Date(y1!, m1! - 1, d1!);
+      const calEnd = new Date(yEnd!, mEnd! - 1, dEnd!);
+      const diffDays = Math.round((calEnd.getTime() - calStart.getTime()) / (1000 * 60 * 60 * 24));
 
       if (diffDays >= 2 || durationHours === 48) {
         isMultiDay = true;
-        durHours = 48;
-        const day2Date = new Date(y1!, m1! - 1, d1! + 1);
-        const day3Date = new Date(yEnd!, mEnd! - 1, dEnd!);
+        durHours = durationHours || 48;
 
-        d2Str = `${String(day2Date.getDate()).padStart(2, '0')}/${String(day2Date.getMonth() + 1).padStart(2, '0')}/${day2Date.getFullYear()}`;
-        d3Str = `${String(day3Date.getDate()).padStart(2, '0')}/${String(day3Date.getMonth() + 1).padStart(2, '0')}/${day3Date.getFullYear()}`;
-
-        day2Start = new Date(day2Date.getFullYear(), day2Date.getMonth(), day2Date.getDate(), 0, 0, 0, 0);
-        day3Start = new Date(day3Date.getFullYear(), day3Date.getMonth(), day3Date.getDate(), 0, 0, 0, 0);
+        for (let i = 0; i <= diffDays; i++) {
+          const curDate = new Date(y1!, m1! - 1, d1! + i);
+          const dateFormatted = `${String(curDate.getDate()).padStart(2, '0')}/${String(curDate.getMonth() + 1).padStart(2, '0')}/${curDate.getFullYear()}`;
+          calDays.push({
+            dayNumber: i + 1,
+            dateStr: dateFormatted,
+            label: dateFormatted,
+            date: curDate,
+          });
+        }
       }
     }
   }
@@ -243,16 +269,24 @@ export function calcularEstadisticasPeriodo(
       if (d && (!minDate || d.getTime() < minDate.getTime())) minDate = d;
     });
     const base = minDate || new Date();
-    const day1Date = new Date(base.getFullYear(), base.getMonth(), base.getDate());
-    const day2Date = new Date(base.getFullYear(), base.getMonth(), base.getDate() + 1);
-    const day3Date = new Date(base.getFullYear(), base.getMonth(), base.getDate() + 2);
+    const y = base.getFullYear();
+    const m = base.getMonth();
+    const d = base.getDate();
 
-    d1Str = `${String(day1Date.getDate()).padStart(2, '0')}/${String(day1Date.getMonth() + 1).padStart(2, '0')}/${day1Date.getFullYear()}`;
-    d2Str = `${String(day2Date.getDate()).padStart(2, '0')}/${String(day2Date.getMonth() + 1).padStart(2, '0')}/${day2Date.getFullYear()}`;
-    d3Str = `${String(day3Date.getDate()).padStart(2, '0')}/${String(day3Date.getMonth() + 1).padStart(2, '0')}/${day3Date.getFullYear()}`;
+    startObj = new Date(y, m, d, 8, 0, 0, 0);
+    endObj = new Date(y, m, d + 2, 8, 0, 0, 0);
 
-    day2Start = new Date(day2Date.getFullYear(), day2Date.getMonth(), day2Date.getDate(), 0, 0, 0, 0);
-    day3Start = new Date(day3Date.getFullYear(), day3Date.getMonth(), day3Date.getDate(), 0, 0, 0, 0);
+    for (let i = 0; i <= 2; i++) {
+      const curDate = new Date(y, m, d + i);
+      const dateFormatted = `${String(curDate.getDate()).padStart(2, '0')}/${String(curDate.getMonth() + 1).padStart(2, '0')}/${curDate.getFullYear()}`;
+      calDays.push({
+        dayNumber: i + 1,
+        dateStr: dateFormatted,
+        label: dateFormatted,
+        date: curDate,
+      });
+    }
+    d1Str = calDays[0]?.dateStr || '';
   }
 
   if (!isMultiDay) {
@@ -264,7 +298,7 @@ export function calcularEstadisticasPeriodo(
         {
           dayNumber: 1,
           dateStr: d1Str || 'Día 1',
-          label: d1Str ? `DÍA 1 (${d1Str})` : 'DÍA 1',
+          label: d1Str || 'Día 1',
           stats,
         },
       ],
@@ -272,10 +306,7 @@ export function calcularEstadisticasPeriodo(
     };
   }
 
-  // Guardia de 48 horas (multi-día: Día 1, Día 2 y Cierre de guardia desde las 00:00)
-  const day1Stats = new Map<string, number>();
-  const day2Stats = new Map<string, number>();
-  const day3Stats = new Map<string, number>();
+  const dayStatsList = calDays.map(() => new Map<string, number>());
 
   reports.forEach((report) => {
     if (report.status !== 'Finalizado') return;
@@ -286,23 +317,30 @@ export function calcularEstadisticasPeriodo(
       if (!isNaN(parsed.getTime())) repDate = parsed;
     }
 
-    let targetDay = 1;
-    if (repDate && day2Start && day3Start) {
-      if (repDate.getTime() >= day3Start.getTime()) {
-        targetDay = 3;
-      } else if (repDate.getTime() >= day2Start.getTime()) {
-        targetDay = 2;
-      } else {
-        targetDay = 1;
+    const fechaVal = findValueInform_data(report.form_data, 'Fecha') as string | undefined;
+
+    let targetIndex = -1;
+
+    if (repDate) {
+      // Fuera del rango de la guardia (antes del inicio o después de la entrega)
+      if (startObj && repDate.getTime() < startObj.getTime()) {
+        return;
       }
-    } else {
-      const fechaVal = findValueInform_data(report.form_data, 'Fecha') as string | undefined;
-      if (fechaVal && d3Str && fechaVal.includes(d3Str)) {
-        targetDay = 3;
-      } else if (fechaVal && d2Str && fechaVal.includes(d2Str)) {
-        targetDay = 2;
+      if (endObj && repDate.getTime() > endObj.getTime()) {
+        return;
+      }
+
+      const repDateStr = `${String(repDate.getDate()).padStart(2, '0')}/${String(repDate.getMonth() + 1).padStart(2, '0')}/${repDate.getFullYear()}`;
+      targetIndex = calDays.findIndex((d) => d.dateStr === repDateStr);
+    } else if (fechaVal) {
+      targetIndex = calDays.findIndex((d) => fechaVal.includes(d.dateStr));
+    }
+
+    if (targetIndex === -1) {
+      if (!repDate && !fechaVal) {
+        targetIndex = 0;
       } else {
-        targetDay = 1;
+        return;
       }
     }
 
@@ -312,39 +350,20 @@ export function calcularEstadisticasPeriodo(
 
     reportCategories.forEach((category) => {
       totalStats.set(category, (totalStats.get(category) || 0) + 1);
-      if (targetDay === 1) {
-        day1Stats.set(category, (day1Stats.get(category) || 0) + 1);
-      } else if (targetDay === 2) {
-        day2Stats.set(category, (day2Stats.get(category) || 0) + 1);
-      } else {
-        day3Stats.set(category, (day3Stats.get(category) || 0) + 1);
-      }
+      const dayStats = dayStatsList[targetIndex]!;
+      dayStats.set(category, (dayStats.get(category) || 0) + 1);
     });
   });
 
   return {
     isMultiDay: true,
     durationHours: durHours,
-    days: [
-      {
-        dayNumber: 1,
-        dateStr: d1Str,
-        label: d1Str ? `DÍA 1 (${d1Str})` : 'DÍA 1',
-        stats: day1Stats,
-      },
-      {
-        dayNumber: 2,
-        dateStr: d2Str,
-        label: d2Str ? `DÍA 2 (${d2Str})` : 'DÍA 2',
-        stats: day2Stats,
-      },
-      {
-        dayNumber: 3,
-        dateStr: d3Str,
-        label: d3Str ? `CIERRE DE GUARDIA (${d3Str} - 00:00 A ENTREGA)` : 'CIERRE DE GUARDIA (00:00 A ENTREGA)',
-        stats: day3Stats,
-      },
-    ],
+    days: calDays.map((d, idx) => ({
+      dayNumber: d.dayNumber,
+      dateStr: d.dateStr,
+      label: d.label,
+      stats: dayStatsList[idx]!,
+    })),
     totalStats,
   };
 }
