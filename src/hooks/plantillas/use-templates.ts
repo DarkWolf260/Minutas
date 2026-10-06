@@ -40,7 +40,7 @@ import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { TemplateSchema } from '@/lib/validations/schemas';
 import { logger } from '@/lib/logger';
 import { stableStringify } from '@/lib/utils';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseOnline } from '@/lib/supabase';
 import { generateId } from '@/lib/utils/id';
 import { createConfigRepository, createTemplateRepository, DbKeys } from '@/lib/repositories';
 import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
@@ -194,6 +194,14 @@ export function useTemplates() {
       bootstrapLocks[currentWorkspace] = true;
       
       const doBootstrap = async () => {
+        // Verificar conexión con el backend antes de intentar sincronizar
+        const online = await isSupabaseOnline();
+        if (!online) {
+          logger.warn('Backend no disponible, posponiendo sincronización inicial de plantillas');
+          bootstrapLocks[currentWorkspace] = false;
+          return;
+        }
+
         setIsBootstrapping(true);
         const toastId = toast.loading('Sincronizando plantillas...');
         
@@ -249,6 +257,7 @@ export function useTemplates() {
           }
         } catch (err) {
           logger.error('Failed to bootstrap templates', err);
+          bootstrapLocks[currentWorkspace] = false;
           toast.error('No se pudieron descargar las plantillas iniciales.', { id: toastId });
         } finally {
           setIsBootstrapping(false);

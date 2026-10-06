@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseOnline } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 export interface CloudTemplate {
@@ -21,6 +21,13 @@ export function useCloudTemplates() {
   const fetchTemplates = async () => {
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       setError('Sin conexión a internet');
+      setLoading(false);
+      return;
+    }
+
+    const online = await isSupabaseOnline();
+    if (!online) {
+      setError('Sin conexión con el backend');
       setLoading(false);
       return;
     }

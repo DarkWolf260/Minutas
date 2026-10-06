@@ -74,7 +74,10 @@ export function useSetup(onComplete: (goToTemplates?: boolean) => void) {
     if (!settingsCargados) return;
     const pasoGuardado = tryGet(STEP_KEY);
     const wsGuardado = tryGet(WS_KEY);
-    if (pasoGuardado) setPasoEstado(Number(pasoGuardado));
+    if (pasoGuardado) {
+      const p = Number(pasoGuardado);
+      setPasoEstado(p > 3 ? 3 : p);
+    }
     if (wsGuardado) setNombreWorkspace(wsGuardado);
   }, [settingsCargados]);
 
@@ -94,9 +97,9 @@ export function useSetup(onComplete: (goToTemplates?: boolean) => void) {
       console.error('Error al guardar datos finales del setup:', err);
     } finally {
       marcarCompletado();
-      if (irAPlantillas) trySet('minutas-template-bootstrap-ok', 'true');
+      trySet('minutas-template-bootstrap-ok', 'true');
       if (triggerTour) trySet('minutas-trigger-tour', 'true');
-      setPasoEstado(8); // Pantalla final (PasoDone)
+      setPasoEstado(3); // Pantalla final (PasoDone)
     }
   };
 

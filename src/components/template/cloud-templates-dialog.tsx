@@ -18,11 +18,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { 
-  CloudDownload, 
-  RefreshCw, 
-  FileText, 
-  CheckCircle2, 
+import {
+  CloudDownload,
+  RefreshCw,
+  FileText,
+  CheckCircle2,
   AlertCircle,
   Download,
   Layers
@@ -32,6 +32,7 @@ import { useTemplates } from '@/hooks/plantillas';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { generateId } from '@/lib/utils/id';
 import { Template } from '@/lib/types';
+import { isSupabaseOnline } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/ui';
@@ -52,12 +53,18 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
   const handleDownload = async (cloudTemplate: any, silent = false) => {
     if (!currentWorkspace) return;
 
+    const online = await isSupabaseOnline();
+    if (!online) {
+      if (!silent) toast.error('Sin conexión con el backend.');
+      return;
+    }
+
     const existing = localTemplates.find(t => t.name === cloudTemplate.name);
-    
+
     if (!silent) {
       setDownloadingIds(prev => new Set(prev).add(cloudTemplate.id));
     }
-    
+
     try {
       if (existing) {
         await updateTemplate({
@@ -106,6 +113,12 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
   const handleDownloadAll = async () => {
     if (!currentWorkspace || cloudTemplates.length === 0) return;
 
+    const online = await isSupabaseOnline();
+    if (!online) {
+      toast.error('Sin conexión con el servidor.');
+      return;
+    }
+
     setIsBulkDownloading(true);
     let successCount = 0;
     const templatesToDownload = cloudTemplates;
@@ -145,10 +158,10 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
               </p>
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={() => refetch()} 
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => refetch()}
             disabled={loading || isBulkDownloading}
             className="rounded-xl h-10 w-10 shrink-0"
           >
@@ -163,9 +176,9 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Plantillas
             </span>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="h-8 text-xs font-bold text-primary hover:text-primary hover:bg-primary/10 rounded-lg gap-2"
               onClick={handleDownloadAll}
               disabled={isBulkDownloading || loading}
@@ -286,8 +299,8 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
       </div>
 
       <div className="p-4 bg-background border-t shrink-0 flex justify-center">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={() => onOpenChange(false)}
           className="rounded-xl w-full sm:w-auto px-10 font-bold text-muted-foreground"
         >

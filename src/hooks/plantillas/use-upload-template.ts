@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseOnline } from '@/lib/supabase';
 import { Template } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -7,6 +7,12 @@ export function useUploadTemplate() {
   const [isUploading, setIsUploading] = useState(false);
 
   const uploadTemplate = async (template: Template) => {
+    const online = await isSupabaseOnline(true);
+    if (!online) {
+      toast.error('Sin conexión con el backend para subir la plantilla.');
+      return { data: null, error: new Error('Backend offline') };
+    }
+
     setIsUploading(true);
     try {
       // Basic validation

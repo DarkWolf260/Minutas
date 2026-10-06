@@ -59,11 +59,11 @@ let cachedHealth: { reachable: boolean; timestamp: number } | null = null;
 /**
  * Fast cached health check to determine if the Supabase backend is currently reachable.
  */
-export async function isSupabaseOnline(): Promise<boolean> {
+export async function isSupabaseOnline(force = false): Promise<boolean> {
   if (!supabaseUrl || supabaseUrl.includes('placeholder')) return false;
 
   const now = Date.now();
-  if (cachedHealth && now - cachedHealth.timestamp < 30000) {
+  if (!force && cachedHealth && now - cachedHealth.timestamp < 30000) {
     return cachedHealth.reachable;
   }
 

@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Building2, Layers, ChevronRight, Network } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Building2, Layers, Check, Network, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { StructureManager } from '@/components/structure/structure-manager';
 import type { StaffRole, Department } from '@/lib/types';
 import { SetupStepLayout } from './layout';
 import { DEFAULT_DEPARTMENTS, DEFAULT_ROLES, EXTENDED_DEPARTMENTS, EXTENDED_ROLES } from '@/lib/constants/structure';
 import { DEPARTMENT_IDS, generateDepartmentId } from '@/lib/constants/departments';
-
-
 
 export function PasoEstructura({
   alSiguiente,
@@ -37,31 +35,29 @@ export function PasoEstructura({
     } else {
       const cemupradId = DEPARTMENT_IDS.SALA_MONITOREO;
       const nuevoId = generateDepartmentId(nombreActual);
-      const deptsPersonalizados = EXTENDED_DEPARTMENTS.map(d =>
-        (d.id === cemupradId || d.id === 'sala-de-monitoreo') ? { ...d, id: nuevoId, name: nombreActual } : d
+      const deptsPersonalizados = EXTENDED_DEPARTMENTS.map((d) =>
+        d.id === cemupradId || d.id === 'sala-de-monitoreo' ? { ...d, id: nuevoId, name: nombreActual } : d
       );
-      const rolesPersonalizados = EXTENDED_ROLES.map(r => ({
+      const rolesPersonalizados = EXTENDED_ROLES.map((r) => ({
         ...r,
         name: r.name.replace(/Sala de Monitoreo/gi, nombreActual),
-        department_scope: r.department_scope.map(scope => (scope === cemupradId || scope === 'sala-de-monitoreo') ? nuevoId : scope)
+        department_scope: r.department_scope.map((scope) =>
+          scope === cemupradId || scope === 'sala-de-monitoreo' ? nuevoId : scope
+        ),
       }));
       setDepartamentos(deptsPersonalizados);
       setRoles(rolesPersonalizados);
     }
   };
 
-  // Sincronizar nombre con debounce para evitar lag al escribir
   useEffect(() => {
     if (presetSeleccionado !== 'extendido') return;
-
     const timer = setTimeout(() => {
       aplicarPreset('extendido');
     }, 300);
-
     return () => clearTimeout(timer);
   }, [nombreMonitoreo, presetSeleccionado]);
 
-  // Inicializar solo una vez si está vacío
   useEffect(() => {
     if (departamentos.length === 0) {
       aplicarPreset('base');
@@ -72,90 +68,123 @@ export function PasoEstructura({
     <SetupStepLayout
       alAtras={alAtras}
       alSiguiente={alSiguiente}
+      sigTexto="Finalizar Configuración"
     >
-      <div className="space-y-6">
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Network className="h-6 w-6 text-primary" />
-            </div>
+      <div className="space-y-6 py-2">
+        {/* Encabezado */}
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+            <Network className="h-6 w-6 text-primary" />
+          </div>
+          <div className="space-y-0.5">
             <h2 className="text-2xl font-bold tracking-tight">Estructura Institucional</h2>
+            <p className="text-muted-foreground text-xs leading-relaxed max-w-[320px]">
+              Elige el esquema organizativo para tu personal y guardias.
+            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3">
+        {/* Tarjetas de Presets */}
+        <div className="grid grid-cols-1 gap-3.5">
+          {/* Preset Base */}
           <button
+            type="button"
             onClick={() => {
               setPresetSeleccionado('base');
               aplicarPreset('base');
             }}
             className={cn(
-              "flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left",
+              'flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all text-left cursor-pointer',
               presetSeleccionado === 'base'
-                ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
-                : "border-border bg-muted/5 hover:border-muted-foreground/30"
+                ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20'
+                : 'border-border/70 bg-muted/10 hover:bg-muted/30'
             )}
           >
-            <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Layers className="h-5 w-5 text-primary" />
+            <div className={cn(
+              'h-10 w-10 rounded-xl flex items-center justify-center shrink-0',
+              presetSeleccionado === 'base' ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+            )}>
+              <Layers className="h-5 w-5" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm tracking-tight">Estructura Base</p>
-              <p className="text-[11px] text-muted-foreground truncate mt-0.5">Departamentos estándar</p>
+            <div className="flex-1 min-w-0 space-y-1">
+              <div className="flex items-center justify-between">
+                <p className="font-bold text-sm tracking-tight">Estructura Estándar</p>
+                {presetSeleccionado === 'base' && <Check className="h-4 w-4 text-primary shrink-0" />}
+              </div>
+              <p className="text-xs text-muted-foreground leading-snug">
+                Ideal para destacamentos de bomberos, estaciones de ambulancia y auxilio.
+              </p>
+              <div className="flex flex-wrap gap-1.5 pt-1.5">
+                {['Dirección', 'Operaciones', 'Telecomunicaciones', 'Despacho', 'Logística'].map((dept) => (
+                  <Badge key={dept} variant="secondary" className="text-[10px] px-2 py-0 font-medium">
+                    {dept}
+                  </Badge>
+                ))}
+              </div>
             </div>
-            <ChevronRight className={cn("h-4 w-4 transition-colors", presetSeleccionado === 'base' ? "text-primary" : "text-muted-foreground")} />
           </button>
 
+          {/* Preset Extendido */}
           <button
+            type="button"
             onClick={() => {
               setPresetSeleccionado('extendido');
               aplicarPreset('extendido');
             }}
             className={cn(
-              "flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left",
+              'flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all text-left cursor-pointer',
               presetSeleccionado === 'extendido'
-                ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
-                : "border-border bg-muted/5 hover:border-muted-foreground/30"
+                ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20'
+                : 'border-border/70 bg-muted/10 hover:bg-muted/30'
             )}
           >
-            <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Building2 className="h-5 w-5 text-primary" />
+            <div className={cn(
+              'h-10 w-10 rounded-xl flex items-center justify-center shrink-0',
+              presetSeleccionado === 'extendido' ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+            )}>
+              <Building2 className="h-5 w-5" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm tracking-tight">Modo Extendido</p>
-              <p className="text-[11px] text-muted-foreground truncate mt-0.5">Incluye Sala de Monitoreo</p>
+            <div className="flex-1 min-w-0 space-y-1">
+              <div className="flex items-center justify-between">
+                <p className="font-bold text-sm tracking-tight">Modo Extendido (con Sala Situacional)</p>
+                {presetSeleccionado === 'extendido' && <Check className="h-4 w-4 text-primary shrink-0" />}
+              </div>
+              <p className="text-xs text-muted-foreground leading-snug">
+                Para centros de comando integrados, monitoreo por cámaras y salas situacionales.
+              </p>
+              <div className="flex flex-wrap gap-1.5 pt-1.5">
+                {['Dirección', 'Operaciones', 'Sala de Monitoreo', 'Telecomunicaciones', 'Despacho'].map((dept) => (
+                  <Badge key={dept} variant="secondary" className="text-[10px] px-2 py-0 font-medium">
+                    {dept}
+                  </Badge>
+                ))}
+              </div>
             </div>
-            <ChevronRight className={cn("h-4 w-4 transition-colors", presetSeleccionado === 'extendido' ? "text-primary" : "text-muted-foreground")} />
           </button>
         </div>
 
+        {/* Input del nombre de sala situacional cuando se elige extendido */}
         {presetSeleccionado === 'extendido' && (
-          <div className="space-y-3 pt-2 animate-in slide-in-from-top-2 duration-300">
-            <div className="space-y-1.5">
-              <Label htmlFor="monitor-room-name" className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground ml-1">Nombre de la Sala de Monitoreo</Label>
-              <Input
-                id="monitor-room-name"
-                value={nombreMonitoreo}
-                onChange={e => setNombreMonitoreo(e.target.value)}
-                placeholder="Ej: Sala de Monitoreo, Sala Situacional..."
-                className="h-11 bg-background focus-visible:ring-primary shadow-sm"
-              />
-            </div>
+          <div className="space-y-1.5 p-4 rounded-2xl bg-muted/30 border border-border/60 animate-in fade-in slide-in-from-top-2 duration-200">
+            <Label htmlFor="monitor-room-name" className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              Nombre de la Sala de Monitoreo / Situacional
+            </Label>
+            <Input
+              id="monitor-room-name"
+              value={nombreMonitoreo}
+              onChange={(e) => setNombreMonitoreo(e.target.value)}
+              placeholder="Ej: Sala Situacional, CEMUPRAD..."
+              className="h-10 bg-background"
+            />
           </div>
         )}
 
-        <div className="min-h-[300px]">
-          <StructureManager
-            compact={true}
-            roles={roles}
-            departments={departamentos}
-            onRolesChange={setRoles}
-            onDepartmentsChange={setDepartamentos}
-            onSave={() => { }}
-            rolesLoaded={true}
-            deptsLoaded={true}
-            initialTab="departments"
-          />
+        {/* Nota informativa de gestión posterior */}
+        <div className="p-3.5 rounded-xl bg-muted/30 border border-border/50 flex items-start gap-3">
+          <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Los cargos (Director, Jefes de Operaciones, Operadores, Conductores) y jerarquías se cargarán automáticamente. Podrás editarlos o añadir nuevos en cualquier momento desde el módulo de <strong>Personal</strong>.
+          </p>
         </div>
       </div>
     </SetupStepLayout>

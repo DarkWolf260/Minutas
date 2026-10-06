@@ -77,7 +77,7 @@ export default function OrdenDelDiaPage() {
               </div>
             ) : (
               <div className="flex flex-col gap-6 h-full min-h-0">
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 shrink-0">
+                <div className="w-full shrink-0">
                   <GuardConfigCard
                     idGuardiaSeleccionada={idGuardiaSeleccionada}
                     setIdGuardiaSeleccionada={setIdGuardiaSeleccionada}

@@ -25,8 +25,8 @@ export function validateSyntax(template: string): string[] {
     const errors: string[] = [];
 
     // Check brace balance in single pass, respecting escapes (\\{, \\}, {{, }})
-    let openBraces = 0;
-    let closeBraces = 0;
+    let depth = 0;
+    let hasUnbalanced = false;
     for (let i = 0; i < template.length; i++) {
         const char = template[i];
         const next = template[i + 1];
@@ -47,10 +47,16 @@ export function validateSyntax(template: string): string[] {
             continue;
         }
 
-        if (char === '{') openBraces++;
-        else if (char === '}') closeBraces++;
+        if (char === '{') {
+            depth++;
+        } else if (char === '}') {
+            depth--;
+            if (depth < 0) {
+                hasUnbalanced = true;
+            }
+        }
     }
-    if (openBraces !== closeBraces) {
+    if (depth !== 0 || hasUnbalanced) {
         errors.push('Desbalance de llaves detectado.');
     }
 

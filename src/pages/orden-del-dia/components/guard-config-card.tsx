@@ -51,7 +51,7 @@ export const GuardConfigCard = ({
   };
 
   return (
-    <Card className="border shadow-xs bg-card/90 backdrop-blur-xs rounded-2xl overflow-hidden">
+    <Card className="w-full border shadow-xs bg-card/90 backdrop-blur-xs rounded-2xl overflow-hidden">
       <div className="p-3.5 sm:p-4 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
         {/* Left: Indicator & Status */}
         <div className="flex items-center gap-3 shrink-0">
@@ -76,11 +76,18 @@ export const GuardConfigCard = ({
                   Activa ({duracionActual}h)
                 </span>
               )}
+              {!guardiaAbierta && !idGuardiaSeleccionada && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                  Sin seleccionar
+                </span>
+              )}
             </div>
             <p className="text-[11px] text-muted-foreground line-clamp-1">
               {guardiaAbierta
                 ? `Guardia operativa de ${duracionActual} horas (${periodo}) protegida`
-                : `Guardia de ${duracionActual}h: ${periodo}`}
+                : idGuardiaSeleccionada
+                ? `Guardia de ${duracionActual}h: ${periodo}`
+                : `Selecciona la guardia de servicio (${duracionActual}h: ${periodo})`}
             </p>
           </div>
         </div>
@@ -100,11 +107,15 @@ export const GuardConfigCard = ({
               <SelectTrigger
                 id="guard-select"
                 className={cn(
-                  'h-9 rounded-xl text-xs font-semibold shadow-2xs',
-                  guardiaAbierta ? 'bg-muted opacity-80' : 'bg-background'
+                  'h-9 rounded-xl text-xs font-semibold shadow-2xs transition-all',
+                  guardiaAbierta
+                    ? 'bg-muted opacity-80'
+                    : !idGuardiaSeleccionada
+                    ? 'bg-background border-primary/40 ring-1 ring-primary/20'
+                    : 'bg-background'
                 )}
               >
-                <SelectValue placeholder="Selecciona..." />
+                <SelectValue placeholder="Selecciona guardia..." />
               </SelectTrigger>
               <SelectContent>
                 {guardias.map((guard: any) => (

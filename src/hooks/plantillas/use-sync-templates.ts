@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseOnline } from '@/lib/supabase';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
@@ -11,9 +11,16 @@ export function useSyncTemplates() {
 
   const syncFromCloud = async () => {
     if (!db) return;
-    
+
+    // Verificar conexión con el backend antes de descargar
+    const online = await isSupabaseOnline(true);
+    if (!online) {
+      toast.error('Sin conexión con el servidor para sincronizar plantillas.');
+      return;
+    }
+
     setIsSyncing(true);
-    
+
     try {
       logger.info('Starting manual template sync from cloud...');
 
@@ -38,11 +45,11 @@ export function useSyncTemplates() {
       if (cloudTemplates) {
         for (const t of cloudTemplates) {
           // Destructure to only get what RxDB expects
-          const { 
+          const {
             id, name, content, type, is_active, workspace_id,
-            statistics_category, statistics_rules, statistics_sub_categories 
+            statistics_category, statistics_rules, statistics_sub_categories
           } = t;
-          
+
           // Safeguard: Find and remove any local template duplicate by name that has a mismatching ID and same workspace_id
           const existingByName = await db.templates.findOne({
             selector: {
