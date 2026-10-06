@@ -41,6 +41,7 @@ import { TemplateSchema } from '@/lib/validations/schemas';
 import { logger } from '@/lib/logger';
 import { stableStringify } from '@/lib/utils';
 import { supabase, isSupabaseOnline } from '@/lib/supabase';
+import { TemplateCloudService } from '@/lib/template/cloud';
 import { generateId } from '@/lib/utils/id';
 import { createConfigRepository, createTemplateRepository, DbKeys } from '@/lib/repositories';
 import { getUserFriendlyErrorMessage } from '@/lib/error-handler';
@@ -194,74 +195,31 @@ export function useTemplates() {
       bootstrapLocks[currentWorkspace] = true;
       
       const doBootstrap = async () => {
-        // Verificar conexión con el backend antes de intentar sincronizar
-        const online = await isSupabaseOnline();
-        if (!online) {
-          logger.warn('Backend no disponible, posponiendo sincronización inicial de plantillas');
-          bootstrapLocks[currentWorkspace] = false;
-          return;
-        }
-
         setIsBootstrapping(true);
         const toastId = toast.loading('Sincronizando plantillas...');
-        
-        try {
-          const { data, error } = await supabase
-            .from('templates')
-            .select('id, name, content, type, statistics_category, statistics_sub_categories, statistics_rules');
 
-          if (error) throw error;
-          if (!data || data.length === 0) {
-            toast.dismiss(toastId);
-            return;
-          }
+        const result = await TemplateCloudService.bootstrapWorkspace(db, currentWorkspace, isCloud);
 
-          logger.info('Bootstrapping templates from cloud', { count: data.length });
-          
-          // 1. Fetch existing template names to avoid duplicates
-          const existingTemplates = await db.templates.find({
-            selector: isCloud
-              ? { workspace_id: null }
-              : { workspace_id: currentWorkspace }
-          }).exec();
-          const existingNames = new Set(existingTemplates.map(t => t.name));
-
-          // 2. Filter out already existing templates by name
-          const newTemplates = data
-            .filter(ct => !existingNames.has(ct.name))
-            .map(ct => ({
-              id: ct.id,
-              workspace_id: isCloud ? null : currentWorkspace,
-              name: ct.name,
-              content: ct.content,
-              type: ct.type || 'normal',
-              is_active: true,
-              statistics_category: ct.statistics_category,
-              statistics_sub_categories: ct.statistics_sub_categories,
-              statistics_rules: ct.statistics_rules,
-            }));
-
-          if (newTemplates.length > 0) {
-            logger.info('Inserting unique cloud templates', { count: newTemplates.length });
-            await db.templates.bulkInsert(newTemplates);
-            toast.success(`${newTemplates.length} plantillas sincronizadas automáticamente.`, { id: toastId });
+        if (!result.success) {
+          bootstrapLocks[currentWorkspace] = false;
+          if (result.error !== 'Backend no disponible') {
+            toast.error(result.error || 'No se pudieron descargar las plantillas iniciales.', { id: toastId });
           } else {
             toast.dismiss(toastId);
           }
-
-          // Clear the one-time bootstrap flag so it doesn't run again
+        } else {
+          if (result.count > 0) {
+            toast.success(`${result.count} plantillas sincronizadas automáticamente.`, { id: toastId });
+          } else {
+            toast.dismiss(toastId);
+          }
           try {
             localStorage.removeItem('minutas-template-bootstrap-ok');
           } catch {
             sessionStorage.removeItem('minutas-template-bootstrap-ok');
           }
-        } catch (err) {
-          logger.error('Failed to bootstrap templates', err);
-          bootstrapLocks[currentWorkspace] = false;
-          toast.error('No se pudieron descargar las plantillas iniciales.', { id: toastId });
-        } finally {
-          setIsBootstrapping(false);
         }
+        setIsBootstrapping(false);
       };
 
       doBootstrap();

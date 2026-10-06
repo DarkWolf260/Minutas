@@ -27,15 +27,13 @@ import {
   Download,
   Layers
 } from 'lucide-react';
-import { useCloudTemplates } from '@/hooks/plantillas';
 import { useTemplates } from '@/hooks/plantillas';
-import { useWorkspaceManager } from '@/lib/db/db-context';
-import { generateId } from '@/lib/utils/id';
-import { Template } from '@/lib/types';
-import { isSupabaseOnline } from '@/lib/supabase';
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
+import { TemplateCloudService, type CloudTemplate } from '@/lib/template/cloud';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/ui';
+import { useEffect, useCallback } from 'react';
 
 interface CloudTemplatesDialogProps {
   open: boolean;
@@ -44,61 +42,58 @@ interface CloudTemplatesDialogProps {
 
 export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialogProps) {
   const isMobile = useIsMobile();
-  const { templates: cloudTemplates, loading, error, refetch } = useCloudTemplates();
-  const { templates: localTemplates, addTemplate, updateTemplate } = useTemplates();
+  const db = useDatabase();
+  const [loading, setLoading] = useState(false);
+  const [cloudTemplates, setCloudTemplates] = useState<CloudTemplate[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const refetch = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { templates, error: fetchErr } = await TemplateCloudService.fetchCatalog();
+      if (fetchErr) {
+        setError(fetchErr);
+        setCloudTemplates([]);
+      } else {
+        setCloudTemplates(templates);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      refetch();
+    }
+  }, [open, refetch]);
+
+  const { templates: localTemplates } = useTemplates();
   const { currentWorkspace } = useWorkspaceManager();
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
   const [isBulkDownloading, setIsBulkDownloading] = useState(false);
 
   const handleDownload = async (cloudTemplate: any, silent = false) => {
-    if (!currentWorkspace) return;
-
-    const online = await isSupabaseOnline();
-    if (!online) {
-      if (!silent) toast.error('Sin conexión con el backend.');
-      return;
-    }
-
-    const existing = localTemplates.find(t => t.name === cloudTemplate.name);
+    if (!currentWorkspace || !db) return;
 
     if (!silent) {
       setDownloadingIds(prev => new Set(prev).add(cloudTemplate.id));
     }
 
     try {
-      if (existing) {
-        await updateTemplate({
-          ...existing,
-          content: cloudTemplate.content,
-          type: cloudTemplate.type || existing.type || 'normal',
-          statistics_category: cloudTemplate.statistics_category || existing.statistics_category,
-          statistics_sub_categories: cloudTemplate.statistics_sub_categories || existing.statistics_sub_categories,
-          statistics_rules: cloudTemplate.statistics_rules || existing.statistics_rules,
-          disable_main_stat_on_apoyo: cloudTemplate.disable_main_stat_on_apoyo !== undefined ? cloudTemplate.disable_main_stat_on_apoyo : existing.disable_main_stat_on_apoyo,
-          disabled_sub_categories_on_apoyo: cloudTemplate.disabled_sub_categories_on_apoyo !== undefined ? cloudTemplate.disabled_sub_categories_on_apoyo : existing.disabled_sub_categories_on_apoyo,
-        });
-        if (!silent) toast.success(`Plantilla "${cloudTemplate.name}" actualizada.`);
-      } else {
-        const newTemplate: Template = {
-          id: generateId('template'),
-          workspace_id: currentWorkspace,
-          name: cloudTemplate.name,
-          content: cloudTemplate.content,
-          type: cloudTemplate.type || 'normal',
-          is_active: true,
-          statistics_category: cloudTemplate.statistics_category,
-          statistics_sub_categories: cloudTemplate.statistics_sub_categories,
-          statistics_rules: cloudTemplate.statistics_rules,
-          disable_main_stat_on_apoyo: cloudTemplate.disable_main_stat_on_apoyo,
-          disabled_sub_categories_on_apoyo: cloudTemplate.disabled_sub_categories_on_apoyo,
-        };
-        await addTemplate(newTemplate);
-        if (!silent) toast.success(`Plantilla "${cloudTemplate.name}" descargada.`);
+      const res = await TemplateCloudService.downloadTemplate(db, currentWorkspace, cloudTemplate, localTemplates);
+      if (!silent) {
+        if (res.success) {
+          toast.success(
+            res.action === 'updated'
+              ? `Plantilla "${cloudTemplate.name}" actualizada.`
+              : `Plantilla "${cloudTemplate.name}" descargada.`
+          );
+        } else {
+          toast.error(res.error || `Error con "${cloudTemplate.name}"`);
+        }
       }
-    } catch (err) {
-      console.error('Error downloading template:', err);
-      if (!silent) toast.error(`Error con "${cloudTemplate.name}"`);
-      throw err;
     } finally {
       if (!silent) {
         setDownloadingIds(prev => {
@@ -111,27 +106,19 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
   };
 
   const handleDownloadAll = async () => {
-    if (!currentWorkspace || cloudTemplates.length === 0) return;
-
-    const online = await isSupabaseOnline();
-    if (!online) {
-      toast.error('Sin conexión con el servidor.');
-      return;
-    }
+    if (!currentWorkspace || !db || cloudTemplates.length === 0) return;
 
     setIsBulkDownloading(true);
-    let successCount = 0;
-    const templatesToDownload = cloudTemplates;
-
-    toast.info(`Iniciando descarga de ${templatesToDownload.length} plantillas...`);
+    toast.info(`Iniciando descarga de ${cloudTemplates.length} plantillas...`);
 
     try {
-      for (const template of templatesToDownload) {
-        await handleDownload(template, true);
-        successCount++;
+      const res = await TemplateCloudService.downloadBulk(db, currentWorkspace, cloudTemplates, localTemplates);
+      if (res.success) {
+        toast.success(`Se han procesado ${res.count} plantillas correctamente.`);
+      } else {
+        toast.error(res.error || 'Ocurrió un error durante la descarga masiva');
       }
-      toast.success(`Se han descargado/actualizado ${successCount} plantillas correctamente.`);
-    } catch (err) {
+    } catch {
       toast.error('Ocurrió un error durante la descarga masiva');
     } finally {
       setIsBulkDownloading(false);

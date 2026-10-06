@@ -2,12 +2,12 @@ import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/admin';
 import { useAdmin } from '@/hooks/admin';
-import { useUploadTemplate } from '@/hooks/plantillas';
 import { useTemplates } from '@/hooks/plantillas';
-import { useSyncTemplates } from '@/hooks/plantillas';
+import { TemplateCloudService } from '@/lib/template/cloud';
 import type { Template } from '@/lib/types';
 import { generateId } from '@/lib/utils/id';
-import { useWorkspaceManager } from '@/lib/db/db-context';
+import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
+import { toast } from 'sonner';
 
 export function usePlantillas() {
   const {
@@ -18,6 +18,7 @@ export function usePlantillas() {
     configs,
     clearAllTemplates,
   } = useTemplates();
+  const db = useDatabase();
   const { currentWorkspace, isCloud } = useWorkspaceManager();
   
   const [idPlantillaSeleccionada, setIdPlantillaSeleccionada] = useState<string | null>(null);
@@ -26,13 +27,46 @@ export function usePlantillas() {
   const [plantillaEditando, setPlantillaEditando] = useState<Template | null>(null);
   const [tabActiva, setTabActiva] = useState('editor');
   const [esDialogOpenNube, setEsDialogOpenNube] = useState(false);
+  const [estaSubiendo, setEstaSubiendo] = useState(false);
+  const [estaSincronizando, setEstaSincronizando] = useState(false);
   const inputArchivoRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const { isAuthenticated: estaAutenticado, user: usuario, signOut: cerrarSesion } = useAuth();
   const { isAdmin } = useAdmin();
-  const { uploadTemplate: subirAPlantillaNube, isUploading: estaSubiendo } = useUploadTemplate();
-  const { syncFromCloud: sincronizarDesdeNube, isSyncing: estaSincronizando } = useSyncTemplates();
+
+  const subirAPlantillaNube = useCallback(async (plantilla: Template) => {
+    setEstaSubiendo(true);
+    try {
+      const res = await TemplateCloudService.publishTemplate(plantilla);
+      if (res.success) {
+        toast.success(`Plantilla "${plantilla.name}" subida al servidor.`);
+        return { data: res.data, error: null };
+      } else {
+        toast.error(res.error || 'Error al subir la plantilla');
+        return { data: null, error: new Error(res.error) };
+      }
+    } finally {
+      setEstaSubiendo(false);
+    }
+  }, []);
+
+  const sincronizarDesdeNube = useCallback(async () => {
+    if (!db) return;
+    setEstaSincronizando(true);
+    try {
+      const res = await TemplateCloudService.syncAll(db, currentWorkspace);
+      if (!res.success) {
+        toast.error(res.error || 'Error al sincronizar plantillas');
+      } else if (res.count === 0) {
+        toast.info('No se encontraron plantillas nuevas en la nube.');
+      } else {
+        toast.success(`Se sincronizaron ${res.count} plantillas correctamente.`);
+      }
+    } finally {
+      setEstaSincronizando(false);
+    }
+  }, [db, currentWorkspace]);
 
   const manejarCambioArchivo = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const archivos = event.target.files;
