@@ -138,7 +138,7 @@ function CabeceraDirecciones({ alAbrirForm }: { alAbrirForm: () => void }) {
   return (
     <div className="flex flex-col gap-4 mb-6 shrink-0 md:flex-row md:items-center md:justify-between">
       <div className="flex items-center gap-4">
-        <Link to="/settings">
+        <Link to="/settings" className="shrink-0 sm:hidden">
           <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
             <ChevronLeft className="h-5 w-5" />
           </Button>

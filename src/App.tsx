@@ -45,20 +45,8 @@ import PersonalPage from '@/pages/personal';
 import PlantillasPage from '@/pages/plantillas';
 import ReporteFinalPage from '@/pages/reporte-final';
 
-const DireccionesPage = lazy(() => import('@/pages/settings/direcciones'));
 const EstadisticasPage = lazy(() => import('@/pages/estadisticas'));
 const SettingsPage = lazy(() => import('@/pages/settings'));
-const SettingsWorkspacesPage = lazy(() => import('@/pages/settings/workspaces'));
-const SettingsProfilePage = lazy(() => import('@/pages/settings/profile'));
-const SettingsBorrarDatosPage = lazy(() => import('@/pages/settings/borrar-datos'));
-const SettingsSyncPage = lazy(() => import('@/pages/settings/sync'));
-const SettingsFeedbackPage = lazy(() => import('@/pages/settings/feedback'));
-const SettingsAboutPage = lazy(() => import('@/pages/settings/about'));
-const SettingsModulesPage = lazy(() => import('@/pages/settings/modules'));
-const AboutAppPage = lazy(() => import('@/pages/settings/about/app'));
-const AboutGuidePage = lazy(() => import('@/pages/settings/about/guide'));
-const AboutChangelogPage = lazy(() => import('@/pages/settings/about/changelog'));
-const AboutTemplatesPage = lazy(() => import('@/pages/settings/about/templates'));
 const RegisterPage = lazy(() => import('@/pages/register'));
 const AdminDashboardPage = lazy(() => import('@/pages/admin'));
 const AdminUsersPage = lazy(() => import('@/pages/admin/users'));
@@ -217,11 +205,6 @@ function AppLayout() {
                   } />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
-                  <Route path="/settings/direcciones" element={
-                    <ProtectedRoute>
-                      <DireccionesPage />
-                    </ProtectedRoute>
-                  } />
                   <Route path="/estadisticas" element={
                     <ProtectedRoute>
                       <EstadisticasPage />
@@ -252,59 +235,9 @@ function AppLayout() {
                       <SettingsPage />
                     </ProtectedRoute>
                   } />
-                  <Route path="/settings/workspaces" element={
+                  <Route path="/settings/*" element={
                     <ProtectedRoute>
-                      <SettingsWorkspacesPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/profile" element={
-                    <ProtectedRoute>
-                      <SettingsProfilePage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/borrar-datos" element={
-                    <ProtectedRoute>
-                      <SettingsBorrarDatosPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/sync" element={
-                    <ProtectedRoute>
-                      <SettingsSyncPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/modules" element={
-                    <ProtectedRoute>
-                      <SettingsModulesPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/feedback" element={
-                    <ProtectedRoute>
-                      <SettingsFeedbackPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/about" element={
-                    <ProtectedRoute>
-                      <SettingsAboutPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/about/app" element={
-                    <ProtectedRoute>
-                      <AboutAppPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/about/guide" element={
-                    <ProtectedRoute>
-                      <AboutGuidePage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/about/changelog" element={
-                    <ProtectedRoute>
-                      <AboutChangelogPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/about/templates" element={
-                    <ProtectedRoute>
-                      <AboutTemplatesPage />
+                      <SettingsPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/offline" element={<OfflinePage />} />

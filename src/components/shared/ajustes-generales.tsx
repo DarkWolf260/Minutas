@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFieldDefinitions } from '@/hooks/configuracion';
@@ -291,62 +290,69 @@ export function AjustesGenerales() {
 
   if (!definitionsLoaded || !rolesLoaded || !settingsLoaded || !deptsLoaded || !templatesLoaded) {
     return (
-      <Card className="shadow-lg h-full flex flex-col overflow-hidden">
-        <CardHeader>
+      <div className="h-full flex flex-col p-4 sm:p-6 lg:p-8 space-y-8 overflow-hidden">
+        <div className="space-y-2">
           <Skeleton className="h-8 w-1/3" />
-          <Skeleton className="h-4 w-1/2 mt-2" />
-        </CardHeader>
-        <CardContent className="p-6 space-y-8 flex-1">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-            <div className="space-y-3">
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-            <div className="space-y-3">
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-            <div className="space-y-3">
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-10 w-full" />
-            </div>
+          <Skeleton className="h-4 w-1/2" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-3">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-10 w-full" />
           </div>
-          <Separator />
-          <div className="space-y-4">
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-10 w-64" />
-            <div className="space-y-2">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
+          <div className="space-y-3">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-10 w-full" />
           </div>
-          <div className="flex justify-end pt-4">
-            <Skeleton className="h-10 w-32" />
+          <div className="space-y-3">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-10 w-full" />
           </div>
-        </CardContent>
-      </Card>
+          <div className="space-y-3">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
+        <Separator />
+        <div className="space-y-4">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-10 w-64" />
+          <div className="space-y-2">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        </div>
+        <div className="flex justify-end pt-4">
+          <Skeleton className="h-10 w-32" />
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="border shadow-sm bg-card h-full flex flex-col overflow-hidden">
-      <CardHeader className="relative">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Ajustes Generales</CardTitle>
-            <CardDescription className="mt-1">
-              Define los valores globales que se utilizarán automáticamente en tus reportes.
-            </CardDescription>
-          </div>
+    <div className="h-full w-full flex flex-col min-h-0 overflow-hidden">
+      {/* Header directo sin Card */}
+      <div className="flex items-center justify-between gap-4 pb-4 border-b shrink-0 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Ajustes Generales</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            Define los valores globales que se utilizarán automáticamente en tus reportes.
+          </p>
         </div>
-      </CardHeader>
-      <CardContent className="p-0 flex-1 min-h-0 flex flex-col">
-        <ScrollArea className="flex-1" type="hover">
-          <div className="p-6 space-y-6">
+        <Button
+          onClick={handleSave}
+          disabled={isSaving}
+          size="sm"
+          className="h-9 px-4 shrink-0 shadow-sm font-bold gap-2"
+          title="Guardar Configuración"
+        >
+          <Save className="h-4 w-4" />
+          <span className="hidden sm:inline">{isSaving ? 'Guardando...' : 'Guardar'}</span>
+        </Button>
+      </div>
+
+      <ScrollArea className="flex-1 min-h-0" type="hover">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-4xl pb-32">
             {isBlocked && (
               <Alert className="bg-amber-500/5 border-amber-500/20 text-amber-600 rounded-2xl mb-2">
                 <Lock className="h-4 w-4" />
@@ -741,20 +747,19 @@ export function AjustesGenerales() {
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-4 border-t">
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="h-9 px-4 shrink-0 shadow-sm font-bold"
+                className="h-10 px-5 shrink-0 shadow-sm font-bold gap-2"
                 title="Guardar Configuración"
               >
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="h-4 w-4" />
                 <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
               </Button>
             </div>
           </div>
         </ScrollArea>
-      </CardContent>
-    </Card>
-  );
-}
+      </div>
+    );
+  }

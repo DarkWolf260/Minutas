@@ -111,7 +111,7 @@ export default function SettingsModulesPage() {
           <Button
             variant="ghost"
             size="icon"
-            className="shrink-0 rounded-xl"
+            className="shrink-0 rounded-xl sm:hidden"
             onClick={() => navigate('/settings')}
           >
             <ChevronLeft className="h-5 w-5" />
