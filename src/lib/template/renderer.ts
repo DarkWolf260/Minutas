@@ -520,7 +520,7 @@ function renderSection(
                         if (isDependencyBlock) {
                             itemContent = itemContent.replace(nestedRegex, '');
                         } else {
-                            const renderedNested = renderSection(
+                            let renderedNested = renderSection(
                                 id,
                                 data,
                                 sections,
@@ -531,6 +531,9 @@ function renderSection(
                                 item,
                                 mappingResults
                             );
+                            if (renderedNested && !nestedSection.is_virtual && (nestedSection.full_raw || '').endsWith('\n') && !renderedNested.endsWith('\n')) {
+                                renderedNested = `${renderedNested}\n`;
+                            }
                             itemContent = itemContent.replace(nestedRegex, () => renderedNested);
                         }
                     }
@@ -643,8 +646,8 @@ function renderSection(
         ? renderedItemsArray.map(item => item.trimEnd()).join(joiner)
         : renderedItemsArray.join(joiner);
 
-    // Add section title only for repeatable sections (or sections with singular/plural titles)
-    if (section.is_repeatable && (section.singular_title || section.plural_title || section.label)) {
+    // Add section title only for repeatable sections (or sections with singular/plural titles), but never for virtual inline fields
+    if (!section.is_virtual && section.is_repeatable && (section.singular_title || section.plural_title || section.label)) {
         const title = itemsWithContent.length > 1 && section.plural_title
             ? section.plural_title
             : (section.singular_title || section.plural_title || section.label);
@@ -705,7 +708,7 @@ export function renderContentWithSections(
 
     topLevelSections.forEach((section: SectionConfig) => {
         const sectionRegex = getSectionRegex(section);
-        const rendered = renderSection(
+        let rendered = renderSection(
             section.id,
             data,
             sections,
@@ -718,6 +721,9 @@ export function renderContentWithSections(
         );
 
         if (sectionRegex) {
+            if (rendered && (section.full_raw || '').endsWith('\n') && !rendered.endsWith('\n')) {
+                rendered = `${rendered}\n`;
+            }
             finalContent = finalContent.replace(sectionRegex, () => rendered);
         }
     });
@@ -823,13 +829,15 @@ export function renderFinalReport(
             const summaryRegex = /<<([\s\S]*?)>>/g;
             const matches = Array.from(fullRenderedContent.matchAll(summaryRegex));
             fullRenderedContent = matches.length > 0
-                ? matches.map((match) => match[1]).join('\n\n')
+                ? matches.map((match) => (match[1] ?? '').trim()).join('\n\n')
                 : '';
         }
 
         // Final cleanup
         const finalOutput = fullRenderedContent
-            .replace(/<<|>>/g, '') // Remove summary markers
+            .replace(/^[ \t]*<<[ \t]*\r?\n/gm, '') // Standalone line with only <<
+            .replace(/\r?\n[ \t]*>>[ \t]*$/gm, '') // Standalone line with only >>
+            .replace(/<<|>>/g, '') // Remove remaining summary markers
             .replace(/:::[^:\n\r]*:::/g, '') // Remove unrendered single-line ::: directives
             .replace(/:::[\s\S]*?:::/g, '') // Remove unprocessed multiline ::: blocks
             .replace(/\\([*{}:[\]\\])/g, '$1') // Final unescaping of characters (\* -> *, \: -> :)

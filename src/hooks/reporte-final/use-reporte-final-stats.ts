@@ -80,10 +80,30 @@ export function useReporteFinalStats({
     }
   };
 
+  const periodoStats = useMemo(() => {
+    return calcularEstadisticasPeriodo(
+      reportesFinalizados,
+      templates,
+      configs,
+      configuracionesGlobales,
+      [],
+      settings.guard_period,
+      settings.guard_shift_duration
+    );
+  }, [
+    reportesFinalizados,
+    templates,
+    configs,
+    configuracionesGlobales,
+    settings.guard_period,
+    settings.guard_shift_duration,
+  ]);
+
   return {
     estadisticasLocal,
     setEstadisticasLocal,
     guardarEstadisticasDebounced,
-    manejarCalcularEstadisticas
+    manejarCalcularEstadisticas,
+    periodoStats
   };
 }

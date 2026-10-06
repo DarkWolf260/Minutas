@@ -780,7 +780,7 @@ describe('statistics-utils', () => {
             expect(formatted).toBe('- Llamadas de emergencias 01');
         });
 
-        it('should separate statistics by day for a 48h guard and show total', () => {
+        it('should separate statistics by day for a 48h guard into Day 1, Day 2, and Closing and show total', () => {
             const reports = [
                 // Day 1
                 createMockReport({
@@ -789,19 +789,19 @@ describe('statistics-utils', () => {
                     status: 'Finalizado',
                     form_data: { Fecha: '05/10/2026', Hora: '14:00' }
                 }),
-                // Day 1 night shift (early morning of 06/10 before 08:00)
+                // Day 2
                 createMockReport({
                     id: 'r-2',
                     template_id: 't-llamadas',
                     status: 'Finalizado',
-                    form_data: { Fecha: '06/10/2026', Hora: '03:30' }
+                    form_data: { Fecha: '06/10/2026', Hora: '11:00' }
                 }),
-                // Day 2
+                // Cierre de guardia (último tramo desde las 00:00 del tercer día)
                 createMockReport({
                     id: 'r-3',
                     template_id: 't-llamadas',
                     status: 'Finalizado',
-                    form_data: { Fecha: '06/10/2026', Hora: '11:00' }
+                    form_data: { Fecha: '07/10/2026', Hora: '04:30' }
                 })
             ];
 
@@ -817,15 +817,18 @@ describe('statistics-utils', () => {
 
             expect(result.isMultiDay).toBe(true);
             expect(result.durationHours).toBe(48);
-            expect(result.days).toHaveLength(2);
-            expect(result.days[0]!.stats.get('1.2 LLAMADAS DE EMERGENCIAS')).toBe(2); // r-1 and r-2
-            expect(result.days[1]!.stats.get('1.2 LLAMADAS DE EMERGENCIAS')).toBe(1); // r-3
+            expect(result.days).toHaveLength(3);
+            expect(result.days[0]!.stats.get('1.2 LLAMADAS DE EMERGENCIAS')).toBe(1); // r-1 (Día 1)
+            expect(result.days[1]!.stats.get('1.2 LLAMADAS DE EMERGENCIAS')).toBe(1); // r-2 (Día 2)
+            expect(result.days[2]!.stats.get('1.2 LLAMADAS DE EMERGENCIAS')).toBe(1); // r-3 (Cierre)
             expect(result.totalStats.get('1.2 LLAMADAS DE EMERGENCIAS')).toBe(3);
 
             const formatted = formatearEstadisticasPeriodo(result);
             expect(formatted).toContain('*DÍA 1 (05/10/2026):*');
-            expect(formatted).toContain('- Llamadas de emergencias 02');
+            expect(formatted).toContain('- Llamadas de emergencias 01');
             expect(formatted).toContain('*DÍA 2 (06/10/2026):*');
+            expect(formatted).toContain('- Llamadas de emergencias 01');
+            expect(formatted).toContain('*CIERRE DE GUARDIA (07/10/2026 - 00:00 A ENTREGA):*');
             expect(formatted).toContain('- Llamadas de emergencias 01');
             expect(formatted).toContain('*TOTAL GUARDIA (48 HORAS):*');
             expect(formatted).toContain('- Llamadas de emergencias 03');

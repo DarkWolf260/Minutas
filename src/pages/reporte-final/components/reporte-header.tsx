@@ -48,18 +48,6 @@ export function ReporteHeader({ hook, isMobile }: ReporteHeaderProps) {
           <TabsTrigger value="history">Historial</TabsTrigger>
         </TabsList>
 
-        {tabActiva === 'history' && reportesGuardadosOrdenados.length > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={manejarCorregirFechasHistorial}
-            className="text-[10px] font-bold uppercase tracking-wider h-8 border-primary/20 text-primary hover:bg-primary/5 ml-2"
-          >
-            <RotateCcw className="h-3 w-3 mr-1.5" />
-            Sincronizar Fechas
-          </Button>
-        )}
-
         {tabActiva === 'generate' && !isMobile && estaCargado && (
           <Button
             onClick={manejarGenerarReporte}
@@ -67,7 +55,7 @@ export function ReporteHeader({ hook, isMobile }: ReporteHeaderProps) {
             className="hidden sm:flex gap-2 shadow-sm font-bold ml-2"
           >
             <FileText className="h-4 w-4" />
-            Generar Reporte Final
+            Generar Reporte de Cierre
           </Button>
         )}
       </div>

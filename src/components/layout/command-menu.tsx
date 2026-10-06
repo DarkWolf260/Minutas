@@ -190,12 +190,12 @@ export function CommandMenu() {
       },
       {
         id: 'nav-reporte',
-        label: 'Ir a Reporte Final',
+        label: 'Ir a Reporte de Cierre',
         category: 'Navegación',
         icon: History,
         shortcut: 'G+R',
         action: () => navigate('/reporte-final'),
-        keywords: ['minuta', 'exportar', 'cierre', 'resumen', 'g+r', 'gr'],
+        keywords: ['reporte final', 'minuta', 'exportar', 'cierre', 'resumen', 'g+r', 'gr'],
       },
       {
         id: 'nav-personal',

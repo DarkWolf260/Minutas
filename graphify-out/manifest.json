@@ -1061,12 +1061,6 @@
     "ast_hash": "cfa70c5d34cb93650af5209e59246ea0",
     "semantic_hash": ""
   },
-  "src/lib/template/__tests__/bug.test.ts": {
-    "mtime": 1789917362.1158624,
-    "seen": 1789932802.0635269,
-    "ast_hash": "4496971689a21c53101767774b8af21c",
-    "semantic_hash": ""
-  },
   "src/lib/template/__tests__/conditionmode_render.test.ts": {
     "mtime": 1789917362.1168876,
     "seen": 1789932802.0635278,
@@ -2390,8 +2384,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\layout\\side-nav.tsx": {
-    "mtime": 1791237871.186073,
-    "ast_hash": "cd3092c309b0e84ca1e060af6d278644",
+    "mtime": 1791247195.1587377,
+    "ast_hash": "d99fc22ed207205f0eaa5770e37f4c24",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\orden-del-dia\\activity-item.tsx": {
@@ -3160,8 +3154,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\reporte-final\\use-reporte-final-stats.ts": {
-    "mtime": 1791229006.7280972,
-    "ast_hash": "498877743384e8c6aad020997446638c",
+    "mtime": 1791247136.5510204,
+    "ast_hash": "8b17d75cb875df08eda8b3901df3b465",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\reporte-final\\use-reporte-final.ts": {
@@ -3220,8 +3214,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\__tests__\\estadisticas-utils.test.ts": {
-    "mtime": 1791229637.6634305,
-    "ast_hash": "ef57fa98f84acb86f2cce6908fb43e0c",
+    "mtime": 1791247105.8367372,
+    "ast_hash": "105dba563af0b8af7e1e0162a0cc7715",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\__tests__\\formatters.test.ts": {
@@ -3320,8 +3314,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\estadisticas\\calculator.ts": {
-    "mtime": 1791228983.4205747,
-    "ast_hash": "d27d6977ff121a101a660b20c5b4c454",
+    "mtime": 1791247086.916577,
+    "ast_hash": "ec23de6857c0eea2a3d6df30c37da89b",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\estadisticas\\categories.ts": {
@@ -3454,11 +3448,6 @@
     "ast_hash": "f328cd941cb3a8f05a53bbb2bb3a713c",
     "semantic_hash": ""
   },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\bug.test.ts": {
-    "mtime": 1791216785.4709508,
-    "ast_hash": "2f659ab0b58cc8d3676ea36e3f54e083",
-    "semantic_hash": ""
-  },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\conditionmode_render.test.ts": {
     "mtime": 1791217421.4359262,
     "ast_hash": "bd13674be0e5b7dc489d8246a5b0944a",
@@ -3510,8 +3499,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\renderer.ts": {
-    "mtime": 1791216885.1712284,
-    "ast_hash": "4216b1b7c57f43e02bb5d5cb101e5152",
+    "mtime": 1791248932.9224162,
+    "ast_hash": "55301b8713fd619dea15fe44de511e38",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\types.ts": {
@@ -3750,18 +3739,18 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\reporte-final.tsx": {
-    "mtime": 1790545986.071344,
-    "ast_hash": "7a4bda44adba2db87dbcc83f290c59ab",
+    "mtime": 1791247186.326535,
+    "ast_hash": "7ee8acdb4bf19709201a4a1606620e3e",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\reporte-final\\components\\reporte-generar.tsx": {
-    "mtime": 1790545986.076342,
-    "ast_hash": "5910e98c7ad45ac19256f5f01a3b10e7",
+    "mtime": 1791247317.9919572,
+    "ast_hash": "f0e3c6da40386cb8d576f2d0766db3df",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\reporte-final\\components\\reporte-header.tsx": {
-    "mtime": 1790545986.0853362,
-    "ast_hash": "f88d5a6d6412f0d1f6afff385a3652ca",
+    "mtime": 1791247166.4445176,
+    "ast_hash": "de5d937d1ed27740fa51eb6a7e02dcea",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\reporte-final\\components\\reporte-historial.tsx": {
@@ -3770,8 +3759,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\reporte-final\\components\\reporte-modals.tsx": {
-    "mtime": 1790545986.0913308,
-    "ast_hash": "2ac4485e86de5fdcce52fee98e74528e",
+    "mtime": 1791247176.48722,
+    "ast_hash": "7fe98c5a3d3be1a1c7210b50a549148d",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\settings\\about.tsx": {
@@ -4140,8 +4129,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\layout\\command-menu.tsx": {
-    "mtime": 1791221210.652749,
-    "ast_hash": "d272a0d682a7f4604f3115069f57bbdd",
+    "mtime": 1791247205.8486207,
+    "ast_hash": "61ce59e7920fd7834966dea6640b2567",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\hooks\\ui\\use-sidebar-expanded.ts": {
@@ -4167,6 +4156,16 @@
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\.impeccable\\critique\\2026-10-05T19-59-30Z__src-pages-personal-tsx.md": {
     "mtime": 1791230370.8557293,
     "ast_hash": "172353efce1367a243cabe65eddd2745",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\.impeccable\\critique\\2026-10-06T00-27-17Z__src-pages-reporte-final-tsx.md": {
+    "mtime": 1791246437.6878934,
+    "ast_hash": "7eeefb0f42b6641c62f6c1de2181c4c8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\repeatable_and_newlines.test.ts": {
+    "mtime": 1791248868.8243446,
+    "ast_hash": "3d6cf75aab132e8b8234885a40371fba",
     "semantic_hash": ""
   }
 }
