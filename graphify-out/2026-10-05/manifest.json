@@ -1061,12 +1061,6 @@
     "ast_hash": "cfa70c5d34cb93650af5209e59246ea0",
     "semantic_hash": ""
   },
-  "src/lib/template/__tests__/bug.test.ts": {
-    "mtime": 1789917362.1158624,
-    "seen": 1789932802.0635269,
-    "ast_hash": "4496971689a21c53101767774b8af21c",
-    "semantic_hash": ""
-  },
   "src/lib/template/__tests__/conditionmode_render.test.ts": {
     "mtime": 1789917362.1168876,
     "seen": 1789932802.0635278,
@@ -3454,11 +3448,6 @@
     "ast_hash": "f328cd941cb3a8f05a53bbb2bb3a713c",
     "semantic_hash": ""
   },
-  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\bug.test.ts": {
-    "mtime": 1791216785.4709508,
-    "ast_hash": "2f659ab0b58cc8d3676ea36e3f54e083",
-    "semantic_hash": ""
-  },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\conditionmode_render.test.ts": {
     "mtime": 1791217421.4359262,
     "ast_hash": "bd13674be0e5b7dc489d8246a5b0944a",
@@ -3510,8 +3499,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\renderer.ts": {
-    "mtime": 1791216885.1712284,
-    "ast_hash": "4216b1b7c57f43e02bb5d5cb101e5152",
+    "mtime": 1791248932.9224162,
+    "ast_hash": "55301b8713fd619dea15fe44de511e38",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\types.ts": {
@@ -4172,6 +4161,11 @@
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\.impeccable\\critique\\2026-10-06T00-27-17Z__src-pages-reporte-final-tsx.md": {
     "mtime": 1791246437.6878934,
     "ast_hash": "7eeefb0f42b6641c62f6c1de2181c4c8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\__tests__\\repeatable_and_newlines.test.ts": {
+    "mtime": 1791248868.8243446,
+    "ast_hash": "3d6cf75aab132e8b8234885a40371fba",
     "semantic_hash": ""
   }
 }

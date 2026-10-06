@@ -1,16 +1,16 @@
 # Graph Report - Minutas  (2026-10-05)
 
 ## Corpus Check
-- 382 files · ~317,587 words
+- 382 files · ~317,319 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3507 nodes · 12088 edges · 265 communities (113 shown, 152 thin omitted)
+- 3508 nodes · 12089 edges · 270 communities (118 shown, 152 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 20 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d03c0f3c`
+- Built from commit: `ec44a983`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -228,7 +228,13 @@
 - [[_COMMUNITY_Supported Versions|Supported Versions]]
 - [[_COMMUNITY_Community 217|Community 217]]
 - [[_COMMUNITY_Community 218|Community 218]]
+- [[_COMMUNITY_Community 219|Community 219]]
+- [[_COMMUNITY_Community 220|Community 220]]
 - [[_COMMUNITY_Community 221|Community 221]]
+- [[_COMMUNITY_Community 222|Community 222]]
+- [[_COMMUNITY_Community 223|Community 223]]
+- [[_COMMUNITY_Community 224|Community 224]]
+- [[_COMMUNITY_Community 225|Community 225]]
 - [[_COMMUNITY_10. Escapado|10. Escapado]]
 - [[_COMMUNITY_css.lint.compatibleVendorPrefixes|css.lint.compatibleVendorPrefixes]]
 - [[_COMMUNITY_src_hooks_use_active_guard_useactiveguard|src_hooks_use_active_guard_useactiveguard]]
@@ -289,8 +295,8 @@
 ## Surprising Connections (you probably didn't know these)
 - `Resumen de Comportamiento Técnico` --references--> `obtenerCategoriasReporte()`  [INFERRED]
   docs/statistics-rules-guide.md → src/lib/estadisticas/categories.ts
-- `NavCard()` --calls--> `cn()`  [INFERRED]
-  src/pages/admin/index.tsx → src/lib/utils.ts
+- `renderFinalReport()` --calls--> `recordReportAudit()`  [INFERRED]
+  src/lib/template/renderer.ts → src/lib/template-parser.ts
 - `SortableStaffItem()` --calls--> `cn()`  [EXTRACTED]
   src/components/guards/guard-staff-editor.tsx → src/lib/utils.ts
 - `OrdenDelDiaFormProps` --references--> `Staff`  [EXTRACTED]
@@ -303,27 +309,27 @@
 - 1-file cycle: `src/components/orden-del-dia/index.tsx -> src/components/orden-del-dia/index.tsx`
 - 2-file cycle: `src/lib/template-parser.ts -> src/lib/template/index.ts -> src/lib/template-parser.ts`
 
-## Communities (265 total, 152 thin omitted)
+## Communities (270 total, 152 thin omitted)
 
 ### Community 0 - "db.ts"
-Cohesion: 0.09
-Nodes (30): commonConflictHandler, ConfigItem, ConfigsCollection, ensureParsed(), getLogicalState(), _global, HistoryCollection, HistoryItem (+22 more)
+Cohesion: 0.08
+Nodes (40): rxdb, closeDatabase(), commonConflictHandler, ConfigItem, ConfigsCollection, createDatabase(), ensureDevMode(), ensureParsed() (+32 more)
 
 ### Community 1 - "side-nav.tsx"
-Cohesion: 0.17
-Nodes (19): Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow (+11 more)
+Cohesion: 0.12
+Nodes (25): EstadisticasPage, PersonnelTable(), Table, TableBody, TableCaption, TableCell, TableFooter, TableHead (+17 more)
 
 ### Community 2 - "form-creator.tsx"
-Cohesion: 0.11
-Nodes (44): FieldCardProps, AVAILABLE_FIELDS, AvailableField, CanvasFieldDragOverlay(), deleteFieldFromTree(), findFieldInTree(), findLocation(), FormCreator() (+36 more)
+Cohesion: 0.14
+Nodes (36): FieldCard(), FieldCardProps, AvailableField, deleteFieldFromTree(), findFieldInTree(), findLocation(), FormCreator(), getNextFieldLabel() (+28 more)
 
 ### Community 3 - "Historial de Cambios - Minutas"
 Cohesion: 0.04
 Nodes (47): [1.0.0] - 2026-04-07, [1.0.1] - 2026-04-22, [1.1.0] - 2026-04-23, [1.1.1] - 2026-04-23, [1.2.0] - 2026-04-24, [1.3.0] - 2026-04-28, [1.3.1] - 2026-04-28, [1.3.2] - 2026-05-11 (+39 more)
 
 ### Community 4 - "setup/index.tsx"
-Cohesion: 0.24
-Nodes (8): ReportGenerator, src_hooks_novedades_index_usenovedadesreturn, UseNovedadesReturn, MobileHeader(), MobileHeaderProps, NovedadMainContent(), NovedadMainContentProps, NovedadSidebarProps
+Cohesion: 0.08
+Nodes (33): ReportGenerator, ReportViewer(), ViewerContent(), ViewerHeader(), ViewerEmpty(), ViewerError(), ViewerLoading(), src_hooks_novedades_index_usenovedades (+25 more)
 
 ### Community 5 - "dependencies"
 Cohesion: 0.05
@@ -331,107 +337,107 @@ Nodes (42): dependencies, class-variance-authority, clsx, date-fns, @dnd-kit/cor
 
 ### Community 6 - "react"
 Cohesion: 0.07
-Nodes (57): date-fns, leaflet, qrcode.react, react-leaflet, react-router-dom, GuardAssignmentPanel(), UnitsManager(), UnitList() (+49 more)
+Nodes (65): date-fns, qrcode.react, react-router-dom, SettingsAboutPage, UnitsManager(), UnitList(), UnitListProps, useUnitsManager() (+57 more)
 
 ### Community 7 - "structure-manager.tsx"
-Cohesion: 0.12
-Nodes (40): ProtectedRoute(), useConfigRepo(), defaultDefinitions, useFieldDefinitions(), defaultProfile, UserProfile, defaultSettings, useSettings() (+32 more)
+Cohesion: 0.10
+Nodes (48): ProtectedRoute(), useConfigRepo(), defaultDefinitions, useFieldDefinitions(), defaultProfile, UserProfile, defaultSettings, useSettings() (+40 more)
 
 ### Community 8 - "user-provider.tsx"
 Cohesion: 0.05
-Nodes (67): AdminUser, NovedadModalsProps, LOCATION_TYPES, ConfirmDialog(), ResponsiveModal(), ResponsiveModalProps, FeedbackItem, TYPE_CONFIG (+59 more)
+Nodes (65): AdminDashboardPage(), useAdminUsers(), NovedadModalsProps, ConfirmDialog(), ConfirmDialogProps, ResponsiveModal(), ResponsiveModalProps, FeedbackItem (+57 more)
 
 ### Community 9 - "validations/schemas.ts"
 Cohesion: 0.08
-Nodes (43): sonner, EstadisticasField(), ReportGeneratorRef, src_hooks_guardias_index_useactiveguard, buildFallbackPeriod(), useActiveGuard(), src_hooks_novedades_index_usedrafts, src_hooks_novedades_index_usereports (+35 more)
+Nodes (32): EstadisticasField(), src_hooks_guardias_index_useactiveguard, src_hooks_guardias_index_useguardhistory, buildFallbackPeriod(), useActiveGuard(), useOrdenDelDiaDraft(), useOrdenDelDiaPagina(), reporte-final/index.ts (+24 more)
 
 ### Community 10 - "ajustes-generales.tsx"
-Cohesion: 0.09
-Nodes (32): lucide-react, Props, State, StructureManager(), src_hooks_configuracion_index_usesetup, setup/index.tsx, PuntosProgreso(), SetupPage() (+24 more)
+Cohesion: 0.08
+Nodes (34): lucide-react, Props, State, Props, State, StructureManager(), src_hooks_configuracion_index_usesetup, setup/index.tsx (+26 more)
 
 ### Community 12 - "App.tsx"
-Cohesion: 0.10
-Nodes (10): Logger, OfflinePhotosDB, useOfflineUpload(), AppLayout(), usePrecacheImages(), ScheduledMessage, BotState, listeners (+2 more)
+Cohesion: 0.13
+Nodes (8): Logger, OfflinePhotosDB, useOfflineUpload(), ScheduledMessage, BotState, listeners, WhatsAppChat, WhatsAppStatus
 
 ### Community 13 - "Motor de Plantillas — Referencia de Sintaxis"
 Cohesion: 0.06
 Nodes (36): src/lib/template/TEMPLATE_ENGINE.md, 10. Escapado, 11. Orden de resolución de valores, 12. Limpieza final del reporte, 1. Campos `{FieldName}`, 2. Acceso a propiedades de personal `{Campo.propiedad}`, 3. Campos Repetibles `{Campo}*`, 4. Secciones `[Label]...[/]` (+28 more)
 
 ### Community 14 - "novedad-sidebar.tsx"
-Cohesion: 0.20
-Nodes (16): DatabaseContext, areEqual(), stableStringify(), ActivityItemProps, AddActivityFormProps, useOrdenDelDiaActivities(), OrdenDelDiaDraft, useOrdenDelDiaGenerator() (+8 more)
+Cohesion: 0.22
+Nodes (14): DatabaseContext, ActivityItemProps, AddActivityFormProps, useOrdenDelDiaActivities(), OrdenDelDiaDraft, useOrdenDelDiaGenerator(), UseOrdenDelDiaGeneratorProps, Nota (+6 more)
 
 ### Community 15 - "Contributing to Minutas"
 Cohesion: 0.07
 Nodes (28): Additional Resources, As a Reviewer, As an Author, Before Submitting, Branch Naming, Code Review Guidelines, Code Style, Commit Messages (+20 more)
 
 ### Community 16 - "StaffRole"
-Cohesion: 0.08
-Nodes (57): vitest, result, formatStaffReporta(), template/evaluator.ts, applyModifiers(), coerceForComparison(), evaluateCondition(), template/index.ts (+49 more)
+Cohesion: 0.17
+Nodes (26): template/index.ts, extractFieldToken(), extractSectionToken(), tokenize(), AUTOMATIC_FIELD_TYPES, generateSectionId(), parse(), parseInternal() (+18 more)
 
 ### Community 17 - "borrar-datos.tsx"
-Cohesion: 0.18
-Nodes (11): SetupPage(), PasoBienvenida(), PasoAreaTrabajo(), PasoModulos(), PasoEstructura(), PasoJerarquia(), PasoPlantillas(), PasoPrimeraVez() (+3 more)
+Cohesion: 0.08
+Nodes (41): ALL_NAV_ITEMS, BottomNav(), ReportGeneratorRef, admin/index.ts, useAdmin(), src_hooks_configuracion_index_usefielddefinitions, src_hooks_configuracion_index_useglobalconfig, useGlobalConfig() (+33 more)
 
 ### Community 18 - "changelog.tsx"
-Cohesion: 0.06
-Nodes (45): FormCreatorHeader(), FormCreatorHeaderProps, MassActionsBarProps, MobileHeader(), MobileHeaderProps, NovedadMainContent(), NovedadMainContentProps, NovedadModals (+37 more)
+Cohesion: 0.05
+Nodes (57): AboutAppPage(), NavCard(), AutoResizeTextarea(), FieldSettingsSidebar(), FormCreatorHeader(), MobileHeader(), MobileHeaderProps, NovedadFilters() (+49 more)
 
 ### Community 19 - "address-map.tsx"
 Cohesion: 0.06
-Nodes (63): CHANGE_TYPE_CONFIG, ChangeEntry, CHANGELOG, ChangelogEntry, ChangeType, WORKFLOW_STEPS, TEMPLATE_LIST, AdminDashboardPage() (+55 more)
+Nodes (50): CHANGE_TYPE_CONFIG, ChangeEntry, CHANGELOG, ChangelogEntry, ChangeType, WORKFLOW_STEPS, TEMPLATE_LIST, NavCardProps (+42 more)
 
 ### Community 20 - "devDependencies"
 Cohesion: 0.07
 Nodes (27): devDependencies, autoprefixer, @babel/core, babel-plugin-react-compiler, eslint, eslint-config-prettier, jsdom, postcss (+19 more)
 
 ### Community 21 - "useSettings"
-Cohesion: 0.07
-Nodes (51): FieldRendererProps, EstadisticasFieldProps, FormLayoutProps, UseReportFormProps, UseReportGeneratorProps, ReportForm, ReportFormProps, ReportFormRef (+43 more)
+Cohesion: 0.12
+Nodes (25): FormLayout(), UseReportFormProps, UseReportGeneratorProps, ReportForm, ReportFormProps, ReportFormRef, useReportViewer(), ViewerContentProps (+17 more)
 
 ### Community 22 - "orden-del-dia/index.tsx"
-Cohesion: 0.17
-Nodes (25): rxjs, DatabaseContextType, MinutasDatabase, src_lib_db_db_stablestringify, ErrorContext, ErrorSeverity, getUserFriendlyErrorMessage(), isQuotaExceededError() (+17 more)
+Cohesion: 0.23
+Nodes (19): rxjs, DatabaseContextType, MinutasDatabase, src_lib_db_db_stablestringify, safeWrite(), SafeWriteOptions, silentWrite(), ConfigRepository (+11 more)
 
 ### Community 23 - "estadisticas-field.tsx"
-Cohesion: 0.09
-Nodes (24): MobileNav(), NavBrand(), useMobileNav(), QuickChatSelector(), ReportViewer(), ViewerHeader(), ScheduledMessagesWorker(), src_hooks_configuracion_index_useprofile (+16 more)
+Cohesion: 0.15
+Nodes (11): QuickChatSelector(), BotState, convertPhotoToBase64(), listeners, updateBotState(), useWhatsAppBot(), WhatsAppChat, WhatsAppStatus (+3 more)
 
 ### Community 25 - "template/index.ts"
 Cohesion: 0.10
-Nodes (25): ActivityItemProps, AddActivityFormProps, OrdenDelDiaFormProps, useReportGenerator(), TemplateBuilder(), src_hooks_direcciones_index_useaddresses, useDirecciones(), orden-del-dia/index.ts (+17 more)
+Nodes (33): ActivityItemProps, AddActivityFormProps, OrdenDelDiaFormProps, AddressFormDialogProps, direcciones/index.ts, src_hooks_direcciones_index_useaddresses, useDirecciones(), orden-del-dia/index.ts (+25 more)
 
 ### Community 26 - "template-parser.ts"
-Cohesion: 0.11
-Nodes (26): @supabase/supabase-js, ProtectedRoute(), AuthContext, AuthContextType, AuthProvider(), useAuthContext(), UserContext, UserContextType (+18 more)
+Cohesion: 0.08
+Nodes (37): sonner, @supabase/supabase-js, AuthContext, AuthContextType, useAuthContext(), UserContext, UserContextType, UserProvider() (+29 more)
 
 ### Community 27 - "useWorkspaceManager"
-Cohesion: 0.13
-Nodes (28): cleanTemplateName(), parseCache, parseTemplate(), recordReportAudit(), renderContent(), renderFinalReport(), AUTOMATIC_FIELD_TYPES, parse() (+20 more)
+Cohesion: 0.16
+Nodes (26): parseTemplate(), renderFinalReport(), parse(), parseTemplate(), renderFinalReport(), TemplateRenderConfig, FieldConfig, ParseResult (+18 more)
 
 ### Community 29 - "use-plantillas.ts"
-Cohesion: 0.12
-Nodes (30): AvailableFieldsSidebar(), AvailableFieldsSidebarProps, CanvasFieldDragOverlay(), CanvasFieldDragOverlayProps, FieldSettingsSidebarProps, SortableCanvasFieldCard(), SortableCanvasFieldCardProps, InnerSectionDroppableZone() (+22 more)
+Cohesion: 0.13
+Nodes (29): AvailableFieldsSidebar(), AvailableFieldsSidebarProps, CanvasFieldDragOverlay(), CanvasFieldDragOverlayProps, FieldSettingsSidebarProps, SortableCanvasFieldCard(), SortableCanvasFieldCardProps, InnerSectionDroppableZone() (+21 more)
 
 ### Community 30 - "structure-tree.tsx"
 Cohesion: 0.20
 Nodes (9): Anti-Patterns Verdict, Design Critique: Reporte de Cierre (Reporte Final), Design Health Score, Minor Observations, Overall Impression, Persona Red Flags, Priority Issues (P0-P3), Questions to Consider (+1 more)
 
 ### Community 31 - "useAuth"
-Cohesion: 0.14
-Nodes (19): SyncContext, SyncContextValue, useSyncContext(), createChannel(), deleteChannel(), fetchPendingReports(), generateChannelCode(), joinChannelByCode() (+11 more)
+Cohesion: 0.12
+Nodes (23): NotificationItem, NotificationsContext, NotificationsContextType, useNotifications(), SyncContext, SyncContextValue, useSyncContext(), createChannel() (+15 more)
 
 ### Community 32 - "sonner"
-Cohesion: 0.11
-Nodes (32): 1. El Asterisco (`*`) - Evaluación Secuencial Repetible, 2. El Paréntesis Uno (` (1)`) - Primera Coincidencia, 3. El Sufijo Virtual de Origen (`-Origen*`) - Evaluación de Trayectos o Rutas, Correlación con condiciones secundarias (Y / O), ¿Cómo funciona?, ¿Cómo funciona?, ¿Cómo funciona?, Ejemplo de Caso de Uso (+24 more)
+Cohesion: 0.09
+Nodes (36): 1. El Asterisco (`*`) - Evaluación Secuencial Repetible, 2. El Paréntesis Uno (` (1)`) - Primera Coincidencia, 3. El Sufijo Virtual de Origen (`-Origen*`) - Evaluación de Trayectos o Rutas, Correlación con condiciones secundarias (Y / O), ¿Cómo funciona?, ¿Cómo funciona?, ¿Cómo funciona?, Ejemplo de Caso de Uso (+28 more)
 
 ### Community 33 - "compilerOptions"
 Cohesion: 0.10
 Nodes (19): compilerOptions, allowJs, esModuleInterop, isolatedModules, jsx, lib, module, moduleResolution (+11 more)
 
 ### Community 34 - "estadisticas-utils.test.ts"
-Cohesion: 0.10
-Nodes (36): DEPARTMENT_IDS, DEPARTMENT_NAMES, generateDepartmentId(), generateUniqueDepartmentId(), GENDER_OPTIONS, RANK_OPTIONS, LEADER_ROLES, OPERATIONAL_ROLES (+28 more)
+Cohesion: 0.11
+Nodes (34): GENDER_OPTIONS, PERSONNEL_STATUS, RANK_OPTIONS, STATUS_OPTIONS, EstadisticasFieldProps, ReportFormField(), ReportFormFieldProps, PersonnelFormFields() (+26 more)
 
 ### Community 35 - "Guía de Desarrollo Local con Supabase CLI"
 Cohesion: 0.17
@@ -451,47 +457,47 @@ Nodes (23): scripts, bot, build, build:dev, caddy, caddy:reload, dev, docs:gener
 
 ### Community 40 - "personnel-table.tsx"
 Cohesion: 0.04
-Nodes (85): react, react-hook-form, ALL_NAV_ITEMS, NavUserMenuProps, QuickChatSelectorProps, ALL_NAV_ITEMS, FieldRenderer, ReportFormField() (+77 more)
+Nodes (65): class-variance-authority, LoadingScreen(), LoadingScreenProps, SortableRoleItem, SortableDeptItem, SortableMemberBadge, AVAILABLE_FIELDS, CanvasFieldDragOverlay() (+57 more)
 
 ### Community 41 - "📖 Sistema de Plantillas"
 Cohesion: 0.12
 Nodes (15): 1. Variables Básicas, 2. Tipos de Campos, 3. Dropdowns (Listas Desplegables), 4. Secciones, 5. Lógica Condicional, 6. Resumen Automático, 7. Separadores, 8. Reglas Estadísticas y Etiquetas Especiales (`*` y ` (1)`) (+7 more)
 
 ### Community 43 - "Community 43"
-Cohesion: 0.10
-Nodes (24): buildFullStaffName(), formatDateToPeriod(), formatStaffMember(), formatStaffMemberForAutocomplete(), formatStaffMemberForDisplay(), formatStaffReporta(), applyModifiers(), coerceForComparison() (+16 more)
+Cohesion: 0.09
+Nodes (27): formatStaffReporta(), cleanTemplateName(), parseCache, recordReportAudit(), renderContent(), applyModifiers(), coerceForComparison(), evaluateCondition() (+19 more)
 
 ### Community 45 - "reporte-generar.tsx"
-Cohesion: 0.06
-Nodes (52): NovedadGroupItem, NovedadGroupItemProps, formatReportDate(), NovedadItem, NovedadItemProps, getReportTimeStr(), getTimeRange(), groupContiguousReports() (+44 more)
+Cohesion: 0.07
+Nodes (49): FormCreatorHeaderProps, NovedadGroupItem, NovedadGroupItemProps, formatReportDate(), NovedadItem, NovedadItemProps, getReportTimeStr(), getTimeRange() (+41 more)
 
 ### Community 46 - "validations/personnel.ts"
-Cohesion: 0.10
-Nodes (35): @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, GuardStaffEditor, GuardStaffEditorProps, SortableStaffItem(), StaffListEditor, StaffListEditorProps (+27 more)
+Cohesion: 0.20
+Nodes (19): GuardStaffEditorProps, StaffListEditorProps, AddEditPersonnelDialog(), AddEditPersonnelDialogProps, PersonnelFormFields(), PersonnelFormFieldsProps, usePersonnelForm(), UsePersonnelFormProps (+11 more)
 
 ### Community 47 - "sync-context.tsx"
 Cohesion: 0.13
-Nodes (26): NotificationBell(), NotificationItem, NotificationsContext, NotificationsContextType, useNotifications(), SyncContext, SyncContextValue, SyncProvider() (+18 more)
+Nodes (28): ReportViewerProps, UseReportViewerProps, ViewerErrorProps, useNotifications(), SyncContext, SyncContextValue, SyncProvider(), createChannel() (+20 more)
 
 ### Community 49 - "server.js"
 Cohesion: 0.07
 Nodes (26): cors, express, ref_fs, qrcode-terminal, whatsapp-web.js, dependencies, cors, express (+18 more)
 
 ### Community 50 - "types/index.ts"
-Cohesion: 0.13
-Nodes (23): SyncModals(), ConfirmDialogProps, useDirecciones(), UseDireccionesReturn, AddressMap, DireccionesPage(), ListaDirecciones(), ListaDireccionesProps (+15 more)
+Cohesion: 0.10
+Nodes (31): StatsHeader(), UseDireccionesReturn, AddressMap, ListaDireccionesProps, LOCATION_TYPE_CONFIG, MapaDireccionesProps, ModalesDireccionesProps, AjustesGeneralesForm() (+23 more)
 
 ### Community 51 - "package.json"
 Cohesion: 0.04
-Nodes (43): name, private, type, version, autoprefixer, @babel/core, babel-plugin-react-compiler, clsx (+35 more)
+Nodes (44): name, private, type, version, autoprefixer, @babel/core, babel-plugin-react-compiler, clsx (+36 more)
 
 ### Community 52 - "use-novedades.ts"
 Cohesion: 0.19
 Nodes (13): @radix-ui/react-label, @radix-ui/react-slot, FormControl, FormDescription, FormField(), FormFieldContext, FormFieldContextValue, FormItem (+5 more)
 
 ### Community 54 - "settings.json"
-Cohesion: 0.05
-Nodes (45): GlobalConfigProvider(), tryRemove(), trySet(), AuthProvider(), react-dom, ref_virtual_pwa_register, AboutAppPage, AboutChangelogPage (+37 more)
+Cohesion: 0.06
+Nodes (34): ScheduledMessagesWorker(), tryRemove(), trySet(), OnboardingTour(), MobileNav(), AboutAppPage, AboutChangelogPage, AboutGuidePage (+26 more)
 
 ### Community 55 - "Guía de Rendimiento y Unificación de Interfaces (RxDB + DnD)"
 Cohesion: 0.25
@@ -502,8 +508,8 @@ Cohesion: 0.20
 Nodes (9): extends, rules, no-console, no-var, prefer-const, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, next/core-web-vitals (+1 more)
 
 ### Community 57 - "personal.tsx"
-Cohesion: 0.10
-Nodes (22): RoleSorter(), StructureTree, TemplateEditor(), src_components_ui_tabs_tabs, TabsContent, TabsList, TabsTrigger, src_hooks_plantillas_index_useplantillas (+14 more)
+Cohesion: 0.12
+Nodes (22): react, GuardAssignmentPanel(), RoleSorter(), StructureTree, TemplateEditor(), src_components_ui_tabs_tabs, TabsContent, TabsList (+14 more)
 
 ### Community 59 - "Community 59"
 Cohesion: 0.22
@@ -514,28 +520,28 @@ Cohesion: 0.15
 Nodes (12): Anti-Patterns (Do NOT Use), Buttons, Cards / Containers, Color Palette, Component Specs, Design System Master File (Original: Minutas), Global Rules, Inputs (+4 more)
 
 ### Community 64 - "Community 64"
-Cohesion: 0.09
-Nodes (21): SettingsAboutPage, LoadingScreen(), LoadingScreenProps, src_hooks_admin_index_useadminusers, useAdminUsers(), src_hooks_sync_index_usecloudworkspaces, admin/index.tsx, AdminDashboardPage() (+13 more)
+Cohesion: 0.17
+Nodes (24): formatStaffReporta(), template/evaluator.ts, applyModifiers(), coerceForComparison(), evaluateCondition(), parseCache, recordReportAudit(), renderContent() (+16 more)
 
 ### Community 66 - "Community 66"
-Cohesion: 0.19
-Nodes (11): calcularEstadisticasDia(), calcularEstadisticasPeriodo(), useManualNovedades(), UseManualNovedadesProps, useReporteFinalGenerator(), UseReporteFinalGeneratorProps, useReporteFinalHistory(), useReporteFinalStats() (+3 more)
+Cohesion: 0.12
+Nodes (18): useDirecciones(), calcularEstadisticasDia(), calcularEstadisticasPeriodo(), useActiveGuard(), NoGuardBanner(), useOrdenDelDiaPagina(), OrdenDelDiaPage(), NovedadManual (+10 more)
 
 ### Community 67 - "eslint.config.mjs"
 Cohesion: 0.29
 Nodes (6): eslintConfig, nextCoreWebVitals, require, ref_eslint_config_next, eslint-config-prettier, ref_module
 
 ### Community 69 - "categories.ts"
-Cohesion: 0.08
-Nodes (38): closeDatabase(), commonConflictHandler, ConfigItem, ConfigsCollection, createDatabase(), ensureDevMode(), ensureParsed(), getDatabase() (+30 more)
+Cohesion: 0.06
+Nodes (49): LoadingScreen(), LoadingScreenProps, closeDatabase(), commonConflictHandler, ConfigItem, ConfigsCollection, createDatabase(), ensureDevMode() (+41 more)
 
 ### Community 70 - "Security Policy"
 Cohesion: 0.50
 Nodes (3): Reporting a Vulnerability, Security Policy, Supported Versions
 
 ### Community 71 - "calculator.ts"
-Cohesion: 0.13
-Nodes (25): DatabaseContextType, MinutasDatabase, ErrorContext, ErrorSeverity, getUserFriendlyErrorMessage(), isQuotaExceededError(), logError(), logOperationError() (+17 more)
+Cohesion: 0.15
+Nodes (23): DatabaseContextType, MinutasDatabase, ErrorContext, ErrorSeverity, getUserFriendlyErrorMessage(), isQuotaExceededError(), logError(), logOperationError() (+15 more)
 
 ### Community 72 - "section-renderer.tsx"
 Cohesion: 0.05
@@ -546,68 +552,68 @@ Cohesion: 0.22
 Nodes (5): ref_path, vite, vite-plugin-pwa, @vitejs/plugin-react, @vitejs/plugin-react-swc
 
 ### Community 76 - "Community 76"
-Cohesion: 0.18
-Nodes (24): FieldCard(), FormCreatorProps, SectionCard(), SectionCardProps, appendFieldTagToText(), compileFieldToken(), compileFormToTemplateString(), compileSectionBlock() (+16 more)
+Cohesion: 0.16
+Nodes (25): TemplateTextEditor(), TemplateTextEditorProps, FormCreatorProps, SectionCard(), SectionCardProps, appendFieldTagToText(), compileFieldToken(), compileFormToTemplateString() (+17 more)
 
 ### Community 77 - "address-form-dialog.tsx"
 Cohesion: 0.09
-Nodes (61): class-variance-authority, @radix-ui/react-dialog, ResultDialogProps, PersonnelHistoryDialog(), BRUSH_SIZES, COLORS, PhotoEditor(), PhotoEditorProps (+53 more)
+Nodes (59): @radix-ui/react-dialog, ResultDialogProps, PersonnelHistoryDialog(), BRUSH_SIZES, COLORS, PhotoEditor(), PhotoEditorProps, base64ToBlob() (+51 more)
 
 ### Community 78 - "configuracion/index.ts"
 Cohesion: 0.07
-Nodes (24): PERSONNEL_STATUS, InferredType, AddressSchema, AppSettingsSchema, cedulaValidator, dateValidator, DepartmentSchema, FieldConfigSchema (+16 more)
+Nodes (23): InferredType, AddressSchema, AppSettingsSchema, cedulaValidator, dateValidator, DepartmentSchema, FieldConfigSchema, FieldTypeSchema (+15 more)
 
 ### Community 79 - "loading-skeleton.tsx"
 Cohesion: 0.23
 Nodes (13): 6. Condicionales `::: if Condición ::: ... :::`, 7. Condicionales `[?{Campo} op valor]...[/]`, Comparación de valores, Condicional anidado, Condicional con dropdown, Condicional de género (uso típico con personal), Modo del condicional (conditionMode), Operadores disponibles (+5 more)
 
 ### Community 81 - "Minutas/typedoc.json"
-Cohesion: 0.09
-Nodes (32): useAdmin(), PlantillasHeader(), GlobalConfig, useGlobalConfig(), useProfile(), GuardSelector(), NoGuardBanner(), ALL_NAV_ITEMS (+24 more)
+Cohesion: 0.11
+Nodes (20): MassActionsBarProps, CedulaInput, CedulaInputProps, NavUserMenuProps, BLOCK_PALETTES, BlockMeta, STAFF_PROTOCOL_NAMES, SYSTEM_VARS (+12 more)
 
 ### Community 82 - "Minutas/tsconfig.json"
-Cohesion: 0.08
-Nodes (74): NavUserMenu(), SideNav(), useUnitsManager(), useUser(), useReportForm(), AjustesGenerales(), useAdmin(), configuracion/index.ts (+66 more)
+Cohesion: 0.09
+Nodes (57): AppLayout(), Root(), AdminRoute(), ProtectedRoute(), useUser(), useReportForm(), useReportGenerator(), AjustesGenerales() (+49 more)
 
 ### Community 83 - "Community 83"
-Cohesion: 0.19
-Nodes (18): html5-qrcode, QRScanner(), QRScannerProps, src_components_ui_alert_dialog_alertdialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription (+10 more)
+Cohesion: 0.07
+Nodes (40): leaflet, react-leaflet, AddressMap(), AddressMapProps, MapType, TILE_LAYERS, QRScanner(), QRScannerProps (+32 more)
 
 ### Community 84 - "Design System: Minutas"
 Cohesion: 0.10
 Nodes (19): 1. Overview, 2. Colors, 3. Typography, 4. Elevation, 5. Components, 6. Do's and Don'ts, Buttons, Cards / Containers (+11 more)
 
 ### Community 85 - "Community 85"
-Cohesion: 0.20
-Nodes (16): rxdb, closeDatabase(), createDatabase(), ensureDevMode(), getDatabase(), getInternalState(), src_lib_db_db_getrxstoragedexie, getStorage() (+8 more)
+Cohesion: 0.14
+Nodes (19): MobileNav(), NavBrand(), NavUserMenu(), NavUserMenuProps, useMobileNav(), NotificationBell(), ALL_NAV_ITEMS, SideNav() (+11 more)
 
 ### Community 86 - "Minutas/components.json"
-Cohesion: 0.18
-Nodes (18): formatAddressToString(), findPointsWithTypes(), obtenerBaseIdYVirtual(), obtenerCategoriasReporte(), obtenerValoresConSoporteVirtual(), TransferPoint, evaluarCondicion(), resolverCategoriaTraslado() (+10 more)
+Cohesion: 0.10
+Nodes (29): DEFAULT_ADDRESSES, formatAddressToString(), LOCATION_TYPES, DEFAULT_STATISTICS_CATEGORIES, STATISTICS_SECTIONS, StatisticsSection, calcularEstadisticasMensuales(), DailyStatisticsGroup (+21 more)
 
 ### Community 87 - "RoleManagerDnD"
 Cohesion: 0.18
 Nodes (11): 13. Campos Especiales y Etiquetas Reservadas, 1. Identificación de la Guardia, 2. Carga Automática de Funcionarios por Rol, A. Etiquetas y Marcadores Estructurales Reservados, B. Campos con Detección Automática de Tipo, C. Campos de Personal con Formato Institucional, D. Propiedades de Notación de Punto `{Campo.propiedad}`, E. Metacampos y Variables Globales Predefinidas (`predefinedValues`) (+3 more)
 
 ### Community 89 - "Community 89"
-Cohesion: 0.10
-Nodes (25): AdminConfigPage(), EstadisticasFieldProps, ReportFormField(), ReportFormFieldProps, FormLayout(), FormLayoutProps, NotificationBell(), NotificationBellProps (+17 more)
+Cohesion: 0.15
+Nodes (16): getInstitutionalData(), DEPARTMENT_IDS, DEPARTMENT_NAMES, constants/personnel.ts, GENDER_OPTIONS, PERSONNEL_STATUS, RANK_OPTIONS, STATUS_OPTIONS (+8 more)
 
 ### Community 90 - "Community 90"
-Cohesion: 0.29
-Nodes (9): Root(), DEPTOS_KEY, ROLES_KEY, STEP_KEY, tryGet(), tryRemove(), trySet(), useSetup() (+1 more)
+Cohesion: 0.25
+Nodes (14): react-hook-form, FieldRenderer, FieldRendererProps, EstadisticasFieldProps, ReportFormField(), ReportFormFieldProps, FormLayoutProps, SectionRenderer() (+6 more)
 
 ### Community 91 - "overrides"
 Cohesion: 0.50
 Nodes (4): overrides, ajv, esbuild, serialize-javascript
 
 ### Community 92 - "form.tsx"
-Cohesion: 0.06
-Nodes (37): useAuth(), AdminRoute(), LoadingScreen(), LoadingScreenProps, ARRAY_KEYS, BOOLEAN_KEYS, GlobalConfigContext, GlobalConfigContextProps (+29 more)
+Cohesion: 0.05
+Nodes (51): useAdmin(), AdminUser, useAuth(), AdminRoute(), PlantillasHeader(), AdminConfigPage(), ARRAY_KEYS, BOOLEAN_KEYS (+43 more)
 
 ### Community 93 - "Community 93"
-Cohesion: 0.07
-Nodes (27): ActivityItem, AddActivityForm(), orden-del-dia/index.tsx, OrdenDelDiaForm, OrdenDelDiaFormRef, SeccionActividadesDiaProps, SeccionDistribucionPersonalProps, SeccionNotasAdmProps (+19 more)
+Cohesion: 0.08
+Nodes (25): ActivityItem, AddActivityForm(), orden-del-dia/index.tsx, OrdenDelDiaForm, OrdenDelDiaFormRef, SeccionActividadesDiaProps, SeccionDistribucionPersonalProps, SeccionNotasAdmProps (+17 more)
 
 ### Community 94 - "Product"
 Cohesion: 0.22
@@ -618,8 +624,8 @@ Cohesion: 0.12
 Nodes (15): Anti-Patterns Verdict, Design Health Score, Deterministic Scan, LLM Assessment, Minor Observations, Overall Impression, [P1] Ausencia de Paleta de Comandos y Atajos de Teclado Globales, [P1] Barra Lateral de Escritorio Icon-Only sin Modo Expandido (+7 more)
 
 ### Community 96 - "report-photos.tsx"
-Cohesion: 0.05
-Nodes (41): zod, getInstitutionalData(), DEPARTMENT_IDS, DEPARTMENT_NAMES, constants/personnel.ts, GENDER_OPTIONS, PERSONNEL_STATUS, RANK_OPTIONS (+33 more)
+Cohesion: 0.08
+Nodes (26): zod, validations/schemas.ts, AddressSchema, AppSettingsSchema, cedulaValidator, createFieldZodSchema(), dateValidator, DepartmentSchema (+18 more)
 
 ### Community 104 - "Community 104"
 Cohesion: 0.29
@@ -627,51 +633,51 @@ Nodes (7): 1. Campos `{FieldName}`, Combinando modificadores, Dropdown con opcio
 
 ### Community 105 - "report.json"
 Cohesion: 0.06
-Nodes (50): AutoResizeTextarea(), FieldSettingsSidebar(), GuardConfigCard(), GuardConfigCardProps, NovedadFilters(), NovedadFiltersProps, StatsHeader(), TemplateList() (+42 more)
+Nodes (40): NovedadFiltersProps, OrdenEmptyState(), OrdenEmptyStateProps, OrdenHeader(), OrdenHeaderProps, SyncWhatsApp(), TemplateList(), WorkspaceControls() (+32 more)
 
 ### Community 147 - "aliases"
-Cohesion: 0.15
-Nodes (20): StatsHeaderProps, StatsSectionRow(), StatsSectionRowProps, StatsTable(), StatsTableProps, StatsTotalRow(), StatsTotalRowProps, DEFAULT_STATISTICS_CATEGORIES (+12 more)
+Cohesion: 0.20
+Nodes (17): StatsHeaderProps, StatsSectionRow(), StatsSectionRowProps, StatsTable(), StatsTableProps, StatsTotalRow(), StatsTotalRowProps, UseEstadisticasReturn (+9 more)
 
 ### Community 148 - "components"
-Cohesion: 0.06
-Nodes (32): Props, State, MassActionsBar(), OrdenEmptyState(), OrdenEmptyStateProps, OrdenHeader(), OrdenHeaderProps, PersonnelHeader() (+24 more)
+Cohesion: 0.12
+Nodes (21): PersonnelModalsProps, PersonnelTabsProps, ReporteGenerar(), ReporteGenerarProps, ReporteHeader(), ReporteHeaderProps, ReporteHistorial(), ReporteHistorialProps (+13 more)
 
 ### Community 149 - "Community 149"
-Cohesion: 0.24
-Nodes (8): initialState, Theme, ThemeProvider(), ThemeProviderContext, ThemeProviderProps, ThemeProviderState, useTheme(), Toaster()
+Cohesion: 0.29
+Nodes (6): initialState, Theme, ThemeProvider(), ThemeProviderContext, ThemeProviderProps, ThemeProviderState
 
 ### Community 150 - "lib"
 Cohesion: 0.11
 Nodes (17): computedHash, skillPath, source, sourceType, skills, impeccable, supabase, supabase-postgres-best-practices (+9 more)
 
 ### Community 151 - "Community 151"
-Cohesion: 0.29
-Nodes (7): ARRAY_KEYS, BOOLEAN_KEYS, GlobalConfig, GlobalConfigContext, GlobalConfigContextProps, GlobalConfigProvider(), AppModuleId
+Cohesion: 0.28
+Nodes (8): vitest, result, parseTemplate(), renderFinalReport(), generateMockData(), previewRender(), buildConfig(), render()
 
 ### Community 152 - "utils"
 Cohesion: 0.15
 Nodes (12): Anti-Patterns (Do NOT Use), Buttons, Cards / Containers, Color Palette, Component Specs, Design System Master File (Original: Minutas), Global Rules, Inputs (+4 more)
 
 ### Community 153 - "iconLibrary"
-Cohesion: 0.06
-Nodes (29): ReporteGenerarProps, ReporteHeaderProps, ReporteHistorialProps, ReporteModalsProps, DatePicker, DatePickerProps, TimeHlvInput, TimeHlvInputProps (+21 more)
+Cohesion: 0.07
+Nodes (34): GuardConfigCard(), GuardConfigCardProps, DatePicker, DatePickerProps, MultiInput, TimeHlvInput, TimeHlvInputProps, GuardSelector() (+26 more)
 
 ### Community 154 - "rsc"
 Cohesion: 0.17
 Nodes (11): boundaries, cards, components, connections, diagram_type, meta, output, quality_profile (+3 more)
 
 ### Community 155 - "Community 155"
-Cohesion: 0.28
-Nodes (7): AboutAppPage(), tryGet(), PWAStatus(), PwaContext, PwaContextType, PwaProvider(), usePwa()
+Cohesion: 0.32
+Nodes (6): tryGet(), PWAStatus(), PwaContext, PwaContextType, PwaProvider(), usePwa()
 
 ### Community 156 - "style"
 Cohesion: 0.08
-Nodes (53): GuardSelector(), GuardSelectorProps, NoGuardBanner(), NoGuardBannerProps, BottomNav(), UnitForm(), UnitFormProps, AjustesGeneralesForm() (+45 more)
+Nodes (59): @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, GuardSelector(), GuardSelectorProps, NoGuardBanner(), NoGuardBannerProps, GuardStaffEditor (+51 more)
 
 ### Community 157 - "tailwind"
-Cohesion: 0.10
-Nodes (15): FeatureErrorBoundary, Props, State, src_hooks_personal_index_usepersonal, src_hooks_personal_index_usepersonalreturn, UsePersonalReturn, MassActionsBar(), MassActionsBarProps (+7 more)
+Cohesion: 0.12
+Nodes (12): FeatureErrorBoundary, src_hooks_personal_index_usepersonal, src_hooks_personal_index_usepersonalreturn, UsePersonalReturn, MassActionsBar(), PersonnelHeader(), PersonnelModals(), PersonnelModalsProps (+4 more)
 
 ### Community 158 - "Community 158"
 Cohesion: 0.29
@@ -694,60 +700,84 @@ Cohesion: 0.40
 Nodes (6): 4. Secciones `[Label]...[/]`, 4. Secciones `::: Nombre ::: ... :::`, Sección repetible, Sección repetible con etiquetas singulares/plurales, Sección repetible con etiquetas singulares y plurales, Sección simple
 
 ### Community 163 - "tsx"
-Cohesion: 0.31
-Nodes (8): base64ToBlob(), compressImage(), downloadImage(), generateReportPhotoName(), ReportImage(), ReportImageProps, ReportPhotos(), uploadToSupabase()
+Cohesion: 0.26
+Nodes (9): LEADER_ROLES, OPERATIONAL_ROLES, SPECIAL_ROLES, STATUS_ROLES, DEFAULT_DEPARTMENTS, DEFAULT_ROLES, EXTENDED_DEPARTMENTS, EXTENDED_ROLES (+1 more)
 
 ### Community 192 - "Community 192"
 Cohesion: 0.40
 Nodes (5): 2. Acceso a propiedades de personal `{Campo.propiedad}`, Propiedades disponibles, Sintaxis, Uso en condicionales (caso de género), Uso en texto
 
+### Community 194 - "Community 194"
+Cohesion: 0.14
+Nodes (8): FeatureErrorBoundary, Props, State, MassActionsBar(), PersonnelHeader(), PersonnelModals(), PersonnelTabs(), PersonnelPageContent()
+
 ### Community 196 - "Community 196"
-Cohesion: 0.19
-Nodes (16): extractFieldToken(), extractSectionToken(), extractTripleColonToken(), parseConditionString(), parseDirectiveContent(), splitConditionAndBody(), tokenize(), ConditionalExpression (+8 more)
+Cohesion: 0.33
+Nodes (9): extractFieldToken(), extractSectionToken(), extractTripleColonToken(), parseConditionString(), parseDirectiveContent(), splitConditionAndBody(), tokenize(), ConditionalExpression (+1 more)
 
 ### Community 197 - "Community 197"
 Cohesion: 0.22
 Nodes (8): Anti-Patterns Verdict, Design Health Score, Minor Observations, Overall Impression, Persona Red Flags, Priority Issues, Questions to Consider, What's Working
 
 ### Community 198 - "Community 198"
-Cohesion: 0.60
-Nodes (4): FormCreator(), resolveTemplateTitle(), TemplateBuilder(), resolveTemplateTitle()
+Cohesion: 0.20
+Nodes (10): ref_virtual_pwa_register, PWAStatus(), PwaContext, PwaContextType, PwaProvider(), usePwa(), src_hooks_configuracion_index_setup_done_key, src_hooks_configuracion_index_tryget (+2 more)
 
 ### Community 218 - "Community 218"
 Cohesion: 0.50
 Nodes (3): Anti-Patterns Verdict, Design Health Score, What's Working
 
+### Community 219 - "Community 219"
+Cohesion: 0.57
+Nodes (4): buildFullStaffName(), formatStaffMember(), formatStaffMemberForAutocomplete(), formatStaffMemberForDisplay()
+
+### Community 220 - "Community 220"
+Cohesion: 0.57
+Nodes (4): buildFullStaffName(), formatStaffMember(), formatStaffMemberForAutocomplete(), formatStaffMemberForDisplay()
+
 ### Community 221 - "Community 221"
 Cohesion: 0.50
 Nodes (3): 🧭 Concepto Creativo: "Next-Gen Tactical Command Hub", 🚀 Cómo Visualizarlo, Minutas Next-Gen: Diseño Alternativo "Command Hub"
 
+### Community 222 - "Community 222"
+Cohesion: 0.67
+Nodes (4): DEPARTMENT_IDS, DEPARTMENT_NAMES, generateDepartmentId(), generateUniqueDepartmentId()
+
+### Community 223 - "Community 223"
+Cohesion: 0.60
+Nodes (4): CsvImportButton(), CsvImportButtonProps, parseSex(), parseStatus()
+
+### Community 224 - "Community 224"
+Cohesion: 0.50
+Nodes (3): react-dom, App(), src_index
+
 ### Community 257 - "10. Escapado"
-Cohesion: 0.14
-Nodes (13): 10. Escapado, 11. Orden de resolución de valores, 12. Limpieza final del reporte, 14. Ejemplo completo, 3. Campos Repetibles `{Campo}*`, 5. Secciones Auto-contenidas `["Título" {Campo}]`, 5. Separadores Visuales `::: separator :::`, 6. Separadores Visuales `[""]` (+5 more)
+Cohesion: 0.13
+Nodes (14): 10. Escapado, 11. Orden de resolución de valores, 12. Limpieza final del reporte, 14. Ejemplo completo, 3. Campos Repetibles `{Campo}*`, 5. Secciones Auto-contenidas `["Título" {Campo}]`, 5. Separadores Visuales `::: --- :::`, 5. Separadores Visuales `::: separator :::` (+6 more)
 
 ### Community 292 - "css.lint.compatibleVendorPrefixes"
 Cohesion: 0.22
 Nodes (8): css.lint.compatibleVendorPrefixes, css.lint.propertyIgnoredByDisplay, css.lint.unknownAtRules, css.lint.validProperties, css.lint.vendorPrefix, html.validate.scripts, html.validate.styles, vscode-edge-devtools.webhint.ignore
 
 ## Knowledge Gaps
-- **1013 isolated node(s):** `@typescript-eslint/no-explicit-any`, `@typescript-eslint/no-unused-vars`, `no-console`, `prefer-const`, `no-var` (+1008 more)
+- **1014 isolated node(s):** `@typescript-eslint/no-explicit-any`, `@typescript-eslint/no-unused-vars`, `no-console`, `prefer-const`, `no-var` (+1009 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **152 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `personnel-table.tsx` to `side-nav.tsx`, `form-creator.tsx`, `setup/index.tsx`, `react`, `validations/schemas.ts`, `ajustes-generales.tsx`, `Community 149`, `useSettings`, `estadisticas-field.tsx`, `Community 151`, `template/index.ts`, `template-parser.ts`, `style`, `tailwind`, `tsx`, `validations/personnel.ts`, `sync-context.tsx`, `package.json`, `use-novedades.ts`, `settings.json`, `personal.tsx`, `Community 64`, `address-form-dialog.tsx`, `Minutas/tsconfig.json`, `Community 83`, `Community 85`, `Community 90`, `Community 93`?**
-  _High betweenness centrality (0.108) - this node is a cross-community bridge._
-- **Why does `Button` connect `address-map.tsx` to `structure-manager.tsx`, `user-provider.tsx`, `borrar-datos.tsx`, `changelog.tsx`, `aliases`, `components`, `iconLibrary`, `Community 155`, `use-plantillas.ts`, `Community 158`, `estadisticas-utils.test.ts`, `reporte-generar.tsx`, `types/index.ts`, `settings.json`, `Community 76`, `Minutas/typedoc.json`, `Community 89`, `form.tsx`, `report.json`?**
-  _High betweenness centrality (0.053) - this node is a cross-community bridge._
-- **Why does `cn()` connect `personnel-table.tsx` to `side-nav.tsx`, `form-creator.tsx`, `setup/index.tsx`, `react`, `validations/schemas.ts`, `ajustes-generales.tsx`, `App.tsx`, `estadisticas-field.tsx`, `template/index.ts`, `template-parser.ts`, `style`, `validations/personnel.ts`, `sync-context.tsx`, `use-novedades.ts`, `settings.json`, `personal.tsx`, `Community 64`, `address-form-dialog.tsx`, `Minutas/tsconfig.json`, `Community 83`, `Community 85`, `Community 93`?**
+- **Why does `react` connect `personal.tsx` to `db.ts`, `side-nav.tsx`, `form-creator.tsx`, `setup/index.tsx`, `react`, `validations/schemas.ts`, `ajustes-generales.tsx`, `borrar-datos.tsx`, `Community 149`, `useSettings`, `estadisticas-field.tsx`, `template/index.ts`, `template-parser.ts`, `style`, `tailwind`, `personnel-table.tsx`, `validations/personnel.ts`, `sync-context.tsx`, `package.json`, `use-novedades.ts`, `settings.json`, `Community 198`, `address-form-dialog.tsx`, `Minutas/tsconfig.json`, `Community 83`, `Community 85`, `Community 90`, `Community 93`, `Community 223`, `Community 224`?**
+  _High betweenness centrality (0.090) - this node is a cross-community bridge._
+- **Why does `Button` connect `report.json` to `structure-manager.tsx`, `user-provider.tsx`, `changelog.tsx`, `address-map.tsx`, `components`, `aliases`, `iconLibrary`, `Community 155`, `use-plantillas.ts`, `Community 158`, `estadisticas-utils.test.ts`, `reporte-generar.tsx`, `types/index.ts`, `settings.json`, `Community 194`, `categories.ts`, `Community 76`, `Minutas/typedoc.json`, `form.tsx`?**
+  _High betweenness centrality (0.052) - this node is a cross-community bridge._
+- **Why does `cn()` connect `personnel-table.tsx` to `side-nav.tsx`, `form-creator.tsx`, `setup/index.tsx`, `react`, `ajustes-generales.tsx`, `borrar-datos.tsx`, `useSettings`, `estadisticas-field.tsx`, `template-parser.ts`, `style`, `use-novedades.ts`, `settings.json`, `personal.tsx`, `Community 198`, `address-form-dialog.tsx`, `Minutas/tsconfig.json`, `Community 83`, `Community 85`, `Community 90`, `Community 93`?**
   _High betweenness centrality (0.043) - this node is a cross-community bridge._
 - **What connects `@typescript-eslint/no-explicit-any`, `@typescript-eslint/no-unused-vars`, `no-console` to the rest of the system?**
-  _1016 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1017 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `db.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.08870967741935484 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07751937984496124 - nodes in this community are weakly interconnected._
+- **Should `side-nav.tsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.12043010752688173 - nodes in this community are weakly interconnected._
 - **Should `form-creator.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.11058823529411765 - nodes in this community are weakly interconnected._
-- **Should `Historial de Cambios - Minutas` be split into smaller, more focused modules?**
-  _Cohesion score 0.041666666666666664 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.13900134952766532 - nodes in this community are weakly interconnected._
