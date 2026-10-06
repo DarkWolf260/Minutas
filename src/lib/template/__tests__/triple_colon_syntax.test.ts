@@ -305,17 +305,16 @@ Menor de edad: {Edad}
     });
 
     describe('Separators', () => {
-        it('handles clean separators ::: separator ::: and titled separators', () => {
+        it('handles clean visual separator ::: --- :::', () => {
             const template = `Dato antes
-::: separator :::
+::: --- :::
 Dato después
-::: separator: DATOS DE CONTACTO :::
 - *TELÉFONO:* {Telefono}`;
 
             const parsed = parseTemplate(template);
             const separators = parsed.sections.filter((s) => s.is_separator);
-            expect(separators).toHaveLength(2);
-            expect(separators[1]?.label).toBe('DATOS DE CONTACTO');
+            expect(separators).toHaveLength(1);
+            expect(parsed.errors).toHaveLength(0);
 
             const result = renderFinalReport(
                 template,
@@ -326,7 +325,6 @@ Dato después
 
             expect(result).toContain('Dato antes');
             expect(result).toContain('Dato después');
-            expect(result).toContain('- *DATOS DE CONTACTO*');
             expect(result).toContain('- *TELÉFONO:* 0414-1234567');
         });
     });

@@ -171,8 +171,8 @@ describe('template-compiler', () => {
     const sepSimple: FormCreatorField = { id: 'sep1', label: 'Separador', type: 'separator' };
     const sepTitled: FormCreatorField = { id: 'sep2', label: 'DATOS DE TRASLADO', type: 'separator' };
 
-    expect(compileFieldToken(sepSimple)).toBe('::: separator :::');
-    expect(compileFieldToken(sepTitled)).toBe('::: separator: DATOS DE TRASLADO :::');
+    expect(compileFieldToken(sepSimple)).toBe('::: --- :::');
+    expect(compileFieldToken(sepTitled)).toBe('::: --- :::');
 
     const model: FormCreatorModel = {
       name: 'Formulario',
@@ -188,14 +188,12 @@ describe('template-compiler', () => {
     };
 
     const compiled = compileFormToTemplateString(model);
-    expect(compiled).toContain('::: separator :::');
-    expect(compiled).toContain('::: separator: DATOS DE TRASLADO :::');
-
+    expect(compiled).toContain('::: --- :::');
+    
     const parsed = parseTemplate(compiled);
     expect(parsed.errors).toHaveLength(0);
     expect(parsed.sections.some((s) => s.is_separator)).toBe(true);
-    expect(parsed.sections.some((s) => s.label === 'DATOS DE TRASLADO')).toBe(true);
-  });
+      });
 
   it('compiles, syncs, removes, and extracts repeatable sections', () => {
     const sec1 = {
@@ -307,7 +305,7 @@ describe('template-compiler', () => {
 - *HORA:* {Hora:time:req}
 - *TURNO:* {Turno:dropdown(Mañana=Mañana|Tarde=Tarde|Noche=Noche)}
 
-::: separator: PERSONAL DE GUARDIA :::
+::: --- :::
 
 ::: section FUNCIONARIOS | FUNCIONARIO* :::
 - *NOMBRE:* {Nombre:req}
@@ -315,7 +313,7 @@ describe('template-compiler', () => {
 - *CÉDULA:* {Cédula:cedula}
 :::
 
-::: separator :::
+::: --- :::
 
 - *RESUMEN DE NOVEDADES:* {Novedades:textarea:full}
 `;

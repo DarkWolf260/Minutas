@@ -218,7 +218,6 @@ function extractTripleColonToken(
         lowerInside.startsWith('section ') ||
         lowerInside.startsWith('map ') ||
         lowerInside.startsWith('map:') ||
-        lowerInside.startsWith('separator') ||
         inside === '---';
 
     if (isDirectiveKeyword) {
@@ -251,58 +250,15 @@ function parseDirectiveContent(
     fullTokenEndPos: number
 ): { tokens: Token[]; endPos: number } | null {
     const trimmed = content.trim();
-    if (!trimmed) {
-        // Empty ::: ::: -> treated as separator
-        return {
-            tokens: [
-                {
-                    type: 'section_start',
-                    label: '',
-                    is_separator: true,
-                    is_self_contained: true,
-                    raw,
-                    position: startPos,
-                },
-                {
-                    type: 'section_end',
-                    raw: '',
-                    position: endPos,
-                },
-            ],
-            endPos,
-        };
-    }
-
-    // Separators: ::: separator :::, ::: --- :::, ::: separator: Titulo :::
     const lowerTrimmed = trimmed.toLowerCase();
-    if (lowerTrimmed === 'separator' || trimmed === '---') {
+
+    // Separators: only ::: --- ::: is supported as a visual separator
+    if (trimmed === '---') {
         return {
             tokens: [
                 {
                     type: 'section_start',
                     label: '',
-                    is_separator: true,
-                    is_self_contained: true,
-                    raw,
-                    position: startPos,
-                },
-                {
-                    type: 'section_end',
-                    raw: '',
-                    position: endPos,
-                },
-            ],
-            endPos,
-        };
-    }
-
-    if (lowerTrimmed.startsWith('separator:') || lowerTrimmed.startsWith('separator ')) {
-        const title = trimmed.slice(trimmed.indexOf(':') > -1 ? trimmed.indexOf(':') + 1 : 10).trim();
-        return {
-            tokens: [
-                {
-                    type: 'section_start',
-                    label: title,
                     is_separator: true,
                     is_self_contained: true,
                     raw,

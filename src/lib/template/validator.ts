@@ -61,7 +61,7 @@ export function validateSyntax(template: string): string[] {
         for (const t of tokens) {
             if (t.type === 'section_start' && !t.is_self_contained) {
                 openBlocks++;
-            } else if (t.type === 'section_end') {
+            } else if (t.type === 'section_end' && t.raw !== '') {
                 openBlocks--;
             }
         }

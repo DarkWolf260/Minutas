@@ -146,7 +146,7 @@ export function TemplateTextEditor({
               {token}
             </mark>
           );
-        } else if (lower.includes('separator') || token.includes('---')) {
+        } else if (token.includes('---')) {
           elements.push(
             <mark
               key={match.index}

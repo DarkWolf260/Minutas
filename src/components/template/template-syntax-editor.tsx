@@ -342,7 +342,7 @@ export function TemplateSyntaxEditor({
           const inside = trimmed.replace(/^:::/, '').replace(/:::\s*$/, '').trim();
           const lower = inside.toLowerCase();
           const isSeparator =
-            lower === 'separator' || lower.startsWith('separator:') || inside === '---';
+            inside === '---';
           const isInline =
             (lower.startsWith('if ') || lower.startsWith('if:')) && isInlineConditional(inside);
 
@@ -536,7 +536,7 @@ export function TemplateSyntaxEditor({
 
           // Self-contained directives (separators, inline conditionals)
           const lower = token.toLowerCase();
-          const isSeparator = lower.includes('separator') || token.includes('---');
+          const isSeparator = token.includes('---');
           elements.push(
             <span
               key={key}
@@ -747,7 +747,7 @@ export function TemplateSyntaxEditor({
                 <Layers className="mr-2 h-3.5 w-3.5 text-violet-500" />
                 <span>Sección Singular / Plural</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => insertSnippet('::: separator :::\n')}>
+              <DropdownMenuItem onClick={() => insertSnippet('::: --- :::\n')}>
                 <FileText className="mr-2 h-3.5 w-3.5 text-sky-500" />
                 <span>Separador Visual</span>
               </DropdownMenuItem>

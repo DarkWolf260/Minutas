@@ -78,12 +78,7 @@ export function compileFieldToken(field: FormCreatorField): string {
   }
 
   if (field.type === 'separator') {
-    const isCustomTitle =
-      field.label &&
-      field.label.trim() &&
-      field.label.trim().toLowerCase() !== 'separador' &&
-      field.label.trim().toLowerCase() !== 'divisor';
-    return isCustomTitle ? `::: separator: ${field.label.trim().toUpperCase()} :::` : '::: separator :::';
+    return '::: --- :::';
   }
 
   const id = sanitizeFieldId(field.label);
@@ -399,15 +394,10 @@ export function compileFormToTemplateString(model: FormCreatorModel): string {
   // Root fields, separators, and sections in exact order
   model.fields.forEach((field) => {
     if (field.type === 'separator') {
-      const isCustomTitle =
-        field.label &&
-        field.label.trim() &&
-        field.label.trim().toLowerCase() !== 'separador' &&
-        field.label.trim().toLowerCase() !== 'divisor';
       if (lines.length > 0 && lines[lines.length - 1] !== '') {
         lines.push('');
       }
-      lines.push(isCustomTitle ? `::: separator: ${field.label.trim().toUpperCase()} :::` : '::: separator :::');
+      lines.push('::: --- :::');
       lines.push('');
     } else if (field.type === 'section') {
       if (lines.length > 0 && lines[lines.length - 1] !== '') {
@@ -460,16 +450,7 @@ export function isFieldTagInText(text: string, field: FormCreatorField): boolean
   }
 
   if (field.type === 'separator') {
-    const isCustomTitle =
-      field.label &&
-      field.label.trim() &&
-      field.label.trim().toLowerCase() !== 'separador' &&
-      field.label.trim().toLowerCase() !== 'divisor';
-    if (isCustomTitle) {
-      const escaped = field.label.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      return new RegExp(`:::\\s*separator:\\s*${escaped}\\s*:::`, 'i').test(text);
-    }
-    return /:::\s*(?:separator|---)\s*:::/i.test(text);
+    return /:::\s*---\s*:::/i.test(text);
   }
 
   const id = sanitizeFieldId(field.label);
@@ -498,16 +479,8 @@ export function updateFieldTagInText(
   }
 
   if (newField.type === 'separator') {
-    const oldIsCustom =
-      oldLabel &&
-      oldLabel.trim() &&
-      oldLabel.trim().toLowerCase() !== 'separador' &&
-      oldLabel.trim().toLowerCase() !== 'divisor';
-    const oldPattern = oldIsCustom
-      ? new RegExp(`:::\\s*separator:\\s*${oldLabel.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:::`, 'gi')
-      : /:::\s*(?:separator|---)\s*:::/gi;
-    const newTag = compileFieldToken(newField);
-    return text.replace(oldPattern, newTag);
+    const oldPattern = /:::\s*(?:separator(?::[^:]*)?|---)\s*:::/gi;
+    return text.replace(oldPattern, '::: --- :::');
   }
 
   const oldId = sanitizeFieldId(oldLabel);
@@ -542,14 +515,7 @@ export function removeFieldTagFromText(text: string, field: FormCreatorField): s
   }
 
   if (field.type === 'separator') {
-    const isCustomTitle =
-      field.label &&
-      field.label.trim() &&
-      field.label.trim().toLowerCase() !== 'separador' &&
-      field.label.trim().toLowerCase() !== 'divisor';
-    const sepPattern = isCustomTitle
-      ? new RegExp(`\\r?\\n*:::\\s*separator:\\s*${field.label.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:::\\r?\\n*`, 'gi')
-      : /\r?\n*:::\s*(?:separator|---)\s*:::\r?\n*/gi;
+    const sepPattern = /\r?\n*:::\s*(?:separator(?::[^:]*)?|---)\s*:::\r?\n*/gi;
     return text.replace(sepPattern, '\n\n').trim();
   }
 
@@ -578,8 +544,7 @@ export function appendFieldTagToText(text: string, field: FormCreatorField): str
   }
 
   if (field.type === 'separator') {
-    const token = compileFieldToken(field);
-    return text.trim() ? `${text.trimEnd()}\n\n${token}\n` : token;
+    return text.trim() ? `${text.trimEnd()}\n\n::: --- :::\n` : '::: --- :::';
   }
 
   const token = compileFieldToken(field);
@@ -615,20 +580,13 @@ export function getProtectedTagRanges(text: string, fields: FormCreatorField[]):
     }
 
     if (field.type === 'separator') {
-      const isCustomTitle =
-        field.label &&
-        field.label.trim() &&
-        field.label.trim().toLowerCase() !== 'separador' &&
-        field.label.trim().toLowerCase() !== 'divisor';
-      const regex = isCustomTitle
-        ? new RegExp(`:::\\s*separator:\\s*${field.label.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:::`, 'gi')
-        : /:::\s*(?:separator|---)\s*:::/gi;
+      const regex = /:::\s*---\s*:::/gi;
       let match: RegExpExecArray | null;
       while ((match = regex.exec(text)) !== null) {
         ranges.push({
           start: match.index,
           end: match.index + match[0].length,
-          label: field.label || 'Separador',
+          label: 'Separador',
           token: match[0],
         });
       }

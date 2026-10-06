@@ -184,7 +184,7 @@ El `*` al final del nombre marca la sección como repetible.
 
 ---
 
-## 5. Separadores Visuales `::: separator :::`
+## 5. Separadores Visuales `::: --- :::`
 
 Para insertar separadores o títulos de sección visuales limpios:
 
