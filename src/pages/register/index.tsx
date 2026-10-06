@@ -79,7 +79,7 @@ export default function RegisterPage() {
         }
       });
       if (error) throw error;
-      toast.success('Cuenta creada exitosamente. Por favor verifica tu correo si es necesario.');
+      toast.success('Cuenta creada exitosamente. Tu solicitud está pendiente de aprobación.');
       navigate(redirectTo, { replace: true });
     } catch (err: any) {
       console.error('Auth error:', err);

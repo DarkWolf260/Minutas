@@ -86,3 +86,53 @@ Cuando estés listo para aplicar tus cambios locales en producción:
 ```bash
 npx supabase db push
 ```
+
+---
+
+## 4. Despliegue de la Base de Datos en Supabase
+
+Existen dos métodos para desplegar la base de datos:
+
+### Opción A: Despliegue mediante Supabase CLI (Recomendado)
+
+1. **Iniciar sesión en Supabase CLI** (si no lo has hecho):
+   ```bash
+   npx supabase login
+   ```
+
+2. **Vincular tu proyecto remoto**:
+   ```bash
+   npx supabase link --project-ref id_del_proyecto
+   ```
+
+3. **Empujar la base de datos completa**:
+   ```bash
+   npx supabase db push
+   ```
+   Esto aplicará automáticamente el archivo maestro consolidado:
+   - `20260613012703_remote_schema.sql` (Contiene las 21 tablas, columnas más recientes de plantillas, RLS, triggers, funciones, Storage bucket y vista de compatibilidad).
+
+---
+
+### Opción B: Despliegue directo desde el Dashboard de Supabase (SQL Editor)
+
+Si prefieres no usar la consola o estás configurando una base de datos desde cero en la web:
+
+1. Entra a tu proyecto en [Supabase Dashboard](https://supabase.com/dashboard).
+2. Ve al menú lateral **SQL Editor**.
+3. Abre y copia todo el contenido del archivo consolidado:
+   - [`supabase/migrations/20260613012703_remote_schema.sql`](../supabase/migrations/20260613012703_remote_schema.sql)
+4. Pégalo en el editor y haz clic en **Run**. ¡Y listo! Todo queda creado en una sola ejecución.
+
+---
+
+## 5. Verificación Posterior al Despliegue
+
+1. **Tablas**: Verifica en *Table Editor* que existan las 21 tablas (`templates`, `reports`, `personnel`, `workspaces`, `lookups`, `configs`, etc.).
+2. **Storage**: Verifica en *Storage* que el bucket `activity-images` esté creado con visibilidad pública.
+3. **Variables de Entorno**: Asegúrate de que tu archivo `.env` contenga:
+   ```env
+   VITE_SUPABASE_URL=https://<tu-project-ref>.supabase.co
+   VITE_SUPABASE_ANON_KEY=<tu-anon-key>
+   ```
+

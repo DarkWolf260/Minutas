@@ -198,10 +198,12 @@ alter table "public"."personnel" enable row level security;
     "id" uuid not null,
     "email" text,
     "full_name" text,
+    "cedula_type" text default 'V'::text,
+    "cedula_number" text,
     "role" text default 'user'::text,
     "is_admin" boolean default false,
     "is_approved" boolean default false,
-    "workspace_id" text,
+    "workspace_id" text default 'minutasdb'::text,
     "is_verified" boolean default false,
     "allowed_workspaces" text[] default '{}'::text[],
     "created_at" timestamp with time zone default now(),
@@ -295,6 +297,8 @@ alter table "public"."sync_reports" enable row level security;
     "statistics_category" text,
     "statistics_sub_categories" jsonb default '[]'::jsonb,
     "statistics_rules" jsonb default '[]'::jsonb,
+    "disable_main_stat_on_apoyo" boolean default null,
+    "disabled_sub_categories_on_apoyo" jsonb default '[]'::jsonb,
     "modified" text default to_char(now(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'::text),
     "_deleted" boolean default false
       );
@@ -640,7 +644,7 @@ CREATE OR REPLACE FUNCTION public.delete_user(target_user_id uuid)
  SET search_path TO 'public', 'pg_temp'
 AS $function$
 BEGIN
-  IF NOT ((auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean = true) THEN
+  IF NOT internal.is_admin() THEN
     RAISE EXCEPTION 'Solo los administradores pueden eliminar usuarios.';
   END IF;
 
@@ -778,8 +782,37 @@ CREATE OR REPLACE FUNCTION public.handle_new_user_profile()
  SET search_path TO 'public'
 AS $function$
 BEGIN
-  INSERT INTO public.profiles (id, email, is_admin, is_approved)
-  VALUES (NEW.id, NEW.email, FALSE, FALSE);
+  INSERT INTO public.profiles (
+    id,
+    email,
+    full_name,
+    cedula_type,
+    cedula_number,
+    workspace_id,
+    is_admin,
+    is_approved,
+    allowed_workspaces
+  )
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+    COALESCE(NEW.raw_user_meta_data->>'cedula_type', 'V'),
+    NEW.raw_user_meta_data->>'cedula_number',
+    COALESCE(NEW.raw_user_meta_data->>'workspace_id', 'minutasdb'),
+    FALSE, -- Siempre FALSE por seguridad: previene auto-asignación de admin
+    FALSE, -- Siempre FALSE: requiere aprobación manual de un administrador
+    ARRAY[COALESCE(NEW.raw_user_meta_data->>'workspace_id', 'minutasdb')]
+  );
+
+  -- Sincronizar hacia raw_app_meta_data (inmutable por el cliente)
+  UPDATE auth.users
+  SET raw_app_meta_data = COALESCE(raw_app_meta_data, '{}'::jsonb) || jsonb_build_object(
+    'is_admin', false,
+    'is_approved', false
+  )
+  WHERE id = NEW.id;
+
   RETURN NEW;
 END;
 $function$
@@ -843,7 +876,7 @@ CREATE OR REPLACE FUNCTION public.suspend_user(target_user_id uuid)
  SET search_path TO 'public'
 AS $function$
 BEGIN
-  IF NOT ((auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean = true) THEN
+  IF NOT internal.is_admin() THEN
     RAISE EXCEPTION 'Solo los administradores pueden suspender usuarios.';
   END IF;
 
@@ -881,7 +914,7 @@ CREATE OR REPLACE FUNCTION public.unsuspend_user(target_user_id uuid)
  SET search_path TO 'public'
 AS $function$
 BEGIN
-  IF NOT ((auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean = true) THEN
+  IF NOT internal.is_admin() THEN
     RAISE EXCEPTION 'Solo los administradores pueden reactivar usuarios.';
   END IF;
 
@@ -2332,3 +2365,92 @@ using (((bucket_id = 'activity-images'::text) AND (owner = auth.uid())));
 
 CREATE INDEX IF NOT EXISTS fuel_schedules_created_by_idx ON public.fuel_schedules(created_by);
 CREATE INDEX IF NOT EXISTS scheduled_messages_workspace_id_idx ON public.scheduled_messages(workspace_id);
+
+-- Storage bucket para imágenes de actividades y reportes
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('activity-images', 'activity-images', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- Vista de compatibilidad para roles basada en public.lookups
+CREATE OR REPLACE VIEW public.roles WITH (security_invoker = true) AS
+SELECT 
+  id,
+  workspace_id,
+  name,
+  COALESCE((data->>'order')::numeric, 0) AS "order",
+  data
+FROM public.lookups
+WHERE type = 'role' AND (_deleted IS FALSE OR _deleted IS NULL);
+
+GRANT SELECT ON public.roles TO authenticated, anon;
+
+-- Índice parcial para acelerar consultas de lookups activos por tipo
+CREATE INDEX IF NOT EXISTS idx_lookups_type_active 
+ON public.lookups (type) 
+WHERE (_deleted IS FALSE OR _deleted IS NULL);
+
+-- ============================================================================
+-- Correcciones de Seguridad (Supabase Linter: 0028 & 0029)
+-- Revocar ejecución externa vía RPC para funciones SECURITY DEFINER internas,
+-- disparadores (triggers) y de administración.
+-- ============================================================================
+
+-- 1. Funciones de Disparadores (Triggers)
+REVOKE EXECUTE ON FUNCTION public.create_audit_log() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.handle_new_user_profile() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.handle_new_workspace() FROM PUBLIC, anon, authenticated;
+
+-- 2. Funciones de Administración / Utilidad interna
+REVOKE EXECUTE ON FUNCTION public.delete_user(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.delete_user_by_admin(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.suspend_user_by_admin(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.update_user_name(uuid, text) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.verify_user_by_admin(uuid, text) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.get_my_workspace() FROM PUBLIC, anon, authenticated;
+
+-- ============================================================================
+-- Sincronización Segura de Roles hacia auth.users.raw_app_meta_data
+-- Garantiza que el JWT solo contenga roles verificados inmutables por el cliente.
+-- ============================================================================
+CREATE OR REPLACE FUNCTION public.sync_profile_to_app_metadata()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+BEGIN
+  UPDATE auth.users
+  SET raw_app_meta_data = COALESCE(raw_app_meta_data, '{}'::jsonb) || jsonb_build_object(
+    'is_admin', NEW.is_admin,
+    'is_approved', NEW.is_approved
+  )
+  WHERE id = NEW.id;
+  RETURN NEW;
+END;
+$function$
+;
+
+REVOKE EXECUTE ON FUNCTION public.sync_profile_to_app_metadata() FROM PUBLIC, anon, authenticated;
+
+DROP TRIGGER IF EXISTS tr_sync_profile_app_metadata ON public.profiles;
+CREATE TRIGGER tr_sync_profile_app_metadata
+AFTER UPDATE OF is_admin, is_approved ON public.profiles
+FOR EACH ROW EXECUTE FUNCTION public.sync_profile_to_app_metadata();
+
+-- Política RLS para permitir eliminación de perfiles por administradores
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'profiles' AND schemaname = 'public' AND policyname = 'Permitir a administradores eliminar perfiles'
+  ) THEN
+    CREATE POLICY "Permitir a administradores eliminar perfiles"
+    ON public.profiles FOR DELETE
+    TO authenticated
+    USING (internal.is_admin());
+  END IF;
+END $$;
+
+
+
