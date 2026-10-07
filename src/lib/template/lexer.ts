@@ -197,12 +197,31 @@ function extractTripleColonToken(
     // Case 2: Directive closed on the same line (::: <content> :::)
     if (nextTripleColonOnLine !== -1) {
         const inside = lineRest.slice(0, nextTripleColonOnLine);
+
+        // If there is no directive content between ::: and ::: (e.g. ::: ::: or ::::::),
+        // the first ::: is a closing tag (section_end), NOT a section opening!
+        if (inside.trim() === '') {
+            const endPos = afterThreeColons + nextTripleColonOnLine;
+            return {
+                tokens: [
+                    {
+                        type: 'section_end',
+                        raw: template.slice(startPos, endPos),
+                        position: startPos,
+                    },
+                ],
+                endPos,
+            };
+        }
+
         const fullEndPos = afterThreeColons + nextTripleColonOnLine + 3;
         let endPos = fullEndPos;
 
         // If the directive occupied the whole line, consume the trailing newline
+        const prevNewline = template.lastIndexOf('\n', startPos - 1);
+        const beforeOnLine = template.slice(prevNewline + 1, startPos);
         const afterClosing = template.slice(fullEndPos, lineEnd);
-        if (afterClosing.trim() === '' && nextNewline !== -1) {
+        if (beforeOnLine.trim() === '' && afterClosing.trim() === '' && nextNewline !== -1) {
             endPos = nextNewline + 1;
         }
 
@@ -267,6 +286,7 @@ function parseDirectiveContent(
                 {
                     type: 'section_end',
                     raw: '',
+                    is_self_contained: true,
                     position: endPos,
                 },
             ],
@@ -279,33 +299,47 @@ function parseDirectiveContent(
     const lowerTrimmedStart = trimmedStart.toLowerCase();
     if (lowerTrimmedStart.startsWith('if ') || lowerTrimmedStart.startsWith('if:')) {
         const rest = trimmedStart.slice(2).trimStart();
-        const { conditionPart, inlineBody } = splitConditionAndBody(rest);
+        const { conditionPart, inlineBody, bodyOffsetInStr } = splitConditionAndBody(rest);
         const condition = parseConditionString(conditionPart) || {
             field_id: conditionPart,
             operator: '=',
             value: '',
         };
 
-        if (inlineBody !== undefined) {
+        if (inlineBody !== undefined && bodyOffsetInStr !== undefined) {
             // Inline conditional: ::: if condition: body :::
             const innerTokens = tokenize(inlineBody);
+
+            const leadingWs = content.length - trimmedStart.length;
+            const restWs = trimmedStart.slice(2).length - rest.length;
+            const bodyStartInContent = leadingWs + 2 + restWs + bodyOffsetInStr;
+            const bodyStartInRaw = 3 + bodyStartInContent;
+            const openingRaw = raw.slice(0, bodyStartInRaw);
+            const closingRaw = raw.slice(bodyStartInRaw + inlineBody.length);
+
+            // Adjust positions of inner tokens relative to template
+            innerTokens.forEach((t) => {
+                t.position += startPos + bodyStartInRaw;
+            });
+
             return {
                 tokens: [
                     {
                         type: 'section_start',
                         condition,
                         is_self_contained: true,
-                        raw,
+                        raw: openingRaw,
                         position: startPos,
                     },
                     ...innerTokens,
                     {
                         type: 'section_end',
-                        raw: '',
-                        position: fullTokenEndPos,
+                        raw: closingRaw,
+                        is_self_contained: true,
+                        position: startPos + bodyStartInRaw + inlineBody.length,
                     },
                 ],
-                endPos: fullTokenEndPos,
+                endPos,
             };
         }
 
@@ -430,6 +464,20 @@ function parseDirectiveContent(
         };
     }
 
+    // Empty directive: treat as section_end
+    if (!trimmed) {
+        return {
+            tokens: [
+                {
+                    type: 'section_end',
+                    raw,
+                    position: startPos,
+                },
+            ],
+            endPos,
+        };
+    }
+
     // Normal section: ::: <Title> ::: or ::: section <Title> :::
     let sectionTitle = trimmed;
     if (sectionTitle.toLowerCase().startsWith('section ')) {
@@ -453,7 +501,7 @@ function parseDirectiveContent(
 /**
  * Splits `condition: inlineBody` respecting quotes
  */
-function splitConditionAndBody(str: string): { conditionPart: string; inlineBody?: string } {
+function splitConditionAndBody(str: string): { conditionPart: string; inlineBody?: string; bodyOffsetInStr?: number } {
     let inQuotes = false;
     let quoteChar = '';
 
@@ -476,11 +524,13 @@ function splitConditionAndBody(str: string): { conditionPart: string; inlineBody
             }
 
             const conditionPart = str.slice(0, i).trim();
+            let bodyOffset = i + 1;
             let inlineBody = str.slice(i + 1);
             if (inlineBody.startsWith(' ')) {
                 inlineBody = inlineBody.slice(1);
+                bodyOffset += 1;
             }
-            return { conditionPart, inlineBody };
+            return { conditionPart, inlineBody, bodyOffsetInStr: bodyOffset };
         }
     }
 
@@ -517,13 +567,22 @@ export function parseConditionString(condStr: string): ConditionalExpression | n
         const rawOp = match[2]!.trim();
         const operator = (rawOp === '==' ? '=' : rawOp) as ConditionalExpression['operator'];
         let val = match[3]!.trim();
+        let target_field_id: string | undefined = undefined;
+
         if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
             val = val.slice(1, -1);
+        } else {
+            const targetFieldMatch = val.match(/^\{\s*([a-zA-Z0-9_.\s\-¿?áéíóúÁÉÍÓÚñÑüÜ]+?)\s*\}$/);
+            if (targetFieldMatch && targetFieldMatch[1]) {
+                target_field_id = targetFieldMatch[1].trim();
+            }
         }
+
         return {
             field_id,
             operator,
             value: val,
+            target_field_id,
             condition_mode: mode,
             is_implicit: false,
         };

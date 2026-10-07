@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
-  ChevronLeft,
   MessageSquarePlus,
   Send,
   ThumbsUp,
@@ -14,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
@@ -101,106 +99,112 @@ export default function FeedbackPage() {
   };
 
   return (
-    <ScrollArea className="h-full w-full" type="always">
-      <div className="max-w-[650px] mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-32 sm:pb-16 space-y-6">
-
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Link to="/settings" className="shrink-0 sm:hidden">
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-          </Link>
+    <div className="h-full w-full flex flex-col min-h-0 overflow-hidden bg-background">
+      {/* Sticky Top Header */}
+      <div className="border-b shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-card/40 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Enviar Comentarios</h1>
-            <p className="text-muted-foreground text-sm">
-              Tu opinión ayuda a mejorar la aplicación para todos.
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
+              <MessageSquarePlus className="h-6 w-6 text-primary" />
+              Enviar Comentarios
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              Tu opinión ayuda a mejorar la aplicación para todos
             </p>
           </div>
         </div>
-
-        {/* Motivational banner */}
-        <div className="flex items-start gap-3 p-4 rounded-xl border border-primary/20 bg-primary/5">
-          <Heart className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-foreground">Tu ayuda importa</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Puedes enviar tantos comentarios como necesites, sea para reportar errores,
-              proponer mejoras o simplemente contarnos tu experiencia. Cada mensaje es leído
-              y tomado en cuenta para el desarrollo de Minutas.
-            </p>
-          </div>
-        </div>
-
-        {/* Sent counter badge */}
-        {sentCount > 0 && (
-          <div className="flex items-center gap-2 p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 animate-in fade-in duration-300">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-            <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
-              {sentCount === 1
-                ? 'Has enviado 1 comentario en esta sesión. ¡Gracias!'
-                : `Has enviado ${sentCount} comentarios en esta sesión. ¡Gracias por tu ayuda!`}
-            </p>
-          </div>
-        )}
-
-        {/* Type selector */}
-        <Card className="shadow-lg border-muted/50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">Tipo de comentario</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-3">
-            {FEEDBACK_TYPES.map(({ value, label, icon: Icon, selected, idle }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setType(value)}
-                className={cn(
-                  'flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-sm font-semibold',
-                  type === value ? selected : idle
-                )}
-              >
-                <Icon className="h-6 w-6" />
-                {label}
-              </button>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Message */}
-        <Card className="shadow-lg border-muted/50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">Tu mensaje</CardTitle>
-            <CardDescription>
-              Describe lo que quieres compartir con el mayor detalle posible.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="feedback-msg" className="sr-only">Mensaje</Label>
-              <Textarea
-                id="feedback-msg"
-                placeholder={PLACEHOLDERS[type]}
-                className="min-h-[150px] resize-none"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                maxLength={1000}
-              />
-              <p className="text-xs text-muted-foreground text-right">{message.length}/1000</p>
-            </div>
-
-            <Button
-              className="w-full h-11 gap-2"
-              onClick={handleSend}
-              disabled={isSending || !message.trim()}
-            >
-              <Send className="h-4 w-4" />
-              {isSending ? 'Enviando...' : 'Enviar comentario'}
-            </Button>
-          </CardContent>
-        </Card>
-
       </div>
-    </ScrollArea>
+
+      {/* Main Content Area */}
+      <ScrollArea className="flex-1 min-h-0" type="always">
+        <div className="max-w-4xl mx-auto w-full p-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-32">
+          {/* Motivational banner */}
+          <div className="flex items-start gap-3 p-4 rounded-xl border border-primary/20 bg-primary/5">
+            <Heart className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-foreground">Tu ayuda importa</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Puedes enviar tantos comentarios como necesites, sea para reportar errores,
+                proponer mejoras o simplemente contarnos tu experiencia. Cada mensaje es leído
+                y tomado en cuenta para el desarrollo de Minutas.
+              </p>
+            </div>
+          </div>
+
+          {/* Sent counter badge */}
+          {sentCount > 0 && (
+            <div className="flex items-center gap-2 p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 animate-in fade-in duration-300">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+              <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
+                {sentCount === 1
+                  ? 'Has enviado 1 comentario en esta sesión. ¡Gracias!'
+                  : `Has enviado ${sentCount} comentarios en esta sesión. ¡Gracias por tu ayuda!`}
+              </p>
+            </div>
+          )}
+
+          {/* Type selector */}
+          <Card className="shadow-xs border-muted/60">
+            <CardHeader className="pb-3 border-b">
+              <CardTitle className="text-base font-semibold">Tipo de comentario</CardTitle>
+              <CardDescription className="text-xs">
+                Elige la categoría que mejor describa tu mensaje
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {FEEDBACK_TYPES.map(({ value, label, icon: Icon, selected, idle }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setType(value)}
+                  className={cn(
+                    'flex flex-col items-center gap-2 p-3 sm:p-4 rounded-xl border-2 transition-all text-xs sm:text-sm font-semibold',
+                    type === value ? selected : idle
+                  )}
+                >
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                  {label}
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Message */}
+          <Card className="shadow-xs border-muted/60">
+            <CardHeader className="pb-3 border-b">
+              <CardTitle className="text-base font-semibold">Tu mensaje</CardTitle>
+              <CardDescription className="text-xs">
+                Describe lo que quieres compartir con el mayor detalle posible.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="feedback-msg" className="sr-only">Mensaje</Label>
+                <Textarea
+                  id="feedback-msg"
+                  placeholder={PLACEHOLDERS[type]}
+                  className="min-h-[140px] resize-none rounded-xl"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  maxLength={1000}
+                />
+                <p className="text-xs text-muted-foreground text-right">{message.length}/1000</p>
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  className="w-full sm:w-auto h-10 px-6 gap-2"
+                  onClick={handleSend}
+                  disabled={isSending || !message.trim()}
+                >
+                  <Send className="h-4 w-4" />
+                  {isSending ? 'Enviando...' : 'Enviar comentario'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </ScrollArea>
+    </div>
   );
 }

@@ -276,6 +276,27 @@ Funciona con:
 - Si alguno no es numérico, la comparación es **de texto** (case-insensitive).
 - Los valores de texto pueden ir entre comillas dobles: `::: if Estado == "activo" :::`
 
+### Comparación entre dos campos (`{Campo1} == {Campo2}`)
+
+Puedes comparar si el contenido de un campo coincide (o difiere) con el de otro campo envolviendo el segundo campo entre llaves `{}`:
+
+```
+::: if {Origen} == {Destino} :::
+El traslado se realizó dentro de la misma localidad: {Origen}.
+:::
+::: if {Origen} != {Destino} :::
+Traslado interurbano desde {Origen} hacia {Destino}.
+:::
+```
+
+También funciona en condicionales inline de una sola línea:
+```
+- *TRAYECTO:* ::: if {Origen} == {Destino}: Local ({Origen}) ::: ::: if {Origen} != {Destino}: De {Origen} a {Destino} :::
+```
+
+* **Nota:** Si ambos campos están vacíos/sin rellenar, la condición no se activará para evitar falsos positivos en reportes recién creados.
+
+
 ### Condicional con dropdown
 
 Cuando el campo es un dropdown, la comparación se hace contra el **label** (la clave visible) o su valor.
@@ -307,7 +328,7 @@ El bloque cuya condición sea falsa se suprime automáticamente sin dejar línea
 
 ### Condicional anidado
 
-Los condicionales pueden anidarse dentro de secciones:
+Los condicionales pueden anidarse dentro de secciones u otros condicionales:
 
 ```
 ::: Sección Principal :::
@@ -317,6 +338,37 @@ Los condicionales pueden anidarse dentro de secciones:
 :::
 :::
 ```
+
+### Condicionales en la misma línea y anidados
+
+Puedes colocar condicionales inline en la misma línea junto con campos dropdown u otros textos.
+
+#### Forma 1: Bloque condicional con dropdown y condiciones inline (Recomendada)
+Mantener la apertura y cierre del bloque en sus propias líneas hace que el código sea limpio y fácil de leer, mientras que el contenido (dropdown + condicionales de municipios) se renderiza en la misma línea:
+
+```markdown
+*TIPO DE NOVEDAD:* ::: if Estatus == "En proceso": Posible accidente de tránsito :::
+::: if Estatus == "Finalizado":show :::
+{Tipo de accidente de tránsito:dropdown} ::: if {Municipio} == {Municipio del incidente}: (Urbano) ::: ::: if {Municipio} != {Municipio del incidente}: (Extra-urbano) :::
+:::
+```
+
+#### Forma 2: Todo en una sola línea
+Si deseas escribir la sección de `Finalizado` completamente en una sola línea:
+
+```markdown
+:::if Estatus == "Finalizado":show:::{Tipo de accidente de tránsito:dropdown} ::: if {Municipio} == {Municipio del incidente}: (Urbano)::: ::: if {Municipio} != {Municipio del incidente}: (Extra-urbano)::: :::
+```
+*(o con `::::::` continuo al final para cerrar el condicional inline y el bloque exterior)*:
+```markdown
+:::if Estatus == "Finalizado":show:::{Tipo de accidente de tránsito:dropdown} ::: if {Municipio} == {Municipio del incidente}: (Urbano)::: ::: if {Municipio} != {Municipio del incidente}: (Extra-urbano)::::::
+```
+
+> [!IMPORTANT]
+> **Ubicación del cierre `:::`**:
+> Para que los condicionales de `(Urbano)` / `(Extra-urbano)` solo se evalúen y muestren cuando `Estatus == "Finalizado"`, deben estar **dentro** de la sección de `Finalizado`.
+> Si colocas `:::` inmediatamente después de `{Tipo de accidente de tránsito:dropdown}:::`, habrás cerrado la condición de `Finalizado` antes de tiempo, provocando que los condicionales de municipio queden afuera y se muestren incluso cuando el estatus sea "En proceso".
+
 
 ---
 

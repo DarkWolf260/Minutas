@@ -14,7 +14,8 @@ import { Separator } from '@/components/ui/separator';
 import { useUser } from '@/components/providers/user-provider';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Lock } from 'lucide-react';
+import { Lock, Building2, Users, Settings2, Sliders } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -250,12 +251,11 @@ export function AjustesGenerales() {
     }
   };
 
-  const allDefaultFieldKeys = useMemo(() => ['Municipio', 'Estado', 'REDAN', 'ZOEDAN'], []);
-  const orderedFields = useMemo(() => Object.keys(definitions), [definitions]);
+  const FIELD_ORDER = useMemo(() => ['Estado', 'Municipio', 'REDAN', 'ZOEDAN'], []);
 
   const generalFields = useMemo(() => {
-    return orderedFields.filter((key: string) => definitions[key] && allDefaultFieldKeys.includes(key));
-  }, [orderedFields, definitions, allDefaultFieldKeys]);
+    return FIELD_ORDER.filter((key: string) => definitions[key]);
+  }, [FIELD_ORDER, definitions]);
 
   const activeTemplates = useMemo(() => {
     return templates.filter(t => t.is_active !== false);
@@ -290,207 +290,228 @@ export function AjustesGenerales() {
 
   if (!definitionsLoaded || !rolesLoaded || !settingsLoaded || !deptsLoaded || !templatesLoaded) {
     return (
-      <div className="h-full flex flex-col p-4 sm:p-6 lg:p-8 space-y-8 overflow-hidden">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-1/3" />
-          <Skeleton className="h-4 w-1/2" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-3">
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-          <div className="space-y-3">
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-          <div className="space-y-3">
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-          <div className="space-y-3">
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-10 w-full" />
+      <div className="h-full w-full flex flex-col min-h-0 overflow-hidden bg-background">
+        {/* Header Skeleton */}
+        <div className="border-b shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-card/40 backdrop-blur-sm">
+          <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+            <div className="space-y-1.5">
+              <Skeleton className="h-7 w-52" />
+              <Skeleton className="h-4 w-80" />
+            </div>
+            <Skeleton className="h-9 w-24 rounded-xl" />
           </div>
         </div>
-        <Separator />
-        <div className="space-y-4">
-          <Skeleton className="h-5 w-40" />
-          <Skeleton className="h-10 w-64" />
-          <div className="space-y-2">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
+
+        {/* Content Skeleton */}
+        <div className="flex-1 overflow-hidden p-4 sm:px-6 lg:px-8 py-6">
+          <div className="max-w-4xl mx-auto w-full space-y-6">
+            <div className="rounded-xl border p-6 space-y-4">
+              <Skeleton className="h-5 w-48" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Skeleton className="h-10 w-full rounded-xl" />
+                <Skeleton className="h-10 w-full rounded-xl" />
+                <Skeleton className="h-10 w-full rounded-xl" />
+                <Skeleton className="h-10 w-full rounded-xl" />
+              </div>
+            </div>
+            <div className="rounded-xl border p-6 space-y-4">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="h-24 w-full rounded-xl" />
+            </div>
           </div>
-        </div>
-        <div className="flex justify-end pt-4">
-          <Skeleton className="h-10 w-32" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full w-full flex flex-col min-h-0 overflow-hidden">
-      {/* Header directo sin Card */}
-      <div className="flex items-center justify-between gap-4 pb-4 border-b shrink-0 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Ajustes Generales</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Define los valores globales que se utilizarán automáticamente en tus reportes.
-          </p>
+    <div className="h-full w-full flex flex-col min-h-0 overflow-hidden bg-background">
+      {/* Header fijo centrado */}
+      <div className="border-b shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-card/40 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
+              <Settings2 className="h-6 w-6 text-primary" />
+              Ajustes Generales
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              Define los valores globales que se utilizarán automáticamente en tus reportes.
+            </p>
+          </div>
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+            size="sm"
+            className="h-9 px-4 shrink-0 shadow-xs font-bold gap-2 rounded-xl"
+            title="Guardar Configuración"
+          >
+            <Save className="h-4 w-4" />
+            <span className="hidden sm:inline">{isSaving ? 'Guardando...' : 'Guardar'}</span>
+          </Button>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={isSaving}
-          size="sm"
-          className="h-9 px-4 shrink-0 shadow-sm font-bold gap-2"
-          title="Guardar Configuración"
-        >
-          <Save className="h-4 w-4" />
-          <span className="hidden sm:inline">{isSaving ? 'Guardando...' : 'Guardar'}</span>
-        </Button>
       </div>
 
-      <ScrollArea className="flex-1 min-h-0" type="hover">
-        <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-4xl pb-32">
-            {isBlocked && (
-              <Alert className="bg-amber-500/5 border-amber-500/20 text-amber-600 rounded-2xl mb-2">
-                <Lock className="h-4 w-4" />
-                <AlertDescription className="text-[11px] font-medium ml-2">
-                  Esta área de trabajo está en la nube. Los ajustes generales solo pueden ser modificados por un administrador desde el Panel de Control.
-                </AlertDescription>
-              </Alert>
-            )}
+      <ScrollArea className="flex-1 min-h-0" type="always">
+        <div className="max-w-4xl mx-auto w-full p-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-32">
+          {isBlocked && (
+            <Alert className="bg-amber-500/5 border-amber-500/20 text-amber-600 rounded-2xl">
+              <Lock className="h-4 w-4" />
+              <AlertDescription className="text-xs font-medium ml-2">
+                Esta área de trabajo está en la nube. Los ajustes generales solo pueden ser modificados por un administrador desde el Panel de Control.
+              </AlertDescription>
+            </Alert>
+          )}
 
-            <AjustesGeneralesForm
-              values={localValues}
-              onChange={(key, val) => setLocalValues(prev => ({ ...prev, [key]: val }))}
-              definitions={definitions}
-              fieldKeys={generalFields}
-              disabled={isBlocked}
-            />
+          {/* Bloque 1: Valores Institucionales */}
+          <Card className="shadow-xs border-muted/60">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" />
+                Valores Institucionales
+              </CardTitle>
+              <CardDescription>
+                Configura los datos geográficos y de jurisdicción por defecto asignados a esta base operativa.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AjustesGeneralesForm
+                values={localValues}
+                onChange={(key, val) => setLocalValues(prev => ({ ...prev, [key]: val }))}
+                definitions={definitions}
+                fieldKeys={generalFields}
+                disabled={isBlocked}
+              />
+            </CardContent>
+          </Card>
 
-            <Separator className="my-2" />
-
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <h4 className="text-sm font-semibold">Personal que Reporta</h4>
-                <p className="text-xs text-muted-foreground">
-                  Gestiona los cargos que se usarán para rellenar la etiqueta [Reporta].
-                </p>
+          {/* Bloque 2: Personal que Reporta */}
+          <Card className="shadow-xs border-muted/60">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Personal que Reporta
+              </CardTitle>
+              <CardDescription>
+                Gestiona y ordena por prioridad los cargos institucionales que se usarán para autocompletar la etiqueta [Reporta].
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Añadir Cargo
+                </Label>
+                <Select onValueChange={handleAddReportRole} disabled={isBlocked}>
+                  <SelectTrigger className="h-10 w-full rounded-xl bg-background shadow-xs">
+                    <SelectValue placeholder={isBlocked ? "Bloqueado por Administración" : "Selecciona un cargo para añadir a la lista..."} />
+                  </SelectTrigger>
+                  <SelectContent className="z-[200]">
+                    {Object.entries(groupedRoles).map(([groupName, groupRoles], idx) => (
+                      <SelectGroup key={groupName}>
+                        {idx > 0 && <SelectSeparator />}
+                        <SelectLabel className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 bg-muted/20">
+                          {groupName}
+                        </SelectLabel>
+                        {groupRoles.map((role) => (
+                          <SelectItem key={role.name} value={role.name} className="pl-4">
+                            {role.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    ))}
+                    {Object.keys(groupedRoles).length === 0 && (
+                      <div className="p-4 text-center text-xs text-muted-foreground">
+                        No hay cargos disponibles
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="space-y-4">
-                <div className="space-y-2 max-w-sm">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Añadir Cargo
-                  </Label>
-                  <Select onValueChange={handleAddReportRole} disabled={isBlocked}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder={isBlocked ? "Bloqueado por Administración" : "Selecciona un cargo..."} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(groupedRoles).map(([groupName, groupRoles], idx) => (
-                        <SelectGroup key={groupName}>
-                          {idx > 0 && <SelectSeparator />}
-                          <SelectLabel className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 bg-muted/20">
-                            {groupName}
-                          </SelectLabel>
-                          {groupRoles.map((role) => (
-                            <SelectItem key={role.name} value={role.name} className="pl-4">
-                              {role.name}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      ))}
-                      {Object.keys(groupedRoles).length === 0 && (
-                        <div className="p-4 text-center text-xs text-muted-foreground">
-                          No hay cargos disponibles
-                        </div>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Cargos Seleccionados (Prioridad)
+                </Label>
+                <div className="space-y-2 rounded-xl border p-2 bg-muted/5 min-h-[50px]">
+                  {(() => {
+                    const existingRoleNames = new Set(roles.map(r => r.name));
+                    const validRoles = localReportaRoles.filter(role => existingRoleNames.has(role));
 
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Cargos Seleccionados (Prioridad)
-                  </Label>
-                  <div className="space-y-2 rounded-md border p-2 bg-muted/5 min-h-[50px]">
-                    {(() => {
-                      const existingRoleNames = new Set(roles.map(r => r.name));
-                      const validRoles = localReportaRoles.filter(role => existingRoleNames.has(role));
-
-                      if (validRoles.length > 0) {
-                        return validRoles.map((roleName, index) => (
-                          <div
-                            key={roleName}
-                            className="flex items-center justify-between rounded-md p-2 bg-background border shadow-sm transition-all"
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
-                                {index + 1}
-                              </span>
-                              <span className="text-sm font-medium">{roleName}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() => handleMoveReportRole(index, 'up')}
-                                disabled={index === 0}
-                              >
-                                <ChevronUp className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() => handleMoveReportRole(index, 'down')}
-                                disabled={index === validRoles.length - 1}
-                              >
-                                <ChevronDown className="h-4 w-4" />
-                              </Button>
-                              <Separator orientation="vertical" className="h-4 mx-1" />
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                                onClick={() => handleRemoveReportRole(roleName)}
-                                disabled={isBlocked}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
+                    if (validRoles.length > 0) {
+                      return validRoles.map((roleName, index) => (
+                        <div
+                          key={roleName}
+                          className="flex items-center justify-between rounded-lg p-2.5 bg-background border shadow-xs transition-all"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                              {index + 1}
+                            </span>
+                            <span className="text-sm font-medium">{roleName}</span>
                           </div>
-                        ));
-                      }
-
-                      return (
-                        <div className="py-4 text-center text-[11px] text-muted-foreground italic">
-                          No has seleccionado ningún cargo válido.
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 rounded-lg"
+                              onClick={() => handleMoveReportRole(index, 'up')}
+                              disabled={index === 0}
+                              title="Subir prioridad"
+                            >
+                              <ChevronUp className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 rounded-lg"
+                              onClick={() => handleMoveReportRole(index, 'down')}
+                              disabled={index === validRoles.length - 1}
+                              title="Bajar prioridad"
+                            >
+                              <ChevronDown className="h-4 w-4" />
+                            </Button>
+                            <Separator orientation="vertical" className="h-4 mx-1" />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
+                              onClick={() => handleRemoveReportRole(roleName)}
+                              disabled={isBlocked}
+                              title="Eliminar de la lista"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                      );
-                    })()}
-                  </div>
+                      ));
+                    }
+
+                    return (
+                      <div className="py-4 text-center text-xs text-muted-foreground italic">
+                        No has seleccionado ningún cargo para reportar.
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            <Separator className="my-2" />
-
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <h4 className="text-sm font-semibold">Visualización de Novedades</h4>
-                <p className="text-xs text-muted-foreground">
-                  Personaliza cómo se muestran las novedades en la barra lateral.
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between rounded-xl border p-4 bg-muted/5 shadow-sm">
+          {/* Bloque 3: Visualización de Novedades */}
+          <Card className="shadow-xs border-muted/60">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <Sliders className="h-5 w-5 text-primary" />
+                Visualización de Novedades
+              </CardTitle>
+              <CardDescription>
+                Personaliza cómo se muestran y agrupan los reportes en la barra lateral y exportaciones.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between rounded-xl border p-4 bg-muted/5 shadow-xs transition-colors hover:bg-muted/10">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
+                  <div className="p-2 bg-primary/10 rounded-xl text-primary shrink-0">
                     <Layers className="h-4 w-4" />
                   </div>
                   <div className="space-y-0.5">
@@ -514,9 +535,9 @@ export function AjustesGenerales() {
                 />
               </div>
 
-              <div className="flex items-center justify-between rounded-xl border p-4 bg-muted/5 shadow-sm">
+              <div className="flex items-center justify-between rounded-xl border p-4 bg-muted/5 shadow-xs transition-colors hover:bg-muted/10">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
+                  <div className="p-2 bg-primary/10 rounded-xl text-primary shrink-0">
                     <Folders className="h-4 w-4" />
                   </div>
                   <div className="space-y-0.5">
@@ -541,8 +562,8 @@ export function AjustesGenerales() {
               </div>
 
               {localGroupByTemplateType && (
-                <div className="border rounded-xl bg-muted/5 pl-8 pr-4 py-4 space-y-4 animate-in slide-in-from-top-2 fade-in duration-200">
-                  <div className="space-y-1">
+                <div className="border rounded-xl bg-muted/10 p-4 sm:p-5 space-y-4 animate-in slide-in-from-top-2 fade-in duration-200">
+                  <div className="space-y-0.5">
                     <Label className="text-sm font-semibold">
                       Seleccionar plantillas a agrupar
                     </Label>
@@ -551,9 +572,8 @@ export function AjustesGenerales() {
                     </p>
                   </div>
 
-                  <div className="space-y-4">
-                    {/* Select Dropdown to Add Template */}
-                    <div className="space-y-2 max-w-sm">
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
                       <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                         Añadir Plantilla
                       </Label>
@@ -568,8 +588,8 @@ export function AjustesGenerales() {
                               }
                             }}
                           >
-                            <SelectTrigger className="h-9">
-                              <SelectValue placeholder="Selecciona una plantilla..." />
+                            <SelectTrigger className="h-10 w-full rounded-xl bg-background shadow-xs">
+                              <SelectValue placeholder="Selecciona una plantilla para agrupar..." />
                             </SelectTrigger>
                             <SelectContent className="z-[200]">
                               {availableTemplates.map(template => (
@@ -591,12 +611,11 @@ export function AjustesGenerales() {
                       })()}
                     </div>
 
-                    {/* List of Selected Templates */}
-                    <div className="space-y-2 max-w-md">
+                    <div className="space-y-1.5">
                       <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                         Plantillas Seleccionadas para Agrupar
                       </Label>
-                      <div className="space-y-2 rounded-md border p-2 bg-muted/5 min-h-[50px]">
+                      <div className="space-y-2 rounded-xl border p-2 bg-background min-h-[50px]">
                         {localGroupedTemplateIds.length > 0 ? (
                           localGroupedTemplateIds.map((templateId, index) => {
                             const template = activeTemplates.find(t => t.id === templateId);
@@ -604,7 +623,7 @@ export function AjustesGenerales() {
                             return (
                               <div
                                 key={templateId}
-                                className="flex items-center justify-between rounded-md p-2 bg-background border shadow-sm transition-all"
+                                className="flex items-center justify-between rounded-lg p-2.5 bg-muted/20 border shadow-xs transition-all"
                               >
                                 <div className="flex items-center gap-3">
                                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
@@ -618,10 +637,11 @@ export function AjustesGenerales() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                                  className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
                                   onClick={() => {
                                     setLocalGroupedTemplateIds(prev => prev.filter(id => id !== templateId));
                                   }}
+                                  title="Eliminar plantilla"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -629,7 +649,7 @@ export function AjustesGenerales() {
                             );
                           })
                         ) : (
-                          <div className="py-4 text-center text-[11px] text-muted-foreground italic">
+                          <div className="py-4 text-center text-xs text-muted-foreground italic">
                             Ninguna plantilla seleccionada.
                           </div>
                         )}
@@ -639,9 +659,9 @@ export function AjustesGenerales() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between rounded-xl border p-4 bg-muted/5 shadow-sm">
+              <div className="flex items-center justify-between rounded-xl border p-4 bg-muted/5 shadow-xs transition-colors hover:bg-muted/10">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
+                  <div className="p-2 bg-primary/10 rounded-xl text-primary shrink-0">
                     <ListOrdered className="h-4 w-4" />
                   </div>
                   <div className="space-y-0.5">
@@ -661,7 +681,7 @@ export function AjustesGenerales() {
               </div>
 
               {localEnableNumbering && (
-                <div className="flex items-center justify-between rounded-xl border p-4 bg-muted/5 shadow-sm pl-8 animate-in slide-in-from-top-2 fade-in duration-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-4 bg-muted/10 shadow-xs animate-in slide-in-from-top-2 fade-in duration-200">
                   <div className="space-y-0.5">
                     <Label htmlFor="numbering-type" className="text-sm font-semibold cursor-pointer">
                       Tipo de numeración
@@ -674,7 +694,7 @@ export function AjustesGenerales() {
                     value={localNumberingType}
                     onValueChange={(val: any) => setLocalNumberingType(val)}
                   >
-                    <SelectTrigger id="numbering-type" className="w-[200px] bg-background">
+                    <SelectTrigger id="numbering-type" className="w-full sm:w-[220px] h-10 rounded-xl bg-background shadow-xs shrink-0">
                       <SelectValue placeholder="Selecciona..." />
                     </SelectTrigger>
                     <SelectContent className="z-[200]">
@@ -694,22 +714,24 @@ export function AjustesGenerales() {
                   </Select>
                 </div>
               )}
-            </div>
+            </CardContent>
+          </Card>
 
-            <Separator className="my-2" />
-
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <h4 className="text-sm font-semibold">Interfaz y Accesibilidad</h4>
-                <p className="text-xs text-muted-foreground">
-                  Personaliza la apariencia general de la aplicación.
-                </p>
-              </div>
-
-              {/* Selector de Tamaño de Texto */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border p-4 bg-muted/5 shadow-sm gap-4">
+          {/* Bloque 4: Interfaz y Accesibilidad */}
+          <Card className="shadow-xs border-muted/60">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <Type className="h-5 w-5 text-primary" />
+                Interfaz y Accesibilidad
+              </CardTitle>
+              <CardDescription>
+                Personaliza la escala de tamaño de las fuentes y elementos de la interfaz.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border p-4 bg-muted/5 shadow-xs gap-4">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
+                  <div className="p-2 bg-primary/10 rounded-xl text-primary shrink-0">
                     <Type className="h-4 w-4" />
                   </div>
                   <div className="space-y-0.5">
@@ -719,7 +741,7 @@ export function AjustesGenerales() {
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-4 gap-1 p-1 bg-muted/30 rounded-xl border border-muted/50 w-full sm:w-[320px] shrink-0 bg-background">
+                <div className="grid grid-cols-4 gap-1 p-1 bg-muted/30 rounded-xl border border-muted/50 w-full sm:w-[320px] shrink-0 bg-background shadow-xs">
                   {(['small', 'normal', 'large', 'xlarge'] as const).map((size) => {
                     const labels: Record<string, string> = {
                       small: 'Pequeño',
@@ -735,8 +757,8 @@ export function AjustesGenerales() {
                         size="sm"
                         onClick={() => handleUpdateTextSize(size)}
                         className={cn(
-                          "h-7 text-[10px] uppercase font-black rounded-lg transition-all",
-                          isActive ? "shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          "h-8 text-[10px] uppercase font-bold rounded-lg transition-all",
+                          isActive ? "shadow-xs" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                         )}
                       >
                         {labels[size]}
@@ -745,21 +767,10 @@ export function AjustesGenerales() {
                   })}
                 </div>
               </div>
-            </div>
-
-            <div className="flex justify-end pt-4 border-t">
-              <Button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="h-10 px-5 shrink-0 shadow-sm font-bold gap-2"
-                title="Guardar Configuración"
-              >
-                <Save className="h-4 w-4" />
-                <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
-              </Button>
-            </div>
-          </div>
-        </ScrollArea>
-      </div>
-    );
-  }
+            </CardContent>
+          </Card>
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}

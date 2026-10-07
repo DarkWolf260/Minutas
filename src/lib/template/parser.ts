@@ -322,11 +322,11 @@ export function parse(tokens: Token[]): TemplateParserResult {
                         field_id: token.condition.field_id,
                         operator: token.condition.operator,
                         value: token.condition.value,
+                        target_field_id: token.condition.target_field_id,
                         condition_mode: token.condition.condition_mode,
                     } : undefined,
                     original_content: inner.map((t) => t.raw).join(''),
                     full_raw: (() => {
-                        if (isSelfContained) return token.raw;
                         const lastToken = idx > 0 ? tokenList[idx - 1] : undefined;
                         const closingRaw = (lastToken?.type === 'section_end') ? lastToken.raw : '';
                         return [token.raw, ...inner.map((t) => t.raw), closingRaw].join('');

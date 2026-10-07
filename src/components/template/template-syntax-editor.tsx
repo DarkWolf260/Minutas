@@ -287,7 +287,8 @@ export function TemplateSyntaxEditor({
   // Identifies every opening block and pairs it with its exact closing :::
   const blockPairs = useMemo(() => {
     const regex =
-      /(:::[^\n\r]*?:::|:::|<<|>>|\\[*{}[\]:\\]|\{[^{}\n\r]+\}\*?|\[\?[^\]\n\r]*\]|\[\/\]|\["[^"\n\r]*"\]\*?)/g;
+      /(:::(?!\s*:::)([^\n\r:]|:(?!::))+?:::|:::|<<|>>|\\[*{}[\]:\\]|\{[^{}\n\r]+\}\*?|\[\?[^\]\n\r]*\]|\[\/\]|\["[^"\n\r]*"\]\*?)/g;
+
 
     const stack: BlockMeta[] = [];
     const completedBlocks: BlockMeta[] = [];
@@ -468,7 +469,8 @@ export function TemplateSyntaxEditor({
     }
 
     const masterRegex =
-      /(:::[^\n\r]*?:::|:::|<<|>>|\\[*{}[\]:\\]|\{[^{}\n\r]+\}\*?|\[\?[^\]\n\r]*\]|\[\/\]|\["[^"\n\r]*"\]\*?)/g;
+      /(:::(?!\s*:::)([^\n\r:]|:(?!::))+?:::|:::|<<|>>|\\[*{}[\]:\\]|\{[^{}\n\r]+\}\*?|\[\?[^\]\n\r]*\]|\[\/\]|\["[^"\n\r]*"\]\*?)/g;
+
 
     const elements: React.ReactNode[] = [];
     let lastIdx = 0;

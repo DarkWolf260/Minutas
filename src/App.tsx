@@ -194,7 +194,7 @@ function AppLayout() {
             <ErrorBoundary name="MainContent">
               <Suspense fallback={<PageLoader />}>
               <div
-                key={location.pathname}
+                key={location.pathname.split('/')[1] || 'root'}
                 className="flex-1 flex flex-col min-h-0 min-w-0 animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out"
               >
                 <Routes>
@@ -228,11 +228,6 @@ function AppLayout() {
                   <Route path="/reporte-final" element={
                     <ProtectedRoute>
                       <ReporteFinalPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings" element={
-                    <ProtectedRoute>
-                      <SettingsPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/settings/*" element={

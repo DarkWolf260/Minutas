@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useIsMobile } from '@/hooks/ui';
 import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
 import { useSettings } from '@/hooks/configuracion';
 import { useUnits } from '@/hooks/configuracion';
@@ -17,21 +16,16 @@ import { useAddresses } from '@/hooks/direcciones';
 import { useGuardHistory } from '@/hooks/guardias';
 import { usePersonnelHistory } from '@/hooks/personal';
 import { useProfile } from '@/hooks/configuracion';
-import { getInstitutionalData } from '@/components/structure/institutional-data'; // Añadido
-import {
-  Trash2,
-  AlertTriangle,
-  ChevronLeft
-} from 'lucide-react';
-import { Link, Navigate } from 'react-router-dom';
+import { Trash2, AlertTriangle } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useUser } from '@/components/providers/user-provider';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 
 export default function BorrarDatosPage() {
   const { clearAllUnits } = useUnits();
-  const { clearAllRoles, saveRoles } = useRoles(); // Añadido saveRoles
-  const { clearAllDepartments, saveDepartments } = useDepartments(); // Añadido saveDepartments
+  const { clearAllRoles } = useRoles();
+  const { clearAllDepartments } = useDepartments();
   const { clearAllSettings } = useSettings();
   const { clearAllReports } = useReports();
   const { clearAllTemplates } = useTemplates();
@@ -43,7 +37,6 @@ export default function BorrarDatosPage() {
   const { clearAllGuardHistory } = useGuardHistory();
   const { clearAllPersonnelHistory } = usePersonnelHistory();
   const { clearProfile } = useProfile();
-  const isMobile = useIsMobile();
   const { isAdmin } = useUser();
   const { isCloud } = useWorkspaceManager();
 
@@ -65,8 +58,6 @@ export default function BorrarDatosPage() {
         await clearAllTemplates();
         break;
       case 'staff':
-        // 1. Limpiar y restaurar estructura institucional (IPP) por defecto
-        // Estas funciones ya eliminan lo anterior e insertan los valores por defecto
         await clearAllRoles();
         await clearAllDepartments();
         await clearAllGuards();
@@ -137,68 +128,76 @@ export default function BorrarDatosPage() {
   };
 
   return (
-    <ScrollArea className="h-full w-full" type="always">
-      <div className="p-4 sm:p-6 lg:p-8 pb-32 sm:pb-16 space-y-6">
-        <div className="max-w-4xl mx-auto flex items-center gap-4 mb-2">
-          <Link to="/settings" className="shrink-0 sm:hidden">
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Borrar datos de la app</h1>
+    <div className="h-full w-full flex flex-col min-h-0 overflow-hidden bg-background">
+      {/* Sticky Top Header */}
+      <div className="border-b shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-card/40 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
+              <Trash2 className="h-6 w-6 text-destructive" />
+              Borrar datos de la app
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              Restablece configuraciones, reportes o el estado completo del sistema
+            </p>
+          </div>
         </div>
-
-        <Card className="max-w-4xl mx-auto shadow-lg border-destructive">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle />
-              Zona de Peligro
-            </CardTitle>
-            <CardDescription>
-              Las siguientes acciones son destructivas y no se pueden deshacer. Úsalas con
-              precaución.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-destructive/10">
-              {Object.entries(resetOptions).map(([key, option]) => (
-                <div
-                  key={key}
-                  className="flex flex-row items-center justify-between p-4 sm:p-6 gap-4 hover:bg-destructive/[0.02] transition-colors"
-                >
-                  <div className="space-y-1">
-                    <h4 className="font-semibold text-destructive">{option.buttonLabel}</h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
-                      {option.description.split('.')[0]}.
-                    </p>
-                  </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setActionToConfirm(key)}
-                    className="h-9 w-9 p-0 sm:h-auto sm:w-auto sm:px-3 sm:py-2 shrink-0 shadow-sm"
-                    title={option.buttonLabel}
-                  >
-                    < Trash2 className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">{option.buttonLabel}</span>
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <ConfirmDialog
-          open={!!actionToConfirm}
-          onOpenChange={(open) => !open && setActionToConfirm(null)}
-          onConfirm={handleConfirmReset}
-          title={actionToConfirm ? resetOptions[actionToConfirm]?.title : ''}
-          message={actionToConfirm ? resetOptions[actionToConfirm]?.description || '' : ''}
-          confirmText="Sí, continuar"
-          cancelText="Cancelar"
-          variant="destructive"
-        />
       </div>
-    </ScrollArea>
+
+      {/* Main Content Area */}
+      <ScrollArea className="flex-1 min-h-0" type="always">
+        <div className="max-w-4xl mx-auto w-full p-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-32">
+          <Card className="shadow-xs border-destructive/40 overflow-hidden">
+            <CardHeader className="bg-destructive/5 border-b border-destructive/10">
+              <CardTitle className="flex items-center gap-2 text-destructive text-base sm:text-lg">
+                <AlertTriangle className="h-5 w-5" />
+                Zona de Peligro
+              </CardTitle>
+              <CardDescription>
+                Las siguientes acciones son destructivas y no se pueden deshacer. Úsalas con precaución.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-destructive/10">
+                {Object.entries(resetOptions).map(([key, option]) => (
+                  <div
+                    key={key}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 gap-3 sm:gap-4 hover:bg-destructive/[0.03] transition-colors"
+                  >
+                    <div className="space-y-1">
+                      <h4 className="font-semibold text-sm sm:text-base text-foreground">{option.buttonLabel}</h4>
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-xl">
+                        {option.description}
+                      </p>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setActionToConfirm(key)}
+                      className="h-9 px-3 shrink-0 shadow-xs w-full sm:w-auto font-medium"
+                      title={option.buttonLabel}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      <span>{option.buttonLabel}</span>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <ConfirmDialog
+            open={!!actionToConfirm}
+            onOpenChange={(open) => !open && setActionToConfirm(null)}
+            onConfirm={handleConfirmReset}
+            title={actionToConfirm ? resetOptions[actionToConfirm]?.title : ''}
+            message={actionToConfirm ? resetOptions[actionToConfirm]?.description || '' : ''}
+            confirmText="Sí, continuar"
+            cancelText="Cancelar"
+            variant="destructive"
+          />
+        </div>
+      </ScrollArea>
+    </div>
   );
 }

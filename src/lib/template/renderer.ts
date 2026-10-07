@@ -421,6 +421,40 @@ function renderSection(
             currentData
         );
 
+        let targetValue = section.condition.value;
+        const targetFieldId = section.condition.target_field_id || (
+            section.condition.value.startsWith('{') && section.condition.value.endsWith('}')
+                ? section.condition.value.slice(1, -1).trim()
+                : undefined
+        );
+
+        if (targetFieldId) {
+            const rawTargetVal = findValueForField(
+                targetFieldId,
+                data,
+                sections,
+                predefinedValues,
+                dynamicPredefinedValues,
+                currentData
+            );
+            targetValue = rawTargetVal !== undefined && rawTargetVal !== null ? String(rawTargetVal) : '';
+
+            // Also resolve dropdown labels for target field if applicable
+            const targetOptions = [
+                ...(config.templateOptions?.get(targetFieldId) || []),
+                ...(config.fields[targetFieldId]?.snippet_options || [])
+            ];
+            if (targetOptions.length && rawTargetVal !== undefined && rawTargetVal !== null) {
+                const opt = targetOptions.find(o =>
+                    String(o.value) === String(rawTargetVal) ||
+                    String(o.label) === String(rawTargetVal)
+                );
+                if (opt) {
+                    targetValue = opt.label;
+                }
+            }
+        }
+
         // Resolve dropdown labels for comparison
         const options = [
             ...(config.templateOptions?.get(section.condition.field_id) || []),
@@ -435,7 +469,6 @@ function renderSection(
 
             if (opt) {
                 // Determine if we should compare against label or value
-                const targetValue = section.condition.value;
                 if (String(opt.label) === targetValue) {
                     valToCompare = opt.label;
                 } else if (String(opt.value) === targetValue) {
@@ -453,7 +486,16 @@ function renderSection(
             return '';
         }
 
-        if (!evaluateCondition(valToCompare, section.condition.operator || '=', section.condition.value)) {
+        // When comparing two fields, if both are empty/unset, condition between two fields is not satisfied
+        if (targetFieldId) {
+            const leftEmpty = valToCompare === undefined || valToCompare === null || String(valToCompare).trim() === '';
+            const rightEmpty = !targetValue || targetValue.trim() === '';
+            if (leftEmpty && rightEmpty) {
+                return '';
+            }
+        }
+
+        if (!evaluateCondition(valToCompare, section.condition.operator || '=', targetValue)) {
             return '';
         }
     }

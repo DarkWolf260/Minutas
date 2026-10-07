@@ -193,6 +193,7 @@ export interface SectionConfig {
     field_id: string;
     operator?: '=' | '!=' | '>' | '<' | '>=' | '<=';
     value: string;
+    target_field_id?: string;
     /** 'hide' (default) = oculto hasta cumplirse | 'show' = siempre visible en formulario */
     condition_mode?: 'show' | 'hide';
   };

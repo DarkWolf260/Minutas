@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parseTemplate, renderFinalReport } from '../index';
+import { tokenize } from '../lexer';
+import { parse } from '../parser';
 import type { TemplateConfig, SnippetOption, FieldType, SectionConfig } from '@/lib/types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -244,4 +246,184 @@ describe('Template Renderer - Modifiers', () => {
         expect(result).toBe('*MUNICIPIO GUANTA, ESTADO ANZOÁTEGUI*');
     });
 });
+
+describe('Template Renderer - Two Field Conditionals', () => {
+    it('should render block conditional when two fields match', () => {
+        const template = `Origen: {Origen}
+Destino: {Destino}
+::: if {Origen} == {Destino} :::
+Traslado dentro de la misma localidad.
+:::`;
+        const dataMatching = { Origen: 'Caracas', Destino: 'Caracas' };
+        const resultMatching = render(template, dataMatching);
+        expect(resultMatching).toContain('Traslado dentro de la misma localidad.');
+
+        const dataDifferent = { Origen: 'Caracas', Destino: 'Maracay' };
+        const resultDifferent = render(template, dataDifferent);
+        expect(resultDifferent).not.toContain('Traslado dentro de la misma localidad.');
+    });
+
+    it('should be case-insensitive when comparing text of two fields', () => {
+        const template = `::: if {Origen} == {Destino} :::
+Misma ciudad
+:::`;
+        const data = { Origen: 'CARACAS', Destino: 'caracas' };
+        const result = render(template, data);
+        expect(result).toContain('Misma ciudad');
+    });
+
+    it('should not render when both fields are empty strings', () => {
+        const template = `::: if {Origen} == {Destino} :::
+Misma ciudad
+:::`;
+        const data = { Origen: '', Destino: '' };
+        const result = render(template, data);
+        expect(result.trim()).toBe('');
+    });
+
+    it('should handle inequality operator != between two fields', () => {
+        const template = `::: if {Origen} != {Destino} :::
+Traslado foráneo
+:::`;
+        const dataDifferent = { Origen: 'Caracas', Destino: 'Valencia' };
+        const resultDifferent = render(template, dataDifferent);
+        expect(resultDifferent).toContain('Traslado foráneo');
+
+        const dataSame = { Origen: 'Caracas', Destino: 'Caracas' };
+        const resultSame = render(template, dataSame);
+        expect(resultSame).not.toContain('Traslado foráneo');
+    });
+
+    it('should support inline conditionals comparing two fields', () => {
+        const template = `Estado: ::: if {Salida} == {Llegada}: En Base :::`;
+        const result = render(template, { Salida: 'Estación 1', Llegada: 'Estación 1' });
+        expect(result).toContain('Estado: En Base');
+    });
+});
+
+describe('Template Lexer/Parser - Consecutive Triple Colons (::: ::: and ::::::)', () => {
+    it('should correctly close multiple nested blocks on the same line with ::: :::', () => {
+        const template = `::: section Principal :::
+{Nombre}
+::: if {Tipo} == "Urgente" :::
+PRIORIDAD ALTA
+::: :::
+Fin`;
+        const data = { Nombre: 'Reporte 1', Tipo: 'Urgente' };
+        const result = render(template, data);
+        expect(result).toContain('PRIORIDAD ALTA');
+        expect(result).toContain('Fin');
+    });
+
+    it('should correctly close multiple nested blocks with continuous ::::::', () => {
+        const template = `::: section Principal :::
+{Nombre}
+::: if {Tipo} == "Urgente" :::
+PRIORIDAD ALTA
+::::::
+Fin`;
+        const data = { Nombre: 'Reporte 1', Tipo: 'Urgente' };
+        const result = render(template, data);
+        expect(result).toContain('PRIORIDAD ALTA');
+        expect(result).toContain('Fin');
+    });
+
+    it('should correctly close previous section and open conditional on same line with ::: ::: if', () => {
+        const template = `::: section Uno :::
+{Dato1}
+::: ::: if {Dato2} == "Si" :::
+Dato 2 es Si
+:::`;
+        const data = { Dato1: 'Valor 1', Dato2: 'Si' };
+        const result = render(template, data);
+        expect(result).toContain('Valor 1');
+        expect(result).toContain('Dato 2 es Si');
+    });
+
+    it('should correctly close previous section and open conditional attached with :::::: if', () => {
+        const template = `::: section Uno :::
+{Dato1}
+:::::: if {Dato2} == "Si" :::
+Dato 2 es Si
+:::`;
+        const data = { Dato1: 'Valor 1', Dato2: 'Si' };
+        const result = render(template, data);
+        expect(result).toContain('Valor 1');
+        expect(result).toContain('Dato 2 es Si');
+    });
+
+    it('Way 1: block conditional with inline conditionals inside', () => {
+        const template = `*TIPO DE NOVEDAD:* ::: if Estatus == "En proceso": Posible accidente de tránsito :::
+::: if Estatus == "Finalizado":show :::
+{Tipo de accidente de tránsito:dropdown} ::: if {Municipio} == {Municipio del incidente}: (Urbano)::: ::: if {Municipio} != {Municipio del incidente}: (Extra-urbano):::
+:::`;
+        const dataFinalizado = {
+            Estatus: 'Finalizado',
+            'Tipo de accidente de tránsito': 'Colisión',
+            Municipio: 'Bolívar',
+            'Municipio del incidente': 'Bolívar'
+        };
+        const resultFinalizado = render(template, dataFinalizado);
+        expect(resultFinalizado).toBe('*TIPO DE NOVEDAD:* \nColisión (Urbano)');
+
+        const dataEnProceso = {
+            Estatus: 'En proceso',
+            'Tipo de accidente de tránsito': 'Colisión',
+            Municipio: 'Bolívar',
+            'Municipio del incidente': 'Bolívar'
+        };
+        const resultEnProceso = render(template, dataEnProceso);
+        expect(resultEnProceso).toBe('*TIPO DE NOVEDAD:* Posible accidente de tránsito');
+    });
+
+    it('Way 2: single-line with space separated ::: ::: at the end', () => {
+        const template = `*TIPO DE NOVEDAD:* :::if Estatus == "En proceso":::Posible accidente de tránsito::: :::if Estatus == "Finalizado":show:::{Tipo de accidente de tránsito:dropdown} ::: if {Municipio} == {Municipio del incidente}: (Urbano)::: ::: if {Municipio} != {Municipio del incidente}: (Extra-urbano)::: :::`;
+        const dataFinalizado = {
+            Estatus: 'Finalizado',
+            'Tipo de accidente de tránsito': 'Colisión',
+            Municipio: 'Bolívar',
+            'Municipio del incidente': 'Bolívar'
+        };
+        const resultFinalizado = render(template, dataFinalizado);
+        expect(resultFinalizado).toBe('*TIPO DE NOVEDAD:* Colisión (Urbano)');
+
+        const dataEnProceso = {
+            Estatus: 'En proceso',
+            'Tipo de accidente de tránsito': 'Colisión',
+            Municipio: 'Bolívar',
+            'Municipio del incidente': 'Bolívar'
+        };
+        const resultEnProceso = render(template, dataEnProceso);
+        expect(resultEnProceso).toBe('*TIPO DE NOVEDAD:* Posible accidente de tránsito');
+    });
+
+    it('Way 3: single-line with continuous :::::: at the end', () => {
+        const template = `*TIPO DE NOVEDAD:* :::if Estatus == "En proceso":::Posible accidente de tránsito::: :::if Estatus == "Finalizado":show:::{Tipo de accidente de tránsito:dropdown} ::: if {Municipio} == {Municipio del incidente}: (Urbano)::: ::: if {Municipio} != {Municipio del incidente}: (Extra-urbano)::::::`;
+        const dataFinalizado = {
+            Estatus: 'Finalizado',
+            'Tipo de accidente de tránsito': 'Colisión',
+            Municipio: 'Bolívar',
+            'Municipio del incidente': 'Bolívar'
+        };
+        const resultFinalizado = render(template, dataFinalizado);
+        expect(resultFinalizado).toBe('*TIPO DE NOVEDAD:* Colisión (Urbano)');
+
+        const dataEnProceso = {
+            Estatus: 'En proceso',
+            'Tipo de accidente de tránsito': 'Colisión',
+            Municipio: 'Bolívar',
+            'Municipio del incidente': 'Bolívar'
+        };
+        const resultEnProceso = render(template, dataEnProceso);
+        expect(resultEnProceso).toBe('*TIPO DE NOVEDAD:* Posible accidente de tránsito');
+    });
+
+    it('Investigating user problem: sticking ::: with :::', () => {
+        const t1 = `*TIPO DE NOVEDAD:* :::if Estatus == "En proceso":::Posible accidente de tránsito:::
+:::if Estatus == "Finalizado":show:::{Tipo de accidente de tránsito:dropdown}::: ::: if {Municipio} == {Municipio del incidente}: (Urbano)::: ::: if {Municipio} != {Municipio del incidente}: (Extra-urbano):::`;
+        console.log('TOKENS t1:', JSON.stringify(tokenize(t1), null, 2));
+        console.log('SECTIONS t1:', JSON.stringify(parse(tokenize(t1)).sections, null, 2));
+    });
+});
+
 

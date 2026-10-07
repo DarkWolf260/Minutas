@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 // ─── Module definitions ────────────────────────────────────────────────────────
 
@@ -103,176 +104,192 @@ export default function SettingsModulesPage() {
   const isLoadedCombined = isLoaded && (!isCloud || !globalConfigLoading);
 
   return (
-    <ScrollArea className="h-full w-full" type="always">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 pb-32 sm:pb-16 space-y-8">
-
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="shrink-0 rounded-xl sm:hidden"
-            onClick={() => navigate('/settings')}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
+    <div className="h-full w-full flex flex-col min-h-0 overflow-hidden bg-background">
+      {/* Header fijo centrado */}
+      <div className="border-b shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-card/40 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
               <LayoutGrid className="h-6 w-6 text-primary" />
-              Módulos
-            </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
+              Módulos del Sistema
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               Activa o desactiva secciones para adaptar la app a tu flujo de trabajo.
             </p>
           </div>
         </div>
+      </div>
 
-        {/* Warning banner for non-admins in cloud mode */}
-        {isCloud && !isAdmin && isLoaded && (
-          <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 animate-in fade-in duration-300">
-            <ShieldAlert className="h-5 w-5 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-sm">Vista de solo lectura (Nube)</p>
-              <p className="text-xs text-amber-600/80 leading-relaxed mt-0.5">
-                La configuración de módulos en áreas sincronizadas con la nube es administrada centralmente. Comunícate con un administrador si necesitas habilitar o deshabilitar alguna herramienta.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Presets (Visible when editing is allowed: local mode or cloud admin) */}
-        {canEdit && (
-          <div className="space-y-2">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-1">
-              Configuración rápida
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => applyPreset(PRESET_DESKTOP)}
-                className={cn(
-                  'flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left',
-                  matchesPreset(disabled_modules, PRESET_DESKTOP)
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30'
-                )}
-              >
-                <div className={cn(
-                  'h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-colors',
-                  matchesPreset(disabled_modules, PRESET_DESKTOP)
-                    ? 'bg-primary/10 text-primary'
-                    : 'bg-muted text-muted-foreground'
-                )}>
-                  <Laptop className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="font-semibold text-sm">Escritorio</p>
-                  <p className="text-[11px] text-muted-foreground leading-tight">Todos los módulos activos</p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => applyPreset(PRESET_MOBILE)}
-                className={cn(
-                  'flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left',
-                  matchesPreset(disabled_modules, PRESET_MOBILE)
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-muted-foreground/30 hover:bg-muted/30'
-                )}
-              >
-                <div className={cn(
-                  'h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-colors',
-                  matchesPreset(disabled_modules, PRESET_MOBILE)
-                    ? 'bg-primary/10 text-primary'
-                    : 'bg-muted text-muted-foreground'
-                )}>
-                  <Smartphone className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="font-semibold text-sm">Móvil</p>
-                  <p className="text-[11px] text-muted-foreground leading-tight">Sin Estadísticas ni Plantillas</p>
-                </div>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Module list */}
-        <div className="space-y-2">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-1">
-            Módulos individuales
-          </p>
-          <div className="rounded-2xl border overflow-hidden divide-y shadow-sm">
-            {MODULE_DEFS.map(({ id, label, description, icon: Icon, color }) => {
-              const enabled = isEnabled(id);
-              const locked = id === 'novedades';
-              return (
-                <div
-                  key={id}
-                  className={cn(
-                    'flex items-center justify-between px-4 py-3.5 transition-colors',
-                    enabled ? 'bg-card hover:bg-muted/20' : 'bg-muted/30'
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={cn(
-                      'h-9 w-9 rounded-xl flex items-center justify-center shrink-0 transition-opacity',
-                      color,
-                      !enabled && 'opacity-40'
-                    )}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className={cn('transition-opacity', !enabled && 'opacity-40')}>
-                      <p className="text-sm font-medium leading-tight">{label}</p>
-                      <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{description}</p>
-                    </div>
-                    {locked && (
-                      <span className="text-[9px] font-bold uppercase tracking-wide bg-muted border px-1.5 py-0.5 rounded text-muted-foreground ml-1">
-                        Requerido
-                      </span>
-                    )}
-                  </div>
-                  <Switch
-                    id={`module-${id}`}
-                    checked={enabled}
-                    onCheckedChange={() => toggle(id)}
-                    disabled={locked || !isLoadedCombined || !canEdit}
-                  />
-                </div>
-              );
-            })}
-          </div>
-          {/* Coming soon modules */}
-          {COMING_SOON_MODULES.map(({ label, description, icon: Icon, color }) => (
-            <div
-              key={label}
-              title="Función futura..."
-              className="flex items-center justify-between px-4 py-3.5 bg-muted/20 opacity-50 cursor-not-allowed rounded-2xl border mt-2 shadow-sm"
-            >
-              <div className="flex items-center gap-3">
-                <div className={cn('h-9 w-9 rounded-xl flex items-center justify-center shrink-0', color)}>
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium leading-tight">{label}</p>
-                    <span className="text-[9px] font-bold uppercase tracking-wide bg-background border px-1.5 py-0.5 rounded text-muted-foreground">
-                      PRÓXIMAMENTE
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{description}</p>
-                </div>
+      <ScrollArea className="flex-1 min-h-0" type="always">
+        <div className="max-w-4xl mx-auto w-full p-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-32">
+          {/* Warning banner for non-admins in cloud mode */}
+          {isCloud && !isAdmin && isLoaded && (
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 animate-in fade-in duration-300">
+              <ShieldAlert className="h-5 w-5 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-sm">Vista de solo lectura (Nube)</p>
+                <p className="text-xs text-amber-600/80 leading-relaxed mt-0.5">
+                  La configuración de módulos en áreas sincronizadas con la nube es administrada centralmente. Comunícate con un administrador si necesitas habilitar o deshabilitar alguna herramienta.
+                </p>
               </div>
             </div>
-          ))}
-          <p className="text-[10px] text-muted-foreground/50 text-center pt-1">
-            Los módulos desactivados se ocultan de la navegación. Sus datos se conservan.
-          </p>
-        </div>
+          )}
 
-      </div>
-    </ScrollArea>
+          {/* Presets (Visible when editing is allowed: local mode or cloud admin) */}
+          {canEdit && (
+            <Card className="shadow-xs border-muted/60">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                  <Laptop className="h-5 w-5 text-primary" />
+                  Configuración Rápida
+                </CardTitle>
+                <CardDescription>
+                  Aplica perfiles predefinidos según el tipo de dispositivo o modo de trabajo.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => applyPreset(PRESET_DESKTOP)}
+                    className={cn(
+                      'flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left',
+                      matchesPreset(disabled_modules, PRESET_DESKTOP)
+                        ? 'border-primary bg-primary/5 shadow-xs'
+                        : 'border-border/60 hover:border-muted-foreground/30 hover:bg-muted/30'
+                    )}
+                  >
+                    <div className={cn(
+                      'h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-colors',
+                      matchesPreset(disabled_modules, PRESET_DESKTOP)
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-muted text-muted-foreground'
+                    )}>
+                      <Laptop className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Escritorio</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight">Todos los módulos activos</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => applyPreset(PRESET_MOBILE)}
+                    className={cn(
+                      'flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left',
+                      matchesPreset(disabled_modules, PRESET_MOBILE)
+                        ? 'border-primary bg-primary/5 shadow-xs'
+                        : 'border-border/60 hover:border-muted-foreground/30 hover:bg-muted/30'
+                    )}
+                  >
+                    <div className={cn(
+                      'h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-colors',
+                      matchesPreset(disabled_modules, PRESET_MOBILE)
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-muted text-muted-foreground'
+                    )}>
+                      <Smartphone className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Móvil</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight">Sin Estadísticas ni Plantillas</p>
+                    </div>
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Module list */}
+          <Card className="shadow-xs border-muted/60">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <LayoutGrid className="h-5 w-5 text-primary" />
+                Módulos Individuales
+              </CardTitle>
+              <CardDescription>
+                Activa o desactiva módulos de forma granular. Los módulos desactivados conservan sus datos.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="rounded-xl border overflow-hidden divide-y">
+                {MODULE_DEFS.map(({ id, label, description, icon: Icon, color }) => {
+                  const enabled = isEnabled(id);
+                  const locked = id === 'novedades';
+                  return (
+                    <div
+                      key={id}
+                      className={cn(
+                        'flex items-center justify-between px-4 py-3.5 transition-colors',
+                        enabled ? 'bg-card hover:bg-muted/20' : 'bg-muted/30'
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          'h-9 w-9 rounded-xl flex items-center justify-center shrink-0 transition-opacity',
+                          color,
+                          !enabled && 'opacity-40'
+                        )}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className={cn('transition-opacity', !enabled && 'opacity-40')}>
+                          <p className="text-sm font-medium leading-tight">{label}</p>
+                          <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{description}</p>
+                        </div>
+                        {locked && (
+                          <span className="text-[9px] font-bold uppercase tracking-wide bg-muted border px-1.5 py-0.5 rounded text-muted-foreground ml-1">
+                            Requerido
+                          </span>
+                        )}
+                      </div>
+                      <Switch
+                        id={`module-${id}`}
+                        checked={enabled}
+                        onCheckedChange={() => toggle(id)}
+                        disabled={locked || !isLoadedCombined || !canEdit}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Coming soon modules */}
+              {COMING_SOON_MODULES.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  {COMING_SOON_MODULES.map(({ label, description, icon: Icon, color }) => (
+                    <div
+                      key={label}
+                      title="Función futura..."
+                      className="flex items-center justify-between px-4 py-3.5 bg-muted/20 opacity-50 cursor-not-allowed rounded-xl border shadow-xs"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn('h-9 w-9 rounded-xl flex items-center justify-center shrink-0', color)}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium leading-tight">{label}</p>
+                            <span className="text-[9px] font-bold uppercase tracking-wide bg-background border px-1.5 py-0.5 rounded text-muted-foreground">
+                              PRÓXIMAMENTE
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <p className="text-[11px] text-muted-foreground/60 text-center pt-2">
+                Los módulos desactivados se ocultan de la navegación principal. Los datos permanecen seguros.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </ScrollArea>
+    </div>
   );
 }
 

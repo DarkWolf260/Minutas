@@ -89,7 +89,7 @@ export function AjustesGeneralesForm({
   };
 
   return (
-    <div className={`grid grid-cols-1 ${columns === 2 ? 'md:grid-cols-2' : ''} gap-x-8 gap-y-4`}>
+    <div className={`grid grid-cols-1 ${columns === 2 ? 'md:grid-cols-2' : ''} gap-x-6 gap-y-4`}>
       {fieldKeys.map((key) => {
         const config = definitions[key];
         if (!config) return null;
@@ -97,7 +97,7 @@ export function AjustesGeneralesForm({
         const options = getOptionsForKey(key);
         
         return (
-          <div key={key} className="space-y-2">
+          <div key={key} className="space-y-1.5">
             <Label htmlFor={key} className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               {config.label}
             </Label>
@@ -108,7 +108,7 @@ export function AjustesGeneralesForm({
                 onValueChange={(val) => handleFieldChange(key, val === CENTINELA_NINGUNO ? '' : val)}
                 disabled={disabled}
               >
-                <SelectTrigger id={key} className="bg-background w-full">
+                <SelectTrigger id={key} className="bg-background w-full h-10 rounded-xl shadow-xs">
                   <SelectValue placeholder="Seleccionar..." />
                 </SelectTrigger>
                 <SelectContent className="z-[200]">
@@ -125,7 +125,7 @@ export function AjustesGeneralesForm({
                 value={values[key] || ''}
                 onChange={(e) => handleFieldChange(key, e.target.value)}
                 placeholder={key === 'Municipio' && esNuevaEsparta ? 'Escribe el municipio (ej. Maneiro, Mariño...)' : undefined}
-                className="bg-background w-full"
+                className="bg-background w-full h-10 rounded-xl shadow-xs"
                 disabled={disabled || key === 'Hora' || key === 'Fecha'}
               />
             )}

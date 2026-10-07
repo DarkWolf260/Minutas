@@ -67,7 +67,7 @@ export function validateSyntax(template: string): string[] {
         for (const t of tokens) {
             if (t.type === 'section_start' && !t.is_self_contained) {
                 openBlocks++;
-            } else if (t.type === 'section_end' && t.raw !== '') {
+            } else if (t.type === 'section_end' && !t.is_self_contained && t.raw !== '') {
                 openBlocks--;
             }
         }
@@ -125,7 +125,7 @@ export function validateSemantics(
 
     sections.forEach((section) => {
         if (section.condition) {
-            const { field_id, value, operator } = section.condition;
+            const { field_id, value, operator, target_field_id } = section.condition;
 
             // Verificar que el campo existe
             // For dotted field IDs (e.g. Director.sex), check if the BASE field exists
@@ -141,19 +141,35 @@ export function validateSemantics(
                 return;
             }
 
-            const fieldType = fieldTypes.get(field_id);
-            const options = templateOptions.get(field_id);
+            const targetFieldId = target_field_id || (
+                value.startsWith('{') && value.endsWith('}') ? value.slice(1, -1).trim() : undefined
+            );
 
-            // Validar si es dropdown
-            if (fieldType === 'dropdown' && options) {
-                // Solo validar índices numéricos para operador = (retrocompatibilidad)
-                const isNumericIndex = (!operator || operator === '=') && /^\d+$/.test(value);
-                if (isNumericIndex) {
-                    const idx = parseInt(value, 10);
-                    if (idx < 0 || idx >= options.length) {
-                        errors.push(
-                            `El condicional para '{${field_id}}' usa índice ${idx}, pero el dropdown solo tiene ${options.length} opciones (índices 0-${options.length - 1}).`
-                        );
+            if (targetFieldId) {
+                const baseTargetFieldId = targetFieldId.includes('.')
+                    ? targetFieldId.slice(0, targetFieldId.indexOf('.'))
+                    : targetFieldId;
+                const isTargetPredefined = PREDEFINED_FIELD_NAMES.has(baseTargetFieldId.toLowerCase());
+                if (!fieldNames.has(targetFieldId) && !fieldNames.has(baseTargetFieldId) && !isTargetPredefined) {
+                    errors.push(
+                        `El condicional compara contra el campo '{${targetFieldId}}' que no está definido en la plantilla.`
+                    );
+                }
+            } else {
+                const fieldType = fieldTypes.get(field_id);
+                const options = templateOptions.get(field_id);
+
+                // Validar si es dropdown
+                if (fieldType === 'dropdown' && options) {
+                    // Solo validar índices numéricos para operador = (retrocompatibilidad)
+                    const isNumericIndex = (!operator || operator === '=') && /^\d+$/.test(value);
+                    if (isNumericIndex) {
+                        const idx = parseInt(value, 10);
+                        if (idx < 0 || idx >= options.length) {
+                            errors.push(
+                                `El condicional para '{${field_id}}' usa índice ${idx}, pero el dropdown solo tiene ${options.length} opciones (índices 0-${options.length - 1}).`
+                            );
+                        }
                     }
                 }
             }

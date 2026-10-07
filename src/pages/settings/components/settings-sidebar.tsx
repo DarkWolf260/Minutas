@@ -49,7 +49,7 @@ interface SettingsGroupDef {
   items: SettingsItemDef[];
 }
 
-export const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
+export const SettingsSidebar: React.FC<SettingsSidebarProps> = React.memo(({
   activeSection,
   onSelectSection,
   isDataRestricted = false,
@@ -417,4 +417,6 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
       </div>
     </aside>
   );
-};
+});
+
+SettingsSidebar.displayName = 'SettingsSidebar';

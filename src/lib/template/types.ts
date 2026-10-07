@@ -29,7 +29,7 @@ export type Token =
         raw: string;
         position: number;
     }
-    | { type: 'section_end'; raw: string; position: number };
+    | { type: 'section_end'; raw: string; position: number; is_self_contained?: boolean };
 
 /**
  * Conditional expression structure
@@ -38,6 +38,7 @@ export interface ConditionalExpression {
     field_id: string;
     operator: '=' | '!=' | '>' | '<' | '>=' | '<=';
     value: string;
+    target_field_id?: string;
     condition_mode?: 'show' | 'hide';
     is_implicit?: boolean;
 }

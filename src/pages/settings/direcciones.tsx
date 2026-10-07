@@ -107,9 +107,9 @@ export default function DireccionesPage() {
 
   return (
     <div className="flex flex-col h-full w-full bg-background overflow-hidden flex-1 pb-32 sm:pb-0">
-      <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-6 flex flex-col flex-1 min-h-0">
-        <CabeceraDirecciones alAbrirForm={manejarAbrirForm} />
+      <CabeceraDirecciones alAbrirForm={manejarAbrirForm} />
 
+      <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col flex-1 min-h-0">
         <Tabs
           value={tabActiva}
           onValueChange={setTabActiva}
@@ -136,22 +136,26 @@ export default function DireccionesPage() {
 
 function CabeceraDirecciones({ alAbrirForm }: { alAbrirForm: () => void }) {
   return (
-    <div className="flex flex-col gap-4 mb-6 shrink-0 md:flex-row md:items-center md:justify-between">
-      <div className="flex items-center gap-4">
-        <Link to="/settings" className="shrink-0 sm:hidden">
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div className="flex flex-col">
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">Gestor de Direcciones</h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">Administración central de puntos de interés y ubicaciones.</p>
+    <div className="border-b shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-card/40 backdrop-blur-sm sticky top-0 z-10">
+      <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
+            <MapPin className="h-6 w-6 text-primary" />
+            Gestor de Direcciones
+          </h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            Administración central de puntos de interés y ubicaciones.
+          </p>
         </div>
+        <Button
+          onClick={() => alAbrirForm()}
+          size="sm"
+          className="h-9 px-4 shrink-0 shadow-xs font-bold gap-2 rounded-xl"
+        >
+          <PlusCircle className="h-4 w-4" />
+          <span>Nueva Dirección</span>
+        </Button>
       </div>
-      <Button onClick={() => alAbrirForm()} className="w-full sm:w-auto shadow-md hover:shadow-lg transition-all active:scale-95 gap-2 h-10">
-        <PlusCircle className="h-4 w-4" />
-        Nueva Dirección
-      </Button>
     </div>
   );
 }

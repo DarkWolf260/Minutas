@@ -180,7 +180,7 @@ export default function SettingsPage() {
         <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
           <Suspense
             fallback={
-              <div className="flex-1 p-6 space-y-4">
+              <div className="flex-1 p-6 space-y-4 max-w-4xl mx-auto w-full">
                 <Skeleton className="h-8 w-48" />
                 <Skeleton className="h-4 w-96" />
                 <Skeleton className="h-[400px] w-full rounded-2xl" />
