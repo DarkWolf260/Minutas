@@ -1,0 +1,43 @@
+# ================================================================
+# Ejemplo de configuración Nginx para Minutas (SPA con React Router)
+# ================================================================
+# Coloca este archivo o su contenido en tu servidor Nginx:
+#   Debian/Ubuntu: /etc/nginx/sites-available/minutas
+#   Docker Nginx:  /etc/nginx/conf.d/default.conf
+#   Windows Nginx: conf/nginx.conf
+
+server {
+    listen 80;
+    server_name 192.168.0.5 localhost;
+
+    # Ruta a la carpeta de build generada con `npm run build`
+    root /var/www/minutas/dist;
+    index index.html;
+
+    # Gzip para acelerar la carga en red local y móvil
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+    # CRÍTICO PARA REACT ROUTER / SPA:
+    # Si no existe el archivo solicitado ($uri ni $uri/), sirve index.html
+    # Esto evita el error 404 al recargar rutas como /settings, /personal, etc.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Caché para activos estáticos con hash único (JS, CSS, imágenes)
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    # No cachear el manifest ni index.html para que las actualizaciones se reflejen de inmediato
+    location = /index.html {
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+    }
+
+    location = /manifest.json {
+        add_header Cache-Control "no-cache";
+        add_header Content-Type "application/json";
+    }
+}

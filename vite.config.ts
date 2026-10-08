@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { VitePWA } from 'vite-plugin-pwa';
+import basicSsl from '@vitejs/plugin-basic-ssl';
 
 // Custom plugin to force correct Content-Type for manifest.json to satisfy PWA installation checks
 const forceManifestContentType = () => ({
@@ -23,6 +24,7 @@ const forceManifestContentType = () => ({
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
+    basicSsl(),
     forceManifestContentType(),
     react({
       babel: {
