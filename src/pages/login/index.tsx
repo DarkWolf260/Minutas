@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/admin';
 import { toast } from 'sonner';
-import { Mail, Lock, Loader2, LogIn, ArrowLeft, ShieldAlert } from 'lucide-react';
+import { Mail, Lock, Loader2, LogIn, ArrowLeft, ShieldAlert, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useGlobalConfig } from '@/hooks/configuracion';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 export default function LoginPage() {
   const [searchParams] = useSearchParams();
@@ -33,6 +34,11 @@ export default function LoginPage() {
     e.preventDefault();
     if (!email || !password) {
       toast.error('Por favor, completa todos los campos');
+      return;
+    }
+
+    if (!isSupabaseConfigured) {
+      toast.error('Supabase no está configurado. Revisa tu archivo .env');
       return;
     }
 
@@ -87,6 +93,29 @@ export default function LoginPage() {
             <div className="px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[11px] font-bold text-amber-600 uppercase tracking-widest flex items-center gap-2 shadow-sm backdrop-blur-sm animate-in fade-in zoom-in duration-300">
               <ShieldAlert className="h-3.5 w-3.5 animate-pulse" />
               Modo Mantenimiento Activo
+            </div>
+          </div>
+        )}
+
+        {!isSupabaseConfigured && (
+          <div className="mb-4 p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-xs space-y-2 text-left animate-in fade-in zoom-in duration-300">
+            <div className="flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
+              <span>Supabase no está configurado</span>
+            </div>
+            <p className="text-muted-foreground leading-relaxed">
+              No se detectaron <code className="text-foreground font-mono bg-muted/60 px-1 py-0.5 rounded">VITE_SUPABASE_URL</code> ni <code className="text-foreground font-mono bg-muted/60 px-1 py-0.5 rounded">VITE_SUPABASE_ANON_KEY</code> en las variables de entorno. Crea tu archivo <code className="text-foreground font-mono bg-muted/60 px-1 py-0.5 rounded">.env</code> para habilitar la autenticación en la nube.
+            </p>
+            <div className="pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full text-xs h-9 border-amber-500/30 hover:bg-amber-500/15"
+                onClick={() => navigate('/')}
+              >
+                Continuar en Modo Local (Offline)
+              </Button>
             </div>
           </div>
         )}

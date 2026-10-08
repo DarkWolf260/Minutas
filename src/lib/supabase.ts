@@ -7,7 +7,14 @@ export const isLocalSupabase = Boolean(
   supabaseUrl && (supabaseUrl.includes('127.0.0.1') || supabaseUrl.includes('localhost'))
 );
 
-if (!supabaseUrl || !supabaseAnonKey) {
+export const isSupabaseConfigured = Boolean(
+  supabaseUrl &&
+  supabaseAnonKey &&
+  !supabaseUrl.includes('placeholder') &&
+  supabaseUrl.trim() !== ''
+);
+
+if (!isSupabaseConfigured) {
   console.warn('Supabase credentials not found in environment variables.');
 }
 
@@ -60,7 +67,7 @@ let cachedHealth: { reachable: boolean; timestamp: number } | null = null;
  * Fast cached health check to determine if the Supabase backend is currently reachable.
  */
 export async function isSupabaseOnline(force = false): Promise<boolean> {
-  if (!supabaseUrl || supabaseUrl.includes('placeholder')) return false;
+  if (!isSupabaseConfigured) return false;
 
   const now = Date.now();
   if (!force && cachedHealth && now - cachedHealth.timestamp < 30000) {
@@ -90,6 +97,10 @@ export async function isSupabaseOnline(force = false): Promise<boolean> {
  * Robust wrapper for Supabase calls to handle JWT expiration gracefully.
  */
 export async function callWithTokenRefresh<T>(call: () => PromiseLike<{data: T | null, error: any}>): Promise<{data: T | null, error: any}> {
+  if (!isSupabaseConfigured) {
+    return { data: null, error: new Error('Supabase no está configurado en las variables de entorno.') };
+  }
+
   // 1. Proactive check: Refresh session if it's expired or about to expire
   try {
     const { data: { session } } = await supabase.auth.getSession();

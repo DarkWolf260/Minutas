@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -20,6 +20,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     // Get initial session safely with a 3-second timeout to prevent hangs when offline or server is down
     const sessionPromise = supabase.auth.getSession();
     const timeoutPromise = new Promise<{ data: { session: null } }>((_, reject) =>
@@ -61,13 +66,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     loading,
     isAuthenticated: !!user,
-    signIn: (email: string, password: string) => 
-      supabase.auth.signInWithPassword({ email, password }),
-    signUp: (email: string, password: string, options?: any) => 
-      supabase.auth.signUp({ email, password, options }),
-    signOut: () => {
+    signIn: async (email: string, password: string) => {
+      if (!isSupabaseConfigured) {
+        return {
+          data: { user: null, session: null },
+          error: new Error('Supabase no está configurado. Por favor, define VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en tu archivo .env.'),
+        };
+      }
+      return supabase.auth.signInWithPassword({ email, password });
+    },
+    signUp: async (email: string, password: string, options?: any) => {
+      if (!isSupabaseConfigured) {
+        return {
+          data: { user: null, session: null },
+          error: new Error('Supabase no está configurado. Por favor, define VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en tu archivo .env.'),
+        };
+      }
+      return supabase.auth.signUp({ email, password, options });
+    },
+    signOut: async () => {
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem('workspace-prompted-this-session');
+      }
+      if (!isSupabaseConfigured) {
+        setUser(null);
+        setSession(null);
+        return { error: null };
       }
       return supabase.auth.signOut();
     },

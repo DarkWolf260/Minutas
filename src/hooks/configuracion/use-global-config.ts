@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase, callWithTokenRefresh, isSupabaseOnline } from '@/lib/supabase';
+import { supabase, callWithTokenRefresh, isSupabaseOnline, isSupabaseConfigured } from '@/lib/supabase';
 import { toast } from 'sonner';
 import type { AppModuleId } from '@/lib/types';
 
@@ -30,6 +30,11 @@ export function GlobalConfigProvider({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(true);
 
   const fetchConfig = async () => {
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const fetchPromise = callWithTokenRefresh<any[]>(() => 
@@ -124,6 +129,10 @@ export function GlobalConfigProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const updateConfig = async (key: keyof GlobalConfig, value: any) => {
+    if (!isSupabaseConfigured) {
+      toast.error('Supabase no está configurado');
+      return false;
+    }
     try {
       // Optimistic update
       setConfig(prev => ({ ...prev, [key]: value }));
