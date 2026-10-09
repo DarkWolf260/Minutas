@@ -78,7 +78,7 @@ export const reportsSchema = {
 
 export const templatesSchema = {
     title: 'templates schema',
-    version: 3,
+    version: 4,
     primaryKey: 'id',
     type: 'object',
     properties: {
@@ -136,6 +136,11 @@ export const templatesSchema = {
                     },
                 },
             },
+        },
+        disable_main_stat_on_apoyo: { type: ['boolean', 'null'] },
+        disabled_sub_categories_on_apoyo: {
+            type: ['array', 'null'],
+            items: { type: 'string' }
         },
         modified: { type: ['string', 'null'] },
         _deleted: { type: 'boolean' }

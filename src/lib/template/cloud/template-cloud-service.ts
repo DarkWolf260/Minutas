@@ -240,6 +240,13 @@ export class TemplateCloudService {
           await existingByName.remove();
         }
 
+        const safeParse = (val: any) => {
+          if (typeof val === 'string') {
+            try { return JSON.parse(val); } catch { return null; }
+          }
+          return val ?? null;
+        };
+
         await db.templates.upsert({
           id,
           name,
@@ -247,11 +254,11 @@ export class TemplateCloudService {
           type: type || 'normal',
           is_active: is_active !== undefined ? is_active : true,
           workspace_id: workspace_id || null,
-          statistics_category,
-          statistics_rules: typeof statistics_rules === 'string' ? JSON.parse(statistics_rules) : statistics_rules,
-          statistics_sub_categories: typeof statistics_sub_categories === 'string' ? JSON.parse(statistics_sub_categories) : statistics_sub_categories,
+          statistics_category: statistics_category ?? null,
+          statistics_rules: safeParse(statistics_rules),
+          statistics_sub_categories: safeParse(statistics_sub_categories),
           disable_main_stat_on_apoyo: disable_main_stat_on_apoyo ?? null,
-          disabled_sub_categories_on_apoyo: typeof disabled_sub_categories_on_apoyo === 'string' ? JSON.parse(disabled_sub_categories_on_apoyo) : (disabled_sub_categories_on_apoyo ?? null),
+          disabled_sub_categories_on_apoyo: safeParse(disabled_sub_categories_on_apoyo),
         });
       }
 
