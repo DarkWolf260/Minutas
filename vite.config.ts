@@ -150,6 +150,12 @@ export default defineConfig({
     port: 3000,
     open: false,
     host: true,
+    proxy: {
+      '/api/whatsapp': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     outDir: 'dist',

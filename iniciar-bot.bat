@@ -1,10 +1,12 @@
 @echo off
 title Bot de WhatsApp - Minutas
+cd /d "%~dp0"
+
 echo =======================================
-echo Verificando si el bot ya está corriendo...
+echo Verificando si el bot ya esta corriendo...
 echo =======================================
 
-rem Busca si hay algún proceso escuchando en el puerto 3001
+rem Busca si hay algun proceso escuchando en el puerto 3001
 netstat -ano | findstr :3001 >nul
 if %errorlevel% == 0 (
     echo.
@@ -16,14 +18,36 @@ if %errorlevel% == 0 (
     echo.
 )
 
+cd whatsapp-bot
+
+rem Verifica si existen los modulos instalados
+if not exist "node_modules\" (
+    echo.
+    echo ==============================================================
+    echo [INFO] No se encontraron dependencias instaladas en whatsapp-bot.
+    echo Instalando paquetes automaticamente con npm install...
+    echo (Esto puede tardar unos minutos descargando Puppeteer/Chromium)
+    echo ==============================================================
+    echo.
+    call npm install
+    if errorlevel 1 (
+        echo.
+        echo [ERROR] La instalacion de dependencias fallo.
+        pause
+        exit /b 1
+    )
+    echo.
+    echo [OK] Dependencias instaladas con exito.
+    echo.
+)
+
 echo.
 echo Iniciando Bot de WhatsApp...
 echo No cierres esta ventana mientras uses la app.
 echo =======================================
 echo.
 
-cd whatsapp-bot
-npm start
+call npm start
 
 echo.
 echo =======================================

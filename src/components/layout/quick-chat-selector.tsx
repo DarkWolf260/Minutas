@@ -28,9 +28,19 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
   const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const isBotReady = bot.isAvailable && bot.status.isReady;
   const selectedIds = settings?.whatsapp_default_chat_ids || [];
   const selectedCount = selectedIds.length;
+  // Solo mostrar chats seleccionados en el icono si el bot está realmente conectado y listo
+  const effectiveSelectedCount = isBotReady ? selectedCount : 0;
   const pendingCount = scheduledMessages.filter(m => m.status === 'pending').length;
+
+  // Si el bot se cerró o se desconectó, limpiar automáticamente los chats seleccionados de la configuración
+  React.useEffect(() => {
+    if (!bot.isLoading && (!bot.isAvailable || !bot.status.isReady) && selectedCount > 0) {
+      saveSettings({ whatsapp_default_chat_ids: [] });
+    }
+  }, [bot.isLoading, bot.isAvailable, bot.status.isReady, selectedCount, saveSettings]);
 
   const handleToggleGroup = async (groupId: string, name: string) => {
     if (!settings) return;
@@ -124,15 +134,15 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
           title="Gestión de WhatsApp"
         >
           <div className="flex h-9 w-10 shrink-0 items-center justify-center relative">
-            <MessageSquare className="h-4 w-4" />
-            {(selectedCount > 0 || pendingCount > 0) && (
+            <MessageSquare className={cn("h-4 w-4", isBotReady ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground")} />
+            {(effectiveSelectedCount > 0 || pendingCount > 0) && (
               <Badge
                 className={cn(
                   "absolute right-1 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full p-0 text-[8px] text-white font-bold animate-in zoom-in border border-background",
                   pendingCount > 0 ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"
                 )}
               >
-                {pendingCount > 0 ? pendingCount : selectedCount}
+                {pendingCount > 0 ? pendingCount : effectiveSelectedCount}
               </Badge>
             )}
           </div>
@@ -233,7 +243,7 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
                 {bot.status.qr ? (
                   <div className="flex flex-col items-center gap-3 animate-in fade-in duration-300">
                     <div className="p-3 bg-white rounded-xl border-2 border-dashed border-emerald-500/30">
-                      <QRCodeSVG value={bot.status.qr} size={150} />
+                      <QRCodeSVG key={bot.status.qr} value={bot.status.qr} size={150} />
                     </div>
                     <p className="text-[10px] text-muted-foreground text-center max-w-[200px] leading-normal">
                       Escanea este código QR con la app de WhatsApp en tu teléfono para vincular la cuenta.

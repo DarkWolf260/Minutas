@@ -22,6 +22,18 @@ export function SyncWhatsApp() {
     }
   }, [settings?.whatsapp_local_url]);
 
+  // Si el bot se cerró o desconectó y había chats seleccionados, limpiarlos automáticamente
+  useEffect(() => {
+    if (!bot.isLoading && (!bot.isAvailable || !bot.status.isReady) && (settings?.whatsapp_default_chat_ids || []).length > 0) {
+      saveSettings({ whatsapp_default_chat_ids: [] });
+    }
+  }, [bot.isLoading, bot.isAvailable, bot.status.isReady, settings?.whatsapp_default_chat_ids, saveSettings]);
+
+  const handleLogout = async () => {
+    await saveSettings({ whatsapp_default_chat_ids: [] });
+    await bot.logout();
+  };
+
   const handleToggleGroup = async (groupId: string) => {
     if (!settings) return;
     const currentIds = settings.whatsapp_default_chat_ids || [];
@@ -51,15 +63,27 @@ export function SyncWhatsApp() {
           </CardTitle>
           
           {bot.isAvailable && (
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-              bot.status.isReady 
-                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' 
-                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-            }`}>
-              <div className={`h-1.5 w-1.5 rounded-full ${
-                bot.status.isReady ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-              }`} />
-              {bot.status.isReady ? 'Conectado' : 'Pendiente'}
+            <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                bot.status.isReady 
+                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' 
+                  : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+              }`}>
+                <div className={`h-1.5 w-1.5 rounded-full ${
+                  bot.status.isReady ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                }`} />
+                {bot.status.isReady ? 'Conectado' : 'Pendiente'}
+              </div>
+              {bot.status.isReady && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="h-7 text-xs text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 px-2 font-medium"
+                >
+                  Cerrar sesión
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -232,8 +256,12 @@ export function SyncWhatsApp() {
             
             {bot.status.qr ? (
               <div className="flex flex-col items-center gap-4">
-                <div className="p-4 bg-white rounded-2xl border-2 border-dashed border-emerald-500/30">
-                  <QRCodeSVG value={bot.status.qr} size={180} />
+                <div className="p-4 bg-white rounded-2xl border-2 border-dashed border-emerald-500/30 shadow-sm animate-in fade-in duration-200">
+                  <QRCodeSVG key={bot.status.qr} value={bot.status.qr} size={180} />
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Código QR sincronizado en tiempo real</span>
                 </div>
                 <p className="text-xs text-muted-foreground text-center max-w-[250px]">
                   Escanea este código QR con la app de WhatsApp en tu teléfono para vincular la cuenta.
@@ -246,7 +274,7 @@ export function SyncWhatsApp() {
               </div>
             )}
             
-            <Button size="sm" variant="outline" onClick={bot.checkStatus} className="w-full border-emerald-500/20 hover:bg-emerald-500/5 hover:text-emerald-600">
+            <Button size="sm" variant="outline" onClick={() => bot.checkStatus(true)} className="w-full border-emerald-500/20 hover:bg-emerald-500/5 hover:text-emerald-600">
               Verificar estado
             </Button>
           </div>

@@ -49,10 +49,14 @@ const listeners = new Set<(state: BotState) => void>();
 function updateBotState(updates: Partial<BotState>) {
   const newState = { ...botState, ...updates };
   
-  // Guard: If neither the local bot is ready nor the cloud bot is active, chats must be empty
-  const hasLocalBot = newState.isAvailable && newState.status.isReady;
-  const hasCloudBot = newState.isCloudActive;
-  if (!hasLocalBot && !hasCloudBot) {
+  // Guard estricto: Si el bot local responde en esta máquina pero no está listo (esperando QR o desconectado),
+  // o si no hay bot local ni bot en la nube listo:
+  // ¡LA LISTA DE CHATS DEBE SER ESTRICTAMENTE VACÍA!
+  const hasLocalBot = newState.isAvailable;
+  const isLocalReady = hasLocalBot && newState.status.isReady;
+  const isCloudReady = !hasLocalBot && newState.isCloudActive;
+
+  if (!isLocalReady && !isCloudReady) {
     newState.chats = [];
   }
   
@@ -149,8 +153,9 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       return botState.status.isReady;
     }
 
-    // Determine the minimum time we must wait before making another fetch request
-    const minInterval = globalIsOffline ? currentPollingInterval : 4000;
+    // Si NO está listo (esperando QR o desconectado), comprobar mucho más rápido (1000ms)
+    // para que el QR aparezca de inmediato cuando la consola lo emita.
+    const minInterval = globalIsOffline ? currentPollingInterval : (botState.status.isReady ? 3500 : 1000);
 
     if (!force && now < lastCheckTime + minInterval) {
       return botState.status.isReady;
@@ -158,31 +163,44 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
 
     isChecking = true;
     try {
-      const response = await fetch(`${localUrl}/api/whatsapp/status`, {
+      const cacheBuster = `_t=${Date.now()}`;
+      const url = `${localUrl}/api/whatsapp/status?${cacheBuster}`;
+      const response = await fetch(url, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        },
       });
       
       if (!response.ok) throw new Error('Status no ok');
       
       const data = await response.json();
       
+      // Capturar si estaba listo ANTES de actualizar el estado
+      const wasReady = botState.status.isReady;
+      const isReadyChanged = wasReady !== data.isReady;
+
       // Success! Reset backoff variables
       globalIsOffline = false;
       lastCheckTime = Date.now();
       consecutiveFailures = 0;
-      currentPollingInterval = 5000;
+      // Intervalo dinámico: si no está listo, poll cada 1.5s; si está listo, poll cada 5s
+      currentPollingInterval = data.isReady ? 5000 : 1500;
       
       updateBotState({
         status: data,
         isAvailable: true,
+        // Si data.isReady es false, chats debe ser vacía SIEMPRE
         chats: data.isReady ? botState.chats : []
       });
 
-      // Report active status to the database (heartbeat) - throttled to once every 45 seconds to avoid excessive RxDB push/pull replication network spam
+      // Report active status to the database (heartbeat)
       if (db && currentWorkspace && isCloud) {
         const statusId = `whatsapp_bot_status:${currentWorkspace}`;
-        const isReadyChanged = botState.status.isReady !== data.isReady;
+        const chatsId = `whatsapp_chats:${currentWorkspace}`;
         const shouldWrite = force || isReadyChanged || (data.isReady && Date.now() - lastHeartbeatTime > 45000);
         
         if (shouldWrite) {
@@ -200,9 +218,8 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
             }
           }).catch(err => logger.error('Error writing bot heartbeat:', err));
 
-          // Clear chats in DB immediately if local bot becomes not ready
+          // Si el bot local ya NO está listo, limpiar los chats en la base de datos INMEDIATAMENTE
           if (!data.isReady) {
-            const chatsId = `whatsapp_chats:${currentWorkspace}`;
             db.configs.upsert({
               id: chatsId,
               workspace_id: currentWorkspace,
@@ -224,13 +241,11 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       consecutiveFailures++;
       
       if (consecutiveFailures === 1) {
-        currentPollingInterval = 15000; // 15s
+        currentPollingInterval = 5000;
       } else if (consecutiveFailures === 2) {
-        currentPollingInterval = 30000; // 30s
-      } else if (consecutiveFailures === 3) {
-        currentPollingInterval = 60000; // 1m
+        currentPollingInterval = 10000;
       } else {
-        currentPollingInterval = 120000; // 2m max
+        currentPollingInterval = 20000;
       }
       
       updateBotState({
@@ -362,24 +377,28 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
 
   // Polling for status with dynamic interval
   useEffect(() => {
-    const now = Date.now();
-    const minInterval = globalIsOffline ? currentPollingInterval : 4000;
-    const shouldCheckImmediately = !lastCheckTime || (now - lastCheckTime >= minInterval);
-
-    if (shouldCheckImmediately) {
-      checkStatus();
-    }
-    
     let timeoutId: NodeJS.Timeout;
-    
+    let isCancelled = false;
+
     const poll = async () => {
+      if (isCancelled) return;
       await checkStatus();
-      timeoutId = setTimeout(poll, currentPollingInterval);
+      if (isCancelled) return;
+
+      // Si el bot no está listo (esperando QR o desconectado), consultar rápido (1500ms)
+      const nextInterval = globalIsOffline 
+        ? currentPollingInterval 
+        : (!botState.status.isReady ? 1500 : 5000);
+
+      timeoutId = setTimeout(poll, nextInterval);
     };
-    
-    timeoutId = setTimeout(poll, currentPollingInterval);
-    
-    return () => clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(poll, 100);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timeoutId);
+    };
   }, [checkStatus]);
 
   // 1. Suscribirse al estado del bot en la base de datos (Supabase Cloud)
@@ -440,18 +459,24 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
 
     const chatsId = `whatsapp_chats:${currentWorkspace}`;
     const sub = db.configs.findOne(chatsId).$.subscribe((doc) => {
-      // Solo aplicar la actualización de la base de datos si NO tenemos el bot local corriendo
-      if (!botState.isAvailable || !botState.status.isReady) {
-        if (botState.isCloudActive && doc) {
-          const item = doc.toJSON();
-          const data = item.data || {};
-          if (Array.isArray(data.chats)) {
-            updateBotState({ chats: data.chats });
-            return;
-          }
+      // Si el bot local está respondiendo en esta máquina, la fuente de verdad es estrictamente local:
+      if (botState.isAvailable) {
+        if (!botState.status.isReady) {
+          updateBotState({ chats: [] });
         }
-        updateBotState({ chats: [] });
+        return;
       }
+
+      // Si es un cliente puramente remoto (nube):
+      if (botState.isCloudActive && doc) {
+        const item = doc.toJSON();
+        const data = item.data || {};
+        if (Array.isArray(data.chats) && data.chats.length > 0) {
+          updateBotState({ chats: data.chats });
+          return;
+        }
+      }
+      updateBotState({ chats: [] });
     });
 
     return () => sub.unsubscribe();
@@ -463,6 +488,43 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       loadChats();
     }
   }, [state.isAvailable, state.status.isReady, state.chats.length, loadChats]);
+
+  const logout = useCallback(async () => {
+    try {
+      updateBotState({
+        status: { isReady: false, needsAuth: false, qr: null, statusMessage: 'Cerrando sesión...' },
+        chats: []
+      });
+
+      if (db && currentWorkspace && isCloud) {
+        const statusId = `whatsapp_bot_status:${currentWorkspace}`;
+        const chatsId = `whatsapp_chats:${currentWorkspace}`;
+        await Promise.all([
+          db.configs.upsert({
+            id: statusId,
+            workspace_id: currentWorkspace,
+            type: 'whatsapp_bot_status',
+            data: { isReady: false, lastSeen: new Date().toISOString(), botId: localUrl }
+          }).catch(() => {}),
+          db.configs.upsert({
+            id: chatsId,
+            workspace_id: currentWorkspace,
+            type: 'whatsapp_bot_status',
+            data: { chats: [], updatedAt: new Date().toISOString() }
+          }).catch(() => {})
+        ]);
+      }
+
+      await fetch(`${localUrl}/api/whatsapp/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      }).catch(() => {});
+
+      setTimeout(() => checkStatus(true), 1200);
+    } catch (e) {
+      console.error('Error during logout:', e);
+    }
+  }, [localUrl, db, currentWorkspace, isCloud, checkStatus]);
 
   const finalAvailable = state.isAvailable || (state.isCloudActive && isCloud);
   const finalStatus = state.isAvailable
@@ -479,6 +541,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     checkStatus,
     loadChats,
     sendMessage,
+    logout,
     localUrl,
     isCloudActive: state.isCloudActive,
     conflictBotUrl: state.conflictBotUrl
