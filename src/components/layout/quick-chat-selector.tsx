@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useWhatsAppBot } from '@/hooks/whatsapp';
 import { useSettings } from '@/hooks/configuracion';
 import { useScheduledMessages } from '@/hooks/whatsapp';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -20,6 +21,7 @@ interface QuickChatSelectorProps {
 }
 
 export function QuickChatSelector({ className, showLabel }: QuickChatSelectorProps) {
+  const { currentWorkspace } = useWorkspaceManager();
   const { settings, saveSettings } = useSettings();
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
   const { scheduledMessages, cancelMessage, isLoading: isScheduledLoading } = useScheduledMessages();
@@ -223,17 +225,31 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
                 <p className="text-xs text-muted-foreground text-center">Verificando conexión con el bot...</p>
               </div>
             ) : !bot.isAvailable ? (
-              <div className="flex flex-col items-center justify-center py-8 px-4 text-center gap-3">
-                <div className="p-3 bg-amber-500/10 rounded-full text-amber-500">
-                  <AlertTriangle className="h-6 w-6" />
+              bot.status.activeWorkspace && currentWorkspace && bot.status.activeWorkspace !== currentWorkspace ? (
+                <div className="flex flex-col items-center justify-center py-6 px-4 text-center gap-2">
+                  <div className="p-2.5 bg-amber-500/10 rounded-full text-amber-500">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-foreground">Bot en otra área de trabajo</p>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                      El dispositivo principal tiene el bot abierto en <strong>"{bot.status.activeWorkspace}"</strong>. Solo está disponible para usuarios en esa área.
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-bold text-foreground">Bot de WhatsApp desconectado</p>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed">
-                    Inicia el servidor del bot de WhatsApp o configura su dirección en los ajustes generales para poder elegir chats.
-                  </p>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 px-4 text-center gap-3">
+                  <div className="p-3 bg-amber-500/10 rounded-full text-amber-500">
+                    <AlertTriangle className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-foreground">Bot de WhatsApp desconectado</p>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                      Inicia el servidor del bot de WhatsApp o configura su dirección en los ajustes generales para poder elegir chats.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )
             ) : bot.status.needsAuth ? (
               <div className="flex flex-col items-center justify-center py-4 px-4 text-center gap-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-400">

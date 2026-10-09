@@ -8,8 +8,10 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Input } from '@/components/ui/input';
 import { useWhatsAppBot } from '@/hooks/whatsapp';
 import { useSettings } from '@/hooks/configuracion';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 
 export function SyncWhatsApp() {
+  const { currentWorkspace } = useWorkspaceManager();
   const { settings, saveSettings } = useSettings();
   const [localUrl, setLocalUrl] = useState('http://localhost:3001');
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
@@ -136,15 +138,30 @@ export function SyncWhatsApp() {
             <span>Verificando estado del bot local...</span>
           </div>
         ) : !bot.isAvailable ? (
-          <div className="flex flex-col items-center justify-center py-8 text-sm text-muted-foreground gap-3 px-4 text-center">
-            <div className="p-3 bg-amber-500/10 rounded-full text-amber-500">
-              <AlertTriangle className="h-6 w-6" />
+          bot.status.activeWorkspace && currentWorkspace && bot.status.activeWorkspace !== currentWorkspace ? (
+            <div className="flex flex-col items-center justify-center py-8 text-sm gap-3 px-4 text-center">
+              <div className="p-3 bg-amber-500/10 rounded-full text-amber-500">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <span className="font-bold text-foreground">Bot activo en otra área de trabajo</span>
+              <p className="text-xs text-muted-foreground max-w-[280px]">
+                El dispositivo principal tiene el bot enlazado al área <strong>"{bot.status.activeWorkspace}"</strong>.
+              </p>
+              <p className="text-[11px] text-muted-foreground/80 max-w-[260px]">
+                Para interactuar con el bot, debes cambiar a esa misma área de trabajo o cambiar de área en el dispositivo principal.
+              </p>
             </div>
-            <span className="font-bold text-foreground">Servidor no disponible</span>
-            <p className="text-xs text-muted-foreground max-w-[250px]">
-              Asegúrate de que el bot de WhatsApp esté encendido y que la URL configurada sea correcta.
-            </p>
-          </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-sm text-muted-foreground gap-3 px-4 text-center">
+              <div className="p-3 bg-amber-500/10 rounded-full text-amber-500">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <span className="font-bold text-foreground">Servidor no disponible</span>
+              <p className="text-xs text-muted-foreground max-w-[250px]">
+                Asegúrate de que el bot de WhatsApp esté encendido y que la URL configurada sea correcta.
+              </p>
+            </div>
+          )
         ) : bot.status.isReady ? (
           <div className="space-y-4">
             <div className="space-y-2">

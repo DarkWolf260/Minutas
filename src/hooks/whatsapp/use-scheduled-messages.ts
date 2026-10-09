@@ -167,14 +167,18 @@ export function useScheduledMessages() {
       try {
         await fetch(`${localUrl}/api/whatsapp/schedule`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
+          },
           body: JSON.stringify({ 
             id, 
             chatId, 
             message, 
             scheduledTime: isoTime, 
             title,
-            media: processedMedia
+            media: processedMedia,
+            workspaceId: currentWorkspace
           }),
         });
       } catch (error) {
@@ -248,7 +252,12 @@ export function useScheduledMessages() {
 
       isSyncing = true;
       try {
-        const response = await fetch(`${localUrl}/api/whatsapp/scheduled`);
+        const wsParam = currentWorkspace ? `?workspace=${encodeURIComponent(currentWorkspace)}` : '';
+        const response = await fetch(`${localUrl}/api/whatsapp/scheduled${wsParam}`, {
+          headers: {
+            ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
+          }
+        });
         if (!response.ok) {
           throw new Error('Server returned non-ok status');
         }
@@ -310,14 +319,18 @@ export function useScheduledMessages() {
               try {
                 const pushRes = await fetch(`${localUrl}/api/whatsapp/schedule`, {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
+                  },
                   body: JSON.stringify({ 
                     id: msg.id, 
                     chatId: msg.chatId, 
                     message: msg.message, 
                     scheduledTime: msg.scheduledTime, 
                     title: msg.title,
-                    media: msg.media
+                    media: msg.media,
+                    workspaceId: currentWorkspace
                   }),
                 });
                 if (pushRes.ok) {

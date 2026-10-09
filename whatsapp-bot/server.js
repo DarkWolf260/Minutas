@@ -175,16 +175,57 @@ async function restartClient(reasonText = 'Reiniciando cliente...') {
 // Inicializar por primera vez
 initWhatsAppClient();
 
+let activeWorkspace = null;
+
 // Rutas de la API
+app.get('/api/whatsapp/workspace', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.json({ activeWorkspace });
+});
+
+app.post('/api/whatsapp/workspace', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  const { workspace } = req.body;
+  if (workspace && typeof workspace === 'string') {
+    const prev = activeWorkspace;
+    activeWorkspace = workspace.trim();
+    console.log(`[Workspace] Área de trabajo del bot asignada: "${activeWorkspace}" (anterior: "${prev || 'ninguna'}")`);
+    return res.json({ success: true, activeWorkspace });
+  }
+  if (workspace === null) {
+    activeWorkspace = null;
+    console.log('[Workspace] Bot desvinculado de área de trabajo específica.');
+    return res.json({ success: true, activeWorkspace: null });
+  }
+  return res.status(400).json({ error: 'workspace string o null es requerido' });
+});
+
 app.get('/api/whatsapp/status', (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
+
+  const requestedWorkspace = req.query.workspace || req.headers['x-workspace-id'];
+  
+  // Si aún no hay área de trabajo activa y la solicitud especifica una, auto-asignarla
+  if (!activeWorkspace && requestedWorkspace && typeof requestedWorkspace === 'string') {
+    activeWorkspace = requestedWorkspace.trim();
+    console.log(`[Workspace] Bot auto-asignado al área de trabajo inicial: "${activeWorkspace}"`);
+  }
+
+  const isWorkspaceMatch = !activeWorkspace || !requestedWorkspace || activeWorkspace === requestedWorkspace;
+
   res.json({
     isReady,
     needsAuth: !isReady && qrCodeData !== null,
     qr: qrCodeData,
-    statusMessage
+    statusMessage: !isWorkspaceMatch 
+      ? `El bot está asignado al área de trabajo "${activeWorkspace}".` 
+      : statusMessage,
+    activeWorkspace,
+    isWorkspaceMatch
   });
 });
 
@@ -213,6 +254,15 @@ app.get('/api/whatsapp/chats', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
+
+  const requestedWorkspace = req.query.workspace || req.headers['x-workspace-id'];
+  if (activeWorkspace && requestedWorkspace && requestedWorkspace !== activeWorkspace) {
+    return res.status(403).json({ 
+      error: `El bot está asignado exclusivamente al área de trabajo "${activeWorkspace}". No disponible en "${requestedWorkspace}".`,
+      activeWorkspace 
+    });
+  }
+
   if (!isReady || !client) {
     return res.status(400).json({ error: 'WhatsApp client is not ready' });
   }
@@ -256,7 +306,17 @@ app.post('/api/whatsapp/send', async (req, res) => {
     return res.status(400).json({ error: 'WhatsApp client is not ready' });
   }
 
-  const { chatId, message, media } = req.body;
+  const { chatId, message, media, workspaceId } = req.body;
+  const requestedWorkspace = workspaceId || req.query.workspace || req.headers['x-workspace-id'];
+
+  if (activeWorkspace && requestedWorkspace && requestedWorkspace !== activeWorkspace) {
+    console.warn(`[Send] Envío rechazado: el bot está activo en "${activeWorkspace}", se solicitó desde "${requestedWorkspace}".`);
+    return res.status(403).json({ 
+      error: `El bot está asignado exclusivamente al área de trabajo "${activeWorkspace}". No disponible en "${requestedWorkspace}".`,
+      activeWorkspace 
+    });
+  }
+
   const hasMedia = media && Array.isArray(media) && media.length > 0;
 
   // Permitir message vacío si hay adjuntos (ej: reporte solo de fotos)
@@ -361,6 +421,12 @@ setInterval(async () => {
 
   for (const msg of messages) {
     if (msg.status === 'pending' && new Date(msg.scheduledTime) <= now) {
+      // Validar si el mensaje pertenece al área de trabajo activa actual
+      if (activeWorkspace && msg.workspaceId && msg.workspaceId !== activeWorkspace) {
+        // Omitir envío mientras el bot esté asignado a otra área de trabajo
+        continue;
+      }
+
       try {
         let targetChatId = msg.chatId;
         if (typeof targetChatId === 'string' && !targetChatId.includes('@')) {
@@ -409,7 +475,17 @@ setInterval(async () => {
 
 // Endpoints del sistema de programación
 app.post('/api/whatsapp/schedule', (req, res) => {
-  const { id, chatId, message, scheduledTime, title, media } = req.body;
+  const { id, chatId, message, scheduledTime, title, media, workspaceId } = req.body;
+  const requestedWorkspace = workspaceId || req.query.workspace || req.headers['x-workspace-id'];
+
+  if (activeWorkspace && requestedWorkspace && requestedWorkspace !== activeWorkspace) {
+    console.warn(`[Schedule] Programación rechazada: el bot está en "${activeWorkspace}", se solicitó desde "${requestedWorkspace}".`);
+    return res.status(403).json({ 
+      error: `El bot está asignado exclusivamente al área de trabajo "${activeWorkspace}". No disponible en "${requestedWorkspace}".`,
+      activeWorkspace 
+    });
+  }
+
   const hasMedia = media && Array.isArray(media) && media.length > 0;
 
   // Permitir message vacío si hay adjuntos
@@ -419,7 +495,16 @@ app.post('/api/whatsapp/schedule', (req, res) => {
 
   const messages = getScheduledMessages();
   const existingIndex = messages.findIndex(m => m.id === id);
-  const newMsg = { id, chatId, message, scheduledTime, title, media, status: 'pending' };
+  const newMsg = { 
+    id, 
+    chatId, 
+    message, 
+    scheduledTime, 
+    title, 
+    media, 
+    workspaceId: requestedWorkspace || activeWorkspace || null,
+    status: 'pending' 
+  };
 
   if (existingIndex >= 0) {
     messages[existingIndex] = newMsg; // Actualiza existente
@@ -450,7 +535,12 @@ app.delete('/api/whatsapp/schedule/:id', (req, res) => {
 });
 
 app.get('/api/whatsapp/scheduled', (req, res) => {
-  res.json(getScheduledMessages());
+  const requestedWorkspace = req.query.workspace || req.headers['x-workspace-id'];
+  let messages = getScheduledMessages();
+  if (requestedWorkspace) {
+    messages = messages.filter(m => !m.workspaceId || m.workspaceId === requestedWorkspace);
+  }
+  res.json(messages);
 });
 // ===============================================
 
