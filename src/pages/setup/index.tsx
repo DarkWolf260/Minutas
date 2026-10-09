@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useSetup } from '@/hooks/configuracion';
+import { useSetup, SETUP_DONE_KEY, trySet, tryRemove } from '@/hooks/configuracion';
 import { 
   PasoBienvenida, 
   PasoModulos, 
@@ -39,10 +39,20 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
     saveSettings 
   } = hook;
 
+  const handleLoginSuccess = () => {
+    trySet(SETUP_DONE_KEY, 'true');
+    tryRemove('minutas-setup-step');
+    tryRemove('minutas-setup-workspace');
+    tryRemove('minutas-setup-roles-v1');
+    tryRemove('minutas-setup-depts-v1');
+    trySet('minutas-template-bootstrap-ok', 'true');
+    onComplete(false);
+  };
+
   const mostrarProgreso = paso >= 0 && paso < TOTAL_PUNTOS;
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center bg-background overflow-hidden">
+    <div className="fixed inset-0 z-40 flex flex-col items-center bg-background overflow-hidden">
       <div className="relative w-full max-w-lg flex flex-col h-full">
         {mostrarProgreso && (
           <div className="flex items-center justify-between py-3 px-6 shrink-0 border-b bg-background/80 backdrop-blur-md">
@@ -65,7 +75,11 @@ export default function SetupPage({ onComplete }: { onComplete: (goToTemplates?:
 
         <div className="flex-1 min-h-0">
           {paso === 0 && (
-            <PasoBienvenida alSiguiente={() => setPaso(1)} />
+            <PasoBienvenida 
+              alSiguiente={() => setPaso(1)} 
+              alIniciarSesionExitoso={handleLoginSuccess}
+              alEntrarDirectoOffline={() => finalizar()}
+            />
           )}
           {paso === 1 && (
             <PasoModulos

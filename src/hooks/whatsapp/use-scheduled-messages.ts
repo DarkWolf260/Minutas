@@ -4,6 +4,7 @@ import { useSettings } from '@/hooks/configuracion';
 import { DbKeys } from '@/lib/repositories/keys';
 import { logger } from '@/lib/logger';
 import { OfflinePhotosDB } from '@/lib/offline-photos';
+import { getEffectiveBotUrl } from './use-whatsapp-bot';
 
 export interface ScheduledMessage {
   id: string;
@@ -86,6 +87,7 @@ export function useScheduledMessages() {
   const deletingIds = useRef<Set<string>>(new Set());
 
   const localUrl = settings?.whatsapp_local_url || 'http://localhost:3001';
+  const apiUrl = getEffectiveBotUrl(localUrl);
 
   // Load and watch scheduled messages
   useEffect(() => {
@@ -165,7 +167,7 @@ export function useScheduledMessages() {
 
       // Enviar al backend Node para que lo programe en segundo plano
       try {
-        await fetch(`${localUrl}/api/whatsapp/schedule`, {
+        await fetch(`${apiUrl}/api/whatsapp/schedule`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -207,7 +209,7 @@ export function useScheduledMessages() {
 
         // Cancelar en el backend Node
         try {
-          await fetch(`${localUrl}/api/whatsapp/schedule/${encodeURIComponent(id)}`, {
+          await fetch(`${apiUrl}/api/whatsapp/schedule/${encodeURIComponent(id)}`, {
             method: 'DELETE',
           });
         } catch (error) {
@@ -253,7 +255,7 @@ export function useScheduledMessages() {
       isSyncing = true;
       try {
         const wsParam = currentWorkspace ? `?workspace=${encodeURIComponent(currentWorkspace)}` : '';
-        const response = await fetch(`${localUrl}/api/whatsapp/scheduled${wsParam}`, {
+        const response = await fetch(`${apiUrl}/api/whatsapp/scheduled${wsParam}`, {
           headers: {
             ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
           }
@@ -317,7 +319,7 @@ export function useScheduledMessages() {
             } else {
               // Message is pending locally but MISSING on the server — push it
               try {
-                const pushRes = await fetch(`${localUrl}/api/whatsapp/schedule`, {
+                const pushRes = await fetch(`${apiUrl}/api/whatsapp/schedule`, {
                   method: 'POST',
                   headers: { 
                     'Content-Type': 'application/json',

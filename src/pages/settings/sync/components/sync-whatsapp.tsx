@@ -205,59 +205,77 @@ export function SyncWhatsApp() {
               </div>
               
               <ScrollArea className="h-56 border rounded-xl bg-background/30 backdrop-blur-sm overflow-hidden">
-                <div className="p-2 space-y-1">
-                  <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Grupos</div>
-                  {bot.chats.filter(c => c.isGroup && (c.name || '').toLowerCase().includes(searchQuery.toLowerCase())).map((chat) => {
-                    const isChecked = (settings?.whatsapp_default_chat_ids || []).includes(chat.id);
-                    return (
-                      <div 
-                        key={chat.id} 
-                        className={`flex items-center justify-between p-2 rounded-lg transition-colors cursor-pointer ${
-                          isChecked ? 'bg-emerald-500/10' : 'hover:bg-muted/50'
-                        }`}
-                        onClick={() => handleToggleGroup(chat.id)}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className={`p-2 rounded-full ${isChecked ? 'bg-emerald-500/20 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
-                            <Users className="h-4 w-4" />
+                {bot.chats.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full py-14 gap-2.5 text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin text-emerald-500" />
+                    <span className="text-xs font-medium">
+                      {bot.status.statusMessage && bot.status.statusMessage !== 'Listo'
+                        ? bot.status.statusMessage
+                        : 'Cargando lista de chats de WhatsApp...'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => bot.loadChats()}
+                      className="text-[11px] text-emerald-600 hover:underline mt-1 font-semibold"
+                    >
+                      Intentar de nuevo
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-2 space-y-1">
+                    <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Grupos</div>
+                    {bot.chats.filter(c => c.isGroup && (c.name || '').toLowerCase().includes(searchQuery.toLowerCase())).map((chat) => {
+                      const isChecked = (settings?.whatsapp_default_chat_ids || []).includes(chat.id);
+                      return (
+                        <div 
+                          key={chat.id} 
+                          className={`flex items-center justify-between p-2 rounded-lg transition-colors cursor-pointer ${
+                            isChecked ? 'bg-emerald-500/10' : 'hover:bg-muted/50'
+                          }`}
+                          onClick={() => handleToggleGroup(chat.id)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className={`p-2 rounded-full ${isChecked ? 'bg-emerald-500/20 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
+                              <Users className="h-4 w-4" />
+                            </div>
+                            <span className="text-sm font-medium">{chat.name || chat.id}</span>
                           </div>
-                          <span className="text-sm font-medium">{chat.name || chat.id}</span>
-                        </div>
-                        <div className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors ${
-                          isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-muted-foreground/30'
-                        }`}>
-                          {isChecked && <Check className="h-3 w-3" />}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  
-                  <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-3">Contactos</div>
-                  {bot.chats.filter(c => !c.isGroup && (c.name || '').toLowerCase().includes(searchQuery.toLowerCase())).map((chat) => {
-                    const isChecked = (settings?.whatsapp_default_chat_ids || []).includes(chat.id);
-                    return (
-                      <div 
-                        key={chat.id} 
-                        className={`flex items-center justify-between p-2 rounded-lg transition-colors cursor-pointer ${
-                          isChecked ? 'bg-emerald-500/10' : 'hover:bg-muted/50'
-                        }`}
-                        onClick={() => handleToggleGroup(chat.id)}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className={`p-2 rounded-full ${isChecked ? 'bg-emerald-500/20 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
-                            <User className="h-4 w-4" />
+                          <div className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors ${
+                            isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-muted-foreground/30'
+                          }`}>
+                            {isChecked && <Check className="h-3 w-3" />}
                           </div>
-                          <span className="text-sm font-medium">{chat.name || chat.id}</span>
                         </div>
-                        <div className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors ${
-                          isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-muted-foreground/30'
-                        }`}>
-                          {isChecked && <Check className="h-3 w-3" />}
+                      );
+                    })}
+                    
+                    <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-3">Contactos</div>
+                    {bot.chats.filter(c => !c.isGroup && (c.name || '').toLowerCase().includes(searchQuery.toLowerCase())).map((chat) => {
+                      const isChecked = (settings?.whatsapp_default_chat_ids || []).includes(chat.id);
+                      return (
+                        <div 
+                          key={chat.id} 
+                          className={`flex items-center justify-between p-2 rounded-lg transition-colors cursor-pointer ${
+                            isChecked ? 'bg-emerald-500/10' : 'hover:bg-muted/50'
+                          }`}
+                          onClick={() => handleToggleGroup(chat.id)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className={`p-2 rounded-full ${isChecked ? 'bg-emerald-500/20 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
+                              <User className="h-4 w-4" />
+                            </div>
+                            <span className="text-sm font-medium">{chat.name || chat.id}</span>
+                          </div>
+                          <div className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors ${
+                            isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-muted-foreground/30'
+                          }`}>
+                            {isChecked && <Check className="h-3 w-3" />}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </ScrollArea>
               
               <p className="text-[11px] text-muted-foreground mt-2 px-1">

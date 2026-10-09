@@ -121,9 +121,28 @@ async function convertPhotoToBase64(photoId: string, url: string, localBlobId?: 
   return url;
 }
 
+/**
+ * Resolves the effective base URL for WhatsApp Bot API requests.
+ * In development mode (Vite dev server) when targeting the local bot (localhost:3001 / 127.0.0.1:3001),
+ * returns empty string ('') to route calls through the same-origin Vite proxy (/api/whatsapp).
+ * This completely avoids browser CORS preflight blocks and Mixed-Content warnings.
+ */
+export function getEffectiveBotUrl(url?: string): string {
+  if (!url) return '';
+  const trimmed = url.trim().replace(/\/+$/, '');
+
+  const isLocalBot = /^https?:\/\/(localhost|127\.0\.0\.1):3001$/i.test(trimmed);
+  if (isLocalBot && import.meta.env.DEV) {
+    return '';
+  }
+
+  return trimmed;
+}
+
 export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
   const db = useDatabase();
   const { currentWorkspace, isCloud } = useWorkspaceManager();
+  const apiUrl = getEffectiveBotUrl(localUrl);
 
   const [state, setState] = useState<BotState>(botState);
 
@@ -171,7 +190,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     try {
       const cacheBuster = `_t=${Date.now()}`;
       const wsParam = currentWorkspace ? `&workspace=${encodeURIComponent(currentWorkspace)}` : '';
-      const url = `${localUrl}/api/whatsapp/status?${cacheBuster}${wsParam}`;
+      const url = `${apiUrl}/api/whatsapp/status?${cacheBuster}${wsParam}`;
       const response = await fetch(url, {
         method: 'GET',
         cache: 'no-store',
@@ -296,7 +315,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     if (state.isAvailable && state.isWorkspaceMatch && state.status.isReady) {
       try {
         const wsParam = currentWorkspace ? `?workspace=${encodeURIComponent(currentWorkspace)}` : '';
-        const response = await fetch(`${localUrl}/api/whatsapp/chats${wsParam}`, {
+        const response = await fetch(`${apiUrl}/api/whatsapp/chats${wsParam}`, {
           headers: {
             ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
           }
@@ -357,7 +376,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
           )
         : undefined;
 
-      const response = await fetch(`${localUrl}/api/whatsapp/send`, {
+      const response = await fetch(`${apiUrl}/api/whatsapp/send`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -565,7 +584,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         updateBotState({ chats: [] });
 
         // 3. Vincular el bot local a la nueva área de trabajo
-        fetch(`${localUrl}/api/whatsapp/workspace`, {
+        fetch(`${apiUrl}/api/whatsapp/workspace`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ workspace: currentWorkspace })
@@ -581,10 +600,18 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     }
   }, [currentWorkspace, localUrl, db, isCloud, checkStatus]);
 
-  // Load chats when ready locally
+  // Load chats when ready locally, retrying if ready but chats are still empty
   useEffect(() => {
-    if (state.isAvailable && state.isWorkspaceMatch && state.status.isReady && state.chats.length === 0) {
+    if (!state.isAvailable || !state.isWorkspaceMatch || !state.status.isReady) return;
+
+    if (state.chats.length === 0) {
       loadChats();
+      const intervalId = setInterval(() => {
+        if (botState.chats.length === 0) {
+          loadChats();
+        }
+      }, 4000);
+      return () => clearInterval(intervalId);
     }
   }, [state.isAvailable, state.isWorkspaceMatch, state.status.isReady, state.chats.length, loadChats]);
 
@@ -612,7 +639,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         ]);
       }
 
-      const res = await fetch(`${localUrl}/api/whatsapp/workspace`, {
+      const res = await fetch(`${apiUrl}/api/whatsapp/workspace`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ workspace: ws })
@@ -653,7 +680,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         ]);
       }
 
-      await fetch(`${localUrl}/api/whatsapp/logout`, {
+      await fetch(`${apiUrl}/api/whatsapp/logout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       }).catch(() => {});

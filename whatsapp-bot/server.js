@@ -6,6 +6,14 @@ const qrcode = require('qrcode-terminal');
 const app = express();
 const port = 3001;
 
+process.on('unhandledRejection', (reason) => {
+  console.warn('[Server] Promesa rechazada no controlada:', reason?.message || reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[Server] Excepción no capturada:', err?.message || err);
+});
+
 // Función para validar si el origen está permitido (soporta localhost, IPs locales y producción)
 function isAllowedOrigin(origin) {
   if (!origin) return true; // Peticiones locales o herramientas como curl/Postman
@@ -33,9 +41,15 @@ app.use((req, res, next) => {
   }
 
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-requested-with');
+  
+  // Permitir dinámicamente cualquier encabezado solicitado por el cliente (x-workspace-id, cache-control, etc.)
+  const requestedHeaders = req.headers['access-control-request-headers'];
+  const defaultAllowedHeaders = 'Content-Type, Authorization, x-requested-with, x-workspace-id, cache-control, pragma';
+  res.setHeader('Access-Control-Allow-Headers', requestedHeaders || defaultAllowedHeaders);
+  res.setHeader('Access-Control-Expose-Headers', '*');
   // Requerido por navegadores basados en Chromium para Private Network Access (PNA)
   res.setHeader('Access-Control-Allow-Private-Network', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400');
 
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
@@ -51,6 +65,7 @@ let qrCodeData = null;
 let statusMessage = 'Iniciando cliente...';
 let client = null;
 let isInitializing = false;
+let cachedChats = [];
 
 function initWhatsAppClient() {
   if (isInitializing) return;
@@ -63,6 +78,7 @@ function initWhatsAppClient() {
     authStrategy: new LocalAuth({ dataPath: './session' }),
     puppeteer: {
       headless: true,
+      protocolTimeout: 0,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -150,26 +166,38 @@ function initWhatsAppClient() {
     });
 }
 
+let isRestarting = false;
+
 async function restartClient(reasonText = 'Reiniciando cliente...') {
-  if (isInitializing) return;
+  if (isRestarting) return;
+  isRestarting = true;
   isInitializing = true;
   isReady = false;
   qrCodeData = null;
+  cachedChats = [];
   statusMessage = reasonText;
 
-  try {
-    if (client) {
-      console.log(`[WhatsApp] Cerrando instancia previa (${reasonText})...`);
-      await client.destroy();
+  setTimeout(async () => {
+    try {
+      if (client) {
+        console.log(`[WhatsApp] Cerrando instancia previa (${reasonText})...`);
+        try {
+          client.pupPage?.removeAllListeners?.();
+          client.removeAllListeners?.();
+        } catch (_) {}
+        await client.destroy().catch(() => {});
+        client = null;
+      }
+    } catch (destroyErr) {
+      // Ignorar si ya estaba destruida
     }
-  } catch (destroyErr) {
-    // Ignorar si ya estaba destruida
-  }
 
-  setTimeout(() => {
-    isInitializing = false;
-    initWhatsAppClient();
-  }, 1500);
+    setTimeout(() => {
+      isInitializing = false;
+      isRestarting = false;
+      initWhatsAppClient();
+    }, 1500);
+  }, 400);
 }
 
 // Inicializar por primera vez
@@ -240,12 +268,10 @@ app.post('/api/whatsapp/logout', async (req, res) => {
 
   try {
     if (client) {
-      await client.logout();
+      await client.logout().catch(() => {});
     }
   } catch (e) {
-    try {
-      if (client) await client.destroy();
-    } catch (destroyErr) {}
+    // Ignorar si falla
   }
   restartClient('Sesión cerrada. Generando nuevo QR...');
 });
@@ -270,34 +296,66 @@ app.get('/api/whatsapp/chats', async (req, res) => {
   try {
     let formattedChats = [];
 
+    // 1. Extracción veloz directa desde la memoria de WhatsApp Web en Puppeteer (inmediato, evita congelamientos)
     try {
-      const chats = await client.getChats();
-      formattedChats = chats.map(chat => ({
-        id: chat.id?._serialized || (typeof chat.id === 'string' ? chat.id : ''),
-        name: chat.name || chat.formattedTitle || 'Sin nombre',
-        isGroup: Boolean(chat.isGroup)
-      })).filter(c => c.id);
-    } catch (err) {
-      console.warn(`[Chats] client.getChats() nativo lanzó error (${err.message || err}). Usando extractor directo...`);
-
-      formattedChats = await client.pupPage.evaluate(() => {
-        try {
-          const chatCollection = (window.require('WAWebCollections')?.Chat || window.Store?.Chat)?.getModelsArray() || [];
-          return chatCollection.map(c => ({
-            id: c.id?._serialized || (typeof c.id === 'string' ? c.id : ''),
-            name: c.name || c.formattedTitle || c.contact?.name || 'Chat',
-            isGroup: Boolean(c.isGroup)
-          })).filter(c => c.id);
-        } catch (e) {
-          return [];
-        }
-      });
+      if (client.pupPage) {
+        formattedChats = await client.pupPage.evaluate(() => {
+          try {
+            const collections = window.require?.('WAWebCollections') || window.Store;
+            const chatCollection = (collections?.Chat || window.Store?.Chat)?.getModelsArray?.() || [];
+            
+            return chatCollection
+              .map(c => {
+                const id = c.id?._serialized || (typeof c.id === 'string' ? c.id : '');
+                const name = c.name || c.formattedTitle || c.contact?.name || c.contact?.pushname || (c.id?.user ? `+${c.id.user}` : 'Chat');
+                const isGroup = Boolean(c.isGroup || (id && id.endsWith('@g.us')));
+                const timestamp = c.t || c.conversationTimestamp || 0;
+                return { id, name, isGroup, timestamp };
+              })
+              .filter(c => c.id && !c.id.includes('@broadcast') && !c.id.includes('status@broadcast'))
+              .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+              .map(({ id, name, isGroup }) => ({ id, name, isGroup }));
+          } catch (e) {
+            return [];
+          }
+        });
+      }
+    } catch (evalErr) {
+      console.warn(`[Chats] Extractor en memoria falló (${evalErr.message}). Intentando fallback nativo...`);
     }
 
-    res.json(formattedChats);
+    // 2. Si el extractor directo devolvió vacío, intentar client.getChats() con un timeout estricto de 4 segundos
+    if (!formattedChats || formattedChats.length === 0) {
+      try {
+        const getChatsSafe = client.getChats().catch(err => {
+          console.warn(`[Chats] Error interno en client.getChats(): ${err?.message || err}`);
+          return [];
+        });
+        const timeoutSafe = new Promise(resolve => setTimeout(() => resolve([]), 4000));
+        const chats = await Promise.race([getChatsSafe, timeoutSafe]);
+        if (Array.isArray(chats) && chats.length > 0) {
+          formattedChats = chats.map(chat => ({
+            id: chat.id?._serialized || (typeof chat.id === 'string' ? chat.id : ''),
+            name: chat.name || chat.formattedTitle || 'Sin nombre',
+            isGroup: Boolean(chat.isGroup)
+          })).filter(c => c.id);
+        }
+      } catch (err) {
+        console.warn(`[Chats] client.getChats() omitido: ${err?.message || err}`);
+      }
+    }
+
+    // 3. Actualizar o recuperar de caché
+    if (formattedChats && formattedChats.length > 0) {
+      cachedChats = formattedChats;
+    } else if (cachedChats.length > 0) {
+      formattedChats = cachedChats;
+    }
+
+    res.json(formattedChats || []);
   } catch (error) {
     console.error('Error obteniendo chats:', error);
-    res.status(500).json({ error: error.toString() });
+    res.json(cachedChats || []);
   }
 });
 
