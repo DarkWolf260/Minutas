@@ -37,17 +37,33 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex h-9 w-9 items-center justify-center rounded-full transition-all overflow-hidden ring-2 ring-border/80 focus:outline-none ml-1 shadow-sm">
-        {profile.avatarUrl && !analyst ? (
-          <img src={profile.avatarUrl} alt="Perfil" className="h-full w-full object-cover" />
-        ) : (
-          <div className={cn(
-            "flex h-full w-full items-center justify-center text-xs font-bold",
-            analyst ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
-          )}>
-            {initials}
-          </div>
-        )}
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          title={`Cuenta: ${displayName}`}
+          aria-label="Menú de usuario"
+          className="relative flex h-9 w-9 shrink-0 aspect-square items-center justify-center rounded-full border border-primary/25 bg-primary/10 hover:bg-primary/20 active:scale-95 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary shadow-xs group cursor-pointer overflow-hidden"
+        >
+          {profile?.avatarUrl && !analyst ? (
+            <img 
+              src={profile.avatarUrl} 
+              alt={displayName} 
+              className="h-full w-full object-cover rounded-full" 
+            />
+          ) : (
+            <div className={cn(
+              "flex h-full w-full items-center justify-center rounded-full transition-colors",
+              analyst 
+                ? "bg-primary text-primary-foreground" 
+                : "text-primary group-hover:text-primary/90"
+            )}>
+              <User className="h-3.5 w-3.5" strokeWidth={1.9} />
+            </div>
+          )}
+          {analyst && (
+            <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-background animate-pulse" />
+          )}
+        </button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-64 mt-1 rounded-xl shadow-xl border-border">

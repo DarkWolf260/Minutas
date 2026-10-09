@@ -17,11 +17,11 @@ export function MobileNav() {
   } = useMobileNav();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/90 backdrop-blur-md px-3 sm:hidden shadow-sm shadow-black/5 animate-in slide-in-from-top duration-500 ease-out">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 border-b bg-background/90 backdrop-blur-md px-3 sm:hidden shadow-sm shadow-black/5 animate-in slide-in-from-top duration-500 ease-out">
       {/* Identidad / Logotipo */}
       <NavBrand />
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 shrink-0">
         {/* Chats de WhatsApp */}
         <QuickChatSelector />
 
