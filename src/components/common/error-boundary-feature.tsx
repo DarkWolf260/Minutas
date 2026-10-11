@@ -4,6 +4,7 @@ import React, { Component, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { logger } from '@/lib/logger';
+import { logError } from '@/lib/error-handler';
 
 interface Props {
   children: ReactNode;
@@ -51,15 +52,13 @@ export class FeatureErrorBoundary extends Component<Props, State> {
     });
 
     // ✅ Send to Sentry via error handler
-    import('@/lib/error-handler').then(({ logError }) => {
-      logError(error, 'error', {
-        feature: this.props.featureName,
-        action: 'render',
-        metadata: {
-          componentStack: errorInfo.componentStack,
-          errorBoundary: true,
-        },
-      });
+    logError(error, 'error', {
+      feature: this.props.featureName,
+      action: 'render',
+      metadata: {
+        componentStack: errorInfo.componentStack,
+        errorBoundary: true,
+      },
     });
   }
 

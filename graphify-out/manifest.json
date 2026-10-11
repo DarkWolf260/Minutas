@@ -2232,8 +2232,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\App.tsx": {
-    "mtime": 1791657064.8382423,
-    "ast_hash": "09363529e0dbabf6108dabeb158825ee",
+    "mtime": 1791751754.213503,
+    "ast_hash": "ffc3eabe6ee7a4cc0524ccc9d7fd2146",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\auth\\admin-route.tsx": {
@@ -2247,8 +2247,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\common\\error-boundary-feature.tsx": {
-    "mtime": 1777662994.7958574,
-    "ast_hash": "16d05737ef7e44209acc1c3166dd1253",
+    "mtime": 1791751544.608057,
+    "ast_hash": "3a283f86146773dd728ba3c188531848",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\common\\error-boundary.tsx": {
@@ -3852,8 +3852,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\vite.config.ts": {
-    "mtime": 1791659928.6388493,
-    "ast_hash": "fd732097231cc518800c92dbd8012cf1",
+    "mtime": 1791751767.1948879,
+    "ast_hash": "a183294ea6d7e449760d92759fd40c0a",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\vitest.config.ts": {

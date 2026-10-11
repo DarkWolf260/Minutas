@@ -142,7 +142,7 @@ export default function RegisterPage() {
               <span>Supabase no está configurado</span>
             </div>
             <p className="text-muted-foreground leading-relaxed">
-              No se detectaron <code className="text-foreground font-mono bg-muted/60 px-1 py-0.5 rounded">VITE_SUPABASE_URL</code> ni <code className="text-foreground font-mono bg-muted/60 px-1 py-0.5 rounded">VITE_SUPABASE_ANON_KEY</code> en las variables de entorno. Crea tu archivo <code className="text-foreground font-mono bg-muted/60 px-1 py-0.5 rounded">.env</code> para habilitar el registro de usuarios.
+              No se detectaron <code className="text-foreground font-mono bg-muted/60 px-1 py-0.5 rounded">SUPABASE_URL</code> ni <code className="text-foreground font-mono bg-muted/60 px-1 py-0.5 rounded">SUPABASE_ANON_KEY</code> en las variables de entorno. Crea tu archivo <code className="text-foreground font-mono bg-muted/60 px-1 py-0.5 rounded">.env</code> para habilitar el registro de usuarios.
             </p>
             <div className="pt-1">
               <Button
