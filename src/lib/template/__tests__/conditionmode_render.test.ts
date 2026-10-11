@@ -2,17 +2,21 @@
  * Test: secciones auto-contenidas dentro de bloque condicional :show se renderizan correctamente
  */
 import { renderFinalReport } from '../renderer';
-import { parseTemplate } from '../../template-parser';
+import { parseTemplate } from '../index';
 
-const TEMPLATE = `[?Estatus=Finalizado:show]
-["Comisiones en sitio"- *COMISIONES EN SITIO:*
-{Comisiones:textarea}]
+const TEMPLATE = `::: if Estatus == "Finalizado":show :::
+::: Comisiones en sitio :::
+- *COMISIONES EN SITIO:*
+{Comisiones:textarea}
+:::
 
-- *DATOS OPERACIONALES:*["Datos operacionales"
+::: section Datos operacionales* :::
+- *DATOS OPERACIONALES:*
 - *UNIDAD:* {Unidad}
 - *TÉCNICO:* {Técnico}
-- *CONDUCTOR:* {Conductor}]*
-[/]
+- *CONDUCTOR:* {Conductor}
+:::
+:::
 - *ESTATUS:* {Estatus}`;
 
 test('self-contained nested sections inside :show conditional render when condition is met', () => {
@@ -32,8 +36,6 @@ test('self-contained nested sections inside :show conditional render when condit
         layout: config.layout,
         fields: {},
     }, {}, false, {}, parseTemplate, () => {});
-
-    console.log('Rendered:\n', rendered);
 
     // The conditional block content should appear since Estatus = 'Finalizado'
     expect(rendered).toContain('COMISIONES EN SITIO');
@@ -61,8 +63,6 @@ test('self-contained nested sections inside a :show conditional are hidden from 
         layout: config.layout,
         fields: {},
     }, {}, false, {}, parseTemplate, () => {});
-
-    console.log('Rendered (condition NOT met):\n', rendered);
 
     // Conditional block should NOT appear since Estatus != 'Finalizado'
     expect(rendered).not.toContain('COMISIONES EN SITIO');

@@ -399,6 +399,11 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
           3: function (oldDoc: any) {
             delete oldDoc.description;
             return oldDoc;
+          },
+          4: function (oldDoc: any) {
+            oldDoc.disable_main_stat_on_apoyo = oldDoc.disable_main_stat_on_apoyo ?? null;
+            oldDoc.disabled_sub_categories_on_apoyo = oldDoc.disabled_sub_categories_on_apoyo ?? null;
+            return oldDoc;
           }
         }
       },

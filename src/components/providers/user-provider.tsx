@@ -72,13 +72,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error('Error fetching user status:', err);
       
-      // Fallback: Check if we have status cached in user metadata to prevent offline lockouts
-      const metadataAdmin = user.user_metadata?.is_admin === true;
-      const metadataApproved = user.user_metadata?.is_approved === true;
+      // Fallback seguro: Solo verificar app_metadata (inmutable por el cliente) si la red falla
+      const appAdmin = (user as any)?.app_metadata?.is_admin === true;
+      const appApproved = (user as any)?.app_metadata?.is_approved === true;
       
       setStatus({
-        isAdmin: metadataAdmin,
-        isApproved: metadataApproved,
+        isAdmin: appAdmin,
+        isApproved: appApproved,
         loading: false, // Ensure loading is set to false to unblock UI
         exists: false
       });

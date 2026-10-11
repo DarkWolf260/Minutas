@@ -32,7 +32,8 @@ export default function ReporteFinalPage() {
             disabled={!estaCargado}
             size="icon"
             className="h-14 w-14 rounded-2xl bg-primary text-primary-foreground shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-primary-foreground/10 hover:scale-105 active:scale-95 transition-all duration-300"
-            title="Generar Reporte Final"
+            title="Generar Reporte de Cierre"
+            aria-label="Generar Reporte de Cierre"
           >
             <FileText className="h-7 w-7" />
           </Button>

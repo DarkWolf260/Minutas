@@ -389,3 +389,31 @@ export const DEFAULT_ADDRESSES = [
     longitude: '-64.684251',
   },
 ];
+
+import type { Address } from '@/lib/types';
+
+export const LOCATION_TYPES = [
+  { value: 'centro_asistencial', label: 'Centro Asistencial' },
+  { value: 'residencia', label: 'Residencia' },
+  { value: 'lugar_publico', label: 'Lugar Público' },
+  { value: 'institucion_comercio', label: 'Institución / Comercio' },
+  { value: 'sede', label: 'Sede' },
+] as const;
+
+export function formatAddressToString(address: Address): string {
+  const parts = [`Municipio ${address.municipality}`, `parroquia ${address.parish}`];
+
+  if (address.sector) {
+    parts.push(`sector ${address.sector}`);
+  }
+
+  const calle = [address.street, address.houseNumber].filter(Boolean).join(' ');
+  if (calle) {
+    parts.push(`calle ${calle}`);
+  }
+
+  parts.push(address.name);
+  parts.push(`Cuadrante de Paz ${address.peaceQuadrant}`);
+
+  return parts.join(', ');
+}

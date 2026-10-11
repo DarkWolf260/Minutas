@@ -5,7 +5,13 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { obtenerCategoriasReporte, calcularEstadisticasMensuales, formatearEstadisticasDia } from '../estadisticas-utils';
+import {
+    obtenerCategoriasReporte,
+    calcularEstadisticasMensuales,
+    formatearEstadisticasDia,
+    calcularEstadisticasPeriodo,
+    formatearEstadisticasPeriodo
+} from '../estadisticas-utils';
 import type { Report, Template, TemplateConfig, Address } from '@/lib/types';
 
 // Mock data factories
@@ -736,6 +742,116 @@ describe('statistics-utils', () => {
             expect(lines[1]).toBe('- Colisión vehículo-vehículo 05');
             expect(lines[2]).toBe('- Arrollamiento 01');
             expect(lines[3]).toBe('- Rescatados en accidentes de tránsito urbanos y extra urbanos 02');
+        });
+    });
+
+    describe('calcularEstadisticasPeriodo and formatearEstadisticasPeriodo', () => {
+        const template = createMockTemplate({
+            id: 't-llamadas',
+            statistics_category: '1.2 LLAMADAS DE EMERGENCIAS',
+        });
+        const config = createMockConfig();
+
+        it('should calculate 24h guard statistics as a single list', () => {
+            const reports = [
+                createMockReport({
+                    id: 'r-1',
+                    template_id: 't-llamadas',
+                    status: 'Finalizado',
+                    form_data: { Fecha: '05/10/2026', Hora: '10:00' }
+                })
+            ];
+
+            const result = calcularEstadisticasPeriodo(
+                reports,
+                [template],
+                { 't-llamadas': config },
+                {},
+                [],
+                '05/10/2026 AL 06/10/2026',
+                24
+            );
+
+            expect(result.isMultiDay).toBe(false);
+            expect(result.durationHours).toBe(24);
+            expect(result.totalStats.get('1.2 LLAMADAS DE EMERGENCIAS')).toBe(1);
+
+            const formatted = formatearEstadisticasPeriodo(result);
+            expect(formatted).toBe('- Llamadas de emergencias 01');
+        });
+
+        it('should separate statistics by day for a 48h guard strictly by dates and respect entrega cutoff', () => {
+            const reports = [
+                // Report before guard start (Day 1 - 07:00 before 08:00) -> should be excluded
+                createMockReport({
+                    id: 'r-0',
+                    template_id: 't-llamadas',
+                    status: 'Finalizado',
+                    form_data: { Fecha: '05/10/2026', Hora: '07:00' }
+                }),
+                // Day 1
+                createMockReport({
+                    id: 'r-1',
+                    template_id: 't-llamadas',
+                    status: 'Finalizado',
+                    form_data: { Fecha: '05/10/2026', Hora: '14:00' }
+                }),
+                // Day 2
+                createMockReport({
+                    id: 'r-2',
+                    template_id: 't-llamadas',
+                    status: 'Finalizado',
+                    form_data: { Fecha: '06/10/2026', Hora: '11:00' }
+                }),
+                // Cierre de guardia (último tramo desde las 00:00 del tercer día antes de entrega)
+                createMockReport({
+                    id: 'r-3',
+                    template_id: 't-llamadas',
+                    status: 'Finalizado',
+                    form_data: { Fecha: '07/10/2026', Hora: '04:30' }
+                }),
+                // Report after entrega (Day 3 - 09:00 after 08:00 handover) -> should be excluded
+                createMockReport({
+                    id: 'r-4',
+                    template_id: 't-llamadas',
+                    status: 'Finalizado',
+                    form_data: { Fecha: '07/10/2026', Hora: '09:00' }
+                })
+            ];
+
+            const result = calcularEstadisticasPeriodo(
+                reports,
+                [template],
+                { 't-llamadas': config },
+                {},
+                [],
+                '05/10/2026 AL 07/10/2026',
+                48
+            );
+
+            expect(result.isMultiDay).toBe(true);
+            expect(result.durationHours).toBe(48);
+            expect(result.days).toHaveLength(3);
+            expect(result.days[0]!.label).toBe('05/10/2026');
+            expect(result.days[1]!.label).toBe('06/10/2026');
+            expect(result.days[2]!.label).toBe('07/10/2026');
+
+            expect(result.days[0]!.stats.get('1.2 LLAMADAS DE EMERGENCIAS')).toBe(1); // r-1 (05/10)
+            expect(result.days[1]!.stats.get('1.2 LLAMADAS DE EMERGENCIAS')).toBe(1); // r-2 (06/10)
+            expect(result.days[2]!.stats.get('1.2 LLAMADAS DE EMERGENCIAS')).toBe(1); // r-3 (07/10)
+            expect(result.totalStats.get('1.2 LLAMADAS DE EMERGENCIAS')).toBe(3); // r-0 and r-4 excluded
+
+            const formatted = formatearEstadisticasPeriodo(result);
+            expect(formatted).toContain('*05/10/2026:*');
+            expect(formatted).toContain('- Llamadas de emergencias 01');
+            expect(formatted).toContain('*06/10/2026:*');
+            expect(formatted).toContain('- Llamadas de emergencias 01');
+            expect(formatted).toContain('*07/10/2026:*');
+            expect(formatted).toContain('- Llamadas de emergencias 01');
+            expect(formatted).toContain('*TOTAL GUARDIA (48 HORAS):*');
+            expect(formatted).toContain('- Llamadas de emergencias 03');
+            expect(formatted).not.toContain('DÍA 1');
+            expect(formatted).not.toContain('CIERRE DE GUARDIA');
         });
     });
 });

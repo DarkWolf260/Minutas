@@ -36,9 +36,9 @@ const ABOUT_MODULES = [
 
 export const AboutModuleList = () => {
   return (
-    <Card className="shadow-lg border-muted/50 rounded-2xl overflow-hidden">
-      <CardHeader className="bg-muted/5 border-b">
-        <CardTitle className="text-base font-bold tracking-tight">Secciones</CardTitle>
+    <Card className="shadow-xs border-muted/60 rounded-xl overflow-hidden">
+      <CardHeader className="bg-muted/5 border-b pb-3">
+        <CardTitle className="text-base font-semibold tracking-tight">Secciones</CardTitle>
         <CardDescription className="text-xs">Selecciona una sección para ver más detalles.</CardDescription>
       </CardHeader>
       <CardContent className="p-3 sm:p-4 space-y-2">

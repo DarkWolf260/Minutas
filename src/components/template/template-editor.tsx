@@ -24,7 +24,7 @@ import { parseTemplate } from '@/lib/template-parser';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { STATISTICS_SECTIONS } from '@/lib/constants/statistics';
-import { BarChart3, Settings2, Plus, Trash2, ChevronDown, Save, Search, Check, X, Copy } from 'lucide-react';
+import { BarChart3, Settings2, Plus, Trash2, ChevronDown, Save, Search, Check, X, Copy, Layout } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import type { StatisticRule } from '@/lib/types';
@@ -552,11 +552,13 @@ export function TemplateEditor({
   config,
   onTemplateChange,
   isReadOnly = false,
+  onOpenVisualCreator,
 }: {
   template: Template;
   config: TemplateConfig;
   onTemplateChange: (template: Template) => void;
   isReadOnly?: boolean;
+  onOpenVisualCreator?: () => void;
 }) {
   const [localTemplate, setLocalTemplate] = useState<Template>(() => {
     const rules = template.statistics_rules || [];
@@ -768,19 +770,33 @@ export function TemplateEditor({
                 <h2 className="text-lg font-bold tracking-tight">Editor de Plantilla</h2>
               </div>
             </div>
-            <Button
-              onClick={handleSaveChanges}
-              disabled={!hasChanges || isReadOnly}
-              className={cn(
-                "h-9 px-6 text-xs shadow-md font-bold rounded-xl shrink-0 sm:w-auto transition-all duration-300",
-                hasChanges && !isReadOnly
-                  ? "bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/20 text-white"
-                  : "bg-muted text-muted-foreground hover:bg-muted"
+            <div className="flex items-center gap-2 shrink-0">
+              {onOpenVisualCreator && !isReadOnly && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onOpenVisualCreator}
+                  className="h-9 px-3.5 text-xs font-semibold rounded-xl border-indigo-200/80 dark:border-indigo-800/60 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 gap-1.5 transition-all shadow-2xs"
+                  title="Abrir este formulario en el Creador Visual"
+                >
+                  <Layout className="h-3.5 w-3.5" />
+                  <span>Editar Formulario</span>
+                </Button>
               )}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {isReadOnly ? 'Solo Lectura' : hasChanges ? 'Guardar Cambios' : 'Guardado'}
-            </Button>
+              <Button
+                onClick={handleSaveChanges}
+                disabled={!hasChanges || isReadOnly}
+                className={cn(
+                  "h-9 px-6 text-xs shadow-md font-bold rounded-xl shrink-0 sm:w-auto transition-all duration-300",
+                  hasChanges && !isReadOnly
+                    ? "bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/20 text-white"
+                    : "bg-muted text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {isReadOnly ? 'Solo Lectura' : hasChanges ? 'Guardar Cambios' : 'Guardado'}
+              </Button>
+            </div>
           </div>
 
           <div className="h-px bg-muted shrink-0" />

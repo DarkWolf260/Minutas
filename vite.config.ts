@@ -147,6 +147,13 @@ export default defineConfig({
   server: {
     port: 3000,
     open: false,
+    host: true,
+    proxy: {
+      '/api/whatsapp': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     outDir: 'dist',
@@ -193,8 +200,19 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    // Force re-bundle on next start to clear stale Sentry cache
-    force: true,
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'lucide-react',
+      'date-fns',
+      'clsx',
+      'tailwind-merge',
+      'class-variance-authority',
+      '@supabase/supabase-js',
+      'sonner',
+      'zod',
+    ],
   },
 });
 

@@ -1,6 +1,7 @@
 import type { Token } from './types';
 import type { SnippetOption, FieldType, SectionConfig, TemplateParserResult } from '@/lib/types';
 import { tokenize } from './lexer';
+import { validateSyntax, validateSemantics } from './validator';
 
 /**
  * Automatic field types based on field name
@@ -9,6 +10,18 @@ const AUTOMATIC_FIELD_TYPES: Record<string, FieldType> = {
     hora: 'time-hlv',
     fecha: 'date',
 };
+
+const VALID_FIELD_TYPES = new Set<FieldType>([
+    'text',
+    'textarea',
+    'date',
+    'time-hlv',
+    'multi-text',
+    'dropdown',
+    'cedula',
+]);
+
+const VALID_TEXT_MODS = new Set(['upper', 'lower', 'title', 'single', 'hidden']);
 
 /**
  * Parses field tag content to extract configuration
@@ -32,7 +45,24 @@ export function parseFieldTag(
     default_value?: string;
     value?: string;
 } {
-    const segments = tagContent.split(':').map((s) => s.trim());
+    // Split segments by colon, but respect parentheses e.g. default(12:30) or dropdown(...)
+    const segments: string[] = [];
+    let currentSegment = '';
+    let parenDepth = 0;
+    for (let i = 0; i < tagContent.length; i++) {
+        const char = tagContent[i];
+        if (char === '(') parenDepth++;
+        else if (char === ')') parenDepth = Math.max(0, parenDepth - 1);
+
+        if (char === ':' && parenDepth === 0) {
+            segments.push(currentSegment.trim());
+            currentSegment = '';
+        } else {
+            currentSegment += char;
+        }
+    }
+    segments.push(currentSegment.trim());
+
     const field_id = segments[0] || '';
     const otherSegments = segments.slice(1);
 
@@ -40,21 +70,7 @@ export function parseFieldTag(
     let is_full_width = false;
     let is_required = false;
     let default_value: string | undefined = undefined;
-    let value: string | undefined = undefined;
     const modifiers: string[] = [];
-
-    const VALID_FIELD_TYPES = new Set<FieldType>([
-        'text',
-        'textarea',
-        'date',
-        'predefined',
-        'time-hlv',
-        'multi-text',
-        'dropdown',
-        'cedula',
-        'semantic',
-    ]);
-    const VALID_TEXT_MODS = new Set(['upper', 'lower', 'title', 'single', 'hidden']);
 
     otherSegments.forEach((segment) => {
         const dropdownMatch = segment.match(/^dropdown\((.+)\)$/);
@@ -82,6 +98,12 @@ export function parseFieldTag(
             return;
         }
 
+        const directDefMatch = segment.match(/^(?:default\("?(.*?)"?\)|def=\((.*?)\))$/i);
+        if (directDefMatch) {
+            default_value = directDefMatch[1] ?? directDefMatch[2];
+            return;
+        }
+
         if (segment === 'full') {
             is_full_width = true;
         } else if (segment === 'req') {
@@ -94,25 +116,19 @@ export function parseFieldTag(
             const pipeParts = segment.split('|');
             pipeParts.forEach((part) => {
                 const trimmed = part.trim();
-                const defMatch = trimmed.match(/^def=\((.*)\)$/);
+                const defMatch = trimmed.match(/^(?:default\("?(.*?)"?\)|def=\((.*?)\))$/i);
                 if (defMatch) {
-                    default_value = defMatch[1];
+                    default_value = defMatch[1] ?? defMatch[2];
                 } else if (trimmed === 'full') is_full_width = true;
                 else if (trimmed === 'req') is_required = true;
-                else if (VALID_TEXT_MODS.has(trimmed)) modifiers.push(trimmed);
                 else if (trimmed) {
-                    // If it's not a known flag/modifier, it's likely the predefined value
-                    if (value === undefined) {
-                        value = trimmed;
-                    } else {
-                        modifiers.push(trimmed);
-                    }
+                    modifiers.push(trimmed);
                 }
             });
         }
     });
 
-    return { field_id, field_type, modifiers, is_full_width, is_required, default_value, value };
+    return { field_id, field_type, modifiers, is_full_width, is_required, default_value };
 }
 
 /**
@@ -130,6 +146,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
     const defaultValues = new Map<string, string>();
     const predefinedValues = new Map<string, string>();
     const globalRenderedFields = new Set<string>();
+    const takenSectionIds = new Set<string>();
 
     // Refactored internal parser for recursion
     function parseInternal(tokenList: Token[], parent_id?: string): {
@@ -171,10 +188,9 @@ export function parse(tokens: Token[]): TemplateParserResult {
                 if (config.is_full_width) fieldWidths.set(field_id, true);
                 if (config.is_required) requiredFields.set(field_id, true);
                 if (config.default_value !== undefined) defaultValues.set(field_id, config.default_value);
-                if (config.value !== undefined) predefinedValues.set(field_id, config.value);
 
                 if (token.raw.endsWith('}*')) {
-                    const sectionId = generateSectionId(field_id, [...sections, ...subSections]);
+                    const sectionId = generateSectionId(field_id, [...sections, ...subSections], takenSectionIds);
                     const sec: SectionConfig = {
                         id: sectionId,
                         parent_id,
@@ -196,7 +212,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
                     }
                 } else {
                     // Allow fields to appear in multiple sections, especially useful for 
-                    // mutually exclusive conditionals (e.g., [?{sex}=F]{Director}[/] [?{sex}=M]{Director}[/])
+                    // mutually exclusive conditionals (e.g., ::: if sex == "F" ::: {Director} ::: ::: if sex == "M" ::: {Director} :::)
                     // We only prevent duplicates at the same level if they are at the root.
                     if (!parent_id) {
                         if (!globalRenderedFields.has(field_id)) {
@@ -213,123 +229,45 @@ export function parse(tokens: Token[]): TemplateParserResult {
                 idx++;
             } else if (token.type === 'section_start') {
                 let inner: Token[] = [];
-                let is_repeatable = token.is_repeatable || false;
-                let isSelfContained = false;
-                let baseLabel = token.label || '';
- 
-                const originalLabel = baseLabel;
-                const is_separator = baseLabel.trim() === '""';
-                // firstBraceIdx uses the original label (before any quote stripping)
-                const firstBraceIdx = baseLabel.indexOf('{');
+                const is_repeatable = !!token.is_repeatable;
+                const isSelfContained = !!token.is_self_contained;
+                const is_separator = !!token.is_separator;
+                const is_mapping = !!token.is_mapping;
+                const baseLabel = token.label || '';
+                const singular_title = token.singular_title || '';
+                const plural_title = token.plural_title || '';
+                const sub_label = token.repeatable_item_label || '';
 
-                // If the label starts with ", extract ONLY the quoted portion as the title.
-                // Text after the closing " (and before ]) is ignored as part of the label.
-                //   "NOVEDADES"          → NOVEDADES
-                //   "Título" texto extra → Título  (texto extra discarded)
-                // Do NOT apply to attribute-style labels like: singular="X" plural="Y"
-                if (baseLabel.startsWith('"')) {
-                    const closingQuote = baseLabel.indexOf('"', 1);
-                    if (closingQuote !== -1) {
-                        baseLabel = baseLabel.slice(1, closingQuote).trim();
-                    } else {
-                        baseLabel = baseLabel.slice(1).trim();
-                    }
-                }
-
-                if ((firstBraceIdx !== -1 && !token.condition) || is_separator) {
-                    isSelfContained = true;
-                    if (is_separator) {
-                        baseLabel = 'separator';
-                        inner = [];
-                    } else {
-                        if (originalLabel.startsWith('"')) {
-                            const closingQuoteIdx = originalLabel.indexOf('"', 1);
-                            if (closingQuoteIdx !== -1) {
-                                // Extract the title from between the quotes
-                                baseLabel = originalLabel.slice(1, closingQuoteIdx).trim();
-                                // Body is everything after the closing quote
-                                const bodyStart = closingQuoteIdx + 1;
-                                inner = tokenize(originalLabel.slice(bodyStart));
-                            } else {
-                                baseLabel = originalLabel.slice(1).trim();
-                                inner = [];
-                            }
-                        } else {
-                            // No quotes: derive label from before the first {
-                            // ... (rest of the attribute match logic)
-                            const attrPattern = /^((?:singular\s*=\s*"[^"]*"\s*|plural\s*=\s*"[^"]*"\s*|sub\s*=\s*"[^"]*"\s*)+)/i;
-                            const attrMatch = originalLabel.match(attrPattern);
-                            if (attrMatch) {
-                                // Body is everything after the attribute block
-                                const bodyStart = attrMatch[0].length;
-                                const bodyContent = originalLabel.slice(bodyStart);
-                                baseLabel = attrMatch[0].trim();
-                                inner = tokenize(bodyContent);
-                            } else {
-                                const inlineContent = originalLabel.substring(firstBraceIdx);
-                                baseLabel = originalLabel.substring(0, firstBraceIdx).trim();
-                                inner = tokenize(inlineContent);
-                            }
-                        }
-                    }
-                }
                 idx++;
-                if (!isSelfContained) {
-                    let depth = 1;
-                    while (idx < tokenList.length && depth > 0) {
-                        const currentToken = tokenList[idx];
-                        if (!currentToken) {
-                            idx++;
-                            continue;
-                        }
-
-                        if (currentToken.type === 'section_start') {
-                            const rawLabel = currentToken.label || '';
-                            const isSep = rawLabel.trim() === '""';
-                            const hasBrace = rawLabel.includes('{');
-                            const isSelfContainedInner = (hasBrace && !currentToken.condition) || isSep;
-                            if (!isSelfContainedInner) depth++;
-                        } else if (currentToken.type === 'section_end') {
-                            depth--;
-                        }
-
-                        if (depth > 0) {
-                            inner.push(currentToken);
-                        }
+                let depth = 1;
+                while (idx < tokenList.length && depth > 0) {
+                    const currentToken = tokenList[idx];
+                    if (!currentToken) {
                         idx++;
+                        continue;
                     }
+
+                    if (currentToken.type === 'section_start') {
+                        depth++;
+                    } else if (currentToken.type === 'section_end') {
+                        depth--;
+                    }
+
+                    if (depth > 0) {
+                        inner.push(currentToken);
+                    }
+                    idx++;
                 }
 
-                // Parse attributes from label: [singular="X" plural="Y" sub="Z"]
-                let singular_title = '';
-                let plural_title = '';
-                let sub_label = '';
-                if (baseLabel) {
-                    const singularMatch = baseLabel.match(/singular\s*=\s*"([^"]*)"/i);
-                    const pluralMatch = baseLabel.match(/plural\s*=\s*"([^"]*)"/i);
-                    const subMatch = baseLabel.match(/sub\s*=\s*"([^"]*)"/i);
-
-                    if (singularMatch) singular_title = singularMatch[1] || '';
-                    if (pluralMatch) plural_title = pluralMatch[1] || '';
-                    if (subMatch) sub_label = subMatch[1] || '';
-
-                    // If it has attributes, the label itself shouldn't be used as title directly 
-                    // unless no attributes were found.
-                    if (singularMatch || pluralMatch || subMatch) {
-                        baseLabel = singular_title || '';
-                    }
-                }
-
-
-                const baseId = baseLabel || (token.condition ? `cond_${token.condition.field_id}` : 'section');
-                const sectionId = generateSectionId(baseId, [...sections, ...subSections]);
+                const baseId = baseLabel || (token.condition ? `cond_${token.condition.field_id}` : (is_separator ? 'separator' : 'section'));
+                const sectionId = generateSectionId(baseId, [...sections, ...subSections], takenSectionIds);
 
                 const innerResult = parseInternal(inner, sectionId);
 
-                const isMappingConditional = token.condition && token.condition.is_implicit && inner.length > 0;
-
-                if (isMappingConditional) {
-                    const field_id = token.condition!.field_id;
+                if (is_mapping && token.condition) {
+                    const field_id = token.condition.field_id;
+                    subFieldNames.add(field_id);
+                    fieldNames.add(field_id);
                     const options: SnippetOption[] = [];
                     inner.forEach((t, i) => {
                         if (t.type === 'text') {
@@ -342,11 +280,9 @@ export function parse(tokens: Token[]): TemplateParserResult {
                                     if (key) {
                                         options.push({
                                             id: `tpl_opt_${field_id}_implicit_${i}_${options.length}`,
-                                            label: key, // The Key: what the user selects in the dropdown
-                                            value: val, // The Value: what goes into the report (long text)
+                                            label: key,
+                                            value: val,
                                         });
-                                        // Extract {campo} references from the mapped value
-                                        // so they appear in the form as input fields
                                         const refMatches = val.matchAll(/\{([^}:]+)(?::[^}]*)?\}/g);
                                         for (const ref of refMatches) {
                                             const refId = ref[1]?.trim();
@@ -363,8 +299,8 @@ export function parse(tokens: Token[]): TemplateParserResult {
                     if (options.length > 0) {
                         const existing = templateOptions.get(field_id) || [];
                         const merged = [...existing];
-                        options.forEach(opt => {
-                            if (!merged.some(m => m.label === opt.label)) {
+                        options.forEach((opt) => {
+                            if (!merged.some((m) => m.label === opt.label)) {
                                 merged.push(opt);
                             }
                         });
@@ -378,41 +314,37 @@ export function parse(tokens: Token[]): TemplateParserResult {
                 const section: SectionConfig = {
                     id: sectionId,
                     parent_id,
-                    label: (is_separator || token.condition) ? '' : (baseLabel || `Sección ${subSections.length + 1}`),
+                    label: is_separator ? (baseLabel === 'separator' ? '' : baseLabel) : (token.condition ? '' : (baseLabel || `Sección ${subSections.length + 1}`)),
                     is_repeatable,
-
                     field_ids: Array.from(innerResult.subFieldNames),
                     layout: innerResult.subLayout,
                     condition: token.condition ? {
                         field_id: token.condition.field_id,
                         operator: token.condition.operator,
                         value: token.condition.value,
+                        target_field_id: token.condition.target_field_id,
                         condition_mode: token.condition.condition_mode,
                     } : undefined,
-                    original_content: inner.map(t => t.raw).join(''),
+                    original_content: inner.map((t) => t.raw).join(''),
                     full_raw: (() => {
-                        if (isSelfContained) return token.raw;
                         const lastToken = idx > 0 ? tokenList[idx - 1] : undefined;
                         const closingRaw = (lastToken?.type === 'section_end') ? lastToken.raw : '';
-                        return [token.raw, ...inner.map(t => t.raw), closingRaw].join('');
+                        return [token.raw, ...inner.map((t) => t.raw), closingRaw].join('');
                     })(),
                     is_separator: is_separator,
-                    is_mapping: isMappingConditional || false,
+                    is_mapping: is_mapping,
                     is_self_contained: isSelfContained && !is_separator,
-                    has_static_content: inner.some(t => t.type === 'text' && t.raw.replace(/[\s\n\r\t]/g, '').length > 0),
+                    has_static_content: inner.some((t) => t.type === 'text' && t.raw.replace(/[\s\n\r\t]/g, '').length > 0),
                 };
-
-
 
                 if (singular_title) section.singular_title = singular_title;
                 if (plural_title) section.plural_title = plural_title;
                 if (sub_label) section.repeatable_item_label = sub_label;
-                // Sections with singular/plural titles are implicitly repeatable
                 if (singular_title || plural_title) section.is_repeatable = true;
 
                 subSections.push(section);
                 subLayout.push(sectionId);
-                innerResult.subFieldNames.forEach(fn => subFieldNames.add(fn));
+                innerResult.subFieldNames.forEach((fn) => subFieldNames.add(fn));
             } else {
                 idx++;
             }
@@ -426,10 +358,19 @@ export function parse(tokens: Token[]): TemplateParserResult {
 
     finalResult.subFieldNames.forEach(fn => fieldNames.add(fn));
 
-    // Ensure fields used in conditions are also tracked in fieldNames
+    const predefinedFieldNames = new Set([
+        'fecha', 'hora', 'municipio', 'estado', 'redan', 'zoedan',
+        'usuario', 'guardia', 'grupo', 'active_guard_id',
+        'director', 'analista', 'reporta', 'estatus', 'status'
+    ]);
+
+    // Ensure valid fields used in conditions are also tracked in fieldNames
     sections.forEach(sec => {
         if (sec.condition) {
-            fieldNames.add(sec.condition.field_id);
+            const base = sec.condition.field_id.split('.')[0] || sec.condition.field_id;
+            if (fieldNames.has(sec.condition.field_id) || fieldNames.has(base) || predefinedFieldNames.has(base.toLowerCase())) {
+                fieldNames.add(sec.condition.field_id);
+            }
         }
     });
     // NOTE: Reconciliation of mapping conditional values was removed because 
@@ -453,7 +394,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
     const absorbedItems = new Set<string>();
     sections.forEach(sec => {
         // Mapping sections don't have a visual layout to absorb into
-        if (!sec.is_mapping) {
+        if (!sec.is_mapping && sec.parent_id) {
             sec.field_ids.forEach(id => absorbedItems.add(id));
             if (sec.layout) sec.layout.forEach(id => absorbedItems.add(id));
         }
@@ -482,7 +423,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
 /**
  * Generates a unique, stable section ID
  */
-function generateSectionId(base: string, existingSections: SectionConfig[]): string {
+function generateSectionId(base: string, existingSections: SectionConfig[], knownIds?: Set<string>): string {
     const prefix = base.startsWith('cond_') || base.startsWith('sec_') ? '' : 'sec_';
     // Normalize: lowercase, remove accents, replace non-alphanumeric with underscore
     const normalized = base.toLowerCase()
@@ -495,9 +436,65 @@ function generateSectionId(base: string, existingSections: SectionConfig[]): str
 
     let counter = 1;
     const originalId = id;
-    while (existingSections.some(s => s.id === id)) {
-        id = `${originalId}_${counter++}`;
+    if (knownIds) {
+        while (knownIds.has(id)) {
+            id = `${originalId}_${counter++}`;
+        }
+        knownIds.add(id);
+    } else {
+        while (existingSections.some(s => s.id === id)) {
+            id = `${originalId}_${counter++}`;
+        }
     }
     return id;
+}
+
+// Cache for parsed templates to avoid redundant work
+const parseCache = new Map<string, TemplateParserResult>();
+
+/**
+ * Parsea una plantilla completa y devuelve su configuración y errores
+ */
+export function parseTemplate(templateContent: string): TemplateParserResult {
+    if (!templateContent) {
+        return {
+            sections: [],
+            layout: [],
+            fieldNames: new Set(),
+            fieldTypes: new Map(),
+            templateOptions: new Map(),
+            fieldModifiers: new Map(),
+            fieldWidths: new Map(),
+            requiredFields: new Map(),
+            defaultValues: new Map(),
+            predefinedValues: new Map(),
+            errors: [],
+        };
+    }
+
+    // Check cache first
+    const cached = parseCache.get(templateContent);
+    if (cached) return cached;
+
+    const tokens = tokenize(templateContent);
+    const result = parse(tokens);
+
+    // Syntax and semantic validation
+    const syntaxErrors = validateSyntax(templateContent);
+    const semanticErrors = validateSemantics(result.sections, result.fieldNames, result.fieldTypes, result.templateOptions);
+
+    const finalResult: TemplateParserResult = {
+        ...result,
+        errors: [...syntaxErrors, ...semanticErrors],
+    };
+
+    // Store in cache (FIFO eviction to keep cache warm)
+    if (parseCache.size >= 100) {
+        const oldestKey = parseCache.keys().next().value;
+        if (oldestKey) parseCache.delete(oldestKey);
+    }
+    parseCache.set(templateContent, finalResult);
+
+    return finalResult;
 }
 

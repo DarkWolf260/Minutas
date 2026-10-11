@@ -233,7 +233,7 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={importing}
             >
-                <Download className="h-4 w-4" />
+                <Upload className="h-4 w-4" />
                 {importing ? 'Importando…' : 'Importar CSV'}
             </Button>
             <Button
@@ -242,7 +242,7 @@ export function CsvImportButton({ onImport, personnel }: CsvImportButtonProps) {
                 className="shadow-sm gap-1.5"
                 onClick={handleExport}
             >
-                <Upload className="h-4 w-4" />
+                <Download className="h-4 w-4" />
                 Exportar CSV
             </Button>
         </div>

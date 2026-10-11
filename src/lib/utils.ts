@@ -57,38 +57,7 @@ export function debounce<F extends (...args: any[]) => any>(
   return debounced;
 }
 
-const RANK_HIERARCHY: Record<string, number> = {
-  'OCPC II': 9,
-  'OCPC I': 8,
-  'OSPC III': 7,
-  'OSPC II': 6,
-  'OSPC I': 5,
-  'OPC III': 4,
-  'OPC II': 3,
-  'OPC I': 2,
-  'OPC': 1,
-  'Sin jerarquía': 0,
-};
-
-/**
- * Compares two ranks to determine seniority.
- * Higher number means higher seniority (OCPC > OSPC > OPC).
- */
-export function compareRanks(a: string | undefined, b: string | undefined): number {
-  const rankA = a?.trim() || '';
-  const rankB = b?.trim() || '';
-
-  const weightA = RANK_HIERARCHY[rankA] || 0;
-  const weightB = RANK_HIERARCHY[rankB] || 0;
-
-  if (weightA !== weightB) {
-    return weightB - weightA; // Seniority first
-  }
-
-  return 0;
-}
-
-export { stableStringify, areEqual } from './utils-pure';
+export { stableStringify } from './utils-pure';
 
 /**
  * Extracts the first two initials from a name string

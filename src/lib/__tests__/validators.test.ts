@@ -105,13 +105,15 @@ describe('validators', () => {
             it('should validate complex template with all features', () => {
                 const template = `
           {Fecha} {Hora}
-          ["Sección 1"]
+          ::: Sección 1 :::
             {Campo1} {Campo2}
-          ["Sección 2"]
+          :::
+          ::: Sección 2 :::
             {Campo3}
-          [?{Status}=activo]
+          :::
+          ::: if Status == "activo" :::
             Contenido condicional
-          [/]
+          :::
         `;
                 const result = validateTemplateSyntax(template);
                 expect(result.valid).toBe(true);
@@ -123,14 +125,14 @@ describe('validators', () => {
                 const template = '{Nombre} {Apellido';
                 const result = validateTemplateSyntax(template);
                 expect(result.valid).toBe(false);
-                expect(result.error).toContain('Llaves de campos');
+                expect(result.error).toContain('Desbalance de llaves');
             });
 
             it('should detect missing opening brace', () => {
                 const template = 'Nombre} {Apellido}';
                 const result = validateTemplateSyntax(template);
                 expect(result.valid).toBe(false);
-                expect(result.error).toContain('Llaves de campos');
+                expect(result.error).toContain('Desbalance de llaves');
             });
 
             it('should detect multiple missing braces', () => {
@@ -140,47 +142,26 @@ describe('validators', () => {
             });
         });
 
-        describe('Invalid Templates - Unbalanced Brackets', () => {
-            it('should detect missing closing bracket', () => {
-                const template = '["Sección 1" Contenido';
+        describe('Invalid Templates - Unbalanced Triple Colon Blocks', () => {
+            it('should detect unclosed block', () => {
+                const template = '::: if Campo == "valor" :::\nContenido';
                 const result = validateTemplateSyntax(template);
                 expect(result.valid).toBe(false);
-                expect(result.error).toContain('Corchetes de secciones');
+                expect(result.error).toContain('Bloques ::: sin cerrar');
             });
 
-            it('should detect missing opening bracket', () => {
-                const template = '"Sección 1"] Contenido';
+            it('should detect unclosed section block', () => {
+                const template = '::: Sección 1 :::\n{Campo}';
                 const result = validateTemplateSyntax(template);
                 expect(result.valid).toBe(false);
-                expect(result.error).toContain('Corchetes de secciones');
+                expect(result.error).toContain('Bloques ::: sin cerrar');
             });
 
-            it('should detect multiple missing brackets', () => {
-                const template = '[["Sección"] Contenido';
+            it('should detect multiple unclosed blocks', () => {
+                const template = '::: if A == 1 :::\n::: if B == 2 :::\nText\n:::';
                 const result = validateTemplateSyntax(template);
                 expect(result.valid).toBe(false);
-            });
-        });
-
-        describe('Invalid Templates - Unbalanced Conditionals', () => {
-            it('should detect missing closing [/]', () => {
-                const template = '[?{Campo}=valor] Contenido';
-                const result = validateTemplateSyntax(template);
-                expect(result.valid).toBe(false);
-                expect(result.error).toContain('Secciones condicionales');
-            });
-
-            it('should detect extra closing [/]', () => {
-                const template = 'Contenido [/]';
-                const result = validateTemplateSyntax(template);
-                expect(result.valid).toBe(false);
-                expect(result.error).toContain('Secciones condicionales');
-            });
-
-            it('should detect multiple missing conditionals', () => {
-                const template = '[?{A}=1] [?{B}=2] Text [/]';
-                const result = validateTemplateSyntax(template);
-                expect(result.valid).toBe(false);
+                expect(result.error).toContain('Bloques ::: sin cerrar');
             });
         });
 

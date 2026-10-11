@@ -3,12 +3,11 @@ import { MinutasDatabase } from './db';
 import { supabase, callWithTokenRefresh } from '../supabase';
 import { logger } from '../logger';
 import { stableStringify } from '../utils-pure';
-import { Subject } from 'rxjs';
-import { debounceTime, map, tap } from 'rxjs';
+import { Subject, debounceTime, map, tap } from 'rxjs';
 import { RealtimePostgresUpdatePayload } from '@supabase/supabase-js';
 
 // Global subject to trigger all replications at once
-export const globalPullTrigger$ = new Subject<any>();
+const globalPullTrigger$ = new Subject<any>();
 
 /**
  * Starts bidirectional replication for a given collection and workspace using custom handlers.

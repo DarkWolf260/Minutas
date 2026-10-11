@@ -10,15 +10,18 @@ import { Input } from '@/components/ui/input';
 import { useWhatsAppBot } from '@/hooks/whatsapp';
 import { useSettings } from '@/hooks/configuracion';
 import { useScheduledMessages } from '@/hooks/whatsapp';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface QuickChatSelectorProps {
   className?: string;
+  showLabel?: boolean;
 }
 
-export function QuickChatSelector({ className }: QuickChatSelectorProps) {
+export function QuickChatSelector({ className, showLabel }: QuickChatSelectorProps) {
+  const { currentWorkspace } = useWorkspaceManager();
   const { settings, saveSettings } = useSettings();
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
   const { scheduledMessages, cancelMessage, isLoading: isScheduledLoading } = useScheduledMessages();
@@ -27,9 +30,19 @@ export function QuickChatSelector({ className }: QuickChatSelectorProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const isBotReady = bot.isAvailable && bot.status.isReady;
   const selectedIds = settings?.whatsapp_default_chat_ids || [];
   const selectedCount = selectedIds.length;
+  // Solo mostrar chats seleccionados en el icono si el bot está realmente conectado y listo
+  const effectiveSelectedCount = isBotReady ? selectedCount : 0;
   const pendingCount = scheduledMessages.filter(m => m.status === 'pending').length;
+
+  // Si el bot se cerró o se desconectó, limpiar automáticamente los chats seleccionados de la configuración
+  React.useEffect(() => {
+    if (!bot.isLoading && (!bot.isAvailable || !bot.status.isReady) && selectedCount > 0) {
+      saveSettings({ whatsapp_default_chat_ids: [] });
+    }
+  }, [bot.isLoading, bot.isAvailable, bot.status.isReady, selectedCount, saveSettings]);
 
   const handleToggleGroup = async (groupId: string, name: string) => {
     if (!settings) return;
@@ -115,22 +128,28 @@ export function QuickChatSelector({ className }: QuickChatSelectorProps) {
       <PopoverTrigger asChild>
         <Button 
           variant="ghost" 
-          size="icon" 
-          className={cn("relative h-9 w-9 rounded-lg transition-all hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400", className)}
+          size="default"
+          className={cn(
+            "relative w-full h-9 p-0 rounded-xl transition-all hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium text-sm flex items-center justify-start",
+            className
+          )}
           title="Gestión de WhatsApp"
         >
-          <MessageSquare className="h-5 w-5" />
-          {(selectedCount > 0 || pendingCount > 0) && (
-            <Badge
-              className={cn(
-                "absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-[10px] text-white font-bold animate-in zoom-in border border-background",
-                pendingCount > 0 ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"
-              )}
-            >
-              {pendingCount > 0 ? pendingCount : selectedCount}
-            </Badge>
-          )}
-          <span className="sr-only">Gestión de WhatsApp</span>
+          <div className="flex h-9 w-10 shrink-0 items-center justify-center relative">
+            <MessageSquare className={cn("h-4 w-4", isBotReady ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground")} />
+            {(effectiveSelectedCount > 0 || pendingCount > 0) && (
+              <Badge
+                className={cn(
+                  "absolute right-1 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full p-0 text-[8px] text-white font-bold animate-in zoom-in border border-background",
+                  pendingCount > 0 ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"
+                )}
+              >
+                {pendingCount > 0 ? pendingCount : effectiveSelectedCount}
+              </Badge>
+            )}
+          </div>
+          {showLabel && <span className="truncate flex-1 text-left whitespace-nowrap animate-slide-down pr-2">Bot de WhatsApp</span>}
+          {!showLabel && <span className="sr-only">Gestión de WhatsApp</span>}
         </Button>
       </PopoverTrigger>
 
@@ -206,17 +225,31 @@ export function QuickChatSelector({ className }: QuickChatSelectorProps) {
                 <p className="text-xs text-muted-foreground text-center">Verificando conexión con el bot...</p>
               </div>
             ) : !bot.isAvailable ? (
-              <div className="flex flex-col items-center justify-center py-8 px-4 text-center gap-3">
-                <div className="p-3 bg-amber-500/10 rounded-full text-amber-500">
-                  <AlertTriangle className="h-6 w-6" />
+              bot.status.activeWorkspace && currentWorkspace && bot.status.activeWorkspace !== currentWorkspace ? (
+                <div className="flex flex-col items-center justify-center py-6 px-4 text-center gap-2">
+                  <div className="p-2.5 bg-amber-500/10 rounded-full text-amber-500">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-foreground">Bot en otra área de trabajo</p>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                      El dispositivo principal tiene el bot abierto en <strong>"{bot.status.activeWorkspace}"</strong>. Solo está disponible para usuarios en esa área.
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-bold text-foreground">Bot de WhatsApp desconectado</p>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed">
-                    Inicia el servidor del bot de WhatsApp o configura su dirección en los ajustes generales para poder elegir chats.
-                  </p>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 px-4 text-center gap-3">
+                  <div className="p-3 bg-amber-500/10 rounded-full text-amber-500">
+                    <AlertTriangle className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-foreground">Bot de WhatsApp desconectado</p>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                      Inicia el servidor del bot de WhatsApp o configura su dirección en los ajustes generales para poder elegir chats.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )
             ) : bot.status.needsAuth ? (
               <div className="flex flex-col items-center justify-center py-4 px-4 text-center gap-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-400">
@@ -226,7 +259,7 @@ export function QuickChatSelector({ className }: QuickChatSelectorProps) {
                 {bot.status.qr ? (
                   <div className="flex flex-col items-center gap-3 animate-in fade-in duration-300">
                     <div className="p-3 bg-white rounded-xl border-2 border-dashed border-emerald-500/30">
-                      <QRCodeSVG value={bot.status.qr} size={150} />
+                      <QRCodeSVG key={bot.status.qr} value={bot.status.qr} size={150} />
                     </div>
                     <p className="text-[10px] text-muted-foreground text-center max-w-[200px] leading-normal">
                       Escanea este código QR con la app de WhatsApp en tu teléfono para vincular la cuenta.

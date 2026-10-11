@@ -1,5 +1,5 @@
 import React from 'react';
-import { Upload, CloudDownload, FileText, AlertTriangle, Pencil, CloudUpload, Trash2 } from 'lucide-react';
+import { Upload, CloudDownload, FileText, AlertTriangle, Pencil, CloudUpload, Trash2, MoreVertical, Layout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -8,6 +8,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn, getTemplateIcon } from '@/lib/utils';
@@ -25,6 +26,7 @@ export interface PlantillasSidebarProps {
     | 'inputArchivoRef'
     | 'manejarCambioArchivo'
     | 'manejarClickEditarContenido'
+    | 'manejarClickEditarEnBuilder'
     | 'estaAutenticado'
     | 'isAdmin'
     | 'isCloud'
@@ -48,6 +50,7 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
     inputArchivoRef,
     manejarCambioArchivo,
     manejarClickEditarContenido,
+    manejarClickEditarEnBuilder,
     estaAutenticado,
     isAdmin,
     isCloud,
@@ -193,7 +196,7 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent><p>Editar</p></TooltipContent>
+                          <TooltipContent><p>Editar formulario (Diseñador Visual)</p></TooltipContent>
                         </Tooltip>
                       )}
 
@@ -243,19 +246,34 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-background/80"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <MoreVertical className="h-3.5 w-3.5" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="w-52">
                             <DropdownMenuItem 
-                              className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                              className="cursor-pointer gap-2"
+                              onClick={(e) => manejarClickEditarContenido(e, template)}
+                            >
+                              <Layout className="h-4 w-4 text-indigo-500" />
+                              <span>Editar en Creador Visual</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="cursor-pointer gap-2"
+                              onClick={(e) => manejarClickEditarEnBuilder(e, template)}
+                            >
+                              <FileText className="h-4 w-4 text-muted-foreground" />
+                              <span>Editar en Constructor</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer gap-2"
                               onClick={(e: React.MouseEvent) => manejarClickEliminar(e, template.id)}
                             >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              <span>Eliminar</span>
+                              <Trash2 className="h-4 w-4" />
+                              <span>Eliminar plantilla</span>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

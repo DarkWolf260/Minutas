@@ -56,12 +56,22 @@ describe('Template Parser', () => {
             expect(result.fieldTypes.get('items')).toBe('multi-text');
         });
 
-        it('should parse semantic type', () => {
-            const template = 'Concepto: {concepto:semantic}';
+        it('should treat removed legacy semantic and predefined as text', () => {
+            const template = 'Concepto: {concepto:semantic}, Campo: {campo:predefined}';
             const result = parseTemplate(template);
 
             expect(result.errors).toHaveLength(0);
-            expect(result.fieldTypes.get('concepto')).toBe('semantic');
+            expect(result.fieldTypes.get('concepto')).toBe('text');
+            expect(result.fieldTypes.get('campo')).toBe('text');
+        });
+
+        it('should parse default values using def= and default()', () => {
+            const template = 'Obs: {obs:def=(Sin novedad)}, Nota: {nota:default("Pendiente")}';
+            const result = parseTemplate(template);
+
+            expect(result.errors).toHaveLength(0);
+            expect(result.defaultValues.get('obs')).toBe('Sin novedad');
+            expect(result.defaultValues.get('nota')).toBe('Pendiente');
         });
 
         it('should parse dropdown with inline options', () => {
@@ -120,9 +130,9 @@ describe('Template Parser', () => {
     describe('Conditional Sections', () => {
         it('should parse advanced conditional with curly braces and operator', () => {
             const template = `Tipo: {tipo:dropdown(A=Opción A|B=Opción B)}
-[?{tipo} = 0]
+::: if tipo == "0" :::
 Contenido para opción A
-[/]`;
+:::`;
             const result = parseTemplate(template);
 
             expect(result.errors).toHaveLength(0);
@@ -138,12 +148,12 @@ Contenido para opción A
 
         it('should parse multiple conditional sections with different operators', () => {
             const template = `Tipo: {tipo:dropdown(A=Opción A|B=Opción B)}
-[?{tipo} = 0]
+::: if tipo == "0" :::
 Contenido A
-[/]
-[?{tipo} != 0]
+:::
+::: if tipo != "0" :::
 Contenido B
-[/]`;
+:::`;
             const result = parseTemplate(template);
 
             expect(result.errors).toHaveLength(0);
@@ -161,12 +171,12 @@ Contenido B
 
         it('should parse conditional with comparison operators', () => {
             const template = `Edad: {edad}
-[?{edad} >= 18]
+::: if edad >= 18 :::
 Es mayor de edad
-[/]
-[?{edad} < 18]
+:::
+::: if edad < 18 :::
 Es menor de edad
-[/]`;
+:::`;
             const result = parseTemplate(template);
 
             expect(result.errors).toHaveLength(0);
@@ -182,9 +192,9 @@ Es menor de edad
 
         it('should parse conditional with quoted string values', () => {
             const template = `Estado: {estado}
-[?{estado} = "activo"]
+::: if estado == "activo" :::
 Sistema activo
-[/]`;
+:::`;
             const result = parseTemplate(template);
 
             expect(result.errors).toHaveLength(0);
@@ -203,20 +213,12 @@ Sistema activo
             expect(result.errors[0]).toContain('llaves');
         });
 
-        it('should detect unbalanced brackets', () => {
-            const template = '[?{campo} = valor';
+        it('should detect unclosed blocks', () => {
+            const template = '::: if campo == "valor" :::\nContenido';
             const result = parseTemplate(template);
 
             expect(result.errors.length).toBeGreaterThan(0);
-            expect(result.errors[0]).toContain('Corchetes');
-        });
-
-        it('should detect unclosed conditionals', () => {
-            const template = '[?{campo} = valor]Contenido';
-            const result = parseTemplate(template);
-
-            expect(result.errors.length).toBeGreaterThan(0);
-            expect(result.errors[0]).toContain('Condicionales sin cerrar');
+            expect(result.errors[0]).toContain('Bloques ::: sin cerrar');
         });
     });
 
@@ -228,15 +230,15 @@ Fecha: {fecha}
 Hora: {hora}
 Tipo: {tipo:dropdown(1=Robo|2=Vandalismo|3=Otro)}
 
-[?{tipo} = 0]
+::: if tipo == "0" :::
 DETALLES DE ROBO
 Monto: {monto}
-[/]
+:::
 
-[?{tipo} = 1]
+::: if tipo == "1" :::
 DETALLES DE VANDALISMO
 Área afectada: {area:textarea:full}
-[/]
+:::
 
 Descripción General: {descripcion:textarea:full:req}
 Reportado por: {reportante:upper}`;

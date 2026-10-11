@@ -11,15 +11,24 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-export const TAG_OPTIONS: Record<string, { label: string; value: string }[]> = {
-  Estado: [{ label: 'Anzoátegui', value: 'Anzoátegui' }],
-  ZOEDAN: [{ label: 'Anzoátegui', value: 'Anzoátegui' }],
-  REDAN: [{ label: 'Oriente', value: 'Oriente' }],
+const TAG_OPTIONS: Record<string, { label: string; value: string }[]> = {
+  Estado: [
+    { label: 'Anzoátegui', value: 'Anzoátegui' },
+    { label: 'Nueva Esparta', value: 'Nueva Esparta' },
+  ],
+  ZOEDAN: [
+    { label: 'Anzoátegui', value: 'Anzoátegui' },
+    { label: 'Nueva Esparta', value: 'Nueva Esparta' },
+  ],
+  REDAN: [
+    { label: 'Oriente', value: 'Oriente' },
+    { label: 'Marítima Insular', value: 'Marítima Insular' },
+  ],
   Municipio: [
-    { label: '(Ninguno)', value: '' },
+    { label: 'Urbaneja', value: 'Urbaneja' },
     { label: 'Guanta', value: 'Guanta' },
     { label: 'Juan Antonio Sotillo', value: 'Juan Antonio Sotillo' },
-    { label: 'Urbaneja', value: 'Urbaneja' },
+    { label: '(Ninguno)', value: '' },
   ],
 };
 
@@ -42,16 +51,53 @@ export function AjustesGeneralesForm({
   columns = 2,
   disabled = false 
 }: AjustesGeneralesFormProps) {
+  const esNuevaEsparta = (values['Estado'] || '').trim().toLowerCase() === 'nueva esparta';
+
+  const handleFieldChange = (key: string, val: string) => {
+    if (key === 'Estado') {
+      onChange('Estado', val);
+      if (val === 'Nueva Esparta') {
+        onChange('ZOEDAN', 'Nueva Esparta');
+        onChange('REDAN', 'Marítima Insular');
+        if (['Guanta', 'Juan Antonio Sotillo', 'Urbaneja'].includes(values['Municipio'] || '')) {
+          onChange('Municipio', '');
+        }
+      } else if (val === 'Anzoátegui') {
+        onChange('ZOEDAN', 'Anzoátegui');
+        onChange('REDAN', 'Oriente');
+        if (!values['Municipio']) {
+          onChange('Municipio', 'Urbaneja');
+        }
+      }
+      return;
+    }
+
+    onChange(key, val);
+  };
+
+  const getOptionsForKey = (key: string) => {
+    if (key === 'Municipio') {
+      if (esNuevaEsparta) return null; // Campo de texto libre para Nueva Esparta
+      const base = TAG_OPTIONS.Municipio!;
+      const currentVal = values['Municipio'];
+      if (currentVal && !base.some(b => b.value === currentVal)) {
+        return [{ label: currentVal, value: currentVal }, ...base];
+      }
+      return base;
+    }
+    return TAG_OPTIONS[key] || null;
+  };
+
   return (
-    <div className={`grid grid-cols-1 ${columns === 2 ? 'md:grid-cols-2' : ''} gap-x-8 gap-y-4`}>
+    <div className={`grid grid-cols-1 ${columns === 2 ? 'md:grid-cols-2' : ''} gap-x-6 gap-y-4`}>
       {fieldKeys.map((key) => {
         const config = definitions[key];
         if (!config) return null;
         
-        const options = TAG_OPTIONS[key];
+        const options = getOptionsForKey(key);
         
         return (
-          <div key={key} className="space-y-2">
+          <div key={key} className="space-y-1.5">
             <Label htmlFor={key} className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               {config.label}
             </Label>
@@ -59,10 +105,10 @@ export function AjustesGeneralesForm({
             {options ? (
               <Select 
                 value={(values[key] === '' || !values[key]) ? CENTINELA_NINGUNO : values[key]} 
-                onValueChange={(val) => onChange(key, val === CENTINELA_NINGUNO ? '' : val)}
+                onValueChange={(val) => handleFieldChange(key, val === CENTINELA_NINGUNO ? '' : val)}
                 disabled={disabled}
               >
-                <SelectTrigger id={key} className="bg-background w-full">
+                <SelectTrigger id={key} className="bg-background w-full h-10 rounded-xl shadow-xs">
                   <SelectValue placeholder="Seleccionar..." />
                 </SelectTrigger>
                 <SelectContent className="z-[200]">
@@ -77,8 +123,9 @@ export function AjustesGeneralesForm({
               <Input
                 id={key}
                 value={values[key] || ''}
-                onChange={(e) => onChange(key, e.target.value)}
-                className="bg-background w-full"
+                onChange={(e) => handleFieldChange(key, e.target.value)}
+                placeholder={key === 'Municipio' && esNuevaEsparta ? 'Escribe el municipio (ej. Maneiro, Mariño...)' : undefined}
+                className="bg-background w-full h-10 rounded-xl shadow-xs"
                 disabled={disabled || key === 'Hora' || key === 'Fecha'}
               />
             )}

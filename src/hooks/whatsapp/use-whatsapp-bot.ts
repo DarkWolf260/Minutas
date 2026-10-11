@@ -15,6 +15,8 @@ export interface WhatsAppStatus {
   needsAuth: boolean;
   qr: string | null;
   statusMessage?: string;
+  activeWorkspace?: string | null;
+  isWorkspaceMatch?: boolean;
 }
 
 // Module-level cache to share offline status and state across all hook instances
@@ -25,6 +27,8 @@ interface BotState {
   isLoading: boolean;
   isCloudActive: boolean;
   conflictBotUrl: string | null;
+  activeWorkspace: string | null;
+  isWorkspaceMatch: boolean;
 }
 
 let globalIsOffline = false;
@@ -42,6 +46,8 @@ let botState: BotState = {
   isLoading: true,
   isCloudActive: false,
   conflictBotUrl: null,
+  activeWorkspace: null,
+  isWorkspaceMatch: true,
 };
 
 const listeners = new Set<(state: BotState) => void>();
@@ -49,10 +55,14 @@ const listeners = new Set<(state: BotState) => void>();
 function updateBotState(updates: Partial<BotState>) {
   const newState = { ...botState, ...updates };
   
-  // Guard: If neither the local bot is ready nor the cloud bot is active, chats must be empty
-  const hasLocalBot = newState.isAvailable && newState.status.isReady;
-  const hasCloudBot = newState.isCloudActive;
-  if (!hasLocalBot && !hasCloudBot) {
+  // Guard estricto: Si el bot local responde en esta máquina pero no está listo (esperando QR o desconectado),
+  // o si no coincide el área de trabajo activa, o si no hay bot local ni bot en la nube listo:
+  // ¡LA LISTA DE CHATS DEBE SER ESTRICTAMENTE VACÍA!
+  const hasLocalBot = newState.isAvailable && newState.isWorkspaceMatch;
+  const isLocalReady = hasLocalBot && newState.status.isReady;
+  const isCloudReady = !hasLocalBot && newState.isCloudActive;
+
+  if (!isLocalReady && !isCloudReady) {
     newState.chats = [];
   }
   
@@ -111,9 +121,28 @@ async function convertPhotoToBase64(photoId: string, url: string, localBlobId?: 
   return url;
 }
 
+/**
+ * Resolves the effective base URL for WhatsApp Bot API requests.
+ * In development mode (Vite dev server) when targeting the local bot (localhost:3001 / 127.0.0.1:3001),
+ * returns empty string ('') to route calls through the same-origin Vite proxy (/api/whatsapp).
+ * This completely avoids browser CORS preflight blocks and Mixed-Content warnings.
+ */
+export function getEffectiveBotUrl(url?: string): string {
+  if (!url) return '';
+  const trimmed = url.trim().replace(/\/+$/, '');
+
+  const isLocalBot = /^https?:\/\/(localhost|127\.0\.0\.1):3001$/i.test(trimmed);
+  if (isLocalBot && import.meta.env.DEV) {
+    return '';
+  }
+
+  return trimmed;
+}
+
 export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
   const db = useDatabase();
   const { currentWorkspace, isCloud } = useWorkspaceManager();
+  const apiUrl = getEffectiveBotUrl(localUrl);
 
   const [state, setState] = useState<BotState>(botState);
 
@@ -149,8 +178,9 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       return botState.status.isReady;
     }
 
-    // Determine the minimum time we must wait before making another fetch request
-    const minInterval = globalIsOffline ? currentPollingInterval : 4000;
+    // Si NO está listo (esperando QR o desconectado), comprobar mucho más rápido (1000ms)
+    // para que el QR aparezca de inmediato cuando la consola lo emita.
+    const minInterval = globalIsOffline ? currentPollingInterval : (botState.status.isReady ? 3500 : 1000);
 
     if (!force && now < lastCheckTime + minInterval) {
       return botState.status.isReady;
@@ -158,31 +188,66 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
 
     isChecking = true;
     try {
-      const response = await fetch(`${localUrl}/api/whatsapp/status`, {
+      const cacheBuster = `_t=${Date.now()}`;
+      const wsParam = currentWorkspace ? `&workspace=${encodeURIComponent(currentWorkspace)}` : '';
+      const url = `${apiUrl}/api/whatsapp/status?${cacheBuster}${wsParam}`;
+      const response = await fetch(url, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
+        },
       });
       
       if (!response.ok) throw new Error('Status no ok');
       
       const data = await response.json();
-      
+      const isMatch = data.isWorkspaceMatch !== false;
+
       // Success! Reset backoff variables
       globalIsOffline = false;
       lastCheckTime = Date.now();
       consecutiveFailures = 0;
-      currentPollingInterval = 5000;
+      currentPollingInterval = data.isReady ? 5000 : 1500;
+
+      // Si el bot local está activo pero asignado a otra área de trabajo
+      if (!isMatch) {
+        updateBotState({
+          status: {
+            ...data,
+            isReady: false,
+            needsAuth: false,
+            qr: null,
+            statusMessage: `El bot está asignado al área de trabajo "${data.activeWorkspace}".`
+          },
+          isAvailable: false,
+          isWorkspaceMatch: false,
+          activeWorkspace: data.activeWorkspace,
+          chats: []
+        });
+        return false;
+      }
       
+      // Capturar si estaba listo ANTES de actualizar el estado
+      const wasReady = botState.status.isReady;
+      const isReadyChanged = wasReady !== data.isReady;
+
       updateBotState({
         status: data,
         isAvailable: true,
+        isWorkspaceMatch: true,
+        activeWorkspace: data.activeWorkspace || currentWorkspace,
+        // Si data.isReady es false, chats debe ser vacía SIEMPRE
         chats: data.isReady ? botState.chats : []
       });
 
-      // Report active status to the database (heartbeat) - throttled to once every 45 seconds to avoid excessive RxDB push/pull replication network spam
+      // Report active status to the database (heartbeat)
       if (db && currentWorkspace && isCloud) {
         const statusId = `whatsapp_bot_status:${currentWorkspace}`;
-        const isReadyChanged = botState.status.isReady !== data.isReady;
+        const chatsId = `whatsapp_chats:${currentWorkspace}`;
         const shouldWrite = force || isReadyChanged || (data.isReady && Date.now() - lastHeartbeatTime > 45000);
         
         if (shouldWrite) {
@@ -200,9 +265,8 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
             }
           }).catch(err => logger.error('Error writing bot heartbeat:', err));
 
-          // Clear chats in DB immediately if local bot becomes not ready
+          // Si el bot local ya NO está listo, limpiar los chats en la base de datos INMEDIATAMENTE
           if (!data.isReady) {
-            const chatsId = `whatsapp_chats:${currentWorkspace}`;
             db.configs.upsert({
               id: chatsId,
               workspace_id: currentWorkspace,
@@ -224,13 +288,11 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       consecutiveFailures++;
       
       if (consecutiveFailures === 1) {
-        currentPollingInterval = 15000; // 15s
+        currentPollingInterval = 5000;
       } else if (consecutiveFailures === 2) {
-        currentPollingInterval = 30000; // 30s
-      } else if (consecutiveFailures === 3) {
-        currentPollingInterval = 60000; // 1m
+        currentPollingInterval = 10000;
       } else {
-        currentPollingInterval = 120000; // 2m max
+        currentPollingInterval = 20000;
       }
       
       updateBotState({
@@ -246,13 +308,18 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
   }, [localUrl, db, currentWorkspace, isCloud]);
 
   const loadChats = useCallback(async () => {
-    const isBotReady = state.status.isReady || (state.isCloudActive && isCloud);
+    const isBotReady = (state.isAvailable && state.isWorkspaceMatch && state.status.isReady) || (state.isCloudActive && isCloud);
     if (!isBotReady) return;
     
-    // If the local bot is running on this device, fetch from it
-    if (state.isAvailable && state.status.isReady) {
+    // If the local bot is running on this device and matched, fetch from it
+    if (state.isAvailable && state.isWorkspaceMatch && state.status.isReady) {
       try {
-        const response = await fetch(`${localUrl}/api/whatsapp/chats`);
+        const wsParam = currentWorkspace ? `?workspace=${encodeURIComponent(currentWorkspace)}` : '';
+        const response = await fetch(`${apiUrl}/api/whatsapp/chats${wsParam}`, {
+          headers: {
+            ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
+          }
+        });
         if (response.ok) {
           const data = await response.json();
           updateBotState({ chats: data });
@@ -290,7 +357,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         console.error('Error loading chats from database:', error);
       }
     }
-  }, [localUrl, state.isAvailable, state.status.isReady, state.isCloudActive, isCloud, db, currentWorkspace]);
+  }, [localUrl, state.isAvailable, state.isWorkspaceMatch, state.status.isReady, state.isCloudActive, isCloud, db, currentWorkspace]);
 
   const sendMessage = useCallback(async (chatId: string, message: string, media?: { id?: string; local_blob_id?: string; url: string; name?: string; description?: string }[]) => {
     try {
@@ -309,10 +376,18 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
           )
         : undefined;
 
-      const response = await fetch(`${localUrl}/api/whatsapp/send`, {
+      const response = await fetch(`${apiUrl}/api/whatsapp/send`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatId, message, media: processedMedia }),
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
+        },
+        body: JSON.stringify({ 
+          chatId, 
+          message, 
+          media: processedMedia,
+          workspaceId: currentWorkspace 
+        }),
       });
       
       if (!response.ok) {
@@ -362,24 +437,28 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
 
   // Polling for status with dynamic interval
   useEffect(() => {
-    const now = Date.now();
-    const minInterval = globalIsOffline ? currentPollingInterval : 4000;
-    const shouldCheckImmediately = !lastCheckTime || (now - lastCheckTime >= minInterval);
-
-    if (shouldCheckImmediately) {
-      checkStatus();
-    }
-    
     let timeoutId: NodeJS.Timeout;
-    
+    let isCancelled = false;
+
     const poll = async () => {
+      if (isCancelled) return;
       await checkStatus();
-      timeoutId = setTimeout(poll, currentPollingInterval);
+      if (isCancelled) return;
+
+      // Si el bot no está listo (esperando QR o desconectado), consultar rápido (1500ms)
+      const nextInterval = globalIsOffline 
+        ? currentPollingInterval 
+        : (!botState.status.isReady ? 1500 : 5000);
+
+      timeoutId = setTimeout(poll, nextInterval);
     };
-    
-    timeoutId = setTimeout(poll, currentPollingInterval);
-    
-    return () => clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(poll, 100);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timeoutId);
+    };
   }, [checkStatus]);
 
   // 1. Suscribirse al estado del bot en la base de datos (Supabase Cloud)
@@ -440,35 +519,183 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
 
     const chatsId = `whatsapp_chats:${currentWorkspace}`;
     const sub = db.configs.findOne(chatsId).$.subscribe((doc) => {
-      // Solo aplicar la actualización de la base de datos si NO tenemos el bot local corriendo
-      if (!botState.isAvailable || !botState.status.isReady) {
-        if (botState.isCloudActive && doc) {
-          const item = doc.toJSON();
-          const data = item.data || {};
-          if (Array.isArray(data.chats)) {
-            updateBotState({ chats: data.chats });
-            return;
-          }
+      // Si el bot local está respondiendo en esta máquina y coincide el área, la fuente de verdad es estrictamente local:
+      if (botState.isAvailable && botState.isWorkspaceMatch) {
+        if (!botState.status.isReady) {
+          updateBotState({ chats: [] });
         }
-        updateBotState({ chats: [] });
+        return;
       }
+
+      // Si es un cliente puramente remoto (nube):
+      if (botState.isCloudActive && doc) {
+        const item = doc.toJSON();
+        const data = item.data || {};
+        if (Array.isArray(data.chats) && data.chats.length > 0) {
+          updateBotState({ chats: data.chats });
+          return;
+        }
+      }
+      updateBotState({ chats: [] });
     });
 
     return () => sub.unsubscribe();
   }, [db, currentWorkspace, isCloud]);
 
-  // Load chats when ready locally
-  useEffect(() => {
-    if (state.isAvailable && state.status.isReady && state.chats.length === 0) {
-      loadChats();
-    }
-  }, [state.isAvailable, state.status.isReady, state.chats.length, loadChats]);
+  // Manejo de cambio de área de trabajo en el dispositivo principal
+  const previousWorkspaceRef = useRef<string>(currentWorkspace);
 
-  const finalAvailable = state.isAvailable || (state.isCloudActive && isCloud);
-  const finalStatus = state.isAvailable
+  useEffect(() => {
+    const prev = previousWorkspaceRef.current;
+    if (prev && prev !== currentWorkspace) {
+      previousWorkspaceRef.current = currentWorkspace;
+
+      logger.info(`[WhatsApp] Cambio de área de trabajo: de "${prev}" a "${currentWorkspace}"`);
+
+      // Si este cliente tenía el bot local activo:
+      if (botState.isAvailable) {
+        // 1. Limpiar heartbeat y chats del área de trabajo anterior en DB
+        if (db && isCloud) {
+          const oldStatusId = `whatsapp_bot_status:${prev}`;
+          const oldChatsId = `whatsapp_chats:${prev}`;
+          db.configs.upsert({
+            id: oldStatusId,
+            workspace_id: prev,
+            type: 'whatsapp_bot_status',
+            data: {
+              isReady: false,
+              lastSeen: new Date().toISOString(),
+              botId: localUrl
+            }
+          }).catch(err => console.error('Error desvinculando estado anterior:', err));
+
+          db.configs.upsert({
+            id: oldChatsId,
+            workspace_id: prev,
+            type: 'whatsapp_bot_status',
+            data: {
+              chats: [],
+              updatedAt: new Date().toISOString()
+            }
+          }).catch(err => console.error('Error limpiando chats anteriores:', err));
+        }
+
+        // 2. Limpiar chats en memoria de la UI
+        updateBotState({ chats: [] });
+
+        // 3. Vincular el bot local a la nueva área de trabajo
+        fetch(`${apiUrl}/api/whatsapp/workspace`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ workspace: currentWorkspace })
+        }).then(() => {
+          checkStatus(true);
+        }).catch(err => console.error('Error cambiando workspace en bot:', err));
+      } else {
+        updateBotState({ chats: [] });
+        checkStatus(true);
+      }
+    } else {
+      previousWorkspaceRef.current = currentWorkspace;
+    }
+  }, [currentWorkspace, localUrl, db, isCloud, checkStatus]);
+
+  // Load chats when ready locally, retrying if ready but chats are still empty
+  useEffect(() => {
+    if (!state.isAvailable || !state.isWorkspaceMatch || !state.status.isReady) return;
+
+    if (state.chats.length === 0) {
+      loadChats();
+      const intervalId = setInterval(() => {
+        if (botState.chats.length === 0) {
+          loadChats();
+        }
+      }, 4000);
+      return () => clearInterval(intervalId);
+    }
+  }, [state.isAvailable, state.isWorkspaceMatch, state.status.isReady, state.chats.length, loadChats]);
+
+  const claimWorkspace = useCallback(async (targetWorkspace?: string) => {
+    const ws = targetWorkspace || currentWorkspace;
+    if (!ws || !localUrl) return;
+    try {
+      const prevWs = botState.activeWorkspace;
+      if (prevWs && prevWs !== ws && db && isCloud) {
+        const oldStatusId = `whatsapp_bot_status:${prevWs}`;
+        const oldChatsId = `whatsapp_chats:${prevWs}`;
+        await Promise.all([
+          db.configs.upsert({
+            id: oldStatusId,
+            workspace_id: prevWs,
+            type: 'whatsapp_bot_status',
+            data: { isReady: false, lastSeen: new Date().toISOString(), botId: localUrl }
+          }).catch(() => {}),
+          db.configs.upsert({
+            id: oldChatsId,
+            workspace_id: prevWs,
+            type: 'whatsapp_bot_status',
+            data: { chats: [], updatedAt: new Date().toISOString() }
+          }).catch(() => {})
+        ]);
+      }
+
+      const res = await fetch(`${apiUrl}/api/whatsapp/workspace`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspace: ws })
+      });
+      if (res.ok) {
+        updateBotState({ chats: [] });
+        await checkStatus(true);
+        await loadChats();
+      }
+    } catch (e) {
+      console.error('Error al reclamar área de trabajo en bot:', e);
+    }
+  }, [currentWorkspace, localUrl, db, isCloud, checkStatus, loadChats]);
+
+  const logout = useCallback(async () => {
+    try {
+      updateBotState({
+        status: { isReady: false, needsAuth: false, qr: null, statusMessage: 'Cerrando sesión...' },
+        chats: []
+      });
+
+      if (db && currentWorkspace && isCloud) {
+        const statusId = `whatsapp_bot_status:${currentWorkspace}`;
+        const chatsId = `whatsapp_chats:${currentWorkspace}`;
+        await Promise.all([
+          db.configs.upsert({
+            id: statusId,
+            workspace_id: currentWorkspace,
+            type: 'whatsapp_bot_status',
+            data: { isReady: false, lastSeen: new Date().toISOString(), botId: localUrl }
+          }).catch(() => {}),
+          db.configs.upsert({
+            id: chatsId,
+            workspace_id: currentWorkspace,
+            type: 'whatsapp_bot_status',
+            data: { chats: [], updatedAt: new Date().toISOString() }
+          }).catch(() => {})
+        ]);
+      }
+
+      await fetch(`${apiUrl}/api/whatsapp/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      }).catch(() => {});
+
+      setTimeout(() => checkStatus(true), 1200);
+    } catch (e) {
+      console.error('Error during logout:', e);
+    }
+  }, [localUrl, db, currentWorkspace, isCloud, checkStatus]);
+
+  const finalAvailable = (state.isAvailable && state.isWorkspaceMatch) || (state.isCloudActive && isCloud);
+  const finalStatus = (state.isAvailable && state.isWorkspaceMatch)
     ? state.status
     : (state.isCloudActive && isCloud)
-      ? { isReady: true, needsAuth: false, qr: null, statusMessage: 'Disponible en la Nube' }
+      ? { isReady: true, needsAuth: false, qr: null, statusMessage: 'Disponible en la Nube', activeWorkspace: currentWorkspace, isWorkspaceMatch: true }
       : state.status;
 
   return {
@@ -479,8 +706,12 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     checkStatus,
     loadChats,
     sendMessage,
+    logout,
+    claimWorkspace,
     localUrl,
     isCloudActive: state.isCloudActive,
-    conflictBotUrl: state.conflictBotUrl
+    conflictBotUrl: state.conflictBotUrl,
+    activeWorkspace: state.activeWorkspace,
+    isWorkspaceMatch: state.isWorkspaceMatch
   };
 }

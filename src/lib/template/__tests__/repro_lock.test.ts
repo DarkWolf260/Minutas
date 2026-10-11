@@ -4,11 +4,12 @@ import { tokenize } from '../lexer';
 
 describe('Locking Issue Reproduction', () => {
     it('should generate stable IDs for the user\'s section', () => {
-        const template = `[singular="DATOS DEL PACIENTE" plural="DATOS DE LOS PACIENTE" sub="PACIENTE"
+        const template = `::: section DATOS DEL PACIENTE | PACIENTE* :::
 - *NOMBRE Y APELLIDO:* {Nombre y apellido:title:req}
 - *EDAD:* {Edad:req}
 - *IDX:* {IDX:req}
-- *DIRECCIÓN:* {Dirección}]`;
+- *DIRECCIÓN:* {Dirección}
+:::`;
 
         const result1 = parse(tokenize(template));
         const result2 = parse(tokenize(template));

@@ -14,10 +14,18 @@ import {
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, FileEdit, Trash2, Activity, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Search, FileEdit, Trash2, Activity, ChevronUp, ChevronDown, ChevronsUpDown, X, Filter } from 'lucide-react';
 import { StaffMember, PersonnelStatus, Department } from '@/lib/types';
 import { cn, normalizeString } from '@/lib/utils';
 import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
+import { STATUS_OPTIONS } from '@/lib/constants/personnel';
 
 interface PersonnelTableProps {
   personnel: StaffMember[];
@@ -33,7 +41,7 @@ interface PersonnelTableProps {
  * Personnel table component with search and filtering
  *
  * Displays all personnel with actions for edit, delete, and view history.
- * Includes built-in search functionality and multi-selection support.
+ * Includes built-in search functionality, faceted filters and multi-selection support.
  */
 export function PersonnelTable({
   personnel,
@@ -45,6 +53,8 @@ export function PersonnelTable({
   onSelectionChange,
 }: PersonnelTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [sortKey, setSortKey] = useState<keyof StaffMember>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [confirmDeleteMember, setConfirmDeleteMember] = useState<StaffMember | null>(null);
@@ -57,9 +67,18 @@ export function PersonnelTable({
 
   const getDeptName = (deptId?: string) => {
     if (!deptId || deptId === 'none') return null;
-    // If the stored value is already a name (not found as id), show it as-is
     return deptNameById.get(deptId) ?? deptId;
   };
+
+  // Status counts for quick filter chips
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: personnel.length };
+    personnel.forEach((p) => {
+      const s = p.status || 'activo';
+      counts[s] = (counts[s] || 0) + 1;
+    });
+    return counts;
+  }, [personnel]);
 
   const toggleSort = (key: keyof StaffMember) => {
     if (sortKey === key) {
@@ -80,24 +99,46 @@ export function PersonnelTable({
   // Filter and sort personnel
   const filteredPersonnel = useMemo(() => {
     const query = normalizeString(searchQuery);
-    let result = query
-      ? personnel.filter(
+    let result = personnel;
+
+    // Filter by status
+    if (statusFilter !== 'all') {
+      result = result.filter((p) => (p.status || 'activo') === statusFilter);
+    }
+
+    // Filter by department
+    if (departmentFilter !== 'all') {
+      result = result.filter((p) => (p.department || '') === departmentFilter);
+    }
+
+    // Filter by text search
+    if (query) {
+      result = result.filter(
         (p) =>
           normalizeString(p.name).includes(query) ||
           normalizeString(p.cedula || '').includes(query) ||
           normalizeString(p.rank || '').includes(query)
-      )
-      : [...personnel];
+      );
+    }
 
-    result.sort((a, b) => {
+    const sorted = [...result];
+    sorted.sort((a, b) => {
       const aVal = String(a[sortKey] ?? '').toLowerCase();
       const bVal = String(b[sortKey] ?? '').toLowerCase();
       const cmp = aVal.localeCompare(bVal, 'es', { sensitivity: 'base' });
       return sortDir === 'asc' ? cmp : -cmp;
     });
 
-    return result;
-  }, [personnel, searchQuery, sortKey, sortDir]);
+    return sorted;
+  }, [personnel, searchQuery, statusFilter, departmentFilter, sortKey, sortDir]);
+
+  const isFiltered = searchQuery.trim() !== '' || statusFilter !== 'all' || departmentFilter !== 'all';
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setDepartmentFilter('all');
+  };
 
   // Get status badge variant
   const getStatusVariant = (
@@ -124,23 +165,125 @@ export function PersonnelTable({
 
   return (
     <div className="space-y-4">
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          id="personnel-search"
-          name="personnel-search"
-          placeholder="Buscar por nombre, cédula o jerarquía..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
-        />
+      {/* Controles de Búsqueda y Filtros */}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+          {/* Input de Búsqueda */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="personnel-search"
+              name="personnel-search"
+              placeholder="Buscar por nombre, cédula o jerarquía..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-9"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
+                aria-label="Limpiar búsqueda"
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
+
+          {/* Selector de Departamento */}
+          {departments.length > 0 && (
+            <div className="w-full sm:w-[220px]">
+              <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                <SelectTrigger className="w-full h-10">
+                  <SelectValue placeholder="Departamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los departamentos</SelectItem>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Botón Reset si hay filtros aplicados */}
+          {isFiltered && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={resetFilters}
+              className="h-10 px-3 text-xs gap-1.5 text-muted-foreground hover:text-foreground shrink-0"
+              title="Restablecer todos los filtros"
+            >
+              <X className="h-3.5 w-3.5" />
+              Limpiar filtros
+            </Button>
+          )}
+        </div>
+
+        {/* Chips de Filtro Rápido por Estado */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+          <span className="text-[11px] font-semibold text-muted-foreground mr-1 uppercase tracking-wider flex items-center gap-1">
+            <Filter className="h-3 w-3" />
+            Estado:
+          </span>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('all')}
+            className={cn(
+              'px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 border',
+              statusFilter === 'all'
+                ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
+                : 'bg-muted/40 text-muted-foreground border-border/50 hover:bg-muted/80 hover:text-foreground'
+            )}
+          >
+            <span>Todos</span>
+            <span className={cn(
+              'text-[10px] px-1.5 py-0.2 rounded-full',
+              statusFilter === 'all' ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'
+            )}>
+              {statusCounts.all || 0}
+            </span>
+          </button>
+
+          {STATUS_OPTIONS.map((opt) => {
+            const count = statusCounts[opt.value] || 0;
+            const isSelected = statusFilter === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setStatusFilter(isSelected ? 'all' : opt.value)}
+                className={cn(
+                  'px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 border',
+                  isSelected
+                    ? 'bg-foreground text-background border-foreground shadow-xs font-bold'
+                    : 'bg-muted/40 text-muted-foreground border-border/50 hover:bg-muted/80 hover:text-foreground'
+                )}
+              >
+                <span>{opt.label}</span>
+                <span className={cn(
+                  'text-[10px] px-1.5 py-0.2 rounded-full',
+                  isSelected ? 'bg-background/20 text-background' : 'bg-muted text-muted-foreground'
+                )}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Results Count */}
+      {/* Results Count with aria-live */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Mostrando {filteredPersonnel.length} de {personnel.length} personas
+        <p className="text-xs sm:text-sm text-muted-foreground" aria-live="polite">
+          Mostrando <span className="font-semibold text-foreground">{filteredPersonnel.length}</span> de <span className="font-semibold text-foreground">{personnel.length}</span> personas
+          {isFiltered && ' (filtrado)'}
         </p>
       </div>
 
@@ -187,8 +330,8 @@ export function PersonnelTable({
           <TableBody>
             {filteredPersonnel.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                  {searchQuery ? 'No se encontraron resultados' : 'No hay personal registrado'}
+                <TableCell colSpan={9} className="text-center text-muted-foreground py-10">
+                  {isFiltered ? 'No se encontraron funcionarios con los filtros aplicados' : 'No hay personal registrado'}
                 </TableCell>
               </TableRow>
             ) : (
@@ -288,7 +431,7 @@ export function PersonnelTable({
       <div className="flex flex-col gap-3 md:hidden">
         {filteredPersonnel.length === 0 ? (
           <div className="text-center text-muted-foreground py-10 border rounded-xl border-dashed bg-muted/20">
-            {searchQuery ? 'No se encontraron resultados' : 'No hay personal registrado'}
+            {isFiltered ? 'No se encontraron funcionarios con los filtros aplicados' : 'No hay personal registrado'}
           </div>
         ) : (
           filteredPersonnel.map((member) => (

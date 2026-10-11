@@ -5,7 +5,8 @@ import { generateId } from '@/lib/utils/id';
 import { findValueInform_data } from '@/lib/report-sorter';
 import { renderFinalReport } from '@/lib/template-parser';
 import { LEADER_ROLES } from '@/lib/constants/roles';
-import { calcularEstadisticasDia } from '@/lib/estadisticas-utils';
+import { calcularEstadisticasDia, calcularEstadisticasPeriodo } from '@/lib/estadisticas-utils';
+import { getPeriodDurationHours } from '@/lib/formatters';
 import type { StaffMember, Report } from '@/lib/types';
 import { useOrdenDelDiaDraft } from '@/hooks/orden-del-dia';
 import { useAdmin } from '@/hooks/admin';
@@ -331,8 +332,11 @@ export function useReporteFinalGenerator({
       .join('\n\n');
 
     const partesReporteFinal = [...headerParts];
-    if (estadisticasLocal.trim())
-      partesReporteFinal.push(``, `*ESTADÍSTICAS DE LA GUARDIA*`, ``, estadisticasLocal.trim());
+    if (estadisticasLocal.trim()) {
+      const duracionHoras = settings.guard_shift_duration || (settings.guard_period ? getPeriodDurationHours(settings.guard_period) : 24);
+      const tituloStats = duracionHoras === 48 ? `*ESTADÍSTICAS DE LA GUARDIA (48 HORAS)*` : `*ESTADÍSTICAS DE LA GUARDIA*`;
+      partesReporteFinal.push(``, tituloStats, ``, estadisticasLocal.trim());
+    }
   
     if (contenidoReporte.trim()) partesReporteFinal.push(``, `*NOVEDADES DE LA GUARDIA*`, ``, contenidoReporte);
     partesReporteFinal.push(``, `*PROTECCIÓN CIVIL ${(municipio || '').toUpperCase()}*`);
@@ -405,8 +409,16 @@ export function useReporteFinalGenerator({
       const isoDate20 = archiveDate.toISOString().split('.')[0] + 'Z';
       const fullIsoDate = now.toISOString();
 
-      const dayStats = calcularEstadisticasDia(reportesFinalizados, templates, configs, configuracionesGlobales);
-      const statsObj = Object.fromEntries(dayStats.entries());
+      const statsResult = calcularEstadisticasPeriodo(
+        reportesFinalizados,
+        templates,
+        configs,
+        configuracionesGlobales,
+        [],
+        settings.guard_period,
+        settings.guard_shift_duration
+      );
+      const statsObj = Object.fromEntries(statsResult.totalStats.entries());
       
       await saveGuardReport({
         id: reportId,
@@ -423,6 +435,7 @@ export function useReporteFinalGenerator({
         is_guard_open: false,
         guard_period: '', 
         active_guard_id: '',
+        guard_shift_duration: 24,
         final_report_manual_novedades: [], 
         final_report_statistics: '', 
         orden_del_dia_draft: null, 

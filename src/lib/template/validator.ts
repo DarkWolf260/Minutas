@@ -7,13 +7,16 @@
 import type { ParseResult, ValidationResult } from './types';
 import type { SectionConfig, FieldType, SnippetOption } from '@/lib/types';
 
+import { tokenize } from './lexer';
+
+const VALID_OPERATORS = new Set(['=', '!=', '>', '<', '>=', '<=']);
+
 /**
  * Validates a template string for syntax errors
  * 
  * Checks for:
  * - Balanced braces { }
- * - Balanced brackets [ ]
- * - Properly closed conditionals [? ... [/]
+ * - Properly closed ::: blocks
  * 
  * @param template - The template string to validate
  * @returns Array of syntax error messages
@@ -21,25 +24,82 @@ import type { SectionConfig, FieldType, SnippetOption } from '@/lib/types';
 export function validateSyntax(template: string): string[] {
     const errors: string[] = [];
 
-    // Check brace balance
-    const openBraces = (template.match(/\{/g) || []).length;
-    const closeBraces = (template.match(/\}/g) || []).length;
-    if (openBraces !== closeBraces) {
+    // Check brace balance in single pass, respecting escapes (\\{, \\}, {{, }})
+    let depth = 0;
+    let hasUnbalanced = false;
+    for (let i = 0; i < template.length; i++) {
+        const char = template[i];
+        const next = template[i + 1];
+
+        // Skip escaped braces
+        if (char === '\\' && (next === '{' || next === '}')) {
+            i++;
+            continue;
+        }
+
+        // Skip double braces (literal escaped braces {{ or }})
+        if (char === '{' && next === '{') {
+            i++;
+            continue;
+        }
+        if (char === '}' && next === '}') {
+            i++;
+            continue;
+        }
+
+        if (char === '{') {
+            depth++;
+        } else if (char === '}') {
+            depth--;
+            if (depth < 0) {
+                hasUnbalanced = true;
+            }
+        }
+    }
+    if (depth !== 0 || hasUnbalanced) {
         errors.push('Desbalance de llaves detectado.');
     }
 
-    // Check bracket balance
-    if (template.includes('[') && !template.includes(']')) {
-        errors.push('Desbalance de Corchetes detectado.');
-    }
-
-    // Check unclosed conditionals
-    if (template.includes('[?') && !template.includes('[/]')) {
-        errors.push('Condicionales sin cerrar detectados.');
+    // Check unclosed or orphan ::: blocks
+    try {
+        const tokens = tokenize(template);
+        let openBlocks = 0;
+        for (const t of tokens) {
+            if (t.type === 'section_start' && !t.is_self_contained) {
+                openBlocks++;
+            } else if (t.type === 'section_end' && !t.is_self_contained && t.raw !== '') {
+                openBlocks--;
+            }
+        }
+        if (openBlocks > 0) {
+            errors.push('Bloques ::: sin cerrar detectados.');
+        } else if (openBlocks < 0) {
+            errors.push('Cierres de bloque ::: huérfanos o adicionales detectados.');
+        }
+    } catch {
+        // Tokenize error fallback
     }
 
     return errors;
 }
+
+const PREDEFINED_FIELD_NAMES = new Set([
+    'fecha',
+    'hora',
+    'municipio',
+    'estado',
+    'redan',
+    'zoedan',
+    'usuario',
+    'guardia',
+    'grupo',
+    'active_guard_id',
+    'director',
+    'analista',
+    'reporta',
+    'estatus',
+    'status',
+]);
 
 /**
  * Validates semantic aspects of a parsed template
@@ -65,7 +125,7 @@ export function validateSemantics(
 
     sections.forEach((section) => {
         if (section.condition) {
-            const { field_id, value, operator } = section.condition;
+            const { field_id, value, operator, target_field_id } = section.condition;
 
             // Verificar que el campo existe
             // For dotted field IDs (e.g. Director.sex), check if the BASE field exists
@@ -73,26 +133,43 @@ export function validateSemantics(
             const basefield_id = field_id.includes('.')
                 ? field_id.slice(0, field_id.indexOf('.'))
                 : field_id;
-            if (!fieldNames.has(field_id) && !fieldNames.has(basefield_id)) {
+            const isPredefined = PREDEFINED_FIELD_NAMES.has(basefield_id.toLowerCase());
+            if (!fieldNames.has(field_id) && !fieldNames.has(basefield_id) && !isPredefined) {
                 errors.push(
                     `El condicional hace referencia al campo '{${field_id}}' que no está definido en la plantilla.`
                 );
                 return;
             }
 
-            const fieldType = fieldTypes.get(field_id);
-            const options = templateOptions.get(field_id);
+            const targetFieldId = target_field_id || (
+                value.startsWith('{') && value.endsWith('}') ? value.slice(1, -1).trim() : undefined
+            );
 
-            // Validar si es dropdown
-            if (fieldType === 'dropdown' && options) {
-                // Solo validar índices numéricos para operador = (retrocompatibilidad)
-                const isNumericIndex = (!operator || operator === '=') && /^\d+$/.test(value);
-                if (isNumericIndex) {
-                    const idx = parseInt(value, 10);
-                    if (idx < 0 || idx >= options.length) {
-                        errors.push(
-                            `El condicional para '{${field_id}}' usa índice ${idx}, pero el dropdown solo tiene ${options.length} opciones (índices 0-${options.length - 1}).`
-                        );
+            if (targetFieldId) {
+                const baseTargetFieldId = targetFieldId.includes('.')
+                    ? targetFieldId.slice(0, targetFieldId.indexOf('.'))
+                    : targetFieldId;
+                const isTargetPredefined = PREDEFINED_FIELD_NAMES.has(baseTargetFieldId.toLowerCase());
+                if (!fieldNames.has(targetFieldId) && !fieldNames.has(baseTargetFieldId) && !isTargetPredefined) {
+                    errors.push(
+                        `El condicional compara contra el campo '{${targetFieldId}}' que no está definido en la plantilla.`
+                    );
+                }
+            } else {
+                const fieldType = fieldTypes.get(field_id);
+                const options = templateOptions.get(field_id);
+
+                // Validar si es dropdown
+                if (fieldType === 'dropdown' && options) {
+                    // Solo validar índices numéricos para operador = (retrocompatibilidad)
+                    const isNumericIndex = (!operator || operator === '=') && /^\d+$/.test(value);
+                    if (isNumericIndex) {
+                        const idx = parseInt(value, 10);
+                        if (idx < 0 || idx >= options.length) {
+                            errors.push(
+                                `El condicional para '{${field_id}}' usa índice ${idx}, pero el dropdown solo tiene ${options.length} opciones (índices 0-${options.length - 1}).`
+                            );
+                        }
                     }
                 }
             }
@@ -108,15 +185,6 @@ export function validateSemantics(
  * @param parseResult - The parsed template to validate
  * @param originalTemplate - Original template string for syntax validation
  * @returns Validation result with errors and warnings
- * 
- * @example
- * ```typescript
- * const result = parse(tokens);
- * const validation = validate(result, template);
- * if (!validation.isValid) {
- *   console.error('Template errors:', validation.errors);
- * }
- * ```
  */
 export function validate(
     parseResult: ParseResult,
@@ -140,20 +208,6 @@ export function validate(
         )
     );
 
-    // Check for duplicate field names (warning, not error)
-    const fieldCount = new Map<string, number>();
-    parseResult.fieldNames.forEach((name) => {
-        fieldCount.set(name, (fieldCount.get(name) || 0) + 1);
-    });
-
-    fieldCount.forEach((count, name) => {
-        if (count > 1) {
-            warnings.push(
-                `El campo '{${name}}' aparece ${count} veces en la plantilla. Esto puede causar comportamiento inesperado.`
-            );
-        }
-    });
-
     return {
         isValid: errors.length === 0,
         errors,
@@ -161,12 +215,6 @@ export function validate(
     };
 }
 
-/**
- * Checks if a section has any fields defined
- */
-export function sectionHasFields(section: SectionConfig): boolean {
-    return section.field_ids && section.field_ids.length > 0;
-}
 
 /**
  * Checks if a field name is valid (not empty, no special chars)
@@ -192,18 +240,6 @@ export function isValidOperatorForType(
     operator: string,
     _fieldType: FieldType
 ): boolean {
-    const validOperators = ['=', '!=', '>', '<', '>=', '<='];
-
-    if (!validOperators.includes(operator)) {
-        return false;
-    }
-
-    // Numeric comparisons only make sense for certain types
-    if (['>', '<', '>=', '<='].includes(operator)) {
-        // These are fine for text (alphabetical) and dates
-        return true;
-    }
-
-    return true;
+    return VALID_OPERATORS.has(operator);
 }
 

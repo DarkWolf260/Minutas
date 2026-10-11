@@ -27,6 +27,52 @@ export function useOrdenDelDiaActivities(periodo: string, definiciones: any) {
 
   const generarActividadesPorDefecto = useCallback((startDate: string, endDate: string, nombreEstado?: string): ManualNovedad[] => {
     const estado = nombreEstado || 'Anzoátegui';
+    const startMs = new Date(startDate).getTime();
+    const endMs = new Date(endDate).getTime();
+    const diffDays = Math.round((endMs - startMs) / (1000 * 60 * 60 * 24));
+
+    if (diffDays >= 2) {
+      const middleDateObj = new Date(startMs + 24 * 60 * 60 * 1000);
+      const middleDate = middleDateObj.toISOString();
+
+      return [
+        // Día 1
+        { id: 'def-1', date: startDate, time: '08:00 HLV', text: 'Se realiza cambio y recepción de Guardia (Inicio Guardia 48H)' },
+        { id: 'def-2', date: startDate, time: '08:30 HLV', text: `Se envía reporte del estado del tiempo a la central de Protección Civil ${estado}.` },
+        { id: 'def-3', date: startDate, time: '12:00 HLV - 13:00 HLV', text: 'Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.' },
+        { id: 'def-4', date: startDate, time: '14:30 HLV', text: `Se envía reporte del estado del tiempo a la central de Protección Civil ${estado}.` },
+        { id: 'def-5', date: startDate, time: '16:00 HLV', text: `Se envía segundo corte de novedades diarias a la central de Protección Civil ${estado}.` },
+        { id: 'def-6', date: startDate, time: '17:30 HLV', text: `Se envía reporte del estado del tiempo a la central de Protección Civil ${estado}.` },
+        { id: 'def-7', date: startDate, time: '18:00 HLV - 19:00 HLV', text: 'Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.' },
+        { id: 'def-8', date: startDate, time: '20:00 HLV', text: 'Se realiza mantenimiento y limpieza de las unidades e instalaciones de la sede.' },
+        { id: 'def-9', date: startDate, time: '20:30 HLV', text: `Se envía reporte del estado del tiempo a la central de Protección Civil ${estado}.` },
+        { id: 'def-10', date: startDate, time: '21:00 HLV', text: 'Se inicia el periodo de descanso del personal.' },
+
+        // Día 2
+        { id: 'def-11', date: middleDate, time: '03:00 HLV', text: `Se envía primer corte de novedades diarias a la central de Protección Civil ${estado}.` },
+        { id: 'def-12', date: middleDate, time: '04:30 HLV', text: `Se envía reporte del estado del tiempo a la central de Protección Civil ${estado}.` },
+        { id: 'def-13', date: middleDate, time: '06:00 HLV', text: 'Culmina el periodo de descanso del personal.' },
+        { id: 'def-14', date: middleDate, time: '06:00 HLV - 07:00 HLV', text: 'Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.' },
+        { id: 'def-15', date: middleDate, time: '08:00 HLV', text: 'Se continúa con las operaciones correspondientes a la guardia de 48 Horas.' },
+        { id: 'def-16', date: middleDate, time: '08:30 HLV', text: `Se envía reporte del estado del tiempo a la central de Protección Civil ${estado}.` },
+        { id: 'def-17', date: middleDate, time: '12:00 HLV - 13:00 HLV', text: 'Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.' },
+        { id: 'def-18', date: middleDate, time: '14:30 HLV', text: `Se envía reporte del estado del tiempo a la central de Protección Civil ${estado}.` },
+        { id: 'def-19', date: middleDate, time: '16:00 HLV', text: `Se envía segundo corte de novedades diarias a la central de Protección Civil ${estado}.` },
+        { id: 'def-20', date: middleDate, time: '17:30 HLV', text: `Se envía reporte del estado del tiempo a la central de Protección Civil ${estado}.` },
+        { id: 'def-21', date: middleDate, time: '18:00 HLV - 19:00 HLV', text: 'Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.' },
+        { id: 'def-22', date: middleDate, time: '20:00 HLV', text: 'Se realiza mantenimiento y limpieza de las unidades e instalaciones de la sede.' },
+        { id: 'def-23', date: middleDate, time: '20:30 HLV', text: `Se envía reporte del estado del tiempo a la central de Protección Civil ${estado}.` },
+        { id: 'def-24', date: middleDate, time: '21:00 HLV', text: 'Se inicia el periodo de descanso del personal.' },
+
+        // Cierre en Día 3 (08:00 HLV)
+        { id: 'def-25', date: endDate, time: '03:00 HLV', text: `Se envía primer corte de novedades diarias a la central de Protección Civil ${estado}.` },
+        { id: 'def-26', date: endDate, time: '04:30 HLV', text: `Se envía reporte del estado del tiempo a la central de Protección Civil ${estado}.` },
+        { id: 'def-27', date: endDate, time: '06:00 HLV', text: 'Culmina el periodo de descanso del personal.' },
+        { id: 'def-28', date: endDate, time: '06:00 HLV - 07:00 HLV', text: 'Se realiza monitoreo de las condiciones meteorológicas con sus respectivas predicciones locales.' },
+        { id: 'def-29', date: endDate, time: '08:00 HLV', text: 'Se envía reporte final de novedades correspondiente a la guardia de 48 Horas del día a la dirección estadal y ZOEDAN / Se da culminación a la guardia de 48 Horas.' },
+      ];
+    }
+
     return [
       { id: 'def-1', date: startDate, time: '08:00 HLV', text: 'Se realiza cambio y recepción de Guardia' },
       { id: 'def-3', date: startDate, time: '08:30 HLV', text: `Se envía reporte del estado del tiempo a la central de Protección Civil ${estado}.` },

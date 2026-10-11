@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { parseTemplate, renderFinalReport } from '../../template-parser';
+import { parseTemplate, renderFinalReport } from '../index';
+import { tokenize } from '../lexer';
+import { parse } from '../parser';
 import type { TemplateConfig, SnippetOption, FieldType, SectionConfig } from '@/lib/types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -53,16 +55,13 @@ function generateMockData(
                 data[fieldName] = `Ejemplo ${fieldName}`;
         }
     });
-    console.log('DEBUG: generateMockData sections count:', sections.length);
     sections.forEach((section: SectionConfig) => {
-        console.log(`DEBUG: Checking section ${section.id}, is_repeatable: ${section.is_repeatable}`);
         if (section.is_repeatable) {
             const itemData: Record<string, string> = {};
             section.field_ids.forEach((field_id: string) => {
                 itemData[field_id] = `Dato ${field_id}`;
             });
             data[section.id] = [{ ...itemData }, { ...itemData }];
-            console.log(`DEBUG: Added repeatable data for ${section.id}`);
         }
     });
     return data;
@@ -75,51 +74,40 @@ describe('Template Renderer - Secciones Repetibles', () => {
         const template = 'NOVEDADES:\n{novedad}*';
         const parsed = parseTemplate(template);
 
-        console.log('Sections:', JSON.stringify(parsed.sections, null, 2));
-        console.log('Layout:', parsed.layout);
-
         const data = generateMockData(parsed.sections, parsed.fieldNames, parsed.fieldTypes, parsed.templateOptions);
-        console.log('Mock data:', JSON.stringify(data, null, 2));
 
         const config = buildConfig(template);
         const result = renderFinalReport(template, data as never, config, {});
-        console.log('Result:', result);
 
         expect(result).toContain('Dato novedad');
     });
 
-    it('should render a repeatable section with [Label]*...[/]', () => {
-        const template = '[Novedades]*\n{descripcion}\n[/]';
+    it('should render a repeatable section with ::: section Label* :::', () => {
+        const template = '::: section Novedades* :::\n{descripcion}\n:::';
         const parsed = parseTemplate(template);
 
-        console.log('Sections:', JSON.stringify(parsed.sections, null, 2));
         const data = generateMockData(parsed.sections, parsed.fieldNames, parsed.fieldTypes, parsed.templateOptions);
-        console.log('Mock data:', JSON.stringify(data, null, 2));
 
         const config = buildConfig(template);
         const result = renderFinalReport(template, data as never, config, {});
-        console.log('Result:', result);
 
         expect(result).toContain('Dato descripcion');
     });
 
     it('should render a repeatable section with singular/plural attributes', () => {
-        const template = '[singular="Novedad" plural="Novedades" sub="NOVEDAD"]*\n{descripcion}\n[/]';
+        const template = '::: section Novedades | Novedad* :::\n{descripcion}\n:::';
         const parsed = parseTemplate(template);
 
-        console.log('Sections:', JSON.stringify(parsed.sections, null, 2));
         const data = generateMockData(parsed.sections, parsed.fieldNames, parsed.fieldTypes, parsed.templateOptions);
-        console.log('Mock data:', JSON.stringify(data, null, 2));
 
         const config = buildConfig(template);
         const result = renderFinalReport(template, data as never, config, {});
-        console.log('Result:', result);
 
         expect(result).toContain('Dato descripcion');
     });
 
     it('should correctly parse and render the Destino repeatable textarea field', () => {
-        const template = '["INFORMACIÓN GEOGRÁFICA"\n- *UBICACIÓN:* {Ubicación:textarea:req}\n- *DESTINO:* {Destino:textarea:req}*\n]';
+        const template = '::: INFORMACIÓN GEOGRÁFICA :::\n- *UBICACIÓN:* {Ubicación:textarea:req}\n- *DESTINO:* {Destino:textarea:req}*\n:::';
         const parsed = parseTemplate(template);
         
         expect(parsed.fieldNames.has('Ubicación')).toBe(true);
@@ -148,29 +136,26 @@ describe('Template Renderer - Secciones Repetibles', () => {
 });
 
 describe('Template Renderer - Secciones Auto-Contenidas', () => {
-    it('should render a self-contained section ["Título" {campo}]', () => {
-        const template = 'Texto antes\n["Título de sección" {campo}]\nTexto después';
+    it('should render a self-contained section', () => {
+        const template = 'Texto antes\n::: Título de sección :::\n{campo}\n:::\nTexto después';
         const data = { campo: 'valor de prueba' };
 
         const result = render(template, data);
-        console.log('Secciones auto-contenidas result:', result);
-
         expect(result).toContain('valor de prueba');
     });
 
     it('should render multiple fields in a self-contained section', () => {
-        const template = '["Info" {nombre} - {cargo}]';
+        const template = '::: Info :::\n{nombre} - {cargo}\n:::';
         const data = { nombre: 'Juan Pérez', cargo: 'Inspector' };
 
         const result = render(template, data);
-        console.log('Multi-field self-contained result:', result);
 
         expect(result).toContain('Juan Pérez');
         expect(result).toContain('Inspector');
     });
 
     it('should render repeatable self-contained section without leaving a trailing asterix', () => {
-        const template = '["Título de ejemplo" {campo1} {campo2}]*';
+        const template = '::: section Título de ejemplo* :::\n{campo1} {campo2}\n:::';
         const parsed = parseTemplate(template);
 
         const data: Record<string, unknown> = {
@@ -182,7 +167,6 @@ describe('Template Renderer - Secciones Auto-Contenidas', () => {
 
         const config = buildConfig(template);
         const result = renderFinalReport(template, data as never, config, {});
-        console.log('Repeatable self-contained result:', result);
 
         expect(result).toContain('respuesta1 respuesta2');
         expect(result).toContain('respuesta3 respuesta4');
@@ -192,15 +176,14 @@ describe('Template Renderer - Secciones Auto-Contenidas', () => {
 
 describe('Template Renderer - Condicionales con Campos', () => {
     it('should render field inside a top-level conditional section', () => {
-        const template = 'Tipo: {tipo}\n[?{tipo} = Robo]\nMonto: {monto}\n[/]';
+        const template = 'Tipo: {tipo}\n::: if tipo == "Robo" :::\nMonto: {monto}\n:::';
         const data = { tipo: 'Robo', monto: '500 USD' };
         const result = render(template, data);
-        console.log('Conditional field result:', result);
         expect(result).toContain('500 USD');
     });
 
     it('should NOT render content when condition is false', () => {
-        const template = 'Tipo: {tipo}\n[?{tipo} = Robo]\nMonto: {monto}\n[/]';
+        const template = 'Tipo: {tipo}\n::: if tipo == "Robo" :::\nMonto: {monto}\n:::';
         const data = { tipo: 'Accidente', monto: '500 USD' };
         const result = render(template, data);
         expect(result).not.toContain('500 USD');
@@ -210,28 +193,21 @@ describe('Template Renderer - Condicionales con Campos', () => {
     it('DIAGNOSTIC: sections for nested conditional dropdown', () => {
         const template = [
             '{Vía de información}',
-            '[?{¿Quien informó?}]',
+            '::: map ¿Quien informó? :::',
             'Personal=el personal de la institución',
             'Funcionario=el funcionario externo',
-            '[/]',
-            '[?{Vía de información} = Llamada]',
+            ':::',
+            '::: if Vía de información == "Llamada" :::',
             '{¿Quien informó?}',
-            '[/]',
+            ':::',
         ].join('\n');
 
         const parsed = parseTemplate(template);
-        console.log('fieldNames:', [...parsed.fieldNames]);
-        console.log('layout:', parsed.layout);
-        console.log('sections:', JSON.stringify(parsed.sections.map((s: any) => ({
-            id: s.id, condition: s.condition, field_ids: s.field_ids, is_mapping: s.is_mapping
-        })), null, 2));
-        console.log('templateOptions ¿Quien informó?:', parsed.templateOptions.get('¿Quien informó?'));
 
         expect(parsed.fieldNames.has('¿Quien informó?')).toBe(true);
         expect(parsed.templateOptions.get('¿Quien informó?')).toBeDefined();
 
         const condSection = parsed.sections.find((s: any) => s.condition?.value === 'Llamada');
-        console.log('condSection:', condSection);
         expect(condSection).toBeDefined();
         expect(condSection?.field_ids).toContain('¿Quien informó?');
     });
@@ -260,5 +236,194 @@ describe('Template Renderer - Modifiers', () => {
         expect(result).not.toContain('31/Mayo/2026');
         expect(result).not.toContain('2026-05-31');
     });
+
+    it('should unescape \\* to * without treating {Field} as repeatable', () => {
+        const template = '*MUNICIPIO {Municipio:upper}, ESTADO {Estado:upper}\\*';
+        const data = {};
+        const predefined = { Municipio: 'Guanta', Estado: 'Anzoátegui' };
+        const result = render(template, data, predefined);
+
+        expect(result).toBe('*MUNICIPIO GUANTA, ESTADO ANZOÁTEGUI*');
+    });
 });
+
+describe('Template Renderer - Two Field Conditionals', () => {
+    it('should render block conditional when two fields match', () => {
+        const template = `Origen: {Origen}
+Destino: {Destino}
+::: if {Origen} == {Destino} :::
+Traslado dentro de la misma localidad.
+:::`;
+        const dataMatching = { Origen: 'Caracas', Destino: 'Caracas' };
+        const resultMatching = render(template, dataMatching);
+        expect(resultMatching).toContain('Traslado dentro de la misma localidad.');
+
+        const dataDifferent = { Origen: 'Caracas', Destino: 'Maracay' };
+        const resultDifferent = render(template, dataDifferent);
+        expect(resultDifferent).not.toContain('Traslado dentro de la misma localidad.');
+    });
+
+    it('should be case-insensitive when comparing text of two fields', () => {
+        const template = `::: if {Origen} == {Destino} :::
+Misma ciudad
+:::`;
+        const data = { Origen: 'CARACAS', Destino: 'caracas' };
+        const result = render(template, data);
+        expect(result).toContain('Misma ciudad');
+    });
+
+    it('should not render when both fields are empty strings', () => {
+        const template = `::: if {Origen} == {Destino} :::
+Misma ciudad
+:::`;
+        const data = { Origen: '', Destino: '' };
+        const result = render(template, data);
+        expect(result.trim()).toBe('');
+    });
+
+    it('should handle inequality operator != between two fields', () => {
+        const template = `::: if {Origen} != {Destino} :::
+Traslado foráneo
+:::`;
+        const dataDifferent = { Origen: 'Caracas', Destino: 'Valencia' };
+        const resultDifferent = render(template, dataDifferent);
+        expect(resultDifferent).toContain('Traslado foráneo');
+
+        const dataSame = { Origen: 'Caracas', Destino: 'Caracas' };
+        const resultSame = render(template, dataSame);
+        expect(resultSame).not.toContain('Traslado foráneo');
+    });
+
+    it('should support inline conditionals comparing two fields', () => {
+        const template = `Estado: ::: if {Salida} == {Llegada}: En Base :::`;
+        const result = render(template, { Salida: 'Estación 1', Llegada: 'Estación 1' });
+        expect(result).toContain('Estado: En Base');
+    });
+});
+
+describe('Template Lexer/Parser - Consecutive Triple Colons (::: ::: and ::::::)', () => {
+    it('should correctly close multiple nested blocks on the same line with ::: :::', () => {
+        const template = `::: section Principal :::
+{Nombre}
+::: if {Tipo} == "Urgente" :::
+PRIORIDAD ALTA
+::: :::
+Fin`;
+        const data = { Nombre: 'Reporte 1', Tipo: 'Urgente' };
+        const result = render(template, data);
+        expect(result).toContain('PRIORIDAD ALTA');
+        expect(result).toContain('Fin');
+    });
+
+    it('should correctly close multiple nested blocks with continuous ::::::', () => {
+        const template = `::: section Principal :::
+{Nombre}
+::: if {Tipo} == "Urgente" :::
+PRIORIDAD ALTA
+::::::
+Fin`;
+        const data = { Nombre: 'Reporte 1', Tipo: 'Urgente' };
+        const result = render(template, data);
+        expect(result).toContain('PRIORIDAD ALTA');
+        expect(result).toContain('Fin');
+    });
+
+    it('should correctly close previous section and open conditional on same line with ::: ::: if', () => {
+        const template = `::: section Uno :::
+{Dato1}
+::: ::: if {Dato2} == "Si" :::
+Dato 2 es Si
+:::`;
+        const data = { Dato1: 'Valor 1', Dato2: 'Si' };
+        const result = render(template, data);
+        expect(result).toContain('Valor 1');
+        expect(result).toContain('Dato 2 es Si');
+    });
+
+    it('should correctly close previous section and open conditional attached with :::::: if', () => {
+        const template = `::: section Uno :::
+{Dato1}
+:::::: if {Dato2} == "Si" :::
+Dato 2 es Si
+:::`;
+        const data = { Dato1: 'Valor 1', Dato2: 'Si' };
+        const result = render(template, data);
+        expect(result).toContain('Valor 1');
+        expect(result).toContain('Dato 2 es Si');
+    });
+
+    it('Way 1: block conditional with inline conditionals inside', () => {
+        const template = `*TIPO DE NOVEDAD:* ::: if Estatus == "En proceso": Posible accidente de tránsito :::
+::: if Estatus == "Finalizado":show :::
+{Tipo de accidente de tránsito:dropdown} ::: if {Municipio} == {Municipio del incidente}: (Urbano)::: ::: if {Municipio} != {Municipio del incidente}: (Extra-urbano):::
+:::`;
+        const dataFinalizado = {
+            Estatus: 'Finalizado',
+            'Tipo de accidente de tránsito': 'Colisión',
+            Municipio: 'Bolívar',
+            'Municipio del incidente': 'Bolívar'
+        };
+        const resultFinalizado = render(template, dataFinalizado);
+        expect(resultFinalizado).toBe('*TIPO DE NOVEDAD:* \nColisión (Urbano)');
+
+        const dataEnProceso = {
+            Estatus: 'En proceso',
+            'Tipo de accidente de tránsito': 'Colisión',
+            Municipio: 'Bolívar',
+            'Municipio del incidente': 'Bolívar'
+        };
+        const resultEnProceso = render(template, dataEnProceso);
+        expect(resultEnProceso).toBe('*TIPO DE NOVEDAD:* Posible accidente de tránsito');
+    });
+
+    it('Way 2: single-line with space separated ::: ::: at the end', () => {
+        const template = `*TIPO DE NOVEDAD:* :::if Estatus == "En proceso":::Posible accidente de tránsito::: :::if Estatus == "Finalizado":show:::{Tipo de accidente de tránsito:dropdown} ::: if {Municipio} == {Municipio del incidente}: (Urbano)::: ::: if {Municipio} != {Municipio del incidente}: (Extra-urbano)::: :::`;
+        const dataFinalizado = {
+            Estatus: 'Finalizado',
+            'Tipo de accidente de tránsito': 'Colisión',
+            Municipio: 'Bolívar',
+            'Municipio del incidente': 'Bolívar'
+        };
+        const resultFinalizado = render(template, dataFinalizado);
+        expect(resultFinalizado).toBe('*TIPO DE NOVEDAD:* Colisión (Urbano)');
+
+        const dataEnProceso = {
+            Estatus: 'En proceso',
+            'Tipo de accidente de tránsito': 'Colisión',
+            Municipio: 'Bolívar',
+            'Municipio del incidente': 'Bolívar'
+        };
+        const resultEnProceso = render(template, dataEnProceso);
+        expect(resultEnProceso).toBe('*TIPO DE NOVEDAD:* Posible accidente de tránsito');
+    });
+
+    it('Way 3: single-line with continuous :::::: at the end', () => {
+        const template = `*TIPO DE NOVEDAD:* :::if Estatus == "En proceso":::Posible accidente de tránsito::: :::if Estatus == "Finalizado":show:::{Tipo de accidente de tránsito:dropdown} ::: if {Municipio} == {Municipio del incidente}: (Urbano)::: ::: if {Municipio} != {Municipio del incidente}: (Extra-urbano)::::::`;
+        const dataFinalizado = {
+            Estatus: 'Finalizado',
+            'Tipo de accidente de tránsito': 'Colisión',
+            Municipio: 'Bolívar',
+            'Municipio del incidente': 'Bolívar'
+        };
+        const resultFinalizado = render(template, dataFinalizado);
+        expect(resultFinalizado).toBe('*TIPO DE NOVEDAD:* Colisión (Urbano)');
+
+        const dataEnProceso = {
+            Estatus: 'En proceso',
+            'Tipo de accidente de tránsito': 'Colisión',
+            Municipio: 'Bolívar',
+            'Municipio del incidente': 'Bolívar'
+        };
+        const resultEnProceso = render(template, dataEnProceso);
+        expect(resultEnProceso).toBe('*TIPO DE NOVEDAD:* Posible accidente de tránsito');
+    });
+
+    it('Investigating user problem: sticking ::: with :::', () => {
+        const t1 = `*TIPO DE NOVEDAD:* :::if Estatus == "En proceso":::Posible accidente de tránsito:::
+:::if Estatus == "Finalizado":show:::{Tipo de accidente de tránsito:dropdown}::: ::: if {Municipio} == {Municipio del incidente}: (Urbano)::: ::: if {Municipio} != {Municipio del incidente}: (Extra-urbano):::`;
+        console.log('TOKENS t1:', JSON.stringify(tokenize(t1), null, 2));
+        console.log('SECTIONS t1:', JSON.stringify(parse(tokenize(t1)).sections, null, 2));
+    });
+});
+
 

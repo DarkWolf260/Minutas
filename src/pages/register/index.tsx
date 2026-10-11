@@ -3,11 +3,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/admin';
 import { useGlobalConfig } from '@/hooks/configuracion';
 import { toast } from 'sonner';
-import { Mail, Lock, Loader2, UserPlus, ArrowLeft, IdCard, ShieldX } from 'lucide-react';
+import { Mail, Lock, Loader2, UserPlus, ArrowLeft, IdCard, ShieldX, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 export default function RegisterPage() {
   const [searchParams] = useSearchParams();
@@ -34,6 +35,11 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!isSupabaseConfigured) {
+      toast.error('Supabase no está configurado. Revisa tu archivo .env');
+      return;
+    }
+
     if (!config.allow_registration) {
       toast.error('Los registros están cerrados actualmente');
       return;
@@ -79,7 +85,7 @@ export default function RegisterPage() {
         }
       });
       if (error) throw error;
-      toast.success('Cuenta creada exitosamente. Por favor verifica tu correo si es necesario.');
+      toast.success('Cuenta creada exitosamente. Tu solicitud está pendiente de aprobación.');
       navigate(redirectTo, { replace: true });
     } catch (err: any) {
       console.error('Auth error:', err);
@@ -120,7 +126,7 @@ export default function RegisterPage() {
       {/* Main Content */}
       <div className="relative z-10 w-full max-w-md p-6">
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 ring-1 ring-primary/20 shadow-[0_0_40px_-10px_rgba(var(--primary),0.5)]">
+          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 ring-1 ring-primary/20 shadow-[0_0_40px_-10px_hsl(var(--primary)/0.35)]">
             <img src="/icons/icon-192x192.png" alt="Minutas Logo" className="h-10 w-10 object-contain" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight">Crear Cuenta</h1>
@@ -128,6 +134,29 @@ export default function RegisterPage() {
             {config.allow_registration ? 'Únete a la comunidad de Minutas Sync' : 'Registros temporalmente cerrados'}
           </p>
         </div>
+
+        {!isSupabaseConfigured && (
+          <div className="mb-4 p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-xs space-y-2 text-left animate-in fade-in zoom-in duration-300">
+            <div className="flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
+              <span>Supabase no está configurado</span>
+            </div>
+            <p className="text-muted-foreground leading-relaxed">
+              No se detectaron <code className="text-foreground font-mono bg-muted/60 px-1 py-0.5 rounded">VITE_SUPABASE_URL</code> ni <code className="text-foreground font-mono bg-muted/60 px-1 py-0.5 rounded">VITE_SUPABASE_ANON_KEY</code> en las variables de entorno. Crea tu archivo <code className="text-foreground font-mono bg-muted/60 px-1 py-0.5 rounded">.env</code> para habilitar el registro de usuarios.
+            </p>
+            <div className="pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full text-xs h-9 border-amber-500/30 hover:bg-amber-500/15"
+                onClick={() => navigate('/')}
+              >
+                Continuar en Modo Local (Offline)
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl">
           {config.allow_registration ? (

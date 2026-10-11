@@ -78,7 +78,7 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
         <Sheet open={esDialogOpenResultado} onOpenChange={setEsDialogOpenResultado}>
           <SheetContent side="bottom" className="h-[95vh] rounded-t-[2.5rem] p-6 flex flex-col">
             <SheetHeader className="pb-4 border-b">
-              <SheetTitle className="text-xl font-bold">Reporte Final Generado</SheetTitle>
+              <SheetTitle className="text-xl font-bold">Reporte de Cierre Generado</SheetTitle>
               <SheetDescription>Previsualización del reporte consolidado de la guardia</SheetDescription>
             </SheetHeader>
 
@@ -132,7 +132,7 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
                     <FileText className="h-6 w-6" />
                   </div>
                   <div>
-                    <DialogTitle className="text-2xl font-bold">Reporte Final Generado</DialogTitle>
+                    <DialogTitle className="text-2xl font-bold">Reporte de Cierre Generado</DialogTitle>
                     <DialogDescription>Previsualización del reporte consolidado de la guardia</DialogDescription>
                   </div>
                 </div>
@@ -162,7 +162,7 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
                   className="flex-1 sm:flex-none h-11 px-6 font-bold border-2 rounded-xl"
                 >
                   <FileDown className="h-4 w-4 mr-2" />
-                  Exportar Word
+                  Exportar a Word
                 </Button>
                 <Button
                   variant="outline"
@@ -270,7 +270,7 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
                 className="h-11 px-8 font-bold border-2 rounded-xl"
               >
                 <FileDown className="h-4 w-4 mr-2" />
-                Exportar Word
+                Exportar a Word
               </Button>
             </DialogFooter>
           </DialogContent>

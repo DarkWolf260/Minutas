@@ -54,6 +54,7 @@ import {
   X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LOCATION_TYPES } from '@/lib/constants/addresses';
 
 interface AddressFormDialogProps {
   isOpen: boolean;
@@ -63,13 +64,7 @@ interface AddressFormDialogProps {
   initialCoords?: { lat: string; lng: string } | null;
 }
 
-export const LOCATION_TYPES = [
-  { value: 'centro_asistencial', label: 'Centro Asistencial' },
-  { value: 'residencia', label: 'Residencia' },
-  { value: 'lugar_publico', label: 'Lugar Público' },
-  { value: 'institucion_comercio', label: 'Institución / Comercio' },
-  { value: 'sede', label: 'Sede' },
-] as const;
+export { LOCATION_TYPES };
 
 const addressSchema = z.object({
   id: z.string().optional(),

@@ -4,10 +4,10 @@
  * Type definitions shared across all template modules
  */
 
-import { FieldType, SectionConfig, SnippetOption } from '@/lib/types';
+import type { FieldType, SectionConfig, SnippetOption, FieldConfig, TemplateParserResult } from '@/lib/types';
 
 // Re-export types from main types file for convenience
-export type { FieldType, SectionConfig, SnippetOption };
+export type { FieldType, SectionConfig, SnippetOption, FieldConfig, TemplateParserResult };
 
 /**
  * Token types for lexer
@@ -15,8 +15,21 @@ export type { FieldType, SectionConfig, SnippetOption };
 export type Token =
     | { type: 'text'; content: string; raw: string; position: number }
     | { type: 'field'; id: string; raw: string; position: number }
-    | { type: 'section_start'; label?: string; condition?: ConditionalExpression; is_repeatable?: boolean; raw: string; position: number }
-    | { type: 'section_end'; raw: string; position: number };
+    | {
+        type: 'section_start';
+        label?: string;
+        condition?: ConditionalExpression;
+        is_repeatable?: boolean;
+        singular_title?: string;
+        plural_title?: string;
+        repeatable_item_label?: string;
+        is_separator?: boolean;
+        is_mapping?: boolean;
+        is_self_contained?: boolean;
+        raw: string;
+        position: number;
+    }
+    | { type: 'section_end'; raw: string; position: number; is_self_contained?: boolean };
 
 /**
  * Conditional expression structure
@@ -25,34 +38,15 @@ export interface ConditionalExpression {
     field_id: string;
     operator: '=' | '!=' | '>' | '<' | '>=' | '<=';
     value: string;
+    target_field_id?: string;
     condition_mode?: 'show' | 'hide';
     is_implicit?: boolean;
 }
 
 /**
- * Field configuration after parsing
+ * Parse result type alias for backwards compatibility
  */
-export interface FieldConfig {
-    id: string;
-    type: FieldType;
-    label: string;
-    modifiers: string[];
-    is_full_width: boolean;
-    is_required: boolean;
-    options?: SnippetOption[];
-}
-
-/**
- * Parse result from parser
- */
-export interface ParseResult {
-    sections: SectionConfig[];
-    fields: Map<string, FieldConfig>;
-    layout: string[];
-    fieldNames: Set<string>;
-    fieldTypes: Map<string, FieldType>;
-    templateOptions: Map<string, SnippetOption[]>;
-}
+export type ParseResult = TemplateParserResult;
 
 /**
  * Validation result
@@ -62,13 +56,3 @@ export interface ValidationResult {
     errors: string[];
     warnings: string[];
 }
-
-/**
- * Render options
- */
-export interface RenderOptions {
-    predefinedValues?: Record<string, string>;
-    dynamicValues?: Record<string, string>;
-    summaryOnly?: boolean;
-}
-

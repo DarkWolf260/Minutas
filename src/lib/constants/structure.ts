@@ -12,7 +12,7 @@ export const DEFAULT_DEPARTMENTS: Department[] = [
 
 export const EXTENDED_DEPARTMENTS: Department[] = [
   ...DEFAULT_DEPARTMENTS,
-  { id: DEPARTMENT_IDS.CEMUPRAD, name: DEPARTMENT_NAMES.CEMUPRAD, staff: {}, order: 4 },
+  { id: DEPARTMENT_IDS.SALA_MONITOREO, name: DEPARTMENT_NAMES.SALA_MONITOREO, staff: {}, order: 4 },
   { id: DEPARTMENT_IDS.IT, name: DEPARTMENT_NAMES.IT, staff: {}, order: 5 },
 ];
 
@@ -43,9 +43,9 @@ export const DEFAULT_ROLES: StaffRole[] = [
 
 export const EXTENDED_ROLES: StaffRole[] = [
   ...DEFAULT_ROLES,
-  { name: SPECIAL_ROLES.JEFE_CEMUPRAD, is_single: true, department_scope: [DEPARTMENT_IDS.CEMUPRAD], order: 3, hierarchy_order: 3, is_hidden: true },
-  { name: SPECIAL_ROLES.ANALISTA_CEMUPRAD, is_single: false, department_scope: [DEPARTMENT_IDS.CEMUPRAD], order: 8, hierarchy_order: 8 },
-  { name: SPECIAL_ROLES.AUXILIAR_CEMUPRAD, is_single: false, department_scope: [DEPARTMENT_IDS.CEMUPRAD], order: 9, hierarchy_order: 9 },
+  { name: SPECIAL_ROLES.JEFE_SALA_MONITOREO, is_single: true, department_scope: [DEPARTMENT_IDS.SALA_MONITOREO], order: 3, hierarchy_order: 3, is_hidden: true },
+  { name: SPECIAL_ROLES.ANALISTA_SALA_MONITOREO, is_single: false, department_scope: [DEPARTMENT_IDS.SALA_MONITOREO], order: 8, hierarchy_order: 8 },
+  { name: SPECIAL_ROLES.AUXILIAR_SALA_MONITOREO, is_single: false, department_scope: [DEPARTMENT_IDS.SALA_MONITOREO], order: 9, hierarchy_order: 9 },
   { name: SPECIAL_ROLES.JEFE_INFORMATICA, is_single: true, department_scope: [DEPARTMENT_IDS.IT], order: 6, hierarchy_order: 6, is_hidden: true },
 ];
 

@@ -19,6 +19,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+import { LOCATION_TYPES, formatAddressToString } from '@/lib/constants/addresses';
+
 interface AddressInputProps {
   value: string;
   onChange: (value: string) => void;
@@ -33,14 +35,6 @@ interface AddressInputProps {
   id?: string;
 }
 
-const LOCATION_TYPES = [
-  { value: 'centro_asistencial', label: 'Centro Asistencial' },
-  { value: 'residencia', label: 'Residencia' },
-  { value: 'lugar_publico', label: 'Lugar Público' },
-  { value: 'institucion_comercio', label: 'Institución / Comercio' },
-  { value: 'sede', label: 'Sede' },
-] as const;
-
 const LOCATION_TYPE_BADGE: Record<string, string> = {
   centro_asistencial: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25',
   residencia: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/25',
@@ -49,23 +43,7 @@ const LOCATION_TYPE_BADGE: Record<string, string> = {
   sede: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/25',
 };
 
-export const formatAddressToString = (address: Address): string => {
-  const parts = [`Municipio ${address.municipality}`, `parroquia ${address.parish}`];
-
-  if (address.sector) {
-    parts.push(`sector ${address.sector}`);
-  }
-
-  const calle = [address.street, address.houseNumber].filter(Boolean).join(' ');
-  if (calle) {
-    parts.push(`calle ${calle}`);
-  }
-
-  parts.push(address.name);
-  parts.push(`Cuadrante de Paz ${address.peaceQuadrant}`);
-
-  return parts.join(', ');
-};
+export { formatAddressToString };
 
 export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, AddressInputProps>(
   ({ value, onChange, onTypeChange, typeValue, placeholder, disabled, className, onBlur, isTextarea, name, id }, ref) => {

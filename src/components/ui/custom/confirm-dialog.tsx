@@ -52,7 +52,7 @@ export function ConfirmDialog({
   if (isMobile) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="rounded-t-3xl border-t-2 border-primary/20 p-6 pb-12 focus-visible:outline-none">
+        <SheetContent side="bottom" className="rounded-t-3xl border-t border-border p-6 pb-12 focus-visible:outline-none shadow-2xl">
           <SheetHeader className="text-left mb-6">
             <SheetTitle className="text-xl font-bold">{title}</SheetTitle>
             <SheetDescription className="text-sm">{message}</SheetDescription>

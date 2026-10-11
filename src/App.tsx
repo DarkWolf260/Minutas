@@ -29,8 +29,9 @@ import { ProtectedRoute } from '@/components/auth/protected-route';
 import { useAuth } from '@/hooks/admin';
 import { useGlobalConfig, GlobalConfigProvider } from '@/hooks/configuracion';
 import { useWorkspaceManager } from '@/lib/db/db-context';
-import { usePrecacheImages } from '@/hooks/ui';
+import { usePrecacheImages, useSidebarExpanded } from '@/hooks/ui';
 import { useOfflineUpload } from '@/hooks/novedades';
+import { CommandMenu } from '@/components/layout/command-menu';
 
 // ─── Lazy-load app pages ──────────────────────────────────────────────────────
 
@@ -44,20 +45,8 @@ import PersonalPage from '@/pages/personal';
 import PlantillasPage from '@/pages/plantillas';
 import ReporteFinalPage from '@/pages/reporte-final';
 
-const DireccionesPage = lazy(() => import('@/pages/settings/direcciones'));
 const EstadisticasPage = lazy(() => import('@/pages/estadisticas'));
 const SettingsPage = lazy(() => import('@/pages/settings'));
-const SettingsWorkspacesPage = lazy(() => import('@/pages/settings/workspaces'));
-const SettingsProfilePage = lazy(() => import('@/pages/settings/profile'));
-const SettingsBorrarDatosPage = lazy(() => import('@/pages/settings/borrar-datos'));
-const SettingsSyncPage = lazy(() => import('@/pages/settings/sync'));
-const SettingsFeedbackPage = lazy(() => import('@/pages/settings/feedback'));
-const SettingsAboutPage = lazy(() => import('@/pages/settings/about'));
-const SettingsModulesPage = lazy(() => import('@/pages/settings/modules'));
-const AboutAppPage = lazy(() => import('@/pages/settings/about/app'));
-const AboutGuidePage = lazy(() => import('@/pages/settings/about/guide'));
-const AboutChangelogPage = lazy(() => import('@/pages/settings/about/changelog'));
-const AboutTemplatesPage = lazy(() => import('@/pages/settings/about/templates'));
 const RegisterPage = lazy(() => import('@/pages/register'));
 const AdminDashboardPage = lazy(() => import('@/pages/admin'));
 const AdminUsersPage = lazy(() => import('@/pages/admin/users'));
@@ -84,6 +73,7 @@ function AppLayout() {
   const { isApproved, isAdmin, loading: statusLoading } = useUser();
   const { config, loading: configLoading } = useGlobalConfig();
   const { isCloud, currentWorkspace } = useWorkspaceManager();
+  const { isExpanded } = useSidebarExpanded();
   
   // Pre-download all reports photos for offline availability
   usePrecacheImages();
@@ -168,7 +158,10 @@ function AppLayout() {
       suppressHydrationWarning
     >
       {showNav && <SideNav />}
-      <div className={cn("flex flex-1 flex-col md:overflow-hidden relative min-w-0 overflow-x-hidden", showNav && "sm:pl-14")}>
+      <div className={cn(
+        "flex flex-1 flex-col md:overflow-hidden relative min-w-0 overflow-x-hidden transition-[padding] duration-300 ease-out",
+        showNav && (isExpanded ? "sm:pl-64" : "sm:pl-16")
+      )}>
         {showNav && <MobileNav />}
 
         {(isOffline || showOnlineBar) && location.pathname !== '/offline' && (
@@ -201,7 +194,7 @@ function AppLayout() {
             <ErrorBoundary name="MainContent">
               <Suspense fallback={<PageLoader />}>
               <div
-                key={location.pathname}
+                key={location.pathname.split('/')[1] || 'root'}
                 className="flex-1 flex flex-col min-h-0 min-w-0 animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out"
               >
                 <Routes>
@@ -212,11 +205,6 @@ function AppLayout() {
                   } />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
-                  <Route path="/settings/direcciones" element={
-                    <ProtectedRoute>
-                      <DireccionesPage />
-                    </ProtectedRoute>
-                  } />
                   <Route path="/estadisticas" element={
                     <ProtectedRoute>
                       <EstadisticasPage />
@@ -242,64 +230,9 @@ function AppLayout() {
                       <ReporteFinalPage />
                     </ProtectedRoute>
                   } />
-                  <Route path="/settings" element={
+                  <Route path="/settings/*" element={
                     <ProtectedRoute>
                       <SettingsPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/workspaces" element={
-                    <ProtectedRoute>
-                      <SettingsWorkspacesPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/profile" element={
-                    <ProtectedRoute>
-                      <SettingsProfilePage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/borrar-datos" element={
-                    <ProtectedRoute>
-                      <SettingsBorrarDatosPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/sync" element={
-                    <ProtectedRoute>
-                      <SettingsSyncPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/modules" element={
-                    <ProtectedRoute>
-                      <SettingsModulesPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/feedback" element={
-                    <ProtectedRoute>
-                      <SettingsFeedbackPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/about" element={
-                    <ProtectedRoute>
-                      <SettingsAboutPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/about/app" element={
-                    <ProtectedRoute>
-                      <AboutAppPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/about/guide" element={
-                    <ProtectedRoute>
-                      <AboutGuidePage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/about/changelog" element={
-                    <ProtectedRoute>
-                      <AboutChangelogPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/about/templates" element={
-                    <ProtectedRoute>
-                      <AboutTemplatesPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/offline" element={<OfflinePage />} />
@@ -350,18 +283,7 @@ function AppLayout() {
       </div>
 
       {showTour && <OnboardingTour onComplete={() => setShowTour(false)} />}
-      
-      {/* Desktop Version Indicator */}
-      <div className="hidden sm:flex fixed bottom-4 right-4 z-[40] pointer-events-none select-none opacity-80 hover:opacity-100 transition-opacity gap-2 items-center">
-        {currentWorkspace && (
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full backdrop-blur-md shadow-md">
-            {currentWorkspace}
-          </span>
-        )}
-        <span className="text-[10px] font-bold uppercase tracking-widest text-foreground bg-background/90 px-2.5 py-1 rounded-full border border-border backdrop-blur-md shadow-md">
-          v{APP_VERSION}
-        </span>
-      </div>
+      <CommandMenu />
     </div>
   );
 }

@@ -30,8 +30,9 @@ export const PlantillasHeader = () => {
       
       {showTabs && (
         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 w-full sm:w-auto">
-          <TabsList className="grid w-[240px] grid-cols-2 shadow-sm">
+          <TabsList className="grid w-[360px] grid-cols-3 shadow-sm">
             <TabsTrigger value="editor">Gestionar</TabsTrigger>
+            <TabsTrigger value="creator">Creador</TabsTrigger>
             <TabsTrigger value="builder">Constructor</TabsTrigger>
           </TabsList>
         </div>

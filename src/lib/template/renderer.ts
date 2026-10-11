@@ -8,19 +8,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { TemplateParserResult, SectionConfig, FieldConfig, FieldType, SnippetOption, form_dataRecord, form_dataValue } from '@/lib/types';
 import { formatStaffMember, formatStaffReporta } from '../formatters';
-/** Inline type for semantic resolution results (previously in integration-engine.ts) */
-export interface ResolutionResult {
-    concept: string;
-    value: string;
-    source: string;
-}
-
-/** Inline stub: resolves a semantic concept to its string value */
-function resolveSemanticConcept(concept: string): ResolutionResult {
-    return { concept, value: concept, source: 'inline' };
-}
 import { evaluateCondition, applyModifiers as applyTextModifier } from './evaluator';
-import { parseFieldTag } from './parser';
+import { parseTemplate as defaultParseTemplate } from './parser';
 import { logger } from '../logger';
 
 /** Internal config shape used during rendering (combines parsed template + field definitions) */
@@ -30,13 +19,14 @@ interface TemplateRenderConfig {
     layout: string[];
     templateOptions: Map<string, SnippetOption[]>;
     fieldModifiers: Map<string, string[]>;
+    defaultValues?: Map<string, string>;
 }
 
 /**
  * Renders template content with data substitution
  * 
  * Logic flow:
- * 1. Pass 1: Scan for mapping conditionals [?{Field}] Key=Value [/]
+ * 1. Pass 1: Scan for mapping blocks (::: map Field ::: Key=Value :::)
  *    - These are definition-only blocks (don't produce output).
  *    - Used to build a translation map for {Field} tags.
  * 2. Pass 2: Global substitution
@@ -56,114 +46,20 @@ export function renderContent(
 ): string {
     if (!content) return '';
     const localData = (data || {}) as form_dataRecord;
-
-    // First pass: collect all mapping results for fields
-    const mappingResults: Record<string, string> = {};
-    const mappingRegex = /\[\?\s*\{[\s\S]+?\}\s*(?:(?:!=|>=|<=|>|<|=)\s*(?:"[^"]*"|\S+?))?\s*\]([\s\S]*?)\[\/\s*\]/g;
-
-    let mappingMatch;
-    while ((mappingMatch = mappingRegex.exec(content)) !== null) {
-        const block = mappingMatch[0];
-        const innerContent = mappingMatch[1];
-        const condMatch = block.match(/^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(?:(!=|>=|<=|>|<|=)\s*("(.*?)"|(\S+?)))?\s*\]/);
-
-        if (condMatch && condMatch[1]) {
-            const condfield_id = condMatch[1].trim();
-            const operator = condMatch[2];
-
-            // Re-use findValueForField for robust case-insensitive lookup
-            const actualValue = findValueForField(
-                condfield_id,
-                localData,
-                config.sections || [],
-                {},
-                {}
-            );
-
-            const options = config.templateOptions.get(condfield_id);
-
-            if (!operator) {
-                let keyToCompare = actualValue;
-                if (options && typeof actualValue === 'string') {
-                    const opt = options.find((o: SnippetOption) => o.value === actualValue || o.label === actualValue);
-                    if (opt) keyToCompare = opt.label;
-                }
-
-                const lines = (innerContent || '').split('\n');
-                for (const line of lines) {
-                    const eqIdx = line.indexOf('=');
-                    if (eqIdx > -1) {
-                        const key = line.substring(0, eqIdx).trim();
-                        const val = line.substring(eqIdx + 1).trim();
-                        if (evaluateCondition(keyToCompare, '=', key)) {
-                            mappingResults[condfield_id] = val;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    const blockRegex =
-        /(\{[^{}]+?\}|\[\?\s*\{[^{}]+?\}\s*(?:(?:!=|>=|<=|>|<|=)\s*(?:"[^"]*"|\S+?))?\s*\][\s\S]*?\[\/\s*\])/g;
-
-    return content.replace(blockRegex, (block) => {
-        if (block.startsWith('{')) {
-            const tag = block.slice(1, -1);
-            const { field_id, modifiers } = parseFieldTag(tag, new Map());
-
-            // If we have a mapping result for this field, use it
-            let val = mappingResults[field_id] !== undefined ? mappingResults[field_id] : localData[field_id];
-
-            // If not already mapped, handle standard dropdown value conversion
-            if (mappingResults[field_id] === undefined) {
-                const options = config.templateOptions.get(field_id);
-                if (options && typeof val === 'string' && /^\d+$/.test(val)) {
-                    const idx = parseInt(val, 10);
-                    if (options[idx]) val = options[idx].value;
-                }
-            }
-
-            // Unir modificadores de la etiqueta con los modificadores detectados globalmente
-            const globalModifiers = config.fieldModifiers.get(field_id) || [];
-            const allModifiers = [...globalModifiers, ...modifiers];
-
-            return applyTextModifier(val, allModifiers);
-        } else if (block.startsWith('[?')) {
-            const condMatch = block.match(
-                /^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(?:(!=|>=|<=|>|<|=)\s*("(.*?)"|(\S+?)))?\s*\]([\s\S]*?)\[\/\s*\]$/
-            );
-            if (condMatch && condMatch[1] && condMatch[6]) {
-                const operator = condMatch[2];
-                if (operator) {
-                    // Standard condition
-                    const condfield_id = condMatch[1].trim();
-                    const targetValue = condMatch[4] || condMatch[5] || '';
-                    const innerContent = condMatch[6];
-                    const actualValue = localData[condfield_id];
-
-                    let valToCompare = actualValue;
-                    const options = config.templateOptions.get(condfield_id);
-                    if (options && /^\d+$/.test(String(actualValue))) {
-                        const idx = parseInt(String(actualValue), 10);
-                        const opt = options[idx];
-                        if (opt) valToCompare = opt.value;
-                    }
-
-                    if (evaluateCondition(valToCompare, operator, targetValue)) {
-                        return renderContent(innerContent, data, config);
-                    }
-                } else {
-                    // Mapping conditional is now handled by the {Field} tag
-                    // We return empty string here so the definition doesn't print itself.
-                    return '';
-                }
-            }
-            return '';
-        }
-        return block;
-    });
+    return renderContentWithSections(
+        content,
+        localData,
+        {
+            fields: {},
+            sections: config.sections || [],
+            layout: config.layout || [],
+            templateOptions: config.templateOptions || new Map(),
+            fieldModifiers: config.fieldModifiers || new Map(),
+            defaultValues: config.defaultValues || new Map(),
+        },
+        config.predefinedValues ? Object.fromEntries(config.predefinedValues) : {},
+        {}
+    );
 }
 
 /**
@@ -173,15 +69,6 @@ function escapeRegExp(string: string): string {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/**
- * Helper: Determines if a section is "virtual" (just a placeholder for a field)
- */
-function isVirtualSection(content: string): boolean {
-    if (!content) return false;
-    const trimmed = content.trim();
-    return trimmed.startsWith('{') && trimmed.endsWith('}');
-}
-
 // Cache for section regexes to avoid repeated RegExp creation
 const sectionRegexCache = new Map<string, RegExp>();
 
@@ -189,70 +76,43 @@ const sectionRegexCache = new Map<string, RegExp>();
  * Helper: Generates a regex to match a section block in the template
  */
 function getSectionRegex(section: SectionConfig): RegExp {
-    // Stable key for caching: section ID + repeatable flag + self-contained flag
-    const cacheKey = `${section.id}_${section.is_repeatable}_${section.is_self_contained}_${section.full_raw?.length || 0}`;
-    const cached = sectionRegexCache.get(cacheKey);
+    const rawPattern = section.full_raw || section.original_content || '';
+    if (!rawPattern) return /(?:)/g;
+
+    const cached = sectionRegexCache.get(rawPattern);
     if (cached) return cached;
 
-    let regex: RegExp;
-    if (section.full_raw) {
-        const escaped = escapeRegExp(section.full_raw).replace(/\n/g, '\\r?\\n');
-        regex = new RegExp(escaped, 'g');
-    } else {
-        const isVirtual = section.is_virtual;
-        const bodyContent = section.original_content || '';
-        const isRepeatable = section.is_repeatable;
+    const escaped = escapeRegExp(rawPattern).replace(/\n/g, '\\r?\\n');
+    const regex = new RegExp(escaped, 'g');
 
-        // Use a pattern that handles both CRLF and LF for cross-platform stability
-        const escapedBody = escapeRegExp(bodyContent).replace(/\n/g, '\\r?\\n');
-
-        if (isVirtual) {
-            regex = new RegExp(`${escapedBody}\\*`, 'g');
-        } else if (section.is_self_contained) {
-            let labelPart = '';
-            if (section.singular_title || section.plural_title || section.repeatable_item_label) {
-                const attrList = [];
-                if (section.singular_title) attrList.push(`singular\\s*=\\s*"${escapeRegExp(section.singular_title)}"`);
-                if (section.plural_title) attrList.push(`plural\\s*=\\s*"${escapeRegExp(section.plural_title)}"`);
-                if (section.repeatable_item_label) attrList.push(`sub\\s*=\\s*"${escapeRegExp(section.repeatable_item_label)}"`);
-                labelPart = attrList.map(a => `${a}\\s*`).join('');
-            } else if (section.label) {
-                const escaped = escapeRegExp(section.label);
-                labelPart = `(?:"${escaped}"|${escaped})`;
-            }
-            const pattern = `\\[\\s*${labelPart}[^\\]]*\\]${isRepeatable ? '\\*?' : ''}`;
-            regex = new RegExp(pattern, 'gs');
-        } else {
-            // Normal or Conditional Section
-            let headerPart = '';
-            if (section.condition) {
-                const cond = section.condition;
-                const opPart = cond.operator
-                    ? `\\s*${escapeRegExp(cond.operator)}\\s*(?:"${escapeRegExp(cond.value)}"|${escapeRegExp(cond.value)})`
-                    : '';
-                const escapedfield_id = escapeRegExp(cond.field_id);
-                const fieldPart = `(?:\\{\\s*${escapedfield_id}\\s*\\}|${escapedfield_id})`;
-                const modeSuffix = `(?:\\s*:(?:show|hide))?`;
-                headerPart = `\\?\\s*${fieldPart}${opPart}${modeSuffix}`;
-            } else if (section.singular_title || section.plural_title || section.repeatable_item_label) {
-                headerPart += section.singular_title ? `singular="${escapeRegExp(section.singular_title)}"\\s*` : '';
-                headerPart += section.plural_title ? `plural="${escapeRegExp(section.plural_title)}"\\s*` : '';
-                headerPart += section.repeatable_item_label ? `sub="${escapeRegExp(section.repeatable_item_label)}"\\s*` : '';
-            } else if (section.label && section.label !== 'separator') {
-                const escaped = escapeRegExp(section.label);
-                headerPart = `(?:"${escaped}"[^\\]]*|${escaped})\\s*`;
-            } else if (section.is_separator || section.label === 'separator') {
-                headerPart = '""';
-            }
-
-            const pattern = `\\[\\s*${headerPart}\\s*\\]${isRepeatable ? '\\*?' : ''}${escapedBody}\\[\\/\\s*\\]`;
-            regex = new RegExp(pattern, 'gs');
-        }
+    if (sectionRegexCache.size >= 500) {
+        const oldestKey = sectionRegexCache.keys().next().value;
+        if (oldestKey) sectionRegexCache.delete(oldestKey);
     }
-
-    if (sectionRegexCache.size > 500) sectionRegexCache.clear();
-    sectionRegexCache.set(cacheKey, regex);
+    sectionRegexCache.set(rawPattern, regex);
     return regex;
+}
+
+// WeakMap for O(1) case-insensitive key lookups without mutating or copying repeatedly
+const lowerKeyCache = new WeakMap<object, Map<string, any>>();
+
+function getFromObjectInsensitive(
+    obj: Record<string, any> | undefined | null,
+    lowerKey: string,
+    exactKey: string
+): form_dataValue {
+    if (!obj || typeof obj !== 'object') return undefined;
+    if (obj[exactKey] !== undefined) return obj[exactKey];
+
+    let map = lowerKeyCache.get(obj);
+    if (!map) {
+        map = new Map<string, any>();
+        for (const k of Object.keys(obj)) {
+            map.set(k.toLowerCase(), obj[k]);
+        }
+        lowerKeyCache.set(obj, map);
+    }
+    return map.get(lowerKey);
 }
 
 /**
@@ -327,7 +187,8 @@ function findValueForField(
 ): form_dataValue {
     // Dot-notation property access: {Director.sex}, {Reporta.cargo}, etc.
     if (field_id.includes('.')) {
-        const basefield_id = field_id.slice(0, field_id.indexOf('.'));
+        const dotIndex = field_id.indexOf('.');
+        const basefield_id = field_id.slice(0, dotIndex);
         const baseValue = findValueForField(basefield_id, data, sections, predefinedValues, dynamicPredefinedValues, itemData);
         // If the base field was found (even as empty array), attempt property resolution
         if (baseValue !== undefined) {
@@ -338,47 +199,34 @@ function findValueForField(
 
     const lowerCasefield_id = field_id.toLowerCase();
 
-
     // 1. Check dynamic predefined values
-    if (dynamicPredefinedValues[field_id] !== undefined) return dynamicPredefinedValues[field_id];
-    const foundKeyInDynamic = Object.keys(dynamicPredefinedValues).find(
-        (k) => k.toLowerCase() === lowerCasefield_id
-    );
-    if (foundKeyInDynamic) return dynamicPredefinedValues[foundKeyInDynamic];
+    const dynamicVal = getFromObjectInsensitive(dynamicPredefinedValues, lowerCasefield_id, field_id);
+    if (dynamicVal !== undefined) return dynamicVal;
 
     // 2. Check item data (for repeatable sections)
-    if (itemData && itemData[field_id] !== undefined) return itemData[field_id];
     if (itemData) {
-        const foundKeyInItem = Object.keys(itemData).find(
-            (k) => k.toLowerCase() === lowerCasefield_id
-        );
-        if (foundKeyInItem) return itemData[foundKeyInItem];
+        const itemVal = getFromObjectInsensitive(itemData, lowerCasefield_id, field_id);
+        if (itemVal !== undefined) return itemVal;
     }
 
     // 3. Check root data
-    if (data[field_id] !== undefined) return data[field_id];
-    const foundKeyInRoot = Object.keys(data).find((k) => k.toLowerCase() === lowerCasefield_id);
-    if (foundKeyInRoot) return data[foundKeyInRoot];
+    const rootVal = getFromObjectInsensitive(data, lowerCasefield_id, field_id);
+    if (rootVal !== undefined) return rootVal;
 
     // 4. Check non-repeatable section data
-    for (const section of sections.filter((s) => !s.is_repeatable && s.id in data)) {
-        const sectionData = data[section.id];
-        if (sectionData && typeof sectionData === 'object' && !Array.isArray(sectionData)) {
-            const dataObj = sectionData as Record<string, any>;
-            if (dataObj[field_id] !== undefined) return dataObj[field_id];
-            const foundKeyInSection = Object.keys(dataObj).find(
-                (k) => k.toLowerCase() === lowerCasefield_id
-            );
-            if (foundKeyInSection) return dataObj[foundKeyInSection];
+    for (const section of sections) {
+        if (!section.is_repeatable && section.id in data) {
+            const sectionData = data[section.id];
+            if (sectionData && typeof sectionData === 'object' && !Array.isArray(sectionData)) {
+                const secVal = getFromObjectInsensitive(sectionData as Record<string, any>, lowerCasefield_id, field_id);
+                if (secVal !== undefined) return secVal;
+            }
         }
     }
 
     // 5. Check predefined values
-    if (predefinedValues[field_id] !== undefined) return predefinedValues[field_id];
-    const foundKeyInPredefined = Object.keys(predefinedValues).find(
-        (k) => k.toLowerCase() === lowerCasefield_id
-    );
-    if (foundKeyInPredefined) return predefinedValues[foundKeyInPredefined];
+    const predefinedVal = getFromObjectInsensitive(predefinedValues, lowerCasefield_id, field_id);
+    if (predefinedVal !== undefined) return predefinedVal;
 
     return undefined;
 }
@@ -463,11 +311,6 @@ function renderValue(
         } else {
             rendered = value.join(' / ');
         }
-    }
-    // Semantic field rendering
-    else if (fieldConfig?.type === 'semantic') {
-        const result = resolveSemanticConcept(field_id);
-        rendered = String(result.value);
     }
     // Default rendering
     else {
@@ -563,6 +406,10 @@ function renderSection(
     const section = sections.find((s) => s.id === sectionId);
     if (!section) return '';
 
+    if (section.is_separator) {
+        return section.label ? `- *${section.label}*` : '';
+    }
+
     // Evaluate condition if present
     if (section.condition) {
         let valToCompare = findValueForField(
@@ -573,6 +420,40 @@ function renderSection(
             dynamicPredefinedValues,
             currentData
         );
+
+        let targetValue = section.condition.value;
+        const targetFieldId = section.condition.target_field_id || (
+            section.condition.value.startsWith('{') && section.condition.value.endsWith('}')
+                ? section.condition.value.slice(1, -1).trim()
+                : undefined
+        );
+
+        if (targetFieldId) {
+            const rawTargetVal = findValueForField(
+                targetFieldId,
+                data,
+                sections,
+                predefinedValues,
+                dynamicPredefinedValues,
+                currentData
+            );
+            targetValue = rawTargetVal !== undefined && rawTargetVal !== null ? String(rawTargetVal) : '';
+
+            // Also resolve dropdown labels for target field if applicable
+            const targetOptions = [
+                ...(config.templateOptions?.get(targetFieldId) || []),
+                ...(config.fields[targetFieldId]?.snippet_options || [])
+            ];
+            if (targetOptions.length && rawTargetVal !== undefined && rawTargetVal !== null) {
+                const opt = targetOptions.find(o =>
+                    String(o.value) === String(rawTargetVal) ||
+                    String(o.label) === String(rawTargetVal)
+                );
+                if (opt) {
+                    targetValue = opt.label;
+                }
+            }
+        }
 
         // Resolve dropdown labels for comparison
         const options = [
@@ -588,7 +469,6 @@ function renderSection(
 
             if (opt) {
                 // Determine if we should compare against label or value
-                const targetValue = section.condition.value;
                 if (String(opt.label) === targetValue) {
                     valToCompare = opt.label;
                 } else if (String(opt.value) === targetValue) {
@@ -606,7 +486,16 @@ function renderSection(
             return '';
         }
 
-        if (!evaluateCondition(valToCompare, section.condition.operator || '=', section.condition.value)) {
+        // When comparing two fields, if both are empty/unset, condition between two fields is not satisfied
+        if (targetFieldId) {
+            const leftEmpty = valToCompare === undefined || valToCompare === null || String(valToCompare).trim() === '';
+            const rightEmpty = !targetValue || targetValue.trim() === '';
+            if (leftEmpty && rightEmpty) {
+                return '';
+            }
+        }
+
+        if (!evaluateCondition(valToCompare, section.condition.operator || '=', targetValue)) {
             return '';
         }
     }
@@ -671,13 +560,9 @@ function renderSection(
                         }
 
                         if (isDependencyBlock) {
-                            // Dependency block is a special case where we just remove the definition 
-                            // but the header construction is same as normal. 
-                            // We can use the regex generated by getSectionRegex.
-                            const cleanRegex = getSectionRegex(nestedSection);
-                            itemContent = itemContent.replace(cleanRegex, '');
+                            itemContent = itemContent.replace(nestedRegex, '');
                         } else {
-                            const renderedNested = renderSection(
+                            let renderedNested = renderSection(
                                 id,
                                 data,
                                 sections,
@@ -688,42 +573,61 @@ function renderSection(
                                 item,
                                 mappingResults
                             );
-                            itemContent = itemContent.replace(nestedRegex, renderedNested);
+                            if (renderedNested && !nestedSection.is_virtual && (nestedSection.full_raw || '').endsWith('\n') && !renderedNested.endsWith('\n')) {
+                                renderedNested = `${renderedNested}\n`;
+                            }
+                            itemContent = itemContent.replace(nestedRegex, () => renderedNested);
                         }
                     }
                 } else {
                     const baseVal = findValueForField(id, data, sections, predefinedValues, dynamicPredefinedValues, item);
-                    // Case-insensitive mapping results lookup
+                    const defaultVal = config.defaultValues?.get(id) ?? config.fields[id]?.default_value;
                     const lowerId = id.toLowerCase();
-                    const mappingKey = Object.keys(mappingResults).find(k => k.toLowerCase() === lowerId);
-                    const val = mappingKey !== undefined ? mappingResults[mappingKey] : baseVal;
+                    const mappedVal = mappingResults[lowerId] !== undefined
+                        ? mappingResults[lowerId]
+                        : mappingResults[id];
+                    const val = mappedVal !== undefined
+                        ? mappedVal
+                        : (baseVal !== undefined && baseVal !== '' ? baseVal : defaultVal);
 
                     itemContent = itemContent.replace(
                         new RegExp(`\\{${escapeRegExp(id)}(:[^|}{]+)*(?:\\|[^{}]+?)?\\}(\\*)?`, 'gi'),
-                        renderValue(val, id, fields, config, { ...data, ...item })
+                        () => renderValue(val, id, fields, config, { ...data, ...item })
                     );
                 }
             });
 
-            if (section.is_self_contained && !section.is_repeatable) {
-                // For non-repeatable self-contained sections, we preserve all static text lines
-                // to avoid stripping intentional headers that don't have fields on the same line.
-                // The final cleanup will handle empty fields.
+            if (section.is_repeatable) {
+                const originalLines = (section.original_content || '').split(/\r?\n/);
+                const lines = itemContent.split(/\r?\n/);
+                const filteredLines = lines.filter((line, lineIdx) => {
+                    // Blank/whitespace-only line: always keep (intentional spacing)
+                    if (line.trim().length === 0) return true;
+
+                    const origLine = originalLines[lineIdx] ?? '';
+                    const hadField = /\{[^{}]+\}/.test(origLine);
+
+                    // If the line never had a field, it's a static label/header -> keep it!
+                    if (!hadField) return true;
+
+                    // If the line had a field, check if any alphanumeric content remains
+                    const alphanumeric = line
+                        .replace(/^[ \t]*(?:-[ \t]*)?(?:\*{1,2}[^*:]+:\*{1,2}|"[^"]*")/g, '')
+                        .replace(/[*:\-\s"']/g, '')
+                        .trim();
+
+                    return alphanumeric.length > 0;
+                });
+                itemContent = filteredLines.join('\n');
             } else if (section.is_self_contained) {
                 const lines = itemContent.split(/\r?\n/);
                 const filteredLines = lines.filter(line => {
                     // Blank/whitespace-only line: always keep (intentional spacing)
                     if (line.trim().length === 0) return true;
 
-                    // Check if any alphanumeric content remains after stripping decorative chars.
-                    // If nothing remains, this was a "- *LABEL:* {empty-field}" line → remove it.
                     const alphanumeric = line
-                        .replace(/- \*\*[^*]+:\*\*/g, '')  // - **LABEL:**
-                        .replace(/- \*[^*]+:\*/g, '')        // - *LABEL:*
-                        .replace(/\*\*[^*]+:\*\*/g, '')      // **LABEL:**
-                        .replace(/\*[^*]+:\*/g, '')          // *LABEL:*
-                        .replace(/^[ \t]*-[ \t]*/gm, '')     // leading bullet
-                        .replace(/[*\-:"'\s]/g, '')          // remaining decorative + quotes
+                        .replace(/^[ \t]*(?:-[ \t]*)?(?:\*{1,2}[^*:]+:\*{1,2}|"[^"]*")/g, '')
+                        .replace(/[*:\-\s"']/g, '')
                         .trim();
 
                     return alphanumeric.length > 0;
@@ -744,38 +648,54 @@ function renderSection(
                         itemContent = `${labelPrefix} ${itemContent.replace(/^\s+/, '')}`;
                     }
                 } else if (itemsWithContent.length > 1) {
-                    // Format: - *NOVEDAD #01*\ncontent — only when multiple items
-                    const labelPrefix = `- *${section.repeatable_item_label} #${String(index + 1).padStart(2, '0')}*`;
-                    // Only trim leading newline if it was explicitly there to avoid triple newlines
-                    const cleaned = itemContent.startsWith('\n') ? itemContent.slice(1) : itemContent;
-                    itemContent = `${labelPrefix}\n${cleaned}`;
+                    const hasDistinctSubLabel =
+                        section.repeatable_item_label.toLowerCase() !== (section.label || '').toLowerCase() &&
+                        section.repeatable_item_label.toLowerCase() !== (section.plural_title || '').toLowerCase();
+
+                    // Only add prefix if there is an explicit distinct sub-label (e.g. ::: section DATOS DE LOS PACIENTES | PACIENTE* :::)
+                    // If there is NO distinct sub-label (e.g. ::: section DATOS OPERACIONALES* :::),
+                    // the top header is already rendered once, so do not repeat or number items.
+                    if (hasDistinctSubLabel) {
+                        const labelPrefix = `- *${section.repeatable_item_label} #${String(index + 1).padStart(2, '0')}*`;
+                        // Only trim leading newlines to avoid extra blank line between prefix and first field
+                        const cleaned = itemContent.replace(/^\r?\n+/, '');
+                        itemContent = `${labelPrefix}\n${cleaned}`;
+                    }
                 }
             }
-            return section.condition ? itemContent.trim() : itemContent;
+            if (section.condition) {
+                const isInline = !section.original_content?.includes('\n') && !section.full_raw?.includes('\n');
+                if (isInline) {
+                    return itemContent;
+                }
+                const hasTrailingNewline = (section.original_content || '').endsWith('\n') || (section.full_raw || '').endsWith('\n');
+                const trimmed = itemContent.trim();
+                return trimmed ? (hasTrailingNewline ? `${trimmed}\n` : trimmed) : '';
+            }
+            return itemContent;
         });
 
+
+
     // Determine appropriate joiner: 
-    // If original_content was virtual, always join with \n. 
-    // Otherwise, join with \n ONLY if items don't already end with a newline.
+    // 1. Virtual items -> joined by single \n
+    // 2. Multiline items -> joined by \n\n (for clean blank line separation between records)
+    // 3. Single line items -> joined by \n
     const isVirtual = section.is_virtual;
     const hasInternalNewlines = renderedItemsArray.some(item => (item || '').trim().includes('\n'));
-    const anyEndsWithNewline = renderedItemsArray.some(item => (item || '').endsWith('\n'));
+    const joiner = isVirtual ? '\n' : (hasInternalNewlines ? '\n\n' : '\n');
+    renderedItems = hasInternalNewlines
+        ? renderedItemsArray.map(item => item.trimEnd()).join(joiner)
+        : renderedItemsArray.join(joiner);
 
-    // Choose joiner:
-    // 1. Virtual items -> joined by single \n
-    // 2. Multiline items that don't already end in \n -> joined by \n\n (for separation)
-    // 3. Items already ending in \n -> joined by '' (respect template)
-    // 4. Single line items -> joined by \n
-    const joiner = isVirtual ? '\n' : (anyEndsWithNewline ? '' : (hasInternalNewlines ? '\n\n' : '\n'));
-    renderedItems = renderedItemsArray.join(joiner);
-
-    // Add section title only for singular/plural sections (not plain labeled ones)
-    if (section.singular_title || section.plural_title) {
+    // Add section title only for repeatable sections (or sections with singular/plural titles), but never for virtual inline fields
+    if (!section.is_virtual && section.is_repeatable && (section.singular_title || section.plural_title || section.label)) {
         const title = itemsWithContent.length > 1 && section.plural_title
             ? section.plural_title
-            : (section.singular_title || section.plural_title!);
+            : (section.singular_title || section.plural_title || section.label);
         const header = `- *${title}*`;
-        renderedItems = `${header}\n${renderedItems}`;
+        const cleanedItems = renderedItems.replace(/^\r?\n+/, '');
+        renderedItems = `${header}\n${cleanedItems}`;
     }
 
     return renderedItems;
@@ -797,48 +717,40 @@ export function renderContentWithSections(
     const { sections = [], fields = {} } = config;
     let finalContent = template;
 
-    // First pass: collect all mapping results for fields
+    // First pass: collect all mapping results for fields from mapping sections
     const mappingResults: Record<string, string> = {};
-    const mappingRegex = /\[\?\s*\{[\s\S]+?\}\s*(?:(?:!=|>=|<=|>|<|=)\s*(?:"[^"]*"|\S+?))?\s*\]([\s\S]*?)\[\/\s*\]/g;
-    let mappingMatch;
-    while ((mappingMatch = mappingRegex.exec(template)) !== null) {
-        const block = mappingMatch[0];
-        const innerContent = mappingMatch[1];
-        const condMatch = block.match(/^\[\?\s*\{\s*([\s\S]+?)\s*\}\s*(?:(!=|>=|<=|>|<|=)\s*("(.*?)"|(\S+?)))?\s*\]/);
-        if (condMatch && condMatch[1]) {
-            const condfield_id = condMatch[1].trim();
-            const operator = condMatch[2];
-            const actualValue = findValueForField(condfield_id, data, sections, predefinedValues, dynamicPredefinedValues);
-            if (!operator) {
-                let keyToCompare = actualValue;
-                const options = config.templateOptions?.get(condfield_id);
-                if (options && typeof actualValue === 'string') {
-                    const opt = options.find((o) => o.value === actualValue || o.label === actualValue);
-                    if (opt) keyToCompare = opt.label;
-                }
-                const lines = (innerContent || '').split('\n');
-                for (const line of lines) {
-                    const eqIdx = line.indexOf('=');
-                    if (eqIdx > -1) {
-                        const key = line.substring(0, eqIdx).trim();
-                        const val = line.substring(eqIdx + 1).trim();
-                        if (evaluateCondition(keyToCompare, '=', key)) {
-                            mappingResults[condfield_id] = val;
-                            break;
-                        }
-                    }
+    sections.filter((s) => s.is_mapping).forEach((s) => {
+        const condfield_id = s.condition?.field_id;
+        if (!condfield_id) return;
+        const actualValue = findValueForField(condfield_id, data, sections, predefinedValues, dynamicPredefinedValues);
+        let keyToCompare = actualValue;
+        const options = config.templateOptions?.get(condfield_id);
+        if (options && typeof actualValue === 'string') {
+            const opt = options.find((o) => o.value === actualValue || o.label === actualValue);
+            if (opt) keyToCompare = opt.label;
+        }
+        const lines = (s.original_content || '').split('\n');
+        for (const line of lines) {
+            const eqIdx = line.indexOf('=');
+            if (eqIdx > -1) {
+                const key = line.substring(0, eqIdx).trim();
+                const val = line.substring(eqIdx + 1).trim();
+                if (evaluateCondition(keyToCompare, '=', key)) {
+                    mappingResults[condfield_id] = val;
+                    mappingResults[condfield_id.toLowerCase()] = val;
+                    break;
                 }
             }
         }
-    }
+    });
 
     const topLevelSections = sections.filter((s: SectionConfig) => {
-        return config.layout.includes(s.id);
+        return !s.parent_id;
     });
 
     topLevelSections.forEach((section: SectionConfig) => {
         const sectionRegex = getSectionRegex(section);
-        const rendered = renderSection(
+        let rendered = renderSection(
             section.id,
             data,
             sections,
@@ -851,32 +763,26 @@ export function renderContentWithSections(
         );
 
         if (sectionRegex) {
-            finalContent = finalContent.replace(sectionRegex, rendered);
+            if (rendered && (section.full_raw || '').endsWith('\n') && !rendered.endsWith('\n')) {
+                rendered = `${rendered}\n`;
+            }
+            finalContent = finalContent.replace(sectionRegex, () => rendered);
         }
     });
 
-
-
-
-
-
-
-
-    // Final cleanup of loose tags (omit semantic tags for post-processing).
-    // Regex extended to also handle dotted field names like {Director.sex}.
+    // Final cleanup of loose tags (handles normal and dotted field names like {Director.sex})
     finalContent = finalContent.replace(
         /\{([^:{}]+?(?:\.[^:{}]+?)?)(:[^|}{]+)*(?:\|[^{}]+?)?\}/g,
-        (match, field_id: string) => {
-            if (match.includes(':semantic')) return match;
+        (_, field_id: string) => {
             field_id = field_id.trim();
             const lowerfield_id = field_id.toLowerCase();
             const baseVal = findValueForField(field_id, data, sections, predefinedValues, dynamicPredefinedValues);
+            const defaultVal = config.defaultValues?.get(field_id) ?? config.fields[field_id]?.default_value;
 
             // Mapping results are only applicable for non-dotted field names
-            const mappingKey = !field_id.includes('.')
-                ? Object.keys(mappingResults).find(k => k.toLowerCase() === lowerfield_id)
-                : undefined;
-            const formValue = mappingKey !== undefined ? mappingResults[mappingKey] : baseVal;
+            const formValue = (!field_id.includes('.') && mappingResults[lowerfield_id] !== undefined)
+                ? mappingResults[lowerfield_id]
+                : (baseVal !== undefined && baseVal !== '' ? baseVal : defaultVal);
 
             return hasContent(formValue) ? renderValue(formValue, field_id, fields, config) : '';
         }
@@ -911,12 +817,13 @@ export function renderFinalReport(
     predefinedValues: Record<string, string>,
     summaryOnly: boolean = false,
     dynamicPredefinedValues: Record<string, string> = {},
-    parseTemplate: (template: string) => TemplateParserResult,
-    recordReportAudit: (reportId: string, audit: ResolutionResult[]) => void
+    parseTemplateFn?: (template: string) => TemplateParserResult,
+    _recordReportAudit?: unknown
 ): string {
     try {
-        const { sections, layout, fieldNames, fieldTypes, templateOptions, fieldModifiers } =
-            parseTemplate(template);
+        const parseFn = parseTemplateFn || defaultParseTemplate;
+        const { sections, layout, fieldNames, fieldTypes, templateOptions, fieldModifiers, defaultValues } =
+            parseFn(template);
 
         // Build final config with all necessary data
         const finalConfig: TemplateRenderConfig = {
@@ -925,12 +832,17 @@ export function renderFinalReport(
             layout,
             templateOptions,
             fieldModifiers,
+            defaultValues,
         };
 
         fieldNames.forEach((fieldName: string) => {
             const fieldConfig: FieldConfig = config.fields[fieldName]
                 ? { ...config.fields[fieldName] }
                 : { type: 'text' as FieldType, label: fieldName };
+
+            if (defaultValues?.has(fieldName)) {
+                fieldConfig.default_value = defaultValues.get(fieldName);
+            }
 
             finalConfig.fields[fieldName] = fieldConfig;
             const options = templateOptions.get(fieldName);
@@ -951,54 +863,28 @@ export function renderFinalReport(
             dynamicPredefinedValues
         );
 
-        // Replace photos/fotos markers with empty string (or clean spacing)
-        fullRenderedContent = fullRenderedContent
-            .replace(/\{photos\}/gi, '')
-            .replace(/\{fotos\}/gi, '');
+        // Replace photos/fotos markers in a single pass
+        fullRenderedContent = fullRenderedContent.replace(/\{(?:photos|fotos)\}/gi, '');
 
         // Extract summary if needed
-        let summaryContent = '';
         if (summaryOnly) {
             const summaryRegex = /<<([\s\S]*?)>>/g;
             const matches = Array.from(fullRenderedContent.matchAll(summaryRegex));
-            if (matches.length > 0) {
-                summaryContent = matches.map((match) => match[1]).join('\n\n');
-            }
-            fullRenderedContent = summaryContent;
+            fullRenderedContent = matches.length > 0
+                ? matches.map((match) => (match[1] ?? '').trim()).join('\n\n')
+                : '';
         }
 
-        // Final cleanup and semantic post-processing
-        let finalOutput = fullRenderedContent
-            .replace(/<<|>>/g, '') // Remove summary markers
-            .replace(/\[\?.*?\][\s\S]*?\[\/\s*\]/g, '') // Remove unprocessed conditional blocks
-            .replace(/\[""\]\s*/g, '') // Remove separators
-            .replace(/\[[\s\S]*?\](\*)?/g, ''); // Remove unprocessed section blocks (don't swallow trailing whitespace)
-
-        // Resolve literal semantic tags
-        const semanticRegex = /\{([\s\S]+?):semantic\}/g;
-        const semanticAudit: ResolutionResult[] = [];
-
-        finalOutput = finalOutput.replace(semanticRegex, (_, concept) => {
-            const result = resolveSemanticConcept(concept.trim());
-            semanticAudit.push(result);
-            return String(result.value);
-        });
-
-        // Record audit if there's semantic data
-        if (data.id && semanticAudit.length > 0) {
-            recordReportAudit(String(data.id), semanticAudit);
-        }
-
-        // Final unescaping of characters (e.g. \* -> *, \\ -> \)
-        finalOutput = finalOutput.replace(/\\([\*\{\}\[\]\\])/g, '$1');
-
-        // Collapse blank lines left by non-rendered conditional blocks.
-        // Reduces 3+ consecutive newlines to a maximum of 2 (one visible blank line).
-        finalOutput = finalOutput.replace(/\n{3,}/g, '\n\n');
-
-        // Remove lines that became entirely whitespace after substitution
-        // (e.g. a label line like "- *DIRECTOR:*" whose field resolved to empty).
-        finalOutput = finalOutput.replace(/^[\t ]+$/gm, '');
+        // Final cleanup
+        const finalOutput = fullRenderedContent
+            .replace(/^[ \t]*<<[ \t]*\r?\n/gm, '') // Standalone line with only <<
+            .replace(/\r?\n[ \t]*>>[ \t]*$/gm, '') // Standalone line with only >>
+            .replace(/<<|>>/g, '') // Remove remaining summary markers
+            .replace(/:::[^:\n\r]*:::/g, '') // Remove unrendered single-line ::: directives
+            .replace(/:::[\s\S]*?:::/g, '') // Remove unprocessed multiline ::: blocks
+            .replace(/\\([*{}:[\]\\])/g, '$1') // Final unescaping of characters (\* -> *, \: -> :)
+            .replace(/^[\t ]+$/gm, '') // Remove whitespace-only lines
+            .replace(/\n{3,}/g, '\n\n'); // Collapse excessive blank lines
 
         return finalOutput.trim();
     } catch (error) {

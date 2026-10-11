@@ -8,8 +8,10 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Input } from '@/components/ui/input';
 import { useWhatsAppBot } from '@/hooks/whatsapp';
 import { useSettings } from '@/hooks/configuracion';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 
 export function SyncWhatsApp() {
+  const { currentWorkspace } = useWorkspaceManager();
   const { settings, saveSettings } = useSettings();
   const [localUrl, setLocalUrl] = useState('http://localhost:3001');
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
@@ -21,6 +23,18 @@ export function SyncWhatsApp() {
       setLocalUrl(settings.whatsapp_local_url);
     }
   }, [settings?.whatsapp_local_url]);
+
+  // Si el bot se cerró o desconectó y había chats seleccionados, limpiarlos automáticamente
+  useEffect(() => {
+    if (!bot.isLoading && (!bot.isAvailable || !bot.status.isReady) && (settings?.whatsapp_default_chat_ids || []).length > 0) {
+      saveSettings({ whatsapp_default_chat_ids: [] });
+    }
+  }, [bot.isLoading, bot.isAvailable, bot.status.isReady, settings?.whatsapp_default_chat_ids, saveSettings]);
+
+  const handleLogout = async () => {
+    await saveSettings({ whatsapp_default_chat_ids: [] });
+    await bot.logout();
+  };
 
   const handleToggleGroup = async (groupId: string) => {
     if (!settings) return;
@@ -51,15 +65,27 @@ export function SyncWhatsApp() {
           </CardTitle>
           
           {bot.isAvailable && (
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-              bot.status.isReady 
-                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' 
-                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-            }`}>
-              <div className={`h-1.5 w-1.5 rounded-full ${
-                bot.status.isReady ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-              }`} />
-              {bot.status.isReady ? 'Conectado' : 'Pendiente'}
+            <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                bot.status.isReady 
+                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' 
+                  : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+              }`}>
+                <div className={`h-1.5 w-1.5 rounded-full ${
+                  bot.status.isReady ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                }`} />
+                {bot.status.isReady ? 'Conectado' : 'Pendiente'}
+              </div>
+              {bot.status.isReady && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="h-7 text-xs text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 px-2 font-medium"
+                >
+                  Cerrar sesión
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -112,15 +138,30 @@ export function SyncWhatsApp() {
             <span>Verificando estado del bot local...</span>
           </div>
         ) : !bot.isAvailable ? (
-          <div className="flex flex-col items-center justify-center py-8 text-sm text-muted-foreground gap-3 px-4 text-center">
-            <div className="p-3 bg-amber-500/10 rounded-full text-amber-500">
-              <AlertTriangle className="h-6 w-6" />
+          bot.status.activeWorkspace && currentWorkspace && bot.status.activeWorkspace !== currentWorkspace ? (
+            <div className="flex flex-col items-center justify-center py-8 text-sm gap-3 px-4 text-center">
+              <div className="p-3 bg-amber-500/10 rounded-full text-amber-500">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <span className="font-bold text-foreground">Bot activo en otra área de trabajo</span>
+              <p className="text-xs text-muted-foreground max-w-[280px]">
+                El dispositivo principal tiene el bot enlazado al área <strong>"{bot.status.activeWorkspace}"</strong>.
+              </p>
+              <p className="text-[11px] text-muted-foreground/80 max-w-[260px]">
+                Para interactuar con el bot, debes cambiar a esa misma área de trabajo o cambiar de área en el dispositivo principal.
+              </p>
             </div>
-            <span className="font-bold text-foreground">Servidor no disponible</span>
-            <p className="text-xs text-muted-foreground max-w-[250px]">
-              Asegúrate de que el bot de WhatsApp esté encendido y que la URL configurada sea correcta.
-            </p>
-          </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-sm text-muted-foreground gap-3 px-4 text-center">
+              <div className="p-3 bg-amber-500/10 rounded-full text-amber-500">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <span className="font-bold text-foreground">Servidor no disponible</span>
+              <p className="text-xs text-muted-foreground max-w-[250px]">
+                Asegúrate de que el bot de WhatsApp esté encendido y que la URL configurada sea correcta.
+              </p>
+            </div>
+          )
         ) : bot.status.isReady ? (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -164,59 +205,77 @@ export function SyncWhatsApp() {
               </div>
               
               <ScrollArea className="h-56 border rounded-xl bg-background/30 backdrop-blur-sm overflow-hidden">
-                <div className="p-2 space-y-1">
-                  <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Grupos</div>
-                  {bot.chats.filter(c => c.isGroup && (c.name || '').toLowerCase().includes(searchQuery.toLowerCase())).map((chat) => {
-                    const isChecked = (settings?.whatsapp_default_chat_ids || []).includes(chat.id);
-                    return (
-                      <div 
-                        key={chat.id} 
-                        className={`flex items-center justify-between p-2 rounded-lg transition-colors cursor-pointer ${
-                          isChecked ? 'bg-emerald-500/10' : 'hover:bg-muted/50'
-                        }`}
-                        onClick={() => handleToggleGroup(chat.id)}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className={`p-2 rounded-full ${isChecked ? 'bg-emerald-500/20 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
-                            <Users className="h-4 w-4" />
+                {bot.chats.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full py-14 gap-2.5 text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin text-emerald-500" />
+                    <span className="text-xs font-medium">
+                      {bot.status.statusMessage && bot.status.statusMessage !== 'Listo'
+                        ? bot.status.statusMessage
+                        : 'Cargando lista de chats de WhatsApp...'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => bot.loadChats()}
+                      className="text-[11px] text-emerald-600 hover:underline mt-1 font-semibold"
+                    >
+                      Intentar de nuevo
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-2 space-y-1">
+                    <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Grupos</div>
+                    {bot.chats.filter(c => c.isGroup && (c.name || '').toLowerCase().includes(searchQuery.toLowerCase())).map((chat) => {
+                      const isChecked = (settings?.whatsapp_default_chat_ids || []).includes(chat.id);
+                      return (
+                        <div 
+                          key={chat.id} 
+                          className={`flex items-center justify-between p-2 rounded-lg transition-colors cursor-pointer ${
+                            isChecked ? 'bg-emerald-500/10' : 'hover:bg-muted/50'
+                          }`}
+                          onClick={() => handleToggleGroup(chat.id)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className={`p-2 rounded-full ${isChecked ? 'bg-emerald-500/20 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
+                              <Users className="h-4 w-4" />
+                            </div>
+                            <span className="text-sm font-medium">{chat.name || chat.id}</span>
                           </div>
-                          <span className="text-sm font-medium">{chat.name || chat.id}</span>
-                        </div>
-                        <div className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors ${
-                          isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-muted-foreground/30'
-                        }`}>
-                          {isChecked && <Check className="h-3 w-3" />}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  
-                  <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-3">Contactos</div>
-                  {bot.chats.filter(c => !c.isGroup && (c.name || '').toLowerCase().includes(searchQuery.toLowerCase())).map((chat) => {
-                    const isChecked = (settings?.whatsapp_default_chat_ids || []).includes(chat.id);
-                    return (
-                      <div 
-                        key={chat.id} 
-                        className={`flex items-center justify-between p-2 rounded-lg transition-colors cursor-pointer ${
-                          isChecked ? 'bg-emerald-500/10' : 'hover:bg-muted/50'
-                        }`}
-                        onClick={() => handleToggleGroup(chat.id)}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className={`p-2 rounded-full ${isChecked ? 'bg-emerald-500/20 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
-                            <User className="h-4 w-4" />
+                          <div className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors ${
+                            isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-muted-foreground/30'
+                          }`}>
+                            {isChecked && <Check className="h-3 w-3" />}
                           </div>
-                          <span className="text-sm font-medium">{chat.name || chat.id}</span>
                         </div>
-                        <div className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors ${
-                          isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-muted-foreground/30'
-                        }`}>
-                          {isChecked && <Check className="h-3 w-3" />}
+                      );
+                    })}
+                    
+                    <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-3">Contactos</div>
+                    {bot.chats.filter(c => !c.isGroup && (c.name || '').toLowerCase().includes(searchQuery.toLowerCase())).map((chat) => {
+                      const isChecked = (settings?.whatsapp_default_chat_ids || []).includes(chat.id);
+                      return (
+                        <div 
+                          key={chat.id} 
+                          className={`flex items-center justify-between p-2 rounded-lg transition-colors cursor-pointer ${
+                            isChecked ? 'bg-emerald-500/10' : 'hover:bg-muted/50'
+                          }`}
+                          onClick={() => handleToggleGroup(chat.id)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className={`p-2 rounded-full ${isChecked ? 'bg-emerald-500/20 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
+                              <User className="h-4 w-4" />
+                            </div>
+                            <span className="text-sm font-medium">{chat.name || chat.id}</span>
+                          </div>
+                          <div className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors ${
+                            isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-muted-foreground/30'
+                          }`}>
+                            {isChecked && <Check className="h-3 w-3" />}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </ScrollArea>
               
               <p className="text-[11px] text-muted-foreground mt-2 px-1">
@@ -232,8 +291,12 @@ export function SyncWhatsApp() {
             
             {bot.status.qr ? (
               <div className="flex flex-col items-center gap-4">
-                <div className="p-4 bg-white rounded-2xl border-2 border-dashed border-emerald-500/30">
-                  <QRCodeSVG value={bot.status.qr} size={180} />
+                <div className="p-4 bg-white rounded-2xl border-2 border-dashed border-emerald-500/30 shadow-sm animate-in fade-in duration-200">
+                  <QRCodeSVG key={bot.status.qr} value={bot.status.qr} size={180} />
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Código QR sincronizado en tiempo real</span>
                 </div>
                 <p className="text-xs text-muted-foreground text-center max-w-[250px]">
                   Escanea este código QR con la app de WhatsApp en tu teléfono para vincular la cuenta.
@@ -246,7 +309,7 @@ export function SyncWhatsApp() {
               </div>
             )}
             
-            <Button size="sm" variant="outline" onClick={bot.checkStatus} className="w-full border-emerald-500/20 hover:bg-emerald-500/5 hover:text-emerald-600">
+            <Button size="sm" variant="outline" onClick={() => bot.checkStatus(true)} className="w-full border-emerald-500/20 hover:bg-emerald-500/5 hover:text-emerald-600">
               Verificar estado
             </Button>
           </div>

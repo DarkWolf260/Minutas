@@ -1,15 +1,13 @@
 import { useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { usePersonnel } from '@/hooks/personal/use-personnel';
-import { useRoles } from '@/hooks/personal/use-roles';
-import { useDepartments } from '@/hooks/personal/use-departments';
-import { useGuards } from '@/hooks/guardias';
+import { useOrganization } from '@/hooks/personal/use-organization';
 import { useUnits } from '@/hooks/configuracion';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import type { StaffMember } from '@/lib/types';
 import { toast } from 'sonner';
 
 export function usePersonal() {
+  const org = useOrganization();
   const {
     personnel: personal,
     addMember: añadirMiembro,
@@ -18,13 +16,15 @@ export function usePersonal() {
     removeMember: eliminarMiembro,
     removeMembers: eliminarMiembros,
     savePersonnel: guardarPersonal,
-    isLoaded: personalCargado,
     isCedulaDuplicate: esCedulaDuplicada,
-  } = usePersonnel();
-  
-  const { roles, saveRoles: guardarRoles, isLoaded: rolesCargados } = useRoles();
-  const { departments: departamentos, saveDepartments: guardarDepartamentos, isLoaded: departamentosCargados } = useDepartments();
-  const { guards: guardias, saveGuards: guardarGuardias, isLoaded: guardiasCargados } = useGuards();
+    roles,
+    saveRoles: guardarRoles,
+    departments: departamentos,
+    saveDepartments: guardarDepartamentos,
+    guards: guardias,
+    saveGuards: guardarGuardias,
+  } = org;
+
   const { units: unidades, isLoaded: unidadesCargadas } = useUnits();
   const { currentWorkspace: workspaceActual } = useWorkspaceManager();
 
@@ -42,7 +42,7 @@ export function usePersonal() {
   const [idsSeleccionados, setIdsSeleccionados] = useState<string[]>([]);
   const [esDialogOpenConfirmarEliminarMasivo, setEsDialogOpenConfirmarEliminarMasivo] = useState(false);
 
-  const estaCargando = !personalCargado || !rolesCargados || !departamentosCargados || !guardiasCargados || !unidadesCargadas;
+  const estaCargando = !org.isLoaded || !unidadesCargadas;
 
   const manejarEditar = (miembro: StaffMember) => {
     setMiembroEditando(miembro);
@@ -103,6 +103,19 @@ export function usePersonal() {
     toast.success(`${idsSeleccionados.length} personas eliminadas`);
   };
 
+  const manejarCambioEstadoMasivo = async (nuevoEstado: any) => {
+    if (idsSeleccionados.length === 0) return;
+    try {
+      await Promise.all(
+        idsSeleccionados.map((id) => actualizarMiembro(id, { status: nuevoEstado }))
+      );
+      toast.success(`Estado actualizado a "${nuevoEstado}" para ${idsSeleccionados.length} personas`);
+      setIdsSeleccionados([]);
+    } catch {
+      toast.error('Error al actualizar el estado del personal seleccionado');
+    }
+  };
+
   const manejarVerHistorial = (miembro: StaffMember) => {
     setMiembroVerHistorial(miembro);
     setEsDialogOpenHistorial(true);
@@ -130,8 +143,8 @@ export function usePersonal() {
     esDialogOpenConfirmarEliminarMasivo,
     setEsDialogOpenConfirmarEliminarMasivo,
     estaCargando,
-    rolesCargados,
-    departamentosCargados,
+    rolesCargados: org.rolesLoaded,
+    departamentosCargados: org.departmentsLoaded,
     
     // Acciones
     manejarEditar,
@@ -140,6 +153,7 @@ export function usePersonal() {
     manejarCancelar,
     manejarEliminar,
     manejarEliminacionMasiva,
+    manejarCambioEstadoMasivo,
     manejarVerHistorial,
     añadirMiembros,
     guardarRoles,

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-import { Textarea } from '@/components/ui/textarea';
+import { TemplateSyntaxEditor } from './template-syntax-editor';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { parseTemplate, resolveTemplateTitle } from '@/lib/template-parser';
@@ -251,16 +251,15 @@ export function TemplateBuilder({
               </div>
             </div>
 
-            {/* Editor Area - This fills the rest of the vertical space */}
-            <div className="flex-1 flex flex-col min-h-0 rounded-md border shadow-sm bg-background">
-              <Textarea
-                ref={textareaRef}
-                value={templateContent}
-                onChange={(e) => setTemplateContent(e.target.value)}
-                className="flex-1 w-full font-mono text-sm leading-relaxed resize-none p-4 border-0 focus-visible:ring-0 overflow-y-auto"
-                placeholder="Escribe el contenido de tu plantilla aquí..."
-              />
-            </div>
+            {/* Editor Area with Syntax Highlighting */}
+            <TemplateSyntaxEditor
+              textareaRef={textareaRef}
+              value={templateContent}
+              onChange={setTemplateContent}
+              onSave={handleSave}
+              className="flex-1 min-h-0"
+              placeholder="Escribe el contenido de tu plantilla aquí..."
+            />
           </CardContent>
         </Card>
 

@@ -8,13 +8,15 @@ export function useMobileNav() {
   const { settings } = useSettings();
   const { user } = useAuth();
 
-  // Dynamic name logic: Use Analista de CEMUPRAD if a guard is active
+  // Dynamic name logic: Use Analista de Sala de Monitoreo if a guard is active
   const analyst = settings.is_guard_open 
-    ? settings.orden_del_dia_draft?.staff?.['Analista de CEMUPRAD']?.[0]
+    ? (settings.orden_del_dia_draft?.staff?.['Analista de Sala de Monitoreo']?.[0]
+      || settings.orden_del_dia_draft?.staff?.['Analista de CEMUPRAD']?.[0]
+      || Object.entries(settings.orden_del_dia_draft?.staff || {}).find(([k]) => k.toLowerCase().includes('analista'))?.[1]?.[0])
     : null;
     
   const displayName = analyst?.name || profile.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario';
-  const displayDepartment = analyst ? 'Analista CEMUPRAD' : (profile.department || 'Área no asignada');
+  const displayDepartment = analyst ? 'Analista Sala de Monitoreo' : (profile.department || 'Área no asignada');
   const initials = getInitials(displayName);
 
   return {

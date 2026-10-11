@@ -3,7 +3,7 @@
  * so we can trace why sections don't render in the browser preview.
  */
 import { describe, it, expect } from 'vitest';
-import { parseTemplate, renderFinalReport } from '../../template-parser';
+import { parseTemplate, renderFinalReport } from '../index';
 import type { TemplateConfig, SectionConfig, FieldType, SnippetOption } from '@/lib/types';
 
 function generateMockData(
@@ -78,33 +78,27 @@ function previewRender(templateContent: string): string {
 }
 
 describe('Template Preview - Secciones', () => {
-    it('renders a normal section [Label]{field}[/]', () => {
-        const template = '[Novedades]\n{descripcion}\n[/]';
+    it('renders a normal section ::: Label ::: {field} :::', () => {
+        const template = '::: Novedades :::\n{descripcion}\n:::';
         const result = previewRender(template);
-        console.log('Normal section result:', result);
         expect(result).toContain('Ejemplo descripcion');
     });
 
-    it('renders a quoted section ["Label"]{field}[/]', () => {
-        const template = '["Novedades"]\n{descripcion}\n[/]';
+    it('renders a section directive ::: section Label ::: {field} :::', () => {
+        const template = '::: section Novedades :::\n{descripcion}\n:::';
         const result = previewRender(template);
-        console.log('Quoted section result:', result);
         expect(result).toContain('Ejemplo descripcion');
     });
 
-    it('renders a quoted repeatable section ["Label"]*{field}[/]', () => {
-        const template = '["Novedades"]*\n{descripcion}\n[/]';
-        const parsed = parseTemplate(template);
-        console.log('Parsed sections:', JSON.stringify(parsed.sections, null, 2));
+    it('renders a repeatable section ::: section Label* ::: {field} :::', () => {
+        const template = '::: section Novedades* :::\n{descripcion}\n:::';
         const result = previewRender(template);
-        console.log('Quoted repeatable result:', result);
         expect(result).toContain('Dato descripcion');
     });
 
-    it('renders a self-contained section ["Title" {field}]', () => {
-        const template = '["Inspector" {nombre}]';
+    it('renders a section block with content', () => {
+        const template = '::: Inspector :::\n{nombre}\n:::';
         const result = previewRender(template);
-        console.log('Self-contained result:', result);
         expect(result).toContain('Ejemplo nombre');
     });
 });

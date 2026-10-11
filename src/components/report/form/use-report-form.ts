@@ -421,32 +421,39 @@ export function useReportForm({
   const lastPropReportId = useRef<string | undefined>(reportId);
   const isFocused = useRef<boolean>(false);
 
+  const onDataChangeRef = useRef(onDataChange);
+  useEffect(() => {
+    onDataChangeRef.current = onDataChange;
+  }, [onDataChange]);
+
   useEffect(() => {
     const subscription = watch((value, { name, type }) => {
       forceRender((n) => n + 1);
       if (type !== 'change' || !name) return;
-      if (onDataChange) {
+      if (onDataChangeRef.current) {
         const currentValues = getValues();
         const dataHash = stableStringify(currentValues);
         if (dataHash !== lastDataHash.current) {
           lastDataHash.current = dataHash;
           const timer = setTimeout(() => {
             // Clone the values to prevent RxDB from deeply freezing RHF's internal state
-            onDataChange(JSON.parse(JSON.stringify(currentValues)));
+            onDataChangeRef.current?.(JSON.parse(JSON.stringify(currentValues)));
           }, 1000);
           return () => clearTimeout(timer);
         }
       }
     });
     return () => subscription.unsubscribe();
-  }, [watch, onDataChange, getValues]);
+  }, [watch, getValues]);
 
   useEffect(() => {
     if (!controlledValues) return;
     Object.entries(controlledValues).forEach(([key, value]) => {
-      setValue(key, value, { shouldDirty: false, shouldValidate: false });
+      if (getValues(key) !== value) {
+        setValue(key, value, { shouldDirty: false, shouldValidate: false });
+      }
     });
-  }, [controlledValues, setValue]);
+  }, [controlledValues, setValue, getValues]);
 
   const hasInitialized = useRef<boolean>(false);
   const lastBaseDataHash = useRef<string>('');
@@ -484,10 +491,26 @@ export function useReportForm({
     if (baseDataChanged && (!methods.formState.isDirty || template.id === 'preview') && !isFocused.current) {
       const formValues = getInitialValues(initialData);
       const currentValues = getValues();
-      const isDataMatching = stableStringify(formValues) === stableStringify(currentValues);
+      
+      let targetValues = formValues;
+      if (methods.formState.isDirty || (template.id === 'preview' && Object.keys(currentValues).length > 0)) {
+        targetValues = { ...formValues };
+        const validFields = new Set([...Object.keys(formValues), 'Estatus', 'Enc', 'pie', 'usuario']);
+        Object.keys(currentValues).forEach((key) => {
+          if (validFields.has(key)) {
+            if (Array.isArray(currentValues[key]) && Array.isArray(formValues[key]) && currentValues[key].length > 0) {
+              targetValues[key] = currentValues[key];
+            } else {
+              targetValues[key] = currentValues[key];
+            }
+          }
+        });
+      }
+
+      const isDataMatching = stableStringify(targetValues) === stableStringify(currentValues);
 
       if (!isDataMatching) {
-        logger.info('Resetting form due to base data or template change', {
+        logger.info('Updating form values due to base data or template change', {
           feature: 'useReportForm',
           metadata: {
             reportId,
@@ -495,7 +518,7 @@ export function useReportForm({
             newHash: baseDataState
           }
         });
-        reset(formValues);
+        reset(targetValues);
       }
       lastBaseDataHash.current = baseDataState;
     }

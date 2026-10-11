@@ -1,7 +1,6 @@
 import { PERSONNEL_STATUS } from '@/lib/constants/personnel';
 
 export type PersonnelStatus = (typeof PERSONNEL_STATUS)[keyof typeof PERSONNEL_STATUS];
-export type AttendanceStatus = 'presente' | 'tarde' | 'ausente' | 'permiso';
 
 /** Represents any value that can appear in a form data field */
 export type form_dataValue =
@@ -156,8 +155,7 @@ export type FieldType =
   | 'time-hlv'
   | 'multi-text'
   | 'dropdown'
-  | 'cedula'
-  | 'semantic';
+  | 'cedula';
 
 export type TextModifier = 'upper' | 'lower' | 'title';
 
@@ -195,6 +193,7 @@ export interface SectionConfig {
     field_id: string;
     operator?: '=' | '!=' | '>' | '<' | '>=' | '<=';
     value: string;
+    target_field_id?: string;
     /** 'hide' (default) = oculto hasta cumplirse | 'show' = siempre visible en formulario */
     condition_mode?: 'show' | 'hide';
   };

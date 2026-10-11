@@ -122,6 +122,9 @@ export const FormLayout = ({
           const section = sectionsById[chunk];
           if (!section) return null;
           const condVal = section.condition ? allFormValues?.[section.condition.field_id] : undefined;
+          const targetCondVal = section.condition?.target_field_id
+            ? allFormValues?.[section.condition.target_field_id]
+            : undefined;
           return (
             <SectionRenderer
               key={section.id}
@@ -138,6 +141,7 @@ export const FormLayout = ({
               settings={settings}
               pathPrefix=""
               conditionValue={condVal}
+              targetConditionValue={targetCondVal}
             />
           );
         } else {

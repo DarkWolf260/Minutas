@@ -1,5 +1,6 @@
 import React from 'react';
 import { AddEditPersonnelDialog } from '@/components/personnel/add-edit-personnel-dialog';
+import { PersonnelHistoryDialog } from '@/components/personnel/personnel-history-dialog';
 import { ConfirmDialog } from '@/components/ui/custom/confirm-dialog';
 import type { UsePersonalReturn } from '@/hooks/personal';
 
@@ -16,6 +17,9 @@ export interface PersonnelModalsProps {
     | 'setEsDialogOpenConfirmarEliminarMasivo'
     | 'idsSeleccionados'
     | 'manejarEliminacionMasiva'
+    | 'esDialogOpenHistorial'
+    | 'setEsDialogOpenHistorial'
+    | 'miembroVerHistorial'
   >;
 }
 
@@ -30,7 +34,10 @@ export const PersonnelModals = ({ hook }: PersonnelModalsProps) => {
     esDialogOpenConfirmarEliminarMasivo,
     setEsDialogOpenConfirmarEliminarMasivo,
     idsSeleccionados,
-    manejarEliminacionMasiva
+    manejarEliminacionMasiva,
+    esDialogOpenHistorial,
+    setEsDialogOpenHistorial,
+    miembroVerHistorial
   } = hook;
 
   return (
@@ -42,6 +49,12 @@ export const PersonnelModals = ({ hook }: PersonnelModalsProps) => {
         departments={departamentos}
         onSave={manejarGuardar}
         onCancel={manejarCancelar}
+      />
+
+      <PersonnelHistoryDialog
+        member={miembroVerHistorial}
+        isOpen={esDialogOpenHistorial}
+        onClose={() => setEsDialogOpenHistorial(false)}
       />
 
       <ConfirmDialog

@@ -6,23 +6,50 @@ const qrcode = require('qrcode-terminal');
 const app = express();
 const port = 3001;
 
-// Middleware para CORS y Private Network Access (PNA) con Orígenes Permitidos Seguros
-const allowedOrigins = [
-  'http://localhost:5173', // Vite Local Dev
-  'http://localhost:3000', // Local Alternativo
-  'https://minutas.vercel.app' // Hosting de Producción (Reemplazar con tu dominio real)
-];
+process.on('unhandledRejection', (reason) => {
+  console.warn('[Server] Promesa rechazada no controlada:', reason?.message || reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[Server] Excepción no capturada:', err?.message || err);
+});
+
+// Función para validar si el origen está permitido (soporta localhost, IPs locales y producción)
+function isAllowedOrigin(origin) {
+  if (!origin) return true; // Peticiones locales o herramientas como curl/Postman
+
+  // localhost o 127.0.0.1 con cualquier puerto y protocolo (http o https)
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) return true;
+
+  // Redes locales privadas (192.168.x.x, 10.x.x.x, 172.16-31.x.x) con cualquier puerto y protocolo
+  if (/^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/i.test(origin)) return true;
+
+  // Dominios de producción / Vercel
+  if (/^https:\/\/.*\.vercel\.app$/i.test(origin) || origin === 'https://minutas.vercel.app') return true;
+
+  return false;
+}
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+
+  if (isAllowedOrigin(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
   }
-  
+
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-requested-with');
+  
+  // Permitir dinámicamente cualquier encabezado solicitado por el cliente (x-workspace-id, cache-control, etc.)
+  const requestedHeaders = req.headers['access-control-request-headers'];
+  const defaultAllowedHeaders = 'Content-Type, Authorization, x-requested-with, x-workspace-id, cache-control, pragma';
+  res.setHeader('Access-Control-Allow-Headers', requestedHeaders || defaultAllowedHeaders);
+  res.setHeader('Access-Control-Expose-Headers', '*');
+  // Requerido por navegadores basados en Chromium para Private Network Access (PNA)
   res.setHeader('Access-Control-Allow-Private-Network', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400');
 
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
@@ -30,94 +57,305 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 let isReady = false;
 let qrCodeData = null;
 let statusMessage = 'Iniciando cliente...';
+let client = null;
+let isInitializing = false;
+let cachedChats = [];
 
-const client = new Client({
-  authStrategy: new LocalAuth({ dataPath: './session' }),
-  puppeteer: {
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
-  },
-  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
-});
-
-client.on('qr', (qr) => {
-  qrCodeData = qr;
-  statusMessage = 'Esperando escaneo de QR...';
-  console.log('\n==================================================');
-  console.log('Escanea este código QR con WhatsApp para iniciar:');
-  console.log('==================================================\n');
-  qrcode.generate(qr, { small: true });
-});
-
-client.on('loading_screen', (percent, message) => {
-  statusMessage = `Sincronizando: ${percent}%`;
-  console.log(`Progreso de carga: ${percent}% - ${message}`);
-});
-
-client.on('ready', () => {
-  isReady = true;
-  qrCodeData = null;
-  statusMessage = 'Listo';
-  console.log('\n==================================================');
-  console.log('✅ Cliente de WhatsApp está listo!');
-  console.log(`📡 Servidor API escuchando en http://localhost:${port}`);
-  console.log('==================================================\n');
-});
-
-client.on('authenticated', () => {
-  console.log('Autenticación exitosa.');
-  statusMessage = 'Autenticado. Sincronizando chats...';
-  qrCodeData = null;
-});
-
-client.on('auth_failure', msg => {
-  console.error('Error de autenticación:', msg);
-  isReady = false;
-  statusMessage = 'Error de autenticación';
-});
-
-client.on('disconnected', (reason) => {
-  console.log('Cliente de WhatsApp desconectado:', reason);
+function initWhatsAppClient() {
+  if (isInitializing) return;
+  isInitializing = true;
   isReady = false;
   qrCodeData = null;
-  statusMessage = 'Desconectado';
-});
+  statusMessage = 'Iniciando cliente de WhatsApp...';
 
-client.initialize();
+  client = new Client({
+    authStrategy: new LocalAuth({ dataPath: './session' }),
+    puppeteer: {
+      headless: true,
+      protocolTimeout: 0,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+        '--no-first-run',
+        '--no-zygote'
+      ],
+    },
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36'
+  });
+
+  client.on('qr', (qr) => {
+    qrCodeData = qr;
+    statusMessage = 'Esperando escaneo de QR...';
+    console.log('\n==================================================');
+    console.log(`[${new Date().toLocaleTimeString()}] Nuevo código QR generado:`);
+    console.log('==================================================\n');
+    qrcode.generate(qr, { small: true });
+  });
+
+  client.on('loading_screen', (percent, message) => {
+    statusMessage = `Sincronizando: ${percent}%`;
+    console.log(`Progreso de carga: ${percent}% - ${message}`);
+  });
+
+  client.on('ready', async () => {
+    isReady = true;
+    qrCodeData = null;
+    statusMessage = 'Listo';
+    console.log('\n==================================================');
+    console.log('✅ Cliente de WhatsApp está listo!');
+    console.log(`📡 Servidor API escuchando en http://localhost:${port}`);
+    console.log('==================================================\n');
+
+    try {
+      if (client.pupPage) {
+        await client.pupPage.evaluate(() => {
+          if (window.WWebJS && window.WWebJS.getChatModel) {
+            const originalGetChatModel = window.WWebJS.getChatModel;
+            window.WWebJS.getChatModel = async (chat, options) => {
+              try {
+                return await originalGetChatModel(chat, options);
+              } catch (e) {
+                return {
+                  id: chat.id,
+                  name: chat.name || chat.formattedTitle,
+                  isGroup: Boolean(chat.isGroup),
+                  formattedTitle: chat.formattedTitle
+                };
+              }
+            };
+          }
+        });
+      }
+    } catch (patchErr) {
+      // Silently ignore if page is not ready yet
+    }
+  });
+
+  client.on('authenticated', () => {
+    console.log('Autenticación exitosa.');
+    statusMessage = 'Autenticado. Sincronizando chats...';
+    qrCodeData = null;
+  });
+
+  client.on('auth_failure', async msg => {
+    console.error('Error de autenticación:', msg);
+    restartClient('Error de autenticación. Generando nuevo QR...');
+  });
+
+  client.on('disconnected', async (reason) => {
+    console.log('Cliente de WhatsApp desconectado:', reason);
+    restartClient('Desconectado. Generando nuevo QR...');
+  });
+
+  client.initialize()
+    .then(() => {
+      isInitializing = false;
+    })
+    .catch(err => {
+      console.error('Error al inicializar el cliente de WhatsApp:', err);
+      statusMessage = 'Error al inicializar cliente: ' + (err.message || err);
+      isInitializing = false;
+    });
+}
+
+let isRestarting = false;
+
+async function restartClient(reasonText = 'Reiniciando cliente...') {
+  if (isRestarting) return;
+  isRestarting = true;
+  isInitializing = true;
+  isReady = false;
+  qrCodeData = null;
+  cachedChats = [];
+  statusMessage = reasonText;
+
+  setTimeout(async () => {
+    try {
+      if (client) {
+        console.log(`[WhatsApp] Cerrando instancia previa (${reasonText})...`);
+        try {
+          client.pupPage?.removeAllListeners?.();
+          client.removeAllListeners?.();
+        } catch (_) {}
+        await client.destroy().catch(() => {});
+        client = null;
+      }
+    } catch (destroyErr) {
+      // Ignorar si ya estaba destruida
+    }
+
+    setTimeout(() => {
+      isInitializing = false;
+      isRestarting = false;
+      initWhatsAppClient();
+    }, 1500);
+  }, 400);
+}
+
+// Inicializar por primera vez
+initWhatsAppClient();
+
+let activeWorkspace = null;
 
 // Rutas de la API
+app.get('/api/whatsapp/workspace', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.json({ activeWorkspace });
+});
+
+app.post('/api/whatsapp/workspace', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  const { workspace } = req.body;
+  if (workspace && typeof workspace === 'string') {
+    const prev = activeWorkspace;
+    activeWorkspace = workspace.trim();
+    console.log(`[Workspace] Área de trabajo del bot asignada: "${activeWorkspace}" (anterior: "${prev || 'ninguna'}")`);
+    return res.json({ success: true, activeWorkspace });
+  }
+  if (workspace === null) {
+    activeWorkspace = null;
+    console.log('[Workspace] Bot desvinculado de área de trabajo específica.');
+    return res.json({ success: true, activeWorkspace: null });
+  }
+  return res.status(400).json({ error: 'workspace string o null es requerido' });
+});
+
 app.get('/api/whatsapp/status', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
+  const requestedWorkspace = req.query.workspace || req.headers['x-workspace-id'];
+  
+  // Si aún no hay área de trabajo activa y la solicitud especifica una, auto-asignarla
+  if (!activeWorkspace && requestedWorkspace && typeof requestedWorkspace === 'string') {
+    activeWorkspace = requestedWorkspace.trim();
+    console.log(`[Workspace] Bot auto-asignado al área de trabajo inicial: "${activeWorkspace}"`);
+  }
+
+  const isWorkspaceMatch = !activeWorkspace || !requestedWorkspace || activeWorkspace === requestedWorkspace;
+
   res.json({
     isReady,
     needsAuth: !isReady && qrCodeData !== null,
     qr: qrCodeData,
-    statusMessage
+    statusMessage: !isWorkspaceMatch 
+      ? `El bot está asignado al área de trabajo "${activeWorkspace}".` 
+      : statusMessage,
+    activeWorkspace,
+    isWorkspaceMatch
   });
 });
 
+app.post('/api/whatsapp/logout', async (req, res) => {
+  console.log('[Logout] Solicitud de cierre de sesión recibida desde la API...');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.json({ success: true, message: 'Cerrando sesión y reiniciando cliente...' });
+
+  isReady = false;
+  qrCodeData = null;
+  statusMessage = 'Cerrando sesión...';
+
+  try {
+    if (client) {
+      await client.logout().catch(() => {});
+    }
+  } catch (e) {
+    // Ignorar si falla
+  }
+  restartClient('Sesión cerrada. Generando nuevo QR...');
+});
+
 app.get('/api/whatsapp/chats', async (req, res) => {
-  if (!isReady) {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
+  const requestedWorkspace = req.query.workspace || req.headers['x-workspace-id'];
+  if (activeWorkspace && requestedWorkspace && requestedWorkspace !== activeWorkspace) {
+    return res.status(403).json({ 
+      error: `El bot está asignado exclusivamente al área de trabajo "${activeWorkspace}". No disponible en "${requestedWorkspace}".`,
+      activeWorkspace 
+    });
+  }
+
+  if (!isReady || !client) {
     return res.status(400).json({ error: 'WhatsApp client is not ready' });
   }
 
   try {
-    const chats = await client.getChats();
-    // Filtramos solo grupos o permitimos todo? El usuario quiere enviar a grupos.
-    const formattedChats = chats.map(chat => ({
-      id: chat.id._serialized,
-      name: chat.name,
-      isGroup: chat.isGroup
-    }));
+    let formattedChats = [];
 
-    res.json(formattedChats);
+    // 1. Extracción veloz directa desde la memoria de WhatsApp Web en Puppeteer (inmediato, evita congelamientos)
+    try {
+      if (client.pupPage) {
+        formattedChats = await client.pupPage.evaluate(() => {
+          try {
+            const collections = window.require?.('WAWebCollections') || window.Store;
+            const chatCollection = (collections?.Chat || window.Store?.Chat)?.getModelsArray?.() || [];
+            
+            return chatCollection
+              .map(c => {
+                const id = c.id?._serialized || (typeof c.id === 'string' ? c.id : '');
+                const name = c.name || c.formattedTitle || c.contact?.name || c.contact?.pushname || (c.id?.user ? `+${c.id.user}` : 'Chat');
+                const isGroup = Boolean(c.isGroup || (id && id.endsWith('@g.us')));
+                const timestamp = c.t || c.conversationTimestamp || 0;
+                return { id, name, isGroup, timestamp };
+              })
+              .filter(c => c.id && !c.id.includes('@broadcast') && !c.id.includes('status@broadcast'))
+              .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+              .map(({ id, name, isGroup }) => ({ id, name, isGroup }));
+          } catch (e) {
+            return [];
+          }
+        });
+      }
+    } catch (evalErr) {
+      console.warn(`[Chats] Extractor en memoria falló (${evalErr.message}). Intentando fallback nativo...`);
+    }
+
+    // 2. Si el extractor directo devolvió vacío, intentar client.getChats() con un timeout estricto de 4 segundos
+    if (!formattedChats || formattedChats.length === 0) {
+      try {
+        const getChatsSafe = client.getChats().catch(err => {
+          console.warn(`[Chats] Error interno en client.getChats(): ${err?.message || err}`);
+          return [];
+        });
+        const timeoutSafe = new Promise(resolve => setTimeout(() => resolve([]), 4000));
+        const chats = await Promise.race([getChatsSafe, timeoutSafe]);
+        if (Array.isArray(chats) && chats.length > 0) {
+          formattedChats = chats.map(chat => ({
+            id: chat.id?._serialized || (typeof chat.id === 'string' ? chat.id : ''),
+            name: chat.name || chat.formattedTitle || 'Sin nombre',
+            isGroup: Boolean(chat.isGroup)
+          })).filter(c => c.id);
+        }
+      } catch (err) {
+        console.warn(`[Chats] client.getChats() omitido: ${err?.message || err}`);
+      }
+    }
+
+    // 3. Actualizar o recuperar de caché
+    if (formattedChats && formattedChats.length > 0) {
+      cachedChats = formattedChats;
+    } else if (cachedChats.length > 0) {
+      formattedChats = cachedChats;
+    }
+
+    res.json(formattedChats || []);
   } catch (error) {
-    res.status(500).json({ error: error.toString() });
+    console.error('Error obteniendo chats:', error);
+    res.json(cachedChats || []);
   }
 });
 
@@ -126,7 +364,17 @@ app.post('/api/whatsapp/send', async (req, res) => {
     return res.status(400).json({ error: 'WhatsApp client is not ready' });
   }
 
-  const { chatId, message, media } = req.body;
+  const { chatId, message, media, workspaceId } = req.body;
+  const requestedWorkspace = workspaceId || req.query.workspace || req.headers['x-workspace-id'];
+
+  if (activeWorkspace && requestedWorkspace && requestedWorkspace !== activeWorkspace) {
+    console.warn(`[Send] Envío rechazado: el bot está activo en "${activeWorkspace}", se solicitó desde "${requestedWorkspace}".`);
+    return res.status(403).json({ 
+      error: `El bot está asignado exclusivamente al área de trabajo "${activeWorkspace}". No disponible en "${requestedWorkspace}".`,
+      activeWorkspace 
+    });
+  }
+
   const hasMedia = media && Array.isArray(media) && media.length > 0;
 
   // Permitir message vacío si hay adjuntos (ej: reporte solo de fotos)
@@ -134,13 +382,21 @@ app.post('/api/whatsapp/send', async (req, res) => {
     return res.status(400).json({ error: 'Faltan parámetros: chatId y al menos message o media son requeridos' });
   }
 
+  // Normalizar chatId para WhatsApp (asegurar @c.us o @g.us)
+  let targetChatId = chatId;
+  if (typeof targetChatId === 'string' && !targetChatId.includes('@')) {
+    targetChatId = `${targetChatId.replace(/\D/g, '')}@c.us`;
+  }
+
   try {
     let textMsgId = null;
 
     // Solo enviar texto si hay contenido (WhatsApp no acepta mensajes vacíos)
     if (message && message.trim()) {
-      const response = await client.sendMessage(chatId, message);
-      textMsgId = response.id._serialized;
+      console.log(`[Send] Enviando texto a ${targetChatId}...`);
+      const response = await client.sendMessage(targetChatId, message);
+      textMsgId = response?.id?._serialized || response?.id || `msg_${Date.now()}`;
+      console.log(`[Send] Texto enviado exitosamente. ID: ${textMsgId}`);
     }
 
     // Responder inmediatamente — el browser no espera que las fotos terminen de enviarse.
@@ -156,16 +412,16 @@ app.post('/api/whatsapp/send', async (req, res) => {
             if (matches) {
               // Base64 data URI
               const messageMedia = new MessageMedia(matches[1], matches[2], item.name || 'foto.jpg');
-              console.log(`[Media] Enviando adjunto a ${chatId}: ${item.name || 'foto.jpg'}`);
-              await client.sendMessage(chatId, messageMedia, { caption: item.description || '' });
+              console.log(`[Media] Enviando adjunto a ${targetChatId}: ${item.name || 'foto.jpg'}`);
+              await client.sendMessage(targetChatId, messageMedia, { caption: item.description || '' });
             } else {
               // URL pública (ej: Supabase Storage)
-              console.log(`[Media] Adjunto URL pública a ${chatId}: ${item.url.substring(0, 80)}...`);
+              console.log(`[Media] Adjunto URL pública a ${targetChatId}: ${item.url.substring(0, 80)}...`);
               const messageMedia = await MessageMedia.fromUrl(item.url, { unsafeMime: true });
-              await client.sendMessage(chatId, messageMedia, { caption: item.description || '' });
+              await client.sendMessage(targetChatId, messageMedia, { caption: item.description || '' });
             }
           } catch (mediaErr) {
-            console.error(`[Media] Error enviando adjunto "${item.name || 'foto'}" a ${chatId}:`, mediaErr.message || mediaErr);
+            console.error(`[Media] Error enviando adjunto "${item.name || 'foto'}" a ${targetChatId}:`, mediaErr.message || mediaErr);
           }
         }
       })();
@@ -213,7 +469,7 @@ setInterval(async () => {
   if (!isReady) return;
   const messages = getScheduledMessages();
   const pendingCount = messages.filter(m => m.status === 'pending').length;
-  
+
   if (pendingCount > 0) {
     console.log(`[Programado] Revisando cola: ${pendingCount} mensaje(s) pendiente(s)`);
   }
@@ -223,12 +479,23 @@ setInterval(async () => {
 
   for (const msg of messages) {
     if (msg.status === 'pending' && new Date(msg.scheduledTime) <= now) {
+      // Validar si el mensaje pertenece al área de trabajo activa actual
+      if (activeWorkspace && msg.workspaceId && msg.workspaceId !== activeWorkspace) {
+        // Omitir envío mientras el bot esté asignado a otra área de trabajo
+        continue;
+      }
+
       try {
-        console.log(`[Programado] Enviando mensaje ${msg.id} a ${msg.chatId}...`);
+        let targetChatId = msg.chatId;
+        if (typeof targetChatId === 'string' && !targetChatId.includes('@')) {
+          targetChatId = `${targetChatId.replace(/\D/g, '')}@c.us`;
+        }
+
+        console.log(`[Programado] Enviando mensaje ${msg.id} a ${targetChatId}...`);
 
         // Solo enviar texto si hay contenido (WhatsApp no acepta mensajes vacíos)
         if (msg.message && msg.message.trim()) {
-          await client.sendMessage(msg.chatId, msg.message);
+          await client.sendMessage(targetChatId, msg.message);
         }
 
         // Si se programaron archivos/fotos adjuntos, se procesan y envían
@@ -238,11 +505,11 @@ setInterval(async () => {
               const matches = item.url.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
               if (matches) {
                 const messageMedia = new MessageMedia(matches[1], matches[2], item.name || 'foto.jpg');
-                console.log(`[Programado - Media] Enviando archivo adjunto a ${msg.chatId}: ${item.name || 'foto.jpg'}`);
-                await client.sendMessage(msg.chatId, messageMedia, { caption: item.description || '' });
+                console.log(`[Programado - Media] Enviando archivo adjunto a ${targetChatId}: ${item.name || 'foto.jpg'}`);
+                await client.sendMessage(targetChatId, messageMedia, { caption: item.description || '' });
               } else {
                 const messageMedia = await MessageMedia.fromUrl(item.url, { unsafeMime: true });
-                await client.sendMessage(msg.chatId, messageMedia, { caption: item.description || '' });
+                await client.sendMessage(targetChatId, messageMedia, { caption: item.description || '' });
               }
             }
           }
@@ -266,7 +533,17 @@ setInterval(async () => {
 
 // Endpoints del sistema de programación
 app.post('/api/whatsapp/schedule', (req, res) => {
-  const { id, chatId, message, scheduledTime, title, media } = req.body;
+  const { id, chatId, message, scheduledTime, title, media, workspaceId } = req.body;
+  const requestedWorkspace = workspaceId || req.query.workspace || req.headers['x-workspace-id'];
+
+  if (activeWorkspace && requestedWorkspace && requestedWorkspace !== activeWorkspace) {
+    console.warn(`[Schedule] Programación rechazada: el bot está en "${activeWorkspace}", se solicitó desde "${requestedWorkspace}".`);
+    return res.status(403).json({ 
+      error: `El bot está asignado exclusivamente al área de trabajo "${activeWorkspace}". No disponible en "${requestedWorkspace}".`,
+      activeWorkspace 
+    });
+  }
+
   const hasMedia = media && Array.isArray(media) && media.length > 0;
 
   // Permitir message vacío si hay adjuntos
@@ -276,14 +553,23 @@ app.post('/api/whatsapp/schedule', (req, res) => {
 
   const messages = getScheduledMessages();
   const existingIndex = messages.findIndex(m => m.id === id);
-  const newMsg = { id, chatId, message, scheduledTime, title, media, status: 'pending' };
-  
+  const newMsg = { 
+    id, 
+    chatId, 
+    message, 
+    scheduledTime, 
+    title, 
+    media, 
+    workspaceId: requestedWorkspace || activeWorkspace || null,
+    status: 'pending' 
+  };
+
   if (existingIndex >= 0) {
     messages[existingIndex] = newMsg; // Actualiza existente
   } else {
     messages.push(newMsg); // Nuevo
   }
-  
+
   saveScheduledMessages(messages);
   const pendingCount = messages.filter(m => m.status === 'pending').length;
   console.log(`\n[Programado] Mensaje programado añadido/actualizado. Total pendientes: ${pendingCount}`);
@@ -295,7 +581,7 @@ app.delete('/api/whatsapp/schedule/:id', (req, res) => {
   let messages = getScheduledMessages();
   const initialLength = messages.length;
   messages = messages.filter(m => m.id !== id);
-  
+
   if (messages.length !== initialLength) {
     saveScheduledMessages(messages);
     const pendingCount = messages.filter(m => m.status === 'pending').length;
@@ -307,12 +593,21 @@ app.delete('/api/whatsapp/schedule/:id', (req, res) => {
 });
 
 app.get('/api/whatsapp/scheduled', (req, res) => {
-  res.json(getScheduledMessages());
+  const requestedWorkspace = req.query.workspace || req.headers['x-workspace-id'];
+  let messages = getScheduledMessages();
+  if (requestedWorkspace) {
+    messages = messages.filter(m => !m.workspaceId || m.workspaceId === requestedWorkspace);
+  }
+  res.json(messages);
 });
 // ===============================================
 
-app.listen(port, () => {
-  console.log(`\nIniciando servidor de WhatsApp Bot en puerto ${port}...`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`\n==================================================`);
+  console.log(`🚀 Servidor de WhatsApp Bot activo en puerto ${port}`);
+  console.log(`   - Local:    http://localhost:${port}`);
+  console.log(`   - Red LAN:  http://0.0.0.0:${port}`);
+  console.log(`==================================================\n`);
 });
 
 // Manejo de cierre gracioso para evitar archivos bloqueados en Windows

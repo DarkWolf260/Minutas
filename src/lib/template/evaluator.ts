@@ -7,21 +7,6 @@
 /**
  * Evaluates a conditional expression
  * 
- * @param fieldValue - The actual value of the field
- * @param operator - The comparison operator (=, !=, >, <, >=, <=)
- * @param targetValue - The value to compare against
- * @returns True if the condition is met
- * 
- * @example
- * ```typescript
- * evaluateCondition('Robo', '=', 'Robo') // true
- * evaluateCondition(5, '>', '3') // true
- * evaluateCondition('Active', '!=', 'Inactive') // true
- * ```
- */
-/**
- * Evaluates a conditional expression
- * 
  * Supports numeric and string comparisons using standard operators.
  * 
  * @param fieldValue - The actual value of the field
@@ -117,11 +102,11 @@ export function applyModifiers(value: unknown, modifiers: string | string[]): st
                 .join(' ');
         } else if (trimmedMod === 'capitalize') {
             result = result.charAt(0).toUpperCase() + result.slice(1);
-        } else if (trimmedMod.startsWith('default(')) {
+        } else if (trimmedMod.startsWith('default(') || trimmedMod.startsWith('def=(')) {
             if (!result || result.trim() === '') {
-                const match = mod.match(/default\("?(.*?)"?\)/i);
-                if (match && match[1]) {
-                    result = match[1];
+                const match = mod.match(/^(?:default\("?(.*?)"?\)|def=\((.*?)\))$/i);
+                if (match) {
+                    result = (match[1] ?? match[2]) || '';
                 }
             }
         }
@@ -130,12 +115,7 @@ export function applyModifiers(value: unknown, modifiers: string | string[]): st
     return result;
 }
 
-/**
- * Formats a value based on its field type (Reserved for future specialized formatting)
- */
-export function formatValue(value: unknown, _fieldType: string): string {
-    return String(value);
-}
+
 
 /**
  * Coerces values for comparison (handles numeric strings)

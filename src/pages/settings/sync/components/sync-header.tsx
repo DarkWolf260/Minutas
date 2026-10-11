@@ -14,7 +14,7 @@ interface SyncHeaderProps {
 export const SyncHeader = ({ usuario, esPrincipal, esSecundario, modoSimple = false }: SyncHeaderProps) => {
   return (
     <div className="flex items-center gap-4 shrink-0">
-      <Link to="/settings">
+      <Link to="/settings" className="sm:hidden">
         <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground">
           <ChevronLeft className="h-5 w-5" />
         </Button>

@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { generateId } from '@/lib/utils/id';
+import { generateUniqueDepartmentId } from '@/lib/constants/departments';
 import { Department, StaffRole, StaffMember } from '@/lib/types';
 import { StructureTree } from '@/components/structure/structure-tree';
 
@@ -62,7 +62,7 @@ export function StructureManager({
       return;
     }
     const newDept: Department = {
-      id: generateId('dept'),
+      id: generateUniqueDepartmentId(name, departments),
       name: name,
       staff: {},
     };
@@ -153,9 +153,9 @@ export function StructureManager({
           {/* Mobile view: Tabbed interface */}
           <div className="flex flex-col lg:hidden">
             <Tabs defaultValue={initialTab || "departments"} className="w-full bg-transparent">
-              <TabsList className="grid w-full grid-cols-2 mb-2 shrink-0">
-                <TabsTrigger value="departments" className="text-xs font-bold uppercase transition-all">Organigrama</TabsTrigger>
-                <TabsTrigger value="roles" className="text-xs font-bold uppercase transition-all">Jerarquía</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-2 shrink-0 bg-muted/80 dark:bg-muted/60 p-1 rounded-xl border border-border shadow-xs">
+                <TabsTrigger value="departments" className="text-xs font-bold uppercase transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xs">Organigrama</TabsTrigger>
+                <TabsTrigger value="roles" className="text-xs font-bold uppercase transition-all rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-xs">Jerarquía</TabsTrigger>
               </TabsList>
               
               <TabsContent 
