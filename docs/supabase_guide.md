@@ -110,7 +110,7 @@ Existen dos métodos para desplegar la base de datos:
    npx supabase db push
    ```
    Esto aplicará automáticamente el archivo maestro consolidado:
-   - `20260613012703_remote_schema.sql` (Contiene las 21 tablas, columnas más recientes de plantillas, RLS, triggers, funciones, Storage bucket y vista de compatibilidad).
+   - `20260613012703_remote_schema.sql` (Contiene las 16 tablas del sistema, columnas más recientes de plantillas, RLS, triggers, funciones, Storage bucket y vista de compatibilidad).
 
 ---
 
@@ -128,7 +128,7 @@ Si prefieres no usar la consola o estás configurando una base de datos desde ce
 
 ## 5. Verificación Posterior al Despliegue
 
-1. **Tablas**: Verifica en *Table Editor* que existan las 21 tablas (`templates`, `reports`, `personnel`, `workspaces`, `lookups`, `configs`, etc.).
+1. **Tablas**: Verifica en *Table Editor* que existan las 16 tablas (`templates`, `reports`, `personnel`, `workspaces`, `lookups`, `configs`, etc.).
 2. **Storage**: Verifica en *Storage* que el bucket `activity-images` esté creado con visibilidad pública.
 3. **Variables de Entorno**: Asegúrate de que tu archivo `.env` contenga:
    ```env
