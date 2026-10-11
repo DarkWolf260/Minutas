@@ -21,7 +21,6 @@ import { OnboardingTour } from '@/components/ui/custom/onboarding-tour';
 import { cn } from '@/lib/utils';
 
 // Setup helpers
-import SetupPage from '@/pages/setup';
 import { SETUP_DONE_KEY, tryGet, trySet, tryRemove } from '@/hooks/configuracion';
 import { APP_VERSION } from '@/pages/settings/about/data';
 import { AdminRoute } from '@/components/auth/admin-route';
@@ -35,15 +34,16 @@ import { CommandMenu } from '@/components/layout/command-menu';
 
 // ─── Lazy-load app pages ──────────────────────────────────────────────────────
 
-import OfflinePage from '@/pages/offline';
-import NotFoundPage from '@/pages/not-found';
-import LoginPage from '@/pages/login';
+const SetupPage = lazy(() => import('@/pages/setup'));
+const OfflinePage = lazy(() => import('@/pages/offline'));
+const NotFoundPage = lazy(() => import('@/pages/not-found'));
+const LoginPage = lazy(() => import('@/pages/login'));
 
-import NovedadesPage from '@/pages/novedades';
-import OrdenDelDiaPage from '@/pages/orden-del-dia';
-import PersonalPage from '@/pages/personal';
-import PlantillasPage from '@/pages/plantillas';
-import ReporteFinalPage from '@/pages/reporte-final';
+const NovedadesPage = lazy(() => import('@/pages/novedades'));
+const OrdenDelDiaPage = lazy(() => import('@/pages/orden-del-dia'));
+const PersonalPage = lazy(() => import('@/pages/personal'));
+const PlantillasPage = lazy(() => import('@/pages/plantillas'));
+const ReporteFinalPage = lazy(() => import('@/pages/reporte-final'));
 
 const EstadisticasPage = lazy(() => import('@/pages/estadisticas'));
 const SettingsPage = lazy(() => import('@/pages/settings'));
@@ -324,7 +324,9 @@ function Root() {
                     ) : (
                       // ── Full-screen setup wizard (no SideNav, no BottomNav) ──────
                       // SetupPage uses DatabaseProvider hooks internally (workspace, settings)
-                      <SetupPage onComplete={handleSetupComplete} />
+                      <Suspense fallback={<PageLoader />}>
+                        <SetupPage onComplete={handleSetupComplete} />
+                      </Suspense>
                     )}
 
                     {/* Global overlays — shown in both modes */}

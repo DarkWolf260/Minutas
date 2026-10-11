@@ -22,6 +22,7 @@ const forceManifestContentType = () => ({
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  envPrefix: ['VITE_', 'SUPABASE_'],
   plugins: [
     forceManifestContentType(),
     react({
@@ -162,38 +163,48 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (
-              id.includes('react') ||
-              id.includes('react-dom') ||
-              id.includes('react-router-dom')
-            ) {
-              return '@vendor-react';
-            }
-            if (id.includes('lucide-react')) {
-              return '@icons';
-            }
-            if (id.includes('@radix-ui')) {
-              return '@ui';
-            }
-            if (id.includes('rxdb') || id.includes('rxjs')) {
-              return '@vendor-db';
-            }
-            if (id.includes('@supabase')) {
-              return '@vendor-supabase';
-            }
-            if (id.includes('leaflet')) {
-              return '@vendor-maps';
-            }
-            if (id.includes('docx')) {
-              return '@vendor-docx';
-            }
-            if (id.includes('date-fns')) {
-              return '@vendor-date';
-            }
-            if (id.includes('html5-qrcode') || id.includes('qrcode.react')) {
-              return '@vendor-qr';
-            }
+          if (!id.includes('node_modules')) return;
+
+          if (id.includes('leaflet')) {
+            return '@vendor-maps';
+          }
+          if (id.includes('lucide-react')) {
+            return '@icons';
+          }
+          if (id.includes('@radix-ui')) {
+            return '@ui';
+          }
+          if (id.includes('html5-qrcode') || id.includes('qrcode.react')) {
+            return '@vendor-qr';
+          }
+          if (id.includes('rxdb') || id.includes('rxjs')) {
+            return '@vendor-db';
+          }
+          if (id.includes('@supabase')) {
+            return '@vendor-supabase';
+          }
+          if (id.includes('docx')) {
+            return '@vendor-docx';
+          }
+          if (id.includes('@dnd-kit')) {
+            return '@vendor-dnd';
+          }
+          if (
+            id.includes('react-hook-form') ||
+            id.includes('@hookform') ||
+            id.includes('zod')
+          ) {
+            return '@vendor-forms';
+          }
+          if (id.includes('date-fns') || id.includes('react-day-picker')) {
+            return '@vendor-date';
+          }
+          if (
+            /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(
+              id
+            )
+          ) {
+            return '@vendor-react';
           }
         },
       },

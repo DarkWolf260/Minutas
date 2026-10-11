@@ -132,7 +132,7 @@ Si prefieres no usar la consola o estás configurando una base de datos desde ce
 2. **Storage**: Verifica en *Storage* que el bucket `activity-images` esté creado con visibilidad pública.
 3. **Variables de Entorno**: Asegúrate de que tu archivo `.env` contenga:
    ```env
-   VITE_SUPABASE_URL=https://<tu-project-ref>.supabase.co
-   VITE_SUPABASE_ANON_KEY=<tu-anon-key>
+   SUPABASE_URL=https://<tu-project-ref>.supabase.co
+   SUPABASE_ANON_KEY=<tu-anon-key>
    ```
 

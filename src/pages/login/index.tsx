@@ -104,7 +104,7 @@ export default function LoginPage() {
               <span>Supabase no está configurado</span>
             </div>
             <p className="text-muted-foreground leading-relaxed">
-              No se detectaron <code className="text-foreground font-mono bg-muted/60 px-1 py-0.5 rounded">VITE_SUPABASE_URL</code> ni <code className="text-foreground font-mono bg-muted/60 px-1 py-0.5 rounded">VITE_SUPABASE_ANON_KEY</code> en las variables de entorno. Crea tu archivo <code className="text-foreground font-mono bg-muted/60 px-1 py-0.5 rounded">.env</code> para habilitar la autenticación en la nube.
+              No se detectó conexión con la base de datos en línea. ¿Deseas continuar en modo local?
             </p>
             <div className="pt-1">
               <Button
@@ -114,7 +114,7 @@ export default function LoginPage() {
                 className="w-full text-xs h-9 border-amber-500/30 hover:bg-amber-500/15"
                 onClick={() => navigate('/')}
               >
-                Continuar en Modo Local (Offline)
+                Continuar en Modo Local
               </Button>
             </div>
           </div>

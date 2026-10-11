@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!isSupabaseConfigured) {
         return {
           data: { user: null, session: null },
-          error: new Error('Supabase no está configurado. Por favor, define VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en tu archivo .env.'),
+          error: new Error('Supabase no está configurado. Por favor, define SUPABASE_URL y SUPABASE_ANON_KEY en tu archivo .env.'),
         };
       }
       return supabase.auth.signInWithPassword({ email, password });
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!isSupabaseConfigured) {
         return {
           data: { user: null, session: null },
-          error: new Error('Supabase no está configurado. Por favor, define VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en tu archivo .env.'),
+          error: new Error('Supabase no está configurado. Por favor, define SUPABASE_URL y SUPABASE_ANON_KEY en tu archivo .env.'),
         };
       }
       return supabase.auth.signUp({ email, password, options });
