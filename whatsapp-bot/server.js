@@ -76,6 +76,7 @@ function initWhatsAppClient() {
 
   client = new Client({
     authStrategy: new LocalAuth({ dataPath: './session' }),
+    authTimeoutMs: 60000,
     puppeteer: {
       headless: true,
       protocolTimeout: 0,
@@ -159,10 +160,16 @@ function initWhatsAppClient() {
     .then(() => {
       isInitializing = false;
     })
-    .catch(err => {
+    .catch(async err => {
       console.error('Error al inicializar el cliente de WhatsApp:', err);
       statusMessage = 'Error al inicializar cliente: ' + (err.message || err);
       isInitializing = false;
+      try {
+        if (client) {
+          await client.destroy().catch(() => {});
+          client = null;
+        }
+      } catch (_) {}
     });
 }
 
