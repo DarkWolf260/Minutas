@@ -25,7 +25,7 @@ export function usePlantillas() {
   const [plantillaAEliminar, setPlantillaAEliminar] = useState<string | null>(null);
   const [esDialogOpenInfo, setEsDialogOpenInfo] = useState(false);
   const [plantillaEditando, setPlantillaEditando] = useState<Template | null>(null);
-  const [tabActiva, setTabActiva] = useState('editor');
+  const [tabActiva, setTabActiva] = useState<'editor' | 'builder'>('editor');
   const [esDialogOpenNube, setEsDialogOpenNube] = useState(false);
   const [estaSubiendo, setEstaSubiendo] = useState(false);
   const [estaSincronizando, setEstaSincronizando] = useState(false);
@@ -196,10 +196,7 @@ export function usePlantillas() {
   };
 
   const manejarClickEditarContenido = (e: React.MouseEvent, plantilla: Template) => {
-    e.stopPropagation();
-    setPlantillaEditando(plantilla);
-    setIdPlantillaSeleccionada(plantilla.id);
-    setTabActiva('creator');
+    manejarClickEditarEnBuilder(e, plantilla);
   };
 
   const manejarClickEditarEnBuilder = (e: React.MouseEvent, plantilla: Template) => {

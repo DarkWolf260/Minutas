@@ -24,7 +24,7 @@ import { parseTemplate } from '@/lib/template-parser';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { STATISTICS_SECTIONS } from '@/lib/constants/statistics';
-import { BarChart3, Settings2, Plus, Trash2, ChevronDown, Save, Search, Check, X, Copy, Layout } from 'lucide-react';
+import { BarChart3, Settings2, Plus, Trash2, ChevronDown, Save, Search, Check, X, Copy, FileText } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import type { StatisticRule } from '@/lib/types';
@@ -552,14 +552,17 @@ export function TemplateEditor({
   config,
   onTemplateChange,
   isReadOnly = false,
+  onOpenBuilder,
   onOpenVisualCreator,
 }: {
   template: Template;
   config: TemplateConfig;
   onTemplateChange: (template: Template) => void;
   isReadOnly?: boolean;
+  onOpenBuilder?: () => void;
   onOpenVisualCreator?: () => void;
 }) {
+  const handleOpenBuilder = onOpenBuilder || onOpenVisualCreator;
   const [localTemplate, setLocalTemplate] = useState<Template>(() => {
     const rules = template.statistics_rules || [];
     const metaRule = rules.find(r => r.field_id === '__meta__');
@@ -771,16 +774,16 @@ export function TemplateEditor({
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {onOpenVisualCreator && !isReadOnly && (
+              {handleOpenBuilder && !isReadOnly && (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={onOpenVisualCreator}
-                  className="h-9 px-3.5 text-xs font-semibold rounded-xl border-indigo-200/80 dark:border-indigo-800/60 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 gap-1.5 transition-all shadow-2xs"
-                  title="Abrir este formulario en el Creador Visual"
+                  onClick={handleOpenBuilder}
+                  className="h-9 px-3.5 text-xs font-semibold rounded-xl border-muted-foreground/30 hover:bg-muted text-foreground gap-1.5 transition-all shadow-2xs"
+                  title="Abrir esta plantilla en el Constructor"
                 >
-                  <Layout className="h-3.5 w-3.5" />
-                  <span>Editar Formulario</span>
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>Editar en Constructor</span>
                 </Button>
               )}
               <Button
