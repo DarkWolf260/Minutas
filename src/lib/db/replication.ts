@@ -134,6 +134,9 @@ async function startCollectionReplication(
     },
     push: {
       handler: async (rows) => {
+        const isLocalOnly = !workspace_id || workspace_id === 'minutasdb';
+        if (isLocalOnly) return [];
+
         // 1. Prepare payloads
         const allowedColumns: Record<string, string[]> = {
           personnel: ['id', 'workspace_id', 'personnel_id', 'name', 'cedula', 'rank', 'cargo', 'titulo', 'role_id', 'status', 'department', 'sex', 'specialties', 'order', '_deleted'],

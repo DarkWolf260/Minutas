@@ -1,7 +1,7 @@
-# Graph Report - Minutas  (2026-10-20)
+# Graph Report - Minutas  (2026-10-21)
 
 ## Corpus Check
-- 408 files · ~328,116 words
+- 408 files · ~328,082 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 9 file(s) not represented in the graph (top: (none) 5, .example 1, .bat 1)
 
@@ -564,7 +564,7 @@ Nodes (8): LoadingScreen(), LoadingScreenProps, DatabaseProvider(), initDB(), mi
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `react` to `novedades.tsx`, `field-renderer.tsx`, `button.tsx`, `sync-context.tsx`, `ScrollArea`, `novedad-sidebar.tsx`, `setup/index.tsx`, `settings/index.tsx`, `template-builder.tsx`, `direcciones.tsx`, `StaffMember`, `db-provider.tsx`, `personnel-table.tsx`, `04-estructura.tsx`, `supabase.ts`, `types/index.ts`, `sonner`, `Badge`, `react-router-dom`, `qr-scanner.tsx`, `App.tsx`, `personnel-form-fields.tsx`, `SelectContent`, `package.json`, `Label`, `borrar-datos.tsx`, `Input`, `lib/utils.ts`, `users/index.tsx`, `cn`, `date-picker.tsx`, `Button`, `side-nav.tsx`, `personal.tsx`?**
-  _High betweenness centrality (0.115) - this node is a cross-community bridge._
+  _High betweenness centrality (0.112) - this node is a cross-community bridge._
 - **What connects `next/core-web-vitals`, `plugin:@typescript-eslint/recommended`, `@radix-ui/react-progress` to the rest of the system?**
   _117 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `db.ts` be split into smaller, more focused modules?**
@@ -574,6 +574,6 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `parseTemplate` be split into smaller, more focused modules?**
   _Cohesion score 0.10708898944193061 - nodes in this community are weakly interconnected._
 - **Why does `Button` connect `Button` to `novedades.tsx`, `field-renderer.tsx`, `button.tsx`, `ScrollArea`, `react`, `novedad-sidebar.tsx`, `setup/index.tsx`, `settings/index.tsx`, `template-builder.tsx`, `direcciones.tsx`, `StaffMember`, `db-provider.tsx`, `personnel-table.tsx`, `04-estructura.tsx`, `types/index.ts`, `Badge`, `react-router-dom`, `qr-scanner.tsx`, `App.tsx`, `personnel-form-fields.tsx`, `SelectContent`, `Label`, `borrar-datos.tsx`, `Input`, `lib/utils.ts`, `users/index.tsx`, `cn`, `date-picker.tsx`, `side-nav.tsx`, `personal.tsx`?**
-  _High betweenness centrality (0.052) - this node is a cross-community bridge._
+  _High betweenness centrality (0.053) - this node is a cross-community bridge._
 - **Should `novedades.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.0792156862745098 - nodes in this community are weakly interconnected._
