@@ -86,14 +86,7 @@ create table "public"."lookups" (
 
 alter table "public"."lookups" enable row level security;
 
-create table "public"."municipalities" (
-    "id" text not null,
-    "state_id" character(3) not null,
-    "name" text not null,
-    "created_at" timestamp with time zone default now()
-      );
 
-alter table "public"."municipalities" enable row level security;
 
 create table "public"."personnel" (
     "id" text not null,
@@ -168,13 +161,7 @@ create table "public"."scheduled_messages" (
 
 alter table "public"."scheduled_messages" enable row level security;
 
-create table "public"."states" (
-    "id" character(3) not null,
-    "name" text not null,
-    "created_at" timestamp with time zone default now()
-      );
 
-alter table "public"."states" enable row level security;
 
 create table "public"."sync_channels" (
     "id" uuid not null default gen_random_uuid(),
@@ -273,9 +260,7 @@ CREATE INDEX idx_sync_reports_status ON public.sync_reports USING btree (status)
 
 CREATE UNIQUE INDEX lookups_pkey ON public.lookups USING btree (id);
 
-CREATE UNIQUE INDEX municipalities_pkey ON public.municipalities USING btree (id);
 
-CREATE UNIQUE INDEX municipalities_state_id_name_key ON public.municipalities USING btree (state_id, name);
 
 CREATE UNIQUE INDEX personnel_pkey ON public.personnel USING btree (id);
 
@@ -285,9 +270,7 @@ CREATE UNIQUE INDEX reports_pkey ON public.reports USING btree (id);
 
 CREATE UNIQUE INDEX scheduled_messages_pkey ON public.scheduled_messages USING btree (id);
 
-CREATE UNIQUE INDEX states_name_key ON public.states USING btree (name);
 
-CREATE UNIQUE INDEX states_pkey ON public.states USING btree (id);
 
 CREATE UNIQUE INDEX sync_channels_code_key ON public.sync_channels USING btree (code);
 
@@ -313,7 +296,7 @@ alter table "public"."history" add constraint "history_pkey" PRIMARY KEY using i
 
 alter table "public"."lookups" add constraint "lookups_pkey" PRIMARY KEY using index "lookups_pkey";
 
-alter table "public"."municipalities" add constraint "municipalities_pkey" PRIMARY KEY using index "municipalities_pkey";
+
 
 alter table "public"."personnel" add constraint "personnel_pkey" PRIMARY KEY using index "personnel_pkey";
 
@@ -323,7 +306,7 @@ alter table "public"."reports" add constraint "reports_pkey" PRIMARY KEY using i
 
 alter table "public"."scheduled_messages" add constraint "scheduled_messages_pkey" PRIMARY KEY using index "scheduled_messages_pkey";
 
-alter table "public"."states" add constraint "states_pkey" PRIMARY KEY using index "states_pkey";
+
 
 alter table "public"."sync_channels" add constraint "sync_channels_pkey" PRIMARY KEY using index "sync_channels_pkey";
 
@@ -361,11 +344,7 @@ alter table "public"."lookups" add constraint "lookups_workspace_id_fkey" FOREIG
 
 alter table "public"."lookups" validate constraint "lookups_workspace_id_fkey";
 
-alter table "public"."municipalities" add constraint "municipalities_state_id_fkey" FOREIGN KEY (state_id) REFERENCES public.states(id) ON DELETE CASCADE not valid;
 
-alter table "public"."municipalities" validate constraint "municipalities_state_id_fkey";
-
-alter table "public"."municipalities" add constraint "municipalities_state_id_name_key" UNIQUE using index "municipalities_state_id_name_key";
 
 alter table "public"."personnel" add constraint "personnel_workspace_id_fkey" FOREIGN KEY (workspace_id) REFERENCES public.workspaces(id) ON DELETE CASCADE not valid;
 
@@ -387,7 +366,7 @@ alter table "public"."scheduled_messages" add constraint "scheduled_messages_wor
 
 alter table "public"."scheduled_messages" validate constraint "scheduled_messages_workspace_id_fkey";
 
-alter table "public"."states" add constraint "states_name_key" UNIQUE using index "states_name_key";
+
 
 alter table "public"."sync_channels" add constraint "sync_channels_code_key" UNIQUE using index "sync_channels_code_key";
 
@@ -1089,47 +1068,7 @@ grant truncate on table "public"."lookups" to "service_role";
 
 grant update on table "public"."lookups" to "service_role";
 
-grant delete on table "public"."municipalities" to "anon";
 
-grant insert on table "public"."municipalities" to "anon";
-
-grant references on table "public"."municipalities" to "anon";
-
-grant select on table "public"."municipalities" to "anon";
-
-grant trigger on table "public"."municipalities" to "anon";
-
-grant truncate on table "public"."municipalities" to "anon";
-
-grant update on table "public"."municipalities" to "anon";
-
-grant delete on table "public"."municipalities" to "authenticated";
-
-grant insert on table "public"."municipalities" to "authenticated";
-
-grant references on table "public"."municipalities" to "authenticated";
-
-grant select on table "public"."municipalities" to "authenticated";
-
-grant trigger on table "public"."municipalities" to "authenticated";
-
-grant truncate on table "public"."municipalities" to "authenticated";
-
-grant update on table "public"."municipalities" to "authenticated";
-
-grant delete on table "public"."municipalities" to "service_role";
-
-grant insert on table "public"."municipalities" to "service_role";
-
-grant references on table "public"."municipalities" to "service_role";
-
-grant select on table "public"."municipalities" to "service_role";
-
-grant trigger on table "public"."municipalities" to "service_role";
-
-grant truncate on table "public"."municipalities" to "service_role";
-
-grant update on table "public"."municipalities" to "service_role";
 
 grant delete on table "public"."personnel" to "anon";
 
@@ -1299,47 +1238,7 @@ grant truncate on table "public"."scheduled_messages" to "service_role";
 
 grant update on table "public"."scheduled_messages" to "service_role";
 
-grant delete on table "public"."states" to "anon";
 
-grant insert on table "public"."states" to "anon";
-
-grant references on table "public"."states" to "anon";
-
-grant select on table "public"."states" to "anon";
-
-grant trigger on table "public"."states" to "anon";
-
-grant truncate on table "public"."states" to "anon";
-
-grant update on table "public"."states" to "anon";
-
-grant delete on table "public"."states" to "authenticated";
-
-grant insert on table "public"."states" to "authenticated";
-
-grant references on table "public"."states" to "authenticated";
-
-grant select on table "public"."states" to "authenticated";
-
-grant trigger on table "public"."states" to "authenticated";
-
-grant truncate on table "public"."states" to "authenticated";
-
-grant update on table "public"."states" to "authenticated";
-
-grant delete on table "public"."states" to "service_role";
-
-grant insert on table "public"."states" to "service_role";
-
-grant references on table "public"."states" to "service_role";
-
-grant select on table "public"."states" to "service_role";
-
-grant trigger on table "public"."states" to "service_role";
-
-grant truncate on table "public"."states" to "service_role";
-
-grant update on table "public"."states" to "service_role";
 
 grant delete on table "public"."sync_channels" to "anon";
 
@@ -1579,34 +1478,7 @@ using ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.allowed
    FROM public.profiles
   WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))));
 
-create policy "Lectura publica"
-  on "public"."municipalities"
-  as permissive
-  for select
-  to public
-using (true);
 
-create policy "Solo admin gestiona (Insert)"
-  on "public"."municipalities"
-  as permissive
-  for insert
-  to public
-  with check (internal.is_admin());
-
-create policy "Solo admin gestiona (Update)"
-  on "public"."municipalities"
-  as permissive
-  for update
-  to public
-  using (internal.is_admin())
-  with check (internal.is_admin());
-
-create policy "Solo admin gestiona (Delete)"
-  on "public"."municipalities"
-  as permissive
-  for delete
-  to public
-  using (internal.is_admin());
 
 create policy "Acceso por workspace"
   on "public"."personnel"
@@ -1652,34 +1524,7 @@ with check ((internal.is_admin() OR (workspace_id IN ( SELECT unnest(profiles.al
    FROM public.profiles
   WHERE ((profiles.id = (select auth.uid())) AND (profiles.is_approved = true))))));
 
-create policy "Lectura publica"
-  on "public"."states"
-  as permissive
-  for select
-  to public
-using (true);
 
-create policy "Solo admin gestiona (Insert)"
-  on "public"."states"
-  as permissive
-  for insert
-  to public
-  with check (internal.is_admin());
-
-create policy "Solo admin gestiona (Update)"
-  on "public"."states"
-  as permissive
-  for update
-  to public
-  using (internal.is_admin())
-  with check (internal.is_admin());
-
-create policy "Solo admin gestiona (Delete)"
-  on "public"."states"
-  as permissive
-  for delete
-  to public
-  using (internal.is_admin());
 
 create policy "Permitir lectura general de canales"
   on "public"."sync_channels"

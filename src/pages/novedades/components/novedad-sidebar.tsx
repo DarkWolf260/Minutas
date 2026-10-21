@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { PlusCircle, Search, Calendar, Pin } from 'lucide-react';
+import { PlusCircle, Search, Calendar, Pin, MessageSquare, FileText, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { NoGuardBanner } from '@/components/guards/guard-selector';
@@ -10,6 +10,8 @@ import { NovedadGroupItem } from './novedad-group-item';
 import type { Report, Template } from '@/lib/types';
 import { useSettings } from '@/hooks/configuracion';
 import { getReportDateTime, findValueInform_data } from '@/lib/report-sorter';
+import { WhatsAppChatView } from './whatsapp-chat/whatsapp-chat-view';
+import { useWhatsAppBot } from '@/hooks/whatsapp';
 
 import type { UseNovedadesReturn } from '@/hooks/novedades';
 
@@ -28,8 +30,13 @@ export interface NovedadSidebarProps {
     | 'manejarSeleccionarReporte'
     | 'manejarExportarTodasWord'
     | 'templates'
+    | 'reports'
   >;
   isMobile: boolean;
+  vistaSidebar?: 'lista' | 'whatsapp';
+  onCambiarVistaSidebar?: (vista: 'lista' | 'whatsapp') => void;
+  isChatExpanded?: boolean;
+  onToggleExpandChat?: () => void;
 }
 
 /** Returns a human-friendly label for a given YYYY-MM-DD key. */
@@ -229,7 +236,14 @@ function groupReportsByTemplate(
   });
 }
 
-export const NovedadSidebar = ({ hook, isMobile }: NovedadSidebarProps) => {
+export const NovedadSidebar = ({
+  hook,
+  isMobile,
+  vistaSidebar: vistaSidebarProp,
+  onCambiarVistaSidebar,
+  isChatExpanded = false,
+  onToggleExpandChat
+}: NovedadSidebarProps) => {
   const {
     idReporteSeleccionado,
     creandoReporte,
@@ -243,9 +257,28 @@ export const NovedadSidebar = ({ hook, isMobile }: NovedadSidebarProps) => {
     manejarSeleccionarReporte,
     manejarExportarTodasWord,
     templates,
+    reports
   } = hook;
 
   const { settings, saveSettings } = useSettings();
+  const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
+  const isBotReady = bot.isAvailable && bot.status.isReady;
+
+  const [internalVista, setInternalVista] = useState<'lista' | 'whatsapp'>(() => {
+    return (localStorage.getItem('novedades_vista_sidebar') as 'lista' | 'whatsapp') || 'lista';
+  });
+
+  const activeVista = vistaSidebarProp ?? internalVista;
+
+  const handleCambiarVista = (vista: 'lista' | 'whatsapp') => {
+    if (onCambiarVistaSidebar) {
+      onCambiarVistaSidebar(vista);
+    } else {
+      setInternalVista(vista);
+      localStorage.setItem('novedades_vista_sidebar', vista);
+    }
+  };
+
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   const groups = useMemo(() => {
@@ -387,26 +420,104 @@ export const NovedadSidebar = ({ hook, isMobile }: NovedadSidebarProps) => {
         idReporteSeleccionado || creandoReporte ? 'hidden sm:flex' : 'flex'
       )}
     >
-      <div className="flex items-center justify-between border-b p-3 sm:p-4 min-h-[60px] sm:min-h-[73px]">
-        <h2 className="text-lg sm:text-xl font-bold tracking-tight">Novedades</h2>
-        <Button
-          size="sm"
-          onClick={() => setEsDialogOpenCrear(true)}
-          disabled={!guardiaAbierta}
-          className="shadow-sm gap-2 h-8 sm:h-9 text-xs sm:text-sm"
-        >
-          <PlusCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          Nuevo
-        </Button>
+      <div className="flex flex-col border-b bg-card">
+        <div className="flex items-center justify-between p-3 sm:p-4 pb-2 min-h-[52px]">
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight">Novedades</h2>
+          {activeVista === 'lista' && (
+            <Button
+              size="sm"
+              onClick={() => setEsDialogOpenCrear(true)}
+              disabled={!guardiaAbierta}
+              className="shadow-sm gap-2 h-8 sm:h-9 text-xs sm:text-sm"
+            >
+              <PlusCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Nuevo
+            </Button>
+          )}
+        </div>
+
+        {/* Alternador de Vistas: Lista vs Chat WhatsApp */}
+        <div className="px-3 sm:px-4 pb-2.5">
+          <div className="flex items-center p-1 bg-muted/60 dark:bg-muted/40 rounded-xl border border-border/40">
+            <button
+              type="button"
+              onClick={() => handleCambiarVista('lista')}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all',
+                activeVista === 'lista'
+                  ? 'bg-background text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              <span>Lista</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-muted font-normal text-muted-foreground">
+                {reportesFiltrados.length}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleCambiarVista('whatsapp')}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all',
+                activeVista === 'whatsapp'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              <span>Chat WhatsApp</span>
+              {isBotReady && (
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+              )}
+            </button>
+          </div>
+        </div>
       </div>
 
-      <NovedadFilters
-        busqueda={busqueda}
-        setBusqueda={setBusqueda}
-        ordenamiento={ordenamiento}
-        setOrdenamiento={setOrdenamiento}
-        manejarExportarTodasWord={manejarExportarTodasWord}
-      />
+      {activeVista === 'whatsapp' ? (
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          {isChatExpanded ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-muted-foreground bg-muted/10">
+              <div className="h-12 w-12 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-3">
+                <MessageSquare className="h-6 w-6" />
+              </div>
+              <h4 className="font-bold text-sm text-foreground">Chat expandido</h4>
+              <p className="text-xs text-muted-foreground mt-1 mb-4 max-w-[200px]">
+                El chat de WhatsApp está abierto en el panel principal.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onToggleExpandChat}
+                className="gap-1.5 h-8 text-xs rounded-xl"
+              >
+                <Minimize2 className="h-3.5 w-3.5" />
+                Contraer a barra lateral
+              </Button>
+            </div>
+          ) : (
+            <WhatsAppChatView
+              reports={reports || reportesFiltrados}
+              templates={templates}
+              selectedReportId={idReporteSeleccionado}
+              onSelectReport={manejarSeleccionarReporte}
+              guardiaAbierta={guardiaAbierta}
+              isExpanded={false}
+              onToggleExpand={onToggleExpandChat}
+              onOpenCreateDialog={() => setEsDialogOpenCrear(true)}
+            />
+          )}
+        </div>
+      ) : (
+        <>
+          <NovedadFilters
+            busqueda={busqueda}
+            setBusqueda={setBusqueda}
+            ordenamiento={ordenamiento}
+            setOrdenamiento={setOrdenamiento}
+            manejarExportarTodasWord={manejarExportarTodasWord}
+          />
 
       <div className="flex-1 min-h-0">
         <ScrollArea className="h-full w-full" type="always">
@@ -630,6 +741,8 @@ export const NovedadSidebar = ({ hook, isMobile }: NovedadSidebarProps) => {
           </div>
         </ScrollArea>
       </div>
-    </aside>
+    </>
+  )}
+</aside>
   );
 };

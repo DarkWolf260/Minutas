@@ -10,6 +10,22 @@ export interface WhatsAppChat {
   isGroup: boolean;
 }
 
+export interface WhatsAppMessage {
+  id: string;
+  body: string;
+  type: string;
+  timestamp: number;
+  fromMe: boolean;
+  from: string;
+  to: string;
+  author: string | null;
+  senderName: string | null;
+  hasMedia: boolean;
+  mediaUrl?: string | null;
+  thumbnail?: string | null;
+  ack?: number;
+}
+
 export interface WhatsAppStatus {
   isReady: boolean;
   needsAuth: boolean;
@@ -691,6 +707,26 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     }
   }, [localUrl, db, currentWorkspace, isCloud, checkStatus]);
 
+  const fetchChatMessages = useCallback(async (chatId: string, limit: number = 50): Promise<WhatsAppMessage[]> => {
+    try {
+      const wsParam = currentWorkspace ? `&workspace=${encodeURIComponent(currentWorkspace)}` : '';
+      const response = await fetch(`${apiUrl}/api/whatsapp/chats/${encodeURIComponent(chatId)}/messages?limit=${limit}${wsParam}`, {
+        headers: {
+          ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
+        }
+      });
+      if (!response.ok) return [];
+      const data: WhatsAppMessage[] = await response.json();
+      return data.map(m => ({
+        ...m,
+        mediaUrl: m.mediaUrl ? (apiUrl ? `${apiUrl}${m.mediaUrl}` : m.mediaUrl) : null
+      }));
+    } catch (e) {
+      console.warn('Error fetching chat messages:', e);
+      return [];
+    }
+  }, [apiUrl, currentWorkspace]);
+
   const finalAvailable = (state.isAvailable && state.isWorkspaceMatch) || (state.isCloudActive && isCloud);
   const finalStatus = (state.isAvailable && state.isWorkspaceMatch)
     ? state.status
@@ -705,6 +741,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     chats: state.chats,
     checkStatus,
     loadChats,
+    fetchChatMessages,
     sendMessage,
     logout,
     claimWorkspace,

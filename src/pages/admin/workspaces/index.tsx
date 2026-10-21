@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Settings,
@@ -36,6 +36,10 @@ import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { MODULE_DEFS } from '@/pages/settings/modules';
+import {
+  VENEZUELA_STATES,
+  getMunicipalitiesByState
+} from '@/lib/constants/venezuela';
 
 import {
   Dialog,
@@ -71,13 +75,16 @@ export default function AdminWorkspacesPage() {
     createCloudWorkspace,
     deleteCloudWorkspace
   } = useCloudWorkspaces();
-  const [states, setStates] = useState<any[]>([]);
-  const [municipalities, setMunicipalities] = useState<any[]>([]);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const states = VENEZUELA_STATES;
   const [selectedState, setSelectedState] = useState('');
+  const municipalities = useMemo(() => {
+    return selectedState ? getMunicipalitiesByState(selectedState) : [];
+  }, [selectedState]);
   const [selectedMunicipality, setSelectedMunicipality] = useState('');
+  const [allUsers, setAllUsers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
+  const [lastAutoName, setLastAutoName] = useState('');
   const [customId, setCustomId] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -99,14 +106,16 @@ export default function AdminWorkspacesPage() {
 
   useEffect(() => {
     const loadMetadata = async () => {
-      const [statesData, usersData, rolesData] = await Promise.all([
-        supabase.from('states').select('*').order('name'),
-        supabase.from('profiles').select('id, full_name, email, allowed_workspaces, is_admin').order('full_name'),
-        supabase.from('roles').select('*').order('order')
-      ]);
-      if (statesData.data) setStates(statesData.data);
-      if (usersData.data) setAllUsers(usersData.data);
-      if (rolesData.data) setAllRoles(rolesData.data);
+      try {
+        const [usersData, rolesData] = await Promise.all([
+          supabase.from('profiles').select('id, full_name, email, allowed_workspaces, is_admin').order('full_name'),
+          supabase.from('roles').select('*').order('order')
+        ]);
+        if (usersData.data) setAllUsers(usersData.data);
+        if (rolesData.data) setAllRoles(rolesData.data);
+      } catch (err) {
+        console.error('Error cargando metadatos:', err);
+      }
     };
     loadMetadata();
   }, []);
@@ -201,29 +210,24 @@ export default function AdminWorkspacesPage() {
   };
 
   useEffect(() => {
-    if (selectedState) {
-      loadMunicipalities(selectedState);
-    } else {
-      setMunicipalities([]);
-    }
     setSelectedMunicipality('');
     setCustomId(selectedState ? selectedState + '-' : '');
   }, [selectedState]);
 
   useEffect(() => {
     if (selectedMunicipality) {
-      setCustomId(selectedMunicipality);
+      const muniObj = municipalities.find(m => m.id === selectedMunicipality);
+      const stateObj = states.find(s => s.id === selectedState);
+      if (muniObj) {
+        setCustomId(muniObj.id);
+        if (!newWorkspaceName || newWorkspaceName === lastAutoName) {
+          const autoName = stateObj ? `${muniObj.name}, ${stateObj.name}` : muniObj.name;
+          setNewWorkspaceName(autoName);
+          setLastAutoName(autoName);
+        }
+      }
     }
-  }, [selectedMunicipality]);
-
-  const loadMunicipalities = async (stateId: string) => {
-    const { data } = await supabase
-      .from('municipalities')
-      .select('*')
-      .eq('state_id', stateId)
-      .order('name');
-    if (data) setMunicipalities(data);
-  };
+  }, [selectedMunicipality, selectedState, municipalities, states, lastAutoName, newWorkspaceName]);
 
   const handleCreate = async () => {
     if (!newWorkspaceName.trim() || !selectedMunicipality || !customId.trim()) {
@@ -231,20 +235,25 @@ export default function AdminWorkspacesPage() {
       return;
     }
 
-    const stateName = states.find((s: any) => s.id === selectedState)?.name;
-    const muniName = municipalities.find((m: any) => m.id === selectedMunicipality)?.name;
+    const stateObj = states.find((s: any) => s.id === selectedState);
+    const muniObj = municipalities.find((m: any) => m.id === selectedMunicipality);
+    const stateName = stateObj?.name || selectedState;
+    const muniName = muniObj?.name || selectedMunicipality;
 
     setIsCreating(true);
     const success = await createCloudWorkspace(
-      newWorkspaceName,
-      stateName || selectedState,
-      muniName || selectedMunicipality,
+      newWorkspaceName.trim(),
+      stateName,
+      muniName,
       customId.toUpperCase().trim()
     );
 
     if (success) {
       setNewWorkspaceName('');
+      setLastAutoName('');
       setCustomId('');
+      setSelectedState('');
+      setSelectedMunicipality('');
       setIsOpen(false);
     }
     setIsCreating(false);
@@ -305,7 +314,16 @@ export default function AdminWorkspacesPage() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <Dialog open={isOpen} onOpenChange={(open) => {
+              setIsOpen(open);
+              if (!open) {
+                setSelectedState('');
+                setSelectedMunicipality('');
+                setNewWorkspaceName('');
+                setLastAutoName('');
+                setCustomId('');
+              }
+            }}>
               <DialogTrigger asChild>
                 <Button className="font-bold shadow-sm gap-2">
                   <Plus className="h-4 w-4" /> Nueva Área
@@ -327,9 +345,9 @@ export default function AdminWorkspacesPage() {
                       </label>
                       <Select value={selectedState} onValueChange={setSelectedState}>
                         <SelectTrigger className="h-10 rounded-xl shadow-sm border-muted/60">
-                          <SelectValue placeholder="Seleccionar..." />
+                          <SelectValue placeholder="Seleccionar estado..." />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-muted/60 shadow-xl z-[100]">
+                        <SelectContent className="max-h-[280px] rounded-xl border-muted/60 shadow-xl z-[100]">
                           {states.map((s: any) => (
                             <SelectItem key={s.id} value={s.id} className="rounded-lg">
                               {s.name}
@@ -349,9 +367,9 @@ export default function AdminWorkspacesPage() {
                         disabled={!selectedState}
                       >
                         <SelectTrigger className="h-10 rounded-xl shadow-sm border-muted/60">
-                          <SelectValue placeholder="Seleccionar..." />
+                          <SelectValue placeholder={selectedState ? "Seleccionar municipio..." : "Elige un estado primero"} />
                         </SelectTrigger>
-                        <SelectContent className="max-h-[250px] rounded-xl border-muted/60 shadow-xl z-[100]">
+                        <SelectContent className="max-h-[280px] rounded-xl border-muted/60 shadow-xl z-[100]">
                           {municipalities.map((m: any) => (
                             <SelectItem key={m.id} value={m.id} className="rounded-lg">
                               {m.name}
@@ -368,7 +386,7 @@ export default function AdminWorkspacesPage() {
                         Nombre del Área (Visible)
                       </label>
                       <Input
-                        placeholder="Ej: Guanta, Anzoátegui"
+                        placeholder="Ej: Diego Bautista Urbaneja, Anzoátegui"
                         value={newWorkspaceName}
                         onChange={(e) => setNewWorkspaceName(e.target.value)}
                         className="h-10 rounded-xl shadow-sm border-muted/60"
@@ -376,13 +394,17 @@ export default function AdminWorkspacesPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1">
-                        ID del Área (Automático)
-                      </label>
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1">
+                          ID del Área (Identificador)
+                        </label>
+                        <span className="text-[9px] text-muted-foreground font-mono">Único en mayúsculas</span>
+                      </div>
                       <Input
                         value={customId}
-                        disabled
-                        className="h-10 rounded-xl bg-muted/50 font-mono font-bold text-primary border-muted/40"
+                        onChange={(e) => setCustomId(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''))}
+                        placeholder="Ej: ANZ-URBANEJA"
+                        className="h-10 rounded-xl bg-muted/40 font-mono font-bold text-primary border-muted/40"
                       />
                     </div>
                   </div>

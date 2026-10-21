@@ -366,6 +366,169 @@ app.get('/api/whatsapp/chats', async (req, res) => {
   }
 });
 
+app.get('/api/whatsapp/chats/:chatId/messages', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
+  const requestedWorkspace = req.query.workspace || req.headers['x-workspace-id'];
+  if (activeWorkspace && requestedWorkspace && requestedWorkspace !== activeWorkspace) {
+    return res.status(403).json({ 
+      error: `El bot está asignado exclusivamente al área de trabajo "${activeWorkspace}".`,
+      activeWorkspace 
+    });
+  }
+
+  if (!isReady || !client) {
+    return res.status(400).json({ error: 'WhatsApp client is not ready' });
+  }
+
+  const { chatId } = req.params;
+  const limit = Math.min(parseInt(req.query.limit, 10) || 50, 100);
+
+  try {
+    let targetChatId = chatId;
+    if (typeof targetChatId === 'string' && !targetChatId.includes('@')) {
+      targetChatId = `${targetChatId.replace(/\D/g, '')}@c.us`;
+    }
+
+    const chat = await client.getChatById(targetChatId);
+    if (!chat) {
+      return res.status(404).json({ error: 'Chat no encontrado' });
+    }
+
+    const messages = await chat.fetchMessages({ limit });
+    const formatted = messages.map(msg => {
+      const msgId = msg.id?._serialized || msg.id?.$1 || (typeof msg.id === 'string' ? msg.id : msg.id?.id) || String(Date.now());
+
+      let thumbnail = null;
+      if (msg.hasMedia && msg._data?.body && typeof msg._data.body === 'string') {
+        const bodyStr = msg._data.body;
+        if (bodyStr.startsWith('data:image/')) {
+          thumbnail = bodyStr;
+        } else if (bodyStr.startsWith('/9j/') || bodyStr.startsWith('iVBORw0KGgo')) {
+          thumbnail = `data:image/jpeg;base64,${bodyStr}`;
+        }
+      }
+
+      return {
+        id: msgId,
+        body: msg.body || '',
+        type: msg.type || 'chat',
+        timestamp: (msg.timestamp || 0) * 1000,
+        fromMe: Boolean(msg.fromMe),
+        from: msg.from,
+        to: msg.to,
+        author: msg.author || null,
+        senderName: msg._data?.notifyName || msg._data?.name || (msg.author ? msg.author.split('@')[0] : (msg.fromMe ? 'Tú' : 'Contacto')),
+        hasMedia: Boolean(msg.hasMedia),
+        mediaUrl: msg.hasMedia ? `/api/whatsapp/messages/${encodeURIComponent(msgId)}/media` : null,
+        thumbnail,
+        ack: msg.ack
+      };
+    });
+
+    res.json(formatted);
+  } catch (error) {
+    console.error(`[Messages] Error obteniendo mensajes de ${chatId}:`, error?.message || error);
+    res.status(500).json({ error: error.message || 'Error al obtener mensajes' });
+  }
+});
+
+// Cache en memoria para archivos multimedia descargados (evita re-descargar de Puppeteer)
+const mediaCache = new Map();
+const MAX_MEDIA_CACHE = 100;
+
+app.get('/api/whatsapp/messages/:messageId/media', async (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+
+  const { messageId } = req.params;
+  const decodedMsgId = decodeURIComponent(messageId);
+
+  if (!isReady || !client) {
+    return res.status(503).json({ error: 'WhatsApp client is not ready' });
+  }
+
+  // 1. Revisar caché en memoria
+  if (mediaCache.has(decodedMsgId)) {
+    const cached = mediaCache.get(decodedMsgId);
+    res.setHeader('Content-Type', cached.mimetype || 'image/jpeg');
+    return res.send(cached.buffer);
+  }
+
+  try {
+    let media = null;
+    let msgObj = null;
+
+    // 2. Intentar descargar mediante client.getMessageById
+    try {
+      msgObj = await client.getMessageById(decodedMsgId);
+      if (msgObj && msgObj.hasMedia) {
+        media = await msgObj.downloadMedia();
+      }
+    } catch (getErr) {
+      console.warn(`[Media] getMessageById aviso para ${decodedMsgId}:`, getErr?.message || getErr);
+    }
+
+    // 3. Fallback: evaluar directamente en pupPage con resolveMediaBlob
+    if ((!media || !media.data) && client.pupPage) {
+      try {
+        const resolved = await client.pupPage.evaluate(async (msgId) => {
+          try {
+            const res = await window.WWebJS.resolveMediaBlob(msgId);
+            if (!res || !res.blob) return null;
+            const data = await window.WWebJS.arrayBufferToBase64Async(await res.blob.arrayBuffer());
+            return {
+              data,
+              mimetype: res.mimetype || 'image/jpeg',
+              filename: res.filename
+            };
+          } catch (e) {
+            return null;
+          }
+        }, decodedMsgId);
+        if (resolved && resolved.data) {
+          media = resolved;
+        }
+      } catch (pupErr) {
+        console.warn(`[Media] pupPage evaluate aviso para ${decodedMsgId}:`, pupErr?.message || pupErr);
+      }
+    }
+
+    // 4. Fallback 2: si no se pudo descargar el archivo completo, usar thumbnail de _data.body si existe
+    if ((!media || !media.data) && msgObj?._data?.body && typeof msgObj._data.body === 'string') {
+      let rawBase64 = msgObj._data.body;
+      if (rawBase64.includes('base64,')) {
+        rawBase64 = rawBase64.split('base64,')[1];
+      }
+      if (rawBase64.length > 20) {
+        const buffer = Buffer.from(rawBase64, 'base64');
+        res.setHeader('Content-Type', 'image/jpeg');
+        return res.send(buffer);
+      }
+    }
+
+    if (!media || !media.data) {
+      return res.status(404).json({ error: 'Media no disponible o expirada en WhatsApp' });
+    }
+
+    const buffer = Buffer.from(media.data, 'base64');
+    const mimetype = media.mimetype || 'image/jpeg';
+
+    if (mediaCache.size >= MAX_MEDIA_CACHE) {
+      const firstKey = mediaCache.keys().next().value;
+      mediaCache.delete(firstKey);
+    }
+    mediaCache.set(decodedMsgId, { mimetype, buffer, timestamp: Date.now() });
+
+    res.setHeader('Content-Type', mimetype);
+    return res.send(buffer);
+  } catch (err) {
+    console.error(`[Media] Error descargando media para ${decodedMsgId}:`, err?.message || err);
+    res.status(500).json({ error: err.message || 'Error al descargar archivo multimedia' });
+  }
+});
+
 app.post('/api/whatsapp/send', async (req, res) => {
   if (!isReady) {
     return res.status(400).json({ error: 'WhatsApp client is not ready' });

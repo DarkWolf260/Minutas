@@ -1,4 +1,4 @@
-import React, { Suspense, memo } from 'react';
+import React, { Suspense, memo, useState } from 'react';
 import { useIsMobile } from '@/hooks/ui';
 import { useNovedades } from '@/hooks/novedades';
 import { cn } from '@/lib/utils';
@@ -9,6 +9,7 @@ import { NovedadSidebar } from './novedades/components/novedad-sidebar';
 import { NovedadMainContent } from './novedades/components/novedad-main-content';
 import { NovedadModals } from './novedades/components/novedad-modals';
 import { MobileHeader } from './novedades/components/mobile-header';
+import { WhatsAppChatView } from './novedades/components/whatsapp-chat/whatsapp-chat-view';
 
 function NovedadesPageContent() {
   const isMobile = useIsMobile();
@@ -19,23 +20,54 @@ function NovedadesPageContent() {
     guardiaAbierta 
   } = hook;
 
+  const [vistaSidebar, setVistaSidebar] = useState<'lista' | 'whatsapp'>(() => {
+    return (localStorage.getItem('novedades_vista_sidebar') as 'lista' | 'whatsapp') || 'lista';
+  });
+  const [isChatExpanded, setIsChatExpanded] = useState(false);
+
+  const handleCambiarVista = (vista: 'lista' | 'whatsapp') => {
+    setVistaSidebar(vista);
+    localStorage.setItem('novedades_vista_sidebar', vista);
+    if (vista === 'lista') {
+      setIsChatExpanded(false);
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col h-full w-full bg-background overflow-hidden sm:flex-row flex-1">
         {/* Sidebar Lateral */}
-        <NovedadSidebar hook={hook} isMobile={isMobile} />
+        <NovedadSidebar
+          hook={hook}
+          isMobile={isMobile}
+          vistaSidebar={vistaSidebar}
+          onCambiarVistaSidebar={handleCambiarVista}
+          isChatExpanded={isChatExpanded}
+          onToggleExpandChat={() => setIsChatExpanded(!isChatExpanded)}
+        />
 
         {/* Área Principal */}
         <main
           className={cn(
             'flex-1 flex flex-col min-h-0 overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300',
-            !idReporteSeleccionado && !creandoReporte ? 'hidden sm:flex' : 'flex'
+            !idReporteSeleccionado && !creandoReporte && !isChatExpanded ? 'hidden sm:flex' : 'flex'
           )}
         >
           <MobileHeader hook={hook} isMobile={isMobile} />
 
           <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-            {!guardiaAbierta && !idReporteSeleccionado && !creandoReporte ? (
+            {isChatExpanded ? (
+              <WhatsAppChatView
+                reports={hook.reports || hook.reportesFiltrados}
+                templates={hook.templates}
+                selectedReportId={hook.idReporteSeleccionado}
+                onSelectReport={hook.manejarSeleccionarReporte}
+                guardiaAbierta={guardiaAbierta}
+                isExpanded={true}
+                onToggleExpand={() => setIsChatExpanded(false)}
+                onOpenCreateDialog={() => hook.setEsDialogOpenCrear(true)}
+              />
+            ) : !guardiaAbierta && !idReporteSeleccionado && !creandoReporte ? (
               <div className="flex-1 flex flex-col items-center justify-center bg-muted/5 h-full">
                 <NoGuardBanner
                   message="Para registrar nuevas novedades o gestionar reportes, primero debes abrir una nueva guardia."
