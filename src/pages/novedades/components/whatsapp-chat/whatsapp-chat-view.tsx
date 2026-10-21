@@ -28,6 +28,7 @@ export interface WhatsAppChatViewProps extends UseWhatsAppChatOptions {
   onToggleExpand?: () => void;
   onOpenCreateDialog?: () => void;
   className?: string;
+  onBack?: () => void;
 }
 
 export function WhatsAppChatView({
@@ -36,10 +37,14 @@ export function WhatsAppChatView({
   selectedReportId,
   onSelectReport,
   guardiaAbierta,
+  initialChatId,
+  externalActiveChatId,
+  onChatChange,
   isExpanded,
   onToggleExpand,
   onOpenCreateDialog,
-  className
+  className,
+  onBack
 }: WhatsAppChatViewProps) {
   const navigate = useNavigate();
   const chatHook = useWhatsAppChat({
@@ -47,7 +52,10 @@ export function WhatsAppChatView({
     templates,
     selectedReportId,
     onSelectReport,
-    guardiaAbierta
+    guardiaAbierta,
+    initialChatId,
+    externalActiveChatId,
+    onChatChange
   });
 
   const {
@@ -99,6 +107,7 @@ export function WhatsAppChatView({
         chatHook={chatHook}
         isExpanded={isExpanded}
         onToggleExpand={onToggleExpand}
+        onBack={onBack}
       />
 
       {/* Messages Stream */}

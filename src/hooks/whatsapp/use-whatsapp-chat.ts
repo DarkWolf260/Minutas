@@ -17,6 +17,9 @@ export interface UseWhatsAppChatOptions {
   selectedReportId: string | null;
   onSelectReport: (id: string | null) => void;
   guardiaAbierta: boolean;
+  initialChatId?: string | null;
+  externalActiveChatId?: string | null;
+  onChatChange?: (id: string) => void;
 }
 
 export function useWhatsAppChat({
@@ -24,16 +27,28 @@ export function useWhatsAppChat({
   templates,
   selectedReportId,
   onSelectReport,
-  guardiaAbierta
+  guardiaAbierta,
+  initialChatId,
+  externalActiveChatId,
+  onChatChange
 }: UseWhatsAppChatOptions) {
   const { settings } = useSettings();
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
 
   // Selected chat ID from real WhatsApp chats
-  const [activeChatId, setActiveChatId] = useState<string>(() => {
-    const defaultIds = settings?.whatsapp_default_chat_ids || [];
-    return defaultIds[0] || '';
+  const [internalActiveChatId, setInternalActiveChatId] = useState<string>(() => {
+    return initialChatId || externalActiveChatId || localStorage.getItem('minutas_active_whatsapp_chat') || settings?.whatsapp_default_chat_ids?.[0] || '';
   });
+
+  const activeChatId = (externalActiveChatId !== undefined && externalActiveChatId !== null)
+    ? externalActiveChatId
+    : internalActiveChatId;
+
+  const setActiveChatId = useCallback((id: string) => {
+    setInternalActiveChatId(id);
+    localStorage.setItem('minutas_active_whatsapp_chat', id);
+    onChatChange?.(id);
+  }, [onChatChange]);
   const [realMessages, setRealMessages] = useState<WhatsAppMessage[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);

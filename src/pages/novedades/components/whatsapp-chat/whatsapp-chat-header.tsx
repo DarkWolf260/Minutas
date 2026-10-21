@@ -8,7 +8,8 @@ import {
   Minimize2,
   ChevronDown,
   Check,
-  Search
+  Search,
+  ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -43,12 +44,14 @@ interface WhatsAppChatHeaderProps {
   chatHook: UseWhatsAppChatReturn;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  onBack?: () => void;
 }
 
 export function WhatsAppChatHeader({
   chatHook,
   isExpanded,
-  onToggleExpand
+  onToggleExpand,
+  onBack
 }: WhatsAppChatHeaderProps) {
   const navigate = useNavigate();
   const {
@@ -122,7 +125,19 @@ export function WhatsAppChatHeader({
   return (
     <div className="flex items-center justify-between px-3 py-2.5 sm:px-4 sm:py-3 border-b bg-card/95 backdrop-blur-sm z-10">
       {/* Left: Chat Avatar & Selector Popover */}
-      <div className="flex items-center gap-2.5 min-w-0">
+      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+        {onBack && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="h-8 px-2 -ml-1 text-muted-foreground hover:text-foreground rounded-lg gap-1 shrink-0"
+            title="Volver a la lista de chats"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="text-xs font-semibold hidden xs:inline">Chats</span>
+          </Button>
+        )}
         <Popover open={isSelectorOpen} onOpenChange={setIsSelectorOpen}>
           <PopoverTrigger asChild>
             <button

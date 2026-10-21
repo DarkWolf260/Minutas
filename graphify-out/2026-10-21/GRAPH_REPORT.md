@@ -1,7 +1,7 @@
 # Graph Report - Minutas  (2026-10-21)
 
 ## Corpus Check
-- 409 files · ~328,593 words
+- 409 files · ~328,509 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 9 file(s) not represented in the graph (top: (none) 5, .example 1, .bat 1)
 
@@ -649,16 +649,16 @@ Nodes (12): rxdb, LoadingScreen(), LoadingScreenProps, DatabaseProvider(), initD
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `react` to `quick-chat-selector.tsx`, `address-input.tsx`, `personnel-tabs.tsx`, `sync-context.tsx`, `Card`, `novedad-sidebar.tsx`, `setup/index.tsx`, `settings/index.tsx`, `sonner`, `workspaces/index.tsx`, `types/index.ts`, `db-provider.tsx`, `personnel-history-dialog.tsx`, `04-estructura.tsx`, `00-bienvenida.tsx`, `TemplateConfig`, `use-orden-del-dia.ts`, `sync-qr-display.tsx`, `address-map.tsx`, `react-router-dom`, `use-reporte-final-generator.ts`, `App.tsx`, `DialogContent`, `guard-selector.tsx`, `package.json`, `Label`, `use-novedades.ts`, `ajustes-generales.tsx`, `template-editor.tsx`, `lib/utils.ts`, `template-syntax-editor.tsx`, `cn`, `ScrollArea`, `structure-tree.tsx`, `Textarea`, `Button`, `nav-user-menu.tsx`, `address-form-dialog.tsx`, `side-nav.tsx`, `whatsapp-chat-view.tsx`, `command-menu.tsx`, `orden-del-dia/index.tsx`, `app-bar.tsx`, `personal.tsx`, `card.tsx`, `error-boundary.tsx`, `useSidebarExpanded`, `app.tsx`, `error-boundary-feature.tsx`?**
-  _High betweenness centrality (0.114) - this node is a cross-community bridge._
+  _High betweenness centrality (0.106) - this node is a cross-community bridge._
 - **What connects `next/core-web-vitals`, `plugin:@typescript-eslint/recommended`, `@radix-ui/react-progress` to the rest of the system?**
   _117 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `db.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.08205128205128205 - nodes in this community are weakly interconnected._
 - **Why does `cn()` connect `cn` to `quick-chat-selector.tsx`, `address-input.tsx`, `personnel-tabs.tsx`, `Card`, `novedad-sidebar.tsx`, `setup/index.tsx`, `settings/index.tsx`, `04-estructura.tsx`, `workspaces/index.tsx`, `types/index.ts`, `db-provider.tsx`, `personnel-history-dialog.tsx`, `00-bienvenida.tsx`, `TemplateConfig`, `address-map.tsx`, `react-router-dom`, `BottomNav`, `App.tsx`, `DialogContent`, `guard-selector.tsx`, `Label`, `ajustes-generales.tsx`, `template-editor.tsx`, `lib/utils.ts`, `template-syntax-editor.tsx`, `ScrollArea`, `structure-tree.tsx`, `Button`, `address-form-dialog.tsx`, `nav-user-menu.tsx`, `Textarea`, `side-nav.tsx`, `whatsapp-chat-view.tsx`, `command-menu.tsx`, `orden-del-dia/index.tsx`, `app-bar.tsx`, `app.tsx`, `card.tsx`?**
-  _High betweenness centrality (0.058) - this node is a cross-community bridge._
+  _High betweenness centrality (0.059) - this node is a cross-community bridge._
 - **Should `parser.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.1349206349206349 - nodes in this community are weakly interconnected._
 - **Why does `Button` connect `Button` to `quick-chat-selector.tsx`, `address-input.tsx`, `personnel-tabs.tsx`, `Card`, `novedad-sidebar.tsx`, `setup/index.tsx`, `settings/index.tsx`, `workspaces/index.tsx`, `types/index.ts`, `db-provider.tsx`, `personnel-history-dialog.tsx`, `00-bienvenida.tsx`, `TemplateConfig`, `sync-qr-display.tsx`, `address-map.tsx`, `react-router-dom`, `use-reporte-final-generator.ts`, `App.tsx`, `DialogContent`, `guard-selector.tsx`, `Label`, `ajustes-generales.tsx`, `template-editor.tsx`, `lib/utils.ts`, `template-syntax-editor.tsx`, `cn`, `ScrollArea`, `structure-tree.tsx`, `Textarea`, `address-form-dialog.tsx`, `whatsapp-chat-view.tsx`, `side-nav.tsx`, `app.tsx`, `orden-del-dia/index.tsx`, `app-bar.tsx`, `personal.tsx`, `card.tsx`, `error-boundary.tsx`, `error-boundary-feature.tsx`?**
-  _High betweenness centrality (0.052) - this node is a cross-community bridge._
+  _High betweenness centrality (0.054) - this node is a cross-community bridge._
 - **Should `quick-chat-selector.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.09291521486643438 - nodes in this community are weakly interconnected._

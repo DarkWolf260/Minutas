@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1792603348.1703682,
-    "seen": 1792603447.1264408,
-    "ast_hash": "581a0b7f0de285a0e69e634fac196b4a",
+    "mtime": 1792606478.390965,
+    "seen": 1792606537.3457847,
+    "ast_hash": "35494056001e823bbfc3f64da9a88be0",
     "semantic_hash": ""
   },
   "src/components/auth/admin-route.tsx": {
@@ -204,9 +204,9 @@
     "semantic_hash": ""
   },
   "src/components/layout/side-nav.tsx": {
-    "mtime": 1791296236.1305852,
-    "seen": 1792458905.4483335,
-    "ast_hash": "56b7839598a7346fc5a6a39733b32791",
+    "mtime": 1792606411.5393107,
+    "seen": 1792606537.3497267,
+    "ast_hash": "bc346fe6639ee267f1c90d5ad35f3720",
     "semantic_hash": ""
   },
   "src/components/orden-del-dia/activity-item.tsx": {
@@ -2496,9 +2496,9 @@
     "semantic_hash": ""
   },
   "src/components/layout/app-bar.tsx": {
-    "mtime": 1792603390.1882026,
-    "seen": 1792603447.1279075,
-    "ast_hash": "98f258876e5cb1132632983db32a38f8",
+    "mtime": 1792606642.028088,
+    "seen": 1792606689.8573773,
+    "ast_hash": "bf731db044232e18c01665c624232da8",
     "semantic_hash": ""
   }
 }

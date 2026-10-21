@@ -11,6 +11,7 @@ import type { Report, Template } from '@/lib/types';
 import { useSettings } from '@/hooks/configuracion';
 import { getReportDateTime, findValueInform_data } from '@/lib/report-sorter';
 import { WhatsAppChatView } from './whatsapp-chat/whatsapp-chat-view';
+import { WhatsAppChatList } from './whatsapp-chat/whatsapp-chat-list';
 import { useWhatsAppBot } from '@/hooks/whatsapp';
 
 import type { UseNovedadesReturn } from '@/hooks/novedades';
@@ -271,7 +272,21 @@ export const NovedadSidebar = ({
   const activeVista = vistaSidebarProp ?? internalVista;
   const effectiveVista = isBotConnected ? activeVista : 'lista';
 
+  const [subVistaWhatsApp, setSubVistaWhatsApp] = useState<'chats' | 'conversacion'>('chats');
+  const [chatWhatsAppActivo, setChatWhatsAppActivo] = useState<string | null>(() => {
+    return localStorage.getItem('minutas_active_whatsapp_chat') || null;
+  });
+
+  const handleSelectChatWhatsApp = (chatId: string) => {
+    setChatWhatsAppActivo(chatId);
+    localStorage.setItem('minutas_active_whatsapp_chat', chatId);
+    setSubVistaWhatsApp('conversacion');
+  };
+
   const handleCambiarVista = (vista: 'lista' | 'whatsapp') => {
+    if (vista === 'whatsapp') {
+      setSubVistaWhatsApp('chats');
+    }
     if (onCambiarVistaSidebar) {
       onCambiarVistaSidebar(vista);
     } else {
@@ -478,24 +493,17 @@ export const NovedadSidebar = ({
       {effectiveVista === 'whatsapp' ? (
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           {isChatExpanded ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-muted-foreground bg-muted/10">
-              <div className="h-12 w-12 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-3">
-                <MessageSquare className="h-6 w-6" />
-              </div>
-              <h4 className="font-bold text-sm text-foreground">Chat expandido</h4>
-              <p className="text-xs text-muted-foreground mt-1 mb-4 max-w-[200px]">
-                El chat de WhatsApp está abierto en el panel principal.
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onToggleExpandChat}
-                className="gap-1.5 h-8 text-xs rounded-xl"
-              >
-                <Minimize2 className="h-3.5 w-3.5" />
-                Contraer a barra lateral
-              </Button>
-            </div>
+            <WhatsAppChatList
+              bot={bot}
+              activeChatId={chatWhatsAppActivo}
+              onSelectChat={handleSelectChatWhatsApp}
+            />
+          ) : subVistaWhatsApp === 'chats' ? (
+            <WhatsAppChatList
+              bot={bot}
+              activeChatId={chatWhatsAppActivo}
+              onSelectChat={handleSelectChatWhatsApp}
+            />
           ) : (
             <WhatsAppChatView
               reports={reports || reportesFiltrados}
@@ -504,8 +512,11 @@ export const NovedadSidebar = ({
               onSelectReport={manejarSeleccionarReporte}
               guardiaAbierta={guardiaAbierta}
               isExpanded={false}
+              externalActiveChatId={chatWhatsAppActivo}
+              onChatChange={setChatWhatsAppActivo}
               onToggleExpand={onToggleExpandChat}
               onOpenCreateDialog={() => setEsDialogOpenCrear(true)}
+              onBack={() => setSubVistaWhatsApp('chats')}
             />
           )}
         </div>

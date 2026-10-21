@@ -1308,9 +1308,9 @@
     "semantic_hash": ""
   },
   "src/pages/novedades/components/novedad-sidebar.tsx": {
-    "mtime": 1792547613.9476044,
-    "seen": 1792547685.3690665,
-    "ast_hash": "c2ff33e221d2784996ba761e6f646247",
+    "mtime": 1792607268.9264822,
+    "seen": 1792607324.9437077,
+    "ast_hash": "d4b54e0b1b238c27cd3d1d0b131f6932",
     "semantic_hash": ""
   },
   "src/pages/novedades/components/template-list.tsx": {
@@ -2460,9 +2460,9 @@
     "semantic_hash": ""
   },
   "src/hooks/whatsapp/use-whatsapp-chat.ts": {
-    "mtime": 1792553093.4686978,
-    "seen": 1792553170.0013168,
-    "ast_hash": "33d81d6f694d81b52a2cfa27400f8f28",
+    "mtime": 1792607200.1523345,
+    "seen": 1792607324.924904,
+    "ast_hash": "c3b1af86a0860596293bc48b0b7a3f5f",
     "semantic_hash": ""
   },
   "src/pages/novedades/components/whatsapp-chat/whatsapp-chat-bubble.tsx": {
@@ -2472,9 +2472,9 @@
     "semantic_hash": ""
   },
   "src/pages/novedades/components/whatsapp-chat/whatsapp-chat-header.tsx": {
-    "mtime": 1792554429.1735415,
-    "seen": 1792554893.8149798,
-    "ast_hash": "f4767261745b46f7fde67b3c8db5154d",
+    "mtime": 1792607008.6058064,
+    "seen": 1792607324.9441216,
+    "ast_hash": "e401685c789465da21c46f96d6c3e3f1",
     "semantic_hash": ""
   },
   "src/pages/novedades/components/whatsapp-chat/whatsapp-chat-input.tsx": {
@@ -2484,9 +2484,9 @@
     "semantic_hash": ""
   },
   "src/pages/novedades/components/whatsapp-chat/whatsapp-chat-view.tsx": {
-    "mtime": 1792552969.761964,
-    "seen": 1792553170.0226567,
-    "ast_hash": "19b5696c9279c3ec4077ee61d4cc8e4f",
+    "mtime": 1792607077.8577592,
+    "seen": 1792607324.9443343,
+    "ast_hash": "a2949d7d90f81341ff154c6e00af6de8",
     "semantic_hash": ""
   },
   "src/lib/constants/venezuela.ts": {
@@ -2499,6 +2499,12 @@
     "mtime": 1792606642.028088,
     "seen": 1792606689.8573773,
     "ast_hash": "bf731db044232e18c01665c624232da8",
+    "semantic_hash": ""
+  },
+  "src/pages/novedades/components/whatsapp-chat/whatsapp-chat-list.tsx": {
+    "mtime": 1792606951.8920627,
+    "seen": 1792607324.944331,
+    "ast_hash": "8d5646e9a791f05c24a94b6aeb72b118",
     "semantic_hash": ""
   }
 }
