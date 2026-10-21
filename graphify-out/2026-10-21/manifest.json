@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "src/App.tsx": {
-    "mtime": 1792010987.0483623,
-    "seen": 1792458905.445243,
-    "ast_hash": "ffc3eabe6ee7a4cc0524ccc9d7fd2146",
+    "mtime": 1792603348.1703682,
+    "seen": 1792603447.1264408,
+    "ast_hash": "581a0b7f0de285a0e69e634fac196b4a",
     "semantic_hash": ""
   },
   "src/components/auth/admin-route.tsx": {
@@ -162,9 +162,9 @@
     "semantic_hash": ""
   },
   "src/components/layout/mobile-nav.tsx": {
-    "mtime": 1791522055.804178,
-    "seen": 1792458905.4482121,
-    "ast_hash": "fbd9ac2ac2e12ea0e7967a7f2d413c84",
+    "mtime": 1792603394.4079504,
+    "seen": 1792603447.1283205,
+    "ast_hash": "c6f1aff0e90082a5467f73b1b7300eb5",
     "semantic_hash": ""
   },
   "src/components/layout/mobile-nav/nav-brand.tsx": {
@@ -876,9 +876,9 @@
     "semantic_hash": ""
   },
   "src/lib/db/replication.ts": {
-    "mtime": 1790793152.5304606,
-    "seen": 1792458905.4784613,
-    "ast_hash": "352f4946248588ee6f50b532bae433e6",
+    "mtime": 1792556606.0917366,
+    "seen": 1792556647.5117395,
+    "ast_hash": "a1f2ddc5244ce0090ea856014133fe17",
     "semantic_hash": ""
   },
   "src/lib/db/schemas.ts": {
@@ -1026,9 +1026,9 @@
     "semantic_hash": ""
   },
   "src/lib/repositories/template.repository.ts": {
-    "mtime": 1789932684.0883086,
-    "seen": 1789932802.0635207,
-    "ast_hash": "b51e99b8496e0d22a020f85a1343a98f",
+    "mtime": 1792556593.493163,
+    "seen": 1792556647.5167072,
+    "ast_hash": "ecf091d3f7bb1c8a2a2784d74df19c09",
     "semantic_hash": ""
   },
   "src/lib/supabase.ts": {
@@ -1656,9 +1656,9 @@
     "semantic_hash": ""
   },
   "vite.config.ts": {
-    "mtime": 1792010987.1337798,
-    "seen": 1792458905.5016875,
-    "ast_hash": "d64f09ba7fe1ebcaebce17cec3c3738a",
+    "mtime": 1792556295.1456141,
+    "seen": 1792556647.541192,
+    "ast_hash": "8ef7ac9184743fb2c2cc27f0cdd18190",
     "semantic_hash": ""
   },
   "vitest.config.ts": {
@@ -1680,8 +1680,8 @@
     "semantic_hash": ""
   },
   "whatsapp-bot/scheduled_messages.json": {
-    "mtime": 1792554761.7151957,
-    "seen": 1792554893.8273444,
+    "mtime": 1792601972.8006072,
+    "seen": 1792603447.198368,
     "ast_hash": "d751713988987e9331980363e24189ce",
     "semantic_hash": ""
   },
@@ -2493,6 +2493,12 @@
     "mtime": 1792545770.7924244,
     "seen": 1792545963.1386485,
     "ast_hash": "895485924a92d31a14ef3c1dac97a7df",
+    "semantic_hash": ""
+  },
+  "src/components/layout/app-bar.tsx": {
+    "mtime": 1792603390.1882026,
+    "seen": 1792603447.1279075,
+    "ast_hash": "98f258876e5cb1132632983db32a38f8",
     "semantic_hash": ""
   }
 }
