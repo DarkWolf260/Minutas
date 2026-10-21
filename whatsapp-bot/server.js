@@ -66,9 +66,57 @@ let statusMessage = 'Iniciando cliente...';
 let client = null;
 let isInitializing = false;
 let cachedChats = [];
+const contactNameCache = new Map();
+const avatarCache = new Map();
+const avatarImageCache = new Map();
+const MAX_AVATAR_IMAGE_CACHE = 250;
+
+async function resolveChatAvatarUrl(chatId) {
+  if (!chatId || !isReady || !client) return null;
+  let targetChatId = typeof chatId === 'string' ? chatId.trim() : '';
+  if (!targetChatId) return null;
+  if (!targetChatId.includes('@')) {
+    targetChatId = `${targetChatId.replace(/\D/g, '')}@c.us`;
+  }
+
+  if (avatarCache.has(targetChatId)) {
+    return avatarCache.get(targetChatId);
+  }
+
+  let picUrl = null;
+  try {
+    picUrl = await client.getProfilePicUrl(targetChatId);
+  } catch (_) {}
+
+  // Si es un ID @lid y no devolvió foto directa, resolver el número telefónico (@c.us)
+  if (!picUrl && targetChatId.endsWith('@lid') && client.pupPage) {
+    try {
+      const phoneWid = await client.pupPage.evaluate(async (lid) => {
+        try {
+          const res = await window.WWebJS?.enforceLidAndPnRetrieval?.(lid);
+          return res?.phone?._serialized || (res?.phone?.user ? `${res.phone.user}@c.us` : null);
+        } catch (e) {
+          return null;
+        }
+      }, targetChatId);
+
+      if (phoneWid && phoneWid !== targetChatId) {
+        if (avatarCache.has(phoneWid)) {
+          picUrl = avatarCache.get(phoneWid);
+        } else {
+          picUrl = await client.getProfilePicUrl(phoneWid).catch(() => null);
+          avatarCache.set(phoneWid, picUrl || null);
+        }
+      }
+    } catch (_) {}
+  }
+
+  avatarCache.set(targetChatId, picUrl || null);
+  avatarCache.set(chatId, picUrl || null);
+  return picUrl || null;
+}
 
 function initWhatsAppClient() {
-  if (isInitializing) return;
   isInitializing = true;
   isReady = false;
   qrCodeData = null;
@@ -104,6 +152,21 @@ function initWhatsAppClient() {
   client.on('loading_screen', (percent, message) => {
     statusMessage = `Sincronizando: ${percent}%`;
     console.log(`Progreso de carga: ${percent}% - ${message}`);
+    if (percent >= 99 && !isReady) {
+      setTimeout(async () => {
+        if (!isReady && client && client.pupPage) {
+          try {
+            const hasPaneSide = await client.pupPage.evaluate(() => {
+              return Boolean(document.querySelector('#pane-side') || window.Store?.Chat);
+            });
+            if (hasPaneSide && !isReady) {
+              console.log('[Watchdog] WhatsApp Web cargado (pane-side detectado). Activando evento ready...');
+              client.emit('ready');
+            }
+          } catch (_) {}
+        }
+      }, 4000);
+    }
   });
 
   client.on('ready', async () => {
@@ -303,25 +366,78 @@ app.get('/api/whatsapp/chats', async (req, res) => {
   try {
     let formattedChats = [];
 
-    // 1. Extracción veloz directa desde la memoria de WhatsApp Web en Puppeteer (inmediato, evita congelamientos)
+    // 1. Extracción directa desde la memoria de WhatsApp Web en Puppeteer enriquecida con la libreta de contactos
     try {
       if (client.pupPage) {
         formattedChats = await client.pupPage.evaluate(() => {
           try {
             const collections = window.require?.('WAWebCollections') || window.Store;
             const chatCollection = (collections?.Chat || window.Store?.Chat)?.getModelsArray?.() || [];
-            
+            const contactCollection = collections?.Contact || window.Store?.Contact;
+            const ContactGetters = window.require?.('WAWebContactGetters');
+
             return chatCollection
               .map(c => {
                 const id = c.id?._serialized || (typeof c.id === 'string' ? c.id : '');
-                const name = c.name || c.formattedTitle || c.contact?.name || c.contact?.pushname || (c.id?.user ? `+${c.id.user}` : 'Chat');
                 const isGroup = Boolean(c.isGroup || (id && id.endsWith('@g.us')));
+
+                // 1. Intentar obtener el contacto asociado de la colección global
+                let contact = null;
+                try {
+                  if (contactCollection) {
+                    contact = contactCollection.get(c.id) 
+                      || contactCollection.get(id) 
+                      || (c.id?.user ? contactCollection.get(`${c.id.user}@c.us`) : null)
+                      || c.contact;
+                  }
+                } catch (e) {}
+                if (!contact && c.contact) {
+                  contact = c.contact;
+                }
+
+                // 2. Extraer el mejor nombre disponible
+                let name = null;
+                if (isGroup) {
+                  name = c.formattedTitle || c.name || c.groupMetadata?.subject || (contact && ContactGetters?.getName?.(contact)) || contact?.name;
+                } else {
+                  if (contact) {
+                    try {
+                      name = ContactGetters?.getName?.(contact)
+                        || contact.name
+                        || contact.formattedName
+                        || contact.displayName
+                        || ContactGetters?.getPushname?.(contact)
+                        || contact.pushname
+                        || contact.notifyName
+                        || ContactGetters?.getVerifiedName?.(contact)
+                        || contact.verifiedName;
+                    } catch (e) {}
+                  }
+                  if (!name) {
+                    name = c.formattedTitle || c.name;
+                  }
+                }
+
+                // 3. Fallback a pushname directo o teléfono
+                if (!name || name === id) {
+                  name = c.contact?.pushname || c.contact?.notifyName || (c.id?.user ? `+${c.id.user}` : 'Chat');
+                }
+
                 const timestamp = c.t || c.conversationTimestamp || 0;
-                return { id, name, isGroup, timestamp };
+                const avatarUrl = c.contact?.profilePicThumbObj?.eurl || c.profilePicThumb?.eurl || null;
+                return { id, name, isGroup, timestamp, avatarUrl };
               })
               .filter(c => c.id && !c.id.includes('@broadcast') && !c.id.includes('status@broadcast'))
               .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-              .map(({ id, name, isGroup }) => ({ id, name, isGroup }));
+              .map(({ id, name, isGroup, avatarUrl }) => {
+                if (avatarUrl) avatarCache.set(id, avatarUrl);
+                return { 
+                  id, 
+                  name, 
+                  isGroup, 
+                  avatarUrl: avatarUrl ? `/api/whatsapp/chats/${encodeURIComponent(id)}/avatar.jpg` : null 
+                };
+              });
           } catch (e) {
             return [];
           }
@@ -352,8 +468,76 @@ app.get('/api/whatsapp/chats', async (req, res) => {
       }
     }
 
-    // 3. Actualizar o recuperar de caché
+    // 3. Para los chats individuales cuyo nombre quedó como número de teléfono,
+    // resolver su nombre real usando client.getContactById (consulta garantizada a WhatsApp)
+    if (Array.isArray(formattedChats) && formattedChats.length > 0) {
+      const chatsNeedingNames = formattedChats.filter(c => 
+        !c.isGroup && (/^\+?\d{7,}$/.test(c.name.replace(/[\s\-\(\)]/g, '')) || c.name === c.id || c.name === 'Chat')
+      );
+
+      if (chatsNeedingNames.length > 0) {
+        await Promise.all(chatsNeedingNames.slice(0, 25).map(async (chat) => {
+          try {
+            const contact = await client.getContactById(chat.id);
+            const resolvedName = contact?.name || contact?.pushname || contact?.shortName || contact?.verifiedName;
+            if (resolvedName && resolvedName.trim() && !/^\+?\d{7,}$/.test(resolvedName.replace(/[\s\-\(\)]/g, ''))) {
+              chat.name = resolvedName.trim();
+            }
+          } catch (err) {}
+        }));
+      }
+    }
+
+    // 4. Actualizar o recuperar de caché preservando nombres reales previamente conocidos
     if (formattedChats && formattedChats.length > 0) {
+      if (cachedChats && cachedChats.length > 0) {
+        const cachedMap = new Map(cachedChats.map(c => [c.id, c.name]));
+        formattedChats.forEach(c => {
+          const oldName = cachedMap.get(c.id);
+          const isCurrentPhone = /^\+?\d{7,}$/.test(c.name.replace(/[\s\-\(\)]/g, ''));
+          const wasOldRealName = oldName && !/^\+?\d{7,}$/.test(oldName.replace(/[\s\-\(\)]/g, ''));
+          if (isCurrentPhone && wasOldRealName) {
+            c.name = oldName;
+          }
+        });
+      }
+
+      // Alimentar contactNameCache con los nombres de contactos/chats conocidos
+      formattedChats.forEach(c => {
+        if (c.id && c.name && !/^\+?\d{7,}$/.test(c.name.replace(/[\s\-\(\)]/g, ''))) {
+          contactNameCache.set(c.id, c.name);
+          if (typeof c.id === 'string' && c.id.includes('@')) {
+            const u = c.id.split('@')[0];
+            contactNameCache.set(`${u}@c.us`, c.name);
+            contactNameCache.set(`${u}@lid`, c.name);
+          }
+        }
+      });
+
+      // Asignar avatares conocidos desde la caché
+      formattedChats.forEach(c => {
+        if (avatarCache.has(c.id)) {
+          const cachedPic = avatarCache.get(c.id);
+          c.avatarUrl = cachedPic ? `/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg` : null;
+        } else if (c.avatarUrl && typeof c.avatarUrl === 'string' && c.avatarUrl.startsWith('http')) {
+          avatarCache.set(c.id, c.avatarUrl);
+          c.avatarUrl = `/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg`;
+        }
+      });
+
+      // Resolver en paralelo los avatares de los primeros 25 chats activos si aún no han sido consultados
+      const chatsNeedingAvatar = formattedChats.slice(0, 25).filter(c => !avatarCache.has(c.id));
+      if (chatsNeedingAvatar.length > 0) {
+        await Promise.allSettled(chatsNeedingAvatar.map(async c => {
+          try {
+            const pic = await resolveChatAvatarUrl(c.id);
+            c.avatarUrl = pic ? `/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg` : null;
+          } catch (e) {
+            c.avatarUrl = null;
+          }
+        }));
+      }
+
       cachedChats = formattedChats;
     } else if (cachedChats.length > 0) {
       formattedChats = cachedChats;
@@ -398,6 +582,116 @@ app.get('/api/whatsapp/chats/:chatId/messages', async (req, res) => {
     }
 
     const messages = await chat.fetchMessages({ limit });
+
+    // 1. Guardar en caché nombres reales ya presentes en los mensajes
+    messages.forEach(msg => {
+      const authorId = msg.author || msg.from;
+      const explicitName = msg._data?.notifyName || msg._data?.name;
+      if (authorId && explicitName && typeof explicitName === 'string' && explicitName.trim()) {
+        const cleanName = explicitName.trim();
+        if (!/^\+?\d{7,}$/.test(cleanName.replace(/[\s\-\(\)]/g, ''))) {
+          contactNameCache.set(authorId, cleanName);
+          if (authorId.includes('@')) {
+            const u = authorId.split('@')[0];
+            contactNameCache.set(`${u}@c.us`, cleanName);
+            contactNameCache.set(`${u}@lid`, cleanName);
+          }
+        }
+      }
+    });
+
+    // 2. Identificar autores que aún no tienen un nombre real en caché
+    const unresolvedAuthors = [...new Set(
+      messages
+        .filter(m => !m.fromMe)
+        .map(m => m.author || m.from)
+        .filter(Boolean)
+        .filter(id => {
+          const cached = contactNameCache.get(id);
+          return !cached || /^\+?\d{7,}$/.test(cached.replace(/[\s\-\(\)]/g, ''));
+        })
+    )];
+
+    // 3. Resolución en bloque a través de la memoria de WhatsApp Web (Puppeteer)
+    if (unresolvedAuthors.length > 0 && client.pupPage) {
+      try {
+        const resolvedMap = await client.pupPage.evaluate((ids) => {
+          const res = {};
+          const collections = window.require?.('WAWebCollections') || window.Store;
+          const contactCollection = collections?.Contact || window.Store?.Contact;
+          const ContactGetters = window.require?.('WAWebContactGetters');
+
+          ids.forEach(id => {
+            try {
+              let contact = null;
+              if (contactCollection) {
+                contact = contactCollection.get(id);
+                if (!contact && id.includes('@')) {
+                  const user = id.split('@')[0];
+                  contact = contactCollection.get(`${user}@c.us`) || contactCollection.get(`${user}@lid`);
+                }
+              }
+              if (contact) {
+                const name = (ContactGetters && ContactGetters.getName ? ContactGetters.getName(contact) : null)
+                  || contact.name
+                  || contact.formattedName
+                  || contact.displayName
+                  || (ContactGetters && ContactGetters.getPushname ? ContactGetters.getPushname(contact) : null)
+                  || contact.pushname
+                  || contact.notifyName
+                  || (ContactGetters && ContactGetters.getVerifiedName ? ContactGetters.getVerifiedName(contact) : null)
+                  || contact.verifiedName;
+                if (name && typeof name === 'string' && name.trim()) {
+                  res[id] = name.trim();
+                }
+              }
+            } catch (e) {}
+          });
+          return res;
+        }, unresolvedAuthors);
+
+        if (resolvedMap && typeof resolvedMap === 'object') {
+          for (const [id, name] of Object.entries(resolvedMap)) {
+            if (name && !/^\+?\d{7,}$/.test(name.replace(/[\s\-\(\)]/g, ''))) {
+              contactNameCache.set(id, name);
+              if (id.includes('@')) {
+                const u = id.split('@')[0];
+                contactNameCache.set(`${u}@c.us`, name);
+                contactNameCache.set(`${u}@lid`, name);
+              }
+            }
+          }
+        }
+      } catch (evalErr) {
+        // Fallback silencioso
+      }
+    }
+
+    // 4. Fallback con client.getContactById para autores que sigan sin nombre
+    const stillUnresolved = unresolvedAuthors.filter(id => {
+      const cached = contactNameCache.get(id);
+      return !cached || /^\+?\d{7,}$/.test(cached.replace(/[\s\-\(\)]/g, ''));
+    });
+
+    if (stillUnresolved.length > 0) {
+      await Promise.all(stillUnresolved.slice(0, 15).map(async (id) => {
+        try {
+          const contact = await client.getContactById(id);
+          const name = contact?.name || contact?.pushname || contact?.shortName || contact?.verifiedName;
+          if (name && typeof name === 'string' && name.trim() && !/^\+?\d{7,}$/.test(name.replace(/[\s\-\(\)]/g, ''))) {
+            contactNameCache.set(id, name.trim());
+            if (id.includes('@')) {
+              const u = id.split('@')[0];
+              contactNameCache.set(`${u}@c.us`, name.trim());
+              contactNameCache.set(`${u}@lid`, name.trim());
+            }
+          }
+        } catch (err) {}
+      }));
+    }
+
+    const isGroupChat = Boolean(chat.isGroup || (typeof targetChatId === 'string' && targetChatId.endsWith('@g.us')));
+
     const formatted = messages.map(msg => {
       const msgId = msg.id?._serialized || msg.id?.$1 || (typeof msg.id === 'string' ? msg.id : msg.id?.id) || String(Date.now());
 
@@ -411,6 +705,31 @@ app.get('/api/whatsapp/chats/:chatId/messages', async (req, res) => {
         }
       }
 
+      let senderName = null;
+      if (msg.fromMe) {
+        senderName = 'Tú';
+      } else {
+        const authorId = msg.author || msg.from;
+        const cached = authorId ? contactNameCache.get(authorId) : null;
+        const notify = msg._data?.notifyName || msg._data?.name;
+
+        if (cached && !/^\+?\d{7,}$/.test(cached.replace(/[\s\-\(\)]/g, ''))) {
+          senderName = cached;
+        } else if (notify && typeof notify === 'string' && notify.trim() && !/^\+?\d{7,}$/.test(notify.replace(/[\s\-\(\)]/g, ''))) {
+          senderName = notify.trim();
+          if (authorId) contactNameCache.set(authorId, senderName);
+        } else if (cached) {
+          senderName = cached;
+        } else if (notify && typeof notify === 'string' && notify.trim()) {
+          senderName = notify.trim();
+        } else if (isGroupChat && msg.author) {
+          const raw = msg.author.split('@')[0];
+          senderName = /^\d{7,15}$/.test(raw) ? `+${raw}` : raw;
+        } else {
+          senderName = chat.name || 'Contacto';
+        }
+      }
+
       return {
         id: msgId,
         body: msg.body || '',
@@ -420,7 +739,7 @@ app.get('/api/whatsapp/chats/:chatId/messages', async (req, res) => {
         from: msg.from,
         to: msg.to,
         author: msg.author || null,
-        senderName: msg._data?.notifyName || msg._data?.name || (msg.author ? msg.author.split('@')[0] : (msg.fromMe ? 'Tú' : 'Contacto')),
+        senderName,
         hasMedia: Boolean(msg.hasMedia),
         mediaUrl: msg.hasMedia ? `/api/whatsapp/messages/${encodeURIComponent(msgId)}/media` : null,
         thumbnail,
@@ -432,6 +751,66 @@ app.get('/api/whatsapp/chats/:chatId/messages', async (req, res) => {
   } catch (error) {
     console.error(`[Messages] Error obteniendo mensajes de ${chatId}:`, error?.message || error);
     res.status(500).json({ error: error.message || 'Error al obtener mensajes' });
+  }
+});
+
+// Endpoint que sirve la imagen binaria (JPEG) directamente desde proxy local
+app.get('/api/whatsapp/chats/:chatId/avatar.jpg', async (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  const { chatId } = req.params;
+  const decodedId = decodeURIComponent(chatId);
+
+  // 1. Revisar caché en memoria del buffer de imagen
+  if (avatarImageCache.has(decodedId)) {
+    res.setHeader('Content-Type', 'image/jpeg');
+    return res.send(avatarImageCache.get(decodedId));
+  }
+
+  try {
+    const picUrl = await resolveChatAvatarUrl(decodedId);
+    if (picUrl) {
+      const cdnRes = await fetch(picUrl);
+      if (cdnRes.ok) {
+        const arrayBuf = await cdnRes.arrayBuffer();
+        const buffer = Buffer.from(arrayBuf);
+
+        if (avatarImageCache.size >= MAX_AVATAR_IMAGE_CACHE) {
+          const firstKey = avatarImageCache.keys().next().value;
+          if (firstKey) avatarImageCache.delete(firstKey);
+        }
+        avatarImageCache.set(decodedId, buffer);
+
+        res.setHeader('Content-Type', 'image/jpeg');
+        return res.send(buffer);
+      }
+    }
+  } catch (err) {
+    console.warn(`[Avatar] Error obteniendo avatar.jpg para ${decodedId}:`, err?.message || err);
+  }
+
+  // Fallback visual SVG neutro si no tiene foto (no retorna 404 para evitar spam en consola)
+  res.setHeader('Content-Type', 'image/svg+xml');
+  return res.send(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>'
+  );
+});
+
+// Endpoint JSON para consultar si un chat tiene avatar
+app.get('/api/whatsapp/chats/:chatId/avatar', async (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  const { chatId } = req.params;
+  const decodedId = decodeURIComponent(chatId);
+
+  try {
+    const picUrl = await resolveChatAvatarUrl(decodedId);
+    if (picUrl) {
+      return res.json({
+        avatarUrl: `/api/whatsapp/chats/${encodeURIComponent(decodedId)}/avatar.jpg`
+      });
+    }
+    return res.json({ avatarUrl: null });
+  } catch (err) {
+    return res.json({ avatarUrl: null });
   }
 });
 

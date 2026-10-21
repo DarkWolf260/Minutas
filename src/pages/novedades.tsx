@@ -1,6 +1,8 @@
-import React, { Suspense, memo, useState } from 'react';
+import React, { Suspense, memo, useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/ui';
 import { useNovedades } from '@/hooks/novedades';
+import { useSettings } from '@/hooks/configuracion';
+import { useWhatsAppBot } from '@/hooks/whatsapp';
 import { cn } from '@/lib/utils';
 import { NoGuardBanner } from '@/components/guards/guard-selector';
 
@@ -20,10 +22,26 @@ function NovedadesPageContent() {
     guardiaAbierta 
   } = hook;
 
+  const { settings } = useSettings();
+  const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
+  const isBotConnected = (bot.isAvailable && bot.status.isReady) || bot.isCloudActive;
+
   const [vistaSidebar, setVistaSidebar] = useState<'lista' | 'whatsapp'>(() => {
     return (localStorage.getItem('novedades_vista_sidebar') as 'lista' | 'whatsapp') || 'lista';
   });
   const [isChatExpanded, setIsChatExpanded] = useState(false);
+
+  // Si el bot no está conectado una vez cargado su estado, asegurar que la vista vuelva a la lista
+  useEffect(() => {
+    if (!bot.isLoading && !isBotConnected) {
+      if (vistaSidebar !== 'lista') {
+        setVistaSidebar('lista');
+      }
+      if (isChatExpanded) {
+        setIsChatExpanded(false);
+      }
+    }
+  }, [bot.isLoading, isBotConnected, vistaSidebar, isChatExpanded]);
 
   const handleCambiarVista = (vista: 'lista' | 'whatsapp') => {
     setVistaSidebar(vista);
@@ -50,13 +68,13 @@ function NovedadesPageContent() {
         <main
           className={cn(
             'flex-1 flex flex-col min-h-0 overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300',
-            !idReporteSeleccionado && !creandoReporte && !isChatExpanded ? 'hidden sm:flex' : 'flex'
+            !idReporteSeleccionado && !creandoReporte && !(isChatExpanded && isBotConnected) ? 'hidden sm:flex' : 'flex'
           )}
         >
           <MobileHeader hook={hook} isMobile={isMobile} />
 
           <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-            {isChatExpanded ? (
+            {isChatExpanded && isBotConnected ? (
               <WhatsAppChatView
                 reports={hook.reports || hook.reportesFiltrados}
                 templates={hook.templates}

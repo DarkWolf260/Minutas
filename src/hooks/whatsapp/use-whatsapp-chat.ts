@@ -8,10 +8,8 @@ export interface ChatItem {
   id: string;
   name: string;
   isGroup: boolean;
-  isGuardNovedades?: boolean;
+  avatarUrl?: string | null;
 }
-
-export const GUARD_NOVEDADES_CHAT_ID = 'guardia-novedades';
 
 export interface UseWhatsAppChatOptions {
   reports: Report[];
@@ -31,51 +29,54 @@ export function useWhatsAppChat({
   const { settings } = useSettings();
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
 
-  // Selected chat tab: either 'guardia-novedades' or a real WhatsApp chat ID
-  const [activeChatId, setActiveChatId] = useState<string>(GUARD_NOVEDADES_CHAT_ID);
+  // Selected chat ID from real WhatsApp chats
+  const [activeChatId, setActiveChatId] = useState<string>(() => {
+    const defaultIds = settings?.whatsapp_default_chat_ids || [];
+    return defaultIds[0] || '';
+  });
   const [realMessages, setRealMessages] = useState<WhatsAppMessage[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [messageText, setMessageText] = useState('');
-  const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const isBotReady = bot.isAvailable && bot.status.isReady;
 
-  // Available chat targets: Guard Novedades first, then bot chats
+  // Available chat targets from WhatsApp bot
   const chatList: ChatItem[] = useMemo(() => {
-    const list: ChatItem[] = [
-      {
-        id: GUARD_NOVEDADES_CHAT_ID,
-        name: 'Novedades de Guardia (Turno)',
-        isGroup: true,
-        isGuardNovedades: true
-      }
-    ];
-
-    if (bot.chats && bot.chats.length > 0) {
-      // Prioritize default configured chats
-      const defaultIds = settings?.whatsapp_default_chat_ids || [];
-      const sortedBotChats = [...bot.chats].sort((a, b) => {
-        const aFav = defaultIds.includes(a.id) ? 1 : 0;
-        const bFav = defaultIds.includes(b.id) ? 1 : 0;
-        return bFav - aFav;
-      });
-
-      sortedBotChats.forEach(c => {
-        list.push({
-          id: c.id,
-          name: c.name || c.id,
-          isGroup: c.isGroup,
-          isGuardNovedades: false
-        });
-      });
+    if (!bot.chats || bot.chats.length === 0) {
+      return [];
     }
 
-    return list;
+    // Prioritize default configured chats
+    const defaultIds = settings?.whatsapp_default_chat_ids || [];
+    const sortedBotChats = [...bot.chats].sort((a, b) => {
+      const aFav = defaultIds.includes(a.id) ? 1 : 0;
+      const bFav = defaultIds.includes(b.id) ? 1 : 0;
+      return bFav - aFav;
+    });
+
+    return sortedBotChats.map(c => ({
+      id: c.id,
+      name: c.name || c.id,
+      isGroup: c.isGroup,
+      avatarUrl: c.avatarUrl || null
+    }));
   }, [bot.chats, settings?.whatsapp_default_chat_ids]);
 
-  const currentChat = useMemo(() => {
-    return chatList.find(c => c.id === activeChatId) || chatList[0]!;
+  // Auto-select chat when chat list is loaded
+  useEffect(() => {
+    if (chatList.length > 0) {
+      const isValid = chatList.some(c => c.id === activeChatId);
+      if (!activeChatId || !isValid) {
+        const defaultIds = settings?.whatsapp_default_chat_ids || [];
+        const preferred = chatList.find(c => defaultIds.includes(c.id));
+        setActiveChatId(preferred ? preferred.id : chatList[0]!.id);
+      }
+    }
+  }, [chatList, activeChatId, settings?.whatsapp_default_chat_ids]);
+
+  const currentChat: ChatItem | null = useMemo(() => {
+    return chatList.find(c => c.id === activeChatId) || (chatList.length > 0 ? chatList[0]! : null);
   }, [chatList, activeChatId]);
 
   const botRef = useRef(bot);
@@ -85,7 +86,7 @@ export function useWhatsAppChat({
 
   // Fetch real messages when active chat is a real WhatsApp chat
   const loadRealMessages = useCallback(async (silent = false) => {
-    if (activeChatId === GUARD_NOVEDADES_CHAT_ID) {
+    if (!activeChatId) {
       setRealMessages([]);
       return;
     }
@@ -112,7 +113,7 @@ export function useWhatsAppChat({
 
   // Poll messages if looking at a real WhatsApp chat
   useEffect(() => {
-    if (activeChatId !== GUARD_NOVEDADES_CHAT_ID && isBotReady) {
+    if (activeChatId && isBotReady) {
       loadRealMessages(false);
 
       const timer = setInterval(() => {
@@ -128,46 +129,28 @@ export function useWhatsAppChat({
   // Send message
   const handleSendMessage = useCallback(async (customText?: string) => {
     const textToSend = (customText !== undefined ? customText : messageText).trim();
-    if (!textToSend) return;
+    if (!textToSend || !activeChatId) return;
 
     setIsSending(true);
     try {
-      if (activeChatId === GUARD_NOVEDADES_CHAT_ID) {
-        // If in Guard Novedades mode, sending a message can send to all configured WhatsApp chats if bot is ready
-        const defaultChatIds = settings?.whatsapp_default_chat_ids || [];
-        if (isBotReady && defaultChatIds.length > 0) {
-          for (const cId of defaultChatIds) {
-            await bot.sendMessage(cId, textToSend);
-          }
-          toast.success(`Mensaje enviado a ${defaultChatIds.length} chat(s) de WhatsApp`);
-        } else {
-          toast.info('Mensaje redactado.', {
-            description: isBotReady 
-              ? 'Selecciona un chat destino o configura chats en Sincronización.'
-              : 'Conecta el bot de WhatsApp para enviar mensajes directos.'
-          });
-        }
-      } else {
-        // Send to the active real WhatsApp chat
-        await bot.sendMessage(activeChatId, textToSend);
-        
-        // Optimistic local add
-        const newMsg: WhatsAppMessage = {
-          id: `temp_${Date.now()}`,
-          body: textToSend,
-          type: 'chat',
-          timestamp: Date.now(),
-          fromMe: true,
-          from: 'me',
-          to: activeChatId,
-          author: null,
-          senderName: 'Tú',
-          hasMedia: false,
-          ack: 1
-        };
-        setRealMessages(prev => [...prev, newMsg]);
-        toast.success('Mensaje enviado');
-      }
+      await bot.sendMessage(activeChatId, textToSend);
+      
+      // Optimistic local add
+      const newMsg: WhatsAppMessage = {
+        id: `temp_${Date.now()}`,
+        body: textToSend,
+        type: 'chat',
+        timestamp: Date.now(),
+        fromMe: true,
+        from: 'me',
+        to: activeChatId,
+        author: null,
+        senderName: 'Tú',
+        hasMedia: false,
+        ack: 1
+      };
+      setRealMessages(prev => [...prev, newMsg]);
+      toast.success('Mensaje enviado');
 
       setMessageText('');
     } catch (err: any) {
@@ -177,11 +160,11 @@ export function useWhatsAppChat({
     } finally {
       setIsSending(false);
     }
-  }, [messageText, activeChatId, settings?.whatsapp_default_chat_ids, isBotReady, bot]);
+  }, [messageText, activeChatId, bot]);
 
   // Send a specific report/novedad to WhatsApp
   const handleSendReportToChat = useCallback(async (report: Report, targetChatId?: string) => {
-    const destinationId = targetChatId || (activeChatId !== GUARD_NOVEDADES_CHAT_ID ? activeChatId : (settings?.whatsapp_default_chat_ids || [])[0]);
+    const destinationId = targetChatId || activeChatId || (settings?.whatsapp_default_chat_ids || [])[0];
     
     if (!destinationId) {
       toast.error('Selecciona un chat destino en el selector superior');

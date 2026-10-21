@@ -8,6 +8,7 @@ export interface WhatsAppChat {
   id: string;
   name: string;
   isGroup: boolean;
+  avatarUrl?: string | null;
 }
 
 export interface WhatsAppMessage {
@@ -323,57 +324,63 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     }
   }, [localUrl, db, currentWorkspace, isCloud]);
 
+  const isLoadingChatsRef = useRef(false);
   const loadChats = useCallback(async () => {
     const isBotReady = (state.isAvailable && state.isWorkspaceMatch && state.status.isReady) || (state.isCloudActive && isCloud);
-    if (!isBotReady) return;
+    if (!isBotReady || isLoadingChatsRef.current) return;
+    isLoadingChatsRef.current = true;
     
-    // If the local bot is running on this device and matched, fetch from it
-    if (state.isAvailable && state.isWorkspaceMatch && state.status.isReady) {
-      try {
-        const wsParam = currentWorkspace ? `?workspace=${encodeURIComponent(currentWorkspace)}` : '';
-        const response = await fetch(`${apiUrl}/api/whatsapp/chats${wsParam}`, {
-          headers: {
-            ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
+    try {
+      // If the local bot is running on this device and matched, fetch from it
+      if (state.isAvailable && state.isWorkspaceMatch && state.status.isReady) {
+        try {
+          const wsParam = currentWorkspace ? `?workspace=${encodeURIComponent(currentWorkspace)}` : '';
+          const response = await fetch(`${apiUrl}/api/whatsapp/chats${wsParam}`, {
+            headers: {
+              ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
+            }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            updateBotState({ chats: data });
+            
+            // Sync to database if we are in cloud workspace
+            if (db && currentWorkspace && isCloud) {
+              const chatsId = `whatsapp_chats:${currentWorkspace}`;
+              await db.configs.upsert({
+                id: chatsId,
+                workspace_id: currentWorkspace,
+                type: 'whatsapp_bot_status',
+                data: {
+                  chats: data,
+                  updatedAt: new Date().toISOString()
+                }
+              }).catch(err => console.error('Error syncing chats list to DB:', err));
+            }
           }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          updateBotState({ chats: data });
-          
-          // Sync to database if we are in cloud workspace
-          if (db && currentWorkspace && isCloud) {
-            const chatsId = `whatsapp_chats:${currentWorkspace}`;
-            await db.configs.upsert({
-              id: chatsId,
-              workspace_id: currentWorkspace,
-              type: 'whatsapp_bot_status',
-              data: {
-                chats: data,
-                updatedAt: new Date().toISOString()
-              }
-            }).catch(err => console.error('Error syncing chats list to DB:', err));
-          }
+        } catch (error) {
+          console.error('Error fetching chats from local bot:', error);
         }
-      } catch (error) {
-        console.error('Error fetching chats from local bot:', error);
-      }
-    } else if (isCloud && db && currentWorkspace) {
-      // If we are a remote client, load from the database
-      try {
-        const chatsId = `whatsapp_chats:${currentWorkspace}`;
-        const doc = await db.configs.findOne(chatsId).exec();
-        if (doc) {
-          const item = doc.toJSON();
-          const data = item.data || {};
-          if (Array.isArray(data.chats)) {
-            updateBotState({ chats: data.chats });
+      } else if (isCloud && db && currentWorkspace) {
+        // If we are a remote client, load from the database
+        try {
+          const chatsId = `whatsapp_chats:${currentWorkspace}`;
+          const doc = await db.configs.findOne(chatsId).exec();
+          if (doc) {
+            const item = doc.toJSON();
+            const data = item.data || {};
+            if (Array.isArray(data.chats)) {
+              updateBotState({ chats: data.chats });
+            }
           }
+        } catch (error) {
+          console.error('Error loading chats from database:', error);
         }
-      } catch (error) {
-        console.error('Error loading chats from database:', error);
       }
+    } finally {
+      isLoadingChatsRef.current = false;
     }
-  }, [localUrl, state.isAvailable, state.isWorkspaceMatch, state.status.isReady, state.isCloudActive, isCloud, db, currentWorkspace]);
+  }, [apiUrl, state.isAvailable, state.isWorkspaceMatch, state.status.isReady, state.isCloudActive, isCloud, db, currentWorkspace]);
 
   const sendMessage = useCallback(async (chatId: string, message: string, media?: { id?: string; local_blob_id?: string; url: string; name?: string; description?: string }[]) => {
     try {
@@ -616,18 +623,17 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     }
   }, [currentWorkspace, localUrl, db, isCloud, checkStatus]);
 
-  // Load chats when ready locally, retrying if ready but chats are still empty
+  // Load chats once when ready locally if chats are currently empty
+  const hasAutoLoadedChatsRef = useRef(false);
   useEffect(() => {
-    if (!state.isAvailable || !state.isWorkspaceMatch || !state.status.isReady) return;
+    if (!state.isAvailable || !state.isWorkspaceMatch || !state.status.isReady) {
+      hasAutoLoadedChatsRef.current = false;
+      return;
+    }
 
-    if (state.chats.length === 0) {
+    if (state.chats.length === 0 && !hasAutoLoadedChatsRef.current) {
+      hasAutoLoadedChatsRef.current = true;
       loadChats();
-      const intervalId = setInterval(() => {
-        if (botState.chats.length === 0) {
-          loadChats();
-        }
-      }, 4000);
-      return () => clearInterval(intervalId);
     }
   }, [state.isAvailable, state.isWorkspaceMatch, state.status.isReady, state.chats.length, loadChats]);
 

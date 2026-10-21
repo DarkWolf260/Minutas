@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useRef, useEffect } from 'react';
 import {
   Check,
   CheckCheck,
@@ -10,7 +10,9 @@ import {
   X,
   Mic,
   FileText,
-  Loader2
+  Loader2,
+  Play,
+  Pause
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Report } from '@/lib/types';
@@ -31,6 +33,22 @@ interface WhatsAppChatBubbleProps {
   onSelectReport?: (id: string) => void;
   onSendReportToChat?: (report: Report) => void;
   isBotReady?: boolean;
+  isGroup?: boolean;
+}
+
+function formatDisplayName(name?: string | null): string {
+  if (!name) return '';
+  const clean = name.trim();
+  // Formatear números telefónicos venezolanos (+58 4xx-xxx-xxxx)
+  const phoneMatch = clean.match(/^(\+?58)?(4\d{2})(\d{3})(\d{4})$/);
+  if (phoneMatch) {
+    return `+58 ${phoneMatch[2]}-${phoneMatch[3]}-${phoneMatch[4]}`;
+  }
+  // Si es un número numérico largo genérico sin formato
+  if (/^\d{9,15}$/.test(clean)) {
+    return `+${clean}`;
+  }
+  return clean;
 }
 
 function formatTime(timestamp?: string | number): string {
@@ -135,13 +153,192 @@ function WhatsAppImagePreview({
   );
 }
 
+function WhatsAppAudioPlayer({
+  mediaUrl,
+  isFromMe
+}: {
+  mediaUrl?: string | null;
+  isFromMe: boolean;
+}) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+    setHasError(false);
+  }, [mediaUrl]);
+
+  const togglePlay = () => {
+    if (!audioRef.current || !mediaUrl) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      setIsLoading(true);
+      audioRef.current.play().catch(err => {
+        console.warn('Error reproduciendo audio:', err);
+        setHasError(true);
+        setIsLoading(false);
+      });
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+      setIsLoading(false);
+    }
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = parseFloat(e.target.value);
+    setCurrentTime(time);
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+    }
+  };
+
+  const cyclePlaybackRate = () => {
+    const rates = [1, 1.5, 2];
+    const nextRate = rates[(rates.indexOf(playbackRate) + 1) % rates.length]!;
+    setPlaybackRate(nextRate);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = nextRate;
+    }
+  };
+
+  const formatSeconds = (sec: number) => {
+    if (isNaN(sec) || !isFinite(sec) || sec < 0) return '0:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  if (!mediaUrl || hasError) {
+    return (
+      <div className="flex items-center gap-2 p-2 rounded-xl bg-black/5 dark:bg-black/20 text-xs text-muted-foreground">
+        <Mic className="h-4 w-4 text-emerald-600 shrink-0" />
+        <span className="italic">Audio no disponible para reproducir</span>
+      </div>
+    );
+  }
+
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  return (
+    <div className="flex flex-col gap-1 w-full min-w-[240px] sm:min-w-[270px]">
+      <audio
+        ref={audioRef}
+        src={mediaUrl}
+        preload="metadata"
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onCanPlay={() => setIsLoading(false)}
+        onWaiting={() => setIsLoading(true)}
+        onPlaying={() => {
+          setIsPlaying(true);
+          setIsLoading(false);
+        }}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => {
+          setIsPlaying(false);
+          setCurrentTime(0);
+        }}
+        onError={() => {
+          setHasError(true);
+          setIsLoading(false);
+        }}
+      />
+
+      {/* Header con icono y selector de velocidad */}
+      <div className="flex items-center justify-between text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 px-0.5">
+        <div className="flex items-center gap-1.5">
+          <div className="h-5 w-5 rounded-full bg-emerald-500/15 flex items-center justify-center">
+            <Mic className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <span>Nota de voz</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={cyclePlaybackRate}
+          className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-emerald-800 dark:text-emerald-200 transition-colors"
+          title="Cambiar velocidad de reproducción"
+        >
+          {playbackRate}x
+        </button>
+      </div>
+
+      {/* Barra de Controles y Duración */}
+      <div className="flex items-center gap-2.5 pt-1 pb-0.5">
+        {/* Botón Circular Grande de Play / Pause */}
+        <button
+          type="button"
+          onClick={togglePlay}
+          className="h-10 w-10 rounded-full flex items-center justify-center shadow-xs shrink-0 transition-all active:scale-95 bg-emerald-600 hover:bg-emerald-700 text-white"
+          title={isPlaying ? 'Pausar' : 'Reproducir'}
+        >
+          {isLoading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : isPlaying ? (
+            <Pause className="h-5 w-5 fill-current" />
+          ) : (
+            <Play className="h-5 w-5 fill-current ml-0.5" />
+          )}
+        </button>
+
+        {/* Barra de Progreso y Tiempo */}
+        <div className="flex-1 flex flex-col justify-center gap-1.5 min-w-0">
+          <div className="relative flex items-center">
+            <input
+              type="range"
+              min={0}
+              max={duration || 100}
+              step={0.1}
+              value={currentTime}
+              onChange={handleSeek}
+              disabled={duration === 0}
+              className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-emerald-600 dark:accent-emerald-400 focus:outline-none"
+              style={{
+                background: `linear-gradient(to right, rgb(5 150 105) ${progressPercent}%, rgba(0, 0, 0, 0.15) ${progressPercent}%)`
+              }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono leading-none px-0.5">
+            <span className="font-medium text-foreground/85">
+              {formatSeconds(currentTime)}
+            </span>
+            <span>
+              {formatSeconds(duration || 0)}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
   report,
   message,
   isSelected,
   onSelectReport,
   onSendReportToChat,
-  isBotReady
+  isBotReady,
+  isGroup
 }: WhatsAppChatBubbleProps) {
   const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = useState<string>('');
@@ -359,15 +556,16 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
           <div
             className={cn(
               'relative max-w-[85%] sm:max-w-[75%] rounded-2xl p-2.5 shadow-sm border text-xs sm:text-sm',
+              isAudio && 'min-w-[270px] sm:min-w-[310px]',
               isFromMe
                 ? 'bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] rounded-tr-xs border-emerald-500/20'
                 : 'bg-white dark:bg-[#202c33] text-[#111b21] dark:text-[#e9edef] rounded-tl-xs border-border/40'
             )}
           >
-            {/* Sender name for group chats (incoming only) */}
-            {!isFromMe && message.senderName && (
+            {/* Sender name for group chats only (incoming only) */}
+            {!isFromMe && isGroup && message.senderName && (
               <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">
-                {message.senderName}
+                {formatDisplayName(message.senderName)}
               </div>
             )}
 
@@ -391,22 +589,10 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
 
             {/* Audio / Nota de voz */}
             {isAudio && (
-              <div className="flex flex-col gap-1.5 p-1 mb-1">
-                <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-                  <Mic className="h-3.5 w-3.5" />
-                  <span>Nota de voz</span>
-                </div>
-                {message.mediaUrl ? (
-                  <audio
-                    controls
-                    src={message.mediaUrl}
-                    className="w-full max-w-[260px] h-8 accent-emerald-600 rounded"
-                    preload="metadata"
-                  />
-                ) : (
-                  <span className="italic text-[11px] text-muted-foreground">Audio recibido</span>
-                )}
-              </div>
+              <WhatsAppAudioPlayer
+                mediaUrl={message.mediaUrl}
+                isFromMe={isFromMe}
+              />
             )}
 
             {/* Documento */}

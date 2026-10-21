@@ -1,27 +1,23 @@
-import React, { useRef, useEffect } from 'react';
-import { Send, Plus, Loader2, FileText, AlertCircle } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Send, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { UseWhatsAppChatReturn } from '@/hooks/whatsapp';
 
 interface WhatsAppChatInputProps {
   chatHook: UseWhatsAppChatReturn;
-  onOpenCreateDialog?: () => void;
 }
 
 export function WhatsAppChatInput({
-  chatHook,
-  onOpenCreateDialog
+  chatHook
 }: WhatsAppChatInputProps) {
   const {
     messageText,
     setMessageText,
     handleSendMessage,
     isSending,
-    activeChatId,
     currentChat,
-    isBotReady,
-    guardiaAbierta
+    isBotReady
   } = chatHook;
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -35,7 +31,7 @@ export function WhatsAppChatInput({
     }
   };
 
-  const isRealChatWithoutBot = !currentChat.isGuardNovedades && !isBotReady;
+  const isRealChatWithoutBot = !isBotReady || !currentChat;
 
   return (
     <div className="p-2 sm:p-3 border-t bg-card/95 backdrop-blur-sm z-10 space-y-1.5">
@@ -48,21 +44,6 @@ export function WhatsAppChatInput({
       )}
 
       <div className="flex items-end gap-1.5 sm:gap-2">
-        {/* Template / New Novedad Quick Button */}
-        {onOpenCreateDialog && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onOpenCreateDialog}
-            disabled={!guardiaAbierta}
-            title="Crear nueva novedad oficial (Plantilla)"
-            className="h-9 w-9 rounded-full text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10 shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        )}
-
         {/* Text Input Area */}
         <div className="flex-1 relative bg-muted/60 focus-within:bg-background border rounded-2xl transition-all">
           <textarea
@@ -72,11 +53,7 @@ export function WhatsAppChatInput({
             onChange={e => setMessageText(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isSending || isRealChatWithoutBot}
-            placeholder={
-              currentChat.isGuardNovedades
-                ? 'Escribe un mensaje o nota rápida...'
-                : `Mensaje para ${currentChat.name}...`
-            }
+            placeholder={!currentChat ? 'Selecciona un chat...' : 'Escribe un mensaje...'}
             className="w-full bg-transparent px-3 py-2 text-xs sm:text-sm resize-none focus:outline-none max-h-24 min-h-[36px] placeholder:text-muted-foreground/60 leading-normal"
           />
         </div>

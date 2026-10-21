@@ -1,27 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   MessageSquare,
   Users,
   User,
-  Shield,
   RefreshCw,
   Maximize2,
   Minimize2,
   ChevronDown,
   Check,
-  Search,
-  Settings,
-  Wifi,
-  WifiOff
+  Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import type { ChatItem } from '@/hooks/whatsapp';
 import type { UseWhatsAppChatReturn } from '@/hooks/whatsapp';
 import { useNavigate } from 'react-router-dom';
+
+function ChatAvatar({ chat }: { chat: ChatItem }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (chat.avatarUrl && !hasError) {
+    return (
+      <img
+        src={chat.avatarUrl}
+        alt={chat.name}
+        className="w-full h-full object-cover"
+        onError={() => setHasError(true)}
+      />
+    );
+  }
+
+  return chat.isGroup ? (
+    <Users className="h-3 w-3" />
+  ) : (
+    <User className="h-3 w-3" />
+  );
+}
 
 interface WhatsAppChatHeaderProps {
   chatHook: UseWhatsAppChatReturn;
@@ -49,6 +65,49 @@ export function WhatsAppChatHeader({
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [isRotating, setIsRotating] = useState(false);
+  const [headerAvatarError, setHeaderAvatarError] = useState(false);
+  const [resolvedAvatar, setResolvedAvatar] = useState<string | null>(null);
+
+  // Reset error when switching chats
+  useEffect(() => {
+    setHeaderAvatarError(false);
+  }, [currentChat?.id, currentChat?.avatarUrl]);
+
+  // Si currentChat no tiene avatarUrl aún definido (o es null), intentar resolver bajo demanda una sola vez
+  useEffect(() => {
+    if (!currentChat?.id || !isBotReady) return;
+
+    if (currentChat.avatarUrl) {
+      setResolvedAvatar(currentChat.avatarUrl);
+      return;
+    }
+    if (currentChat.avatarUrl === null) {
+      setResolvedAvatar(null);
+      return;
+    }
+
+    let isMounted = true;
+    fetch(`/api/whatsapp/chats/${encodeURIComponent(currentChat.id)}/avatar`)
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        if (isMounted) {
+          const url = data?.avatarUrl || null;
+          setResolvedAvatar(url);
+          currentChat.avatarUrl = url;
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          currentChat.avatarUrl = null;
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentChat?.id, currentChat?.avatarUrl, isBotReady]);
+
+  const displayAvatar = currentChat?.avatarUrl || resolvedAvatar;
 
   const handleRefresh = async () => {
     setIsRotating(true);
@@ -74,49 +133,42 @@ export function WhatsAppChatHeader({
               <div className="relative shrink-0">
                 <div
                   className={cn(
-                    'h-9 w-9 sm:h-10 sm:w-10 rounded-full flex items-center justify-center font-bold text-xs shadow-sm transition-transform group-hover:scale-105',
-                    currentChat.isGuardNovedades
-                      ? 'bg-emerald-600 text-white'
-                      : currentChat.isGroup
-                        ? 'bg-teal-600/15 text-teal-700 dark:text-teal-300'
-                        : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                    'h-9 w-9 sm:h-10 sm:w-10 rounded-full flex items-center justify-center font-bold text-xs shadow-sm transition-transform group-hover:scale-105 overflow-hidden',
+                    currentChat?.isGroup
+                      ? 'bg-teal-600/15 text-teal-700 dark:text-teal-300'
+                      : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                   )}
                 >
-                  {currentChat.isGuardNovedades ? (
-                    <Shield className="h-5 w-5" />
-                  ) : currentChat.isGroup ? (
+                  {displayAvatar && !headerAvatarError ? (
+                    <img
+                      src={displayAvatar}
+                      alt={currentChat?.name || 'Chat'}
+                      className="w-full h-full object-cover"
+                      onError={() => setHeaderAvatarError(true)}
+                    />
+                  ) : currentChat?.isGroup ? (
                     <Users className="h-4 w-4" />
-                  ) : (
+                  ) : currentChat ? (
                     <User className="h-4 w-4" />
+                  ) : (
+                    <MessageSquare className="h-4 w-4" />
                   )}
                 </div>
-
-                {/* Online indicator */}
-                {isBotReady && (
-                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-background ring-1 ring-emerald-500/20" />
-                )}
               </div>
 
-              {/* Title & Subtitle */}
+              {/* Title */}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1">
                   <span className="font-bold text-xs sm:text-sm text-foreground truncate">
-                    {currentChat.name}
+                    {currentChat?.name || 'Seleccionar chat'}
                   </span>
                   <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0 group-hover:text-foreground transition-transform" />
                 </div>
-                <div className="text-[10px] sm:text-[11px] text-muted-foreground truncate flex items-center gap-1.5">
-                  {currentChat.isGuardNovedades ? (
-                    <span>{reports.length} reportes en guardia</span>
-                  ) : isBotReady ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      en línea
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">Bot desconectado</span>
-                  )}
-                </div>
+                {!isBotReady && (
+                  <div className="text-[10px] text-muted-foreground truncate">
+                    Bot desconectado
+                  </div>
+                )}
               </div>
             </button>
           </PopoverTrigger>
@@ -138,56 +190,39 @@ export function WhatsAppChatHeader({
                 Chats Disponibles
               </div>
 
-              <ScrollArea className="max-h-60">
-                <div className="space-y-1 pr-1">
-                  {filteredChatList.map(chat => {
-                    const isSelected = chat.id === activeChatId;
-                    return (
-                      <button
-                        key={chat.id}
-                        onClick={() => {
-                          setActiveChatId(chat.id);
-                          setIsSelectorOpen(false);
-                        }}
-                        className={cn(
-                          'w-full flex items-center justify-between p-2 rounded-lg text-left text-xs transition-colors',
-                          isSelected
-                            ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 font-medium'
-                            : 'hover:bg-muted text-foreground'
-                        )}
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div
-                            className={cn(
-                              'h-6 w-6 rounded-full flex items-center justify-center shrink-0 text-[10px]',
-                              chat.isGuardNovedades
-                                ? 'bg-emerald-600 text-white'
-                                : chat.isGroup
-                                  ? 'bg-muted text-muted-foreground'
-                                  : 'bg-muted text-muted-foreground'
-                            )}
-                          >
-                            {chat.isGuardNovedades ? (
-                              <Shield className="h-3 w-3" />
-                            ) : chat.isGroup ? (
-                              <Users className="h-3 w-3" />
-                            ) : (
-                              <User className="h-3 w-3" />
-                            )}
-                          </div>
-                          <span className="truncate">{chat.name}</span>
+              <div className="max-h-64 overflow-y-auto overflow-x-hidden space-y-1 pr-1 overscroll-contain">
+                {filteredChatList.map(chat => {
+                  const isSelected = chat.id === activeChatId;
+                  return (
+                    <button
+                      key={chat.id}
+                      onClick={() => {
+                        setActiveChatId(chat.id);
+                        setIsSelectorOpen(false);
+                      }}
+                      className={cn(
+                        'w-full flex items-center justify-between p-2 rounded-lg text-left text-xs transition-colors',
+                        isSelected
+                          ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 font-medium'
+                          : 'hover:bg-muted text-foreground'
+                      )}
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <div className="h-6 w-6 rounded-full flex items-center justify-center shrink-0 text-[10px] bg-muted text-muted-foreground overflow-hidden">
+                          <ChatAvatar chat={chat} />
                         </div>
-                        {isSelected && <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0 ml-1" />}
-                      </button>
-                    );
-                  })}
-                  {filteredChatList.length === 0 && (
-                    <div className="py-4 text-center text-xs text-muted-foreground">
-                      No se encontraron chats
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
+                        <span className="truncate flex-1">{chat.name}</span>
+                      </div>
+                      {isSelected && <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0 ml-1.5" />}
+                    </button>
+                  );
+                })}
+                {filteredChatList.length === 0 && (
+                  <div className="py-4 text-center text-xs text-muted-foreground">
+                    No se encontraron chats
+                  </div>
+                )}
+              </div>
 
               {/* Bot status notice inside popover */}
               {!isBotReady && (
@@ -208,21 +243,8 @@ export function WhatsAppChatHeader({
         </Popover>
       </div>
 
-      {/* Right Controls: Bot indicator, Refresh, Expand */}
+      {/* Right Controls: Refresh, Expand */}
       <div className="flex items-center gap-1 shrink-0">
-        {/* Status pill */}
-        <div
-          title={isBotReady ? 'Bot de WhatsApp conectado' : 'Bot no detectado en localhost:3001'}
-          className={cn(
-            'flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border',
-            isBotReady
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-              : 'bg-muted text-muted-foreground border-border/40'
-          )}
-        >
-          {isBotReady ? <Wifi className="h-2.5 w-2.5" /> : <WifiOff className="h-2.5 w-2.5" />}
-          <span className="hidden sm:inline">{isBotReady ? 'Conectado' : 'Offline'}</span>
-        </div>
 
         {/* Refresh button */}
         <Button
