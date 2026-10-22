@@ -70,6 +70,128 @@ const contactNameCache = new Map();
 const avatarCache = new Map();
 const avatarImageCache = new Map();
 const MAX_AVATAR_IMAGE_CACHE = 250;
+const revokedMessageIds = new Set();
+const recentMessagesCache = new Map();
+const MAX_RECENT_MESSAGES = 250;
+
+function extractThumbnail(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  const str = raw.trim();
+  if (str.startsWith('data:image/')) return str;
+  let clean = str;
+  if (clean.includes('base64,')) {
+    clean = clean.split('base64,')[1];
+  }
+  if (clean.length > 20) {
+    if (clean.startsWith('UklGR')) {
+      return `data:image/webp;base64,${clean}`;
+    }
+    if (clean.startsWith('iVBORw0KGgo')) {
+      return `data:image/png;base64,${clean}`;
+    }
+    return `data:image/jpeg;base64,${clean}`;
+  }
+  return null;
+}
+
+async function resolveQuotedMsg(msg, isGroupChat) {
+  try {
+    let qData = msg._data?.quotedMsg;
+    let quotedMessageInstance = null;
+
+    if (!qData && msg.hasQuotedMsg && typeof msg.getQuotedMessage === 'function') {
+      try {
+        quotedMessageInstance = await msg.getQuotedMessage();
+        if (quotedMessageInstance) {
+          qData = quotedMessageInstance._data;
+        }
+      } catch (e) {}
+    }
+
+    if (!qData && !quotedMessageInstance) {
+      return null;
+    }
+
+    const qType = quotedMessageInstance?.type || qData?.type || 'chat';
+    const qIsRevoked = qType === 'revoked' || qData?.subtype === 'sender_revoke' || qData?.subtype === 'admin_revoke';
+
+    const qFromMe = Boolean(quotedMessageInstance?.fromMe || qData?.fromMe);
+    const qAuthorId = quotedMessageInstance?.author || qData?.author || quotedMessageInstance?.from || qData?.from || msg._data?.quotedParticipant;
+
+    let qSenderName = qFromMe ? 'Tú' : null;
+    if (!qSenderName && qAuthorId) {
+      const cached = contactNameCache.get(qAuthorId);
+      const notify = qData?.notifyName || qData?.name;
+      if (cached && !/^\+?\d{7,}$/.test(cached.replace(/[\s\-\(\)]/g, ''))) {
+        qSenderName = cached;
+      } else if (notify && typeof notify === 'string' && notify.trim() && !/^\+?\d{7,}$/.test(notify.replace(/[\s\-\(\)]/g, ''))) {
+        qSenderName = notify.trim();
+        contactNameCache.set(qAuthorId, qSenderName);
+      } else if (cached) {
+        qSenderName = cached;
+      } else if (notify && typeof notify === 'string' && notify.trim()) {
+        qSenderName = notify.trim();
+      } else if (isGroupChat && qAuthorId) {
+        const raw = qAuthorId.split('@')[0];
+        qSenderName = /^\d{7,15}$/.test(raw) ? `+${raw}` : raw;
+      } else {
+        qSenderName = 'Contacto';
+      }
+    }
+
+    // Extraer miniatura si el mensaje citado tenía foto
+    let qThumbnail = null;
+    const rawBody = qData?.body || quotedMessageInstance?._data?.body;
+    if (rawBody && typeof rawBody === 'string') {
+      qThumbnail = extractThumbnail(rawBody);
+    }
+    if (!qThumbnail && (qData?.thumbnail || quotedMessageInstance?._data?.thumbnail)) {
+      qThumbnail = extractThumbnail(qData?.thumbnail || quotedMessageInstance?._data?.thumbnail);
+    }
+    if (!qThumbnail && (qData?.mediaData?.preview || quotedMessageInstance?._data?.mediaData?.preview)) {
+      qThumbnail = extractThumbnail(qData?.mediaData?.preview || quotedMessageInstance?._data?.mediaData?.preview);
+    }
+
+    // Texto o subtítulo
+    let qBody = qIsRevoked ? 'Este mensaje fue eliminado' : (qData?.caption || quotedMessageInstance?.body || '');
+    if (!qIsRevoked && !qBody && rawBody && typeof rawBody === 'string' && !rawBody.startsWith('data:') && !rawBody.startsWith('/9j/') && rawBody.length < 500) {
+      qBody = rawBody;
+    }
+
+    const qHasMedia = Boolean(
+      quotedMessageInstance?.hasMedia ||
+      qData?.isMedia ||
+      qData?.hasMedia ||
+      ['image', 'video', 'document', 'audio', 'ptt', 'sticker'].includes(qType) ||
+      qThumbnail
+    );
+
+    if (!qBody && !qIsRevoked) {
+      if (qType === 'image') qBody = 'Foto';
+      else if (qType === 'video') qBody = 'Video';
+      else if (qType === 'audio' || qType === 'ptt') qBody = 'Nota de voz';
+      else if (qType === 'document') qBody = 'Documento';
+      else if (qType === 'sticker') qBody = 'Sticker';
+    }
+
+    const qMsgId = quotedMessageInstance?.id?._serialized || qData?.id?._serialized || (typeof qData?.id === 'string' ? qData.id : qData?.id?.id) || msg._data?.quotedStanzaID || null;
+
+    return {
+      id: qMsgId,
+      body: qBody,
+      type: qType,
+      fromMe: qFromMe,
+      senderName: qSenderName || (qFromMe ? 'Tú' : 'Contacto'),
+      hasMedia: qHasMedia,
+      thumbnail: qThumbnail,
+      mediaUrl: (qHasMedia && qMsgId) ? `/api/whatsapp/messages/${encodeURIComponent(qMsgId)}/media` : null,
+      isRevoked: qIsRevoked
+    };
+  } catch (err) {
+    console.warn('[QuotedMsg] Error resolviendo mensaje citado:', err?.message || err);
+    return null;
+  }
+}
 
 async function resolveChatAvatarUrl(chatId) {
   if (!chatId || !isReady || !client) return null;
@@ -212,6 +334,15 @@ function initWhatsAppClient() {
   client.on('auth_failure', async msg => {
     console.error('Error de autenticación:', msg);
     restartClient('Error de autenticación. Generando nuevo QR...');
+  });
+
+  client.on('message_revoke_everyone', async (after, before) => {
+    try {
+      const afterId = after?.id?._serialized || after?.id;
+      if (afterId) revokedMessageIds.add(afterId);
+      const beforeId = before?.id?._serialized || before?.id;
+      if (beforeId) revokedMessageIds.add(beforeId);
+    } catch (err) {}
   });
 
   client.on('disconnected', async (reason) => {
@@ -692,17 +823,28 @@ app.get('/api/whatsapp/chats/:chatId/messages', async (req, res) => {
 
     const isGroupChat = Boolean(chat.isGroup || (typeof targetChatId === 'string' && targetChatId.endsWith('@g.us')));
 
-    const formatted = messages.map(msg => {
+    const formatted = await Promise.all(messages.map(async (msg) => {
       const msgId = msg.id?._serialized || msg.id?.$1 || (typeof msg.id === 'string' ? msg.id : msg.id?.id) || String(Date.now());
 
+      // Guardar en recentMessagesCache para descarga de media rápida y fallback
+      if (recentMessagesCache.size >= MAX_RECENT_MESSAGES) {
+        const firstKey = recentMessagesCache.keys().next().value;
+        recentMessagesCache.delete(firstKey);
+      }
+      recentMessagesCache.set(msgId, msg);
+
+      const isRevoked = Boolean(
+        msg.type === 'revoked' ||
+        msg._data?.type === 'revoked' ||
+        msg._data?.subtype === 'sender_revoke' ||
+        msg._data?.subtype === 'admin_revoke' ||
+        msg._data?.isRevoked === true ||
+        revokedMessageIds.has(msgId)
+      );
+
       let thumbnail = null;
-      if (msg.hasMedia && msg._data?.body && typeof msg._data.body === 'string') {
-        const bodyStr = msg._data.body;
-        if (bodyStr.startsWith('data:image/')) {
-          thumbnail = bodyStr;
-        } else if (bodyStr.startsWith('/9j/') || bodyStr.startsWith('iVBORw0KGgo')) {
-          thumbnail = `data:image/jpeg;base64,${bodyStr}`;
-        }
+      if (!isRevoked && msg.hasMedia) {
+        thumbnail = extractThumbnail(msg._data?.body || msg._data?.thumbnail || msg._data?.mediaData?.preview);
       }
 
       let senderName = null;
@@ -730,22 +872,27 @@ app.get('/api/whatsapp/chats/:chatId/messages', async (req, res) => {
         }
       }
 
+      const quotedMsg = !isRevoked ? await resolveQuotedMsg(msg, isGroupChat) : null;
+
       return {
         id: msgId,
-        body: msg.body || '',
-        type: msg.type || 'chat',
+        body: isRevoked ? '' : (msg.body || ''),
+        type: isRevoked ? 'revoked' : (msg.type || 'chat'),
         timestamp: (msg.timestamp || 0) * 1000,
         fromMe: Boolean(msg.fromMe),
         from: msg.from,
         to: msg.to,
         author: msg.author || null,
         senderName,
-        hasMedia: Boolean(msg.hasMedia),
-        mediaUrl: msg.hasMedia ? `/api/whatsapp/messages/${encodeURIComponent(msgId)}/media` : null,
+        hasMedia: isRevoked ? false : Boolean(msg.hasMedia),
+        mediaUrl: (!isRevoked && msg.hasMedia) ? `/api/whatsapp/messages/${encodeURIComponent(msgId)}/media` : null,
         thumbnail,
-        ack: msg.ack
+        ack: msg.ack,
+        isRevoked,
+        hasQuotedMsg: Boolean(quotedMsg),
+        quotedMsg
       };
-    });
+    }));
 
     res.json(formatted);
   } catch (error) {
@@ -837,19 +984,27 @@ app.get('/api/whatsapp/messages/:messageId/media', async (req, res) => {
 
   try {
     let media = null;
-    let msgObj = null;
+    let msgObj = recentMessagesCache.get(decodedMsgId) || null;
 
-    // 2. Intentar descargar mediante client.getMessageById
-    try {
-      msgObj = await client.getMessageById(decodedMsgId);
-      if (msgObj && msgObj.hasMedia) {
-        media = await msgObj.downloadMedia();
+    // 2. Si no estaba en recentMessagesCache, intentar mediante client.getMessageById
+    if (!msgObj) {
+      try {
+        msgObj = await client.getMessageById(decodedMsgId);
+      } catch (getErr) {
+        console.warn(`[Media] getMessageById aviso para ${decodedMsgId}:`, getErr?.message || getErr);
       }
-    } catch (getErr) {
-      console.warn(`[Media] getMessageById aviso para ${decodedMsgId}:`, getErr?.message || getErr);
     }
 
-    // 3. Fallback: evaluar directamente en pupPage con resolveMediaBlob
+    // 3. Descargar media si tenemos instancia msgObj
+    if (msgObj && typeof msgObj.downloadMedia === 'function') {
+      try {
+        media = await msgObj.downloadMedia();
+      } catch (dlErr) {
+        console.warn(`[Media] downloadMedia aviso para ${decodedMsgId}:`, dlErr?.message || dlErr);
+      }
+    }
+
+    // 4. Fallback: evaluar directamente en pupPage con resolveMediaBlob
     if ((!media || !media.data) && client.pupPage) {
       try {
         const resolved = await client.pupPage.evaluate(async (msgId) => {
@@ -874,16 +1029,19 @@ app.get('/api/whatsapp/messages/:messageId/media', async (req, res) => {
       }
     }
 
-    // 4. Fallback 2: si no se pudo descargar el archivo completo, usar thumbnail de _data.body si existe
-    if ((!media || !media.data) && msgObj?._data?.body && typeof msgObj._data.body === 'string') {
-      let rawBase64 = msgObj._data.body;
-      if (rawBase64.includes('base64,')) {
-        rawBase64 = rawBase64.split('base64,')[1];
-      }
-      if (rawBase64.length > 20) {
-        const buffer = Buffer.from(rawBase64, 'base64');
-        res.setHeader('Content-Type', 'image/jpeg');
-        return res.send(buffer);
+    // 5. Fallback 2: si no se pudo descargar el archivo completo, usar thumbnail de _data.body o mediaData
+    if (!media || !media.data) {
+      const rawThumb = msgObj?._data?.body || msgObj?._data?.thumbnail || msgObj?._data?.mediaData?.preview;
+      if (rawThumb && typeof rawThumb === 'string') {
+        let rawBase64 = rawThumb;
+        if (rawBase64.includes('base64,')) {
+          rawBase64 = rawBase64.split('base64,')[1];
+        }
+        if (rawBase64.length > 20) {
+          const buffer = Buffer.from(rawBase64, 'base64');
+          res.setHeader('Content-Type', 'image/jpeg');
+          return res.send(buffer);
+        }
       }
     }
 

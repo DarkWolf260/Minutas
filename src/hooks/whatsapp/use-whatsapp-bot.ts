@@ -11,6 +11,18 @@ export interface WhatsAppChat {
   avatarUrl?: string | null;
 }
 
+export interface QuotedWhatsAppMessage {
+  id?: string | null;
+  body?: string;
+  type?: string;
+  fromMe?: boolean;
+  senderName?: string | null;
+  hasMedia?: boolean;
+  mediaUrl?: string | null;
+  thumbnail?: string | null;
+  isRevoked?: boolean;
+}
+
 export interface WhatsAppMessage {
   id: string;
   body: string;
@@ -25,6 +37,9 @@ export interface WhatsAppMessage {
   mediaUrl?: string | null;
   thumbnail?: string | null;
   ack?: number;
+  isRevoked?: boolean;
+  hasQuotedMsg?: boolean;
+  quotedMsg?: QuotedWhatsAppMessage | null;
 }
 
 export interface WhatsAppStatus {
@@ -725,7 +740,11 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       const data: WhatsAppMessage[] = await response.json();
       return data.map(m => ({
         ...m,
-        mediaUrl: m.mediaUrl ? (apiUrl ? `${apiUrl}${m.mediaUrl}` : m.mediaUrl) : null
+        mediaUrl: m.mediaUrl ? (apiUrl ? `${apiUrl}${m.mediaUrl}` : m.mediaUrl) : null,
+        quotedMsg: m.quotedMsg ? {
+          ...m.quotedMsg,
+          mediaUrl: m.quotedMsg.mediaUrl ? (apiUrl ? `${apiUrl}${m.quotedMsg.mediaUrl}` : m.quotedMsg.mediaUrl) : null
+        } : null
       }));
     } catch (e) {
       console.warn('Error fetching chat messages:', e);

@@ -12,7 +12,8 @@ import {
   FileText,
   Loader2,
   Play,
-  Pause
+  Pause,
+  Ban
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Report } from '@/lib/types';
@@ -536,12 +537,20 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
     const isFromMe = message.fromMe;
     const formattedTime = formatTime(message.timestamp);
 
+    const isRevoked = Boolean(
+      message.isRevoked ||
+      message.type === 'revoked' ||
+      message.body === 'Este mensaje fue eliminado' ||
+      message.body === 'Eliminaste este mensaje'
+    );
+
     const isImage =
-      message.type === 'image' ||
-      message.type === 'sticker' ||
-      (message.hasMedia && !['ptt', 'audio', 'document', 'video', 'call_log', 'revoked'].includes(message.type));
-    const isAudio = message.type === 'ptt' || message.type === 'audio';
-    const isDocument = message.type === 'document';
+      !isRevoked &&
+      (message.type === 'image' ||
+        message.type === 'sticker' ||
+        (message.hasMedia && !['ptt', 'audio', 'document', 'video', 'call_log', 'revoked'].includes(message.type)));
+    const isAudio = !isRevoked && (message.type === 'ptt' || message.type === 'audio');
+    const isDocument = !isRevoked && message.type === 'document';
 
     const hasMediaPreview = Boolean(message.mediaUrl || message.thumbnail);
 
@@ -557,94 +566,175 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
             className={cn(
               'relative max-w-[85%] sm:max-w-[75%] rounded-2xl p-2.5 shadow-sm border text-xs sm:text-sm',
               isAudio && 'min-w-[270px] sm:min-w-[310px]',
+              isRevoked && 'opacity-85 select-none',
               isFromMe
                 ? 'bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] rounded-tr-xs border-emerald-500/20'
                 : 'bg-white dark:bg-[#202c33] text-[#111b21] dark:text-[#e9edef] rounded-tl-xs border-border/40'
             )}
           >
-            {/* Sender name for group chats only (incoming only) */}
-            {!isFromMe && isGroup && message.senderName && (
+            {/* Sender name for group chats only (incoming only, non-revoked) */}
+            {!isFromMe && isGroup && message.senderName && !isRevoked && (
               <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">
                 {formatDisplayName(message.senderName)}
               </div>
             )}
 
-            {/* Render Imagen real */}
-            {isImage && (
-              <div className="mb-1.5">
-                <WhatsAppImagePreview
-                  mediaUrl={message.mediaUrl}
-                  thumbnail={message.thumbnail}
-                  alt={message.body || 'Imagen de WhatsApp'}
-                  onClick={() => {
-                    const target = message.mediaUrl || message.thumbnail;
-                    if (target) {
-                      setSelectedPhotoUrl(target);
-                      setPreviewTitle(message.body || (message.senderName ? `Foto de ${message.senderName}` : 'Foto de WhatsApp'));
-                    }
-                  }}
-                />
+            {/* Mensaje Eliminado (Revoked) */}
+            {isRevoked ? (
+              <div className="flex items-center gap-1.5 py-0.5 text-muted-foreground/80 dark:text-muted-foreground/70 italic text-xs select-none">
+                <Ban className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                <span>{isFromMe ? 'Eliminaste este mensaje' : 'Este mensaje fue eliminado'}</span>
               </div>
-            )}
-
-            {/* Audio / Nota de voz */}
-            {isAudio && (
-              <WhatsAppAudioPlayer
-                mediaUrl={message.mediaUrl}
-                isFromMe={isFromMe}
-              />
-            )}
-
-            {/* Documento */}
-            {isDocument && (
-              <div className="flex items-center gap-2.5 p-2.5 mb-1.5 rounded-xl bg-black/5 dark:bg-black/20 text-xs">
-                <div className="p-2 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                  <FileText className="h-5 w-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">{message.body || 'Documento adjunto'}</div>
-                  <span className="text-[10px] text-muted-foreground">Documento</span>
-                </div>
-                {message.mediaUrl && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 rounded-full shrink-0"
-                    onClick={() => downloadImage(message.mediaUrl!, 'documento')}
-                    title="Descargar documento"
+            ) : (
+              <>
+                {/* Mensaje Respondido / Citado (Quoted Message) */}
+                {message.quotedMsg && (
+                  <div
+                    className={cn(
+                      'mb-1.5 p-1.5 sm:p-2 rounded-xl border-l-[3.5px] text-xs flex items-center justify-between gap-2 overflow-hidden select-none transition-colors',
+                      isFromMe
+                        ? 'bg-black/5 dark:bg-black/25 border-emerald-600 dark:border-emerald-400'
+                        : 'bg-black/5 dark:bg-black/25 border-emerald-600 dark:border-emerald-400'
+                    )}
                   >
-                    <Download className="h-3.5 w-3.5" />
-                  </Button>
+                    <div className="flex-1 min-w-0 pr-1">
+                      {/* Remitente del mensaje citado */}
+                      <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 truncate">
+                        {message.quotedMsg.fromMe ? 'Tú' : formatDisplayName(message.quotedMsg.senderName) || 'Contacto'}
+                      </div>
+
+                      {/* Contenido / extracto del mensaje citado */}
+                      <div className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                        {message.quotedMsg.isRevoked ? (
+                          <span className="italic flex items-center gap-1 text-muted-foreground/70">
+                            <Ban className="h-3 w-3 shrink-0" />
+                            Este mensaje fue eliminado
+                          </span>
+                        ) : (
+                          <>
+                            {message.quotedMsg.hasMedia && !message.quotedMsg.body && (
+                              <span className="flex items-center gap-1">
+                                <ImageIcon className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                <span>Foto</span>
+                              </span>
+                            )}
+                            {message.quotedMsg.body && (
+                              <span className="truncate">{message.quotedMsg.body}</span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Miniatura si el mensaje respondido tenía foto */}
+                    {message.quotedMsg.hasMedia && (message.quotedMsg.thumbnail || message.quotedMsg.mediaUrl) && (
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const target = message.quotedMsg?.mediaUrl || message.quotedMsg?.thumbnail;
+                          if (target) {
+                            setSelectedPhotoUrl(target);
+                            setPreviewTitle(message.quotedMsg?.body || 'Foto del mensaje respondido');
+                          }
+                        }}
+                        className="h-10 w-10 sm:h-11 sm:w-11 rounded-lg bg-black/10 dark:bg-white/10 shrink-0 overflow-hidden cursor-pointer group/qthumb relative border border-black/5"
+                        title="Ver foto citada"
+                      >
+                        <img
+                          src={message.quotedMsg.thumbnail || message.quotedMsg.mediaUrl || ''}
+                          alt="Foto respondida"
+                          className="w-full h-full object-cover transition-transform group-hover/qthumb:scale-105"
+                          onError={(e) => {
+                            if (message.quotedMsg?.thumbnail && e.currentTarget.src !== message.quotedMsg.thumbnail) {
+                              e.currentTarget.src = message.quotedMsg.thumbnail;
+                            } else {
+                              e.currentTarget.style.display = 'none';
+                            }
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 )}
-              </div>
-            )}
 
-            {/* Placeholder fallback para otros tipos no reconocidos */}
-            {message.hasMedia && !isImage && !isAudio && !isDocument && (
-              <div className="flex items-center gap-2 p-2 mb-1.5 rounded-lg bg-black/5 dark:bg-black/20 text-xs">
-                <ImageIcon className="h-4 w-4 text-emerald-600" />
-                <span className="italic text-muted-foreground">Archivo multimedia</span>
-              </div>
-            )}
+                {/* Render Imagen real */}
+                {isImage && (
+                  <div className="mb-1.5">
+                    <WhatsAppImagePreview
+                      mediaUrl={message.mediaUrl}
+                      thumbnail={message.thumbnail}
+                      alt={message.body || 'Imagen de WhatsApp'}
+                      onClick={() => {
+                        const target = message.mediaUrl || message.thumbnail;
+                        if (target) {
+                          setSelectedPhotoUrl(target);
+                          setPreviewTitle(message.body || (message.senderName ? `Foto de ${message.senderName}` : 'Foto de WhatsApp'));
+                        }
+                      }}
+                    />
+                  </div>
+                )}
 
-            {/* Message text / caption */}
-            {message.body && (
-              <div className="whitespace-pre-wrap break-words leading-relaxed pr-2">
-                {message.body}
-              </div>
+                {/* Audio / Nota de voz */}
+                {isAudio && (
+                  <WhatsAppAudioPlayer
+                    mediaUrl={message.mediaUrl}
+                    isFromMe={isFromMe}
+                  />
+                )}
+
+                {/* Documento */}
+                {isDocument && (
+                  <div className="flex items-center gap-2.5 p-2.5 mb-1.5 rounded-xl bg-black/5 dark:bg-black/20 text-xs">
+                    <div className="p-2 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{message.body || 'Documento adjunto'}</div>
+                      <span className="text-[10px] text-muted-foreground">Documento</span>
+                    </div>
+                    {message.mediaUrl && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 rounded-full shrink-0"
+                        onClick={() => downloadImage(message.mediaUrl!, 'documento')}
+                        title="Descargar documento"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {/* Placeholder fallback para otros tipos no reconocidos */}
+                {message.hasMedia && !isImage && !isAudio && !isDocument && (
+                  <div className="flex items-center gap-2 p-2 mb-1.5 rounded-lg bg-black/5 dark:bg-black/20 text-xs">
+                    <ImageIcon className="h-4 w-4 text-emerald-600" />
+                    <span className="italic text-muted-foreground">Archivo multimedia</span>
+                  </div>
+                )}
+
+                {/* Message text / caption */}
+                {message.body && (
+                  <div className="whitespace-pre-wrap break-words leading-relaxed pr-2">
+                    {message.body}
+                  </div>
+                )}
+              </>
             )}
 
             {/* Timestamp and delivery ticks */}
             <div
               className={cn(
                 'flex items-center justify-end gap-1 mt-1 text-[10px]',
-                !message.body && isImage && hasMediaPreview
+                !message.body && !message.quotedMsg && isImage && hasMediaPreview
                   ? 'absolute bottom-2 right-2 bg-black/60 text-white px-2 py-0.5 rounded-full backdrop-blur-xs shadow-sm z-10'
                   : 'text-muted-foreground/80 dark:text-white/60'
               )}
             >
               <span>{formattedTime}</span>
-              {isFromMe && (
+              {isFromMe && !isRevoked && (
                 message.ack && message.ack >= 3 ? (
                   <CheckCheck className={cn('h-3.5 w-3.5', message.ack === 4 ? 'text-blue-500' : '')} />
                 ) : (
