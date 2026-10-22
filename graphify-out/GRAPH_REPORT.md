@@ -1,17 +1,17 @@
 # Graph Report - Minutas  (2026-10-21)
 
 ## Corpus Check
-- 411 files · ~330,541 words
+- 411 files · ~330,912 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 9 file(s) not represented in the graph (top: (none) 5, .example 1, .bat 1)
 
 ## Summary
-- 2245 nodes · 8065 edges · 229 communities (90 shown, 139 thin omitted)
+- 2245 nodes · 8067 edges · 229 communities (90 shown, 139 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 27 edges (avg confidence: 0.94)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b845fdc2`
+- Built from commit: `e020ee85`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 

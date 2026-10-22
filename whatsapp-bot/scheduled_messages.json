@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "id": "minutasdb:scheduled_message:127bf1fd-755f-41a3-9004-3ec53c3a050c",
+    "chatId": "584166842831-1553703217@g.us",
+    "message": "*PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO URBANEJA, ESTADO ANZOÁTEGUI*\n\n*DIRECTOR*\nLcdo. Gustavo Castillo\n\n*JEFE DE OPERACIONES*\nOCPC I Alexander Rivas\n\n*JEFE DE LOS SERVICIOS*\nOPC Jose Bejarano\n\n- *EQUIPO DE GUARDIA:* “C”\n- *FECHA:* 22/Octubre/2026\n- *HORA:* 02:30 HLV\n\n- *TIPO DE NOVEDAD:* Reportes de novedades\n\n- *DESCRIPCIÓN DE LA NOVEDAD:* Se realiza reporte del segundo corte de novedades diarias comprendidas entre las 16:00 HLV hasta las 03:00 HLV.\n\n- Guardias preventivas 01\n- Inspecciones de riesgos 01\n- De árboles 01\n- Conversatorios 01\n- Eventos Meteorológicos 01\n\n- *REPORTA:* Analista de SIMATUR OPC Rubén Rojas V-28.702.026\n\n*SOLO QUEREMOS SALVAR VIDAS* 🚑",
+    "scheduledTime": "2026-10-22T06:30:00.000Z",
+    "title": "Reporte de novedades Segundo corte",
+    "media": [],
+    "workspaceId": "minutasdb",
+    "status": "sent"
+  },
+  {
+    "id": "minutasdb:scheduled_message:02920292-5e3f-4e26-a49c-39810ff3ff5d",
+    "chatId": "120363353558604551@g.us",
+    "message": "*PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO URBANEJA, ESTADO ANZOÁTEGUI*\n\n*DIRECTOR*\nLcdo. Gustavo Castillo\n\n*JEFE DE OPERACIONES*\nOCPC I Alexander Rivas\n\n*JEFE DE LOS SERVICIOS*\nOPC Jose Bejarano\n\n- *EQUIPO DE GUARDIA:* “C”\n- *FECHA:* 22/Octubre/2026\n- *HORA:* 02:30 HLV\n\n- *TIPO DE NOVEDAD:* Reportes de novedades\n\n- *DESCRIPCIÓN DE LA NOVEDAD:* Se realiza reporte del segundo corte de novedades diarias comprendidas entre las 16:00 HLV hasta las 03:00 HLV.\n\n- Guardias preventivas 01\n- Inspecciones de riesgos 01\n- De árboles 01\n- Conversatorios 01\n- Eventos Meteorológicos 01\n\n- *REPORTA:* Analista de SIMATUR OPC Rubén Rojas V-28.702.026\n\n*SOLO QUEREMOS SALVAR VIDAS* 🚑",
+    "scheduledTime": "2026-10-22T06:30:00.000Z",
+    "title": "Reporte de novedades Segundo corte",
+    "media": [],
+    "workspaceId": "minutasdb",
+    "status": "sent"
+  },
+  {
+    "id": "minutasdb:scheduled_message:b351f2c8-b979-4fd9-91a2-ed1c25327a79",
+    "chatId": "584166842831-1553703217@g.us",
+    "message": "*PROTECCIÓN CIVIL MUNICIPIO URBANEJA* 🚨\n\n- *REPORTE DEL ESTADO DEL TIEMPO:* ⛅\n- *FECHA:* 22/Octubre/2026\n- *HORA:* 04:00 HLV\n\n- *DESCRIPCIÓN:* Cielo con nubosidad dispersa\n\n- *NOVEDAD:* Sin novedades para la hora.\n\n- *REPORTA:* Analista de SIMATUR OPC Rubén Rojas V-28.702.026\n\n*SOLO QUEREMOS SALVAR VIDAS* 🚨🚑",
+    "scheduledTime": "2026-10-22T08:00:00.000Z",
+    "title": "Reporte del estado del tiempo",
+    "media": [],
+    "workspaceId": "minutasdb",
+    "status": "sent"
+  },
+  {
+    "id": "minutasdb:scheduled_message:78215d90-4bb5-41db-87c0-82ae8ede6dca",
+    "chatId": "120363353558604551@g.us",
+    "message": "*PROTECCIÓN CIVIL MUNICIPIO URBANEJA* 🚨\n\n- *REPORTE DEL ESTADO DEL TIEMPO:* ⛅\n- *FECHA:* 22/Octubre/2026\n- *HORA:* 04:00 HLV\n\n- *DESCRIPCIÓN:* Cielo con nubosidad dispersa\n\n- *NOVEDAD:* Sin novedades para la hora.\n\n- *REPORTA:* Analista de SIMATUR OPC Rubén Rojas V-28.702.026\n\n*SOLO QUEREMOS SALVAR VIDAS* 🚨🚑",
+    "scheduledTime": "2026-10-22T08:00:00.000Z",
+    "title": "Reporte del estado del tiempo",
+    "media": [],
+    "workspaceId": "minutasdb",
+    "status": "sent"
+  }
+]

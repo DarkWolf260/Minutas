@@ -1,7 +1,7 @@
 # Graph Report - Minutas  (2026-10-21)
 
 ## Corpus Check
-- 411 files · ~330,509 words
+- 411 files · ~330,541 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 9 file(s) not represented in the graph (top: (none) 5, .example 1, .bat 1)
 
@@ -633,16 +633,16 @@ Nodes (4): formatAddressToString(), resolverCategoriaTraslado(), resolverTipoDes
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `react` to `lib/utils.ts`, `novedad-main-content.tsx`, `Button`, `sync-context.tsx`, `Card`, `novedad-sidebar.tsx`, `00-bienvenida.tsx`, `settings/index.tsx`, `useSettings`, `db-provider.tsx`, `StaffMember`, `sync-setup.tsx`, `direcciones.tsx`, `notification-bell.tsx`, `Report`, `sonner`, `workspaces/index.tsx`, `modules.tsx`, `lucide-react`, `use-templates.ts`, `App.tsx`, `whatsapp-chat-bubble.tsx`, `ajustes-generales.tsx`, `package.json`, `reporte-historial.tsx`, `borrar-datos.tsx`, `types/index.ts`, `Label`, `side-nav.tsx`, `cn`, `address-form-dialog.tsx`, `DialogContent`, `repositories/index.ts`, `button.tsx`, `report-photos.tsx`, `personnel-table.tsx`, `logger`, `guard-selector.tsx`, `novedades.tsx`, `command-menu.tsx`, `orden-del-dia.tsx`, `error-boundary.tsx`, `personal.tsx`, `report-generator.tsx`, `04-estructura.tsx`?**
-  _High betweenness centrality (0.099) - this node is a cross-community bridge._
+  _High betweenness centrality (0.101) - this node is a cross-community bridge._
 - **What connects `next/core-web-vitals`, `plugin:@typescript-eslint/recommended`, `@radix-ui/react-progress` to the rest of the system?**
   _117 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `db.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.08502024291497975 - nodes in this community are weakly interconnected._
 - **Why does `cn()` connect `cn` to `lib/utils.ts`, `novedad-main-content.tsx`, `Button`, `Card`, `novedad-sidebar.tsx`, `00-bienvenida.tsx`, `settings/index.tsx`, `useSettings`, `db-provider.tsx`, `StaffMember`, `sync-setup.tsx`, `direcciones.tsx`, `notification-bell.tsx`, `workspaces/index.tsx`, `modules.tsx`, `lucide-react`, `App.tsx`, `whatsapp-chat-bubble.tsx`, `ajustes-generales.tsx`, `Label`, `side-nav.tsx`, `address-form-dialog.tsx`, `DialogContent`, `button.tsx`, `personnel-table.tsx`, `novedades.tsx`, `guard-selector.tsx`, `command-menu.tsx`, `report-generator.tsx`, `04-estructura.tsx`?**
-  _High betweenness centrality (0.055) - this node is a cross-community bridge._
+  _High betweenness centrality (0.056) - this node is a cross-community bridge._
 - **Should `lib/utils.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.11008325624421832 - nodes in this community are weakly interconnected._
 - **Why does `Button` connect `Button` to `lib/utils.ts`, `novedad-main-content.tsx`, `Card`, `react`, `novedad-sidebar.tsx`, `00-bienvenida.tsx`, `settings/index.tsx`, `useSettings`, `db-provider.tsx`, `StaffMember`, `sync-setup.tsx`, `direcciones.tsx`, `notification-bell.tsx`, `Report`, `workspaces/index.tsx`, `modules.tsx`, `lucide-react`, `App.tsx`, `whatsapp-chat-bubble.tsx`, `ajustes-generales.tsx`, `reporte-historial.tsx`, `borrar-datos.tsx`, `Label`, `side-nav.tsx`, `cn`, `address-form-dialog.tsx`, `DialogContent`, `button.tsx`, `report-photos.tsx`, `personnel-table.tsx`, `novedades.tsx`, `guard-selector.tsx`, `orden-del-dia.tsx`, `error-boundary.tsx`, `personal.tsx`, `report-generator.tsx`?**
-  _High betweenness centrality (0.046) - this node is a cross-community bridge._
+  _High betweenness centrality (0.047) - this node is a cross-community bridge._
 - **Should `Historial de Cambios - Minutas` be split into smaller, more focused modules?**
   _Cohesion score 0.041666666666666664 - nodes in this community are weakly interconnected._
