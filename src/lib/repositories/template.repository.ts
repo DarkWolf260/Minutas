@@ -87,14 +87,24 @@ export function createTemplateRepository(db: MinutasDatabase | null, workspace_i
     silentWrite(() => db.templates.bulkInsert(templates), { feature: 'Templates' });
 
   const clearAll = async () =>
-    silentWrite(
+    safeWrite(
       async () => {
+        const selector = isLocalOnly
+          ? {
+              $or: [
+                { workspace_id: ws },
+                { workspace_id: null },
+              ],
+            }
+          : {
+              workspace_id: null,
+            };
         const allTemplates = await db.templates
-          .find({ selector: { workspace_id: ws } })
+          .find({ selector })
           .exec();
         await Promise.all(allTemplates.map((d) => d.remove()));
       },
-      { feature: 'Templates' }
+      { feature: 'Templates', successMessage: 'Todas las plantillas han sido eliminadas.' }
     );
 
   return { watchAll, add, update, remove, toggle, bulkAdd, clearAll };

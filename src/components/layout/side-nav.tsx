@@ -93,34 +93,10 @@ export function SideNav() {
     <TooltipProvider>
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-20 hidden flex-col border-r border-border/80 bg-card text-card-foreground sm:flex shadow-xs transition-[width] duration-300 ease-out select-none overflow-x-hidden",
+          "fixed top-16 bottom-0 left-0 z-20 hidden flex-col border-r border-border/80 bg-card text-card-foreground sm:flex shadow-xs transition-[width] duration-300 ease-out select-none overflow-x-hidden",
           isExpanded ? "w-64" : "w-16"
         )}
       >
-        {/* Top Header: Brand & Workspace */}
-        <div className="flex items-center h-16 border-b border-border/60 px-3 shrink-0 overflow-x-hidden">
-          <Link
-            to="/"
-            className="w-full flex items-center group min-w-0"
-            title="Ir a Inicio"
-          >
-            <div className="flex h-9 w-10 shrink-0 items-center justify-center">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary transition-all group-hover:bg-primary/20 group-hover:scale-105 shadow-2xs">
-                <img src="/icons/icon-192x192.png" alt="App Icon" className="h-5 w-5 object-contain" />
-              </div>
-            </div>
-            {isExpanded && (
-              <div className="flex flex-col min-w-0 text-left animate-slide-down pr-2">
-                <span className="text-sm font-bold tracking-tight text-foreground truncate leading-tight">
-                  Minutas
-                </span>
-                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider truncate mt-0.5">
-                  {currentWorkspace || 'Principal'}
-                </span>
-              </div>
-            )}
-          </Link>
-        </div>
 
         {/* Quick Search Bar (Untitled UI Style) */}
         <div className="px-3 pt-3 pb-1.5 shrink-0 overflow-x-hidden">

@@ -35,10 +35,10 @@ export const ViewerContent = ({
     >
       <div className="w-full max-w-[1000px] mx-auto p-4 sm:p-8 pb-32">
         <Card className="border bg-card shadow-sm">
-          <CardHeader className="bg-card/50 border-b">
-            <CardTitle className="text-xl font-bold">{report.title}</CardTitle>
+          <CardHeader className="bg-card/50 border-b py-3.5 px-4 sm:px-6">
+            <CardTitle className="text-lg sm:text-xl font-bold">{report.title}</CardTitle>
           </CardHeader>
-          <CardContent className="pt-8 px-4 sm:px-6">
+          <CardContent className="pt-6 px-4 sm:px-6">
             <ReportForm
               ref={formRef}
               key={report.id}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Upload, CloudDownload, FileText, AlertTriangle, Pencil, CloudUpload, Trash2, MoreVertical, Layout } from 'lucide-react';
+import { Upload, CloudDownload, FileText, AlertTriangle, Pencil, CloudUpload, Trash2, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -25,7 +25,6 @@ export interface PlantillasSidebarProps {
     | 'manejarClickSubirLocal'
     | 'inputArchivoRef'
     | 'manejarCambioArchivo'
-    | 'manejarClickEditarContenido'
     | 'manejarClickEditarEnBuilder'
     | 'estaAutenticado'
     | 'isAdmin'
@@ -49,7 +48,6 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
     manejarClickSubirLocal,
     inputArchivoRef,
     manejarCambioArchivo,
-    manejarClickEditarContenido,
     manejarClickEditarEnBuilder,
     estaAutenticado,
     isAdmin,
@@ -191,12 +189,12 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-background/80"
-                              onClick={(e) => manejarClickEditarContenido(e, template)}
+                              onClick={(e) => manejarClickEditarEnBuilder(e, template)}
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent><p>Editar formulario (Diseñador Visual)</p></TooltipContent>
+                          <TooltipContent><p>Editar plantilla (Constructor)</p></TooltipContent>
                         </Tooltip>
                       )}
 
@@ -253,13 +251,6 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-52">
-                            <DropdownMenuItem 
-                              className="cursor-pointer gap-2"
-                              onClick={(e) => manejarClickEditarContenido(e, template)}
-                            >
-                              <Layout className="h-4 w-4 text-indigo-500" />
-                              <span>Editar en Creador Visual</span>
-                            </DropdownMenuItem>
                             <DropdownMenuItem 
                               className="cursor-pointer gap-2"
                               onClick={(e) => manejarClickEditarEnBuilder(e, template)}

@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { cn, normalizeString } from '@/lib/utils';
 import { APP_VERSION } from '@/pages/settings/about/data';
 
 export interface SettingsSidebarProps {
@@ -154,16 +154,16 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = React.memo(({
   );
 
   const filteredGroups = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    const query = normalizeString(search);
     if (!query) return groups;
 
     return groups
       .map((group) => {
         const matchingItems = group.items.filter(
           (item) =>
-            item.title.toLowerCase().includes(query) ||
-            item.description.toLowerCase().includes(query) ||
-            item.id.toLowerCase().includes(query)
+            normalizeString(item.title).includes(query) ||
+            normalizeString(item.description).includes(query) ||
+            normalizeString(item.id).includes(query)
         );
         return {
           ...group,

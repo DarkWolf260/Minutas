@@ -182,7 +182,10 @@ const ensureDevMode = async () => {
 
   if (import.meta.env.DEV) {
     try {
-      const { RxDBDevModePlugin } = await import('rxdb/plugins/dev-mode');
+      const { RxDBDevModePlugin, disableWarnings } = await import('rxdb/plugins/dev-mode');
+      if (typeof disableWarnings === 'function') {
+        disableWarnings();
+      }
       addRxPlugin(RxDBDevModePlugin);
       state.isDevModePluginAdded = true;
     } catch (err) {
@@ -328,6 +331,7 @@ const createDatabase = async (): Promise<MinutasDatabase> => {
       name: name,
       storage: getStorage(),
       ignoreDuplicate: import.meta.env.DEV,
+      multiInstance: false,
     });
 
     // 3. Register IMMEDIATELY in the global tracking

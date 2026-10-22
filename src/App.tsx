@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { SideNav } from '@/components/layout/side-nav';
-import { MobileNav } from '@/components/layout/mobile-nav';
+import { AppBar } from '@/components/layout/app-bar';
 import { BottomNav } from '@/components/layout/bottom-nav';
 import { Toaster } from '@/components/ui/toaster';
 import { ErrorBoundary } from '@/components/common/error-boundary';
@@ -154,15 +154,17 @@ function AppLayout() {
 
   return (
     <div
-      className="flex min-h-full w-full flex-col sm:flex-row md:overflow-hidden bg-background overflow-x-hidden"
+      className="flex min-h-screen h-screen w-full flex-col md:overflow-hidden bg-background overflow-x-hidden"
       suppressHydrationWarning
     >
-      {showNav && <SideNav />}
-      <div className={cn(
-        "flex flex-1 flex-col md:overflow-hidden relative min-w-0 overflow-x-hidden transition-[padding] duration-300 ease-out",
-        showNav && (isExpanded ? "sm:pl-64" : "sm:pl-16")
-      )}>
-        {showNav && <MobileNav />}
+      {showNav && <AppBar />}
+
+      <div className="flex flex-1 w-full min-h-0 relative md:overflow-hidden">
+        {showNav && <SideNav />}
+        <div className={cn(
+          "flex flex-1 flex-col md:overflow-hidden relative min-w-0 overflow-x-hidden transition-[padding] duration-300 ease-out",
+          showNav && (isExpanded ? "sm:pl-64" : "sm:pl-16")
+        )}>
 
         {(isOffline || showOnlineBar) && location.pathname !== '/offline' && (
           <div className={cn(
@@ -280,6 +282,7 @@ function AppLayout() {
         </main>
 
         {showNav && <BottomNav />}
+        </div>
       </div>
 
       {showTour && <OnboardingTour onComplete={() => setShowTour(false)} />}

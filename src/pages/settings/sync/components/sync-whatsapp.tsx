@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, MessageSquare, AlertTriangle, Loader2, Users, User, Search, Check } from 'lucide-react';
+import { CheckCircle2, MessageSquare, AlertTriangle, Loader2, Users, User, Search, Check, PanelLeft, PanelRight } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { QRCodeSVG } from 'qrcode.react';
@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { useWhatsAppBot } from '@/hooks/whatsapp';
 import { useSettings } from '@/hooks/configuracion';
 import { useWorkspaceManager } from '@/lib/db/db-context';
+import { normalizeString, cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export function SyncWhatsApp() {
   const { currentWorkspace } = useWorkspaceManager();
@@ -51,6 +53,18 @@ export function SyncWhatsApp() {
       newIds = [...currentIds, groupId];
     }
     await saveSettings({ whatsapp_default_chat_ids: newIds });
+  };
+
+  const chatPosition = settings?.whatsapp_chat_position || 'sidebar';
+
+  const handleUpdateChatPosition = async (position: 'sidebar' | 'right_form') => {
+    if (chatPosition === position) return;
+    await saveSettings({ whatsapp_chat_position: position });
+    toast.success(
+      position === 'right_form'
+        ? 'Chat configurado al lado derecho del formulario'
+        : 'Chat integrado en el apartado de plantillas/lista'
+    );
   };
 
   return (
@@ -224,7 +238,12 @@ export function SyncWhatsApp() {
                 ) : (
                   <div className="p-2 space-y-1">
                     <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Grupos</div>
-                    {bot.chats.filter(c => c.isGroup && (c.name || '').toLowerCase().includes(searchQuery.toLowerCase())).map((chat) => {
+                    {bot.chats.filter(c => {
+                      if (!c.isGroup) return false;
+                      const norm = normalizeString(searchQuery);
+                      if (!norm) return true;
+                      return normalizeString(c.name || '').includes(norm) || normalizeString(c.id || '').includes(norm);
+                    }).map((chat) => {
                       const isChecked = (settings?.whatsapp_default_chat_ids || []).includes(chat.id);
                       return (
                         <div 
@@ -250,7 +269,12 @@ export function SyncWhatsApp() {
                     })}
                     
                     <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-3">Contactos</div>
-                    {bot.chats.filter(c => !c.isGroup && (c.name || '').toLowerCase().includes(searchQuery.toLowerCase())).map((chat) => {
+                    {bot.chats.filter(c => {
+                      if (c.isGroup) return false;
+                      const norm = normalizeString(searchQuery);
+                      if (!norm) return true;
+                      return normalizeString(c.name || '').includes(norm) || normalizeString(c.id || '').includes(norm);
+                    }).map((chat) => {
                       const isChecked = (settings?.whatsapp_default_chat_ids || []).includes(chat.id);
                       return (
                         <div 
@@ -322,6 +346,86 @@ export function SyncWhatsApp() {
             </p>
           </div>
         )}
+
+        {/* Ubicación del Chat de WhatsApp en Novedades */}
+        <div className="pt-5 border-t border-emerald-500/15 space-y-3">
+          <div>
+            <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+              <MessageSquare className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              Disposición del Chat en Novedades
+            </h4>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Elige si prefieres tener el chat en la barra lateral izquierda o como panel a la derecha del formulario.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Opción 1: Integrado en apartado de plantillas / lista lateral */}
+            <button
+              type="button"
+              onClick={() => handleUpdateChatPosition('sidebar')}
+              className={cn(
+                "relative flex flex-col items-start p-3.5 rounded-xl border text-left transition-all group cursor-pointer",
+                chatPosition === 'sidebar'
+                  ? "border-emerald-500 bg-emerald-500/10 shadow-xs ring-1 ring-emerald-500/30"
+                  : "border-border/70 hover:border-emerald-500/40 hover:bg-muted/40"
+              )}
+            >
+              <div className="flex items-center justify-between w-full mb-2">
+                <div className={cn(
+                  "p-2 rounded-lg transition-colors",
+                  chatPosition === 'sidebar' ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground group-hover:text-foreground"
+                )}>
+                  <PanelLeft className="h-4 w-4" />
+                </div>
+                {chatPosition === 'sidebar' && (
+                  <div className="h-5 w-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+                    <Check className="h-3 w-3 stroke-[3]" />
+                  </div>
+                )}
+              </div>
+              <div className="font-bold text-xs text-foreground">
+                Integrado en Plantillas / Lista
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                El chat se ubica en la barra lateral izquierda, alternando con la lista de reportes y plantillas.
+              </p>
+            </button>
+
+            {/* Opción 2: Del lado derecho del formulario */}
+            <button
+              type="button"
+              onClick={() => handleUpdateChatPosition('right_form')}
+              className={cn(
+                "relative flex flex-col items-start p-3.5 rounded-xl border text-left transition-all group cursor-pointer",
+                chatPosition === 'right_form'
+                  ? "border-emerald-500 bg-emerald-500/10 shadow-xs ring-1 ring-emerald-500/30"
+                  : "border-border/70 hover:border-emerald-500/40 hover:bg-muted/40"
+              )}
+            >
+              <div className="flex items-center justify-between w-full mb-2">
+                <div className={cn(
+                  "p-2 rounded-lg transition-colors",
+                  chatPosition === 'right_form' ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground group-hover:text-foreground"
+                )}>
+                  <PanelRight className="h-4 w-4" />
+                </div>
+                {chatPosition === 'right_form' && (
+                  <div className="h-5 w-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+                    <Check className="h-3 w-3 stroke-[3]" />
+                  </div>
+                )}
+              </div>
+              <div className="font-bold text-xs text-foreground">
+                Del Lado Derecho del Formulario
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                El chat se muestra como un panel derecho junto al formulario, permitiendo leer mensajes mientras redactas el reporte.
+              </p>
+            </button>
+          </div>
+        </div>
+
         {showLimitAlert && (
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-50 animate-in fade-in">
             <div className="bg-card border rounded-2xl p-6 shadow-xl max-w-sm text-center space-y-4 border-amber-500/20">

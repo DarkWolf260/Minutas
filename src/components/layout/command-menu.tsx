@@ -27,7 +27,7 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
+import { cn, normalizeString } from '@/lib/utils';
 import { useTheme } from '@/components/providers/theme-provider';
 import { useAdmin } from '@/hooks/admin';
 import { useWorkspaceManager } from '@/lib/db/db-context';
@@ -335,12 +335,12 @@ export function CommandMenu() {
   }, [navigate, isAdmin, workspaces, switchWorkspace, setTheme]);
 
   const filteredItems = useMemo(() => {
-    if (!query.trim()) return items;
-    const lower = query.toLowerCase().trim();
+    const norm = normalizeString(query);
+    if (!norm) return items;
     return items.filter((item) => {
-      if (item.label.toLowerCase().includes(lower)) return true;
-      if (item.category.toLowerCase().includes(lower)) return true;
-      if (item.keywords?.some((k) => k.toLowerCase().includes(lower))) return true;
+      if (normalizeString(item.label).includes(norm)) return true;
+      if (normalizeString(item.category).includes(norm)) return true;
+      if (item.keywords?.some((k) => normalizeString(k).includes(norm))) return true;
       return false;
     });
   }, [items, query]);

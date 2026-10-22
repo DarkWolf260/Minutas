@@ -18,6 +18,10 @@ if %errorlevel% == 0 (
     echo.
 )
 
+rem Limpia posibles instancias zombies de Chromium/Puppeteer que bloquean la sesion
+powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name = 'chrome.exe'\" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*whatsapp-bot*session*' -or $_.ExecutablePath -like '*\.cache\puppeteer\*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }" >nul 2>&1
+
+
 cd whatsapp-bot
 
 rem Verifica si existen los modulos instalados

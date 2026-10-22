@@ -127,9 +127,9 @@ export function getTemplateIcon(name: string = ''): LucideIcon {
  * Normalizes a string by converting it to lowercase and removing diacritics (accents).
  * Helpful for accent-insensitive search.
  */
-export function normalizeString(str: string): string {
-  if (!str) return '';
-  return str
+export function normalizeString(str?: unknown): string {
+  if (str === null || str === undefined) return '';
+  return String(str)
     .toLowerCase()
     .normalize('NFD') // Decompose combined characters into base + accent
     .replace(/[\u0300-\u036f]/g, ''); // Remove the accent characters

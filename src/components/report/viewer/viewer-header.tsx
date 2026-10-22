@@ -1,4 +1,4 @@
-import { Trash2, Eye, Save, CheckIcon, Send, X, MessageSquare, ChevronDown, Clock } from 'lucide-react';
+import { Trash2, Eye, Save, CheckIcon, Send, X, MessageSquare, Clock, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -11,6 +11,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -93,83 +94,23 @@ export const ViewerHeader = ({
   };
 
   return (
-    <header className="flex-none flex items-center justify-between border-b p-4 bg-background z-20 shadow-sm min-h-[73px]">
-      <div className="flex items-center gap-2">
+    <header className="flex-none flex items-center justify-between border-b px-3 py-2 sm:px-4 sm:py-2.5 bg-background z-20 shadow-xs min-h-[52px]">
+      {/* Lado izquierdo: Navegación, Estatus y Previsualización */}
+      <div className="flex items-center gap-1.5 sm:gap-2">
         {onClose && (
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="hidden sm:flex text-muted-foreground hover:text-foreground h-9 w-9 mr-1"
+            className="hidden sm:flex text-muted-foreground hover:text-foreground h-8 w-8 mr-0.5"
             title="Cerrar reporte"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </Button>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-destructive hover:bg-destructive/10 h-9 w-9"
-          onClick={onDelete}
-          title="Eliminar reporte"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-        <Button variant="outline" size="sm" onClick={onPreview} className="bg-background shadow-sm">
-          <Eye className="h-4 w-4 sm:mr-2" />
-          <span className="hidden sm:inline">Vista Previa</span>
-        </Button>
-        {isWhatsAppAvailable && (
-          <div className="flex items-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onWhatsAppSend}
-              disabled={isSendingWhatsApp}
-              className="bg-background shadow-sm text-green-600 border-green-500/30 hover:bg-green-500/10 rounded-r-none h-9"
-              title="Enviar por WhatsApp"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 sm:mr-2">
-                <path d="M12.004 2C6.48 2 2 6.48 2 12c0 1.73.44 3.4 1.28 4.88L2.05 22l5.26-1.38C8.73 21.43 10.35 21.87 12 21.87c5.52 0 10-4.48 10-10S17.52 2 12.004 2zm0 18c-1.5 0-2.95-.38-4.23-1.1l-.3-.17-3.15.83.84-3.07-.19-.31c-.78-1.25-1.2-2.7-1.2-4.18 0-4.41 3.59-8 8-8s8 3.59 8 8-3.59 8-8 8zm4.56-6.32c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.15.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.23.25-.39.08-.15.04-.29-.02-.41-.06-.12-.56-1.35-.77-1.85-.2-.5-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.88.86-.88 2.1s.9 2.43 1.02 2.6c.12.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.59.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.1-.23-.16-.48-.29z" />
-              </svg>
-              <span className="hidden sm:inline">Enviar</span>
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-background shadow-sm text-green-600 border-green-500/30 hover:bg-green-500/10 rounded-l-none px-2 border-l-0 h-9"
-                  title="Opciones de programación"
-                >
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setIsScheduleDialogOpen(true)}>
-                  <Clock className="mr-2 h-4 w-4" />
-                  <span>Programar Envío</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setIsListDialogOpen(true)} className="justify-between">
-                  <div className="flex items-center">
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    <span>Ver Programados</span>
-                  </div>
-                  {pendingCount > 0 && (
-                    <span className="ml-2 bg-amber-500/20 text-amber-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                      {pendingCount}
-                    </span>
-                  )}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
-      </div>
 
-      <div className="flex items-center gap-2">
         <Select value={status} onValueChange={onStatusChange}>
-          <SelectTrigger id="report-status" className="h-9 w-[110px] sm:w-[150px] bg-background">
+          <SelectTrigger id="report-status" className="h-8 text-xs w-[110px] sm:w-[130px] bg-background">
             <SelectValue placeholder="Estatus..." />
           </SelectTrigger>
           <SelectContent>
@@ -178,17 +119,32 @@ export const ViewerHeader = ({
           </SelectContent>
         </Select>
 
-        {isSecondary && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onPreview}
+          className="bg-background shadow-xs h-8 px-2.5 text-xs"
+        >
+          <Eye className="h-3.5 w-3.5 sm:mr-1.5" />
+          <span className="hidden sm:inline">Vista Previa</span>
+        </Button>
+      </div>
+
+      {/* Lado derecho: Acciones principales y Menú de más opciones */}
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        {isWhatsAppAvailable && (
           <Button
             variant="outline"
             size="sm"
-            onClick={sendToSync}
-            disabled={isSendingSyncReport}
-            className="h-9 px-3 sm:px-4 shadow-sm border-violet-500/40 text-violet-600 hover:bg-violet-500/10"
-            title="Enviar al dispositivo principal"
+            onClick={onWhatsAppSend}
+            disabled={isSendingWhatsApp}
+            className="bg-background shadow-xs text-green-600 border-green-500/30 hover:bg-green-500/10 h-8 px-2.5 text-xs font-medium"
+            title="Enviar por WhatsApp"
           >
-            <Send className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Enviar al Principal</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 sm:mr-1.5">
+              <path d="M12.004 2C6.48 2 2 6.48 2 12c0 1.73.44 3.4 1.28 4.88L2.05 22l5.26-1.38C8.73 21.43 10.35 21.87 12 21.87c5.52 0 10-4.48 10-10S17.52 2 12.004 2zm0 18c-1.5 0-2.95-.38-4.23-1.1l-.3-.17-3.15.83.84-3.07-.19-.31c-.78-1.25-1.2-2.7-1.2-4.18 0-4.41 3.59-8 8-8s8 3.59 8 8-3.59 8-8 8zm4.56-6.32c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.15.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.23.25-.39.08-.15.04-.29-.02-.41-.06-.12-.56-1.35-.77-1.85-.2-.5-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.88.86-.88 2.1s.9 2.43 1.02 2.6c.12.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.59.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.1-.23-.16-.48-.29z" />
+            </svg>
+            <span className="hidden sm:inline">Enviar</span>
           </Button>
         )}
 
@@ -196,15 +152,70 @@ export const ViewerHeader = ({
           size="sm"
           onClick={onSave}
           disabled={isFinalizado || saveButtonText === 'Guardado'}
-          className="h-9 px-3 sm:px-4 shadow-sm"
+          className="h-8 px-3 text-xs shadow-xs font-semibold"
         >
           {saveButtonText === 'Guardado' ? (
-            <CheckIcon className="h-4 w-4 sm:mr-2" />
+            <CheckIcon className="h-3.5 w-3.5 sm:mr-1.5" />
           ) : (
-            <Save className="h-4 w-4 sm:mr-2" />
+            <Save className="h-3.5 w-3.5 sm:mr-1.5" />
           )}
           <span className="hidden sm:inline">{saveButtonText}</span>
         </Button>
+
+        {/* Menú de Más Opciones (Opciones secundarias y destructivas) */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground relative"
+              title="Más opciones"
+            >
+              <MoreVertical className="h-4 w-4" />
+              {pendingCount > 0 && (
+                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-amber-500" />
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            {isWhatsAppAvailable && (
+              <>
+                <DropdownMenuItem onClick={() => setIsScheduleDialogOpen(true)}>
+                  <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span>Programar Envío WhatsApp</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsListDialogOpen(true)} className="justify-between">
+                  <div className="flex items-center">
+                    <MessageSquare className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span>Ver Programados</span>
+                  </div>
+                  {pendingCount > 0 && (
+                    <span className="bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                      {pendingCount}
+                    </span>
+                  )}
+                </DropdownMenuItem>
+              </>
+            )}
+
+            {isSecondary && (
+              <DropdownMenuItem onClick={sendToSync} disabled={isSendingSyncReport}>
+                <Send className="mr-2 h-4 w-4 text-violet-600" />
+                <span>Enviar al Principal</span>
+              </DropdownMenuItem>
+            )}
+
+            {(isWhatsAppAvailable || isSecondary) && <DropdownMenuSeparator />}
+
+            <DropdownMenuItem
+              onClick={onDelete}
+              className="text-destructive focus:text-destructive focus:bg-destructive/10"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              <span>Eliminar reporte</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Diálogo para Programar */}

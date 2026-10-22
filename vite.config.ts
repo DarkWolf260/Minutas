@@ -153,6 +153,29 @@ export default defineConfig({
       '/api/whatsapp': {
         target: 'http://localhost:3001',
         changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('error', (_err, req, res) => {
+            if (!res || (res as any).headersSent) return;
+            try {
+              (res as any).writeHead(200, { 'Content-Type': 'application/json' });
+              if (req.url && req.url.includes('/status')) {
+                res.end(JSON.stringify({
+                  isReady: false,
+                  needsAuth: false,
+                  qr: null,
+                  statusMessage: 'Bot desconectado',
+                  activeWorkspace: null,
+                  isWorkspaceMatch: true,
+                  isAvailable: false
+                }));
+              } else if (req.url && (req.url.includes('/chats') || req.url.includes('/scheduled') || req.url.includes('/messages'))) {
+                res.end(JSON.stringify([]));
+              } else {
+                res.end(JSON.stringify({ offline: true, error: 'Bot desconectado' }));
+              }
+            } catch (_) {}
+          });
+        },
       },
     },
   },

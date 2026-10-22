@@ -66,9 +66,179 @@ let statusMessage = 'Iniciando cliente...';
 let client = null;
 let isInitializing = false;
 let cachedChats = [];
+const contactNameCache = new Map();
+const avatarCache = new Map();
+const avatarImageCache = new Map();
+const MAX_AVATAR_IMAGE_CACHE = 250;
+const revokedMessageIds = new Set();
+const recentMessagesCache = new Map();
+const MAX_RECENT_MESSAGES = 250;
+
+function extractThumbnail(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  const str = raw.trim();
+  if (str.startsWith('data:image/')) return str;
+  let clean = str;
+  if (clean.includes('base64,')) {
+    clean = clean.split('base64,')[1];
+  }
+  if (clean.length > 20) {
+    if (clean.startsWith('UklGR')) {
+      return `data:image/webp;base64,${clean}`;
+    }
+    if (clean.startsWith('iVBORw0KGgo')) {
+      return `data:image/png;base64,${clean}`;
+    }
+    return `data:image/jpeg;base64,${clean}`;
+  }
+  return null;
+}
+
+async function resolveQuotedMsg(msg, isGroupChat) {
+  try {
+    let qData = msg._data?.quotedMsg;
+    let quotedMessageInstance = null;
+
+    if (!qData && msg.hasQuotedMsg && typeof msg.getQuotedMessage === 'function') {
+      try {
+        quotedMessageInstance = await msg.getQuotedMessage();
+        if (quotedMessageInstance) {
+          qData = quotedMessageInstance._data;
+        }
+      } catch (e) {}
+    }
+
+    if (!qData && !quotedMessageInstance) {
+      return null;
+    }
+
+    const qType = quotedMessageInstance?.type || qData?.type || 'chat';
+    const qIsRevoked = qType === 'revoked' || qData?.subtype === 'sender_revoke' || qData?.subtype === 'admin_revoke';
+
+    const qFromMe = Boolean(quotedMessageInstance?.fromMe || qData?.fromMe);
+    const qAuthorId = quotedMessageInstance?.author || qData?.author || quotedMessageInstance?.from || qData?.from || msg._data?.quotedParticipant;
+
+    let qSenderName = qFromMe ? 'Tú' : null;
+    if (!qSenderName && qAuthorId) {
+      const cached = contactNameCache.get(qAuthorId);
+      const notify = qData?.notifyName || qData?.name;
+      if (cached && !/^\+?\d{7,}$/.test(cached.replace(/[\s\-\(\)]/g, ''))) {
+        qSenderName = cached;
+      } else if (notify && typeof notify === 'string' && notify.trim() && !/^\+?\d{7,}$/.test(notify.replace(/[\s\-\(\)]/g, ''))) {
+        qSenderName = notify.trim();
+        contactNameCache.set(qAuthorId, qSenderName);
+      } else if (cached) {
+        qSenderName = cached;
+      } else if (notify && typeof notify === 'string' && notify.trim()) {
+        qSenderName = notify.trim();
+      } else if (isGroupChat && qAuthorId) {
+        const raw = qAuthorId.split('@')[0];
+        qSenderName = /^\d{7,15}$/.test(raw) ? `+${raw}` : raw;
+      } else {
+        qSenderName = 'Contacto';
+      }
+    }
+
+    // Extraer miniatura si el mensaje citado tenía foto
+    let qThumbnail = null;
+    const rawBody = qData?.body || quotedMessageInstance?._data?.body;
+    if (rawBody && typeof rawBody === 'string') {
+      qThumbnail = extractThumbnail(rawBody);
+    }
+    if (!qThumbnail && (qData?.thumbnail || quotedMessageInstance?._data?.thumbnail)) {
+      qThumbnail = extractThumbnail(qData?.thumbnail || quotedMessageInstance?._data?.thumbnail);
+    }
+    if (!qThumbnail && (qData?.mediaData?.preview || quotedMessageInstance?._data?.mediaData?.preview)) {
+      qThumbnail = extractThumbnail(qData?.mediaData?.preview || quotedMessageInstance?._data?.mediaData?.preview);
+    }
+
+    // Texto o subtítulo
+    let qBody = qIsRevoked ? 'Este mensaje fue eliminado' : (qData?.caption || quotedMessageInstance?.body || '');
+    if (!qIsRevoked && !qBody && rawBody && typeof rawBody === 'string' && !rawBody.startsWith('data:') && !rawBody.startsWith('/9j/') && rawBody.length < 500) {
+      qBody = rawBody;
+    }
+
+    const qHasMedia = Boolean(
+      quotedMessageInstance?.hasMedia ||
+      qData?.isMedia ||
+      qData?.hasMedia ||
+      ['image', 'video', 'document', 'audio', 'ptt', 'sticker'].includes(qType) ||
+      qThumbnail
+    );
+
+    if (!qBody && !qIsRevoked) {
+      if (qType === 'image') qBody = 'Foto';
+      else if (qType === 'video') qBody = 'Video';
+      else if (qType === 'audio' || qType === 'ptt') qBody = 'Nota de voz';
+      else if (qType === 'document') qBody = 'Documento';
+      else if (qType === 'sticker') qBody = 'Sticker';
+    }
+
+    const qMsgId = quotedMessageInstance?.id?._serialized || qData?.id?._serialized || (typeof qData?.id === 'string' ? qData.id : qData?.id?.id) || msg._data?.quotedStanzaID || null;
+
+    return {
+      id: qMsgId,
+      body: qBody,
+      type: qType,
+      fromMe: qFromMe,
+      senderName: qSenderName || (qFromMe ? 'Tú' : 'Contacto'),
+      hasMedia: qHasMedia,
+      thumbnail: qThumbnail,
+      mediaUrl: (qHasMedia && qMsgId) ? `/api/whatsapp/messages/${encodeURIComponent(qMsgId)}/media` : null,
+      isRevoked: qIsRevoked
+    };
+  } catch (err) {
+    console.warn('[QuotedMsg] Error resolviendo mensaje citado:', err?.message || err);
+    return null;
+  }
+}
+
+async function resolveChatAvatarUrl(chatId) {
+  if (!chatId || !isReady || !client) return null;
+  let targetChatId = typeof chatId === 'string' ? chatId.trim() : '';
+  if (!targetChatId) return null;
+  if (!targetChatId.includes('@')) {
+    targetChatId = `${targetChatId.replace(/\D/g, '')}@c.us`;
+  }
+
+  if (avatarCache.has(targetChatId)) {
+    return avatarCache.get(targetChatId);
+  }
+
+  let picUrl = null;
+  try {
+    picUrl = await client.getProfilePicUrl(targetChatId);
+  } catch (_) {}
+
+  // Si es un ID @lid y no devolvió foto directa, resolver el número telefónico (@c.us)
+  if (!picUrl && targetChatId.endsWith('@lid') && client.pupPage) {
+    try {
+      const phoneWid = await client.pupPage.evaluate(async (lid) => {
+        try {
+          const res = await window.WWebJS?.enforceLidAndPnRetrieval?.(lid);
+          return res?.phone?._serialized || (res?.phone?.user ? `${res.phone.user}@c.us` : null);
+        } catch (e) {
+          return null;
+        }
+      }, targetChatId);
+
+      if (phoneWid && phoneWid !== targetChatId) {
+        if (avatarCache.has(phoneWid)) {
+          picUrl = avatarCache.get(phoneWid);
+        } else {
+          picUrl = await client.getProfilePicUrl(phoneWid).catch(() => null);
+          avatarCache.set(phoneWid, picUrl || null);
+        }
+      }
+    } catch (_) {}
+  }
+
+  avatarCache.set(targetChatId, picUrl || null);
+  avatarCache.set(chatId, picUrl || null);
+  return picUrl || null;
+}
 
 function initWhatsAppClient() {
-  if (isInitializing) return;
   isInitializing = true;
   isReady = false;
   qrCodeData = null;
@@ -76,6 +246,7 @@ function initWhatsAppClient() {
 
   client = new Client({
     authStrategy: new LocalAuth({ dataPath: './session' }),
+    authTimeoutMs: 60000,
     puppeteer: {
       headless: true,
       protocolTimeout: 0,
@@ -103,6 +274,21 @@ function initWhatsAppClient() {
   client.on('loading_screen', (percent, message) => {
     statusMessage = `Sincronizando: ${percent}%`;
     console.log(`Progreso de carga: ${percent}% - ${message}`);
+    if (percent >= 99 && !isReady) {
+      setTimeout(async () => {
+        if (!isReady && client && client.pupPage) {
+          try {
+            const hasPaneSide = await client.pupPage.evaluate(() => {
+              return Boolean(document.querySelector('#pane-side') || window.Store?.Chat);
+            });
+            if (hasPaneSide && !isReady) {
+              console.log('[Watchdog] WhatsApp Web cargado (pane-side detectado). Activando evento ready...');
+              client.emit('ready');
+            }
+          } catch (_) {}
+        }
+      }, 4000);
+    }
   });
 
   client.on('ready', async () => {
@@ -150,6 +336,15 @@ function initWhatsAppClient() {
     restartClient('Error de autenticación. Generando nuevo QR...');
   });
 
+  client.on('message_revoke_everyone', async (after, before) => {
+    try {
+      const afterId = after?.id?._serialized || after?.id;
+      if (afterId) revokedMessageIds.add(afterId);
+      const beforeId = before?.id?._serialized || before?.id;
+      if (beforeId) revokedMessageIds.add(beforeId);
+    } catch (err) {}
+  });
+
   client.on('disconnected', async (reason) => {
     console.log('Cliente de WhatsApp desconectado:', reason);
     restartClient('Desconectado. Generando nuevo QR...');
@@ -159,10 +354,16 @@ function initWhatsAppClient() {
     .then(() => {
       isInitializing = false;
     })
-    .catch(err => {
+    .catch(async err => {
       console.error('Error al inicializar el cliente de WhatsApp:', err);
       statusMessage = 'Error al inicializar cliente: ' + (err.message || err);
       isInitializing = false;
+      try {
+        if (client) {
+          await client.destroy().catch(() => {});
+          client = null;
+        }
+      } catch (_) {}
     });
 }
 
@@ -296,25 +497,78 @@ app.get('/api/whatsapp/chats', async (req, res) => {
   try {
     let formattedChats = [];
 
-    // 1. Extracción veloz directa desde la memoria de WhatsApp Web en Puppeteer (inmediato, evita congelamientos)
+    // 1. Extracción directa desde la memoria de WhatsApp Web en Puppeteer enriquecida con la libreta de contactos
     try {
       if (client.pupPage) {
         formattedChats = await client.pupPage.evaluate(() => {
           try {
             const collections = window.require?.('WAWebCollections') || window.Store;
             const chatCollection = (collections?.Chat || window.Store?.Chat)?.getModelsArray?.() || [];
-            
+            const contactCollection = collections?.Contact || window.Store?.Contact;
+            const ContactGetters = window.require?.('WAWebContactGetters');
+
             return chatCollection
               .map(c => {
                 const id = c.id?._serialized || (typeof c.id === 'string' ? c.id : '');
-                const name = c.name || c.formattedTitle || c.contact?.name || c.contact?.pushname || (c.id?.user ? `+${c.id.user}` : 'Chat');
                 const isGroup = Boolean(c.isGroup || (id && id.endsWith('@g.us')));
+
+                // 1. Intentar obtener el contacto asociado de la colección global
+                let contact = null;
+                try {
+                  if (contactCollection) {
+                    contact = contactCollection.get(c.id) 
+                      || contactCollection.get(id) 
+                      || (c.id?.user ? contactCollection.get(`${c.id.user}@c.us`) : null)
+                      || c.contact;
+                  }
+                } catch (e) {}
+                if (!contact && c.contact) {
+                  contact = c.contact;
+                }
+
+                // 2. Extraer el mejor nombre disponible
+                let name = null;
+                if (isGroup) {
+                  name = c.formattedTitle || c.name || c.groupMetadata?.subject || (contact && ContactGetters?.getName?.(contact)) || contact?.name;
+                } else {
+                  if (contact) {
+                    try {
+                      name = ContactGetters?.getName?.(contact)
+                        || contact.name
+                        || contact.formattedName
+                        || contact.displayName
+                        || ContactGetters?.getPushname?.(contact)
+                        || contact.pushname
+                        || contact.notifyName
+                        || ContactGetters?.getVerifiedName?.(contact)
+                        || contact.verifiedName;
+                    } catch (e) {}
+                  }
+                  if (!name) {
+                    name = c.formattedTitle || c.name;
+                  }
+                }
+
+                // 3. Fallback a pushname directo o teléfono
+                if (!name || name === id) {
+                  name = c.contact?.pushname || c.contact?.notifyName || (c.id?.user ? `+${c.id.user}` : 'Chat');
+                }
+
                 const timestamp = c.t || c.conversationTimestamp || 0;
-                return { id, name, isGroup, timestamp };
+                const avatarUrl = c.contact?.profilePicThumbObj?.eurl || c.profilePicThumb?.eurl || null;
+                return { id, name, isGroup, timestamp, avatarUrl };
               })
               .filter(c => c.id && !c.id.includes('@broadcast') && !c.id.includes('status@broadcast'))
               .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-              .map(({ id, name, isGroup }) => ({ id, name, isGroup }));
+              .map(({ id, name, isGroup, avatarUrl }) => {
+                if (avatarUrl) avatarCache.set(id, avatarUrl);
+                return { 
+                  id, 
+                  name, 
+                  isGroup, 
+                  avatarUrl: avatarUrl ? `/api/whatsapp/chats/${encodeURIComponent(id)}/avatar.jpg` : null 
+                };
+              });
           } catch (e) {
             return [];
           }
@@ -345,8 +599,76 @@ app.get('/api/whatsapp/chats', async (req, res) => {
       }
     }
 
-    // 3. Actualizar o recuperar de caché
+    // 3. Para los chats individuales cuyo nombre quedó como número de teléfono,
+    // resolver su nombre real usando client.getContactById (consulta garantizada a WhatsApp)
+    if (Array.isArray(formattedChats) && formattedChats.length > 0) {
+      const chatsNeedingNames = formattedChats.filter(c => 
+        !c.isGroup && (/^\+?\d{7,}$/.test(c.name.replace(/[\s\-\(\)]/g, '')) || c.name === c.id || c.name === 'Chat')
+      );
+
+      if (chatsNeedingNames.length > 0) {
+        await Promise.all(chatsNeedingNames.slice(0, 25).map(async (chat) => {
+          try {
+            const contact = await client.getContactById(chat.id);
+            const resolvedName = contact?.name || contact?.pushname || contact?.shortName || contact?.verifiedName;
+            if (resolvedName && resolvedName.trim() && !/^\+?\d{7,}$/.test(resolvedName.replace(/[\s\-\(\)]/g, ''))) {
+              chat.name = resolvedName.trim();
+            }
+          } catch (err) {}
+        }));
+      }
+    }
+
+    // 4. Actualizar o recuperar de caché preservando nombres reales previamente conocidos
     if (formattedChats && formattedChats.length > 0) {
+      if (cachedChats && cachedChats.length > 0) {
+        const cachedMap = new Map(cachedChats.map(c => [c.id, c.name]));
+        formattedChats.forEach(c => {
+          const oldName = cachedMap.get(c.id);
+          const isCurrentPhone = /^\+?\d{7,}$/.test(c.name.replace(/[\s\-\(\)]/g, ''));
+          const wasOldRealName = oldName && !/^\+?\d{7,}$/.test(oldName.replace(/[\s\-\(\)]/g, ''));
+          if (isCurrentPhone && wasOldRealName) {
+            c.name = oldName;
+          }
+        });
+      }
+
+      // Alimentar contactNameCache con los nombres de contactos/chats conocidos
+      formattedChats.forEach(c => {
+        if (c.id && c.name && !/^\+?\d{7,}$/.test(c.name.replace(/[\s\-\(\)]/g, ''))) {
+          contactNameCache.set(c.id, c.name);
+          if (typeof c.id === 'string' && c.id.includes('@')) {
+            const u = c.id.split('@')[0];
+            contactNameCache.set(`${u}@c.us`, c.name);
+            contactNameCache.set(`${u}@lid`, c.name);
+          }
+        }
+      });
+
+      // Asignar avatares conocidos desde la caché
+      formattedChats.forEach(c => {
+        if (avatarCache.has(c.id)) {
+          const cachedPic = avatarCache.get(c.id);
+          c.avatarUrl = cachedPic ? `/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg` : null;
+        } else if (c.avatarUrl && typeof c.avatarUrl === 'string' && c.avatarUrl.startsWith('http')) {
+          avatarCache.set(c.id, c.avatarUrl);
+          c.avatarUrl = `/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg`;
+        }
+      });
+
+      // Resolver en paralelo los avatares de los primeros 25 chats activos si aún no han sido consultados
+      const chatsNeedingAvatar = formattedChats.slice(0, 25).filter(c => !avatarCache.has(c.id));
+      if (chatsNeedingAvatar.length > 0) {
+        await Promise.allSettled(chatsNeedingAvatar.map(async c => {
+          try {
+            const pic = await resolveChatAvatarUrl(c.id);
+            c.avatarUrl = pic ? `/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg` : null;
+          } catch (e) {
+            c.avatarUrl = null;
+          }
+        }));
+      }
+
       cachedChats = formattedChats;
     } else if (cachedChats.length > 0) {
       formattedChats = cachedChats;
@@ -356,6 +678,391 @@ app.get('/api/whatsapp/chats', async (req, res) => {
   } catch (error) {
     console.error('Error obteniendo chats:', error);
     res.json(cachedChats || []);
+  }
+});
+
+app.get('/api/whatsapp/chats/:chatId/messages', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
+  const requestedWorkspace = req.query.workspace || req.headers['x-workspace-id'];
+  if (activeWorkspace && requestedWorkspace && requestedWorkspace !== activeWorkspace) {
+    return res.status(403).json({ 
+      error: `El bot está asignado exclusivamente al área de trabajo "${activeWorkspace}".`,
+      activeWorkspace 
+    });
+  }
+
+  if (!isReady || !client) {
+    return res.status(400).json({ error: 'WhatsApp client is not ready' });
+  }
+
+  const { chatId } = req.params;
+  const limit = Math.min(parseInt(req.query.limit, 10) || 50, 100);
+
+  try {
+    let targetChatId = chatId;
+    if (typeof targetChatId === 'string' && !targetChatId.includes('@')) {
+      targetChatId = `${targetChatId.replace(/\D/g, '')}@c.us`;
+    }
+
+    const chat = await client.getChatById(targetChatId);
+    if (!chat) {
+      return res.status(404).json({ error: 'Chat no encontrado' });
+    }
+
+    const messages = await chat.fetchMessages({ limit });
+
+    // 1. Guardar en caché nombres reales ya presentes en los mensajes
+    messages.forEach(msg => {
+      const authorId = msg.author || msg.from;
+      const explicitName = msg._data?.notifyName || msg._data?.name;
+      if (authorId && explicitName && typeof explicitName === 'string' && explicitName.trim()) {
+        const cleanName = explicitName.trim();
+        if (!/^\+?\d{7,}$/.test(cleanName.replace(/[\s\-\(\)]/g, ''))) {
+          contactNameCache.set(authorId, cleanName);
+          if (authorId.includes('@')) {
+            const u = authorId.split('@')[0];
+            contactNameCache.set(`${u}@c.us`, cleanName);
+            contactNameCache.set(`${u}@lid`, cleanName);
+          }
+        }
+      }
+    });
+
+    // 2. Identificar autores que aún no tienen un nombre real en caché
+    const unresolvedAuthors = [...new Set(
+      messages
+        .filter(m => !m.fromMe)
+        .map(m => m.author || m.from)
+        .filter(Boolean)
+        .filter(id => {
+          const cached = contactNameCache.get(id);
+          return !cached || /^\+?\d{7,}$/.test(cached.replace(/[\s\-\(\)]/g, ''));
+        })
+    )];
+
+    // 3. Resolución en bloque a través de la memoria de WhatsApp Web (Puppeteer)
+    if (unresolvedAuthors.length > 0 && client.pupPage) {
+      try {
+        const resolvedMap = await client.pupPage.evaluate((ids) => {
+          const res = {};
+          const collections = window.require?.('WAWebCollections') || window.Store;
+          const contactCollection = collections?.Contact || window.Store?.Contact;
+          const ContactGetters = window.require?.('WAWebContactGetters');
+
+          ids.forEach(id => {
+            try {
+              let contact = null;
+              if (contactCollection) {
+                contact = contactCollection.get(id);
+                if (!contact && id.includes('@')) {
+                  const user = id.split('@')[0];
+                  contact = contactCollection.get(`${user}@c.us`) || contactCollection.get(`${user}@lid`);
+                }
+              }
+              if (contact) {
+                const name = (ContactGetters && ContactGetters.getName ? ContactGetters.getName(contact) : null)
+                  || contact.name
+                  || contact.formattedName
+                  || contact.displayName
+                  || (ContactGetters && ContactGetters.getPushname ? ContactGetters.getPushname(contact) : null)
+                  || contact.pushname
+                  || contact.notifyName
+                  || (ContactGetters && ContactGetters.getVerifiedName ? ContactGetters.getVerifiedName(contact) : null)
+                  || contact.verifiedName;
+                if (name && typeof name === 'string' && name.trim()) {
+                  res[id] = name.trim();
+                }
+              }
+            } catch (e) {}
+          });
+          return res;
+        }, unresolvedAuthors);
+
+        if (resolvedMap && typeof resolvedMap === 'object') {
+          for (const [id, name] of Object.entries(resolvedMap)) {
+            if (name && !/^\+?\d{7,}$/.test(name.replace(/[\s\-\(\)]/g, ''))) {
+              contactNameCache.set(id, name);
+              if (id.includes('@')) {
+                const u = id.split('@')[0];
+                contactNameCache.set(`${u}@c.us`, name);
+                contactNameCache.set(`${u}@lid`, name);
+              }
+            }
+          }
+        }
+      } catch (evalErr) {
+        // Fallback silencioso
+      }
+    }
+
+    // 4. Fallback con client.getContactById para autores que sigan sin nombre
+    const stillUnresolved = unresolvedAuthors.filter(id => {
+      const cached = contactNameCache.get(id);
+      return !cached || /^\+?\d{7,}$/.test(cached.replace(/[\s\-\(\)]/g, ''));
+    });
+
+    if (stillUnresolved.length > 0) {
+      await Promise.all(stillUnresolved.slice(0, 15).map(async (id) => {
+        try {
+          const contact = await client.getContactById(id);
+          const name = contact?.name || contact?.pushname || contact?.shortName || contact?.verifiedName;
+          if (name && typeof name === 'string' && name.trim() && !/^\+?\d{7,}$/.test(name.replace(/[\s\-\(\)]/g, ''))) {
+            contactNameCache.set(id, name.trim());
+            if (id.includes('@')) {
+              const u = id.split('@')[0];
+              contactNameCache.set(`${u}@c.us`, name.trim());
+              contactNameCache.set(`${u}@lid`, name.trim());
+            }
+          }
+        } catch (err) {}
+      }));
+    }
+
+    const isGroupChat = Boolean(chat.isGroup || (typeof targetChatId === 'string' && targetChatId.endsWith('@g.us')));
+
+    const formatted = await Promise.all(messages.map(async (msg) => {
+      const msgId = msg.id?._serialized || msg.id?.$1 || (typeof msg.id === 'string' ? msg.id : msg.id?.id) || String(Date.now());
+
+      // Guardar en recentMessagesCache para descarga de media rápida y fallback
+      if (recentMessagesCache.size >= MAX_RECENT_MESSAGES) {
+        const firstKey = recentMessagesCache.keys().next().value;
+        recentMessagesCache.delete(firstKey);
+      }
+      recentMessagesCache.set(msgId, msg);
+
+      const isRevoked = Boolean(
+        msg.type === 'revoked' ||
+        msg._data?.type === 'revoked' ||
+        msg._data?.subtype === 'sender_revoke' ||
+        msg._data?.subtype === 'admin_revoke' ||
+        msg._data?.isRevoked === true ||
+        revokedMessageIds.has(msgId)
+      );
+
+      let thumbnail = null;
+      if (!isRevoked && msg.hasMedia) {
+        thumbnail = extractThumbnail(msg._data?.body || msg._data?.thumbnail || msg._data?.mediaData?.preview);
+      }
+
+      let senderName = null;
+      if (msg.fromMe) {
+        senderName = 'Tú';
+      } else {
+        const authorId = msg.author || msg.from;
+        const cached = authorId ? contactNameCache.get(authorId) : null;
+        const notify = msg._data?.notifyName || msg._data?.name;
+
+        if (cached && !/^\+?\d{7,}$/.test(cached.replace(/[\s\-\(\)]/g, ''))) {
+          senderName = cached;
+        } else if (notify && typeof notify === 'string' && notify.trim() && !/^\+?\d{7,}$/.test(notify.replace(/[\s\-\(\)]/g, ''))) {
+          senderName = notify.trim();
+          if (authorId) contactNameCache.set(authorId, senderName);
+        } else if (cached) {
+          senderName = cached;
+        } else if (notify && typeof notify === 'string' && notify.trim()) {
+          senderName = notify.trim();
+        } else if (isGroupChat && msg.author) {
+          const raw = msg.author.split('@')[0];
+          senderName = /^\d{7,15}$/.test(raw) ? `+${raw}` : raw;
+        } else {
+          senderName = chat.name || 'Contacto';
+        }
+      }
+
+      const quotedMsg = !isRevoked ? await resolveQuotedMsg(msg, isGroupChat) : null;
+
+      return {
+        id: msgId,
+        body: isRevoked ? '' : (msg.body || ''),
+        type: isRevoked ? 'revoked' : (msg.type || 'chat'),
+        timestamp: (msg.timestamp || 0) * 1000,
+        fromMe: Boolean(msg.fromMe),
+        from: msg.from,
+        to: msg.to,
+        author: msg.author || null,
+        senderName,
+        hasMedia: isRevoked ? false : Boolean(msg.hasMedia),
+        mediaUrl: (!isRevoked && msg.hasMedia) ? `/api/whatsapp/messages/${encodeURIComponent(msgId)}/media` : null,
+        thumbnail,
+        ack: msg.ack,
+        isRevoked,
+        hasQuotedMsg: Boolean(quotedMsg),
+        quotedMsg
+      };
+    }));
+
+    res.json(formatted);
+  } catch (error) {
+    console.error(`[Messages] Error obteniendo mensajes de ${chatId}:`, error?.message || error);
+    res.status(500).json({ error: error.message || 'Error al obtener mensajes' });
+  }
+});
+
+// Endpoint que sirve la imagen binaria (JPEG) directamente desde proxy local
+app.get('/api/whatsapp/chats/:chatId/avatar.jpg', async (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  const { chatId } = req.params;
+  const decodedId = decodeURIComponent(chatId);
+
+  // 1. Revisar caché en memoria del buffer de imagen
+  if (avatarImageCache.has(decodedId)) {
+    res.setHeader('Content-Type', 'image/jpeg');
+    return res.send(avatarImageCache.get(decodedId));
+  }
+
+  try {
+    const picUrl = await resolveChatAvatarUrl(decodedId);
+    if (picUrl) {
+      const cdnRes = await fetch(picUrl);
+      if (cdnRes.ok) {
+        const arrayBuf = await cdnRes.arrayBuffer();
+        const buffer = Buffer.from(arrayBuf);
+
+        if (avatarImageCache.size >= MAX_AVATAR_IMAGE_CACHE) {
+          const firstKey = avatarImageCache.keys().next().value;
+          if (firstKey) avatarImageCache.delete(firstKey);
+        }
+        avatarImageCache.set(decodedId, buffer);
+
+        res.setHeader('Content-Type', 'image/jpeg');
+        return res.send(buffer);
+      }
+    }
+  } catch (err) {
+    console.warn(`[Avatar] Error obteniendo avatar.jpg para ${decodedId}:`, err?.message || err);
+  }
+
+  // Fallback visual SVG neutro si no tiene foto (no retorna 404 para evitar spam en consola)
+  res.setHeader('Content-Type', 'image/svg+xml');
+  return res.send(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>'
+  );
+});
+
+// Endpoint JSON para consultar si un chat tiene avatar
+app.get('/api/whatsapp/chats/:chatId/avatar', async (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  const { chatId } = req.params;
+  const decodedId = decodeURIComponent(chatId);
+
+  try {
+    const picUrl = await resolveChatAvatarUrl(decodedId);
+    if (picUrl) {
+      return res.json({
+        avatarUrl: `/api/whatsapp/chats/${encodeURIComponent(decodedId)}/avatar.jpg`
+      });
+    }
+    return res.json({ avatarUrl: null });
+  } catch (err) {
+    return res.json({ avatarUrl: null });
+  }
+});
+
+// Cache en memoria para archivos multimedia descargados (evita re-descargar de Puppeteer)
+const mediaCache = new Map();
+const MAX_MEDIA_CACHE = 100;
+
+app.get('/api/whatsapp/messages/:messageId/media', async (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+
+  const { messageId } = req.params;
+  const decodedMsgId = decodeURIComponent(messageId);
+
+  if (!isReady || !client) {
+    return res.status(503).json({ error: 'WhatsApp client is not ready' });
+  }
+
+  // 1. Revisar caché en memoria
+  if (mediaCache.has(decodedMsgId)) {
+    const cached = mediaCache.get(decodedMsgId);
+    res.setHeader('Content-Type', cached.mimetype || 'image/jpeg');
+    return res.send(cached.buffer);
+  }
+
+  try {
+    let media = null;
+    let msgObj = recentMessagesCache.get(decodedMsgId) || null;
+
+    // 2. Si no estaba en recentMessagesCache, intentar mediante client.getMessageById
+    if (!msgObj) {
+      try {
+        msgObj = await client.getMessageById(decodedMsgId);
+      } catch (getErr) {
+        console.warn(`[Media] getMessageById aviso para ${decodedMsgId}:`, getErr?.message || getErr);
+      }
+    }
+
+    // 3. Descargar media si tenemos instancia msgObj
+    if (msgObj && typeof msgObj.downloadMedia === 'function') {
+      try {
+        media = await msgObj.downloadMedia();
+      } catch (dlErr) {
+        console.warn(`[Media] downloadMedia aviso para ${decodedMsgId}:`, dlErr?.message || dlErr);
+      }
+    }
+
+    // 4. Fallback: evaluar directamente en pupPage con resolveMediaBlob
+    if ((!media || !media.data) && client.pupPage) {
+      try {
+        const resolved = await client.pupPage.evaluate(async (msgId) => {
+          try {
+            const res = await window.WWebJS.resolveMediaBlob(msgId);
+            if (!res || !res.blob) return null;
+            const data = await window.WWebJS.arrayBufferToBase64Async(await res.blob.arrayBuffer());
+            return {
+              data,
+              mimetype: res.mimetype || 'image/jpeg',
+              filename: res.filename
+            };
+          } catch (e) {
+            return null;
+          }
+        }, decodedMsgId);
+        if (resolved && resolved.data) {
+          media = resolved;
+        }
+      } catch (pupErr) {
+        console.warn(`[Media] pupPage evaluate aviso para ${decodedMsgId}:`, pupErr?.message || pupErr);
+      }
+    }
+
+    // 5. Fallback 2: si no se pudo descargar el archivo completo, usar thumbnail de _data.body o mediaData
+    if (!media || !media.data) {
+      const rawThumb = msgObj?._data?.body || msgObj?._data?.thumbnail || msgObj?._data?.mediaData?.preview;
+      if (rawThumb && typeof rawThumb === 'string') {
+        let rawBase64 = rawThumb;
+        if (rawBase64.includes('base64,')) {
+          rawBase64 = rawBase64.split('base64,')[1];
+        }
+        if (rawBase64.length > 20) {
+          const buffer = Buffer.from(rawBase64, 'base64');
+          res.setHeader('Content-Type', 'image/jpeg');
+          return res.send(buffer);
+        }
+      }
+    }
+
+    if (!media || !media.data) {
+      return res.status(404).json({ error: 'Media no disponible o expirada en WhatsApp' });
+    }
+
+    const buffer = Buffer.from(media.data, 'base64');
+    const mimetype = media.mimetype || 'image/jpeg';
+
+    if (mediaCache.size >= MAX_MEDIA_CACHE) {
+      const firstKey = mediaCache.keys().next().value;
+      mediaCache.delete(firstKey);
+    }
+    mediaCache.set(decodedMsgId, { mimetype, buffer, timestamp: Date.now() });
+
+    res.setHeader('Content-Type', mimetype);
+    return res.send(buffer);
+  } catch (err) {
+    console.error(`[Media] Error descargando media para ${decodedMsgId}:`, err?.message || err);
+    res.status(500).json({ error: err.message || 'Error al descargar archivo multimedia' });
   }
 });
 
