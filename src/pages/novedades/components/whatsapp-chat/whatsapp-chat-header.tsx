@@ -9,12 +9,13 @@ import {
   ChevronDown,
   Check,
   Search,
-  ArrowLeft
+  ArrowLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
+import { cn, normalizeString } from '@/lib/utils';
 import type { ChatItem } from '@/hooks/whatsapp';
 import type { UseWhatsAppChatReturn } from '@/hooks/whatsapp';
 import { useNavigate } from 'react-router-dom';
@@ -45,13 +46,15 @@ interface WhatsAppChatHeaderProps {
   isExpanded?: boolean;
   onToggleExpand?: () => void;
   onBack?: () => void;
+  onCollapse?: () => void;
 }
 
 export function WhatsAppChatHeader({
   chatHook,
   isExpanded,
   onToggleExpand,
-  onBack
+  onBack,
+  onCollapse
 }: WhatsAppChatHeaderProps) {
   const navigate = useNavigate();
   const {
@@ -118,9 +121,14 @@ export function WhatsAppChatHeader({
     setTimeout(() => setIsRotating(false), 500);
   };
 
-  const filteredChatList = chatList.filter(c =>
-    c.name.toLowerCase().includes(searchFilter.toLowerCase())
-  );
+  const searchFilterNorm = normalizeString(searchFilter);
+  const filteredChatList = chatList.filter(c => {
+    if (!searchFilterNorm) return true;
+    return (
+      normalizeString(c.name || '').includes(searchFilterNorm) ||
+      normalizeString(c.id || '').includes(searchFilterNorm)
+    );
+  });
 
   return (
     <div className="flex items-center justify-between px-3 py-2.5 sm:px-4 sm:py-3 border-b bg-card/95 backdrop-blur-sm z-10">
@@ -286,6 +294,19 @@ export function WhatsAppChatHeader({
             ) : (
               <Maximize2 className="h-3.5 w-3.5" />
             )}
+          </Button>
+        )}
+
+        {/* Collapse toggle (used in right panel mode) */}
+        {onCollapse && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onCollapse}
+            title="Ocultar panel lateral"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+          >
+            <ChevronRight className="h-4 w-4" />
           </Button>
         )}
       </div>

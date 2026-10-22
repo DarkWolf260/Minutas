@@ -42,7 +42,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { cn } from '@/lib/utils';
+import { cn, normalizeString } from '@/lib/utils';
 
 export default function AdminUsersPage() {
   const navigate = useNavigate();
@@ -95,11 +95,13 @@ export default function AdminUsersPage() {
   const [filterRole, setFilterRole] = useState<string>('all'); // all, admin, standard
 
   // Filtering logic
+  const searchNorm = normalizeString(search);
   const filteredUsers = users.filter(u => {
-    const matchesSearch = 
-      (u.full_name?.toLowerCase() || '').includes(search.toLowerCase()) ||
-      (u.email?.toLowerCase() || '').includes(search.toLowerCase()) ||
-      (u.cedula_number || '').includes(search);
+    const matchesSearch = !searchNorm ? true : (
+      normalizeString(u.full_name || '').includes(searchNorm) ||
+      normalizeString(u.email || '').includes(searchNorm) ||
+      normalizeString(u.cedula_number || '').includes(searchNorm)
+    );
 
     const matchesStatus = 
       filterStatus === 'all' ? true :

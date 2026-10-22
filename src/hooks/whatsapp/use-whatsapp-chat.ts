@@ -165,8 +165,6 @@ export function useWhatsAppChat({
         ack: 1
       };
       setRealMessages(prev => [...prev, newMsg]);
-      toast.success('Mensaje enviado');
-
       setMessageText('');
     } catch (err: any) {
       toast.error('Error al enviar mensaje', {

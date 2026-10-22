@@ -198,9 +198,9 @@
     "semantic_hash": ""
   },
   "src/components/layout/quick-chat-selector.tsx": {
-    "mtime": 1791521147.1717253,
-    "seen": 1792458905.4483306,
-    "ast_hash": "93d3fa9a747e73520a3825c1a6b40606",
+    "mtime": 1792607962.5485895,
+    "seen": 1792608178.9156778,
+    "ast_hash": "01df4fe1c9241a2a27a01bf902d4ce3e",
     "semantic_hash": ""
   },
   "src/components/layout/side-nav.tsx": {
@@ -534,9 +534,9 @@
     "semantic_hash": ""
   },
   "src/components/template/template-editor.tsx": {
-    "mtime": 1792458564.233277,
-    "seen": 1792458905.457173,
-    "ast_hash": "0af676ac8318e55c4d7e9adbf0adca2e",
+    "mtime": 1792608050.592963,
+    "seen": 1792608178.926602,
+    "ast_hash": "8b8f8202b1e13f78e58dc108a06738a4",
     "semantic_hash": ""
   },
   "src/components/ui/accordion.tsx": {
@@ -1140,9 +1140,9 @@
     "semantic_hash": ""
   },
   "src/lib/types/index.ts": {
-    "mtime": 1791331660.5554657,
-    "seen": 1792458905.4863427,
-    "ast_hash": "1374a3e58690d5c737bc5f3b2301a1c8",
+    "mtime": 1792608353.1430266,
+    "seen": 1792608873.038883,
+    "ast_hash": "b381670e1f94fa374552d0aac735cd92",
     "semantic_hash": ""
   },
   "src/lib/utils-pure.ts": {
@@ -1152,9 +1152,9 @@
     "semantic_hash": ""
   },
   "src/lib/utils.ts": {
-    "mtime": 1790793152.5816827,
-    "seen": 1792458905.486651,
-    "ast_hash": "c3ecf6c252b7cebfcdfabec84f6aea36",
+    "mtime": 1792608132.8997586,
+    "seen": 1792608178.959114,
+    "ast_hash": "ad754d22450475edac8d47f7f73fad04",
     "semantic_hash": ""
   },
   "src/lib/utils/id.ts": {
@@ -1206,15 +1206,15 @@
     "semantic_hash": ""
   },
   "src/pages/admin/users/index.tsx": {
-    "mtime": 1789935947.9712977,
-    "seen": 1789936014.5440607,
-    "ast_hash": "9f52d7491fd24bfa227048ccc29a9579",
+    "mtime": 1792608098.9025028,
+    "seen": 1792608178.96074,
+    "ast_hash": "d6e3d54d01b0db40d0632ad4a4ca2226",
     "semantic_hash": ""
   },
   "src/pages/admin/workspaces/index.tsx": {
-    "mtime": 1792546481.008326,
-    "seen": 1792546525.8879607,
-    "ast_hash": "9d23b2f500a5943461360f2b2befd581",
+    "mtime": 1792608071.6993465,
+    "seen": 1792608178.9607437,
+    "ast_hash": "eb278fa4c104f3d129fc5fa80319653c",
     "semantic_hash": ""
   },
   "src/pages/estadisticas.tsx": {
@@ -1266,15 +1266,15 @@
     "semantic_hash": ""
   },
   "src/pages/novedades.tsx": {
-    "mtime": 1792547639.273794,
-    "seen": 1792547685.3678336,
-    "ast_hash": "6da4c75a0280b9b7ddfda532f487b173",
+    "mtime": 1792608776.083599,
+    "seen": 1792608873.042877,
+    "ast_hash": "c911c0b4f8a541edb68bdf091ed631ac",
     "semantic_hash": ""
   },
   "src/pages/novedades/components/mobile-header.tsx": {
-    "mtime": 1789936481.0543246,
-    "seen": 1789936881.3524077,
-    "ast_hash": "b9ff5e080ea9a2e98e4a97fc5ffcf179",
+    "mtime": 1792608740.207911,
+    "seen": 1792608873.0428803,
+    "ast_hash": "cf9bab0fef42aa8553093e071a627f0f",
     "semantic_hash": ""
   },
   "src/pages/novedades/components/novedad-filters.tsx": {
@@ -1308,15 +1308,15 @@
     "semantic_hash": ""
   },
   "src/pages/novedades/components/novedad-sidebar.tsx": {
-    "mtime": 1792547613.9476044,
-    "seen": 1792547685.3690665,
-    "ast_hash": "c2ff33e221d2784996ba761e6f646247",
+    "mtime": 1792608808.8490262,
+    "seen": 1792608873.0438795,
+    "ast_hash": "73c07cf092bc569230fa71007c12b6dd",
     "semantic_hash": ""
   },
   "src/pages/novedades/components/template-list.tsx": {
-    "mtime": 1789917362.1407945,
-    "seen": 1789932802.063573,
-    "ast_hash": "7b8ceb5dca60fabf6dee7a2183dc2e8d",
+    "mtime": 1792607937.293186,
+    "seen": 1792608178.9641314,
+    "ast_hash": "d00473c9f25a58853e5e069f69c551a2",
     "semantic_hash": ""
   },
   "src/pages/offline.tsx": {
@@ -1560,9 +1560,9 @@
     "semantic_hash": ""
   },
   "src/pages/settings/sync/components/sync-whatsapp.tsx": {
-    "mtime": 1791550953.241957,
-    "seen": 1792458905.5000613,
-    "ast_hash": "bec30fbccdfd594e707f79429da8743a",
+    "mtime": 1792608522.7448616,
+    "seen": 1792608873.0527344,
+    "ast_hash": "d310fd17cd33b4d3c2c3277e50a96a0d",
     "semantic_hash": ""
   },
   "src/pages/settings/workspaces.tsx": {
@@ -1866,9 +1866,9 @@
     "semantic_hash": ""
   },
   "src/hooks/configuracion/use-settings.ts": {
-    "mtime": 1789917362.0884056,
-    "seen": 1789935743.7513564,
-    "ast_hash": "ce019c6131213269a7d709630f54dc7d",
+    "mtime": 1792608374.6457627,
+    "seen": 1792608873.016178,
+    "ast_hash": "aa570f86c7fff24402b90059be3a08d2",
     "semantic_hash": ""
   },
   "src/hooks/configuracion/use-setup.ts": {
@@ -1896,9 +1896,9 @@
     "semantic_hash": ""
   },
   "src/hooks/direcciones/use-direcciones.ts": {
-    "mtime": 1789936654.2892478,
-    "seen": 1789936881.3241978,
-    "ast_hash": "8fe72367705a26d58ac5f92375ef41f9",
+    "mtime": 1792608119.734095,
+    "seen": 1792608178.9363456,
+    "ast_hash": "acf4664aa407299e8874c9b57e720e8f",
     "semantic_hash": ""
   },
   "src/hooks/estadisticas/index.ts": {
@@ -2106,9 +2106,9 @@
     "semantic_hash": ""
   },
   "src/components/layout/command-menu.tsx": {
-    "mtime": 1791296236.1085844,
-    "seen": 1792458905.448207,
-    "ast_hash": "e830f4fe5ec93925bfcbec17da6d15a0",
+    "mtime": 1792608005.0998483,
+    "seen": 1792608178.9144218,
+    "ast_hash": "b56f8629cf9d69901884cb605793d6f0",
     "semantic_hash": ""
   },
   "src/components/template/template-syntax-editor.tsx": {
@@ -2172,9 +2172,9 @@
     "semantic_hash": ""
   },
   "src/pages/settings/components/settings-sidebar.tsx": {
-    "mtime": 1791297435.1338866,
-    "seen": 1792458905.4989903,
-    "ast_hash": "94dc5b2d4e2d41fcfa9e2c8d9b5fab32",
+    "mtime": 1792608025.1986246,
+    "seen": 1792608178.970648,
+    "ast_hash": "1bacaee39bc12c1550201b8d71b64550",
     "semantic_hash": ""
   },
   "src/pages/setup/__tests__/setup-login.test.ts": {
@@ -2460,9 +2460,9 @@
     "semantic_hash": ""
   },
   "src/hooks/whatsapp/use-whatsapp-chat.ts": {
-    "mtime": 1792553093.4686978,
-    "seen": 1792553170.0013168,
-    "ast_hash": "33d81d6f694d81b52a2cfa27400f8f28",
+    "mtime": 1792607200.1523345,
+    "seen": 1792607324.924904,
+    "ast_hash": "c3b1af86a0860596293bc48b0b7a3f5f",
     "semantic_hash": ""
   },
   "src/pages/novedades/components/whatsapp-chat/whatsapp-chat-bubble.tsx": {
@@ -2472,9 +2472,9 @@
     "semantic_hash": ""
   },
   "src/pages/novedades/components/whatsapp-chat/whatsapp-chat-header.tsx": {
-    "mtime": 1792554429.1735415,
-    "seen": 1792554893.8149798,
-    "ast_hash": "f4767261745b46f7fde67b3c8db5154d",
+    "mtime": 1792608570.2200904,
+    "seen": 1792608873.0442991,
+    "ast_hash": "0bea44d07d1f4bcb77e3c8bf26dd0c83",
     "semantic_hash": ""
   },
   "src/pages/novedades/components/whatsapp-chat/whatsapp-chat-input.tsx": {
@@ -2484,9 +2484,9 @@
     "semantic_hash": ""
   },
   "src/pages/novedades/components/whatsapp-chat/whatsapp-chat-view.tsx": {
-    "mtime": 1792552969.761964,
-    "seen": 1792553170.0226567,
-    "ast_hash": "19b5696c9279c3ec4077ee61d4cc8e4f",
+    "mtime": 1792608599.791205,
+    "seen": 1792608873.0447104,
+    "ast_hash": "9e01f19c8ce1013590ef76ff68aedcfa",
     "semantic_hash": ""
   },
   "src/lib/constants/venezuela.ts": {
@@ -2499,6 +2499,18 @@
     "mtime": 1792606642.028088,
     "seen": 1792606689.8573773,
     "ast_hash": "bf731db044232e18c01665c624232da8",
+    "semantic_hash": ""
+  },
+  "src/pages/novedades/components/whatsapp-chat/whatsapp-chat-list.tsx": {
+    "mtime": 1792607665.4079309,
+    "seen": 1792608178.9645667,
+    "ast_hash": "6ce0eb6fa390d29fc0b4066cf4042697",
+    "semantic_hash": ""
+  },
+  "src/pages/novedades/components/whatsapp-chat/whatsapp-right-panel.tsx": {
+    "mtime": 1792608830.8832343,
+    "seen": 1792608873.0447135,
+    "ast_hash": "4667fa7448d5254d444deda81f844a71",
     "semantic_hash": ""
   }
 }

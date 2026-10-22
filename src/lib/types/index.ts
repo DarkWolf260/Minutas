@@ -106,6 +106,8 @@ export interface AppSettings {
   group_by_template_type?: boolean;
   pinned_template_ids?: string[];
   grouped_template_ids?: string[];
+  /** Ubicación del chat de WhatsApp en la vista de novedades ('sidebar' = integrado en lista/plantillas, 'right_form' = al lado derecho del formulario) */
+  whatsapp_chat_position?: 'sidebar' | 'right_form';
 }
 
 export interface ReportPhoto {

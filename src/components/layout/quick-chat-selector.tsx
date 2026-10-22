@@ -13,7 +13,7 @@ import { useScheduledMessages } from '@/hooks/whatsapp';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn, normalizeString } from '@/lib/utils';
 
 interface QuickChatSelectorProps {
   className?: string;
@@ -85,9 +85,14 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
   };
 
   // Filter groups and contacts
-  const filteredChats = bot.chats.filter(c => 
-    (c.name || c.id || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const searchQueryNorm = normalizeString(searchQuery);
+  const filteredChats = bot.chats.filter(c => {
+    if (!searchQueryNorm) return true;
+    return (
+      normalizeString(c.name || '').includes(searchQueryNorm) ||
+      normalizeString(c.id || '').includes(searchQueryNorm)
+    );
+  });
   
   const groupChats = filteredChats.filter(c => c.isGroup);
   const contactChats = filteredChats.filter(c => !c.isGroup);
@@ -119,9 +124,10 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
     }, {} as Record<string, any>)
   );
 
-  const filteredScheduled = groupedScheduled.filter(g => 
-    (g.title || 'Sin título').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredScheduled = groupedScheduled.filter(g => {
+    if (!searchQueryNorm) return true;
+    return normalizeString(g.title || 'Sin título').includes(searchQueryNorm);
+  });
 
   return (
     <Popover>

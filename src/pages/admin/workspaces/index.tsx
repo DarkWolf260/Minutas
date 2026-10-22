@@ -33,7 +33,7 @@ import { DbKeys } from '@/lib/repositories';
 import { useCloudWorkspaces } from '@/hooks/sync';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { cn } from '@/lib/utils';
+import { cn, normalizeString } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { MODULE_DEFS } from '@/pages/settings/modules';
 import {
@@ -288,10 +288,14 @@ export default function AdminWorkspacesPage() {
     }
   };
 
-  const filtered = workspaces.filter((ws: any) =>
-    ws.name.toLowerCase().includes(search.toLowerCase()) ||
-    ws.id.toLowerCase().includes(search.toLowerCase())
-  );
+  const searchNorm = normalizeString(search);
+  const filtered = workspaces.filter((ws: any) => {
+    if (!searchNorm) return true;
+    return (
+      normalizeString(ws.name || '').includes(searchNorm) ||
+      normalizeString(ws.id || '').includes(searchNorm)
+    );
+  });
 
   return (
     <div className="flex flex-col min-h-screen bg-background overflow-y-auto custom-scrollbar">

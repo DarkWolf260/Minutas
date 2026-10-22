@@ -79,11 +79,11 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
       <div className={cn("w-full max-w-[1000px] mx-auto", !hideHeader && "p-4 sm:p-8 pb-32")}>
         <Card className={cn("border bg-card shadow-sm font-inherit", hideHeader && "border-none shadow-none bg-transparent")}>
           {!hideHeader && (
-            <CardHeader className="bg-card/50 border-b">
-              <CardTitle className="text-xl font-bold">{cleanTemplateName(template.name)}</CardTitle>
+            <CardHeader className="bg-card/50 border-b py-3.5 px-4 sm:px-6">
+              <CardTitle className="text-lg sm:text-xl font-bold">{cleanTemplateName(template.name)}</CardTitle>
             </CardHeader>
           )}
-          <CardContent className={cn("pt-8", hideHeader && "pt-0 p-0")}>
+          <CardContent className={cn("pt-6 px-4 sm:px-6", hideHeader && "pt-0 p-0")}>
             <ReportForm
               ref={formRef}
               reportId={sessionKey}

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAddresses } from '@/hooks/direcciones';
 import type { Address } from '@/lib/types';
 import { generateId } from '@/lib/utils/id';
+import { normalizeString } from '@/lib/utils';
 
 export function useDirecciones() {
   const { 
@@ -118,15 +119,15 @@ export function useDirecciones() {
         return addr.municipality === filtroMunicipio;
       })
       .filter((addr) => {
-        if (!busqueda) return true;
-        const busquedaBaja = busqueda.toLowerCase();
+        const busquedaNorm = normalizeString(busqueda);
+        if (!busquedaNorm) return true;
         return (
-          addr.name.toLowerCase().includes(busquedaBaja) ||
-          (addr.street && addr.street.toLowerCase().includes(busquedaBaja)) ||
-          (addr.houseNumber && addr.houseNumber.toLowerCase().includes(busquedaBaja)) ||
-          addr.parish.toLowerCase().includes(busquedaBaja) ||
-          (addr.sector && addr.sector.toLowerCase().includes(busquedaBaja)) ||
-          addr.peaceQuadrant.toLowerCase().includes(busquedaBaja)
+          normalizeString(addr.name).includes(busquedaNorm) ||
+          (addr.street && normalizeString(addr.street).includes(busquedaNorm)) ||
+          (addr.houseNumber && normalizeString(addr.houseNumber).includes(busquedaNorm)) ||
+          normalizeString(addr.parish).includes(busquedaNorm) ||
+          (addr.sector && normalizeString(addr.sector).includes(busquedaNorm)) ||
+          normalizeString(addr.peaceQuadrant).includes(busquedaNorm)
         );
       });
   }, [direcciones, busqueda, filtroMunicipio]);

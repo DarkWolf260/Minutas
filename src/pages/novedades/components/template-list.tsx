@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { getTemplateIcon } from '@/lib/utils';
+import { getTemplateIcon, normalizeString } from '@/lib/utils';
 import type { Template } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
@@ -17,10 +17,14 @@ export const TemplateList = ({ templates, onSelect, onNavigateToTemplates }: Tem
   
   const activas = React.useMemo(() => templates.filter(t => t.is_active), [templates]);
   
-  const filteredTemplates = React.useMemo(() => 
-    activas.filter(t => t.name.toLowerCase().includes(search.toLowerCase())),
-    [activas, search]
-  );
+  const filteredTemplates = React.useMemo(() => {
+    const searchNorm = normalizeString(search);
+    if (!searchNorm) return activas;
+    return activas.filter(t => 
+      normalizeString(t.name).includes(searchNorm) ||
+      normalizeString(cleanTemplateName(t.name)).includes(searchNorm)
+    );
+  }, [activas, search]);
   
   if (activas.length === 0) {
     return (

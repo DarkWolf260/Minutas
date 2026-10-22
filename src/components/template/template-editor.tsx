@@ -26,7 +26,7 @@ import { toast } from 'sonner';
 import { STATISTICS_SECTIONS } from '@/lib/constants/statistics';
 import { BarChart3, Settings2, Plus, Trash2, ChevronDown, Save, Search, Check, X, Copy, FileText } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { cn, normalizeString } from '@/lib/utils';
 import type { StatisticRule } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 
@@ -74,14 +74,14 @@ const SearchableCategorySelector = React.memo(({
 
   const filteredOptions = useMemo(() => {
     const all = STATISTICS_SECTIONS;
-    if (!search) return all;
-    const lowerSearch = search.toLowerCase();
+    const lowerSearch = normalizeString(search);
+    if (!lowerSearch) return all;
 
     return all.map((section: any) => ({
       ...section,
       items: (section.items || []).filter((item: any) =>
-        item.label.toLowerCase().includes(lowerSearch) ||
-        item.code.toLowerCase().includes(lowerSearch)
+        normalizeString(item.label).includes(lowerSearch) ||
+        normalizeString(item.code).includes(lowerSearch)
       )
     })).filter((section: any) => section.items.length > 0);
   }, [search]);

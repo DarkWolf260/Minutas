@@ -12,6 +12,7 @@ import { NovedadMainContent } from './novedades/components/novedad-main-content'
 import { NovedadModals } from './novedades/components/novedad-modals';
 import { MobileHeader } from './novedades/components/mobile-header';
 import { WhatsAppChatView } from './novedades/components/whatsapp-chat/whatsapp-chat-view';
+import { WhatsAppRightPanel } from './novedades/components/whatsapp-chat/whatsapp-right-panel';
 
 function NovedadesPageContent() {
   const isMobile = useIsMobile();
@@ -25,6 +26,20 @@ function NovedadesPageContent() {
   const { settings } = useSettings();
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
   const isBotConnected = (bot.isAvailable && bot.status.isReady) || bot.isCloudActive;
+
+  const chatPosition = settings?.whatsapp_chat_position || 'sidebar';
+  const isRightChat = chatPosition === 'right_form' && isBotConnected && !isMobile;
+  const [isRightChatCollapsed, setIsRightChatCollapsed] = useState<boolean>(() => {
+    return localStorage.getItem('novedades_right_chat_collapsed') === 'true';
+  });
+
+  const handleToggleRightChatCollapse = () => {
+    setIsRightChatCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem('novedades_right_chat_collapsed', String(next));
+      return next;
+    });
+  };
 
   const [vistaSidebar, setVistaSidebar] = useState<'lista' | 'whatsapp'>(() => {
     return (localStorage.getItem('novedades_vista_sidebar') as 'lista' | 'whatsapp') || 'lista';
@@ -58,53 +73,79 @@ function NovedadesPageContent() {
         <NovedadSidebar
           hook={hook}
           isMobile={isMobile}
-          vistaSidebar={vistaSidebar}
+          vistaSidebar={chatPosition === 'right_form' && !isMobile ? 'lista' : vistaSidebar}
           onCambiarVistaSidebar={handleCambiarVista}
           isChatExpanded={isChatExpanded}
           onToggleExpandChat={() => setIsChatExpanded(!isChatExpanded)}
+          showWhatsAppTab={chatPosition !== 'right_form' || isMobile}
         />
 
-        {/* Área Principal */}
-        <main
-          className={cn(
-            'flex-1 flex flex-col min-h-0 overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300',
-            !idReporteSeleccionado && !creandoReporte && !(isChatExpanded && isBotConnected) ? 'hidden sm:flex' : 'flex'
-          )}
-        >
-          <MobileHeader hook={hook} isMobile={isMobile} />
-
-          <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-            {isChatExpanded && isBotConnected ? (
-              <WhatsAppChatView
-                reports={hook.reports || hook.reportesFiltrados}
-                templates={hook.templates}
-                selectedReportId={hook.idReporteSeleccionado}
-                onSelectReport={hook.manejarSeleccionarReporte}
-                guardiaAbierta={guardiaAbierta}
-                isExpanded={true}
-                onToggleExpand={() => setIsChatExpanded(false)}
-                onOpenCreateDialog={() => hook.setEsDialogOpenCrear(true)}
-              />
-            ) : !guardiaAbierta && !idReporteSeleccionado && !creandoReporte ? (
-              <div className="flex-1 flex flex-col items-center justify-center bg-muted/5 h-full">
-                <NoGuardBanner
-                  message="Para registrar nuevas novedades o gestionar reportes, primero debes abrir una nueva guardia."
-                  allowOpenHere
-                />
-              </div>
-            ) : (
-              <Suspense
-                fallback={
-                  <div className="flex-1 p-6">
-                    <div className="h-full w-full bg-muted/20 rounded-lg animate-pulse"></div>
-                  </div>
-                }
-              >
-                <NovedadMainContent hook={hook} />
-              </Suspense>
+        {/* Contenedor Centro y Derecha */}
+        <div className="flex-1 flex flex-row min-h-0 overflow-hidden">
+          {/* Área Principal: Formulario / Visor */}
+          <main
+            className={cn(
+              'flex-1 flex flex-col min-h-0 overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300',
+              !idReporteSeleccionado && !creandoReporte && !(isChatExpanded && isBotConnected) ? 'hidden sm:flex' : 'flex'
             )}
-          </div>
-        </main>
+          >
+            <MobileHeader
+              hook={hook}
+              isMobile={isMobile}
+              isBotConnected={isBotConnected}
+              onOpenWhatsApp={() => setIsChatExpanded(true)}
+            />
+
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+              {isChatExpanded && isBotConnected ? (
+                <WhatsAppChatView
+                  reports={hook.reports || hook.reportesFiltrados}
+                  templates={hook.templates}
+                  selectedReportId={hook.idReporteSeleccionado}
+                  onSelectReport={hook.manejarSeleccionarReporte}
+                  guardiaAbierta={guardiaAbierta}
+                  isExpanded={true}
+                  onToggleExpand={() => setIsChatExpanded(false)}
+                  onOpenCreateDialog={() => hook.setEsDialogOpenCrear(true)}
+                />
+              ) : !guardiaAbierta && !idReporteSeleccionado && !creandoReporte ? (
+                <div className="flex-1 flex flex-col items-center justify-center bg-muted/5 h-full">
+                  <NoGuardBanner
+                    message="Para registrar nuevas novedades o gestionar reportes, primero debes abrir una nueva guardia."
+                    allowOpenHere
+                  />
+                </div>
+              ) : (
+                <Suspense
+                  fallback={
+                    <div className="flex-1 p-6">
+                      <div className="h-full w-full bg-muted/20 rounded-lg animate-pulse"></div>
+                    </div>
+                  }
+                >
+                  <NovedadMainContent hook={hook} />
+                </Suspense>
+              )}
+            </div>
+          </main>
+
+          {/* Panel Derecho de WhatsApp (al lado derecho del formulario) */}
+          {isRightChat && !isChatExpanded && (
+            <WhatsAppRightPanel
+              bot={bot}
+              reports={hook.reports || hook.reportesFiltrados}
+              templates={hook.templates}
+              selectedReportId={hook.idReporteSeleccionado}
+              onSelectReport={hook.manejarSeleccionarReporte}
+              guardiaAbierta={guardiaAbierta}
+              onOpenCreateDialog={() => hook.setEsDialogOpenCrear(true)}
+              isChatExpanded={isChatExpanded}
+              onToggleExpandChat={() => setIsChatExpanded(true)}
+              isCollapsed={isRightChatCollapsed}
+              onToggleCollapse={handleToggleRightChatCollapse}
+            />
+          )}
+        </div>
       </div>
 
       {/* Capa de Diálogos y Modales */}

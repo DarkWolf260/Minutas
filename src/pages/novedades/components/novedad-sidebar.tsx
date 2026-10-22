@@ -38,6 +38,7 @@ export interface NovedadSidebarProps {
   onCambiarVistaSidebar?: (vista: 'lista' | 'whatsapp') => void;
   isChatExpanded?: boolean;
   onToggleExpandChat?: () => void;
+  showWhatsAppTab?: boolean;
 }
 
 /** Returns a human-friendly label for a given YYYY-MM-DD key. */
@@ -243,7 +244,8 @@ export const NovedadSidebar = ({
   vistaSidebar: vistaSidebarProp,
   onCambiarVistaSidebar,
   isChatExpanded = false,
-  onToggleExpandChat
+  onToggleExpandChat,
+  showWhatsAppTab
 }: NovedadSidebarProps) => {
   const {
     idReporteSeleccionado,
@@ -265,12 +267,15 @@ export const NovedadSidebar = ({
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
   const isBotConnected = (bot.isAvailable && bot.status.isReady) || bot.isCloudActive;
 
+  const isChatPositionRight = settings?.whatsapp_chat_position === 'right_form';
+  const shouldShowWhatsAppTab = showWhatsAppTab ?? (!isChatPositionRight || isMobile);
+
   const [internalVista, setInternalVista] = useState<'lista' | 'whatsapp'>(() => {
     return (localStorage.getItem('novedades_vista_sidebar') as 'lista' | 'whatsapp') || 'lista';
   });
 
   const activeVista = vistaSidebarProp ?? internalVista;
-  const effectiveVista = isBotConnected ? activeVista : 'lista';
+  const effectiveVista = isBotConnected && shouldShowWhatsAppTab ? activeVista : 'lista';
 
   const [subVistaWhatsApp, setSubVistaWhatsApp] = useState<'chats' | 'conversacion'>('chats');
   const [chatWhatsAppActivo, setChatWhatsAppActivo] = useState<string | null>(() => {
@@ -439,24 +444,24 @@ export const NovedadSidebar = ({
       <div className="flex flex-col border-b bg-card">
         <div
           className={cn(
-            'flex items-center justify-between p-3 sm:p-4',
-            isBotConnected ? 'pb-2 min-h-[52px]' : 'min-h-[60px] sm:min-h-[73px]'
+            'flex items-center justify-between px-3 py-2 sm:px-4 sm:py-2.5 min-h-[52px]',
+            isBotConnected && shouldShowWhatsAppTab && 'pb-1.5'
           )}
         >
-          <h2 className="text-lg sm:text-xl font-bold tracking-tight">Novedades</h2>
+          <h2 className="text-base sm:text-lg font-bold tracking-tight">Novedades</h2>
           <Button
             size="sm"
             onClick={() => setEsDialogOpenCrear(true)}
             disabled={!guardiaAbierta}
-            className="shadow-sm gap-2 h-8 sm:h-9 text-xs sm:text-sm"
+            className="shadow-sm gap-1.5 h-8 px-2.5 text-xs font-medium"
           >
-            <PlusCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <PlusCircle className="h-3.5 w-3.5" />
             Nuevo
           </Button>
         </div>
 
-        {/* Alternador de Vistas: Lista vs Chat WhatsApp (solo visible si el bot está conectado) */}
-        {isBotConnected && (
+        {/* Alternador de Vistas: Lista vs Chat WhatsApp (solo visible si el bot está conectado y la pestaña está habilitada) */}
+        {isBotConnected && shouldShowWhatsAppTab && (
           <div className="px-3 sm:px-4 pb-2.5 animate-in fade-in duration-200">
             <div className="flex items-center p-1 bg-muted/60 dark:bg-muted/40 rounded-xl border border-border/40">
               <button

@@ -29,6 +29,7 @@ export interface WhatsAppChatViewProps extends UseWhatsAppChatOptions {
   onOpenCreateDialog?: () => void;
   className?: string;
   onBack?: () => void;
+  onCollapse?: () => void;
 }
 
 export function WhatsAppChatView({
@@ -44,7 +45,8 @@ export function WhatsAppChatView({
   onToggleExpand,
   onOpenCreateDialog,
   className,
-  onBack
+  onBack,
+  onCollapse
 }: WhatsAppChatViewProps) {
   const navigate = useNavigate();
   const chatHook = useWhatsAppChat({
@@ -108,6 +110,7 @@ export function WhatsAppChatView({
         isExpanded={isExpanded}
         onToggleExpand={onToggleExpand}
         onBack={onBack}
+        onCollapse={onCollapse}
       />
 
       {/* Messages Stream */}

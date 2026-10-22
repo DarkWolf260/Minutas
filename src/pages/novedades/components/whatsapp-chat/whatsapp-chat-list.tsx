@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { QRCodeSVG } from 'qrcode.react';
-import { cn } from '@/lib/utils';
+import { cn, normalizeString } from '@/lib/utils';
 import type { WhatsAppChat } from '@/hooks/whatsapp';
 import type { useWhatsAppBot } from '@/hooks/whatsapp';
 
@@ -68,9 +68,14 @@ export function WhatsAppChatList({
 
   const isBotReady = bot.isAvailable && bot.status.isReady;
 
-  const filteredChats = (bot.chats || []).filter(c =>
-    (c.name || c.id || '').toLowerCase().includes(search.toLowerCase())
-  );
+  const searchNorm = normalizeString(search);
+  const filteredChats = (bot.chats || []).filter(c => {
+    if (!searchNorm) return true;
+    return (
+      normalizeString(c.name || '').includes(searchNorm) ||
+      normalizeString(c.id || '').includes(searchNorm)
+    );
+  });
 
   return (
     <div className={cn('flex flex-col h-full w-full bg-card overflow-hidden', className)}>
