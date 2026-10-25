@@ -264,7 +264,7 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
                 
                 {bot.status.qr ? (
                   <div className="flex flex-col items-center gap-3 animate-in fade-in duration-300">
-                    <div className="p-3 bg-white rounded-xl border-2 border-dashed border-emerald-500/30">
+                    <div className="p-3 bg-white rounded-xl border border-border/80 shadow-2xs">
                       <QRCodeSVG key={bot.status.qr} value={bot.status.qr} size={150} />
                     </div>
                     <p className="text-[10px] text-muted-foreground text-center max-w-[200px] leading-normal">
@@ -272,9 +272,11 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
                     </p>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center p-6 border border-dashed rounded-xl bg-background/50 text-xs text-muted-foreground gap-2 w-full">
-                    <Loader2 className="h-5 w-5 animate-spin text-amber-500" />
-                    <span>Generando código QR...</span>
+                  <div className="empty-state-container py-6 w-full border border-border/60 rounded-xl">
+                    <div className="empty-state-icon-box">
+                      <Loader2 className="h-5 w-5 animate-spin text-amber-500" />
+                    </div>
+                    <div className="empty-state-title">Generando código QR...</div>
                   </div>
                 )}
                 
@@ -341,7 +343,7 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
                               </div>
                               <div className={cn(
                                 "h-4 w-4 rounded-full border flex items-center justify-center shrink-0 transition-colors",
-                                isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-muted-foreground/30'
+                                isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-border'
                               )}>
                                 {isChecked && <Check className="h-2.5 w-2.5" />}
                               </div>
@@ -379,7 +381,7 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
                               </div>
                               <div className={cn(
                                 "h-4 w-4 rounded-full border flex items-center justify-center shrink-0 transition-colors",
-                                isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-muted-foreground/30'
+                                isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-border'
                               )}>
                                 {isChecked && <Check className="h-2.5 w-2.5" />}
                               </div>
@@ -390,8 +392,12 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
                     )}
 
                     {filteredChats.length === 0 && (
-                      <div className="text-center py-8 text-xs text-muted-foreground">
-                        No se encontraron chats
+                      <div className="empty-state-container py-8">
+                        <div className="empty-state-icon-box">
+                          <User className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="empty-state-title">No se encontraron chats</div>
+                        <div className="empty-state-description">Prueba con otro término de búsqueda</div>
                       </div>
                     )}
                   </div>
@@ -416,14 +422,19 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
               <ScrollArea className="h-60 border rounded-xl overflow-hidden bg-muted/10 p-1">
                 <div className="p-1.5 space-y-2">
                   {isScheduledLoading ? (
-                    <div className="flex flex-col items-center justify-center py-12 gap-2">
-                      <Loader2 className="h-5 w-5 animate-spin text-emerald-500" />
-                      <p className="text-xs text-muted-foreground">Cargando programados...</p>
+                    <div className="empty-state-container py-8">
+                      <div className="empty-state-icon-box">
+                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      </div>
+                      <div className="empty-state-title">Cargando programados...</div>
                     </div>
                   ) : filteredScheduled.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center text-xs text-muted-foreground gap-2">
-                      <Clock className="h-8 w-8 opacity-30 text-emerald-500" />
-                      <span>No hay mensajes programados</span>
+                    <div className="empty-state-container py-8">
+                      <div className="empty-state-icon-box">
+                        <Clock className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div className="empty-state-title">Sin mensajes programados</div>
+                      <div className="empty-state-description">No hay envíos pendientes</div>
                     </div>
                   ) : (
                     filteredScheduled.map((group: any) => {
@@ -431,7 +442,7 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
                       return (
                         <div 
                           key={group.ids[0]} 
-                          className="flex items-center justify-between p-2 rounded-xl bg-background border shadow-sm transition-all hover:shadow-md animate-in fade-in duration-300"
+                          className="flex items-center justify-between p-2 rounded-xl bg-background border shadow-2xs transition-all hover:border-primary/20 animate-in fade-in duration-300"
                         >
                           <div className="flex flex-col gap-0.5 min-w-0 pr-1">
                             <span className="text-xs font-bold text-foreground truncate max-w-[170px]">
@@ -439,7 +450,7 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
                             </span>
                             
                             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                              <Calendar className="h-3 w-3 shrink-0 text-emerald-500/60" />
+                              <Calendar className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
                               <span className="truncate">
                                 {new Date(group.scheduledTime).toLocaleDateString([], { day: '2-digit', month: 'short' })} a las {new Date(group.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>

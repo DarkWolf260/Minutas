@@ -107,7 +107,7 @@ function SortableStaffItem({
                 placeholder="Observación..."
                 value={member.observation || ''}
                 onChange={(e) => onUpdateMember({ ...member, observation: e.target.value })}
-                className="h-7 text-[11px] bg-background/50 border-dashed focus-visible:ring-1 focus-visible:ring-primary/30 w-full"
+                className="h-8 text-xs bg-background/50 border-border/60 focus-visible:ring-1 focus-visible:ring-primary/30 w-full rounded-lg"
               />
             </div>
           )}

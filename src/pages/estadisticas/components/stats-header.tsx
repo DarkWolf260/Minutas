@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, FileDown, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { AppBarActionPortal } from '@/components/layout/app-bar-action-portal';
 
 import type { UseEstadisticasReturn } from '@/hooks/estadisticas';
 
@@ -36,31 +36,19 @@ export const StatsHeader = ({ hook }: StatsHeaderProps) => {
   } = hook;
 
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0">
-      <div className="flex items-center gap-4">
-        <Link to="/" className="shrink-0">
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div className="flex flex-col">
-          <h1 className="text-3xl font-bold tracking-tight">Estadísticas</h1>
-          <p className="text-muted-foreground mt-1">
-            Visualización de datos operacionales por mes y año.
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
+    <AppBarActionPortal>
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         <Button
           variant="outline"
-          size="icon"
-          className="h-9 w-9 shadow-sm"
+          size="icon-sm"
+          className="h-9 w-9 shadow-2xs"
           onClick={manejarMesAnterior}
+          aria-label="Mes anterior"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <Select value={String(mes)} onValueChange={(v) => setMes(parseInt(v))}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[115px] sm:w-[130px] h-9 text-xs">
             <SelectValue>{nombresMeses[mes]}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -72,7 +60,7 @@ export const StatsHeader = ({ hook }: StatsHeaderProps) => {
           </SelectContent>
         </Select>
         <Select value={String(anio)} onValueChange={(v) => setAnio(parseInt(v))}>
-          <SelectTrigger className="w-[100px]">
+          <SelectTrigger className="w-[80px] sm:w-[90px] h-9 text-xs">
             <SelectValue>{anio}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -85,17 +73,18 @@ export const StatsHeader = ({ hook }: StatsHeaderProps) => {
         </Select>
         <Button
           variant="outline"
-          size="icon"
-          className="h-9 w-9 shadow-sm"
+          size="icon-sm"
+          className="h-9 w-9 shadow-2xs"
           onClick={manejarMesSiguiente}
+          aria-label="Mes siguiente"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
 
         <Select value={modo} onValueChange={(v: any) => setModo(v)}>
-          <SelectTrigger className="w-[180px] shadow-sm">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
+          <SelectTrigger className="hidden md:flex w-[155px] h-9 text-xs shadow-2xs">
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
               <SelectValue />
             </div>
           </SelectTrigger>
@@ -105,10 +94,12 @@ export const StatsHeader = ({ hook }: StatsHeaderProps) => {
           </SelectContent>
         </Select>
 
-        <Button variant="secondary" size="icon" className="h-9 w-9 shadow-sm" title="Exportar (Próximamente)">
+        <Button variant="secondary" size="icon-sm" className="hidden sm:flex h-9 w-9 shadow-2xs" title="Exportar (Próximamente)" aria-label="Exportar estadísticas">
           <FileDown className="h-4 w-4" />
         </Button>
       </div>
-    </div>
+    </AppBarActionPortal>
   );
 };
+
+

@@ -145,12 +145,14 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
                   <div
                     key={`${template.id}-${index}`}
                     className={cn(
-                      'group w-full grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg p-2 text-left transition-all hover:bg-accent/50 border border-transparent min-w-0 overflow-hidden shrink-0',
-                      idPlantillaSeleccionada === template.id && 'bg-accent border-accent-foreground/10 shadow-sm'
+                      'group w-full grid grid-cols-[auto_1fr_auto] items-center gap-2.5 rounded-xl p-2 text-left transition-all border outline-none min-w-0 overflow-hidden shrink-0',
+                      idPlantillaSeleccionada === template.id
+                        ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/20 shadow-2xs'
+                        : 'border-transparent hover:bg-muted/50'
                     )}
                   >
                     <div
-                      className="flex items-center gap-2 cursor-pointer min-w-0"
+                      className="flex items-center gap-2 cursor-pointer min-w-0 pl-1"
                       onClick={() => setIdPlantillaSeleccionada(template.id)}
                     >
                       {(() => {
@@ -187,9 +189,10 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
                           <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-background/80"
+                              size="icon-sm"
+                              className="text-muted-foreground hover:text-foreground"
                               onClick={(e) => manejarClickEditarEnBuilder(e, template)}
+                              aria-label="Editar plantilla en Constructor"
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
@@ -202,9 +205,10 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
                         <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-background/80"
+                            size="icon-sm"
+                            className="text-muted-foreground hover:text-foreground"
                             onClick={(e) => manejarDescargarPlantilla(e, template)}
+                            aria-label="Descargar plantilla"
                           >
                             <CloudDownload className="h-3.5 w-3.5" />
                           </Button>
@@ -216,13 +220,14 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
                         <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
-                            size="icon"
+                            size="icon-sm"
                             className={cn(
-                              "h-7 w-7 transition-colors",
-                              estaAutenticado && isAdmin ? "text-primary hover:bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-background/80"
+                              "transition-colors",
+                              estaAutenticado && isAdmin ? "text-primary hover:bg-primary/10" : "text-muted-foreground hover:text-foreground"
                             )}
                             onClick={(e) => manejarSubirANube(e, template)}
                             disabled={estaSubiendo || !isAdmin}
+                            aria-label="Subir a la nube"
                           >
                             <CloudUpload className="h-3.5 w-3.5" />
                           </Button>
@@ -243,9 +248,10 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-background/80"
+                              size="icon-sm"
+                              className="text-muted-foreground hover:text-foreground"
                               onClick={(e) => e.stopPropagation()}
+                              aria-label="Más opciones"
                             >
                               <MoreVertical className="h-3.5 w-3.5" />
                             </Button>
@@ -274,9 +280,14 @@ export const PlantillasSidebar = ({ hook }: PlantillasSidebarProps) => {
                 );
               })}
               {templates.length === 0 && (
-                <div className="p-8 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-                  <FileText className="h-8 w-8 opacity-20" />
-                  No has subido ninguna plantilla.
+                <div className="empty-state-container py-12">
+                  <div className="empty-state-icon-box">
+                    <FileText className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <h3 className="empty-state-title">Sin plantillas</h3>
+                  <p className="empty-state-desc">
+                    No has subido ninguna plantilla de reporte todavía.
+                  </p>
                 </div>
               )}
             </div>

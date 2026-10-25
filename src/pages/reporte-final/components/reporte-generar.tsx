@@ -257,9 +257,12 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
                     ))}
                   </div>
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-6 text-muted-foreground">
-                    <TrendingUp className="h-8 w-8 text-muted-foreground/30 mb-2" />
-                    <p className="text-xs font-medium">No se han registrado novedades estadísticas en esta guardia.</p>
+                  <div className="empty-state-container py-8">
+                    <div className="empty-state-icon-box">
+                      <TrendingUp className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <p className="empty-state-title">Sin novedades estadísticas</p>
+                    <p className="empty-state-desc">No se han registrado novedades estadísticas en esta guardia.</p>
                   </div>
                 )}
               </ScrollArea>
@@ -274,7 +277,7 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
                     onChange={(e) => setEstadisticasLocal(e.target.value)}
                   />
                 </ScrollArea>
-                <div className="p-2.5 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/20">
+                <div className="p-2.5 bg-muted/50 rounded-lg border border-border/60">
                   <p className="text-[11px] text-muted-foreground italic flex items-start gap-2">
                     <Clock className="h-3 w-3 mt-0.5 shrink-0" />
                     Nota: Puede editar libremente este formato antes de generar el reporte de cierre.
@@ -352,7 +355,7 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
                 {novedadesManualesOrdenadas.map((novedad: NovedadManual) => (
                   <div
                     key={novedad.id}
-                    className={`group flex items-start gap-4 p-3 rounded-xl border border-muted/50 transition-all duration-200 hover:shadow-md ${idEditandoManual === novedad.id ? 'border-primary bg-primary/5 ring-2 ring-primary/20' : 'border-muted hover:border-muted-foreground/30 bg-background'}`}
+                    className={`group flex items-start gap-4 p-3 rounded-xl border transition-all duration-200 shadow-2xs ${idEditandoManual === novedad.id ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border/60 hover:border-border bg-background'}`}
                   >
                     <div className="flex flex-col items-center gap-1 shrink-0 pt-1">
                       <Badge variant="outline" className="text-[9px] font-bold px-1.5 py-0 border-primary/30 text-primary bg-primary/5">
@@ -368,8 +371,8 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
                     <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <Button
                         variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                        size="icon-sm"
+                        className="text-muted-foreground hover:text-primary hover:bg-primary/10"
                         onClick={() => manejarEditarNovedadManual(novedad)}
                         aria-label="Editar novedad"
                         title="Editar novedad"
@@ -378,8 +381,8 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
                       </Button>
                       <Button
                         variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        size="icon-sm"
+                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         onClick={() => {
                           setIdParaEliminar(novedad.id);
                           setEsDialogOpenEliminar(true);
@@ -393,9 +396,12 @@ export function ReporteGenerar({ hook }: ReporteGenerarProps) {
                   </div>
                 ))}
                 {novedadesManualesOrdenadas.length === 0 && (
-                  <div className="text-center py-12 border-muted/50 border-dashed rounded-2xl bg-muted/10">
-                    <History className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground font-medium">No hay novedades manuales agregadas.</p>
+                  <div className="empty-state-container py-10">
+                    <div className="empty-state-icon-box">
+                      <History className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <p className="empty-state-title">Sin novedades manuales</p>
+                    <p className="empty-state-desc">No hay novedades manuales agregadas.</p>
                   </div>
                 )}
               </div>

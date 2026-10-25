@@ -96,7 +96,7 @@ export const GuardConfigCard = ({
         <div className="flex flex-wrap items-center gap-3">
           {/* Guardia Select */}
           <div className="flex flex-col gap-1 min-w-[140px] flex-1 sm:flex-none">
-            <Label htmlFor="guard-select" className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1">
+            <Label htmlFor="guard-select" className="text-[10px] uppercase font-bold text-muted-foreground ml-1">
               Guardia de Turno
             </Label>
             <Select
@@ -129,7 +129,7 @@ export const GuardConfigCard = ({
 
           {/* Duración Select */}
           <div className="flex flex-col gap-1 min-w-[115px] flex-1 sm:flex-none">
-            <Label htmlFor="duracion-select" className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1">
+            <Label htmlFor="duracion-select" className="text-[10px] uppercase font-bold text-muted-foreground ml-1">
               Duración
             </Label>
             <Select
@@ -159,7 +159,7 @@ export const GuardConfigCard = ({
 
           {/* Periodo DatePicker */}
           <div className="flex flex-col gap-1 min-w-[140px] flex-1 sm:flex-none">
-            <Label htmlFor="periodo" className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1">
+            <Label htmlFor="periodo" className="text-[10px] uppercase font-bold text-muted-foreground ml-1">
               Fecha Inicio
             </Label>
             <DatePicker

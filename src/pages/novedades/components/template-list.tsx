@@ -59,12 +59,12 @@ export const TemplateList = ({ templates, onSelect, onNavigateToTemplates }: Tem
               <button
                 key={template.id}
                 onClick={() => onSelect(template.id)}
-                className="w-full text-left p-4 rounded-2xl border bg-card hover:bg-muted transition-all flex items-center gap-4 active:scale-[0.98] shadow-sm border-muted/60"
+                className="w-full text-left p-3.5 sm:p-4 rounded-xl border bg-card hover:bg-muted/60 transition-all duration-150 flex items-center gap-3.5 active:scale-[0.99] shadow-2xs border-border/60 cursor-pointer"
               >
-                <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
-                <span className="font-semibold text-sm tracking-tight">{cleanTemplateName(template.name)}</span>
+                <span className="font-semibold text-sm tracking-tight text-foreground">{cleanTemplateName(template.name)}</span>
               </button>
             );
           })}

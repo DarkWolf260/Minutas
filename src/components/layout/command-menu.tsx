@@ -394,7 +394,7 @@ export function CommandMenu() {
           ) : (
             grouped.map(([category, categoryItems]) => (
               <div key={category} className="space-y-1">
-                <div className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                <div className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                   {category}
                 </div>
                 {categoryItems.map((item) => {
@@ -448,7 +448,7 @@ export function CommandMenu() {
               Seleccionar
             </span>
           </div>
-          <span className="text-[10px] text-muted-foreground/80">
+          <span className="text-[10px] text-muted-foreground">
             Atajos: pulsa <kbd className="px-1 py-0.5 rounded bg-muted border font-mono">G</kbd> y luego la letra (<kbd className="px-1 py-0.5 rounded bg-muted border font-mono">G+N</kbd>, <kbd className="px-1 py-0.5 rounded bg-muted border font-mono">G+O</kbd>, <kbd className="px-1 py-0.5 rounded bg-muted border font-mono">Ctrl+B</kbd>)
           </span>
         </div>

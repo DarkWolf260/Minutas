@@ -49,14 +49,12 @@ export const NovedadGroupItem = React.memo(({
       <button
         onClick={() => onToggleExpand(id)}
         className={cn(
-          'w-full rounded-2xl p-3 text-left transition-all duration-200 group border border-transparent flex items-center justify-between gap-3',
-          hasSelectedChild 
-            ? 'bg-primary/5 border-primary/20 shadow-sm ring-1 ring-primary/20' 
-            : 'bg-muted/10 hover:bg-muted/30'
+          'list-group-header',
+          hasSelectedChild && 'list-group-header-active'
         )}
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 font-bold text-xs">
+          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0 font-bold text-xs">
             {count}
           </div>
           <div className="min-w-0">
@@ -79,17 +77,17 @@ export const NovedadGroupItem = React.memo(({
                 onTogglePin(templateId, e);
               }}
               className={cn(
-                "p-1 rounded hover:bg-muted/80 transition-colors duration-150",
+                "p-1 rounded-md hover:bg-muted transition-colors duration-150",
                 isPinned 
                   ? "text-primary hover:text-primary/80" 
-                  : "text-muted-foreground/40 hover:text-muted-foreground"
+                  : "text-muted-foreground/70 hover:text-foreground"
               )}
               title={isPinned ? "Desanclar grupo" : "Anclar grupo"}
             >
               <Pin className={cn("h-3.5 w-3.5", isPinned && "fill-current")} />
             </button>
           )}
-          <div className="text-muted-foreground/60 group-hover:text-foreground transition-colors duration-200 p-1">
+          <div className="text-muted-foreground group-hover:text-foreground transition-colors duration-200 p-1">
             {isExpanded ? (
               <ChevronDown className="h-4 w-4" />
             ) : (

@@ -388,7 +388,7 @@ export function AddressFormDialog({
           isMobile ? "p-4 pb-8" : "p-6 sm:justify-between"
         )}>
           {isMobile ? (
-            <Button type="submit" className="w-full h-12 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 rounded-xl font-bold gap-2">
+            <Button type="submit" className="w-full h-12 shadow-2xs rounded-xl font-bold gap-2">
               <Save className="h-5 w-5" />
               {address ? 'Guardar Cambios' : 'Registrar Ubicación'}
             </Button>
@@ -399,7 +399,7 @@ export function AddressFormDialog({
                   Cancelar
                 </Button>
               </DialogClose>
-              <Button type="submit" size="sm" className="shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 px-8 font-bold gap-2">
+              <Button type="submit" className="h-10 shadow-2xs px-8 font-bold gap-2 rounded-xl">
                 <Save className="h-4 w-4" />
                 {address ? 'Guardar Cambios' : 'Registrar'}
               </Button>
@@ -441,11 +441,11 @@ export function AddressFormDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-2xl bg-background/95 backdrop-blur-xl border-muted/50 shadow-2xl overflow-hidden p-0 rounded-3xl">
+      <DialogContent className="sm:max-w-2xl bg-background border shadow-lg overflow-hidden p-0 rounded-xl">
         <DialogHeader className="p-8 pb-4 bg-muted/5 border-b border-muted/20">
           <div className="flex justify-between items-start">
             <div className="space-y-1">
-              <DialogTitle className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">
+              <DialogTitle className="text-2xl font-bold tracking-tight text-foreground">
                 {title}
               </DialogTitle>
               <DialogDescription className="text-sm">

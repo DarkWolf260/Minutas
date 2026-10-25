@@ -1,8 +1,6 @@
 import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 import { useGlobalConfig } from '@/hooks/configuracion';
 import {
-  ChevronLeft,
   ShieldAlert,
   UserPlus,
   Loader2,
@@ -36,33 +34,16 @@ export default function AdminConfigPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background overflow-y-auto custom-scrollbar">
       <div className="p-4 sm:p-6 lg:p-10 w-full max-w-[1700px] mx-auto flex flex-col gap-8">
-        
-        {/* CABECERA (ESTÁNDAR APP) */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 shrink-0">
-          <div className="flex items-center gap-4">
-            <Link to="/admin" className="shrink-0">
-              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div className="flex flex-col">
-              <h1 className="text-3xl font-bold tracking-tight">Configuración Global</h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Ajustes maestros que afectan el comportamiento de toda la plataforma.
-              </p>
-            </div>
-          </div>
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Registro de Usuarios */}
-          <Card className="group shadow-md border-primary/10 hover:border-primary/30 overflow-hidden relative bg-card/60 backdrop-blur-md transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1">
-            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500">
+          <Card className="group shadow-2xs border-border/80 hover:border-primary/40 overflow-hidden relative bg-card transition-all duration-200">
+            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-200">
               <UserPlus className="h-32 w-32 rotate-6" />
             </div>
             
             <CardHeader className="pb-4 relative">
-              <div className="h-12 w-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center mb-4 shadow-inner">
+              <div className="h-12 w-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center mb-4">
                 <UserPlus className="h-6 w-6" />
               </div>
               <CardTitle className="text-xl font-bold">Seguridad de Acceso</CardTitle>
@@ -74,7 +55,7 @@ export default function AdminConfigPage() {
             <CardContent className="space-y-6 relative">
               <Separator className="bg-muted/50" />
               
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-muted/40 group/item hover:bg-muted/30 transition-colors">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/20 border border-muted/40 group/item hover:bg-muted/30 transition-colors">
                 <div className="space-y-1">
                   <Label className="text-sm font-bold flex items-center gap-2">
                     Permitir Nuevos Registros
@@ -98,13 +79,13 @@ export default function AdminConfigPage() {
           </Card>
 
           {/* Mantenimiento */}
-          <Card className="group shadow-md border-primary/10 hover:border-primary/30 overflow-hidden relative bg-card/60 backdrop-blur-md transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1">
-            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500">
+          <Card className="group shadow-2xs border-border/80 hover:border-primary/40 overflow-hidden relative bg-card transition-all duration-200">
+            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-200">
               <ShieldAlert className="h-32 w-32 -rotate-6" />
             </div>
 
             <CardHeader className="pb-4 relative">
-              <div className="h-12 w-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mb-4 shadow-inner">
+              <div className="h-12 w-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center mb-4">
                 <ShieldAlert className="h-6 w-6" />
               </div>
               <CardTitle className="text-xl font-bold">Estado del Sistema</CardTitle>
@@ -116,7 +97,7 @@ export default function AdminConfigPage() {
             <CardContent className="space-y-6 relative">
               <Separator className="bg-muted/50" />
               
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 group/item hover:bg-amber-500/10 transition-colors">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 group/item hover:bg-amber-500/10 transition-colors">
                 <div className="space-y-1">
                   <Label className="text-sm font-bold flex items-center gap-2">
                     Modo Mantenimiento
@@ -139,13 +120,13 @@ export default function AdminConfigPage() {
         </div>
 
         {/* Módulos para Administradores */}
-        <Card className="group shadow-md border-primary/10 hover:border-primary/30 overflow-hidden relative bg-card/60 backdrop-blur-md transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5">
-          <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500">
+        <Card className="group shadow-2xs border-border/80 hover:border-primary/40 overflow-hidden relative bg-card transition-all duration-200">
+          <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-200">
             <LayoutGrid className="h-32 w-32 rotate-6" />
           </div>
           
           <CardHeader className="pb-4 relative">
-            <div className="h-12 w-12 rounded-2xl bg-violet-500/10 text-violet-500 flex items-center justify-center mb-4 shadow-inner">
+            <div className="h-12 w-12 rounded-xl bg-violet-500/10 text-violet-500 flex items-center justify-center mb-4">
               <LayoutGrid className="h-6 w-6" />
             </div>
             <CardTitle className="text-xl font-bold">Módulos para Administradores</CardTitle>
@@ -174,9 +155,9 @@ export default function AdminConfigPage() {
                   <div
                     key={id}
                     className={cn(
-                      'flex items-center justify-between p-4 rounded-2xl border transition-all duration-300',
+                      'flex items-center justify-between p-4 rounded-xl border transition-colors',
                       enabled 
-                        ? 'bg-card border-muted/40 hover:bg-muted/10' 
+                        ? 'bg-card border-border/60 hover:bg-muted/20' 
                         : 'bg-muted/10 border-muted/20'
                     )}
                   >

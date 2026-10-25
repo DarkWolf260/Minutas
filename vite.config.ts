@@ -152,6 +152,13 @@ export default defineConfig({
     port: 3000,
     open: false,
     host: true,
+    watch: {
+      ignored: [
+        '**/whatsapp-bot/**',
+        '**/.git/**',
+        '**/graphify-out/**',
+      ],
+    },
     proxy: {
       '/api/whatsapp': {
         target: 'http://localhost:3001',

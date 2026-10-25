@@ -61,14 +61,14 @@ export const AddActivityForm: React.FC<AddActivityFormProps> = ({
     <div className="p-4 border-b bg-muted/10">
       <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
         <div className="sm:col-span-4 space-y-1">
-          <Label className="text-[10px] font-bold uppercase opacity-50 ml-1">Fecha</Label>
+          <Label className="text-[10px] font-semibold uppercase text-muted-foreground ml-1">Fecha</Label>
           <DatePicker 
             value={format(date, 'yyyy-MM-dd')} 
             onChange={(val) => setDate(new Date(val + 'T00:00:00'))} 
           />
         </div>
         <div className="sm:col-span-3 space-y-1">
-          <Label className="text-[10px] font-bold uppercase opacity-50 ml-1">Hora</Label>
+          <Label className="text-[10px] font-semibold uppercase text-muted-foreground ml-1">Hora</Label>
           <TimeHlvInput value={time} onChange={setTime} className="h-9 text-xs" />
         </div>
         <div className="sm:col-span-5 flex gap-2 items-end">

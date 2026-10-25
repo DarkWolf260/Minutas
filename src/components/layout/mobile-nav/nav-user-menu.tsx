@@ -80,7 +80,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
             <User className="mr-3 h-4 w-4" />
             <span className="text-sm font-medium">Mi Perfil</span>
           </div>
-          <span className="text-[9px] bg-muted px-1.5 py-0.5 rounded font-black text-muted-foreground/70 uppercase">Próximamente</span>
+          <span className="text-[9px] bg-muted px-1.5 py-0.5 rounded font-bold text-muted-foreground uppercase">Próximamente</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild className="py-2.5">

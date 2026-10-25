@@ -4,7 +4,6 @@ import { usePersonal } from '@/hooks/personal';
 import { FeatureErrorBoundary } from '@/components/common/error-boundary-feature';
 
 // Componentes extraídos (SOLID)
-import { PersonnelHeader } from './personal/components/personnel-header';
 import { MassActionsBar } from './personal/components/mass-actions-bar';
 import { PersonnelTabs } from './personal/components/personnel-tabs';
 import { PersonnelModals } from './personal/components/personnel-modals';
@@ -22,11 +21,7 @@ function PersonnelPageContent() {
   if (estaCargando) {
     return (
       <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-28 sm:pb-6 flex flex-col md:flex-1 md:min-h-0 space-y-8">
-        <div className="space-y-2">
-          <div className="h-8 w-48 bg-muted/20 rounded-lg animate-pulse" />
-          <div className="h-4 w-96 bg-muted/20 rounded-lg animate-pulse" />
-        </div>
-        <div className="h-[500px] w-full bg-muted/10 rounded-3xl animate-pulse" />
+        <div className="h-[500px] w-full bg-muted/10 rounded-xl animate-pulse" />
       </div>
     );
   }
@@ -42,9 +37,6 @@ function PersonnelPageContent() {
       />
 
       <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-28 sm:pb-6 flex flex-col md:flex-1 md:min-h-0">
-        {/* Cabecera */}
-        <PersonnelHeader />
-
         {/* Contenido de Pestañas */}
         <div className="w-full flex flex-col gap-6 md:flex-1 md:min-h-0">
           <PersonnelTabs hook={hook} />

@@ -248,21 +248,19 @@ export function NoGuardBanner({
   if (!isLoaded) return null;
 
   return (
-    <div className="flex flex-col items-center justify-center py-6 sm:py-16 px-3 text-center animate-in fade-in duration-500 gap-4 sm:gap-8 w-full min-h-0">
-      <div className="max-w-sm space-y-2 sm:space-y-4">
-        <div className="h-14 w-14 sm:h-20 sm:w-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto border-2 border-dashed border-amber-500/20">
-          <Lock className="h-6 w-6 sm:h-9 sm:w-9 text-amber-500/40" />
-        </div>
-        <div className="space-y-1 sm:space-y-1.5">
-          <h3 className="text-base sm:text-lg font-bold text-foreground/80 tracking-tight">
-            Guardia no Iniciada
-          </h3>
-          <p className="text-[12px] sm:text-sm text-muted-foreground/60 leading-relaxed">{message}</p>
-        </div>
+    <div className="empty-state-container py-8 sm:py-16 px-3">
+      <div className="empty-state-icon-box bg-amber-500/10 text-amber-600 dark:text-amber-400">
+        <Lock className="h-6 w-6" />
+      </div>
+      <div className="empty-state-title text-base sm:text-lg">
+        Guardia no Iniciada
+      </div>
+      <div className="empty-state-description max-w-sm">
+        {message}
       </div>
  
       {allowOpenHere && guards.length > 0 && (
-        <div className="w-full max-w-md bg-card border border-muted/60 rounded-2xl shadow-sm p-4 sm:p-5 space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="w-full max-w-md bg-card border border-border/80 rounded-xl shadow-2xs p-4 sm:p-5 space-y-3 sm:space-y-4 mt-6 text-left">
           <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-left">
             Abrir guardia aquí
           </p>
@@ -272,7 +270,7 @@ export function NoGuardBanner({
             <div className="flex-1 space-y-1 sm:space-y-1.5 text-left">
               <Label
                 htmlFor="no-guard-select"
-                className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
+                className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-foreground ml-1"
               >
                 Guardia
               </Label>
@@ -294,7 +292,7 @@ export function NoGuardBanner({
             <div className="w-full sm:w-28 space-y-1 sm:space-y-1.5 text-left">
               <Label
                 htmlFor="no-guard-duration"
-                className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
+                className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-foreground ml-1"
               >
                 Duración
               </Label>

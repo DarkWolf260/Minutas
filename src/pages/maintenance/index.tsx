@@ -21,8 +21,8 @@ export default function MaintenancePage() {
       <div className="absolute inset-0 bg-grid-white/[0.02] bg-[length:32px_32px]" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="max-w-md w-full bg-card/40 backdrop-blur-xl border border-amber-500/20 rounded-3xl p-8 shadow-2xl text-center space-y-6 relative z-10">
-        <div className="mx-auto w-20 h-20 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-500/20 shadow-[0_0_50px_-10px_rgba(245,158,11,0.3)]">
+      <div className="max-w-md w-full bg-card/80 backdrop-blur-md border border-amber-500/20 rounded-xl p-8 shadow-lg text-center space-y-6 relative z-10">
+        <div className="mx-auto w-20 h-20 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500 border border-amber-500/20 shadow-2xs">
           <Hammer className="h-10 w-10 animate-bounce" />
         </div>
 

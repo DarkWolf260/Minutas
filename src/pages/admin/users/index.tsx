@@ -21,6 +21,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { AppBarActionPortal } from '@/components/layout/app-bar-action-portal';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useNavigate, Link } from 'react-router-dom';
@@ -202,45 +203,33 @@ export default function AdminUsersPage() {
     <div className="flex flex-col min-h-screen bg-background overflow-y-auto custom-scrollbar">
       <div className="p-4 sm:p-6 lg:p-10 w-full max-w-[1700px] mx-auto flex flex-col gap-8 pb-32">
         
-        {/* CABECERA (ESTÁNDAR APP) */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 shrink-0">
-          <div className="flex items-center gap-4">
-            <Link to="/admin" className="shrink-0">
-              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div className="flex flex-col">
-              <h1 className="text-3xl font-bold tracking-tight">Gestión de Usuarios</h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Controla accesos, aprueba nuevas cuentas y asigna roles administrativos.
-              </p>
-            </div>
-          </div>
+        <AppBarActionPortal>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 rounded-lg shrink-0 border-muted/60 hover:bg-muted"
+            onClick={() => refresh()}
+            disabled={loading}
+            title="Actualizar lista de usuarios"
+          >
+            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+          </Button>
+        </AppBarActionPortal>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nombre o cédula..."
-                className="pl-10 h-10 rounded-lg bg-background border-muted/60 focus:ring-3 focus:ring-primary/20"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-10 w-10 rounded-lg shrink-0 border-muted/60 hover:bg-muted"
-              onClick={() => refresh()}
-              disabled={loading}
-            >
-              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-            </Button>
+        {/* BARRA DE BÚSQUEDA Y ESTADO */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shrink-0">
+          <Badge variant="outline" className="h-9 px-3.5 rounded-lg border-muted/60 bg-muted/20 font-bold uppercase text-[10px] tracking-widest text-muted-foreground w-fit">
+            {filteredUsers.length} Usuarios
+          </Badge>
 
-            <Badge variant="outline" className="h-10 px-4 rounded-lg border-muted/60 bg-muted/20 font-bold uppercase text-[10px] tracking-widest text-muted-foreground">
-              {filteredUsers.length} Usuarios
-            </Badge>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nombre o cédula..."
+              className="pl-10 h-9 rounded-lg bg-background border-muted/60 focus:ring-3 focus:ring-primary/20 text-sm"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
         </div>
 
@@ -282,20 +271,22 @@ export default function AdminUsersPage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
             <Loader2Spinner />
-            <p className="text-[11px] font-bold tracking-[0.2em] text-muted-foreground/50 uppercase">Cargando Personal...</p>
+            <p className="text-[11px] font-bold tracking-[0.2em] text-muted-foreground uppercase">Cargando Personal...</p>
           </div>
         ) : filteredUsers.length === 0 ? (
-          <div className="py-20 text-center border-2 border-dashed border-muted/20 rounded-2xl bg-muted/5">
-            <User className="h-16 w-16 text-muted/20 mx-auto mb-6" />
-            <h3 className="text-xl font-bold text-muted-foreground">Sin resultados</h3>
-            <p className="text-sm text-muted-foreground/60 mt-2">Prueba cambiando tu búsqueda o filtros.</p>
+          <div className="empty-state-container py-16 border rounded-xl border-border/60 bg-muted/20">
+            <div className="empty-state-icon-box">
+              <User className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="empty-state-title">Sin resultados</h3>
+            <p className="empty-state-desc">Prueba cambiando tu búsqueda o filtros.</p>
           </div>
         ) : (
           <div className="rounded-2xl border bg-card/60 backdrop-blur-md overflow-hidden shadow-md border-primary/10">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left border-collapse">
                 <thead>
-                  <tr className="border-b bg-muted/30 uppercase text-[10px] font-black tracking-widest text-muted-foreground/70 select-none">
+                  <tr className="border-b bg-muted/30 uppercase text-[10px] font-bold tracking-widest text-muted-foreground select-none">
                     <th className="px-6 py-4 w-12 text-center">
                       <Checkbox
                         checked={isAllSelected}

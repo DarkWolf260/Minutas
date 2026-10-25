@@ -11,6 +11,15 @@ export interface WhatsAppChat {
   avatarUrl?: string | null;
 }
 
+export interface WhatsAppLocation {
+  latitude: number;
+  longitude: number;
+  description?: string | null;
+  name?: string | null;
+  url?: string | null;
+  isLive?: boolean;
+}
+
 export interface QuotedWhatsAppMessage {
   id?: string | null;
   body?: string;
@@ -21,6 +30,7 @@ export interface QuotedWhatsAppMessage {
   mediaUrl?: string | null;
   thumbnail?: string | null;
   isRevoked?: boolean;
+  location?: WhatsAppLocation | null;
 }
 
 export interface WhatsAppMessage {
@@ -40,6 +50,7 @@ export interface WhatsAppMessage {
   isRevoked?: boolean;
   hasQuotedMsg?: boolean;
   quotedMsg?: QuotedWhatsAppMessage | null;
+  location?: WhatsAppLocation | null;
 }
 
 export interface WhatsAppStatus {

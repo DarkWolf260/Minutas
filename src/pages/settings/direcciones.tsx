@@ -4,6 +4,7 @@ import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import { Button } from '@/components/ui/button';
+import { AppBarActionPortal } from '@/components/layout/app-bar-action-portal';
 import {
   Card,
   CardHeader,
@@ -136,27 +137,16 @@ export default function DireccionesPage() {
 
 function CabeceraDirecciones({ alAbrirForm }: { alAbrirForm: () => void }) {
   return (
-    <div className="border-b shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-card/40 backdrop-blur-sm sticky top-0 z-10">
-      <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
-            <MapPin className="h-6 w-6 text-primary" />
-            Gestor de Direcciones
-          </h2>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Administración central de puntos de interés y ubicaciones.
-          </p>
-        </div>
-        <Button
-          onClick={() => alAbrirForm()}
-          size="sm"
-          className="h-9 px-4 shrink-0 shadow-xs font-bold gap-2 rounded-xl"
-        >
-          <PlusCircle className="h-4 w-4" />
-          <span>Nueva Dirección</span>
-        </Button>
-      </div>
-    </div>
+    <AppBarActionPortal>
+      <Button
+        onClick={() => alAbrirForm()}
+        size="sm"
+        className="h-9 px-4 shrink-0 shadow-xs font-bold gap-2 rounded-xl"
+      >
+        <PlusCircle className="h-4 w-4" />
+        <span>Nueva Dirección</span>
+      </Button>
+    </AppBarActionPortal>
   );
 }
 
@@ -222,7 +212,7 @@ function ListaDirecciones({ hook }: ListaDireccionesProps) {
                 Búsqueda Inteligente
               </Label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
                   name="address-search"
@@ -243,7 +233,7 @@ function ListaDirecciones({ hook }: ListaDireccionesProps) {
               <div className="relative">
                 <Select value={filtroMunicipio} onValueChange={setFiltroMunicipio}>
                   <SelectTrigger id="municipality-filter" className="h-10 bg-background/50 border-muted/40 pl-10 focus:bg-background transition-all">
-                    <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+                    <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="backdrop-blur-xl">
@@ -279,7 +269,7 @@ function ListaDirecciones({ hook }: ListaDireccionesProps) {
                           <CardTitle className="flex items-start gap-2.5 text-base font-bold tracking-tight leading-snug">
                             <MapPin className={cn(
                               "h-4 w-4 mt-0.5 shrink-0 transition-colors",
-                              seleccionadaParaMapa?.id === direccion.id ? "text-primary" : "text-muted-foreground/70"
+                              seleccionadaParaMapa?.id === direccion.id ? "text-primary" : "text-muted-foreground"
                             )} />
                             <span className="flex-1">{direccion.name}</span>
                           </CardTitle>
@@ -297,14 +287,14 @@ function ListaDirecciones({ hook }: ListaDireccionesProps) {
                           })()}
                         </div>
                         {direccion.latitude && direccion.longitude && (
-                          <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] mt-1.5 shrink-0" title="Coordenadas disponibles" />
+                          <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20 mt-1.5 shrink-0" title="Coordenadas disponibles" />
                         )}
                       </div>
                     </CardHeader>
                     <CardContent className="p-4 text-sm text-muted-foreground space-y-3">
                       {(direccion.street || direccion.houseNumber) && (
                         <div className="space-y-0.5">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Dirección</p>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground font-semibold">Dirección</p>
                           <p className="text-foreground/90 font-medium">
                             {`${direccion.street || ''}${direccion.street && direccion.houseNumber ? ', ' : ''}${direccion.houseNumber || ''}`}
                           </p>
@@ -312,7 +302,7 @@ function ListaDirecciones({ hook }: ListaDireccionesProps) {
                       )}
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-0.5">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Ubicación</p>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground font-semibold">Ubicación</p>
                           <p className="text-foreground/80 text-xs">
                             {[
                               `Mcp. ${direccion.municipality}`,
@@ -324,7 +314,7 @@ function ListaDirecciones({ hook }: ListaDireccionesProps) {
                           </p>
                         </div>
                         <div className="space-y-0.5">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Cuadrante</p>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground font-semibold">Cuadrante</p>
                           <p className="text-foreground/80 text-xs">
                             {direccion.peaceQuadrant}
                           </p>
@@ -335,7 +325,7 @@ function ListaDirecciones({ hook }: ListaDireccionesProps) {
                       <div className="mr-auto flex items-center gap-1">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 px-2 hover:bg-background/80">
+                            <Button variant="ghost" size="sm" className="h-9 px-2.5 hover:bg-background/80" aria-label="Copiar dirección">
                               {idCopiado === direccion.id ? (
                                 <Check className="h-3.5 w-3.5 text-emerald-500" />
                               ) : (
@@ -364,9 +354,10 @@ function ListaDirecciones({ hook }: ListaDireccionesProps) {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 px-2 hover:bg-background/80 text-blue-500"
+                            className="h-9 px-2.5 hover:bg-background/80 text-blue-500"
                             onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${direccion.latitude},${direccion.longitude}`, '_blank')}
                             title="Abrir en Google Maps"
+                            aria-label="Abrir en Google Maps"
                           >
                             <Globe className="h-3.5 w-3.5" />
                           </Button>
@@ -377,7 +368,7 @@ function ListaDirecciones({ hook }: ListaDireccionesProps) {
                         variant={seleccionadaParaMapa?.id === direccion.id ? "secondary" : "outline"}
                         size="sm"
                         className={cn(
-                          "h-8 text-xs font-semibold px-3 transition-all",
+                          "h-9 text-xs font-semibold px-3 transition-all",
                           seleccionadaParaMapa?.id === direccion.id ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""
                         )}
                         onClick={() => {
@@ -391,7 +382,7 @@ function ListaDirecciones({ hook }: ListaDireccionesProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 text-xs px-3 bg-background hover:bg-muted"
+                        className="h-9 text-xs px-3 bg-background hover:bg-muted"
                         onClick={() => manejarAbrirForm(direccion)}
                       >
                         <Edit className="mr-1.5 h-3.5 w-3.5" /> Editar
@@ -399,8 +390,9 @@ function ListaDirecciones({ hook }: ListaDireccionesProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                        className="h-9 w-9 p-0 text-destructive hover:bg-destructive/10"
                         onClick={() => setDireccionAEliminar(direccion)}
+                        aria-label="Eliminar dirección"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -409,10 +401,12 @@ function ListaDirecciones({ hook }: ListaDireccionesProps) {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                <MapPin className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-semibold">Sin resultados</h3>
-                <p className="mt-1 text-sm text-muted-foreground px-4">
+              <div className="empty-state-container py-16">
+                <div className="empty-state-icon-box">
+                  <MapPin className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="empty-state-title">Sin resultados</h3>
+                <p className="empty-state-desc px-4">
                   {busqueda || filtroMunicipio !== 'all'
                     ? 'Prueba con otra búsqueda o filtro.'
                     : 'Empieza añadiendo una nueva dirección.'}

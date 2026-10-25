@@ -100,7 +100,7 @@ export function UnitsManager() {
             <Button
               onClick={handleSave}
               disabled={isSaving || !isModified}
-              className="gap-2 shadow-lg shadow-primary/20 h-11 px-6 font-bold"
+              className="gap-2 shadow-2xs h-11 px-6 font-bold rounded-xl"
             >
               {isSaving ? (
                 <span className="flex items-center gap-2">

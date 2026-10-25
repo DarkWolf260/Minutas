@@ -124,16 +124,16 @@ export default function SettingsPage() {
           </div>
           <Skeleton className="h-9 w-full rounded-xl" />
           <div className="space-y-2 pt-2">
-            <Skeleton className="h-16 w-full rounded-2xl" />
-            <Skeleton className="h-16 w-full rounded-2xl" />
-            <Skeleton className="h-16 w-full rounded-2xl" />
-            <Skeleton className="h-16 w-full rounded-2xl" />
+            <Skeleton className="h-16 w-full rounded-xl" />
+            <Skeleton className="h-16 w-full rounded-xl" />
+            <Skeleton className="h-16 w-full rounded-xl" />
+            <Skeleton className="h-16 w-full rounded-xl" />
           </div>
         </div>
 
         {/* Skeleton Main */}
         <div className="hidden sm:flex flex-1 p-6 md:p-8">
-          <Skeleton className="h-full w-full rounded-3xl" />
+          <Skeleton className="h-full w-full rounded-xl" />
         </div>
       </div>
     );

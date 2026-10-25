@@ -18,7 +18,7 @@ function PuntosProgreso({ actual, total }: { actual: number; total: number }) {
           key={i}
           className={cn(
             'h-1.5 rounded-full transition-all duration-300',
-            i < actual ? 'bg-primary w-5' : i === actual ? 'bg-primary w-5' : 'bg-muted-foreground/20 w-2.5'
+            i < actual ? 'bg-primary w-5' : i === actual ? 'bg-primary w-5' : 'bg-muted w-2.5'
           )}
         />
       ))}

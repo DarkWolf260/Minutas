@@ -13,7 +13,9 @@ import {
   Loader2,
   Play,
   Pause,
-  Ban
+  Ban,
+  MapPin,
+  ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Report } from '@/lib/types';
@@ -67,6 +69,51 @@ function downloadImage(url: string, filename = 'whatsapp-image.jpg') {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+function isBase64ImageString(str?: string | null): boolean {
+  if (!str || typeof str !== 'string') return false;
+  const s = str.trim();
+  if (s.startsWith('data:image/')) return true;
+  if (s.length > 20) {
+    if (s.startsWith('/9j/') || s.startsWith('UklGR') || s.startsWith('iVBORw0KGgo') || s.startsWith('R0lGOD')) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function QuotedMessageThumbnail({
+  quotedMsg,
+  onClick
+}: {
+  quotedMsg: NonNullable<WhatsAppMessage['quotedMsg']>;
+  onClick: (e: React.MouseEvent) => void;
+}) {
+  const [hasError, setHasError] = useState(false);
+  let target = quotedMsg.thumbnail || quotedMsg.mediaUrl;
+  if (!target && quotedMsg.body && isBase64ImageString(quotedMsg.body)) {
+    target = quotedMsg.body.startsWith('data:') ? quotedMsg.body : `data:image/jpeg;base64,${quotedMsg.body.trim()}`;
+  }
+
+  if (hasError || !target) {
+    return null;
+  }
+
+  return (
+    <div
+      onClick={onClick}
+      className="h-10 w-10 sm:h-11 sm:w-11 rounded-lg bg-black/10 dark:bg-white/10 shrink-0 overflow-hidden cursor-pointer group/qthumb relative border border-black/5"
+      title="Ver foto citada"
+    >
+      <img
+        src={target}
+        alt="Foto respondida"
+        className="w-full h-full object-cover transition-transform group-hover/qthumb:scale-105"
+        onError={() => setHasError(true)}
+      />
+    </div>
+  );
 }
 
 function WhatsAppImagePreview({
@@ -332,6 +379,158 @@ function WhatsAppAudioPlayer({
   );
 }
 
+function WhatsAppLocationCard({
+  location,
+  thumbnail
+}: {
+  location: NonNullable<WhatsAppMessage['location']>;
+  thumbnail?: string | null;
+}) {
+  const [mapImgError, setMapImgError] = useState(false);
+  const mapsUrl = location.url || `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
+
+  const handleOpenMap = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open(mapsUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleCopyCoords = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(`${location.latitude}, ${location.longitude}`);
+    toast.success('Coordenadas copiadas al portapapeles');
+  };
+
+  const locationTitle =
+    location.name ||
+    location.description ||
+    (location.isLive ? 'Ubicación en tiempo real' : 'Ubicación compartida');
+  const formattedCoords = `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`;
+
+  return (
+    <div className="flex flex-col w-full min-w-[240px] sm:min-w-[270px] max-w-sm rounded-xl overflow-hidden border border-black/10 dark:border-white/10 bg-white/70 dark:bg-black/20 shadow-xs mb-1.5 transition-all">
+      {/* Visualización del Mapa */}
+      <div
+        onClick={handleOpenMap}
+        className="relative h-28 sm:h-32 w-full bg-slate-100 dark:bg-slate-900 cursor-pointer overflow-hidden group select-none"
+        title="Abrir en Google Maps"
+      >
+        {thumbnail && !mapImgError ? (
+          <img
+            src={thumbnail}
+            alt="Mapa de ubicación"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={() => setMapImgError(true)}
+          />
+        ) : (
+          /* Fondo de cuadrícula de mapa estilizado */
+          <div className="w-full h-full relative flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-100 to-sky-100 dark:from-slate-900 dark:via-[#162a2c] dark:to-slate-800">
+            <svg
+              className="absolute inset-0 w-full h-full opacity-40 dark:opacity-30 stroke-current text-emerald-800 dark:text-emerald-400"
+              xmlns="http://www.w3.org/2000/svg"
+              width="100%"
+              height="100%"
+            >
+              <defs>
+                <pattern id="map-pattern" width="32" height="32" patternUnits="userSpaceOnUse">
+                  <path d="M 32 0 L 0 0 0 32" fill="none" strokeWidth="0.8" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#map-pattern)" />
+              <path
+                d="M -20 70 Q 80 40 180 80 T 360 40"
+                fill="none"
+                strokeWidth="4"
+                className="stroke-amber-400/60 dark:stroke-amber-500/40"
+              />
+              <path
+                d="M 60 -10 Q 90 90 120 180"
+                fill="none"
+                strokeWidth="3"
+                className="stroke-sky-400/60 dark:stroke-sky-500/40"
+              />
+            </svg>
+          </div>
+        )}
+
+        {/* Pin central del marcador */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="relative flex items-center justify-center -translate-y-2">
+            {location.isLive && (
+              <span className="absolute h-8 w-8 rounded-full bg-red-500/30 animate-ping" />
+            )}
+            <div className="h-9 w-9 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg ring-2 ring-white dark:ring-black">
+              <MapPin className="h-5 w-5 fill-current" />
+            </div>
+          </div>
+        </div>
+
+        {/* Distintivo de tipo (En vivo / Ubicación) */}
+        <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5">
+          {location.isLive ? (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-600/90 text-white shadow-sm backdrop-blur-xs">
+              <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+              En vivo
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-black/60 text-white shadow-sm backdrop-blur-xs">
+              <MapPin className="h-3 w-3 text-red-400" />
+              Ubicación
+            </span>
+          )}
+        </div>
+
+        {/* Indicador flotante en hover */}
+        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+          <div className="px-2.5 py-1 rounded-md bg-black/75 text-white text-[11px] font-medium flex items-center gap-1 shadow-md">
+            <span>Ver en Google Maps</span>
+            <ExternalLink className="h-3 w-3" />
+          </div>
+        </div>
+      </div>
+
+      {/* Título, coordenadas y acciones */}
+      <div className="p-2.5 flex flex-col gap-1.5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-xs text-foreground truncate" title={locationTitle}>
+              {locationTitle}
+            </h4>
+            <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
+              {formattedCoords}
+            </div>
+          </div>
+        </div>
+
+        {/* Botones de acción */}
+        <div className="flex items-center gap-1.5 pt-1 border-t border-black/5 dark:border-white/5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleOpenMap}
+            className="flex-1 h-7 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10 px-2 justify-center gap-1"
+          >
+            <ExternalLink className="h-3 w-3" />
+            <span>Abrir mapa</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleCopyCoords}
+            className="h-7 text-[11px] text-muted-foreground hover:text-foreground px-2 gap-1"
+            title="Copiar coordenadas"
+          >
+            <Copy className="h-3 w-3" />
+            <span className="hidden sm:inline">Copiar</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
   report,
   message,
@@ -473,7 +672,7 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
               </div>
 
               {/* Time & Delivery ticks */}
-              <div className="flex items-center gap-1 text-muted-foreground/80 dark:text-white/60 ml-auto">
+              <div className="flex items-center gap-1 text-muted-foreground dark:text-white/80 ml-auto">
                 <span>{formattedTime}</span>
                 {isFinalizado ? (
                   <CheckCheck className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
@@ -544,11 +743,18 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
       message.body === 'Eliminaste este mensaje'
     );
 
+    const isLocation =
+      !isRevoked &&
+      (message.type === 'location' ||
+        message.type === 'live_location' ||
+        Boolean(message.location));
+
     const isImage =
       !isRevoked &&
+      !isLocation &&
       (message.type === 'image' ||
         message.type === 'sticker' ||
-        (message.hasMedia && !['ptt', 'audio', 'document', 'video', 'call_log', 'revoked'].includes(message.type)));
+        (message.hasMedia && !['ptt', 'audio', 'document', 'video', 'call_log', 'revoked', 'location', 'live_location'].includes(message.type)));
     const isAudio = !isRevoked && (message.type === 'ptt' || message.type === 'audio');
     const isDocument = !isRevoked && message.type === 'document';
 
@@ -581,8 +787,8 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
 
             {/* Mensaje Eliminado (Revoked) */}
             {isRevoked ? (
-              <div className="flex items-center gap-1.5 py-0.5 text-muted-foreground/80 dark:text-muted-foreground/70 italic text-xs select-none">
-                <Ban className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+              <div className="flex items-center gap-1.5 py-0.5 text-muted-foreground italic text-xs select-none">
+                <Ban className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <span>{isFromMe ? 'Eliminaste este mensaje' : 'Este mensaje fue eliminado'}</span>
               </div>
             ) : (
@@ -606,20 +812,33 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                       {/* Contenido / extracto del mensaje citado */}
                       <div className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
                         {message.quotedMsg.isRevoked ? (
-                          <span className="italic flex items-center gap-1 text-muted-foreground/70">
+                          <span className="italic flex items-center gap-1 text-muted-foreground">
                             <Ban className="h-3 w-3 shrink-0" />
                             Este mensaje fue eliminado
                           </span>
                         ) : (
                           <>
-                            {message.quotedMsg.hasMedia && !message.quotedMsg.body && (
-                              <span className="flex items-center gap-1">
-                                <ImageIcon className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                                <span>Foto</span>
+                            {message.quotedMsg.location ? (
+                              <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-300 font-medium truncate">
+                                <MapPin className="h-3 w-3 shrink-0 text-red-500" />
+                                <span className="truncate">
+                                  {message.quotedMsg.location.isLive
+                                    ? 'Ubicación en tiempo real'
+                                    : message.quotedMsg.location.name || message.quotedMsg.location.description || 'Ubicación'}
+                                </span>
                               </span>
-                            )}
-                            {message.quotedMsg.body && (
-                              <span className="truncate">{message.quotedMsg.body}</span>
+                            ) : (
+                              <>
+                                {message.quotedMsg.hasMedia && !message.quotedMsg.body && (
+                                  <span className="flex items-center gap-1">
+                                    <ImageIcon className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                    <span>Foto</span>
+                                  </span>
+                                )}
+                                {message.quotedMsg.body && !isBase64ImageString(message.quotedMsg.body) && (
+                                  <span className="truncate">{message.quotedMsg.body}</span>
+                                )}
+                              </>
                             )}
                           </>
                         )}
@@ -628,7 +847,8 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
 
                     {/* Miniatura si el mensaje respondido tenía foto */}
                     {message.quotedMsg.hasMedia && (message.quotedMsg.thumbnail || message.quotedMsg.mediaUrl) && (
-                      <div
+                      <QuotedMessageThumbnail
+                        quotedMsg={message.quotedMsg}
                         onClick={(e) => {
                           e.stopPropagation();
                           const target = message.quotedMsg?.mediaUrl || message.quotedMsg?.thumbnail;
@@ -637,22 +857,7 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                             setPreviewTitle(message.quotedMsg?.body || 'Foto del mensaje respondido');
                           }
                         }}
-                        className="h-10 w-10 sm:h-11 sm:w-11 rounded-lg bg-black/10 dark:bg-white/10 shrink-0 overflow-hidden cursor-pointer group/qthumb relative border border-black/5"
-                        title="Ver foto citada"
-                      >
-                        <img
-                          src={message.quotedMsg.thumbnail || message.quotedMsg.mediaUrl || ''}
-                          alt="Foto respondida"
-                          className="w-full h-full object-cover transition-transform group-hover/qthumb:scale-105"
-                          onError={(e) => {
-                            if (message.quotedMsg?.thumbnail && e.currentTarget.src !== message.quotedMsg.thumbnail) {
-                              e.currentTarget.src = message.quotedMsg.thumbnail;
-                            } else {
-                              e.currentTarget.style.display = 'none';
-                            }
-                          }}
-                        />
-                      </div>
+                      />
                     )}
                   </div>
                 )}
@@ -673,6 +878,20 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                       }}
                     />
                   </div>
+                )}
+
+                {/* Ubicación compartida */}
+                {isLocation && message.location && (
+                  <WhatsAppLocationCard
+                    location={message.location}
+                    thumbnail={
+                      message.thumbnail ||
+                      message.mediaUrl ||
+                      (message.body && isBase64ImageString(message.body)
+                        ? (message.body.startsWith('data:') ? message.body : `data:image/jpeg;base64,${message.body.trim()}`)
+                        : null)
+                    }
+                  />
                 )}
 
                 {/* Audio / Nota de voz */}
@@ -708,7 +927,7 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                 )}
 
                 {/* Placeholder fallback para otros tipos no reconocidos */}
-                {message.hasMedia && !isImage && !isAudio && !isDocument && (
+                {message.hasMedia && !isImage && !isAudio && !isDocument && !isLocation && (
                   <div className="flex items-center gap-2 p-2 mb-1.5 rounded-lg bg-black/5 dark:bg-black/20 text-xs">
                     <ImageIcon className="h-4 w-4 text-emerald-600" />
                     <span className="italic text-muted-foreground">Archivo multimedia</span>
@@ -716,11 +935,17 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                 )}
 
                 {/* Message text / caption */}
-                {message.body && (
-                  <div className="whitespace-pre-wrap break-words leading-relaxed pr-2">
-                    {message.body}
-                  </div>
-                )}
+                {message.body &&
+                  !isBase64ImageString(message.body) &&
+                  (!isLocation ||
+                    (message.body !== message.location?.name &&
+                      message.body !== message.location?.description &&
+                      message.body?.trim() !== `${message.location?.latitude}, ${message.location?.longitude}` &&
+                      message.body?.trim() !== `${message.location?.latitude},${message.location?.longitude}`)) && (
+                    <div className="whitespace-pre-wrap break-words leading-relaxed pr-2">
+                      {message.body}
+                    </div>
+                  )}
               </>
             )}
 
@@ -730,7 +955,7 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                 'flex items-center justify-end gap-1 mt-1 text-[10px]',
                 !message.body && !message.quotedMsg && isImage && hasMediaPreview
                   ? 'absolute bottom-2 right-2 bg-black/60 text-white px-2 py-0.5 rounded-full backdrop-blur-xs shadow-sm z-10'
-                  : 'text-muted-foreground/80 dark:text-white/60'
+                  : 'text-muted-foreground dark:text-white/80'
               )}
             >
               <span>{formattedTime}</span>

@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getInitials } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AppBarActionPortal } from '@/components/layout/app-bar-action-portal';
 
 export default function ProfilePage() {
   const { profile, saveProfile, isLoaded } = useProfile();
@@ -55,17 +56,11 @@ export default function ProfilePage() {
   if (!isLoaded) {
     return (
       <div className="h-full w-full flex flex-col min-h-0 overflow-hidden bg-background">
-        <div className="border-b shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-card/40 backdrop-blur-sm">
-          <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
-            <div className="space-y-2">
-              <Skeleton className="h-7 w-48" />
-              <Skeleton className="h-4 w-72" />
-            </div>
-            <Skeleton className="h-9 w-28" />
-          </div>
-        </div>
+        <AppBarActionPortal>
+          <Skeleton className="h-9 w-28 rounded-xl" />
+        </AppBarActionPortal>
         <div className="max-w-4xl mx-auto w-full p-4 sm:px-6 lg:px-8 py-6 space-y-6">
-          <Skeleton className="h-64 w-full rounded-2xl" />
+          <Skeleton className="h-64 w-full rounded-xl" />
         </div>
       </div>
     );
@@ -76,31 +71,19 @@ export default function ProfilePage() {
 
   return (
     <div className="h-full w-full flex flex-col min-h-0 overflow-hidden bg-background">
-      {/* Sticky Top Header */}
-      <div className="border-b shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-card/40 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
-              <User className="h-6 w-6 text-primary" />
-              Perfil de Usuario
-            </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              Información personal que se utilizará de firma en los reportes locales
-            </p>
-          </div>
-          <Button
-            form="profile-form"
-            type="submit"
-            disabled={isSaving}
-            size="sm"
-            className="gap-2 shrink-0 shadow-xs"
-          >
-            <Save className="h-4 w-4" />
-            <span className="hidden sm:inline">{isSaving ? 'Guardando...' : 'Guardar Perfil'}</span>
-            <span className="sm:hidden">{isSaving ? '...' : 'Guardar'}</span>
-          </Button>
-        </div>
-      </div>
+      <AppBarActionPortal>
+        <Button
+          form="profile-form"
+          type="submit"
+          disabled={isSaving}
+          size="sm"
+          className="gap-2 shrink-0 shadow-2xs font-semibold h-9 rounded-xl"
+        >
+          <Save className="h-4 w-4" />
+          <span className="hidden sm:inline">{isSaving ? 'Guardando...' : 'Guardar Perfil'}</span>
+          <span className="sm:hidden">{isSaving ? '...' : 'Guardar'}</span>
+        </Button>
+      </AppBarActionPortal>
 
       {/* Main Content Area */}
       <ScrollArea className="flex-1 min-h-0" type="always">

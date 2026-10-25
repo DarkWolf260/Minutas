@@ -1,16 +1,14 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronLeft, RotateCcw, FileText } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AppBarActionPortal } from '@/components/layout/app-bar-action-portal';
 import type { UseReporteFinalReturn } from '@/hooks/reporte-final';
 
 export interface ReporteHeaderProps {
   hook: Pick<
     UseReporteFinalReturn,
     | 'tabActiva'
-    | 'reportesGuardadosOrdenados'
-    | 'manejarCorregirFechasHistorial'
     | 'manejarGenerarReporte'
     | 'estaCargado'
   >;
@@ -20,45 +18,31 @@ export interface ReporteHeaderProps {
 export function ReporteHeader({ hook, isMobile }: ReporteHeaderProps) {
   const {
     tabActiva,
-    reportesGuardadosOrdenados,
-    manejarCorregirFechasHistorial,
     manejarGenerarReporte,
     estaCargado
   } = hook;
 
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10">
-      <div className="flex items-center gap-4">
-        <Link to="/" className="shrink-0">
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div className="flex flex-col">
-          <h1 className="text-3xl font-bold tracking-tight">Reporte de Cierre</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Gestiona y consulta los reportes de cierre de guardia.
-          </p>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto">
-        <TabsList className="grid w-[240px] grid-cols-2 shadow-sm">
-          <TabsTrigger value="generate">Generar</TabsTrigger>
-          <TabsTrigger value="history">Historial</TabsTrigger>
+    <AppBarActionPortal>
+      <div className="flex items-center gap-2">
+        <TabsList className="grid w-[180px] sm:w-[200px] grid-cols-2 h-9 p-1 shadow-xs bg-muted/60">
+          <TabsTrigger value="generate" className="text-xs font-semibold">Generar</TabsTrigger>
+          <TabsTrigger value="history" className="text-xs font-semibold">Historial</TabsTrigger>
         </TabsList>
 
         {tabActiva === 'generate' && !isMobile && estaCargado && (
           <Button
             onClick={manejarGenerarReporte}
             size="sm"
-            className="hidden sm:flex gap-2 shadow-sm font-bold ml-2"
+            className="hidden sm:flex h-9 px-3.5 gap-2 shadow-xs font-bold rounded-xl"
           >
             <FileText className="h-4 w-4" />
-            Generar Reporte de Cierre
+            <span>Generar Reporte</span>
           </Button>
         )}
       </div>
-    </div>
+    </AppBarActionPortal>
   );
 }
+
+

@@ -168,7 +168,7 @@ export function OnboardingTour({ onComplete }: { onComplete: () => void }) {
 
       {/* Tooltip */}
       <div 
-        className="absolute bg-card border rounded-3xl p-5 shadow-2xl w-[calc(100vw-40px)] sm:w-[320px] pointer-events-auto animate-in zoom-in-95 fade-in duration-300 z-50"
+        className="absolute bg-card border rounded-xl p-5 shadow-lg w-[calc(100vw-40px)] sm:w-[320px] pointer-events-auto animate-in zoom-in-95 fade-in duration-300 z-50"
         style={tooltipStyles}
       >
         <div className="flex items-start justify-between mb-4">

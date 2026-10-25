@@ -119,7 +119,7 @@ export function SyncWhatsApp() {
         )}
 
         {/* Configuración de URL */}
-        <div className="space-y-2 pb-2 border-b border-dashed border-emerald-500/10">
+        <div className="space-y-2 pb-2 border-b border-border/60">
           <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
             URL del Bot de WhatsApp
           </label>
@@ -315,7 +315,7 @@ export function SyncWhatsApp() {
             
             {bot.status.qr ? (
               <div className="flex flex-col items-center gap-4">
-                <div className="p-4 bg-white rounded-2xl border-2 border-dashed border-emerald-500/30 shadow-sm animate-in fade-in duration-200">
+                <div className="p-4 bg-white rounded-xl border border-emerald-500/30 shadow-2xs animate-in fade-in duration-200">
                   <QRCodeSVG key={bot.status.qr} value={bot.status.qr} size={180} />
                 </div>
                 <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
@@ -327,7 +327,7 @@ export function SyncWhatsApp() {
                 </p>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-2xl bg-background/50 text-sm text-muted-foreground gap-3">
+              <div className="flex flex-col items-center justify-center p-8 border rounded-xl border-border/60 bg-muted/20 text-sm text-muted-foreground gap-3">
                 <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
                 <span>Generando código QR...</span>
               </div>

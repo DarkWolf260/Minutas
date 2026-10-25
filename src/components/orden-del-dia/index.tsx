@@ -224,9 +224,12 @@ function SeccionActividadesDia({ hook }: SeccionActividadesDiaProps) {
       <ScrollArea className="flex-1" type="always">
         <div className="p-4 space-y-2">
           {actividades.length === 0 ? (
-            <div className="py-12 flex flex-col items-center justify-center text-muted-foreground opacity-50">
-              <PlusCircle className="h-8 w-8 mb-2 stroke-1" />
-              <p className="text-[11px] font-medium uppercase tracking-widest text-center px-4">Sin actividades registradas</p>
+            <div className="empty-state-container py-10">
+              <div className="empty-state-icon-box">
+                <PlusCircle className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div className="empty-state-title">Sin actividades registradas</div>
+              <div className="empty-state-description">Añade una actividad para la orden del día</div>
             </div>
           ) : (
             actividades.map((actividad: any) => (
@@ -281,7 +284,10 @@ function SeccionNotasAdm({ hook }: SeccionNotasAdmProps) {
       <ScrollArea className="pt-4 flex-1" type="always">
         <div className="space-y-3 px-4">
           {notas.length === 0 ? (
-            <p className="text-xs text-center text-muted-foreground py-4 border-2 border-dashed rounded-lg bg-muted/5">No hay notas registradas.</p>
+            <div className="empty-state-container py-8">
+              <div className="empty-state-title">Sin notas registradas</div>
+              <div className="empty-state-description">Añade una nota administrativa para la orden del día</div>
+            </div>
           ) : (
             notas.map((nota: Nota) => (
               <NoteItem key={nota.id} note={nota} onUpdate={manejarUpdateNota} onRemove={manejarEliminarNota} />

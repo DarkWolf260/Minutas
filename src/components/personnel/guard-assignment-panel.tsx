@@ -151,9 +151,10 @@ export function GuardAssignmentPanel({
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon-sm"
                           onClick={() => setConfirmDeleteGuardId(guard.id)}
-                          className="text-muted-foreground hover:text-destructive h-8 w-8 p-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="text-muted-foreground hover:text-destructive opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label="Eliminar guardia"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -161,8 +162,12 @@ export function GuardAssignmentPanel({
                     ))}
 
                     {guards.length === 0 && (
-                      <div className="text-xs text-muted-foreground text-center py-8 border border-dashed rounded-xl bg-background/50">
-                        No hay guardias creadas
+                      <div className="empty-state-container py-8 border border-border/60 rounded-xl bg-muted/20">
+                        <div className="empty-state-icon-box">
+                          <ShieldCheck className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <p className="empty-state-title text-xs">Sin guardias</p>
+                        <p className="empty-state-desc text-[11px]">No hay guardias creadas en el sistema.</p>
                       </div>
                     )}
                   </div>
@@ -191,7 +196,7 @@ export function GuardAssignmentPanel({
               <Button
                 size="sm"
                 variant="default"
-                className="flex gap-1.5 h-8 px-2.5 shadow-md"
+                className="flex gap-1.5 h-9 px-3 shadow-xs"
                 onClick={() => editorRef.current?.save?.()}
               >
                 <Save className="h-4 w-4" />
@@ -209,17 +214,15 @@ export function GuardAssignmentPanel({
             </CardContent>
           </Card>
         ) : (
-          <Card className="flex-1 flex flex-col items-center justify-center p-12 text-center border-dashed bg-muted/5 border-muted-foreground/20 rounded-2xl">
-            <div className="max-w-xs space-y-4">
-              <div className="h-20 w-20 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-2 border border-primary/10">
-                <ShieldCheck className="h-10 w-10 text-primary/30" />
+          <Card className="flex-1 flex flex-col items-center justify-center p-8 text-center border bg-card rounded-xl shadow-2xs">
+            <div className="empty-state-container max-w-sm">
+              <div className="empty-state-icon-box">
+                <ShieldCheck className="h-6 w-6 text-primary" />
               </div>
-              <div className="space-y-1">
-                <h3 className="text-lg font-bold tracking-tight">Gestión de Guardias</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Elige una guardia del panel lateral o crea una nueva para empezar a asignar funcionarios y cargos operativos.
-                </p>
-              </div>
+              <h3 className="empty-state-title text-base sm:text-lg">Gestión de Guardias</h3>
+              <p className="empty-state-desc">
+                Elige una guardia del panel lateral o crea una nueva para empezar a asignar funcionarios y cargos operativos.
+              </p>
             </div>
           </Card>
         )}

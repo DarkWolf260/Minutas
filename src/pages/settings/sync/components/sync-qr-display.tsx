@@ -12,7 +12,7 @@ interface SyncQRDisplayProps {
 
 export const SyncQRDisplay = ({ channelCode, manejarCopiarCodigo }: SyncQRDisplayProps) => {
   return (
-    <Card className="border-2 border-primary/20 shadow-xl shadow-primary/5 rounded-3xl overflow-hidden bg-card/50 backdrop-blur-sm">
+    <Card className="border border-border/80 shadow-xs rounded-xl overflow-hidden bg-card">
       <CardHeader className="pb-3 text-center sm:text-left bg-primary/5 border-b">
         <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
           <QrCode className="h-4 w-4 text-primary" />
@@ -28,10 +28,10 @@ export const SyncQRDisplay = ({ channelCode, manejarCopiarCodigo }: SyncQRDispla
       <CardContent className="p-6 sm:p-8 space-y-8">
         <div className="flex flex-col items-center gap-8">
           {/* El QR directo y grande como pidió el usuario */}
-          <div className="relative group p-4 bg-white rounded-3xl shadow-inner border-2 border-dashed border-primary/20 transition-all hover:border-primary/40">
-            <div className="absolute inset-0 bg-primary/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="relative group p-4 bg-white rounded-xl shadow-2xs border border-border/80 transition-all hover:border-primary/40">
+            <div className="absolute inset-0 bg-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
             <QRGenerator value={channelCode || ''} size={200} />
-            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-background border px-3 py-1 rounded-full shadow-sm">
+            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-background border px-3 py-1 rounded-full shadow-2xs">
               <p className="text-[10px] font-black uppercase tracking-widest text-primary">Cámara</p>
             </div>
           </div>
@@ -39,7 +39,7 @@ export const SyncQRDisplay = ({ channelCode, manejarCopiarCodigo }: SyncQRDispla
           <div className="w-full flex flex-col gap-4 items-center">
             <div className="w-full flex items-center gap-3">
               <div
-                className="flex-1 bg-muted/30 border-2 rounded-2xl py-5 px-6 flex items-center justify-center group hover:bg-muted/50 hover:border-primary/30 transition-all cursor-pointer relative shadow-sm"
+                className="flex-1 bg-muted/30 border rounded-xl py-5 px-6 flex items-center justify-center group hover:bg-muted/50 hover:border-primary/30 transition-all cursor-pointer relative shadow-2xs"
                 onClick={manejarCopiarCodigo}
               >
                 <div className="absolute top-0 left-0 h-full w-1 bg-primary rounded-l-full opacity-0 group-hover:opacity-100 transition-opacity" />

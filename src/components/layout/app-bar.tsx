@@ -1,7 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { PlusCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useActiveGuard } from '@/hooks/guardias';
 import { NotificationBell } from '@/components/layout/notification-bell';
 import { QuickChatSelector } from '@/components/layout/quick-chat-selector';
 import { useMobileNav } from './mobile-nav/use-mobile-nav';
@@ -77,6 +80,8 @@ function getBreadcrumbs(pathname: string): BreadcrumbSegment[] {
 
 export function AppBar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isGuardOpen: guardiaAbierta } = useActiveGuard();
   const {
     profile,
     analyst,
@@ -86,6 +91,15 @@ export function AppBar() {
   } = useMobileNav();
 
   const breadcrumbs = getBreadcrumbs(location.pathname);
+  const isNovedades = location.pathname === '/' || location.pathname === '/novedades';
+
+  const handleNuevo = () => {
+    if (isNovedades) {
+      window.dispatchEvent(new CustomEvent('open-novedades-create'));
+    } else {
+      navigate('/?new=true');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 flex h-16 w-full shrink-0 items-center justify-between border-b border-border/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 sm:px-6 shadow-sm select-none transition-colors duration-200">
@@ -94,7 +108,7 @@ export function AppBar() {
         <Link
           to="/"
           className="flex items-center gap-2.5 group shrink-0 focus-visible:outline-none"
-          title="Minutas — Inicio"
+          title="Minutas: Inicio"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary transition-all duration-200 group-hover:bg-primary/20 group-hover:scale-105 shadow-2xs">
             <img
@@ -112,7 +126,7 @@ export function AppBar() {
           <div className="hidden sm:flex items-center gap-2 min-w-0 animate-in fade-in duration-200">
             {breadcrumbs.map((crumb) => (
               <React.Fragment key={crumb.label}>
-                <span className="text-muted-foreground/30 font-light text-base select-none">/</span>
+                <span className="text-muted-foreground font-light text-base select-none">/</span>
                 {crumb.href ? (
                   <Link
                     to={crumb.href}
@@ -132,19 +146,36 @@ export function AppBar() {
       </div>
 
       {/* Lado derecho:
-          - En escritorio (sm en adelante): Completamente limpio, solo logo y título como solicitado.
-          - En móviles (< sm): Controles esenciales (WhatsApp, notificaciones, perfil) para no perder funcionalidad.
+          - En escritorio: Botón Nuevo con tamaño y proporciones completas si estamos en Novedades
+          - En móviles (< sm): Botón Nuevo si estamos en Novedades + Controles esenciales (WhatsApp, notificaciones, perfil)
       */}
-      <div className="flex items-center gap-1.5 shrink-0 sm:hidden">
-        <QuickChatSelector />
-        <NotificationBell />
-        <NavUserMenu
-          profile={profile}
-          analyst={analyst}
-          displayName={displayName}
-          displayDepartment={displayDepartment}
-          initials={initials}
-        />
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div id="app-bar-actions" className="flex items-center gap-2 empty:hidden" />
+
+        {isNovedades && (
+          <Button
+            size="appbar"
+            onClick={handleNuevo}
+            disabled={!guardiaAbierta}
+            className="shrink-0"
+            title={guardiaAbierta ? 'Crear nueva novedad' : 'Debes abrir una guardia para registrar novedades'}
+          >
+            <PlusCircle className="h-4 w-4 shrink-0" />
+            <span>Nuevo</span>
+          </Button>
+        )}
+
+        <div className="flex items-center gap-1.5 sm:hidden">
+          <QuickChatSelector />
+          <NotificationBell />
+          <NavUserMenu
+            profile={profile}
+            analyst={analyst}
+            displayName={displayName}
+            displayDepartment={displayDepartment}
+            initials={initials}
+          />
+        </div>
       </div>
     </header>
   );

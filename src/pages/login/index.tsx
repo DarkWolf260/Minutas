@@ -159,7 +159,7 @@ export default function LoginPage() {
             </div>
             <Button
               type="submit"
-              className="w-full h-11 rounded-xl font-bold mt-4 shadow-lg shadow-primary/20"
+              className="w-full h-11 rounded-xl font-bold mt-4 shadow-2xs"
               disabled={isSubmitting}
             >
               {isSubmitting ? (

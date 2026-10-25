@@ -89,43 +89,33 @@ export default function AdminDashboardPage() {
 
       <div className="flex-1 overflow-auto p-4 md:p-8 relative">
         <div className="max-w-[1600px] w-full mx-auto space-y-8">
-          {/* Hero Section */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-primary/5 border border-primary/20 p-6 md:p-10 rounded-2xl shadow-sm relative overflow-hidden">
-            <div className="space-y-2 relative">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest mb-2 border border-primary/20">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Acceso de Administrador
-              </div>
-              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground leading-tight">
-                Panel de Control
-              </h1>
+          {/* Admin Status Banner */}
+          <div className="flex items-center justify-between gap-4 bg-primary/5 border border-primary/20 px-6 py-4 rounded-2xl shadow-sm relative overflow-hidden">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest border border-primary/20">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Acceso de Administrador
             </div>
 
-            <div className="flex gap-4 items-center relative">
-              <div className="hidden sm:flex flex-col items-end">
-                <span className="text-[10px] font-bold uppercase text-muted-foreground/60 tracking-tighter">Versión del Sistema</span>
-                <span className="text-sm font-mono font-bold text-primary">v{APP_VERSION}</span>
-              </div>
-              <div className="h-16 w-16 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/20">
-                <Settings className="h-8 w-8" />
-              </div>
+            <div className="flex items-center gap-3">
+              <span className="hidden sm:inline text-[10px] font-bold uppercase text-muted-foreground tracking-tighter">Versión del Sistema:</span>
+              <span className="text-xs font-mono font-bold text-primary">v{APP_VERSION}</span>
             </div>
           </div>
 
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat, i) => (
-              <Card key={i} className="border-muted/50 bg-card shadow-sm rounded-2xl overflow-hidden group hover:border-primary/30 transition-all duration-300">
+              <Card key={i} className="border-border/60 bg-card shadow-2xs rounded-xl overflow-hidden group hover:border-primary/30 transition-colors">
                 <CardContent className="p-6 flex items-center justify-between">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                       {stat.label}
                     </p>
                     <div className="text-3xl font-black tracking-tight flex items-baseline gap-2">
                       {stat.value}
                     </div>
                   </div>
-                  <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-inner", stat.bg, stat.color)}>
+                  <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105", stat.bg, stat.color)}>
                     <stat.icon className="h-6 w-6" />
                   </div>
                 </CardContent>
@@ -193,9 +183,9 @@ interface NavCardProps {
 
 function NavCard({ title, description, icon: Icon, count, label, color, onClick }: NavCardProps) {
   const colorMap = {
-    blue: "border-blue-500/20 hover:border-blue-500/50 bg-blue-500/5 group-hover:bg-blue-500/10",
-    amber: "border-amber-500/20 hover:border-amber-500/50 bg-amber-500/5 group-hover:bg-amber-500/10",
-    emerald: "border-emerald-500/20 hover:border-emerald-500/50 bg-emerald-500/5 group-hover:bg-emerald-500/10"
+    blue: "border-blue-500/20 hover:border-blue-500/50 bg-blue-500/5",
+    amber: "border-amber-500/20 hover:border-amber-500/50 bg-amber-500/5",
+    emerald: "border-emerald-500/20 hover:border-emerald-500/50 bg-emerald-500/5"
   };
 
   const iconColorMap = {
@@ -207,17 +197,17 @@ function NavCard({ title, description, icon: Icon, count, label, color, onClick 
   return (
     <Card
       className={cn(
-        "group relative overflow-hidden transition-all duration-500 cursor-pointer border-muted/50 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] bg-card",
+        "group relative overflow-hidden transition-all duration-200 cursor-pointer border rounded-xl shadow-2xs hover:shadow-xs active:scale-[0.99] bg-card",
         colorMap[color]
       )}
       onClick={onClick}
     >
-      <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500">
+      <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-300">
         <Icon className="h-32 w-32 rotate-12" />
       </div>
 
       <CardHeader className="pb-2 relative">
-        <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center mb-4 shadow-inner bg-muted/50", iconColorMap[color])}>
+        <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-4 bg-muted/50", iconColorMap[color])}>
           <Icon className="h-6 w-6" />
         </div>
         <CardTitle className="text-xl font-bold tracking-tight">{title}</CardTitle>
@@ -234,7 +224,7 @@ function NavCard({ title, description, icon: Icon, count, label, color, onClick 
                 <span className="text-2xl font-black tracking-tighter">
                   {count === null ? '...' : count}
                 </span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Registros</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Registros</span>
               </div>
             ) : (
               <div className="px-2 py-1 rounded-lg bg-background/50 border border-muted/50 text-[10px] font-bold uppercase tracking-widest">
@@ -242,7 +232,7 @@ function NavCard({ title, description, icon: Icon, count, label, color, onClick 
               </div>
             )}
           </div>
-          <div className={cn("h-8 w-8 rounded-full flex items-center justify-center transition-all duration-300 group-hover:translate-x-1", iconColorMap[color])}>
+          <div className={cn("h-8 w-8 rounded-full flex items-center justify-center transition-all duration-200 group-hover:translate-x-1", iconColorMap[color])}>
             <ArrowRight className="h-5 w-5" />
           </div>
         </div>

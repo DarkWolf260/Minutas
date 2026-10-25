@@ -63,6 +63,10 @@ export default {
         md: 'calc(var(--radius) - 6px)',
         sm: 'calc(var(--radius) - 8px)',
       },
+      boxShadow: {
+        '2xs': '0 1px 1px 0 rgba(0, 0, 0, 0.04)',
+        xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+      },
       keyframes: {
         'accordion-down': {
           from: {

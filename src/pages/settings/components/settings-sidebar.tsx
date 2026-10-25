@@ -206,7 +206,7 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = React.memo(({
       {/* Filter / Search Bar */}
       <div className="p-3 border-b bg-card/60">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder="Buscar ajuste..."
             value={search}
@@ -216,7 +216,8 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = React.memo(({
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground"
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-md"
+              aria-label="Limpiar búsqueda"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -229,10 +230,12 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = React.memo(({
         <ScrollArea className="h-full w-full" type="always">
           <div className="p-3 space-y-5 pb-24 sm:pb-8">
             {filteredGroups.length === 0 ? (
-              <div className="py-12 px-4 text-center space-y-2">
-                <Search className="h-7 w-7 text-muted-foreground/30 mx-auto" />
-                <p className="text-sm font-semibold text-muted-foreground">Sin resultados</p>
-                <p className="text-xs text-muted-foreground/60">
+              <div className="py-12 px-4 text-center">
+                <div className="empty-state-icon-box">
+                  <Search className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <h3 className="empty-state-title">Sin resultados</h3>
+                <p className="empty-state-desc">
                   No se encontraron opciones para &quot;{search}&quot;
                 </p>
               </div>
@@ -241,12 +244,12 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = React.memo(({
                 <div key={group.title} className="space-y-1.5">
                   {/* Category separator header matching NovedadSidebar */}
                   <div className="flex items-center gap-2 px-1 mb-2">
-                    <group.icon className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70 truncate">
+                    <group.icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground truncate">
                       {group.title}
                     </span>
                     <div className="flex-1 h-px bg-border/60" />
-                    <span className="text-[10px] text-muted-foreground/40 shrink-0 font-medium">
+                    <span className="text-[10px] text-muted-foreground font-semibold px-1.5 py-0.5 rounded-full bg-muted/60 shrink-0">
                       {group.items.length}
                     </span>
                   </div>
@@ -263,7 +266,7 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = React.memo(({
                           return (
                             <div
                               key={item.id}
-                              className="w-full rounded-2xl p-3 text-left opacity-50 cursor-not-allowed border border-dashed border-border/60 bg-muted/20"
+                              className="w-full rounded-xl p-3 text-left opacity-50 cursor-not-allowed border border-dashed border-border/60 bg-muted/20"
                               title="Acción bloqueada para usuarios en la nube"
                             >
                               <div className="flex w-full items-start gap-3">
@@ -282,7 +285,7 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = React.memo(({
                                       Bloqueado
                                     </Badge>
                                   </div>
-                                  <p className="text-[11px] text-muted-foreground/70 line-clamp-1">
+                                  <p className="text-[11px] text-muted-foreground line-clamp-1">
                                     {item.description}
                                   </p>
                                 </div>
@@ -296,13 +299,13 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = React.memo(({
                             key={item.id}
                             to={item.path}
                             onClick={() => onSelectSection(item.id)}
-                            className="block w-full group rounded-2xl transition-all duration-200 outline-none"
+                            className="block w-full group rounded-xl transition-all duration-200 outline-none"
                           >
                             <div
                               className={cn(
-                                'w-full rounded-2xl p-3 text-left transition-all duration-200 border outline-none',
+                                'w-full rounded-xl p-3 text-left transition-all duration-200 border outline-none',
                                 isSelected
-                                  ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/20 shadow-sm'
+                                  ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/20 shadow-2xs'
                                   : 'border-transparent hover:bg-muted/50 hover:border-border/40'
                               )}
                             >
@@ -311,7 +314,7 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = React.memo(({
                                   className={cn(
                                     'p-2 rounded-xl shrink-0 transition-transform group-hover:scale-105',
                                     isSelected
-                                      ? 'bg-primary text-primary-foreground shadow-sm'
+                                      ? 'bg-primary text-primary-foreground shadow-2xs'
                                       : 'bg-primary/10 text-primary'
                                   )}
                                 >
@@ -342,12 +345,12 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = React.memo(({
                                           'h-3.5 w-3.5 shrink-0 transition-colors',
                                           isSelected
                                             ? 'text-primary'
-                                            : 'text-muted-foreground/40 group-hover:text-foreground'
+                                            : 'text-muted-foreground group-hover:text-foreground'
                                         )}
                                       />
                                     )}
                                   </div>
-                                  <p className="text-[11px] text-muted-foreground/80 line-clamp-2 leading-relaxed">
+                                  <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
                                     {item.description}
                                   </p>
                                 </div>
@@ -364,9 +367,9 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = React.memo(({
                           type="button"
                           onClick={() => onSelectSection(item.id)}
                           className={cn(
-                            'w-full rounded-2xl p-3 text-left transition-all duration-200 group border outline-none',
+                            'w-full rounded-xl p-3 text-left transition-all duration-200 group border outline-none',
                             isSelected
-                              ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/20 shadow-sm'
+                              ? 'bg-primary/5 border-primary/20 ring-1 ring-primary/20 shadow-2xs'
                               : 'border-transparent hover:bg-muted/50 hover:border-border/40'
                           )}
                         >
@@ -375,7 +378,7 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = React.memo(({
                               className={cn(
                                 'p-2 rounded-xl shrink-0 transition-transform group-hover:scale-105',
                                 isSelected
-                                  ? 'bg-primary text-primary-foreground shadow-sm'
+                                  ? 'bg-primary text-primary-foreground shadow-2xs'
                                   : 'bg-primary/10 text-primary'
                               )}
                             >
@@ -400,7 +403,7 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = React.memo(({
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-[11px] text-muted-foreground/80 line-clamp-2 leading-relaxed">
+                              <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
                                 {item.description}
                               </p>
                             </div>

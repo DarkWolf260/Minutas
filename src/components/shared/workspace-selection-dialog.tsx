@@ -86,7 +86,7 @@ export function WorkspaceSelectionDialog() {
                 className={cn(
                   "flex items-center justify-between p-4 rounded-xl border transition-all duration-300 cursor-pointer hover:bg-muted/50 group",
                   isSelected 
-                    ? "border-primary bg-primary/5 shadow-md shadow-primary/5" 
+                    ? "border-primary bg-primary/5 shadow-2xs" 
                     : "border-border/50 bg-card hover:border-border"
                 )}
               >
@@ -127,7 +127,7 @@ export function WorkspaceSelectionDialog() {
           <Button 
             variant="default" 
             onClick={handleConfirm}
-            className="w-full sm:w-auto shadow-lg hover:shadow-primary/20 transition-all duration-300"
+            className="w-full sm:w-auto shadow-2xs"
           >
             Continuar
           </Button>

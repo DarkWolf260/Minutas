@@ -62,10 +62,12 @@ export const SyncInbox = ({ hook }: SyncInboxProps) => {
           </CardHeader>
           <CardContent className="p-0">
             {reportesBandeja.length === 0 ? (
-              <div className="text-center py-12 text-sm text-muted-foreground">
-                <Inbox className="h-10 w-10 mx-auto mb-3 opacity-10" />
-                <p className="font-medium">No hay reportes pendientes</p>
-                <p className="text-[10px] uppercase mt-1 tracking-widest opacity-60">Todo al día</p>
+              <div className="empty-state-container py-12">
+                <div className="empty-state-icon-box">
+                  <Inbox className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="empty-state-title">No hay reportes pendientes</div>
+                <div className="empty-state-description">Todo al día en la bandeja de entrada</div>
               </div>
             ) : (
               <div className="divide-y">
@@ -80,7 +82,7 @@ export const SyncInbox = ({ hook }: SyncInboxProps) => {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold truncate leading-tight">{sr.reportData.title}</p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
-                        <span className="font-bold text-foreground/70">{sr.sourceDevice}</span> ·{' '}
+                        <span className="font-semibold text-foreground">{sr.sourceDevice}</span> ·{' '}
                         {format(new Date(sr.sentAt), "d MMM, HH:mm", { locale: es })}
                       </p>
                     </div>

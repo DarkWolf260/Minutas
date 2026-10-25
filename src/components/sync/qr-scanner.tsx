@@ -72,13 +72,13 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-sm mx-auto">
-      <div className="relative w-full aspect-square bg-black rounded-3xl overflow-hidden border-4 border-muted shadow-2xl">
+      <div className="relative w-full aspect-square bg-black rounded-xl overflow-hidden border-2 border-border shadow-md">
         <div id="qr-reader" className="w-full h-full" />
         
         {!isReady && !error && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm z-10">
             <RefreshCw className="h-8 w-8 text-primary animate-spin mb-3" />
-            <p className="text-xs font-bold text-white/70 animate-pulse">Iniciando cámara...</p>
+            <p className="text-xs font-semibold text-white animate-pulse">Iniciando cámara...</p>
           </div>
         )}
 

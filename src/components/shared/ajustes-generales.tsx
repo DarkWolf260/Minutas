@@ -7,6 +7,7 @@ import { useFieldDefinitions } from '@/hooks/configuracion';
 import { useRoles } from '@/hooks/personal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { AppBarActionPortal } from '@/components/layout/app-bar-action-portal';
 import { toast } from 'sonner';
 import { useSettings } from '@/hooks/configuracion';
 import { useDepartments } from '@/hooks/personal';
@@ -291,16 +292,9 @@ export function AjustesGenerales() {
   if (!definitionsLoaded || !rolesLoaded || !settingsLoaded || !deptsLoaded || !templatesLoaded) {
     return (
       <div className="h-full w-full flex flex-col min-h-0 overflow-hidden bg-background">
-        {/* Header Skeleton */}
-        <div className="border-b shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-card/40 backdrop-blur-sm">
-          <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
-            <div className="space-y-1.5">
-              <Skeleton className="h-7 w-52" />
-              <Skeleton className="h-4 w-80" />
-            </div>
-            <Skeleton className="h-9 w-24 rounded-xl" />
-          </div>
-        </div>
+        <AppBarActionPortal>
+          <Skeleton className="h-9 w-24 rounded-xl" />
+        </AppBarActionPortal>
 
         {/* Content Skeleton */}
         <div className="flex-1 overflow-hidden p-4 sm:px-6 lg:px-8 py-6">
@@ -327,30 +321,18 @@ export function AjustesGenerales() {
 
   return (
     <div className="h-full w-full flex flex-col min-h-0 overflow-hidden bg-background">
-      {/* Header fijo centrado */}
-      <div className="border-b shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-card/40 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
-              <Settings2 className="h-6 w-6 text-primary" />
-              Ajustes Generales
-            </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              Define los valores globales que se utilizarán automáticamente en tus reportes.
-            </p>
-          </div>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            size="sm"
-            className="h-9 px-4 shrink-0 shadow-xs font-bold gap-2 rounded-xl"
-            title="Guardar Configuración"
-          >
-            <Save className="h-4 w-4" />
-            <span className="hidden sm:inline">{isSaving ? 'Guardando...' : 'Guardar'}</span>
-          </Button>
-        </div>
-      </div>
+      <AppBarActionPortal>
+        <Button
+          onClick={handleSave}
+          disabled={isSaving}
+          size="sm"
+          className="h-9 px-4 shrink-0 shadow-xs font-bold gap-2 rounded-xl"
+          title="Guardar Configuración"
+        >
+          <Save className="h-4 w-4" />
+          <span className="hidden sm:inline">{isSaving ? 'Guardando...' : 'Guardar'}</span>
+        </Button>
+      </AppBarActionPortal>
 
       <ScrollArea className="flex-1 min-h-0" type="always">
         <div className="max-w-4xl mx-auto w-full p-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-32">

@@ -25,7 +25,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Download,
-  Layers
+  Layers,
+  Loader2
 } from 'lucide-react';
 import { useTemplates } from '@/hooks/plantillas';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
@@ -133,7 +134,7 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
       )}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
+            <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-2xs shrink-0">
               <CloudDownload className="h-6 w-6 text-primary-foreground" />
             </div>
             <div className="min-w-0">
@@ -183,29 +184,31 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
         <ScrollArea className="flex-1">
           <div className="p-4 sm:p-6 space-y-3">
             {error ? (
-              <div className="py-20 text-center flex flex-col items-center justify-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
-                  <AlertCircle className="h-8 w-8 text-destructive" />
+              <div className="empty-state-container py-16">
+                <div className="empty-state-icon-box bg-destructive/10 text-destructive">
+                  <AlertCircle className="h-6 w-6" />
                 </div>
-                <div className="space-y-1 p-4">
-                  <p className="font-bold text-lg text-foreground">Error de conexión</p>
-                  <p className="text-sm text-muted-foreground max-w-[250px] mx-auto leading-tight">{error}</p>
-                </div>
-                <Button variant="outline" onClick={() => refetch()} className="rounded-xl px-8">
+                <div className="empty-state-title">Error de conexión</div>
+                <div className="empty-state-description max-w-[280px]">{error}</div>
+                <Button variant="outline" onClick={() => refetch()} className="rounded-xl px-8 mt-2">
                   Reintentar
                 </Button>
               </div>
             ) : loading && cloudTemplates.length === 0 ? (
-              <div className="py-20 text-center flex flex-col items-center justify-center gap-4">
-                <RefreshCw className="h-12 w-12 text-primary opacity-20 animate-spin" />
-                <p className="text-sm font-medium text-muted-foreground">Sincronizando...</p>
+              <div className="empty-state-container py-16">
+                <div className="empty-state-icon-box">
+                  <Loader2 className="h-6 w-6 text-primary animate-spin" />
+                </div>
+                <div className="empty-state-title">Sincronizando...</div>
+                <div className="empty-state-description">Buscando plantillas en la nube</div>
               </div>
             ) : cloudTemplates.length === 0 ? (
-              <div className="py-20 text-center flex flex-col items-center justify-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-                  <FileText className="h-8 w-8 text-muted-foreground opacity-30" />
+              <div className="empty-state-container py-16">
+                <div className="empty-state-icon-box">
+                  <FileText className="h-6 w-6 text-muted-foreground" />
                 </div>
-                <p className="text-sm text-muted-foreground">No hay plantillas nuevas.</p>
+                <div className="empty-state-title">No hay plantillas nuevas</div>
+                <div className="empty-state-description">Todas las plantillas disponibles ya están instaladas o no hay registros</div>
               </div>
             ) : (
               <div className="grid gap-3">
@@ -218,8 +221,8 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
                     <div
                       key={template.id}
                       className={cn(
-                        "group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border bg-card transition-all duration-200 gap-4",
-                        "hover:shadow-md hover:border-primary/30",
+                        "group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border bg-card transition-all duration-200 gap-4",
+                        "hover:shadow-xs hover:border-primary/30",
                         isDownloaded && "border-green-500/20 bg-green-500/[0.02]"
                       )}
                     >
@@ -258,7 +261,7 @@ export function CloudTemplatesDialog({ open, onOpenChange }: CloudTemplatesDialo
                         disabled={isDownloading || isBulkDownloading}
                         className={cn(
                           "rounded-xl font-bold text-xs h-10 sm:h-9 px-6 sm:px-4 transition-all w-full sm:w-auto",
-                          isDownloaded ? "border-green-500/30 text-green-700 hover:bg-green-500/10" : "shadow-lg shadow-primary/20"
+                          isDownloaded ? "border-green-500/30 text-green-700 hover:bg-green-500/10" : "shadow-2xs"
                         )}
                         onClick={() => handleDownload(template)}
                       >
