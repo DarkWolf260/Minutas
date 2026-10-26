@@ -25,6 +25,7 @@ const defaultSettings: AppSettings = {
   pinned_template_ids: [],
   grouped_template_ids: [],
   whatsapp_chat_position: 'sidebar',
+  whatsapp_recipient_groups: [],
 };
 
 export function useSettings() {
@@ -66,6 +67,9 @@ export function useSettings() {
         sanitized.disabled_modules = d.disabled_modules || d.disabledModules;
         sanitized.reportarole_ids = d.reportarole_ids || d.reportaroleIds || [];
         sanitized.whatsapp_default_chat_ids = d.whatsapp_default_chat_ids || d.whatsappDefaultChatIds || [];
+        sanitized.whatsapp_recipient_groups = Array.isArray(d.whatsapp_recipient_groups) 
+          ? d.whatsapp_recipient_groups 
+          : (Array.isArray(d.whatsappRecipientGroups) ? d.whatsappRecipientGroups : []);
         sanitized.whatsapp_local_url = d.whatsapp_local_url || d.whatsappLocalUrl || '';
         sanitized.final_report_statistics = d.final_report_statistics || d.finalReportStatistics || '';
         sanitized.group_consecutive_reports = d.group_consecutive_reports !== undefined ? d.group_consecutive_reports : false;

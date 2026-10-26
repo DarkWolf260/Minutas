@@ -22,16 +22,14 @@ import { useNavigate } from 'react-router-dom';
 function ChatAvatar({ chat }: { chat: ChatItem }) {
   const [hasError, setHasError] = useState(false);
 
-  const targetAvatarUrl = chat.avatarUrl || (chat.id ? `/api/whatsapp/chats/${encodeURIComponent(chat.id)}/avatar.jpg` : null);
-
   useEffect(() => {
     setHasError(false);
-  }, [chat.id, targetAvatarUrl]);
+  }, [chat.id, chat.avatarUrl]);
 
-  if (targetAvatarUrl && !hasError) {
+  if (chat.avatarUrl && !hasError) {
     return (
       <img
-        src={targetAvatarUrl}
+        src={chat.avatarUrl}
         alt={chat.name}
         className="w-full h-full object-cover"
         onError={() => setHasError(true)}
@@ -72,6 +70,7 @@ export function WhatsAppChatHeader({
     refreshMessages,
     reports
   } = chatHook;
+
 
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');

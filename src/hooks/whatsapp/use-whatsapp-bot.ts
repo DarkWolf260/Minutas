@@ -9,6 +9,8 @@ export interface WhatsAppChat {
   name: string;
   isGroup: boolean;
   avatarUrl?: string | null;
+  timestamp?: number;
+  unreadCount?: number;
 }
 
 export interface WhatsAppLocation {

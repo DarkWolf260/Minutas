@@ -88,7 +88,7 @@ export function useWhatsAppChat({
       id: c.id,
       name: c.name || c.id,
       isGroup: c.isGroup,
-      avatarUrl: c.avatarUrl || `/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg`
+      avatarUrl: c.avatarUrl || null
     }));
   }, [bot.chats, settings?.whatsapp_default_chat_ids]);
 

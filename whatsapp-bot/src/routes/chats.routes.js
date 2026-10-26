@@ -54,8 +54,11 @@ router.get('/:chatId/avatar.jpg', async (req, res) => {
 
   const { status, contentType, data } = await getChatAvatarBinary(decodedId);
   if (status === 404) {
-    res.setHeader('Cache-Control', 'public, max-age=1800');
-    return res.status(404).send(data);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Content-Type', 'image/png');
+    // Pixel transparente 1x1 para evitar errores 404 en la consola del navegador
+    const transparentPixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
+    return res.status(200).send(transparentPixel);
   }
   res.setHeader('Cache-Control', 'public, max-age=86400');
   res.setHeader('Content-Type', contentType);

@@ -210,7 +210,8 @@ async function fetchChats(requestedWorkspace) {
               id: c.id,
               name: c.name,
               isGroup: c.isGroup,
-              avatarUrl: `/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg`
+              timestamp: c.timestamp || 0,
+              avatarUrl: c.directPicUrl ? `/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg` : null
             };
           });
       }
@@ -236,17 +237,24 @@ async function fetchChats(requestedWorkspace) {
           })
           .map(chat => {
             const id = chat.id?._serialized || (typeof chat.id === 'string' ? chat.id : '');
+            const hasAvatar = Boolean(state.avatarCache.get(id));
             return {
               id,
               name: chat.name || chat.formattedTitle || (id.endsWith('@g.us') ? 'Grupo' : 'Contacto'),
               isGroup: Boolean(chat.isGroup),
-              avatarUrl: `/api/whatsapp/chats/${encodeURIComponent(id)}/avatar.jpg`
+              timestamp: chat.timestamp || 0,
+              avatarUrl: hasAvatar ? `/api/whatsapp/chats/${encodeURIComponent(id)}/avatar.jpg` : null
             };
           });
       }
     } catch (err) {
       console.warn(`[Chats] client.getChats() omitido: ${err?.message || err}`);
     }
+  }
+
+  // Ordenar chats por los más recientes (timestamp descendente)
+  if (Array.isArray(formattedChats)) {
+    formattedChats.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
   }
 
   // 3. Para los chats individuales cuyo nombre quedó como número de teléfono, resolver nombre real
@@ -314,9 +322,13 @@ async function fetchChats(requestedWorkspace) {
       }
     });
 
-    // Asignar endpoint de avatares a todos los chats
+    // Asignar endpoint de avatares solo a chats con foto de perfil conocida
     formattedChats.forEach(c => {
-      c.avatarUrl = `/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg`;
+      if (c.directPicUrl || state.avatarCache.get(c.id)) {
+        c.avatarUrl = `/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg`;
+      } else {
+        c.avatarUrl = null;
+      }
     });
 
     // Resolver de inmediato los primeros 40 chats activos para que tengan respuesta instantánea

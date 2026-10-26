@@ -87,15 +87,17 @@ export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewer
     }
   };
 
-  const handleWhatsAppSchedule = async (scheduledTime: Date) => {
+  const handleWhatsAppSchedule = async (scheduledTime: Date, targetChatIds?: string[]) => {
     if (!report || !formRef.current) return;
     const content = formRef.current.getRenderedContent();
     const photos = formRef.current.getPhotos() || [];
-    const chatIds = settings?.whatsapp_default_chat_ids || [];
+    const chatIds = targetChatIds && targetChatIds.length > 0
+      ? targetChatIds
+      : (settings?.whatsapp_default_chat_ids || []);
     
     if (chatIds.length === 0) {
-      toast.error('No has configurado grupos destino.', { 
-        description: 'Ve a Configuración > Sincronización para seleccionar al menos un chat.' 
+      toast.error('No has seleccionado destinatarios.', { 
+        description: 'Selecciona al menos un chat destinatario para programar el envío.' 
       });
       return;
     }
