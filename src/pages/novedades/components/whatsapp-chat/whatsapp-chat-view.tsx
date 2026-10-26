@@ -88,6 +88,28 @@ export function WhatsAppChatView({
     setShowScrollBottom(!isNearBottom);
   };
 
+  // Mapa de nombres de contactos reales obtenidos desde bot.chats
+  const contactNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    if (bot.chats && bot.chats.length > 0) {
+      bot.chats.forEach(c => {
+        if (c.id && c.name && !/^\+?\d{7,}$/.test(c.name.replace(/[\s\-\(\)]/g, ''))) {
+          const clean = c.name.trim();
+          map.set(c.id, clean);
+          if (c.id.includes('@')) {
+            const u = c.id.split('@')[0];
+            if (u) {
+              map.set(`${u}@c.us`, clean);
+              map.set(`${u}@lid`, clean);
+              map.set(u, clean);
+            }
+          }
+        }
+      });
+    }
+    return map;
+  }, [bot.chats]);
+
   return (
     <div
       className={cn(
@@ -190,6 +212,7 @@ export function WhatsAppChatView({
               key={msg.id}
               message={msg}
               isGroup={Boolean(currentChat?.isGroup)}
+              contactNameMap={contactNameMap}
             />
           ))
         )}

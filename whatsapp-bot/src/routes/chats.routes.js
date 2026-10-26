@@ -49,11 +49,15 @@ router.get('/:chatId/messages', async (req, res) => {
 });
 
 router.get('/:chatId/avatar.jpg', async (req, res) => {
-  res.setHeader('Cache-Control', 'public, max-age=86400');
   const { chatId } = req.params;
   const decodedId = decodeURIComponent(chatId);
 
-  const { contentType, data } = await getChatAvatarBinary(decodedId);
+  const { status, contentType, data } = await getChatAvatarBinary(decodedId);
+  if (status === 404) {
+    res.setHeader('Cache-Control', 'public, max-age=1800');
+    return res.status(404).send(data);
+  }
+  res.setHeader('Cache-Control', 'public, max-age=86400');
   res.setHeader('Content-Type', contentType);
   return res.send(data);
 });

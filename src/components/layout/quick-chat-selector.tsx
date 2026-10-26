@@ -87,6 +87,16 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
   // Filter groups and contacts
   const searchQueryNorm = normalizeString(searchQuery);
   const filteredChats = bot.chats.filter(c => {
+    if (!c.id) return false;
+    const lower = c.id.toLowerCase().trim();
+    if (
+      lower === 'status@broadcast' ||
+      lower.startsWith('status@') ||
+      lower.includes('@broadcast') ||
+      lower.includes('@newsletter')
+    ) {
+      return false;
+    }
     if (!searchQueryNorm) return true;
     return (
       normalizeString(c.name || '').includes(searchQueryNorm) ||

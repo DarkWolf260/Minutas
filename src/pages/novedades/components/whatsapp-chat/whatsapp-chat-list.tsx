@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search,
   Users,
@@ -9,7 +9,8 @@ import {
   MessageSquare,
   AlertCircle,
   Loader2,
-  Check
+  Check,
+  PanelRightClose
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -23,16 +24,23 @@ interface WhatsAppChatListProps {
   bot: ReturnType<typeof useWhatsAppBot>;
   activeChatId: string | null;
   onSelectChat: (chatId: string) => void;
+  onToggleCollapse?: () => void;
   className?: string;
 }
 
 function ChatAvatarItem({ chat }: { chat: WhatsAppChat }) {
   const [hasError, setHasError] = useState(false);
 
-  if (chat.avatarUrl && !hasError) {
+  const targetAvatarUrl = chat.avatarUrl || (chat.id ? `/api/whatsapp/chats/${encodeURIComponent(chat.id)}/avatar.jpg` : null);
+
+  useEffect(() => {
+    setHasError(false);
+  }, [chat.id, targetAvatarUrl]);
+
+  if (targetAvatarUrl && !hasError) {
     return (
       <img
-        src={chat.avatarUrl}
+        src={targetAvatarUrl}
         alt={chat.name}
         className="w-full h-full object-cover rounded-full"
         onError={() => setHasError(true)}
@@ -51,6 +59,7 @@ export function WhatsAppChatList({
   bot,
   activeChatId,
   onSelectChat,
+  onToggleCollapse,
   className
 }: WhatsAppChatListProps) {
   const [search, setSearch] = useState('');
@@ -70,6 +79,16 @@ export function WhatsAppChatList({
 
   const searchNorm = normalizeString(search);
   const filteredChats = (bot.chats || []).filter(c => {
+    if (!c.id) return false;
+    const lower = c.id.toLowerCase().trim();
+    if (
+      lower === 'status@broadcast' ||
+      lower.startsWith('status@') ||
+      lower.includes('@broadcast') ||
+      lower.includes('@newsletter')
+    ) {
+      return false;
+    }
     if (!searchNorm) return true;
     return (
       normalizeString(c.name || '').includes(searchNorm) ||
@@ -96,16 +115,29 @@ export function WhatsAppChatList({
             )}
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleRefresh}
-            disabled={!bot.isAvailable || isRefreshing}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-full"
-            title="Actualizar lista de chats"
-          >
-            <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              disabled={!bot.isAvailable || isRefreshing}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-full"
+              title="Actualizar lista de chats"
+            >
+              <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+            </Button>
+            {onToggleCollapse && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onToggleCollapse}
+                title="Ocultar panel lateral"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-full"
+              >
+                <PanelRightClose className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Buscador */}

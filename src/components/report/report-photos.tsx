@@ -651,7 +651,7 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
 
       {/* ── Lightbox ─────────────────────────────────────────────────────────── */}
       <Dialog open={!!selectedPhoto} onOpenChange={(open) => !open && setSelectedPhoto(null)}>
-        <DialogContent className="max-w-[90vw] md:max-w-4xl p-0 border border-muted/20 bg-background/95 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <DialogContent hideCloseButton className="max-w-[90vw] md:max-w-4xl p-0 border border-muted/20 bg-background/95 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
           <DialogHeader className="p-4 border-b border-muted/10 absolute top-0 left-0 right-0 bg-background/80 backdrop-blur-md z-10 flex flex-row items-center justify-between">
             <DialogTitle className="text-sm font-semibold truncate pr-8">
               {selectedPhoto?.description || selectedPhoto?.name || 'Vista previa de evidencia'}

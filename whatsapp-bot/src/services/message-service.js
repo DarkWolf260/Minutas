@@ -7,7 +7,7 @@ const { extractLocation } = require('../utils/location');
 
 const MAX_MEDIA_CACHE = 100;
 
-async function resolveQuotedMsg(msg, isGroupChat) {
+async function resolveQuotedMsg(msg, isGroupChat, knownContactMap) {
   try {
     let qData = msg._data?.quotedMsg;
     let quotedMessageInstance = null;
@@ -40,17 +40,23 @@ async function resolveQuotedMsg(msg, isGroupChat) {
 
     // Remitente del mensaje citado
     let qSenderName = null;
+    const rawAuthor = quotedMessageInstance?.author || qData?.author || qData?.from || quotedMessageInstance?.from;
+    const qAuthorId = extractWidString(rawAuthor);
+
     if (qFromMe) {
       qSenderName = 'Tú';
     } else {
-      let rawAuthor = quotedMessageInstance?.author || qData?.author || qData?.from || quotedMessageInstance?.from;
-      let qAuthorId = extractWidString(rawAuthor);
-
-      if (qAuthorId && state.contactNameCache.has(qAuthorId)) {
-        qSenderName = state.contactNameCache.get(qAuthorId);
-      } else if (qAuthorId && typeof qAuthorId === 'string' && qAuthorId.includes('@')) {
-        const u = qAuthorId.split('@')[0];
-        qSenderName = state.contactNameCache.get(`${u}@c.us`) || state.contactNameCache.get(`${u}@lid`);
+      if (qAuthorId) {
+        if (knownContactMap && knownContactMap.has(qAuthorId)) {
+          qSenderName = knownContactMap.get(qAuthorId);
+        } else if (state.contactNameCache.has(qAuthorId)) {
+          qSenderName = state.contactNameCache.get(qAuthorId);
+        } else if (typeof qAuthorId === 'string' && qAuthorId.includes('@')) {
+          const u = qAuthorId.split('@')[0];
+          qSenderName = (knownContactMap && (knownContactMap.get(`${u}@c.us`) || knownContactMap.get(`${u}@lid`) || knownContactMap.get(u)))
+            || state.contactNameCache.get(`${u}@c.us`)
+            || state.contactNameCache.get(`${u}@lid`);
+        }
       }
 
       const explicitName = qData?.notifyName || quotedMessageInstance?._data?.notifyName || quotedMessageInstance?._data?.name;
@@ -63,9 +69,17 @@ async function resolveQuotedMsg(msg, isGroupChat) {
 
       if (!qSenderName && qAuthorId && typeof qAuthorId === 'string' && qAuthorId.includes('@')) {
         const raw = qAuthorId.split('@')[0];
-        qSenderName = /^\d{7,15}$/.test(raw) ? `+${raw}` : raw;
+        if (qAuthorId.endsWith('@lid')) {
+          qSenderName = explicitName || 'Contacto';
+        } else {
+          qSenderName = /^\d{7,15}$/.test(raw) ? `+${raw}` : raw;
+        }
       } else if (qAuthorId) {
-        qSenderName = String(qAuthorId);
+        if (typeof qAuthorId === 'string' && qAuthorId.includes('@lid')) {
+          qSenderName = explicitName || 'Contacto';
+        } else {
+          qSenderName = String(qAuthorId);
+        }
       } else {
         qSenderName = 'Contacto';
       }
@@ -140,6 +154,8 @@ async function resolveQuotedMsg(msg, isGroupChat) {
       body: qBody,
       type: qType,
       fromMe: qFromMe,
+      author: qAuthorId || null,
+      from: qAuthorId || null,
       senderName: qSenderName || (qFromMe ? 'Tú' : 'Contacto'),
       hasMedia: qHasMedia,
       thumbnail: qThumbnail,
@@ -168,38 +184,66 @@ async function fetchChatMessages(targetChatId, limit = 50) {
   }
 
   const messages = await chat.fetchMessages({ limit });
+  const isGroupChat = Boolean(chat.isGroup || (typeof targetChatId === 'string' && targetChatId.endsWith('@g.us')));
 
-  // 1. Guardar en caché nombres reales ya presentes en los mensajes
-  messages.forEach(msg => {
-    const authorId = extractWidString(msg.author || msg.from);
-    const explicitName = msg._data?.notifyName || msg._data?.name;
-    if (authorId && explicitName && typeof explicitName === 'string' && explicitName.trim()) {
-      const cleanName = explicitName.trim();
-      if (!/^\+?\d{7,}$/.test(cleanName.replace(/[\s\-\(\)]/g, ''))) {
-        state.contactNameCache.set(authorId, cleanName);
-        if (typeof authorId === 'string' && authorId.includes('@')) {
-          const u = authorId.split('@')[0];
-          state.contactNameCache.set(`${u}@c.us`, cleanName);
-          state.contactNameCache.set(`${u}@lid`, cleanName);
+  // 1. Mapa de nombres de contactos conocidos desde la libreta de contactos cargada en chat-service
+  const knownContactMap = new Map();
+  if (state.cachedChats && state.cachedChats.length > 0) {
+    state.cachedChats.forEach(c => {
+      if (c.id && c.name && !/^\+?\d{7,}$/.test(c.name.replace(/[\s\-\(\)]/g, ''))) {
+        const clean = c.name.trim();
+        knownContactMap.set(c.id, clean);
+        if (typeof c.id === 'string' && c.id.includes('@')) {
+          const u = c.id.split('@')[0];
+          knownContactMap.set(`${u}@c.us`, clean);
+          knownContactMap.set(`${u}@lid`, clean);
+          knownContactMap.set(u, clean);
         }
       }
+    });
+  }
+
+  // Si es un chat individual (1-on-1), el nombre del interlocutor es el nombre asignado al chat
+  if (!isGroupChat && chat.name && !/^\+?\d{7,}$/.test(chat.name.replace(/[\s\-\(\)]/g, ''))) {
+    const directName = chat.name.trim();
+    const directId = extractWidString(targetChatId);
+    if (directId) {
+      knownContactMap.set(directId, directName);
+      if (directId.includes('@')) {
+        const u = directId.split('@')[0];
+        knownContactMap.set(`${u}@c.us`, directName);
+        knownContactMap.set(`${u}@lid`, directName);
+        knownContactMap.set(u, directName);
+      }
     }
+  }
+
+  // 2. Extraer todos los autores de los mensajes (incluyendo citados) para resolver sus nombres de agenda
+  const directAuthorIds = messages
+    .filter(m => !m.fromMe)
+    .map(m => extractWidString(m.author || m.from))
+    .filter(Boolean);
+
+  const quotedAuthorIds = messages
+    .map(m => {
+      const q = m._data?.quotedMsg;
+      if (!q) return null;
+      if (q.fromMe || q.id?.fromMe) return null;
+      return extractWidString(q.author || q.from);
+    })
+    .filter(Boolean);
+
+  const allAuthorIds = [...new Set([...directAuthorIds, ...quotedAuthorIds])];
+
+  // Autores que aún no están en knownContactMap ni en state.contactNameCache con nombre de agenda
+  const authorsToResolve = allAuthorIds.filter(id => {
+    if (knownContactMap.has(id)) return false;
+    const cached = state.contactNameCache.get(id);
+    return !cached || /^\+?\d{7,}$/.test(cached.replace(/[\s\-\(\)]/g, ''));
   });
 
-  // 2. Identificar autores que aún no tienen un nombre real en caché
-  const unresolvedAuthors = [...new Set(
-    messages
-      .filter(m => !m.fromMe)
-      .map(m => extractWidString(m.author || m.from))
-      .filter(Boolean)
-      .filter(id => {
-        const cached = state.contactNameCache.get(id);
-        return !cached || /^\+?\d{7,}$/.test(cached.replace(/[\s\-\(\)]/g, ''));
-      })
-  )];
-
-  // 3. Resolución en bloque a través de la memoria de WhatsApp Web (Puppeteer)
-  if (unresolvedAuthors.length > 0 && state.client.pupPage) {
+  // 3. Resolución prioritaria en memoria de WhatsApp Web (Store.Contact de Puppeteer)
+  if (authorsToResolve.length > 0 && state.client.pupPage) {
     try {
       const resolvedMap = await state.client.pupPage.evaluate((ids) => {
         const res = {};
@@ -216,25 +260,57 @@ async function fetchChatMessages(targetChatId, limit = 50) {
                 const user = id.split('@')[0];
                 contact = contactCollection.get(`${user}@c.us`) || contactCollection.get(`${user}@lid`);
               }
+              if (!contact && typeof id === 'string' && id.endsWith('@lid') && contactCollection.getModelsArray) {
+                contact = contactCollection.getModelsArray().find(c => {
+                  const cLid = c.lid?._serialized || (typeof c.lid === 'string' ? c.lid : '');
+                  return cLid === id;
+                });
+              }
             }
             if (contact) {
-              const name = (ContactGetters && ContactGetters.getName ? ContactGetters.getName(contact) : null)
+              // PRIORIDAD 1: Nombre guardado en la libreta de contactos (contact.name o ContactGetters.getName)
+              const addressBookName = (ContactGetters && ContactGetters.getName ? ContactGetters.getName(contact) : null)
                 || contact.name
                 || contact.formattedName
-                || contact.displayName
-                || (ContactGetters && ContactGetters.getPushname ? ContactGetters.getPushname(contact) : null)
+                || contact.displayName;
+
+              // PRIORIDAD 2: Pushname configurado por el remitente
+              const pushName = (ContactGetters && ContactGetters.getPushname ? ContactGetters.getPushname(contact) : null)
                 || contact.pushname
                 || contact.notifyName
                 || (ContactGetters && ContactGetters.getVerifiedName ? ContactGetters.getVerifiedName(contact) : null)
                 || contact.verifiedName;
-              if (name && typeof name === 'string' && name.trim()) {
-                res[id] = name.trim();
+
+              const chosen = addressBookName || pushName;
+              if (chosen && typeof chosen === 'string' && chosen.trim()) {
+                res[id] = chosen.trim();
+              } else if (contact.id?._serialized || contact.id?.user) {
+                const rawUser = contact.id?.user || contact.id?._serialized?.split('@')[0];
+                if (rawUser && /^\d{7,15}$/.test(rawUser)) {
+                  res[id] = `+${rawUser}`;
+                }
               }
+            } else if (typeof id === 'string' && id.endsWith('@lid')) {
+              // Intento de resolución de LID a través de WWebJS
+              try {
+                const lidRes = window.WWebJS?.enforceLidAndPnRetrieval?.(id);
+                const phone = lidRes?.phone?._serialized || (lidRes?.phone?.user ? `${lidRes.phone.user}@c.us` : null);
+                if (phone) {
+                  const phoneUser = phone.split('@')[0];
+                  const phoneContact = contactCollection?.get?.(phone);
+                  const pnName = phoneContact?.name || phoneContact?.pushname;
+                  if (pnName) {
+                    res[id] = pnName;
+                  } else if (phoneUser && /^\d{7,15}$/.test(phoneUser)) {
+                    res[id] = `+${phoneUser}`;
+                  }
+                }
+              } catch (_) {}
             }
           } catch (e) {}
         });
         return res;
-      }, unresolvedAuthors);
+      }, authorsToResolve);
 
       if (resolvedMap && typeof resolvedMap === 'object') {
         for (const [id, name] of Object.entries(resolvedMap)) {
@@ -253,17 +329,18 @@ async function fetchChatMessages(targetChatId, limit = 50) {
     }
   }
 
-  // 4. Fallback con client.getContactById
-  const stillUnresolved = unresolvedAuthors.filter(id => {
+  // 4. Fallback con client.getContactById para contactos que sigan sin nombre
+  const stillUnresolved = authorsToResolve.filter(id => {
+    if (knownContactMap.has(id)) return false;
     const cached = state.contactNameCache.get(id);
     return !cached || /^\+?\d{7,}$/.test(cached.replace(/[\s\-\(\)]/g, ''));
   });
 
   if (stillUnresolved.length > 0) {
-    await Promise.all(stillUnresolved.slice(0, 15).map(async (id) => {
+    await Promise.all(stillUnresolved.slice(0, 50).map(async (id) => {
       try {
         const contact = await state.client.getContactById(id);
-        const name = contact?.name || contact?.pushname || contact?.shortName || contact?.verifiedName;
+        const name = contact?.name || contact?.shortName || contact?.pushname || contact?.verifiedName;
         if (name && typeof name === 'string' && name.trim() && !/^\+?\d{7,}$/.test(name.replace(/[\s\-\(\)]/g, ''))) {
           state.contactNameCache.set(id, name.trim());
           if (typeof id === 'string' && id.includes('@')) {
@@ -275,8 +352,6 @@ async function fetchChatMessages(targetChatId, limit = 50) {
       } catch (err) {}
     }));
   }
-
-  const isGroupChat = Boolean(chat.isGroup || (typeof targetChatId === 'string' && targetChatId.endsWith('@g.us')));
 
   const formatted = await Promise.all(messages.map(async (msg) => {
     const msgId = msg.id?._serialized || msg.id?.$1 || (typeof msg.id === 'string' ? msg.id : msg.id?.id) || String(Date.now());
@@ -326,20 +401,38 @@ async function fetchChatMessages(targetChatId, limit = 50) {
       senderName = 'Tú';
     } else {
       const authorId = extractWidString(msg.author || msg.from);
-      let cached = authorId ? state.contactNameCache.get(authorId) : null;
-      if (!cached && authorId && typeof authorId === 'string' && authorId.includes('@')) {
-        const u = authorId.split('@')[0];
-        cached = state.contactNameCache.get(`${u}@c.us`) || state.contactNameCache.get(`${u}@lid`);
-      }
-      const notify = msg._data?.notifyName || msg._data?.name;
+      let foundName = null;
 
-      if (cached && !/^\+?\d{7,}$/.test(cached.replace(/[\s\-\(\)]/g, ''))) {
-        senderName = cached;
-      } else if (notify && typeof notify === 'string' && notify.trim() && !/^\+?\d{7,}$/.test(notify.replace(/[\s\-\(\)]/g, ''))) {
-        senderName = notify.trim();
-      } else if (cached) {
-        senderName = cached;
-      } else if (authorId && typeof authorId === 'string' && authorId.includes('@')) {
+      // 1. Primero consultar knownContactMap (libreta de contactos de chat-service)
+      if (authorId) {
+        foundName = knownContactMap.get(authorId);
+        if (!foundName && authorId.includes('@')) {
+          const u = authorId.split('@')[0];
+          foundName = knownContactMap.get(`${u}@c.us`) || knownContactMap.get(`${u}@lid`) || knownContactMap.get(u);
+        }
+      }
+
+      // 2. Si no, consultar contactNameCache (Store.Contact de Puppeteer / getContactById)
+      if (!foundName && authorId) {
+        foundName = state.contactNameCache.get(authorId);
+        if (!foundName && authorId.includes('@')) {
+          const u = authorId.split('@')[0];
+          foundName = state.contactNameCache.get(`${u}@c.us`) || state.contactNameCache.get(`${u}@lid`);
+        }
+      }
+
+      // 3. Si no, usar pushname del mensaje (notifyName)
+      const notify = msg._data?.notifyName || msg._data?.name;
+      if (!foundName && notify && typeof notify === 'string' && notify.trim() && !/^\+?\d{7,}$/.test(notify.replace(/[\s\-\(\)]/g, ''))) {
+        foundName = notify.trim();
+      }
+
+      // 4. Formatear
+      if (foundName && !/^\+?\d{7,}$/.test(foundName.replace(/[\s\-\(\)]/g, ''))) {
+        senderName = foundName;
+      } else if (authorId && authorId.endsWith('@lid')) {
+        senderName = notify || 'Contacto';
+      } else if (authorId && authorId.includes('@')) {
         const raw = authorId.split('@')[0];
         senderName = /^\d{7,15}$/.test(raw) ? `+${raw}` : raw;
       } else {
@@ -350,7 +443,7 @@ async function fetchChatMessages(targetChatId, limit = 50) {
     let quotedMsg = null;
     const hasQuotedMsg = Boolean(msg.hasQuotedMsg || msg._data?.quotedMsg);
     if (!isRevoked && hasQuotedMsg) {
-      quotedMsg = await resolveQuotedMsg(msg, isGroupChat);
+      quotedMsg = await resolveQuotedMsg(msg, isGroupChat, knownContactMap);
     }
 
     const hasMedia = !isRevoked && (msg.hasMedia || ['image', 'video', 'document', 'audio', 'ptt', 'sticker'].includes(msg.type));
@@ -370,7 +463,7 @@ async function fetchChatMessages(targetChatId, limit = 50) {
       mediaUrl,
       thumbnail,
       location,
-      ack: msg.ack || 0,
+      ack: typeof msg.ack === 'number' ? msg.ack : (typeof msg._data?.ack === 'number' ? msg._data.ack : 0),
       isRevoked,
       hasQuotedMsg: Boolean(quotedMsg),
       quotedMsg

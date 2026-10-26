@@ -240,6 +240,8 @@ export function SyncWhatsApp() {
                     <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Grupos</div>
                     {bot.chats.filter(c => {
                       if (!c.isGroup) return false;
+                      const lower = (c.id || '').toLowerCase().trim();
+                      if (lower === 'status@broadcast' || lower.startsWith('status@') || lower.includes('@broadcast') || lower.includes('@newsletter')) return false;
                       const norm = normalizeString(searchQuery);
                       if (!norm) return true;
                       return normalizeString(c.name || '').includes(norm) || normalizeString(c.id || '').includes(norm);
@@ -271,6 +273,8 @@ export function SyncWhatsApp() {
                     <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-3">Contactos</div>
                     {bot.chats.filter(c => {
                       if (c.isGroup) return false;
+                      const lower = (c.id || '').toLowerCase().trim();
+                      if (lower === 'status@broadcast' || lower.startsWith('status@') || lower.includes('@broadcast') || lower.includes('@newsletter')) return false;
                       const norm = normalizeString(searchQuery);
                       if (!norm) return true;
                       return normalizeString(c.name || '').includes(norm) || normalizeString(c.id || '').includes(norm);

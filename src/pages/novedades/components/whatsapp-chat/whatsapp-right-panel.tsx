@@ -113,29 +113,11 @@ export function WhatsAppRightPanel({
     >
       {subVista === 'chats' ? (
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          {/* Header de la lista de chats */}
-          <div className="flex items-center justify-between px-3 py-2.5 border-b bg-card">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xs font-bold text-foreground tracking-wide">
-                WhatsApp
-              </span>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggleCollapse}
-              title="Ocultar panel lateral"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-            >
-              <PanelRightClose className="h-4 w-4" />
-            </Button>
-          </div>
-
           <WhatsAppChatList
             bot={bot}
             activeChatId={activeChatId}
             onSelectChat={handleSelectChat}
+            onToggleCollapse={onToggleCollapse}
           />
         </div>
       ) : (
