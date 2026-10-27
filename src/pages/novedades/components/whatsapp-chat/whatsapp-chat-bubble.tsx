@@ -21,7 +21,12 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Report } from '@/lib/types';
-import type { WhatsAppMessage } from '@/hooks/whatsapp';
+import {
+  type WhatsAppMessage,
+  useSafeMediaSrc,
+  downloadMediaSafe,
+  resolveSafeMediaUrl
+} from '@/hooks/whatsapp';
 import { WhatsAppMarkdown } from './whatsapp-markdown';
 import { Button } from '@/components/ui/button';
 import {
@@ -77,38 +82,47 @@ function formatTime(timestamp?: string | number): string {
 }
 
 async function downloadMedia(url: string, filename = 'whatsapp-media') {
-  try {
-    if (url.startsWith('data:')) {
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      return;
-    }
-    const response = await fetch(url);
-    const blob = await response.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-  } catch (err) {
-    console.error('Failed to download media:', err);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+  return downloadMediaSafe(url, filename);
 }
 const downloadImage = downloadMedia;
+
+function LightboxPhotoPreview({ src, title }: { src: string; title?: string }) {
+  const { src: safeSrc, isLoading } = useSafeMediaSrc(src);
+  return (
+    <div className="relative flex items-center justify-center max-w-full max-h-[75vh]">
+      {isLoading && !safeSrc && (
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+      )}
+      {safeSrc && (
+        <img
+          src={safeSrc}
+          alt={title || 'Imagen ampliada'}
+          className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-xl"
+        />
+      )}
+    </div>
+  );
+}
+
+function LightboxVideoPreview({ src }: { src: string }) {
+  const { src: safeSrc, isLoading } = useSafeMediaSrc(src);
+  if (isLoading && !safeSrc) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+      </div>
+    );
+  }
+  if (!safeSrc) return null;
+  return (
+    <video
+      src={safeSrc}
+      controls
+      autoPlay
+      className="max-w-full max-h-[75vh] rounded-lg shadow-xl"
+    />
+  );
+}
 
 function isBase64ImageString(str?: string | null): boolean {
   if (!str || typeof str !== 'string') return false;
@@ -156,15 +170,17 @@ function QuotedMessageThumbnail({
   onClick
 }: {
   quotedMsg: NonNullable<WhatsAppMessage['quotedMsg']>;
-  onClick: (e: React.MouseEvent) => void;
+  onClick: (e: React.MouseEvent, resolvedSrc?: string) => void;
 }) {
-  const [hasError, setHasError] = useState(false);
-  let target = quotedMsg.thumbnail || quotedMsg.mediaUrl;
-  if (!target && quotedMsg.body && isBase64ImageString(quotedMsg.body)) {
-    target = quotedMsg.body.startsWith('data:') ? quotedMsg.body : `data:image/jpeg;base64,${quotedMsg.body.trim()}`;
+  const [imgError, setImgError] = useState(false);
+  let initialThumb = quotedMsg.thumbnail || null;
+  if (!initialThumb && quotedMsg.body && isBase64ImageString(quotedMsg.body)) {
+    initialThumb = quotedMsg.body.startsWith('data:') ? quotedMsg.body : `data:image/jpeg;base64,${quotedMsg.body.trim()}`;
   }
 
-  if (hasError || !target) {
+  const { src, hasError } = useSafeMediaSrc(quotedMsg.mediaUrl, initialThumb);
+
+  if (hasError || !src || imgError) {
     return null;
   }
 
@@ -172,15 +188,15 @@ function QuotedMessageThumbnail({
 
   return (
     <div
-      onClick={onClick}
+      onClick={(e) => onClick(e, src)}
       className="h-10 w-10 sm:h-11 sm:w-11 rounded-lg bg-black/10 dark:bg-white/10 shrink-0 overflow-hidden cursor-pointer group/qthumb relative border border-black/5"
       title={isQuotedVideo ? 'Ver video citado' : 'Ver foto citada'}
     >
       <img
-        src={target}
+        src={src}
         alt={isQuotedVideo ? 'Video respondido' : 'Foto respondida'}
         className="w-full h-full object-cover transition-transform group-hover/qthumb:scale-105"
-        onError={() => setHasError(true)}
+        onError={() => setImgError(true)}
       />
       {isQuotedVideo && (
         <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
@@ -200,39 +216,19 @@ function WhatsAppImagePreview({
   mediaUrl?: string | null;
   thumbnail?: string | null;
   alt?: string;
-  onClick: () => void;
+  onClick: (resolvedSrc?: string) => void;
 }) {
-  const [hasError, setHasError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { src, isLoading, hasError } = useSafeMediaSrc(mediaUrl, thumbnail);
+  const [imgError, setImgError] = useState(false);
 
-  // Intentar cargar mediaUrl primero; si no existe, usar thumbnail
-  const initialSrc = mediaUrl || thumbnail;
-  const [src, setSrc] = useState<string | null>(initialSrc || null);
-
-  React.useEffect(() => {
-    setSrc(mediaUrl || thumbnail || null);
-    setHasError(false);
-    setIsLoading(true);
+  useEffect(() => {
+    setImgError(false);
   }, [mediaUrl, thumbnail]);
 
-  const handleImageError = () => {
-    // Si falló la descarga de resolución completa pero hay thumbnail, reintentar con thumbnail
-    if (src === mediaUrl && thumbnail) {
-      setSrc(thumbnail);
-    } else {
-      setHasError(true);
-      setIsLoading(false);
-    }
-  };
-
-  const handleImageLoad = () => {
-    setIsLoading(false);
-  };
-
-  if (!src || (hasError && !thumbnail)) {
+  if (!src || (hasError && !thumbnail) || imgError) {
     return (
       <div
-        onClick={onClick}
+        onClick={() => onClick(src || thumbnail || undefined)}
         className="flex items-center gap-2 p-3 rounded-xl bg-black/5 dark:bg-black/20 text-xs text-muted-foreground hover:bg-black/10 transition-colors cursor-pointer"
       >
         <ImageIcon className="h-5 w-5 text-emerald-600 shrink-0" />
@@ -243,7 +239,7 @@ function WhatsAppImagePreview({
 
   return (
     <div
-      onClick={onClick}
+      onClick={() => onClick(src)}
       className="relative overflow-hidden rounded-xl max-h-80 sm:max-h-96 flex items-center justify-center bg-black/5 dark:bg-black/30 group cursor-pointer"
     >
       {/* Indicador de carga progresiva */}
@@ -256,8 +252,7 @@ function WhatsAppImagePreview({
       <img
         src={src}
         alt={alt || 'Imagen de WhatsApp'}
-        onError={handleImageError}
-        onLoad={handleImageLoad}
+        onError={() => setImgError(true)}
         loading="lazy"
         className={cn(
           'w-full max-h-80 sm:max-h-96 object-cover rounded-xl transition-all duration-300',
@@ -272,7 +267,7 @@ function WhatsAppImagePreview({
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            onClick();
+            onClick(src);
           }}
           className="p-1.5 rounded-full bg-black/60 hover:bg-black/85 text-white backdrop-blur-md shadow-md transition-all hover:scale-110 active:scale-95"
           title="Ampliar imagen"
@@ -304,8 +299,10 @@ function WhatsAppVideoPlayer({
 }: {
   mediaUrl?: string | null;
   thumbnail?: string | null;
-  onExpand: () => void;
+  onExpand: (resolvedSrc?: string) => void;
 }) {
+  const { src: safeVideoUrl, isLoading: isVideoLoading } = useSafeMediaSrc(mediaUrl);
+  const { src: safePosterUrl } = useSafeMediaSrc(null, thumbnail);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -322,7 +319,7 @@ function WhatsAppVideoPlayer({
   const handlePlayToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!videoRef.current) {
-      onExpand();
+      onExpand(safeVideoUrl || safePosterUrl || undefined);
       return;
     }
     if (isPlaying) {
@@ -339,11 +336,11 @@ function WhatsAppVideoPlayer({
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  if (!mediaUrl && !thumbnail) {
+  if (!safeVideoUrl && !safePosterUrl) {
     return (
       <div className="flex items-center gap-2 p-3 rounded-xl bg-black/5 dark:bg-black/20 text-xs text-muted-foreground">
         <VideoIcon className="h-5 w-5 text-emerald-600 shrink-0" />
-        <span className="italic">Video no disponible</span>
+        <span className="italic">{isVideoLoading ? 'Cargando video...' : 'Video no disponible'}</span>
       </div>
     );
   }
@@ -351,11 +348,11 @@ function WhatsAppVideoPlayer({
   return (
     <div className="relative overflow-hidden rounded-xl max-h-80 sm:max-h-96 w-full min-w-[240px] sm:min-w-[280px] bg-black/90 group flex items-center justify-center">
       {/* Video Element */}
-      {mediaUrl ? (
+      {safeVideoUrl ? (
         <video
           ref={videoRef}
-          src={mediaUrl}
-          poster={thumbnail || undefined}
+          src={safeVideoUrl}
+          poster={safePosterUrl || undefined}
           preload="metadata"
           controls={isPlaying}
           onPlay={() => setIsPlaying(true)}
@@ -367,16 +364,16 @@ function WhatsAppVideoPlayer({
           onError={() => setHasError(true)}
           className="w-full max-h-80 sm:max-h-96 object-contain rounded-xl"
         />
-      ) : thumbnail ? (
+      ) : safePosterUrl ? (
         <img
-          src={thumbnail}
+          src={safePosterUrl}
           alt="Vista previa de video"
           className="w-full max-h-80 sm:max-h-96 object-cover rounded-xl opacity-80"
         />
       ) : null}
 
       {/* Overlay de Carga */}
-      {isLoading && (
+      {(isLoading || isVideoLoading) && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-xs z-10 pointer-events-none">
           <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
         </div>
@@ -404,13 +401,13 @@ function WhatsAppVideoPlayer({
       </div>
 
       {/* Botones de acción en la parte superior derecha: Zoom y Descarga directa */}
-      {(mediaUrl || thumbnail) && (
+      {(safeVideoUrl || safePosterUrl) && (
         <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onExpand();
+              onExpand(safeVideoUrl || safePosterUrl || undefined);
             }}
             className="p-1.5 rounded-full bg-black/60 hover:bg-black/85 text-white backdrop-blur-md shadow-md transition-all hover:scale-110 active:scale-95"
             title="Ampliar video"
@@ -421,7 +418,7 @@ function WhatsAppVideoPlayer({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              const target = mediaUrl || thumbnail;
+              const target = safeVideoUrl || safePosterUrl;
               if (target) {
                 downloadMedia(target, `whatsapp-${Date.now()}.mp4`);
               }
@@ -444,6 +441,7 @@ function WhatsAppAudioPlayer({
   mediaUrl?: string | null;
   isFromMe: boolean;
 }) {
+  const { src: safeAudioUrl, isLoading: isMediaLoading, hasError: isMediaError } = useSafeMediaSrc(mediaUrl);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -457,10 +455,10 @@ function WhatsAppAudioPlayer({
     setCurrentTime(0);
     setDuration(0);
     setHasError(false);
-  }, [mediaUrl]);
+  }, [safeAudioUrl]);
 
   const togglePlay = () => {
-    if (!audioRef.current || !mediaUrl) return;
+    if (!audioRef.current || !safeAudioUrl) return;
     if (isPlaying) {
       audioRef.current.pause();
     } else {
@@ -510,11 +508,13 @@ function WhatsAppAudioPlayer({
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  if (!mediaUrl || hasError) {
+  if (!safeAudioUrl || hasError || isMediaError) {
     return (
       <div className="flex items-center gap-2 p-2 rounded-xl bg-black/5 dark:bg-black/20 text-xs text-muted-foreground">
         <Mic className="h-4 w-4 text-emerald-600 shrink-0" />
-        <span className="italic">Audio no disponible para reproducir</span>
+        <span className="italic">
+          {isMediaLoading ? 'Cargando nota de voz...' : 'Audio no disponible para reproducir'}
+        </span>
       </div>
     );
   }
@@ -525,7 +525,7 @@ function WhatsAppAudioPlayer({
     <div className="flex flex-col gap-1 w-full max-w-full">
       <audio
         ref={audioRef}
-        src={mediaUrl}
+        src={safeAudioUrl}
         preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
@@ -622,6 +622,7 @@ function WhatsAppLocationCard({
   location: NonNullable<WhatsAppMessage['location']>;
   thumbnail?: string | null;
 }) {
+  const { src: safeThumbnail } = useSafeMediaSrc(null, thumbnail);
   const [mapImgError, setMapImgError] = useState(false);
   const mapsUrl = location.url || `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
 
@@ -650,9 +651,9 @@ function WhatsAppLocationCard({
         className="relative h-28 sm:h-32 w-full bg-muted cursor-pointer overflow-hidden group select-none"
         title="Abrir en Google Maps"
       >
-        {thumbnail && !mapImgError ? (
+        {safeThumbnail && !mapImgError ? (
           <img
-            src={thumbnail}
+            src={safeThumbnail}
             alt="Mapa de ubicación"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={() => setMapImgError(true)}
@@ -989,11 +990,7 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
             </DialogHeader>
             <div className="p-4 flex items-center justify-center bg-black/40 min-h-[50vh] max-h-[80vh] overflow-hidden">
               {selectedPhotoUrl && (
-                <img
-                  src={selectedPhotoUrl}
-                  alt={previewTitle || 'Foto adjunta'}
-                  className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-xl"
-                />
+                <LightboxPhotoPreview src={selectedPhotoUrl} title={previewTitle || 'Foto adjunta'} />
               )}
             </div>
           </DialogContent>
@@ -1157,9 +1154,9 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                     {message.quotedMsg.hasMedia && (message.quotedMsg.thumbnail || message.quotedMsg.mediaUrl) && (
                       <QuotedMessageThumbnail
                         quotedMsg={message.quotedMsg}
-                        onClick={(e) => {
+                        onClick={(e, resolvedSrc) => {
                           e.stopPropagation();
-                          const target = message.quotedMsg?.mediaUrl || message.quotedMsg?.thumbnail;
+                          const target = resolvedSrc || message.quotedMsg?.thumbnail || message.quotedMsg?.mediaUrl;
                           if (target) {
                             setSelectedPhotoUrl(target);
                             setPreviewTitle(message.quotedMsg?.body || 'Foto del mensaje respondido');
@@ -1177,8 +1174,8 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                       mediaUrl={message.mediaUrl}
                       thumbnail={message.thumbnail}
                       alt={message.body || 'Imagen de WhatsApp'}
-                      onClick={() => {
-                        const target = message.mediaUrl || message.thumbnail;
+                      onClick={(resolvedSrc) => {
+                        const target = resolvedSrc || message.thumbnail || message.mediaUrl;
                         if (target) {
                           setSelectedPhotoUrl(target);
                           setPreviewTitle(message.body || (effectiveSenderName ? `Foto de ${effectiveSenderName}` : 'Foto de WhatsApp'));
@@ -1194,8 +1191,8 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                     <WhatsAppVideoPlayer
                       mediaUrl={message.mediaUrl}
                       thumbnail={message.thumbnail}
-                      onExpand={() => {
-                        const target = message.mediaUrl || message.thumbnail;
+                      onExpand={(resolvedSrc) => {
+                        const target = resolvedSrc || message.thumbnail || message.mediaUrl;
                         if (target) {
                           setSelectedVideoUrl(target);
                           setPreviewTitle(message.body || (effectiveSenderName ? `Video de ${effectiveSenderName}` : 'Video de WhatsApp'));
@@ -1328,11 +1325,7 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
             </DialogHeader>
             <div className="p-4 flex items-center justify-center bg-black/40 min-h-[50vh] max-h-[80vh] overflow-hidden">
               {selectedPhotoUrl && (
-                <img
-                  src={selectedPhotoUrl}
-                  alt={previewTitle || 'Imagen ampliada'}
-                  className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-xl"
-                />
+                <LightboxPhotoPreview src={selectedPhotoUrl} title={previewTitle || 'Imagen ampliada'} />
               )}
             </div>
           </DialogContent>
@@ -1375,12 +1368,7 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
             </DialogHeader>
             <div className="p-4 flex items-center justify-center bg-black/70 min-h-[50vh] max-h-[80vh] overflow-hidden">
               {selectedVideoUrl && (
-                <video
-                  src={selectedVideoUrl}
-                  controls
-                  autoPlay
-                  className="max-w-full max-h-[75vh] rounded-lg shadow-xl"
-                />
+                <LightboxVideoPreview src={selectedVideoUrl} />
               )}
             </div>
           </DialogContent>
