@@ -1,8 +1,13 @@
 const path = require('path');
 
+// Si corre empaquetado como .exe usa la carpeta del ejecutable; si corre con node usa la carpeta whatsapp-bot
+const baseDir = process.pkg 
+  ? path.dirname(process.execPath) 
+  : path.join(__dirname, '..');
+
 const PORT = process.env.PORT || 3001;
-const SCHEDULE_FILE = path.join(__dirname, '..', 'scheduled_messages.json');
-const SESSION_DATA_PATH = path.join(__dirname, '..', 'session');
+const SCHEDULE_FILE = path.join(baseDir, 'scheduled_messages.json');
+const SESSION_DATA_PATH = path.join(baseDir, 'session');
 
 const MAX_AVATAR_IMAGE_CACHE = 250;
 const MAX_RECENT_MESSAGES = 250;

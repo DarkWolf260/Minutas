@@ -18,40 +18,23 @@ if %errorlevel% == 0 (
     echo.
 )
 
-rem Limpia posibles instancias zombies de Chromium/Puppeteer que bloquean la sesion
-powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name = 'chrome.exe'\" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like '*whatsapp-bot*session*' -or $_.ExecutablePath -like '*\.cache\puppeteer\*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }" >nul 2>&1
+rem Limpia posibles instancias zombies de Edge/Chromium/Puppeteer que bloquean la sesion
+powershell -NoProfile -Command "Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { ($_.Name -eq 'chrome.exe' -or $_.Name -eq 'msedge.exe') -and ($_.CommandLine -like '*whatsapp-bot*session*' -or $_.ExecutablePath -like '*\.cache\puppeteer\*') } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }" >nul 2>&1
 
 
 cd whatsapp-bot
 
-rem Verifica si existen los modulos instalados
-if not exist "node_modules\" (
-    echo.
-    echo ==============================================================
-    echo [INFO] No se encontraron dependencias instaladas en whatsapp-bot.
-    echo Instalando paquetes automaticamente con npm install...
-    echo (Esto puede tardar unos minutos descargando Puppeteer/Chromium)
-    echo ==============================================================
-    echo.
-    call npm install
-    if errorlevel 1 (
-        echo.
-        echo [ERROR] La instalacion de dependencias fallo.
-        pause
-        exit /b 1
-    )
-    echo.
-    echo [OK] Dependencias instaladas con exito.
-    echo.
-)
-
 echo.
-echo Iniciando Bot de WhatsApp...
+echo Iniciando Bot de WhatsApp (Microsoft Edge)...
 echo No cierres esta ventana mientras uses la app.
 echo =======================================
 echo.
 
-call npm start
+if exist "dist\MinutasWhatsAppBot.exe" (
+    "dist\MinutasWhatsAppBot.exe"
+) else (
+    call npm start
+)
 
 echo.
 echo =======================================

@@ -1,8 +1,25 @@
+const fs = require('fs');
+const path = require('path');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const { PORT, SESSION_DATA_PATH } = require('./config');
 const state = require('./state');
 const { discardExpiredMessages } = require('./services/scheduler-service');
+
+function getEdgeExecutablePath() {
+  const possiblePaths = [
+    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+    process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'Microsoft', 'Edge', 'Application', 'msedge.exe') : null
+  ].filter(Boolean);
+
+  for (const edgePath of possiblePaths) {
+    if (fs.existsSync(edgePath)) {
+      return edgePath;
+    }
+  }
+  return null;
+}
 
 function initWhatsAppClient() {
   state.isInitializing = true;
@@ -10,11 +27,19 @@ function initWhatsAppClient() {
   state.qrCodeData = null;
   state.statusMessage = 'Iniciando cliente de WhatsApp...';
 
+  const edgePath = getEdgeExecutablePath();
+  if (edgePath) {
+    console.log(`[WhatsApp] Usando Microsoft Edge del sistema: "${edgePath}"`);
+  } else {
+    console.log('[WhatsApp] Microsoft Edge no encontrado en rutas estándar, usando Chromium por defecto.');
+  }
+
   state.client = new Client({
     authStrategy: new LocalAuth({ dataPath: SESSION_DATA_PATH }),
     authTimeoutMs: 60000,
     puppeteer: {
       headless: true,
+      executablePath: edgePath || undefined,
       protocolTimeout: 0,
       args: [
         '--no-sandbox',
@@ -196,6 +221,7 @@ async function destroyClient() {
 }
 
 module.exports = {
+  getEdgeExecutablePath,
   initWhatsAppClient,
   restartClient,
   destroyClient
