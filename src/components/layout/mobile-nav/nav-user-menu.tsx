@@ -34,6 +34,11 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
   const { workspaces, currentWorkspace, switchWorkspace } = useWorkspaceManager();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
+  const [avatarError, setAvatarError] = React.useState(false);
+
+  React.useEffect(() => {
+    setAvatarError(false);
+  }, [profile?.avatarUrl]);
 
   return (
     <DropdownMenu>
@@ -44,11 +49,12 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
           aria-label="Menú de usuario"
           className="relative flex h-9 w-9 shrink-0 aspect-square items-center justify-center rounded-full border border-primary/25 bg-primary/10 hover:bg-primary/20 active:scale-95 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary shadow-xs group cursor-pointer overflow-hidden"
         >
-          {profile?.avatarUrl && !analyst ? (
+          {profile?.avatarUrl && !avatarError && !analyst ? (
             <img 
               src={profile.avatarUrl} 
               alt={displayName} 
               className="h-full w-full object-cover rounded-full" 
+              onError={() => setAvatarError(true)}
             />
           ) : (
             <div className={cn(

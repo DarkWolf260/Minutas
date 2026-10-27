@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
@@ -72,6 +72,11 @@ export function SideNav() {
   const { workspaces, currentWorkspace, switchWorkspace } = useWorkspaceManager();
   const { isExpanded, toggleExpanded } = useSidebarExpanded();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [profile.avatarUrl]);
 
   const disabled_modules = [
     ...(settings.disabled_modules || []),
@@ -271,8 +276,13 @@ export function SideNav() {
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center">
                     <div className="h-8 w-8 rounded-full overflow-hidden border border-border/60 shadow-2xs flex items-center justify-center bg-primary/10 text-primary font-bold text-xs shrink-0">
-                      {profile.avatarUrl && !analyst ? (
-                        <img src={profile.avatarUrl} alt="Perfil" className="h-full w-full object-cover" />
+                      {profile.avatarUrl && !avatarError && !analyst ? (
+                        <img
+                          src={profile.avatarUrl}
+                          alt="Perfil"
+                          className="h-full w-full object-cover"
+                          onError={() => setAvatarError(true)}
+                        />
                       ) : (
                         <div className={cn(
                           "flex h-full w-full items-center justify-center text-[10px] font-black",
