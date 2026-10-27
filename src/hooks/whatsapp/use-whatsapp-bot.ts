@@ -9,6 +9,17 @@ export interface WhatsAppChat {
   name: string;
   isGroup: boolean;
   avatarUrl?: string | null;
+  timestamp?: number;
+  unreadCount?: number;
+}
+
+export interface WhatsAppLocation {
+  latitude: number;
+  longitude: number;
+  description?: string | null;
+  name?: string | null;
+  url?: string | null;
+  isLive?: boolean;
 }
 
 export interface QuotedWhatsAppMessage {
@@ -16,11 +27,14 @@ export interface QuotedWhatsAppMessage {
   body?: string;
   type?: string;
   fromMe?: boolean;
+  from?: string | null;
+  author?: string | null;
   senderName?: string | null;
   hasMedia?: boolean;
   mediaUrl?: string | null;
   thumbnail?: string | null;
   isRevoked?: boolean;
+  location?: WhatsAppLocation | null;
 }
 
 export interface WhatsAppMessage {
@@ -40,6 +54,7 @@ export interface WhatsAppMessage {
   isRevoked?: boolean;
   hasQuotedMsg?: boolean;
   quotedMsg?: QuotedWhatsAppMessage | null;
+  location?: WhatsAppLocation | null;
 }
 
 export interface WhatsAppStatus {
@@ -84,6 +99,20 @@ let botState: BotState = {
 
 const listeners = new Set<(state: BotState) => void>();
 
+function isValidWhatsAppChatId(id: string | undefined | null): boolean {
+  if (!id || typeof id !== 'string') return false;
+  const lower = id.toLowerCase().trim();
+  if (
+    lower === 'status@broadcast' ||
+    lower.startsWith('status@') ||
+    lower.includes('@broadcast') ||
+    lower.includes('@newsletter')
+  ) {
+    return false;
+  }
+  return true;
+}
+
 function updateBotState(updates: Partial<BotState>) {
   const newState = { ...botState, ...updates };
   
@@ -96,6 +125,8 @@ function updateBotState(updates: Partial<BotState>) {
 
   if (!isLocalReady && !isCloudReady) {
     newState.chats = [];
+  } else if (Array.isArray(newState.chats)) {
+    newState.chats = newState.chats.filter(c => isValidWhatsAppChatId(c.id));
   }
   
   botState = newState;
@@ -715,6 +746,27 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
             data: { chats: [], updatedAt: new Date().toISOString() }
           }).catch(() => {})
         ]);
+      }
+
+      // Descartar mensajes programados vencidos localmente
+      if (db && currentWorkspace) {
+        try {
+          const now = new Date();
+          const pendingDocs = await db.scheduled_messages.find({
+            selector: {
+              workspace_id: currentWorkspace,
+              status: 'pending'
+            }
+          }).exec();
+          for (const doc of pendingDocs) {
+            if (new Date(doc.scheduledTime) <= now) {
+              await doc.incrementalPatch({
+                status: 'failed',
+                error: 'Descartado: Mensaje vencido al cerrar sesión'
+              });
+            }
+          }
+        } catch (_) {}
       }
 
       await fetch(`${apiUrl}/api/whatsapp/logout`, {

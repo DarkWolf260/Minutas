@@ -412,26 +412,26 @@ const RuleEditorCard = React.memo(({
         <Button
           variant="outline"
           size="sm"
-          className="h-7 flex-1 text-[9px] font-bold uppercase tracking-wider border-dashed border-muted-foreground/30 text-muted-foreground hover:text-foreground rounded-lg"
+          className="h-8 flex-1 text-[10px] font-bold uppercase tracking-wider border-border/80 text-muted-foreground hover:text-foreground rounded-lg"
           onClick={() => {
             const newSecConditions = [...(rule.conditions || []), { field_id: '', operator: '=' as const, condition: '' }];
             onUpdate(id, { conditions: newSecConditions as any });
           }}
           disabled={isReadOnly}
         >
-          <Plus className="h-3 w-3 mr-1" /> Añadir Y (AND)
+          <Plus className="h-3.5 w-3.5 mr-1" /> Añadir Y (AND)
         </Button>
         <Button
           variant="outline"
           size="sm"
-          className="h-7 flex-1 text-[9px] font-bold uppercase tracking-wider border-dashed border-muted-foreground/30 text-muted-foreground hover:text-foreground rounded-lg"
+          className="h-8 flex-1 text-[10px] font-bold uppercase tracking-wider border-border/80 text-muted-foreground hover:text-foreground rounded-lg"
           onClick={() => {
             const newOrConditions = [...(rule.or_conditions || []), { field_id: '', operator: '=' as const, condition: '' }];
             onUpdate(id, { or_conditions: newOrConditions as any });
           }}
           disabled={isReadOnly}
         >
-          <Plus className="h-3 w-3 mr-1" /> Añadir O (OR)
+          <Plus className="h-3.5 w-3.5 mr-1" /> Añadir O (OR)
         </Button>
       </div>
 
@@ -987,10 +987,14 @@ export function TemplateEditor({
               <ScrollArea className="flex-1 md:min-h-0 pr-4 -mr-4">
                 <div className="space-y-4 pb-6">
                   {localRules.length === 0 && (
-                    <div className="text-center py-16 border-2 border-dashed rounded-2xl bg-muted/5">
-                      <BarChart3 className="h-10 w-10 text-muted-foreground/20 mx-auto mb-3" />
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/65">Sin reglas automáticas configuradas.</p>
-                      <p className="text-xs text-muted-foreground/50 mt-1 max-w-[280px] mx-auto">Configura reglas para mapear palabras clave de los reportes a estadísticas automáticamente.</p>
+                    <div className="empty-state-container py-16">
+                      <div className="empty-state-icon-box">
+                        <BarChart3 className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <div className="empty-state-title">Sin reglas automáticas</div>
+                      <div className="empty-state-description max-w-[320px]">
+                        Configura reglas para mapear palabras clave de los reportes a estadísticas automáticamente
+                      </div>
                     </div>
                   )}
                   {localRules.slice(0, visibleCount).map((item, idx) => (

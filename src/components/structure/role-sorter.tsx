@@ -284,9 +284,12 @@ export function RoleSorter({ roles, departments, onReorder, onUpdate, onRemove, 
                 ))}
                 
                 {sortedRoles.length === 0 && (
-                  <div className="py-12 text-center text-muted-foreground border border-dashed rounded-lg">
-                    <Layers className="h-8 w-8 mx-auto opacity-20 mb-2" />
-                    <p className="text-xs">No hay cargos en el reporte</p>
+                  <div className="empty-state-container py-8 border rounded-xl border-border/60 bg-muted/20">
+                    <div className="empty-state-icon-box">
+                      <Layers className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <p className="empty-state-title text-xs">Sin cargos en el reporte</p>
+                    <p className="empty-state-desc text-[11px]">Agrega o habilita cargos para definir la jerarquía.</p>
                   </div>
                 )}
               </div>

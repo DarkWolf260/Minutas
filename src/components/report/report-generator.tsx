@@ -77,10 +77,10 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
 
     const formContent = (
       <div className={cn("w-full max-w-[1000px] mx-auto", !hideHeader && "p-4 sm:p-8 pb-32")}>
-        <Card className={cn("border bg-card shadow-sm font-inherit", hideHeader && "border-none shadow-none bg-transparent")}>
+        <Card className={cn("border bg-card shadow-xs font-inherit", hideHeader && "border-none shadow-none bg-transparent")}>
           {!hideHeader && (
-            <CardHeader className="bg-card/50 border-b py-3.5 px-4 sm:px-6">
-              <CardTitle className="text-lg sm:text-xl font-bold">{cleanTemplateName(template.name)}</CardTitle>
+            <CardHeader className="border-b py-3 px-4 sm:px-6 bg-card">
+              <CardTitle className="text-base sm:text-lg font-bold text-foreground">{cleanTemplateName(template.name)}</CardTitle>
             </CardHeader>
           )}
           <CardContent className={cn("pt-6 px-4 sm:px-6", hideHeader && "pt-0 p-0")}>
@@ -106,6 +106,7 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
       <div className="flex flex-col h-full w-full overflow-hidden relative" id="report-generator-root">
         {!hideHeader && (
           <GeneratorHeader 
+            templateName={cleanTemplateName(template.name)}
             onPreview={handlePreviewClick} 
             onSave={handleSaveClick} 
             onDiscard={onCancel}
@@ -113,21 +114,21 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
         )}
 
         {!hideHeader ? (
-          <ScrollArea className="flex-1 min-h-0 w-full bg-muted/20 pointer-events-auto" id="generator-scroll-area" type="always">
+          <ScrollArea className="flex-1 min-h-0 w-full bg-muted/30 pointer-events-auto" id="generator-scroll-area" type="always">
             {formContent}
           </ScrollArea>
         ) : (
           <div className="flex-1 w-full bg-transparent">
             {formContent}
-            <div className="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-muted/20">
+            <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 mt-8 pt-6 border-t border-border/40">
               <Button variant="ghost" onClick={onCancel} className="text-muted-foreground hover:text-destructive">
                 Descartar
               </Button>
-              <Button variant="outline" onClick={handlePreviewClick} className="shadow-sm">
+              <Button variant="outline" onClick={handlePreviewClick} className="shadow-2xs">
                 <Eye className="h-4 w-4 mr-2" />
                 Vista Previa
               </Button>
-              <Button onClick={handleSaveClick} className="shadow-sm px-6">
+              <Button onClick={handleSaveClick} className="shadow-xs px-6 font-semibold">
                 <Save className="h-4 w-4 mr-2" />
                 Guardar Reporte
               </Button>

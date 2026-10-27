@@ -250,7 +250,7 @@ export function SideNav() {
                     <span className="truncate flex-1 text-left whitespace-nowrap animate-slide-down">
                       Colapsar barra
                     </span>
-                    <kbd className="mr-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground/70 bg-muted/60 border border-border/60">
+                    <kbd className="mr-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-muted/60 border border-border/60">
                       Ctrl+B
                     </kbd>
                   </>
@@ -294,7 +294,7 @@ export function SideNav() {
                           {displayDepartment}
                         </span>
                       </div>
-                      <ChevronsUpDown className="h-4 w-4 text-muted-foreground/80 shrink-0 group-hover:text-foreground transition-colors mr-2" />
+                      <ChevronsUpDown className="h-4 w-4 text-muted-foreground shrink-0 group-hover:text-foreground transition-colors mr-2" />
                     </>
                   )}
                 </button>
@@ -389,7 +389,7 @@ export function SideNav() {
                 </div>
 
                 <DropdownMenuSeparator />
-                <div className="px-2 py-1 text-[10px] text-muted-foreground/80 flex items-center justify-between">
+                <div className="px-2 py-1 text-[10px] text-muted-foreground flex items-center justify-between">
                   <span>Versión</span>
                   <span className="font-mono font-semibold">v{APP_VERSION}</span>
                 </div>

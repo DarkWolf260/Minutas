@@ -6,7 +6,6 @@ import {
   RefreshCw,
   Maximize2,
   Minimize2,
-  ChevronDown,
   Check,
   Search,
   ArrowLeft,
@@ -22,6 +21,10 @@ import { useNavigate } from 'react-router-dom';
 
 function ChatAvatar({ chat }: { chat: ChatItem }) {
   const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setHasError(false);
+  }, [chat.id, chat.avatarUrl]);
 
   if (chat.avatarUrl && !hasError) {
     return (
@@ -67,6 +70,7 @@ export function WhatsAppChatHeader({
     refreshMessages,
     reports
   } = chatHook;
+
 
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
@@ -131,9 +135,9 @@ export function WhatsAppChatHeader({
   });
 
   return (
-    <div className="flex items-center justify-between px-3 py-2.5 sm:px-4 sm:py-3 border-b bg-card/95 backdrop-blur-sm z-10">
+    <div className="flex items-center justify-between gap-1.5 px-3 py-2.5 sm:px-4 sm:py-3 border-b bg-card/95 backdrop-blur-sm z-10 min-w-0">
       {/* Left: Chat Avatar & Selector Popover */}
-      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-hidden">
         {onBack && (
           <Button
             variant="ghost"
@@ -150,7 +154,7 @@ export function WhatsAppChatHeader({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-2 text-left p-1 -ml-1 rounded-xl hover:bg-muted/80 transition-colors group max-w-[220px] sm:max-w-[260px]"
+              className="flex items-center gap-2 text-left p-1 -ml-1 rounded-xl hover:bg-muted/80 transition-colors group min-w-0 flex-1 overflow-hidden"
             >
               {/* Avatar */}
               <div className="relative shrink-0">
@@ -181,12 +185,9 @@ export function WhatsAppChatHeader({
 
               {/* Title */}
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1">
-                  <span className="font-bold text-xs sm:text-sm text-foreground truncate">
-                    {currentChat?.name || 'Seleccionar chat'}
-                  </span>
-                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0 group-hover:text-foreground transition-transform" />
-                </div>
+                <span className="font-bold text-xs sm:text-sm text-foreground truncate block">
+                  {currentChat?.name || 'Seleccionar chat'}
+                </span>
                 {!isBotReady && (
                   <div className="text-[10px] text-muted-foreground truncate">
                     Bot desconectado

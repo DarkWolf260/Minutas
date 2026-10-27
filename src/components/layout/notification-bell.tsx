@@ -164,8 +164,10 @@ export function NotificationBell({ className, showLabel }: NotificationBellProps
         <ScrollArea className="h-[300px]">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 text-center">
-              <BellOff className="mb-2 h-8 w-8 text-muted-foreground/50" />
-              <p className="text-xs text-muted-foreground">No hay notificaciones recientes.</p>
+              <div className="empty-state-icon-box mb-2">
+                <BellOff className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium">No hay notificaciones recientes.</p>
             </div>
           ) : (
             <div className="grid gap-1 p-2">

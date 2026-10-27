@@ -26,21 +26,6 @@ export default function SyncPage() {
   if (!estaConfigurado) {
     return (
       <div className="h-full w-full flex flex-col min-h-0 overflow-hidden bg-background">
-        {/* Header fijo centrado */}
-        <div className="border-b shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-card/40 backdrop-blur-sm sticky top-0 z-10">
-          <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
-                <Wifi className="h-6 w-6 text-primary" />
-                Sincronización
-              </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                Conecta dispositivos para transferir reportes y datos en tiempo real.
-              </p>
-            </div>
-          </div>
-        </div>
-
         <ScrollArea className="flex-1 min-h-0" type="always">
           <div className="max-w-4xl mx-auto w-full p-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-32">
             <SyncSetup hook={hook} setEsQRScannerOpen={setEsQRScannerOpen} />
@@ -62,33 +47,11 @@ export default function SyncPage() {
   // Pantalla de Estado Activo
   return (
     <div className="h-full w-full flex flex-col min-h-0 overflow-hidden bg-background">
-      {/* Header fijo centrado */}
-      <div className="border-b shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-card/40 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
-              <Wifi className="h-6 w-6 text-primary" />
-              Sincronización
-            </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              {hook.usuario?.email || 'Conexión activa entre dispositivos'}
-            </p>
-          </div>
-          <Badge variant={hook.esPrincipal ? 'default' : 'secondary'} className="shrink-0 h-7 rounded-lg">
-            {hook.esPrincipal ? (
-              <><Monitor className="h-3 w-3 mr-1.5" />Principal</>
-            ) : (
-              <><Smartphone className="h-3 w-3 mr-1.5" />Secundario</>
-            )}
-          </Badge>
-        </div>
-      </div>
-
       <ScrollArea className="flex-1 min-h-0" type="always">
         <div className="max-w-4xl mx-auto w-full p-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-32">
           {/* Indicador de Estado */}
           <Card className={cn(
-            'border shadow-xs rounded-xl overflow-hidden relative group',
+            'border shadow-2xs rounded-xl overflow-hidden relative group',
             hook.esPrincipal ? 'border-green-500/20 bg-green-500/5' : 'border-blue-500/20 bg-blue-500/5'
           )}>
             <div className={cn(
@@ -96,14 +59,23 @@ export default function SyncPage() {
               hook.esPrincipal ? "bg-green-500" : "bg-blue-500"
             )} />
             <CardContent className="p-5 space-y-2">
-              <div className="flex items-center gap-3">
-                <div className={cn(
-                  'h-2.5 w-2.5 rounded-full animate-pulse',
-                  hook.esPrincipal ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'
-                )} />
-                <span className="font-bold text-sm tracking-tight">
-                  {hook.esPrincipal ? 'Escuchando reportes entrantes' : 'Listo para enviar reportes'}
-                </span>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    'h-2.5 w-2.5 rounded-full animate-pulse',
+                    hook.esPrincipal ? 'bg-green-500' : 'bg-blue-500'
+                  )} />
+                  <span className="font-bold text-sm tracking-tight">
+                    {hook.esPrincipal ? 'Escuchando reportes entrantes' : 'Listo para enviar reportes'}
+                  </span>
+                </div>
+                <Badge variant={hook.esPrincipal ? 'default' : 'secondary'} className="shrink-0 h-6 text-xs rounded-lg">
+                  {hook.esPrincipal ? (
+                    <><Monitor className="h-3 w-3 mr-1" />Principal</>
+                  ) : (
+                    <><Smartphone className="h-3 w-3 mr-1" />Secundario</>
+                  )}
+                </Badge>
               </div>
               <p className="text-xs text-muted-foreground font-medium">
                 {hook.esPrincipal
@@ -135,9 +107,9 @@ export default function SyncPage() {
               </CardHeader>
               <CardContent className="text-[13px] text-muted-foreground space-y-4 pt-4">
                 <p>Al guardar un reporte en <span className="font-bold text-foreground">Novedades</span> aparecerá un nuevo botón:</p>
-                <div className="bg-muted/50 rounded-xl p-3 flex items-center gap-3 font-bold text-foreground border border-dashed border-primary/20">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Send className="h-4 w-4 text-primary" />
+                <div className="bg-primary/5 rounded-xl p-3 flex items-center gap-3 font-semibold text-foreground border border-primary/20 shadow-2xs">
+                  <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                    <Send className="h-4 w-4" />
                   </div>
                   Enviar al Dispositivo Principal
                 </div>

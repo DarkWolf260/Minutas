@@ -178,7 +178,7 @@ export const SyncSetup = ({ hook, setEsQRScannerOpen }: SyncSetupProps) => {
           )}
 
           <Button
-            className="w-full h-12 rounded-xl font-bold gap-2 shadow-lg shadow-primary/10"
+            className="w-full h-12 rounded-xl font-bold gap-2 shadow-2xs"
             onClick={manejarConfiguracion}
             disabled={sincronizando}
           >

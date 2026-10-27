@@ -226,7 +226,7 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
               Tipo de lugar:
             </span>
             <Select name={name ? `${name}_tipo` : undefined} value={typeValue ?? ''} onValueChange={onTypeChange} disabled={disabled}>
-              <SelectTrigger className="h-7 text-xs rounded-lg border-dashed flex-1">
+              <SelectTrigger className="h-8 text-xs rounded-lg border-border/70 flex-1">
                 <SelectValue placeholder="Seleccionar tipo..." />
               </SelectTrigger>
               <SelectContent>

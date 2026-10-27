@@ -359,7 +359,7 @@ export function parse(tokens: Token[]): TemplateParserResult {
     finalResult.subFieldNames.forEach(fn => fieldNames.add(fn));
 
     const predefinedFieldNames = new Set([
-        'fecha', 'hora', 'municipio', 'estado', 'redan', 'zoedan',
+        'fecha', 'hora', 'municipio', 'municipio_largo', 'municipiolargo', 'estado', 'redan', 'zoedan',
         'usuario', 'guardia', 'grupo', 'active_guard_id',
         'director', 'analista', 'reporta', 'estatus', 'status'
     ]);

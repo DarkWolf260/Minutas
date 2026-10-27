@@ -174,8 +174,8 @@ function AppLayout() {
             {isOffline ? <WifiOff className="h-3 w-3" /> : <RefreshCw className="h-3 w-3 animate-spin-slow" />}
             <span>
               {isOffline 
-                ? `Modo Sin Conexión${user ? ' — Los cambios se sincronizarán al volver' : ''}`
-                : `Conexión Restaurada${user ? ' — Sincronizando datos...' : ''}`}
+                ? `Modo Sin Conexión${user ? ': Los cambios se sincronizarán al volver' : ''}`
+                : `Conexión Restaurada${user ? ': Sincronizando datos...' : ''}`}
             </span>
           </div>
         )}

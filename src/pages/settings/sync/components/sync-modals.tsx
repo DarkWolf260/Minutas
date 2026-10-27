@@ -66,7 +66,7 @@ export const SyncModals = ({ hook, esQRScannerOpen, setEsQRScannerOpen }: SyncMo
 
       {/* Reset Sync AlertDialog */}
       <AlertDialog open={esConfirmarReinicioOpen} onOpenChange={setEsConfirmarReinicioOpen}>
-        <AlertDialogContent className="rounded-3xl border-2">
+        <AlertDialogContent className="rounded-xl border border-border">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold">¿Desactivar sincronización?</AlertDialogTitle>
             <AlertDialogDescription className="text-sm">

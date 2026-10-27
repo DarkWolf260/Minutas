@@ -28,6 +28,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { AppBarActionPortal } from '@/components/layout/app-bar-action-portal';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DbKeys } from '@/lib/repositories';
 import { useCloudWorkspaces } from '@/hooks/sync';
@@ -299,140 +300,121 @@ export default function AdminWorkspacesPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background overflow-y-auto custom-scrollbar">
-      <div className="p-4 sm:p-6 lg:p-10 w-full max-w-[1700px] mx-auto flex flex-col gap-8">
-
-        {/* CABECERA (ESTÁNDAR APP) */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 shrink-0">
-          <div className="flex items-center gap-4">
-            <Link to="/" className="shrink-0">
-              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-                <ChevronLeft className="h-5 w-5" />
+      <div className="p-4 sm:p-6 lg:p-10 w-full max-w-[1700px] mx-auto flex flex-col gap-8">        <AppBarActionPortal>
+          <Dialog open={isOpen} onOpenChange={(open) => {
+            setIsOpen(open);
+            if (!open) {
+              setSelectedState('');
+              setSelectedMunicipality('');
+              setNewWorkspaceName('');
+              setLastAutoName('');
+              setCustomId('');
+            }
+          }}>
+            <DialogTrigger asChild>
+              <Button className="h-9 px-4 rounded-xl font-bold shadow-sm gap-2">
+                <Plus className="h-4 w-4" /> Nueva Área
               </Button>
-            </Link>
-            <div className="flex flex-col">
-              <h1 className="text-3xl font-bold tracking-tight">Gestión de Áreas de Trabajo</h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Administra la infraestructura cloud y autoriza personal.
-              </p>
-            </div>
-          </div>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px] rounded-2xl border-muted/60 shadow-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold">Crear área en la Nube</DialogTitle>
+                <DialogDescription>
+                  Define la ubicación y el identificador único para el área de trabajo.
+                </DialogDescription>
+              </DialogHeader>
 
-          <div className="flex items-center gap-3 shrink-0">
-            <Dialog open={isOpen} onOpenChange={(open) => {
-              setIsOpen(open);
-              if (!open) {
-                setSelectedState('');
-                setSelectedMunicipality('');
-                setNewWorkspaceName('');
-                setLastAutoName('');
-                setCustomId('');
-              }
-            }}>
-              <DialogTrigger asChild>
-                <Button className="font-bold shadow-sm gap-2">
-                  <Plus className="h-4 w-4" /> Nueva Área
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px] rounded-2xl border-muted/60 shadow-2xl">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl font-bold">Crear área en la Nube</DialogTitle>
-                  <DialogDescription>
-                    Define la ubicación y el identificador único para el área de trabajo.
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-6 py-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1">
-                        Estado
-                      </label>
-                      <Select value={selectedState} onValueChange={setSelectedState}>
-                        <SelectTrigger className="h-10 rounded-xl shadow-sm border-muted/60">
-                          <SelectValue placeholder="Seleccionar estado..." />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-[280px] rounded-xl border-muted/60 shadow-xl z-[100]">
-                          {states.map((s: any) => (
-                            <SelectItem key={s.id} value={s.id} className="rounded-lg">
-                              {s.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1">
-                        Municipio
-                      </label>
-                      <Select
-                        value={selectedMunicipality}
-                        onValueChange={setSelectedMunicipality}
-                        disabled={!selectedState}
-                      >
-                        <SelectTrigger className="h-10 rounded-xl shadow-sm border-muted/60">
-                          <SelectValue placeholder={selectedState ? "Seleccionar municipio..." : "Elige un estado primero"} />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-[280px] rounded-xl border-muted/60 shadow-xl z-[100]">
-                          {municipalities.map((m: any) => (
-                            <SelectItem key={m.id} value={m.id} className="rounded-lg">
-                              {m.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+              <div className="space-y-6 py-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1">
+                      Estado
+                    </label>
+                    <Select value={selectedState} onValueChange={setSelectedState}>
+                      <SelectTrigger className="h-10 rounded-xl shadow-sm border-muted/60">
+                        <SelectValue placeholder="Seleccionar estado..." />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[280px] rounded-xl border-muted/60 shadow-xl z-[100]">
+                        {states.map((s: any) => (
+                          <SelectItem key={s.id} value={s.id} className="rounded-lg">
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  <div className="space-y-4 pt-2 border-t border-muted/30">
-                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1">
-                        Nombre del Área (Visible)
-                      </label>
-                      <Input
-                        placeholder="Ej: Diego Bautista Urbaneja, Anzoátegui"
-                        value={newWorkspaceName}
-                        onChange={(e) => setNewWorkspaceName(e.target.value)}
-                        className="h-10 rounded-xl shadow-sm border-muted/60"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1">
-                          ID del Área (Identificador)
-                        </label>
-                        <span className="text-[9px] text-muted-foreground font-mono">Único en mayúsculas</span>
-                      </div>
-                      <Input
-                        value={customId}
-                        onChange={(e) => setCustomId(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''))}
-                        placeholder="Ej: ANZ-URBANEJA"
-                        className="h-10 rounded-xl bg-muted/40 font-mono font-bold text-primary border-muted/40"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1">
+                      Municipio
+                    </label>
+                    <Select
+                      value={selectedMunicipality}
+                      onValueChange={setSelectedMunicipality}
+                      disabled={!selectedState}
+                    >
+                      <SelectTrigger className="h-10 rounded-xl shadow-sm border-muted/60">
+                        <SelectValue placeholder={selectedState ? "Seleccionar municipio..." : "Elige un estado primero"} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[280px] rounded-xl border-muted/60 shadow-xl z-[100]">
+                        {municipalities.map((m: any) => (
+                          <SelectItem key={m.id} value={m.name} className="rounded-lg">
+                            {m.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
-                <DialogFooter>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={handleCreate}
-                    disabled={isCreating || !newWorkspaceName.trim() || !selectedMunicipality || !customId.trim()}
-                    className="font-bold shadow-sm"
-                  >
-                    {isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Crear área de trabajo'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
+                <div className="space-y-4 pt-2 border-t border-muted/30">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1">
+                      Nombre del Área (Visible)
+                    </label>
+                    <Input
+                      placeholder="Ej: Diego Bautista Urbaneja, Anzoátegui"
+                      value={newWorkspaceName}
+                      onChange={(e) => setNewWorkspaceName(e.target.value)}
+                      className="h-10 rounded-xl shadow-sm border-muted/60"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1">
+                        ID del Área (Identificador)
+                      </label>
+                      <span className="text-[9px] text-muted-foreground font-mono">Único en mayúsculas</span>
+                    </div>
+                    <Input
+                      value={customId}
+                      onChange={(e) => setCustomId(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''))}
+                      placeholder="Ej: ANZ-URBANEJA"
+                      className="h-10 rounded-xl bg-muted/40 font-mono font-bold text-primary border-muted/40"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleCreate}
+                  disabled={isCreating || !newWorkspaceName.trim() || !selectedMunicipality || !customId.trim()}
+                  className="font-bold shadow-sm"
+                >
+                  {isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Crear área de trabajo'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </AppBarActionPortal>
 
         {/* BUSCADOR Y CONTROLES */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -452,14 +434,16 @@ export default function AdminWorkspacesPage() {
 
         {/* GRILLA DE ÁREAS */}
         {fetchLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
-            <p className="text-[11px] font-bold tracking-[0.2em] text-muted-foreground/50 uppercase">Sincronizando Nube...</p>
+          <div className="empty-state-container py-20">
+            <div className="empty-state-icon-box">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+            <div className="empty-state-title">Sincronizando con la nube...</div>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filtered.map((ws: any) => (
-              <Card key={ws.id} className="group shadow-md border-primary/10 hover:border-primary/30 overflow-hidden relative bg-card/60 backdrop-blur-md transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1">
+              <Card key={ws.id} className="group shadow-2xs border-border/80 hover:border-primary/40 overflow-hidden relative bg-card transition-all duration-200">
                 <CardHeader className="py-5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -526,10 +510,12 @@ export default function AdminWorkspacesPage() {
             ))}
 
             {filtered.length === 0 && (
-              <div className="col-span-full py-20 text-center border-2 border-dashed border-muted/20 rounded-2xl bg-muted/5">
-                <Layers className="h-16 w-16 text-muted/20 mx-auto mb-6" />
-                <h3 className="text-xl font-bold text-muted-foreground">No se encontraron áreas de trabajo</h3>
-                <p className="text-sm text-muted-foreground/60 mt-2">Prueba ajustando tu búsqueda o crea una nueva área.</p>
+              <div className="col-span-full empty-state-container py-16 border rounded-xl border-border/60 bg-muted/20">
+                <div className="empty-state-icon-box">
+                  <Layers className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="empty-state-title">No se encontraron áreas de trabajo</h3>
+                <p className="empty-state-desc">Prueba ajustando tu búsqueda o crea una nueva área.</p>
               </div>
             )}
           </div>
@@ -686,10 +672,10 @@ export default function AdminWorkspacesPage() {
                             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                               Cargos Seleccionados (Prioridad)
                             </Label>
-                            <div className="space-y-2 rounded-xl border border-dashed p-3 bg-muted/5 min-h-[100px]">
+                            <div className="space-y-2 rounded-xl border border-border/70 p-3 bg-muted/10 min-h-[100px]">
                               {wsConfig.reportarole_ids && wsConfig.reportarole_ids.length > 0 ? (
                                 wsConfig.reportarole_ids.map((roleName: string, index: number) => (
-                                  <div key={roleName} className="flex items-center justify-between p-2 rounded-lg bg-background border shadow-sm">
+                                  <div key={roleName} className="flex items-center justify-between p-2 rounded-lg bg-background border shadow-2xs">
                                     <div className="flex items-center gap-3">
                                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
                                         {index + 1}
@@ -699,41 +685,42 @@ export default function AdminWorkspacesPage() {
                                     <div className="flex items-center gap-1">
                                       <Button
                                         variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7"
+                                        size="icon-sm"
                                         disabled={index === 0}
                                         onClick={() => {
                                           const newRoles = [...wsConfig.reportarole_ids];
                                           [newRoles[index], newRoles[index - 1]] = [newRoles[index - 1], newRoles[index]];
                                           setWsConfig((prev: any) => ({ ...prev, reportarole_ids: newRoles }));
                                         }}
+                                        aria-label="Subir prioridad"
                                       >
                                         <ChevronUp className="h-4 w-4" />
                                       </Button>
                                       <Button
                                         variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7"
+                                        size="icon-sm"
                                         disabled={index === wsConfig.reportarole_ids.length - 1}
                                         onClick={() => {
                                           const newRoles = [...wsConfig.reportarole_ids];
                                           [newRoles[index], newRoles[index + 1]] = [newRoles[index + 1], newRoles[index]];
                                           setWsConfig((prev: any) => ({ ...prev, reportarole_ids: newRoles }));
                                         }}
+                                        aria-label="Bajar prioridad"
                                       >
                                         <ChevronDown className="h-4 w-4" />
                                       </Button>
                                       <Separator orientation="vertical" className="h-4 mx-1" />
                                       <Button
                                         variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                                        size="icon-sm"
+                                        className="text-destructive hover:bg-destructive/10"
                                         onClick={() => {
                                           setWsConfig((prev: any) => ({
                                             ...prev,
                                             reportarole_ids: prev.reportarole_ids.filter((r: string) => r !== roleName)
                                           }));
                                         }}
+                                        aria-label="Eliminar cargo"
                                       >
                                         <Trash2 className="h-4 w-4" />
                                       </Button>
@@ -741,8 +728,9 @@ export default function AdminWorkspacesPage() {
                                   </div>
                                 ))
                               ) : (
-                                <div className="py-8 text-center text-xs text-muted-foreground italic">
-                                  No hay cargos seleccionados.
+                                <div className="empty-state-container py-6">
+                                  <div className="empty-state-title">No hay cargos seleccionados</div>
+                                  <div className="empty-state-description">Añade cargos desde la lista desplegable superior</div>
                                 </div>
                               )}
                             </div>
@@ -835,7 +823,7 @@ export default function AdminWorkspacesPage() {
             </Button>
             {activeTab === 'ajustes' && (
               <Button
-                className="font-bold rounded-xl gap-2 shadow-lg shadow-primary/20"
+                className="font-bold rounded-xl gap-2 shadow-2xs"
                 onClick={handleSaveSettings}
                 disabled={isSavingSettings || isLoadingSettings}
               >

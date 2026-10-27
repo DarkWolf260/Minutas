@@ -245,6 +245,36 @@ describe('Template Renderer - Modifiers', () => {
 
         expect(result).toBe('*MUNICIPIO GUANTA, ESTADO ANZOÁTEGUI*');
     });
+
+    it('should choose between short and long municipality name in template using constants', () => {
+        const templateShort = 'Municipio corto: {Municipio} ({Estado})';
+        const templateShortUpper = 'MUNICIPIO {Municipio:upper}';
+        const templateLargoModifier = 'Oficial: {Municipio:largo:upper}';
+        const templateLargoTag = '*{Municipio_Largo:upper}\\*';
+        const templateLargoTitle = 'Jurisdicción: {Municipio:largo}';
+
+        const data = {};
+        // Note: NO Municipio_Largo field in predefined! Only the base standard Municipio
+        const predefined = {
+            Municipio: 'Urbaneja',
+            Estado: 'Anzoátegui'
+        };
+
+        // Short format
+        expect(render(templateShort, data, predefined)).toBe('Municipio corto: Urbaneja (Anzoátegui)');
+        expect(render(templateShortUpper, data, predefined)).toBe('MUNICIPIO URBANEJA');
+
+        // Long format (chosen in the template via :largo or {Municipio_Largo})
+        expect(render(templateLargoModifier, data, predefined)).toBe(
+            'Oficial: MUNICIPIO TURÍSTICO "EL MORRO" LICENCIADO DIEGO BAUTISTA URBANEJA'
+        );
+        expect(render(templateLargoTag, data, predefined)).toBe(
+            '*MUNICIPIO TURÍSTICO "EL MORRO" LICENCIADO DIEGO BAUTISTA URBANEJA*'
+        );
+        expect(render(templateLargoTitle, data, predefined)).toBe(
+            'Jurisdicción: Municipio Turístico "El Morro" Licenciado Diego Bautista Urbaneja'
+        );
+    });
 });
 
 describe('Template Renderer - Two Field Conditionals', () => {

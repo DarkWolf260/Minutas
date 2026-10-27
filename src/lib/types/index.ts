@@ -74,6 +74,13 @@ export type AppModuleId =
   | 'estadisticas'
   | 'plantillas';
 
+export interface WhatsAppRecipientGroup {
+  id: string;
+  name: string;
+  chatIds: string[];
+  createdAt?: string;
+}
+
 export interface AppSettings {
   id?: string;
   workspace_id?: string;
@@ -87,6 +94,7 @@ export interface AppSettings {
   /** Modules explicitly disabled by the user. undefined = all enabled (backwards-compatible). */
   disabled_modules?: AppModuleId[];
   whatsapp_default_chat_ids?: string[];
+  whatsapp_recipient_groups?: WhatsAppRecipientGroup[];
   whatsapp_local_url?: string;
   orden_del_dia_draft?: {
     staff: Staff;

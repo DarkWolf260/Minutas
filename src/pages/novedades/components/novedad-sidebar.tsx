@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { PlusCircle, Search, Calendar, Pin, MessageSquare, FileText, Minimize2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Search, Calendar, Pin, MessageSquare, FileText, Minimize2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { NoGuardBanner } from '@/components/guards/guard-selector';
 import { cn } from '@/lib/utils';
@@ -58,8 +57,8 @@ function formatDayLabel(dateKey: string): string {
     month: 'long',
   });
 
-  if (dateKey === toKey(today)) return `Hoy — ${formatted}`;
-  if (dateKey === toKey(yesterday)) return `Ayer — ${formatted}`;
+  if (dateKey === toKey(today)) return `Hoy, ${formatted}`;
+  if (dateKey === toKey(yesterday)) return `Ayer, ${formatted}`;
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 }
 
@@ -267,7 +266,7 @@ export const NovedadSidebar = ({
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
   const isBotConnected = (bot.isAvailable && bot.status.isReady) || bot.isCloudActive;
 
-  const isChatPositionRight = settings?.whatsapp_chat_position === 'right_form';
+  const isChatPositionRight = (settings?.whatsapp_chat_position || 'right_form') === 'right_form';
   const shouldShowWhatsAppTab = showWhatsAppTab ?? (!isChatPositionRight || isMobile);
 
   const [internalVista, setInternalVista] = useState<'lista' | 'whatsapp'>(() => {
@@ -441,59 +440,39 @@ export const NovedadSidebar = ({
         idReporteSeleccionado || creandoReporte ? 'hidden sm:flex' : 'flex'
       )}
     >
-      <div className="flex flex-col border-b bg-card">
-        <div
-          className={cn(
-            'flex items-center justify-between px-3 py-2 sm:px-4 sm:py-2.5 min-h-[52px]',
-            isBotConnected && shouldShowWhatsAppTab && 'pb-1.5'
-          )}
-        >
-          <h2 className="text-base sm:text-lg font-bold tracking-tight">Novedades</h2>
-          <Button
-            size="sm"
-            onClick={() => setEsDialogOpenCrear(true)}
-            disabled={!guardiaAbierta}
-            className="shadow-sm gap-1.5 h-8 px-2.5 text-xs font-medium"
-          >
-            <PlusCircle className="h-3.5 w-3.5" />
-            Nuevo
-          </Button>
-        </div>
-
-        {/* Alternador de Vistas: Lista vs Chat WhatsApp (solo visible si el bot está conectado y la pestaña está habilitada) */}
-        {isBotConnected && shouldShowWhatsAppTab && (
-          <div className="px-3 sm:px-4 pb-2.5 animate-in fade-in duration-200">
-            <div className="flex items-center p-1 bg-muted/60 dark:bg-muted/40 rounded-xl border border-border/40">
-              <button
-                type="button"
-                onClick={() => handleCambiarVista('lista')}
-                className={cn(
-                  'flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all',
-                  effectiveVista === 'lista'
-                    ? 'bg-background text-foreground shadow-xs'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <FileText className="h-3.5 w-3.5" />
-                <span>Lista</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleCambiarVista('whatsapp')}
-                className={cn(
-                  'flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all',
-                  effectiveVista === 'whatsapp'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <MessageSquare className="h-3.5 w-3.5" />
-                <span>Chat WhatsApp</span>
-              </button>
-            </div>
+      {/* Alternador de Vistas: Lista vs Chat WhatsApp (solo visible si el bot está conectado y la pestaña está habilitada) */}
+      {isBotConnected && shouldShowWhatsAppTab && (
+        <div className="flex flex-col border-b bg-card p-2 sm:px-4 sm:py-2.5 animate-in fade-in duration-200">
+          <div className="flex items-center p-1 bg-muted/60 dark:bg-muted/40 rounded-xl border border-border/40">
+            <button
+              type="button"
+              onClick={() => handleCambiarVista('lista')}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all',
+                effectiveVista === 'lista'
+                  ? 'bg-background text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              <span>Lista</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleCambiarVista('whatsapp')}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all',
+                effectiveVista === 'whatsapp'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              <span>Chat WhatsApp</span>
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {effectiveVista === 'whatsapp' ? (
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
@@ -532,7 +511,6 @@ export const NovedadSidebar = ({
             setBusqueda={setBusqueda}
             ordenamiento={ordenamiento}
             setOrdenamiento={setOrdenamiento}
-            manejarExportarTodasWord={manejarExportarTodasWord}
           />
 
       <div className="flex-1 min-h-0">
@@ -605,12 +583,12 @@ export const NovedadSidebar = ({
                         >
                           {/* Day separator header */}
                           <div className="flex items-center gap-2 px-1 mb-2">
-                            <Calendar className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/60 truncate">
+                            <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground truncate">
                               {group.label}
                             </span>
                             <div className="flex-1 h-px bg-border/60" />
-                            <span className="text-[10px] text-muted-foreground/40 shrink-0 font-medium">
+                            <span className="text-[10px] text-muted-foreground font-semibold px-1.5 py-0.5 rounded-full bg-muted/60 shrink-0">
                               {group.reports.length}
                             </span>
                           </div>
@@ -661,17 +639,15 @@ export const NovedadSidebar = ({
                       allowOpenHere
                     />
                   ) : (
-                    <>
-                      <div className="h-16 w-16 rounded-full bg-muted/20 flex items-center justify-center mx-auto mb-4 border-2 border-dashed border-muted-foreground/10 opacity-60">
-                        <Search className="h-7 w-7 opacity-20" />
+                    <div className="py-6 text-center w-full">
+                      <div className="empty-state-icon-box">
+                        <Search className="h-5 w-5 text-muted-foreground" />
                       </div>
-                      <div className="space-y-1">
-                        <h3 className="text-sm font-bold text-foreground/70 tracking-tight">Sin resultados</h3>
-                        <p className="text-xs text-muted-foreground/60 max-w-[200px] mx-auto leading-relaxed">
-                          No se encontraron reportes registrados.
-                        </p>
-                      </div>
-                    </>
+                      <h3 className="empty-state-title">Sin resultados</h3>
+                      <p className="empty-state-desc">
+                        No se encontraron reportes registrados.
+                      </p>
+                    </div>
                   )}
                 </div>
               )
@@ -686,12 +662,12 @@ export const NovedadSidebar = ({
                     >
                       {/* Day separator header */}
                       <div className="flex items-center gap-2 px-1 mb-2">
-                        <Calendar className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/60 truncate">
+                        <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground truncate">
                           {group.label}
                         </span>
                         <div className="flex-1 h-px bg-border/60" />
-                        <span className="text-[10px] text-muted-foreground/40 shrink-0 font-medium">
+                        <span className="text-[10px] text-muted-foreground font-semibold px-1.5 py-0.5 rounded-full bg-muted/60 shrink-0">
                           {group.reports.length}
                         </span>
                       </div>
@@ -739,17 +715,15 @@ export const NovedadSidebar = ({
                       allowOpenHere
                     />
                   ) : (
-                    <>
-                      <div className="h-16 w-16 rounded-full bg-muted/20 flex items-center justify-center mx-auto mb-4 border-2 border-dashed border-muted-foreground/10 opacity-60">
-                        <Search className="h-7 w-7 opacity-20" />
+                    <div className="py-6 text-center w-full">
+                      <div className="empty-state-icon-box">
+                        <Search className="h-5 w-5 text-muted-foreground" />
                       </div>
-                      <div className="space-y-1">
-                        <h3 className="text-sm font-bold text-foreground/70 tracking-tight">Sin resultados</h3>
-                        <p className="text-xs text-muted-foreground/60 max-w-[200px] mx-auto leading-relaxed">
-                          No se encontraron reportes registrados.
-                        </p>
-                      </div>
-                    </>
+                      <h3 className="empty-state-title">Sin resultados</h3>
+                      <p className="empty-state-desc">
+                        No se encontraron reportes registrados.
+                      </p>
+                    </div>
                   )}
                 </div>
               )

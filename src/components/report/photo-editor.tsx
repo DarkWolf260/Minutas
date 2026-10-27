@@ -1037,7 +1037,7 @@ export const PhotoEditor: React.FC<PhotoEditorProps> = ({
             <Button
               type="button"
               onClick={handleSave}
-              className="rounded-xl h-9 px-4 gap-1.5 text-xs font-semibold shadow-md shadow-primary/10"
+              className="rounded-xl h-9 px-4 gap-1.5 text-xs font-semibold shadow-2xs"
             >
               <Save className="h-3.5 w-3.5" />
               <span>Guardar Cambios</span>

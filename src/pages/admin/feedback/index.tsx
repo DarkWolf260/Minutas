@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { AppBarActionPortal } from '@/components/layout/app-bar-action-portal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
@@ -119,37 +120,12 @@ export default function AdminFeedbackPage() {
     <div className="flex flex-col min-h-screen bg-background overflow-y-auto custom-scrollbar">
       <div className="p-4 sm:p-6 lg:p-10 w-full max-w-[1700px] mx-auto flex flex-col gap-8">
         
-        {/* CABECERA (ESTÁNDAR APP) */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 shrink-0">
-          <div className="flex items-center gap-4">
-            <Link to="/admin" className="shrink-0">
-              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div className="flex flex-col">
-              <h1 className="text-3xl font-bold tracking-tight">Bandeja de Feedback</h1>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Revisa los comentarios, sugerencias y errores reportados por los usuarios.
-              </p>
-            </div>
-          </div>
-
+        <AppBarActionPortal>
           <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-10 w-10 rounded-lg shrink-0 border-muted/60 hover:bg-muted"
-              onClick={fetchFeedback}
-              disabled={loading}
-            >
-              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-            </Button>
-
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="h-10 px-3 rounded-lg border border-muted/60 bg-background text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="h-9 px-3 rounded-lg border border-muted/60 bg-background text-xs font-semibold shadow-2xs focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
               <option value="all">Todos los Tipos</option>
               <option value="sugerencia">Sugerencias</option>
@@ -157,24 +133,39 @@ export default function AdminFeedbackPage() {
               <option value="elogio">Elogios</option>
               <option value="otro">Otros</option>
             </select>
-            
-            <Badge variant="outline" className="h-10 px-4 rounded-lg border-muted/60 bg-muted/20 font-bold uppercase text-[10px] tracking-widest text-muted-foreground">
-              {filteredFeedback.length} Comentarios
-            </Badge>
+
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-lg shrink-0 border-muted/60 hover:bg-muted"
+              onClick={fetchFeedback}
+              disabled={loading}
+              title="Actualizar feedback"
+            >
+              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+            </Button>
           </div>
+        </AppBarActionPortal>
+
+        <div className="flex items-center justify-between shrink-0">
+          <Badge variant="outline" className="h-8 px-3.5 rounded-lg border-muted/60 bg-muted/20 font-bold uppercase text-[10px] tracking-widest text-muted-foreground w-fit">
+            {filteredFeedback.length} Comentarios
+          </Badge>
         </div>
 
         {/* Content */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
             <Loader2Spinner />
-            <p className="text-[11px] font-bold tracking-[0.2em] text-muted-foreground/50 uppercase">Cargando bandeja...</p>
+            <p className="text-[11px] font-bold tracking-[0.2em] text-muted-foreground uppercase">Cargando bandeja...</p>
           </div>
         ) : filteredFeedback.length === 0 ? (
-          <div className="py-20 text-center border-2 border-dashed border-muted/20 rounded-2xl bg-muted/5">
-            <MessageSquare className="h-16 w-16 text-muted/20 mx-auto mb-6" />
-            <h3 className="text-xl font-bold text-muted-foreground">Bandeja vacía</h3>
-            <p className="text-sm text-muted-foreground/60 mt-2">No hay comentarios en esta categoría.</p>
+          <div className="empty-state-container py-16 border rounded-xl border-border/60 bg-muted/20">
+            <div className="empty-state-icon-box">
+              <MessageSquare className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="empty-state-title">Bandeja vacía</h3>
+            <p className="empty-state-desc">No hay comentarios en esta categoría.</p>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -186,7 +177,7 @@ export default function AdminFeedbackPage() {
                 <Card
                   key={item.id}
                   className={cn(
-                    "group shadow-md overflow-hidden relative bg-card/60 backdrop-blur-md transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 border cursor-pointer",
+                    "group shadow-2xs overflow-hidden relative bg-card transition-all duration-200 hover:shadow-xs border cursor-pointer",
                     cfg.cardBorder
                   )}
                   onClick={() => setSelectedItem(item)}

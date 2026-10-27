@@ -34,18 +34,22 @@ export const UnitList = ({ units, onDeleteRequest }: UnitListProps) => {
                   </div>
                   <Button
                     variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                    size="icon-sm"
+                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                     onClick={() => onDeleteRequest(unit)}
+                    aria-label={`Eliminar unidad ${unit}`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               ))
             ) : (
-              <div className="py-12 flex flex-col items-center justify-center text-muted-foreground">
-                <Car className="h-8 w-8 mb-4 opacity-20" />
-                <p className="text-xs font-medium">No hay unidades configuradas</p>
+              <div className="empty-state-container py-8">
+                <div className="empty-state-icon-box">
+                  <Car className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="empty-state-title text-xs">Sin unidades</p>
+                <p className="empty-state-desc text-[11px]">No hay unidades operativas configuradas.</p>
               </div>
             )}
           </div>

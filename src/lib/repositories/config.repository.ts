@@ -72,6 +72,7 @@ export function createConfigRepository(db: MinutasDatabase | null, workspace_id:
         if (merged.disabledModules !== undefined) merged.disabled_modules = merged.disabledModules;
         if (merged.reportaroleIds !== undefined) merged.reportarole_ids = merged.reportaroleIds;
         if (merged.whatsappDefaultChatIds !== undefined) merged.whatsapp_default_chat_ids = merged.whatsappDefaultChatIds;
+        if (merged.whatsappRecipientGroups !== undefined) merged.whatsapp_recipient_groups = merged.whatsappRecipientGroups;
         if (merged.whatsappLocalUrl !== undefined) merged.whatsapp_local_url = merged.whatsappLocalUrl;
 
         // Eliminar versiones viejas
@@ -84,6 +85,7 @@ export function createConfigRepository(db: MinutasDatabase | null, workspace_id:
         delete merged.disabledModules;
         delete merged.reportaroleIds;
         delete merged.whatsappDefaultChatIds;
+        delete merged.whatsappRecipientGroups;
         delete merged.whatsappLocalUrl;
 
         // 4. VERIFICACIÓN DE CAMBIO REAL (Freno al bucle)

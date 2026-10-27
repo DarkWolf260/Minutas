@@ -1,36 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ChevronLeft, ArrowUpCircle, ListChecks } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowUpCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { CHANGELOG, CHANGE_TYPE_CONFIG, APP_VERSION } from './data';
 
 export default function AboutChangelogPage() {
   return (
     <div className="h-full w-full flex flex-col min-h-0 overflow-hidden bg-background">
-      {/* Sticky Top Header */}
-      <div className="border-b shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-card/40 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Link to="/settings/about">
-              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
-                <ListChecks className="h-6 w-6 text-primary" />
-                Historial de Cambios
-              </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                Novedades y correcciones por versión
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Main Content Area */}
       <ScrollArea className="flex-1 min-h-0" type="always">

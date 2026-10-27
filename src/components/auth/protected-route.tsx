@@ -37,11 +37,11 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (user && !isApproved) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background p-6">
-        <div className="max-w-md w-full bg-card border rounded-3xl p-8 shadow-2xl text-center space-y-6 relative overflow-hidden">
+        <div className="max-w-md w-full bg-card border rounded-xl p-8 shadow-lg text-center space-y-6 relative overflow-hidden">
           {/* Decorative background */}
           <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 rounded-full bg-amber-500/10 blur-2xl pointer-events-none" />
           
-          <div className="mx-auto w-16 h-16 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-600 border border-amber-500/20">
+          <div className="mx-auto w-16 h-16 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-600 border border-amber-500/20">
             <ShieldAlert className="h-8 w-8" />
           </div>
           

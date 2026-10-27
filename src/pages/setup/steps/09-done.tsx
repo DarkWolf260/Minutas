@@ -19,7 +19,7 @@ export function PasoDone({
       <div className="flex flex-col items-center justify-center text-center space-y-7 py-6 h-full min-h-[75vh]">
         {/* Icono de Victoria */}
         <div className="relative">
-          <div className="h-20 w-20 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-md ring-8 ring-primary/5">
+          <div className="h-20 w-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-2xs">
             <ShieldCheck className="h-10 w-10 text-primary" />
           </div>
         </div>

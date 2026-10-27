@@ -91,12 +91,12 @@ export function ReporteHistorial({ hook }: ReporteHistorialProps) {
           ))}
         </div>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center text-center p-10 border-4 border-dashed rounded-3xl bg-muted/5 max-w-2xl mx-auto w-full">
-          <div className="h-20 w-20 rounded-full bg-muted/20 flex items-center justify-center mb-6">
-            <History className="h-10 w-10 text-muted-foreground/20" />
+        <div className="empty-state-container border rounded-xl bg-card max-w-2xl mx-auto">
+          <div className="empty-state-icon-box">
+            <History className="h-7 w-7 text-primary" />
           </div>
-          <h3 className="text-xl font-bold mb-2">No hay reportes archivados</h3>
-          <p className="text-muted-foreground max-w-xs">
+          <h3 className="empty-state-title text-base sm:text-lg">No hay reportes archivados</h3>
+          <p className="empty-state-desc max-w-sm mt-1">
             Los reportes finales que generes y guardes aparecerán en esta sección cronológicamente.
           </p>
         </div>

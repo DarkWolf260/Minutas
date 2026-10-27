@@ -11,6 +11,7 @@ import { formatStaffMember, formatStaffReporta } from '../formatters';
 import { evaluateCondition, applyModifiers as applyTextModifier } from './evaluator';
 import { parseTemplate as defaultParseTemplate } from './parser';
 import { logger } from '../logger';
+import { obtenerNombreLargoMunicipio } from '../constants/venezuela';
 
 /** Internal config shape used during rendering (combines parsed template + field definitions) */
 interface TemplateRenderConfig {
@@ -222,6 +223,14 @@ function findValueForField(
                 if (secVal !== undefined) return secVal;
             }
         }
+    }
+
+    // Direct support for {Municipio_Largo} resolving from base {Municipio} using constants
+    if (lowerCasefield_id === 'municipio_largo' || lowerCasefield_id === 'municipiolargo') {
+        const customLargo = getFromObjectInsensitive(predefinedValues, lowerCasefield_id, field_id);
+        if (customLargo !== undefined) return customLargo;
+        const baseMuni = getFromObjectInsensitive(predefinedValues, 'municipio', 'Municipio');
+        if (baseMuni !== undefined && baseMuni !== null) return obtenerNombreLargoMunicipio(String(baseMuni));
     }
 
     // 5. Check predefined values
@@ -590,9 +599,17 @@ function renderSection(
                         ? mappedVal
                         : (baseVal !== undefined && baseVal !== '' ? baseVal : defaultVal);
 
+                    const isLargoModifier = (config.fieldModifiers?.get(id) || []).some(
+                        m => m.toLowerCase() === 'largo' || m.toLowerCase() === 'long'
+                    );
+                    let effectiveVal = val;
+                    if (lowerId === 'municipio' && isLargoModifier && typeof effectiveVal === 'string') {
+                        effectiveVal = obtenerNombreLargoMunicipio(effectiveVal);
+                    }
+
                     itemContent = itemContent.replace(
                         new RegExp(`\\{${escapeRegExp(id)}(:[^|}{]+)*(?:\\|[^{}]+?)?\\}(\\*)?`, 'gi'),
-                        () => renderValue(val, id, fields, config, { ...data, ...item })
+                        () => renderValue(effectiveVal, id, fields, config, { ...data, ...item })
                     );
                 }
             });
@@ -773,16 +790,20 @@ export function renderContentWithSections(
     // Final cleanup of loose tags (handles normal and dotted field names like {Director.sex})
     finalContent = finalContent.replace(
         /\{([^:{}]+?(?:\.[^:{}]+?)?)(:[^|}{]+)*(?:\|[^{}]+?)?\}/g,
-        (_, field_id: string) => {
+        (_, field_id: string, modifierStr?: string) => {
             field_id = field_id.trim();
             const lowerfield_id = field_id.toLowerCase();
             const baseVal = findValueForField(field_id, data, sections, predefinedValues, dynamicPredefinedValues);
             const defaultVal = config.defaultValues?.get(field_id) ?? config.fields[field_id]?.default_value;
 
             // Mapping results are only applicable for non-dotted field names
-            const formValue = (!field_id.includes('.') && mappingResults[lowerfield_id] !== undefined)
+            let formValue = (!field_id.includes('.') && mappingResults[lowerfield_id] !== undefined)
                 ? mappingResults[lowerfield_id]
                 : (baseVal !== undefined && baseVal !== '' ? baseVal : defaultVal);
+
+            if (lowerfield_id === 'municipio' && modifierStr && (modifierStr.toLowerCase().includes(':largo') || modifierStr.toLowerCase().includes(':long')) && typeof formValue === 'string') {
+                formValue = obtenerNombreLargoMunicipio(formValue);
+            }
 
             return hasContent(formValue) ? renderValue(formValue, field_id, fields, config) : '';
         }

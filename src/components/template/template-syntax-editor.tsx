@@ -14,6 +14,7 @@ import {
   UserCheck,
   FileText,
   Hash,
+  Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -810,7 +811,11 @@ export function TemplateSyntaxEditor({
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => insertSnippet('{Municipio:upper}')}>
                 <Calendar className="mr-2 h-3.5 w-3.5 text-emerald-500" />
-                <span>Municipio ({'{Municipio}'})</span>
+                <span>Municipio Corto ({'{Municipio}'})</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => insertSnippet('{Municipio:largo:upper}')}>
+                <Building2 className="mr-2 h-3.5 w-3.5 text-emerald-500" />
+                <span>Municipio Largo Oficial ({'{Municipio:largo}'})</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => insertSnippet('{Estado:upper}\\*')}>
                 <Calendar className="mr-2 h-3.5 w-3.5 text-emerald-500" />

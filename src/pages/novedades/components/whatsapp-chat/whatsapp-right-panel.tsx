@@ -5,9 +5,11 @@ import {
   PanelRightOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { Report, Template } from '@/lib/types';
-import { useWhatsAppBot } from '@/hooks/whatsapp';
+import { useWhatsAppBot, useScheduledMessages } from '@/hooks/whatsapp';
+import { useSettings } from '@/hooks/configuracion';
 import { WhatsAppChatView } from './whatsapp-chat-view';
 import { WhatsAppChatList } from './whatsapp-chat-list';
 
@@ -54,6 +56,11 @@ export function WhatsAppRightPanel({
     setSubVista('conversacion');
   };
 
+  const { settings } = useSettings();
+  const { scheduledMessages } = useScheduledMessages();
+  const selectedCount = (settings?.whatsapp_default_chat_ids || []).length;
+  const pendingCount = scheduledMessages.filter(m => m.status === 'pending').length;
+
   const isBotReady = (bot.isAvailable && bot.status.isReady) || bot.isCloudActive;
 
   // Si está colapsado, mostrar barra lateral delgada con botón para expandir
@@ -69,13 +76,23 @@ export function WhatsAppRightPanel({
           variant="ghost"
           size="icon"
           onClick={onToggleCollapse}
-          title="Expandir panel de WhatsApp"
+          title={
+            pendingCount > 0
+              ? `WhatsApp: ${pendingCount} envíos programados pendientes`
+              : selectedCount > 0
+              ? `WhatsApp: ${selectedCount} destinatarios configurados`
+              : 'Expandir panel de WhatsApp'
+          }
           className="h-9 w-9 rounded-xl hover:bg-emerald-500/15 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 relative"
         >
           <MessageSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-          {isBotReady && (
+          {pendingCount > 0 ? (
+            <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] font-bold text-white shadow-2xs animate-pulse">
+              {pendingCount}
+            </span>
+          ) : isBotReady ? (
             <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          )}
+          ) : null}
         </Button>
 
         {/* Texto vertical rotado */}
@@ -113,29 +130,12 @@ export function WhatsAppRightPanel({
     >
       {subVista === 'chats' ? (
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          {/* Header de la lista de chats */}
-          <div className="flex items-center justify-between px-3 py-2.5 border-b bg-card">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xs font-bold text-foreground tracking-wide">
-                WhatsApp
-              </span>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggleCollapse}
-              title="Ocultar panel lateral"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-            >
-              <PanelRightClose className="h-4 w-4" />
-            </Button>
-          </div>
-
           <WhatsAppChatList
             bot={bot}
             activeChatId={activeChatId}
             onSelectChat={handleSelectChat}
+            onToggleCollapse={onToggleCollapse}
+            reports={reports}
           />
         </div>
       ) : (

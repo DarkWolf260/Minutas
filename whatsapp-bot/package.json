@@ -3,8 +3,22 @@
   "version": "1.0.0",
   "description": "WhatsApp bot for Minutas using whatsapp-web.js",
   "main": "server.js",
+  "bin": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "bundle": "esbuild server.js --bundle --platform=node --target=node20 --external:@aws-sdk/client-s3 --outfile=dist/bundle.cjs",
+    "build:exe": "npm run bundle && pkg --sea dist/bundle.cjs -o dist/MinutasWhatsAppBot.exe && node set-icon.js"
+  },
+  "pkg": {
+    "scripts": [
+      "src/**/*.js"
+    ],
+    "assets": [
+      "node_modules/whatsapp-web.js/**/*"
+    ]
+  },
+  "puppeteer": {
+    "skipDownload": true
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -14,5 +28,8 @@
   },
   "overrides": {
     "basic-ftp": "^6.2.2"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.24.0"
   }
 }

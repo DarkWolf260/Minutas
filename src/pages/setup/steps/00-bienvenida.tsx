@@ -283,7 +283,7 @@ export function PasoBienvenida({
 
                 <Button
                   type="submit"
-                  className="w-full h-11 rounded-xl font-bold mt-2 shadow-md shadow-primary/20 gap-2 cursor-pointer"
+                  className="w-full h-11 rounded-xl font-bold mt-2 shadow-2xs gap-2 cursor-pointer"
                   disabled={iniciandoSesion || !isSupabaseConfigured}
                 >
                   {iniciandoSesion ? (

@@ -62,9 +62,23 @@ export function useWhatsAppChat({
       return [];
     }
 
+    const validChats = bot.chats.filter(c => {
+      if (!c.id) return false;
+      const lower = c.id.toLowerCase().trim();
+      if (
+        lower === 'status@broadcast' ||
+        lower.startsWith('status@') ||
+        lower.includes('@broadcast') ||
+        lower.includes('@newsletter')
+      ) {
+        return false;
+      }
+      return true;
+    });
+
     // Prioritize default configured chats
     const defaultIds = settings?.whatsapp_default_chat_ids || [];
-    const sortedBotChats = [...bot.chats].sort((a, b) => {
+    const sortedBotChats = [...validChats].sort((a, b) => {
       const aFav = defaultIds.includes(a.id) ? 1 : 0;
       const bFav = defaultIds.includes(b.id) ? 1 : 0;
       return bFav - aFav;

@@ -1680,15 +1680,15 @@
     "semantic_hash": ""
   },
   "whatsapp-bot/scheduled_messages.json": {
-    "mtime": 1792637578.8556304,
-    "seen": 1792637812.275628,
-    "ast_hash": "b668a3e55b6efa3e5d39fa45b4a394d1",
+    "mtime": 1792656012.2161374,
+    "seen": 1792673632.893439,
+    "ast_hash": "6a700527fb9c8f709df7a41de985cd01",
     "semantic_hash": ""
   },
   "whatsapp-bot/server.js": {
-    "mtime": 1792554754.392278,
-    "seen": 1792554893.8273475,
-    "ast_hash": "ff42338431ddcbf901806fc2b6071d53",
+    "mtime": 1792673529.512845,
+    "seen": 1792673632.8934429,
+    "ast_hash": "8b807c69822639cb142565dc004af71e",
     "semantic_hash": ""
   },
   "CHANGELOG.md": {
@@ -2100,9 +2100,9 @@
     "semantic_hash": ""
   },
   "src/hooks/whatsapp/use-whatsapp-bot.ts": {
-    "mtime": 1792555997.8171544,
-    "seen": 1792556042.9443693,
-    "ast_hash": "a9f301663c94a7e504be8f5c8614c10c",
+    "mtime": 1792673482.8960829,
+    "seen": 1792673632.8569148,
+    "ast_hash": "dd9031c173ab8e6240bb4938b5c07d9f",
     "semantic_hash": ""
   },
   "src/components/layout/command-menu.tsx": {
@@ -2466,9 +2466,9 @@
     "semantic_hash": ""
   },
   "src/pages/novedades/components/whatsapp-chat/whatsapp-chat-bubble.tsx": {
-    "mtime": 1792552959.9066346,
-    "seen": 1792553170.0224295,
-    "ast_hash": "96792007dfdd38f2288424c579ac74bc",
+    "mtime": 1792673591.6718292,
+    "seen": 1792673632.8791106,
+    "ast_hash": "3e23f985760c8630e06ff68e393516e0",
     "semantic_hash": ""
   },
   "src/pages/novedades/components/whatsapp-chat/whatsapp-chat-header.tsx": {

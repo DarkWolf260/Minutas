@@ -89,7 +89,7 @@ export function ReportPreview({
             {copyButtonText}
           </Button>
           <DialogClose asChild>
-            <Button variant="secondary">Cerrar</Button>
+            <Button variant="secondary">Cerrar vista previa</Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>

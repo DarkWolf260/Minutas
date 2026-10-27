@@ -86,19 +86,17 @@ export default function PlantillasPage() {
                   />
                 </div>
               ) : (
-                <Card className="h-full min-h-[400px] flex items-center justify-center sm:rounded-lg border-2 border-dashed">
-                  <CardContent className="text-center space-y-4 p-12">
-                    <div className="h-20 w-20 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                      <FileText className="h-10 w-10 text-muted-foreground/30" />
+                <div className="empty-state-container border rounded-xl bg-card min-h-[400px]">
+                  <div className="max-w-md">
+                    <div className="empty-state-icon-box">
+                      <FileText className="h-7 w-7 text-primary" />
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold">Sin selección</h3>
-                      <p className="text-sm text-muted-foreground max-w-[280px] mx-auto mt-2">
-                        Selecciona una plantilla de la lista o sube una nueva para comenzar a configurar sus campos.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                    <h3 className="empty-state-title text-lg sm:text-xl">Sin plantilla seleccionada</h3>
+                    <p className="empty-state-desc max-w-xs mt-2">
+                      Selecciona una plantilla de la lista o sube una nueva para comenzar a configurar sus campos.
+                    </p>
+                  </div>
+                </div>
               )}
             </main>
           </TabsContent>

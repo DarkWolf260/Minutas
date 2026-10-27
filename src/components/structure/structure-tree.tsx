@@ -198,7 +198,7 @@ const RoleRow = React.memo(({
 
         <div className="flex items-center gap-1 shrink-0 ml-auto">
           <div className="flex items-center gap-1 mr-1">
-            <Label htmlFor={`single-${role.name}`} className="text-[10px] uppercase font-bold text-muted-foreground/60 hidden sm:block">Único</Label>
+            <Label htmlFor={`single-${role.name}`} className="text-[10px] uppercase font-bold text-muted-foreground hidden sm:block">Único</Label>
             <Switch
               id={`single-${role.name}`}
               checked={role.is_single}
@@ -209,11 +209,12 @@ const RoleRow = React.memo(({
 
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-sm"
             onClick={() => onRemove(role.name)}
-            className="h-7 w-7 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all rounded-full opacity-0 group-hover:opacity-100"
+            className="flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all rounded-lg opacity-0 group-hover:opacity-100"
+            aria-label="Eliminar cargo"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -298,11 +299,12 @@ const SortableRoleRow = React.memo(({
 
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-sm"
             onClick={() => onRemove(role.name)}
-            className="h-7 w-7 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all rounded-full opacity-0 group-hover:opacity-100"
+            className="flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all rounded-lg opacity-0 group-hover:opacity-100"
+            aria-label="Eliminar cargo"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -391,27 +393,29 @@ const SortableDeptItem = React.memo(({
           <div className="flex items-center gap-0.5 pr-1 bg-muted/5 group-data-[state=open]:bg-muted/10 h-8 transition-colors shrink-0 ml-auto">
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onAddRole(e);
               }}
-              className="h-7 w-7 flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 transition-all rounded-full"
+              className="flex items-center justify-center bg-primary/10 text-primary hover:bg-primary/20 transition-all rounded-lg"
               title="Añadir Cargo"
+              aria-label="Añadir cargo"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onRemoveDept(e);
               }}
-              className="h-7 w-7 flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all rounded-full opacity-0 group-hover:opacity-100"
+              className="flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all rounded-lg opacity-0 group-hover:opacity-100"
               title="Eliminar Departamento"
+              aria-label="Eliminar departamento"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -783,8 +787,9 @@ function StructureTreeComponent({
                   />
                 ))}
                 {globalRoles.length === 0 && (
-                  <div className="p-8 text-center text-xs text-muted-foreground italic">
-                    Sin cargos globales definidos.
+                  <div className="empty-state-container py-8">
+                    <div className="empty-state-title">Sin cargos globales</div>
+                    <div className="empty-state-description">No hay cargos con alcance global definidos</div>
                   </div>
                 )}
               </div>

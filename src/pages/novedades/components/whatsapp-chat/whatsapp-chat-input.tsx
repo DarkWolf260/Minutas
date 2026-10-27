@@ -54,7 +54,7 @@ export function WhatsAppChatInput({
             onKeyDown={handleKeyDown}
             disabled={isSending || isRealChatWithoutBot}
             placeholder={!currentChat ? 'Selecciona un chat...' : 'Escribe un mensaje...'}
-            className="w-full bg-transparent px-3 py-2 text-xs sm:text-sm resize-none focus:outline-none max-h-24 min-h-[36px] placeholder:text-muted-foreground/60 leading-normal"
+            className="w-full bg-transparent px-3 py-2 text-xs sm:text-sm resize-none focus:outline-none max-h-24 min-h-[36px] placeholder:text-muted-foreground leading-normal"
           />
         </div>
 

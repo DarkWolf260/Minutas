@@ -1,7 +1,7 @@
 # Graph Report - Minutas  (2026-10-22)
 
 ## Corpus Check
-- 411 files · ~331,914 words
+- 411 files · ~332,082 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 9 file(s) not represented in the graph (top: (none) 5, .example 1, .bat 1)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `94d6b06b`
+- Built from commit: `3881ffd8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -607,16 +607,16 @@ Nodes (4): FeatureErrorBoundary, PersonnelHeader(), PersonnelPage(), PersonnelPa
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `react` to `Input`, `novedad-main-content.tsx`, `personnel-tabs.tsx`, `sync-context.tsx`, `button.tsx`, `novedad-sidebar.tsx`, `00-bienvenida.tsx`, `settings/index.tsx`, `Badge`, `template-builder.tsx`, `types/index.ts`, `db-provider.tsx`, `useSettings`, `useAuth`, `Report`, `sonner`, `workspaces/index.tsx`, `calculator.ts`, `supabase.ts`, `Button`, `App.tsx`, `whatsapp-chat-bubble.tsx`, `guard-selector.tsx`, `package.json`, `Card`, `borrar-datos.tsx`, `setup/index.tsx`, `use-templates.ts`, `configuracion/index.ts`, `cn`, `users/index.tsx`, `field-renderer.tsx`, `address-form-dialog.tsx`, `structure-tree.tsx`, `orden-del-dia/index.tsx`, `personnel-table.tsx`, `use-whatsapp-bot.ts`, `novedades.tsx`, `react-router-dom`, `side-nav.tsx`, `personal.tsx`, `04-estructura.tsx`?**
-  _High betweenness centrality (0.098) - this node is a cross-community bridge._
+  _High betweenness centrality (0.096) - this node is a cross-community bridge._
 - **What connects `next/core-web-vitals`, `plugin:@typescript-eslint/recommended`, `@radix-ui/react-progress` to the rest of the system?**
   _117 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `db.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.07781649245063879 - nodes in this community are weakly interconnected._
 - **Why does `cn()` connect `cn` to `Input`, `novedad-main-content.tsx`, `personnel-tabs.tsx`, `button.tsx`, `novedad-sidebar.tsx`, `00-bienvenida.tsx`, `settings/index.tsx`, `Badge`, `db-provider.tsx`, `template-builder.tsx`, `workspaces/index.tsx`, `Button`, `App.tsx`, `whatsapp-chat-bubble.tsx`, `guard-selector.tsx`, `Card`, `setup/index.tsx`, `users/index.tsx`, `field-renderer.tsx`, `address-form-dialog.tsx`, `structure-tree.tsx`, `personnel-table.tsx`, `novedades.tsx`, `react-router-dom`, `side-nav.tsx`, `04-estructura.tsx`?**
-  _High betweenness centrality (0.065) - this node is a cross-community bridge._
+  _High betweenness centrality (0.067) - this node is a cross-community bridge._
 - **Should `parseTemplate` be split into smaller, more focused modules?**
   _Cohesion score 0.0992313067784766 - nodes in this community are weakly interconnected._
 - **Why does `Button` connect `Button` to `Input`, `novedad-main-content.tsx`, `personnel-tabs.tsx`, `button.tsx`, `react`, `novedad-sidebar.tsx`, `00-bienvenida.tsx`, `settings/index.tsx`, `Badge`, `template-builder.tsx`, `types/index.ts`, `db-provider.tsx`, `useAuth`, `Report`, `workspaces/index.tsx`, `App.tsx`, `whatsapp-chat-bubble.tsx`, `guard-selector.tsx`, `Card`, `borrar-datos.tsx`, `setup/index.tsx`, `cn`, `users/index.tsx`, `field-renderer.tsx`, `address-form-dialog.tsx`, `structure-tree.tsx`, `orden-del-dia/index.tsx`, `personnel-table.tsx`, `novedades.tsx`, `react-router-dom`, `side-nav.tsx`, `ErrorBoundary`, `personal.tsx`?**
-  _High betweenness centrality (0.050) - this node is a cross-community bridge._
+  _High betweenness centrality (0.051) - this node is a cross-community bridge._
 - **Should `Input` be split into smaller, more focused modules?**
   _Cohesion score 0.1241565452091768 - nodes in this community are weakly interconnected._

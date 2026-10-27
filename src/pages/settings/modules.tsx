@@ -105,30 +105,15 @@ export default function SettingsModulesPage() {
 
   return (
     <div className="h-full w-full flex flex-col min-h-0 overflow-hidden bg-background">
-      {/* Header fijo centrado */}
-      <div className="border-b shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 bg-card/40 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
-              <LayoutGrid className="h-6 w-6 text-primary" />
-              Módulos del Sistema
-            </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              Activa o desactiva secciones para adaptar la app a tu flujo de trabajo.
-            </p>
-          </div>
-        </div>
-      </div>
-
       <ScrollArea className="flex-1 min-h-0" type="always">
         <div className="max-w-4xl mx-auto w-full p-4 sm:px-6 lg:px-8 py-6 space-y-6 pb-32">
           {/* Warning banner for non-admins in cloud mode */}
           {isCloud && !isAdmin && isLoaded && (
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 animate-in fade-in duration-300">
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 animate-in fade-in duration-300">
               <ShieldAlert className="h-5 w-5 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-sm">Vista de solo lectura (Nube)</p>
-                <p className="text-xs text-amber-600/80 leading-relaxed mt-0.5">
+                <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed mt-0.5">
                   La configuración de módulos en áreas sincronizadas con la nube es administrada centralmente. Comunícate con un administrador si necesitas habilitar o deshabilitar alguna herramienta.
                 </p>
               </div>
@@ -155,8 +140,8 @@ export default function SettingsModulesPage() {
                     className={cn(
                       'flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left',
                       matchesPreset(disabled_modules, PRESET_DESKTOP)
-                        ? 'border-primary bg-primary/5 shadow-xs'
-                        : 'border-border/60 hover:border-muted-foreground/30 hover:bg-muted/30'
+                        ? 'border-primary bg-primary/5 shadow-2xs'
+                        : 'border-border/60 hover:border-border hover:bg-muted/50'
                     )}
                   >
                     <div className={cn(
@@ -179,8 +164,8 @@ export default function SettingsModulesPage() {
                     className={cn(
                       'flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left',
                       matchesPreset(disabled_modules, PRESET_MOBILE)
-                        ? 'border-primary bg-primary/5 shadow-xs'
-                        : 'border-border/60 hover:border-muted-foreground/30 hover:bg-muted/30'
+                        ? 'border-primary bg-primary/5 shadow-2xs'
+                        : 'border-border/60 hover:border-border hover:bg-muted/50'
                     )}
                   >
                     <div className={cn(
@@ -282,7 +267,7 @@ export default function SettingsModulesPage() {
                 </div>
               )}
 
-              <p className="text-[11px] text-muted-foreground/60 text-center pt-2">
+              <p className="text-[11px] text-muted-foreground text-center pt-2">
                 Los módulos desactivados se ocultan de la navegación principal. Los datos permanecen seguros.
               </p>
             </CardContent>

@@ -526,7 +526,7 @@ export function DatabaseProvider({ children, setupMode = false }: DatabaseProvid
               variant="default"
               size="lg"
               onClick={() => window.location.reload()} 
-              className="w-full shadow-lg hover:shadow-primary/20 transition-all duration-300"
+              className="w-full shadow-2xs rounded-xl"
             >
               Reintentar Conexión
             </Button>

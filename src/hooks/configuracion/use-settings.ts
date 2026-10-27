@@ -24,7 +24,8 @@ const defaultSettings: AppSettings = {
   group_by_template_type: false,
   pinned_template_ids: [],
   grouped_template_ids: [],
-  whatsapp_chat_position: 'sidebar',
+  whatsapp_chat_position: 'right_form',
+  whatsapp_recipient_groups: [],
 };
 
 export function useSettings() {
@@ -66,6 +67,9 @@ export function useSettings() {
         sanitized.disabled_modules = d.disabled_modules || d.disabledModules;
         sanitized.reportarole_ids = d.reportarole_ids || d.reportaroleIds || [];
         sanitized.whatsapp_default_chat_ids = d.whatsapp_default_chat_ids || d.whatsappDefaultChatIds || [];
+        sanitized.whatsapp_recipient_groups = Array.isArray(d.whatsapp_recipient_groups) 
+          ? d.whatsapp_recipient_groups 
+          : (Array.isArray(d.whatsappRecipientGroups) ? d.whatsappRecipientGroups : []);
         sanitized.whatsapp_local_url = d.whatsapp_local_url || d.whatsappLocalUrl || '';
         sanitized.final_report_statistics = d.final_report_statistics || d.finalReportStatistics || '';
         sanitized.group_consecutive_reports = d.group_consecutive_reports !== undefined ? d.group_consecutive_reports : false;
@@ -74,7 +78,7 @@ export function useSettings() {
         sanitized.group_by_template_type = d.group_by_template_type !== undefined ? d.group_by_template_type : false;
         sanitized.pinned_template_ids = d.pinned_template_ids || [];
         sanitized.grouped_template_ids = d.grouped_template_ids || [];
-        sanitized.whatsapp_chat_position = d.whatsapp_chat_position === 'right_form' ? 'right_form' : 'sidebar';
+        sanitized.whatsapp_chat_position = d.whatsapp_chat_position === 'sidebar' ? 'sidebar' : 'right_form';
 
         // 4. Comparación Profunda: Solo actualizar si hay un cambio real
         setSettings(prev => {

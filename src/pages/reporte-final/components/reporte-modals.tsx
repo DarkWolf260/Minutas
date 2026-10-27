@@ -101,7 +101,7 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
               </Button>
               <Button
                 onClick={() => setEsDialogOpenConfirmarGuardar(true)}
-                className="w-full h-12 font-bold shadow-lg shadow-primary/20 rounded-xl"
+                className="w-full h-12 font-bold shadow-2xs rounded-xl"
               >
                 <Save className="h-4 w-4 mr-2" />
                 Finalizar y Archivar
@@ -124,11 +124,11 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
         </Sheet>
       ) : (
         <Dialog open={esDialogOpenResultado} onOpenChange={setEsDialogOpenResultado}>
-          <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden p-0 border-none rounded-3xl shadow-2xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden p-0 border rounded-xl shadow-lg">
             <DialogHeader className="p-6 pb-4 bg-muted/30 border-b">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+                  <div className="p-2 rounded-xl bg-primary text-primary-foreground shadow-2xs">
                     <FileText className="h-6 w-6" />
                   </div>
                   <div>
@@ -151,7 +151,7 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
               <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
                 <Button
                   onClick={() => setEsDialogOpenConfirmarGuardar(true)}
-                  className="flex-1 sm:flex-none h-11 px-6 font-bold shadow-lg shadow-primary/20 rounded-xl"
+                  className="flex-1 sm:flex-none h-11 px-6 font-bold shadow-2xs rounded-xl"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   Finalizar y Archivar
@@ -259,7 +259,7 @@ export function ReporteModals({ hook, isMobile }: ReporteModalsProps) {
             <DialogFooter className="pt-4 border-t flex items-center gap-3">
               <Button
                 onClick={manejarCopiarReporte}
-                className="h-11 px-8 font-bold rounded-xl shadow-lg shadow-primary/10"
+                className="h-11 px-8 font-bold rounded-xl shadow-2xs"
               >
                 <ClipboardCheck className="h-4 w-4 mr-2" />
                 {textoBotonCopiar}

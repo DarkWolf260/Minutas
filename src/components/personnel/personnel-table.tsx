@@ -430,8 +430,10 @@ export function PersonnelTable({
 
       <div className="flex flex-col gap-3 md:hidden">
         {filteredPersonnel.length === 0 ? (
-          <div className="text-center text-muted-foreground py-10 border rounded-xl border-dashed bg-muted/20">
-            {isFiltered ? 'No se encontraron funcionarios con los filtros aplicados' : 'No hay personal registrado'}
+          <div className="empty-state-container py-10 border rounded-xl border-border/60 bg-muted/20">
+            <p className="empty-state-desc">
+              {isFiltered ? 'No se encontraron funcionarios con los filtros aplicados' : 'No hay personal registrado'}
+            </p>
           </div>
         ) : (
           filteredPersonnel.map((member) => (

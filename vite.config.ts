@@ -33,7 +33,7 @@ export default defineConfig({
       },
     }),
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       includeAssets: ['icons/icon-192x192.png', 'icons/icon-512x512.png', 'screenshots/desktop.png', 'screenshots/mobile.png'],
       manifestFilename: 'manifest.json',
       manifest: {
@@ -87,6 +87,9 @@ export default defineConfig({
         ],
       },
       workbox: {
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,png}'],
         navigateFallback: 'index.html',
         runtimeCaching: [
@@ -149,6 +152,13 @@ export default defineConfig({
     port: 3000,
     open: false,
     host: true,
+    watch: {
+      ignored: [
+        '**/whatsapp-bot/**',
+        '**/.git/**',
+        '**/graphify-out/**',
+      ],
+    },
     proxy: {
       '/api/whatsapp': {
         target: 'http://localhost:3001',

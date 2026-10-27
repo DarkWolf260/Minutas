@@ -66,7 +66,7 @@ export function WorkspaceControls({ onCreate, onImport }: WorkspaceControlsProps
     <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
       <Button
         variant="outline"
-        className="h-12 rounded-xl border-dashed hover:border-primary hover:bg-primary/5 transition-all group"
+        className="h-12 rounded-xl border border-border/80 hover:border-primary/50 hover:bg-primary/5 transition-all group shadow-2xs"
         onClick={() => setMode('local')}
       >
         <Plus className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />
@@ -75,7 +75,7 @@ export function WorkspaceControls({ onCreate, onImport }: WorkspaceControlsProps
 
       <Button
         variant="outline"
-        className="h-12 rounded-xl border-dashed hover:bg-muted/50"
+        className="h-12 rounded-xl border border-border/80 hover:bg-muted/50 transition-all shadow-2xs"
         onClick={() => document.getElementById('import-workspace-input')?.click()}
       >
         <Upload className="mr-2 h-4 w-4" />

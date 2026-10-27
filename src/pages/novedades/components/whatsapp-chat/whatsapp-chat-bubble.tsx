@@ -13,15 +13,21 @@ import {
   Loader2,
   Play,
   Pause,
-  Ban
+  Ban,
+  MapPin,
+  ExternalLink,
+  Video as VideoIcon,
+  Maximize2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Report } from '@/lib/types';
 import type { WhatsAppMessage } from '@/hooks/whatsapp';
+import { WhatsAppMarkdown } from './whatsapp-markdown';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
@@ -35,11 +41,22 @@ interface WhatsAppChatBubbleProps {
   onSendReportToChat?: (report: Report) => void;
   isBotReady?: boolean;
   isGroup?: boolean;
+  contactNameMap?: Map<string, string>;
 }
 
 function formatDisplayName(name?: string | null): string {
   if (!name) return '';
-  const clean = name.trim();
+  let clean = name.trim();
+
+  // Si contiene identificador @lid, nunca debe mostrarse directamente
+  if (clean.includes('@lid')) {
+    return 'Contacto';
+  }
+  // Si contiene sufijo @c.us, eliminarlo
+  if (clean.endsWith('@c.us')) {
+    clean = clean.replace('@c.us', '');
+  }
+
   // Formatear números telefónicos venezolanos (+58 4xx-xxx-xxxx)
   const phoneMatch = clean.match(/^(\+?58)?(4\d{2})(\d{3})(\d{4})$/);
   if (phoneMatch) {
@@ -59,14 +76,119 @@ function formatTime(timestamp?: string | number): string {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-function downloadImage(url: string, filename = 'whatsapp-image.jpg') {
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.target = '_blank';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+async function downloadMedia(url: string, filename = 'whatsapp-media') {
+  try {
+    if (url.startsWith('data:')) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+  } catch (err) {
+    console.error('Failed to download media:', err);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+}
+const downloadImage = downloadMedia;
+
+function isBase64ImageString(str?: string | null): boolean {
+  if (!str || typeof str !== 'string') return false;
+  const s = str.trim();
+  if (s.startsWith('data:image/')) return true;
+  if (s.length > 20) {
+    if (s.startsWith('/9j/') || s.startsWith('UklGR') || s.startsWith('iVBORw0KGgo') || s.startsWith('R0lGOD')) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function MessageStatusTicks({ ack }: { ack?: number }) {
+  const currentAck = typeof ack === 'number' ? ack : 1;
+
+  // ACK_READ (3) o ACK_PLAYED (4) => Doble check azul WhatsApp (#53bdeb)
+  if (currentAck >= 3) {
+    return (
+      <span title="Visto" className="inline-flex items-center">
+        <CheckCheck className="h-3.5 w-3.5 text-[#53bdeb] dark:text-[#53bdeb] shrink-0" />
+      </span>
+    );
+  }
+
+  // ACK_DEVICE (2) => Doble check gris (entregado al dispositivo)
+  if (currentAck === 2) {
+    return (
+      <span title="Entregado" className="inline-flex items-center">
+        <CheckCheck className="h-3.5 w-3.5 text-muted-foreground/75 dark:text-white/70 shrink-0" />
+      </span>
+    );
+  }
+
+  // ACK_SERVER (1) o ACK_PENDING (0) => Un check gris (enviado)
+  return (
+    <span title={currentAck === 1 ? 'Enviado' : 'Pendiente'} className="inline-flex items-center">
+      <Check className="h-3.5 w-3.5 text-muted-foreground/75 dark:text-white/70 shrink-0" />
+    </span>
+  );
+}
+
+function QuotedMessageThumbnail({
+  quotedMsg,
+  onClick
+}: {
+  quotedMsg: NonNullable<WhatsAppMessage['quotedMsg']>;
+  onClick: (e: React.MouseEvent) => void;
+}) {
+  const [hasError, setHasError] = useState(false);
+  let target = quotedMsg.thumbnail || quotedMsg.mediaUrl;
+  if (!target && quotedMsg.body && isBase64ImageString(quotedMsg.body)) {
+    target = quotedMsg.body.startsWith('data:') ? quotedMsg.body : `data:image/jpeg;base64,${quotedMsg.body.trim()}`;
+  }
+
+  if (hasError || !target) {
+    return null;
+  }
+
+  const isQuotedVideo = quotedMsg.type === 'video';
+
+  return (
+    <div
+      onClick={onClick}
+      className="h-10 w-10 sm:h-11 sm:w-11 rounded-lg bg-black/10 dark:bg-white/10 shrink-0 overflow-hidden cursor-pointer group/qthumb relative border border-black/5"
+      title={isQuotedVideo ? 'Ver video citado' : 'Ver foto citada'}
+    >
+      <img
+        src={target}
+        alt={isQuotedVideo ? 'Video respondido' : 'Foto respondida'}
+        className="w-full h-full object-cover transition-transform group-hover/qthumb:scale-105"
+        onError={() => setHasError(true)}
+      />
+      {isQuotedVideo && (
+        <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
+          <Play className="h-3.5 w-3.5 fill-white text-white drop-shadow-sm" />
+        </div>
+      )}
+    </div>
+  );
 }
 
 function WhatsAppImagePreview({
@@ -144,12 +266,173 @@ function WhatsAppImagePreview({
         )}
       />
 
-      {/* Botón flotante para ampliar imagen */}
-      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-        <span className="p-2 rounded-full bg-black/60 text-white backdrop-blur-md shadow-md scale-90 group-hover:scale-100 transition-transform">
+      {/* Botones de acción en la parte superior derecha: Zoom y Descarga directa */}
+      <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
+          className="p-1.5 rounded-full bg-black/60 hover:bg-black/85 text-white backdrop-blur-md shadow-md transition-all hover:scale-110 active:scale-95"
+          title="Ampliar imagen"
+        >
           <ZoomIn className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (src) {
+              downloadMedia(src, `whatsapp-${Date.now()}.jpg`);
+            }
+          }}
+          className="p-1.5 rounded-full bg-black/60 hover:bg-black/85 text-white backdrop-blur-md shadow-md transition-all hover:scale-110 active:scale-95"
+          title="Descargar imagen"
+        >
+          <Download className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function WhatsAppVideoPlayer({
+  mediaUrl,
+  thumbnail,
+  onExpand
+}: {
+  mediaUrl?: string | null;
+  thumbnail?: string | null;
+  onExpand: () => void;
+}) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [duration, setDuration] = useState<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+      setIsLoading(false);
+    }
+  };
+
+  const handlePlayToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!videoRef.current) {
+      onExpand();
+      return;
+    }
+    if (isPlaying) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play().catch(() => setHasError(true));
+    }
+  };
+
+  const formatSeconds = (sec: number) => {
+    if (isNaN(sec) || !isFinite(sec) || sec < 0) return '0:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  if (!mediaUrl && !thumbnail) {
+    return (
+      <div className="flex items-center gap-2 p-3 rounded-xl bg-black/5 dark:bg-black/20 text-xs text-muted-foreground">
+        <VideoIcon className="h-5 w-5 text-emerald-600 shrink-0" />
+        <span className="italic">Video no disponible</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative overflow-hidden rounded-xl max-h-80 sm:max-h-96 w-full min-w-[240px] sm:min-w-[280px] bg-black/90 group flex items-center justify-center">
+      {/* Video Element */}
+      {mediaUrl ? (
+        <video
+          ref={videoRef}
+          src={mediaUrl}
+          poster={thumbnail || undefined}
+          preload="metadata"
+          controls={isPlaying}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onEnded={() => setIsPlaying(false)}
+          onWaiting={() => setIsLoading(true)}
+          onPlaying={() => setIsLoading(false)}
+          onLoadedMetadata={handleLoadedMetadata}
+          onError={() => setHasError(true)}
+          className="w-full max-h-80 sm:max-h-96 object-contain rounded-xl"
+        />
+      ) : thumbnail ? (
+        <img
+          src={thumbnail}
+          alt="Vista previa de video"
+          className="w-full max-h-80 sm:max-h-96 object-cover rounded-xl opacity-80"
+        />
+      ) : null}
+
+      {/* Overlay de Carga */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-xs z-10 pointer-events-none">
+          <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+        </div>
+      )}
+
+      {/* Botón Central de Play */}
+      {!isPlaying && (
+        <div
+          onClick={handlePlayToggle}
+          className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors cursor-pointer z-10"
+          title="Reproducir video"
+        >
+          <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-emerald-600/90 hover:bg-emerald-600 text-white flex items-center justify-center shadow-xl ring-2 ring-white/40 transition-transform group-hover:scale-110">
+            <Play className="h-6 w-6 ml-1 fill-current" />
+          </div>
+        </div>
+      )}
+
+      {/* Badge de Video y Duración */}
+      <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5 pointer-events-none">
+        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-black/70 text-white shadow-sm backdrop-blur-xs">
+          <VideoIcon className="h-3 w-3 text-emerald-400" />
+          <span>{duration ? formatSeconds(duration) : 'Video'}</span>
         </span>
       </div>
+
+      {/* Botones de acción en la parte superior derecha: Zoom y Descarga directa */}
+      {(mediaUrl || thumbnail) && (
+        <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onExpand();
+            }}
+            className="p-1.5 rounded-full bg-black/60 hover:bg-black/85 text-white backdrop-blur-md shadow-md transition-all hover:scale-110 active:scale-95"
+            title="Ampliar video"
+          >
+            <ZoomIn className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              const target = mediaUrl || thumbnail;
+              if (target) {
+                downloadMedia(target, `whatsapp-${Date.now()}.mp4`);
+              }
+            }}
+            className="p-1.5 rounded-full bg-black/60 hover:bg-black/85 text-white backdrop-blur-md shadow-md transition-all hover:scale-110 active:scale-95"
+            title="Descargar video"
+          >
+            <Download className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -239,7 +522,7 @@ function WhatsAppAudioPlayer({
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="flex flex-col gap-1 w-full min-w-[240px] sm:min-w-[270px]">
+    <div className="flex flex-col gap-1 w-full max-w-full">
       <audio
         ref={audioRef}
         src={mediaUrl}
@@ -332,6 +615,158 @@ function WhatsAppAudioPlayer({
   );
 }
 
+function WhatsAppLocationCard({
+  location,
+  thumbnail
+}: {
+  location: NonNullable<WhatsAppMessage['location']>;
+  thumbnail?: string | null;
+}) {
+  const [mapImgError, setMapImgError] = useState(false);
+  const mapsUrl = location.url || `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
+
+  const handleOpenMap = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open(mapsUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleCopyCoords = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(`${location.latitude}, ${location.longitude}`);
+    toast.success('Coordenadas copiadas al portapapeles');
+  };
+
+  const locationTitle =
+    location.name ||
+    location.description ||
+    (location.isLive ? 'Ubicación en tiempo real' : 'Ubicación compartida');
+  const formattedCoords = `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`;
+
+  return (
+    <div className="flex flex-col w-full rounded-xl overflow-hidden bg-black/5 dark:bg-black/25 mb-1.5 transition-colors">
+      {/* Visualización del Mapa */}
+      <div
+        onClick={handleOpenMap}
+        className="relative h-28 sm:h-32 w-full bg-muted cursor-pointer overflow-hidden group select-none"
+        title="Abrir en Google Maps"
+      >
+        {thumbnail && !mapImgError ? (
+          <img
+            src={thumbnail}
+            alt="Mapa de ubicación"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={() => setMapImgError(true)}
+          />
+        ) : (
+          /* Fondo de cuadrícula de mapa estilizado */
+          <div className="w-full h-full relative flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-100 to-sky-100 dark:from-slate-900 dark:via-[#162a2c] dark:to-slate-800">
+            <svg
+              className="absolute inset-0 w-full h-full opacity-40 dark:opacity-30 stroke-current text-emerald-800 dark:text-emerald-400"
+              xmlns="http://www.w3.org/2000/svg"
+              width="100%"
+              height="100%"
+            >
+              <defs>
+                <pattern id="map-pattern" width="32" height="32" patternUnits="userSpaceOnUse">
+                  <path d="M 32 0 L 0 0 0 32" fill="none" strokeWidth="0.8" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#map-pattern)" />
+              <path
+                d="M -20 70 Q 80 40 180 80 T 360 40"
+                fill="none"
+                strokeWidth="4"
+                className="stroke-amber-400/60 dark:stroke-amber-500/40"
+              />
+              <path
+                d="M 60 -10 Q 90 90 120 180"
+                fill="none"
+                strokeWidth="3"
+                className="stroke-sky-400/60 dark:stroke-sky-500/40"
+              />
+            </svg>
+          </div>
+        )}
+
+        {/* Pin central del marcador */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="relative flex items-center justify-center -translate-y-2">
+            {location.isLive && (
+              <span className="absolute h-8 w-8 rounded-full bg-red-500/30 animate-ping" />
+            )}
+            <div className="h-9 w-9 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md ring-2 ring-white dark:ring-black">
+              <MapPin className="h-5 w-5 fill-current" />
+            </div>
+          </div>
+        </div>
+
+        {/* Distintivo de tipo (En vivo / Ubicación) */}
+        <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5">
+          {location.isLive ? (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-600/90 text-white shadow-sm backdrop-blur-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+              En vivo
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-black/60 text-white shadow-sm backdrop-blur-sm">
+              <MapPin className="h-3 w-3 text-red-400" />
+              Ubicación
+            </span>
+          )}
+        </div>
+
+        {/* Indicador flotante en hover */}
+        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+          <div className="px-2.5 py-1 rounded-md bg-black/75 text-white text-[11px] font-medium flex items-center gap-1 shadow-md">
+            <span>Ver en Google Maps</span>
+            <ExternalLink className="h-3 w-3" />
+          </div>
+        </div>
+      </div>
+
+      {/* Título, coordenadas y acciones */}
+      <div className="p-2.5 flex flex-col gap-1.5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-xs text-foreground truncate" title={locationTitle}>
+              {locationTitle}
+            </h4>
+            <div className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate">
+              {formattedCoords}
+            </div>
+          </div>
+        </div>
+
+        {/* Botones de acción */}
+        <div className="flex items-center gap-1.5 pt-1 border-t border-border/30">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleOpenMap}
+            className="flex-1 h-7 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10 px-2 justify-center gap-1"
+          >
+            <ExternalLink className="h-3 w-3" />
+            <span>Abrir mapa</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleCopyCoords}
+            className="h-7 text-[11px] text-muted-foreground hover:text-foreground px-2 gap-1"
+            title="Copiar coordenadas"
+          >
+            <Copy className="h-3 w-3" />
+            <span className="hidden sm:inline">Copiar</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
   report,
   message,
@@ -339,9 +774,11 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
   onSelectReport,
   onSendReportToChat,
   isBotReady,
-  isGroup
+  isGroup,
+  contactNameMap
 }: WhatsAppChatBubbleProps) {
   const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string | null>(null);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = useState<string>('');
 
   // Scenario 1: Report / Novedad bubble
@@ -418,8 +855,34 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                         className="w-full h-full object-cover transition-transform group-hover/img:scale-105"
                         loading="lazy"
                       />
+                      {/* Botones de acción en la parte superior derecha */}
+                      <div className="absolute top-1.5 right-1.5 z-20 flex items-center gap-1 opacity-90 sm:opacity-0 group-hover/img:opacity-100 transition-opacity">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPhotoUrl(photo.url);
+                            setPreviewTitle(photo.name || report.title);
+                          }}
+                          className="p-1 rounded-full bg-black/60 hover:bg-black/85 text-white backdrop-blur-md shadow-md transition-all hover:scale-110 active:scale-95"
+                          title="Ampliar foto"
+                        >
+                          <ZoomIn className="h-3 w-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            downloadMedia(photo.url, photo.name || `novedad-${Date.now()}.jpg`);
+                          }}
+                          className="p-1 rounded-full bg-black/60 hover:bg-black/85 text-white backdrop-blur-md shadow-md transition-all hover:scale-110 active:scale-95"
+                          title="Descargar foto"
+                        >
+                          <Download className="h-3 w-3" />
+                        </button>
+                      </div>
                       {i === 2 && photos.length > 3 && (
-                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-xs font-bold">
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-xs font-bold pointer-events-none">
                           +{photos.length - 3}
                         </div>
                       )}
@@ -430,17 +893,17 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
             )}
 
             {/* Text Content */}
-            <div className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words pr-2">
+            <div className="text-xs sm:text-sm leading-relaxed pr-2">
               {report.content ? (
                 report.content.length > 300 ? (
                   <>
-                    {report.content.substring(0, 300)}...
-                    <span className="text-emerald-700 dark:text-emerald-300 font-semibold ml-1">
+                    <WhatsAppMarkdown text={report.content.substring(0, 300) + '...'} />
+                    <span className="text-emerald-700 dark:text-emerald-300 font-semibold ml-1 inline-block">
                       [Ver más]
                     </span>
                   </>
                 ) : (
-                  report.content
+                  <WhatsAppMarkdown text={report.content} />
                 )
               ) : (
                 <span className="italic text-muted-foreground">Sin descripción</span>
@@ -473,12 +936,16 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
               </div>
 
               {/* Time & Delivery ticks */}
-              <div className="flex items-center gap-1 text-muted-foreground/80 dark:text-white/60 ml-auto">
+              <div className="flex items-center gap-1 text-muted-foreground dark:text-white/80 ml-auto">
                 <span>{formattedTime}</span>
                 {isFinalizado ? (
-                  <CheckCheck className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
+                  <span title="Finalizado / Visto" className="inline-flex items-center">
+                    <CheckCheck className="h-3.5 w-3.5 text-[#53bdeb] dark:text-[#53bdeb] shrink-0" />
+                  </span>
                 ) : (
-                  <Check className="h-3.5 w-3.5" />
+                  <span title="En proceso" className="inline-flex items-center">
+                    <Check className="h-3.5 w-3.5 text-muted-foreground/75 dark:text-white/70 shrink-0" />
+                  </span>
                 )}
               </div>
             </div>
@@ -487,11 +954,14 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
 
         {/* Lightbox Dialog */}
         <Dialog open={!!selectedPhotoUrl} onOpenChange={(open) => !open && setSelectedPhotoUrl(null)}>
-          <DialogContent className="max-w-[95vw] md:max-w-4xl p-0 border border-muted/20 bg-background/95 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl">
+          <DialogContent hideCloseButton className="max-w-[95vw] md:max-w-4xl p-0 border border-muted/20 bg-background/95 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl">
             <DialogHeader className="p-3.5 border-b border-border/50 bg-background/80 backdrop-blur-md flex flex-row items-center justify-between">
               <DialogTitle className="text-xs sm:text-sm font-semibold truncate pr-4">
                 {previewTitle || 'Vista previa de imagen'}
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                {previewTitle || 'Vista previa ampliada de imagen adjunta a la novedad'}
+              </DialogDescription>
               <div className="flex items-center gap-1">
                 {selectedPhotoUrl && (
                   <Button
@@ -544,15 +1014,53 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
       message.body === 'Eliminaste este mensaje'
     );
 
+    const isLocation =
+      !isRevoked &&
+      (message.type === 'location' ||
+        message.type === 'live_location' ||
+        Boolean(message.location));
+
+    const isVideo = !isRevoked && message.type === 'video';
+
     const isImage =
       !isRevoked &&
+      !isLocation &&
+      !isVideo &&
       (message.type === 'image' ||
         message.type === 'sticker' ||
-        (message.hasMedia && !['ptt', 'audio', 'document', 'video', 'call_log', 'revoked'].includes(message.type)));
+        (message.hasMedia && !['ptt', 'audio', 'document', 'video', 'call_log', 'revoked', 'location', 'live_location'].includes(message.type)));
     const isAudio = !isRevoked && (message.type === 'ptt' || message.type === 'audio');
     const isDocument = !isRevoked && message.type === 'document';
 
     const hasMediaPreview = Boolean(message.mediaUrl || message.thumbnail);
+
+    // Resolver nombre del remitente dando prioridad a la libreta de contactos (contactNameMap)
+    const authorKey = message.author || message.from;
+    const authorNum = authorKey ? authorKey.split('@')[0] : '';
+    const resolvedFromMap =
+      (authorKey && contactNameMap?.get(authorKey)) ||
+      (authorNum && contactNameMap?.get(`${authorNum}@c.us`)) ||
+      (authorNum && contactNameMap?.get(`${authorNum}@lid`)) ||
+      (authorNum && contactNameMap?.get(authorNum));
+
+    const effectiveSenderName = resolvedFromMap || message.senderName;
+
+    // Resolver nombre del remitente del mensaje citado dando prioridad a la libreta de contactos
+    const quotedAuthorKey = message.quotedMsg?.author || message.quotedMsg?.from || '';
+    const quotedAuthorNum = quotedAuthorKey ? quotedAuthorKey.split('@')[0] : '';
+    const resolvedQuotedFromMap =
+      (quotedAuthorKey && contactNameMap?.get(quotedAuthorKey)) ||
+      (quotedAuthorNum && contactNameMap?.get(`${quotedAuthorNum}@c.us`)) ||
+      (quotedAuthorNum && contactNameMap?.get(`${quotedAuthorNum}@lid`)) ||
+      (quotedAuthorNum && contactNameMap?.get(quotedAuthorNum));
+
+    let candidateQuotedSender = resolvedQuotedFromMap || message.quotedMsg?.senderName;
+    if (candidateQuotedSender && candidateQuotedSender.includes('@lid')) {
+      candidateQuotedSender = (quotedAuthorKey && contactNameMap?.get(quotedAuthorKey)) || 'Contacto';
+    }
+    const effectiveQuotedSenderName = formatDisplayName(candidateQuotedSender) || 'Contacto';
+
+    const isMediaCard = isAudio || isLocation;
 
     return (
       <>
@@ -564,8 +1072,8 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
         >
           <div
             className={cn(
-              'relative max-w-[85%] sm:max-w-[75%] rounded-2xl p-2.5 shadow-sm border text-xs sm:text-sm',
-              isAudio && 'min-w-[270px] sm:min-w-[310px]',
+              'relative rounded-2xl p-2.5 shadow-sm border text-xs sm:text-sm',
+              isMediaCard ? 'w-72 sm:w-80 max-w-[88%]' : 'max-w-[85%] sm:max-w-[75%]',
               isRevoked && 'opacity-85 select-none',
               isFromMe
                 ? 'bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] rounded-tr-xs border-emerald-500/20'
@@ -573,16 +1081,16 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
             )}
           >
             {/* Sender name for group chats only (incoming only, non-revoked) */}
-            {!isFromMe && isGroup && message.senderName && !isRevoked && (
+            {!isFromMe && isGroup && effectiveSenderName && !isRevoked && (
               <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">
-                {formatDisplayName(message.senderName)}
+                {formatDisplayName(effectiveSenderName)}
               </div>
             )}
 
             {/* Mensaje Eliminado (Revoked) */}
             {isRevoked ? (
-              <div className="flex items-center gap-1.5 py-0.5 text-muted-foreground/80 dark:text-muted-foreground/70 italic text-xs select-none">
-                <Ban className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+              <div className="flex items-center gap-1.5 py-0.5 text-muted-foreground italic text-xs select-none">
+                <Ban className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <span>{isFromMe ? 'Eliminaste este mensaje' : 'Este mensaje fue eliminado'}</span>
               </div>
             ) : (
@@ -600,26 +1108,45 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                     <div className="flex-1 min-w-0 pr-1">
                       {/* Remitente del mensaje citado */}
                       <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 truncate">
-                        {message.quotedMsg.fromMe ? 'Tú' : formatDisplayName(message.quotedMsg.senderName) || 'Contacto'}
+                        {message.quotedMsg.fromMe ? 'Tú' : effectiveQuotedSenderName}
                       </div>
 
                       {/* Contenido / extracto del mensaje citado */}
                       <div className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
                         {message.quotedMsg.isRevoked ? (
-                          <span className="italic flex items-center gap-1 text-muted-foreground/70">
+                          <span className="italic flex items-center gap-1 text-muted-foreground">
                             <Ban className="h-3 w-3 shrink-0" />
                             Este mensaje fue eliminado
                           </span>
                         ) : (
                           <>
-                            {message.quotedMsg.hasMedia && !message.quotedMsg.body && (
-                              <span className="flex items-center gap-1">
-                                <ImageIcon className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                                <span>Foto</span>
+                            {message.quotedMsg.location ? (
+                              <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-300 font-medium truncate">
+                                <MapPin className="h-3 w-3 shrink-0 text-red-500" />
+                                <span className="truncate">
+                                  {message.quotedMsg.location.isLive
+                                    ? 'Ubicación en tiempo real'
+                                    : message.quotedMsg.location.name || message.quotedMsg.location.description || 'Ubicación'}
+                                </span>
                               </span>
-                            )}
-                            {message.quotedMsg.body && (
-                              <span className="truncate">{message.quotedMsg.body}</span>
+                            ) : (
+                              <>
+                                {message.quotedMsg.type === 'video' && !message.quotedMsg.body && (
+                                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                                    <VideoIcon className="h-3 w-3 shrink-0" />
+                                    <span>Video</span>
+                                  </span>
+                                )}
+                                {message.quotedMsg.hasMedia && message.quotedMsg.type !== 'video' && !message.quotedMsg.body && (
+                                  <span className="flex items-center gap-1">
+                                    <ImageIcon className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                    <span>Foto</span>
+                                  </span>
+                                )}
+                                {message.quotedMsg.body && !isBase64ImageString(message.quotedMsg.body) && (
+                                  <WhatsAppMarkdown text={message.quotedMsg.body} inline className="truncate" />
+                                )}
+                              </>
                             )}
                           </>
                         )}
@@ -628,7 +1155,8 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
 
                     {/* Miniatura si el mensaje respondido tenía foto */}
                     {message.quotedMsg.hasMedia && (message.quotedMsg.thumbnail || message.quotedMsg.mediaUrl) && (
-                      <div
+                      <QuotedMessageThumbnail
+                        quotedMsg={message.quotedMsg}
                         onClick={(e) => {
                           e.stopPropagation();
                           const target = message.quotedMsg?.mediaUrl || message.quotedMsg?.thumbnail;
@@ -637,22 +1165,7 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                             setPreviewTitle(message.quotedMsg?.body || 'Foto del mensaje respondido');
                           }
                         }}
-                        className="h-10 w-10 sm:h-11 sm:w-11 rounded-lg bg-black/10 dark:bg-white/10 shrink-0 overflow-hidden cursor-pointer group/qthumb relative border border-black/5"
-                        title="Ver foto citada"
-                      >
-                        <img
-                          src={message.quotedMsg.thumbnail || message.quotedMsg.mediaUrl || ''}
-                          alt="Foto respondida"
-                          className="w-full h-full object-cover transition-transform group-hover/qthumb:scale-105"
-                          onError={(e) => {
-                            if (message.quotedMsg?.thumbnail && e.currentTarget.src !== message.quotedMsg.thumbnail) {
-                              e.currentTarget.src = message.quotedMsg.thumbnail;
-                            } else {
-                              e.currentTarget.style.display = 'none';
-                            }
-                          }}
-                        />
-                      </div>
+                      />
                     )}
                   </div>
                 )}
@@ -668,11 +1181,42 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                         const target = message.mediaUrl || message.thumbnail;
                         if (target) {
                           setSelectedPhotoUrl(target);
-                          setPreviewTitle(message.body || (message.senderName ? `Foto de ${message.senderName}` : 'Foto de WhatsApp'));
+                          setPreviewTitle(message.body || (effectiveSenderName ? `Foto de ${effectiveSenderName}` : 'Foto de WhatsApp'));
                         }
                       }}
                     />
                   </div>
+                )}
+
+                {/* Render Video real */}
+                {isVideo && (
+                  <div className="mb-1.5">
+                    <WhatsAppVideoPlayer
+                      mediaUrl={message.mediaUrl}
+                      thumbnail={message.thumbnail}
+                      onExpand={() => {
+                        const target = message.mediaUrl || message.thumbnail;
+                        if (target) {
+                          setSelectedVideoUrl(target);
+                          setPreviewTitle(message.body || (effectiveSenderName ? `Video de ${effectiveSenderName}` : 'Video de WhatsApp'));
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Ubicación compartida */}
+                {isLocation && message.location && (
+                  <WhatsAppLocationCard
+                    location={message.location}
+                    thumbnail={
+                      message.thumbnail ||
+                      message.mediaUrl ||
+                      (message.body && isBase64ImageString(message.body)
+                        ? (message.body.startsWith('data:') ? message.body : `data:image/jpeg;base64,${message.body.trim()}`)
+                        : null)
+                    }
+                  />
                 )}
 
                 {/* Audio / Nota de voz */}
@@ -708,7 +1252,7 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                 )}
 
                 {/* Placeholder fallback para otros tipos no reconocidos */}
-                {message.hasMedia && !isImage && !isAudio && !isDocument && (
+                {message.hasMedia && !isImage && !isVideo && !isAudio && !isDocument && !isLocation && (
                   <div className="flex items-center gap-2 p-2 mb-1.5 rounded-lg bg-black/5 dark:bg-black/20 text-xs">
                     <ImageIcon className="h-4 w-4 text-emerald-600" />
                     <span className="italic text-muted-foreground">Archivo multimedia</span>
@@ -716,11 +1260,17 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                 )}
 
                 {/* Message text / caption */}
-                {message.body && (
-                  <div className="whitespace-pre-wrap break-words leading-relaxed pr-2">
-                    {message.body}
-                  </div>
-                )}
+                {message.body &&
+                  !isBase64ImageString(message.body) &&
+                  (!isLocation ||
+                    (message.body !== message.location?.name &&
+                      message.body !== message.location?.description &&
+                      message.body?.trim() !== `${message.location?.latitude}, ${message.location?.longitude}` &&
+                      message.body?.trim() !== `${message.location?.latitude},${message.location?.longitude}`)) && (
+                    <div className="pr-2">
+                      <WhatsAppMarkdown text={message.body} />
+                    </div>
+                  )}
               </>
             )}
 
@@ -730,16 +1280,12 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                 'flex items-center justify-end gap-1 mt-1 text-[10px]',
                 !message.body && !message.quotedMsg && isImage && hasMediaPreview
                   ? 'absolute bottom-2 right-2 bg-black/60 text-white px-2 py-0.5 rounded-full backdrop-blur-xs shadow-sm z-10'
-                  : 'text-muted-foreground/80 dark:text-white/60'
+                  : 'text-muted-foreground dark:text-white/80'
               )}
             >
               <span>{formattedTime}</span>
               {isFromMe && !isRevoked && (
-                message.ack && message.ack >= 3 ? (
-                  <CheckCheck className={cn('h-3.5 w-3.5', message.ack === 4 ? 'text-blue-500' : '')} />
-                ) : (
-                  <Check className="h-3.5 w-3.5" />
-                )
+                <MessageStatusTicks ack={message.ack} />
               )}
             </div>
           </div>
@@ -747,11 +1293,14 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
 
         {/* Lightbox Dialog for Real WhatsApp Images */}
         <Dialog open={!!selectedPhotoUrl} onOpenChange={(open) => !open && setSelectedPhotoUrl(null)}>
-          <DialogContent className="max-w-[95vw] md:max-w-4xl p-0 border border-muted/20 bg-background/95 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl">
+          <DialogContent hideCloseButton className="max-w-[95vw] md:max-w-4xl p-0 border border-muted/20 bg-background/95 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl">
             <DialogHeader className="p-3.5 border-b border-border/50 bg-background/80 backdrop-blur-md flex flex-row items-center justify-between">
               <DialogTitle className="text-xs sm:text-sm font-semibold truncate pr-4">
                 {previewTitle || 'Vista previa de imagen'}
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                {previewTitle || 'Vista previa ampliada de imagen de WhatsApp'}
+              </DialogDescription>
               <div className="flex items-center gap-1">
                 {selectedPhotoUrl && (
                   <Button
@@ -783,6 +1332,54 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
                   src={selectedPhotoUrl}
                   alt={previewTitle || 'Imagen ampliada'}
                   className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-xl"
+                />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Lightbox Dialog for Real WhatsApp Videos */}
+        <Dialog open={!!selectedVideoUrl} onOpenChange={(open) => !open && setSelectedVideoUrl(null)}>
+          <DialogContent hideCloseButton className="max-w-[95vw] md:max-w-4xl p-0 border border-muted/20 bg-background/95 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl">
+            <DialogHeader className="p-3.5 border-b border-border/50 bg-background/80 backdrop-blur-md flex flex-row items-center justify-between">
+              <DialogTitle className="text-xs sm:text-sm font-semibold truncate pr-4">
+                {previewTitle || 'Reproductor de video'}
+              </DialogTitle>
+              <DialogDescription className="sr-only">
+                {previewTitle || 'Reproductor de video de WhatsApp'}
+              </DialogDescription>
+              <div className="flex items-center gap-1">
+                {selectedVideoUrl && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full hover:bg-muted"
+                    onClick={() => downloadImage(selectedVideoUrl, `whatsapp-${Date.now()}.mp4`)}
+                    title="Descargar video"
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full hover:bg-muted"
+                  onClick={() => setSelectedVideoUrl(null)}
+                  title="Cerrar"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </DialogHeader>
+            <div className="p-4 flex items-center justify-center bg-black/70 min-h-[50vh] max-h-[80vh] overflow-hidden">
+              {selectedVideoUrl && (
+                <video
+                  src={selectedVideoUrl}
+                  controls
+                  autoPlay
+                  className="max-w-full max-h-[75vh] rounded-lg shadow-xl"
                 />
               )}
             </div>

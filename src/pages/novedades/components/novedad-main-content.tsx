@@ -68,17 +68,15 @@ export const NovedadMainContent = ({ hook }: NovedadMainContentProps) => {
 
 function VistaVacia() {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center text-muted-foreground p-6 text-center animate-in fade-in duration-500 w-full h-full">
-      <div className="max-w-md space-y-4">
-        <div className="h-20 w-20 rounded-full bg-muted/20 flex items-center justify-center mx-auto mb-2 border-2 border-dashed border-muted-foreground/10 opacity-60">
-          <FileText className="h-9 w-9 opacity-20" />
+    <div className="empty-state-container">
+      <div className="max-w-md">
+        <div className="empty-state-icon-box">
+          <FileText className="h-6 w-6 sm:h-7 sm:w-7 text-muted-foreground" />
         </div>
-        <div className="space-y-1.5">
-          <h3 className="text-lg font-bold text-foreground/80 tracking-tight">Sin reporte seleccionado</h3>
-          <p className="text-sm max-w-[280px] mx-auto text-muted-foreground/60 leading-relaxed">
-            Selecciona un reporte de la lista lateral para visualizar sus detalles o realizar ediciones administrativas.
-          </p>
-        </div>
+        <h3 className="empty-state-title">Sin reporte seleccionado</h3>
+        <p className="empty-state-desc">
+          Selecciona un reporte de la lista lateral para consultar su información o editarlo.
+        </p>
       </div>
     </div>
   );
