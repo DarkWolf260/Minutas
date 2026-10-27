@@ -361,6 +361,9 @@ async function fetchChatMessages(targetChatId, limit = 50) {
       state.recentMessagesCache.delete(firstKey);
     }
     state.recentMessagesCache.set(msgId, msg);
+    if (msg.id?.id) {
+      state.recentMessagesCache.set(msg.id.id, msg);
+    }
 
     const isRevoked = Boolean(
       msg.type === 'revoked' ||
@@ -488,6 +491,15 @@ async function getMessageMedia(decodedMsgId) {
   let media = null;
   let msgObj = state.recentMessagesCache.get(decodedMsgId) || null;
 
+  // Si no se encontró por ID serializado exacto, buscar por stanza ID
+  if (!msgObj && decodedMsgId.includes('_')) {
+    const parts = decodedMsgId.split('_');
+    const stanzaId = parts[parts.length - 1];
+    if (stanzaId) {
+      msgObj = state.recentMessagesCache.get(stanzaId) || null;
+    }
+  }
+
   // 2. Si no estaba en recentMessagesCache y el ID es serializado, consultar mediante client.getMessageById
   if (!msgObj && decodedMsgId.includes('_')) {
     try {
@@ -506,19 +518,51 @@ async function getMessageMedia(decodedMsgId) {
     }
   }
 
-  // 4. Fallback: evaluar directamente en pupPage con resolveMediaBlob
+  // 4. Fallback: evaluar directamente en pupPage con resolveMediaBlob o miniatura incrustada
   if ((!media || !media.data) && state.client.pupPage) {
     try {
       const resolved = await state.client.pupPage.evaluate(async (msgId) => {
         try {
-          const res = await window.WWebJS.resolveMediaBlob(msgId);
-          if (!res || !res.blob) return null;
-          const data = await window.WWebJS.arrayBufferToBase64Async(await res.blob.arrayBuffer());
-          return {
-            data,
-            mimetype: res.mimetype || 'image/jpeg',
-            filename: res.filename
-          };
+          const { Msg } = window.require('WAWebCollections');
+          let msg = Msg.get(msgId);
+          if (!msg) {
+            const parts = msgId.split('_');
+            const stanzaId = parts[parts.length - 1];
+            msg = Msg.models.find(m => m.id?._serialized === msgId || m.id?.id === stanzaId);
+          }
+
+          if (msg) {
+            try {
+              const res = await window.WWebJS.resolveMediaBlob(msg.id?._serialized || msgId);
+              if (res && res.blob) {
+                const data = await window.WWebJS.arrayBufferToBase64Async(await res.blob.arrayBuffer());
+                return {
+                  data,
+                  mimetype: res.mimetype || 'image/jpeg',
+                  filename: res.filename
+                };
+              }
+            } catch (e) {}
+
+            // Si falló la resolución completa, retornar miniatura incrustada
+            const thumbRaw = msg._data?.body || msg._data?.thumbnail || msg._data?.mediaData?.preview;
+            if (thumbRaw && typeof thumbRaw === 'string') {
+              let clean = thumbRaw;
+              let mimetype = 'image/jpeg';
+              if (clean.includes('base64,')) {
+                const parts = clean.split('base64,');
+                if (parts[0].includes('image/webp')) mimetype = 'image/webp';
+                else if (parts[0].includes('image/png')) mimetype = 'image/png';
+                clean = parts[1];
+              } else if (clean.startsWith('UklGR')) {
+                mimetype = 'image/webp';
+              }
+              if (clean && clean.length > 20) {
+                return { data: clean.trim(), mimetype };
+              }
+            }
+          }
+          return null;
         } catch (e) {
           return null;
         }
@@ -531,17 +575,26 @@ async function getMessageMedia(decodedMsgId) {
     }
   }
 
-  // 5. Fallback 2: usar thumbnail de _data.body o mediaData
+  // 5. Fallback 2: usar thumbnail de _data.body o mediaData normalizado
   if (!media || !media.data) {
-    const rawThumb = msgObj?._data?.body || msgObj?._data?.thumbnail || msgObj?._data?.mediaData?.preview;
+    const rawThumb = extractThumbnail(
+      msgObj?._data?.body ||
+      msgObj?._data?.thumbnail ||
+      msgObj?._data?.mediaData?.preview ||
+      msgObj?.body ||
+      msgObj?._data?.preview
+    );
     if (rawThumb && typeof rawThumb === 'string') {
       let rawBase64 = rawThumb;
-      if (rawBase64.includes('base64,')) {
-        rawBase64 = rawBase64.split('base64,')[1];
+      let mimetype = 'image/jpeg';
+      if (rawBase64.startsWith('data:')) {
+        const parts = rawBase64.split(';base64,');
+        mimetype = parts[0].replace('data:', '') || 'image/jpeg';
+        rawBase64 = parts[1] || '';
       }
       if (rawBase64.length > 20) {
         const buffer = Buffer.from(rawBase64, 'base64');
-        return { mimetype: 'image/jpeg', buffer };
+        return { mimetype, buffer };
       }
     }
   }
