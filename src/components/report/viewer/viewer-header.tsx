@@ -198,13 +198,14 @@ export const ViewerHeader = ({
         )}
 
         <Button
+          variant="secondary"
           size="sm"
           onClick={onSave}
           disabled={isFinalizado || saveButtonText === 'Guardado'}
           className="h-9 px-3.5 text-xs sm:text-sm shadow-xs font-semibold"
         >
           {saveButtonText === 'Guardado' ? (
-            <CheckIcon className="h-4 w-4 sm:mr-1.5" />
+            <CheckIcon className="h-4 w-4 sm:mr-1.5 text-emerald-600 dark:text-emerald-400" />
           ) : (
             <Save className="h-4 w-4 sm:mr-1.5" />
           )}

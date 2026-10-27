@@ -166,7 +166,7 @@ export function WhatsAppChatList({
     setModalMode('group');
     setEditingGroup(null);
     setGroupNameInput('');
-    setModalSelectedChatIds(selectedIds.length > 0 ? [...selectedIds] : []);
+    setModalSelectedChatIds([]);
     setModalChatSearch('');
   };
 
