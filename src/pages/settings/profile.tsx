@@ -20,6 +20,11 @@ export default function ProfilePage() {
     department: '',
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [profile.avatarUrl]);
 
   useEffect(() => {
     if (isLoaded) {
@@ -97,8 +102,13 @@ export default function ProfilePage() {
               <div className="flex justify-between items-end mb-6 -mt-12">
                 <div className="flex items-end gap-5 rounded-full ring-4 ring-background bg-background">
                   <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-primary/10 flex items-center justify-center text-3xl sm:text-4xl font-semibold text-primary overflow-hidden shadow-inner border border-primary/20">
-                    {profile.avatarUrl ? (
-                      <img src={profile.avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                    {profile.avatarUrl && !avatarError ? (
+                      <img
+                        src={profile.avatarUrl}
+                        alt="Avatar"
+                        className="h-full w-full object-cover"
+                        onError={() => setAvatarError(true)}
+                      />
                     ) : (
                       initials
                     )}

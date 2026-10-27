@@ -211,7 +211,7 @@ async function fetchChats(requestedWorkspace) {
               name: c.name,
               isGroup: c.isGroup,
               timestamp: c.timestamp || 0,
-              avatarUrl: c.directPicUrl ? `/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg` : null
+              avatarUrl: c.directPicUrl || null
             };
           });
       }
@@ -237,13 +237,13 @@ async function fetchChats(requestedWorkspace) {
           })
           .map(chat => {
             const id = chat.id?._serialized || (typeof chat.id === 'string' ? chat.id : '');
-            const hasAvatar = Boolean(state.avatarCache.get(id));
+            const pic = state.avatarCache.get(id);
             return {
               id,
               name: chat.name || chat.formattedTitle || (id.endsWith('@g.us') ? 'Grupo' : 'Contacto'),
               isGroup: Boolean(chat.isGroup),
               timestamp: chat.timestamp || 0,
-              avatarUrl: hasAvatar ? `/api/whatsapp/chats/${encodeURIComponent(id)}/avatar.jpg` : null
+              avatarUrl: pic || null
             };
           });
       }
@@ -322,16 +322,7 @@ async function fetchChats(requestedWorkspace) {
       }
     });
 
-    // Asignar endpoint de avatares solo a chats con foto de perfil conocida
-    formattedChats.forEach(c => {
-      if (c.directPicUrl || state.avatarCache.get(c.id)) {
-        c.avatarUrl = `/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg`;
-      } else {
-        c.avatarUrl = null;
-      }
-    });
-
-    // Resolver de inmediato los primeros 40 chats activos para que tengan respuesta instantánea
+    // Resolver de inmediato los primeros 40 chats activos para que tengan respuesta instantánea con su foto real
     const initialAvatarBatch = formattedChats.slice(0, 40).filter(c => !state.avatarCache.has(c.id) || !state.avatarCache.get(c.id));
     if (initialAvatarBatch.length > 0) {
       await Promise.allSettled(initialAvatarBatch.map(async c => {
@@ -340,6 +331,16 @@ async function fetchChats(requestedWorkspace) {
         } catch (e) {}
       }));
     }
+
+    // Asignar avatares reales directos (HTTPS) de WhatsApp para compatibilidad completa en web / nube / Vercel
+    formattedChats.forEach(c => {
+      const pic = c.directPicUrl || state.avatarCache.get(c.id) || null;
+      if (pic && typeof pic === 'string' && /^https?:\/\//i.test(pic)) {
+        c.avatarUrl = pic;
+      } else {
+        c.avatarUrl = null;
+      }
+    });
 
     // Para los chats restantes (> 40), resolver en segundo plano en lotes pequeños sin bloquear HTTP
     const remainingAvatarBatch = formattedChats.slice(40).filter(c => !state.avatarCache.has(c.id) || !state.avatarCache.get(c.id));

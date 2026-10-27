@@ -72,9 +72,9 @@ router.get('/:chatId/avatar', async (req, res) => {
 
   try {
     const picUrl = await resolveChatAvatarUrl(decodedId);
-    if (picUrl) {
+    if (picUrl && typeof picUrl === 'string' && /^https?:\/\//i.test(picUrl)) {
       return res.json({
-        avatarUrl: `/api/whatsapp/chats/${encodeURIComponent(decodedId)}/avatar.jpg`
+        avatarUrl: picUrl
       });
     }
     return res.json({ avatarUrl: null });

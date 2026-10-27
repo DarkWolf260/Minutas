@@ -202,6 +202,36 @@ export function getEffectiveBotUrl(url?: string): string {
   return trimmed;
 }
 
+/**
+ * Normaliza y valida una URL de avatar para renderizado en <img>.
+ * En entornos HTTPS (ej: producción en Vercel), rechaza URLs inseguras http://
+ * (especialmente localhost/red privada) y rutas relativas /api/whatsapp que devuelven HTML,
+ * evitando advertencias de Mixed Content y permitiendo que se muestre el icono de usuario de fallback.
+ */
+export function getCleanAvatarUrl(avatarUrl?: string | null): string | null {
+  if (!avatarUrl || typeof avatarUrl !== 'string') return null;
+  const trimmed = avatarUrl.trim();
+  if (!trimmed) return null;
+
+  // Si ya es una URL HTTPS directa (ej: CDN oficial de WhatsApp https://pps.whatsapp.net/...), es segura y válida
+  if (/^https:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  // Comprobar si la aplicación se ejecuta sobre HTTPS (producción)
+  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+
+  if (isHttps) {
+    // En HTTPS, los navegadores bloquean <img> con http:// hacia redes locales y /api/whatsapp devuelve index.html.
+    // Retornar null previene los avisos de Mixed Content y activa inmediatamente el fallback limpio de icono.
+    if (/^http:\/\//i.test(trimmed) || trimmed.startsWith('/api/whatsapp')) {
+      return null;
+    }
+  }
+
+  return trimmed;
+}
+
 export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
   const db = useDatabase();
   const { currentWorkspace, isCloud } = useWorkspaceManager();

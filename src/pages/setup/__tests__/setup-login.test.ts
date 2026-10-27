@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SETUP_DONE_KEY, trySet, tryGet, tryRemove } from '@/hooks/configuracion';
 

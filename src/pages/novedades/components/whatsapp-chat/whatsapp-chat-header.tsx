@@ -15,21 +15,21 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { cn, normalizeString } from '@/lib/utils';
-import type { ChatItem } from '@/hooks/whatsapp';
-import type { UseWhatsAppChatReturn } from '@/hooks/whatsapp';
+import { type ChatItem, type UseWhatsAppChatReturn, getCleanAvatarUrl } from '@/hooks/whatsapp';
 import { useNavigate } from 'react-router-dom';
 
 function ChatAvatar({ chat }: { chat: ChatItem }) {
   const [hasError, setHasError] = useState(false);
+  const cleanUrl = getCleanAvatarUrl(chat.avatarUrl);
 
   useEffect(() => {
     setHasError(false);
-  }, [chat.id, chat.avatarUrl]);
+  }, [chat.id, cleanUrl]);
 
-  if (chat.avatarUrl && !hasError) {
+  if (cleanUrl && !hasError) {
     return (
       <img
-        src={chat.avatarUrl}
+        src={cleanUrl}
         alt={chat.name}
         className="w-full h-full object-cover"
         onError={() => setHasError(true)}
@@ -87,12 +87,19 @@ export function WhatsAppChatHeader({
   useEffect(() => {
     if (!currentChat?.id || !isBotReady) return;
 
-    if (currentChat.avatarUrl) {
-      setResolvedAvatar(currentChat.avatarUrl);
+    const currentClean = getCleanAvatarUrl(currentChat.avatarUrl);
+    if (currentClean) {
+      setResolvedAvatar(currentClean);
       return;
     }
     if (currentChat.avatarUrl === null) {
       setResolvedAvatar(null);
+      return;
+    }
+
+    const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    if (isHttps) {
+      // En HTTPS (Vercel), no consultar rutas relativas /api/whatsapp que no están proxificadas
       return;
     }
 
@@ -101,7 +108,7 @@ export function WhatsAppChatHeader({
       .then(res => (res.ok ? res.json() : null))
       .then(data => {
         if (isMounted) {
-          const url = data?.avatarUrl || null;
+          const url = getCleanAvatarUrl(data?.avatarUrl);
           setResolvedAvatar(url);
           currentChat.avatarUrl = url;
         }
@@ -117,7 +124,7 @@ export function WhatsAppChatHeader({
     };
   }, [currentChat?.id, currentChat?.avatarUrl, isBotReady]);
 
-  const displayAvatar = currentChat?.avatarUrl || resolvedAvatar;
+  const displayAvatar = getCleanAvatarUrl(currentChat?.avatarUrl || resolvedAvatar);
 
   const handleRefresh = async () => {
     setIsRotating(true);

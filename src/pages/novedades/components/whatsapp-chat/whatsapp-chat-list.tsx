@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/dialog';
 import { QRCodeSVG } from 'qrcode.react';
 import { cn, normalizeString } from '@/lib/utils';
-import type { WhatsAppChat, useWhatsAppBot } from '@/hooks/whatsapp';
+import { type WhatsAppChat, type useWhatsAppBot, getCleanAvatarUrl } from '@/hooks/whatsapp';
 import { useSettings } from '@/hooks/configuracion';
 import { useScheduledMessages } from '@/hooks/whatsapp';
 import type { Report, WhatsAppRecipientGroup } from '@/lib/types';
@@ -67,15 +67,16 @@ function formatChatTime(timestamp?: number) {
 
 function ChatAvatarItem({ chat }: { chat: WhatsAppChat }) {
   const [hasError, setHasError] = useState(false);
+  const cleanUrl = getCleanAvatarUrl(chat.avatarUrl);
 
   useEffect(() => {
     setHasError(false);
-  }, [chat.id, chat.avatarUrl]);
+  }, [chat.id, cleanUrl]);
 
-  if (chat.avatarUrl && !hasError) {
+  if (cleanUrl && !hasError) {
     return (
       <img
-        src={chat.avatarUrl}
+        src={cleanUrl}
         alt={chat.name}
         className="w-full h-full object-cover rounded-full"
         onError={() => setHasError(true)}
