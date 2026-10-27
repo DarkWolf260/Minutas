@@ -1,9 +1,20 @@
 const path = require('path');
 
-// Si corre empaquetado como .exe usa la carpeta del ejecutable; si corre con node usa la carpeta whatsapp-bot
-const baseDir = process.pkg 
-  ? path.dirname(process.execPath) 
-  : path.join(__dirname, '..');
+// Detecta si corre como ejecutable (.exe empaquetado con Node SEA o pkg)
+const isExe = Boolean(process.pkg) || (process.execPath && !path.basename(process.execPath).toLowerCase().startsWith('node'));
+
+let baseDir;
+if (isExe) {
+  const exeDir = path.dirname(process.execPath);
+  // Si el .exe está en la subcarpeta 'dist', guarda los datos en el directorio del proyecto
+  if (path.basename(exeDir).toLowerCase() === 'dist') {
+    baseDir = path.resolve(exeDir, '..');
+  } else {
+    baseDir = exeDir;
+  }
+} else {
+  baseDir = path.join(__dirname, '..');
+}
 
 const PORT = process.env.PORT || 3001;
 const SCHEDULE_FILE = path.join(baseDir, 'scheduled_messages.json');

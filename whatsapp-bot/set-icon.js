@@ -6,8 +6,8 @@ async function ensureIcon() {
   const iconPath = path.join(__dirname, 'icon.ico');
   const webpPath = path.join(__dirname, 'WhatsApp.webp');
 
-  // Si existe WhatsApp.webp, convertirlo a icon.ico
-  if (fs.existsSync(webpPath)) {
+  // Si no existe icon.ico pero existe WhatsApp.webp, convertirlo a icon.ico
+  if (!fs.existsSync(iconPath) && fs.existsSync(webpPath)) {
     try {
       console.log('[Icono] Convirtiendo WhatsApp.webp a icon.ico de alta resolución...');
       const puppeteer = require('puppeteer');

@@ -1,7 +1,11 @@
+// Desactivar avisos de deprecación internos de Node (ej. punycode)
+process.noDeprecation = true;
+
 const express = require('express');
 const { PORT, isAllowedOrigin } = require('./src/config');
 const { initWhatsAppClient, destroyClient } = require('./src/client');
 const { initScheduler } = require('./src/services/scheduler-service');
+const { cleanupEnvironment } = require('./src/cleanup');
 
 const statusRoutes = require('./src/routes/status.routes');
 const chatsRoutes = require('./src/routes/chats.routes');
@@ -53,23 +57,55 @@ app.use('/api/whatsapp', statusRoutes);
 app.use('/api/whatsapp', messagesRoutes);
 app.use('/api/whatsapp', schedulerRoutes);
 
-// Iniciar servicios en segundo plano y cliente de WhatsApp
-initScheduler();
-initWhatsAppClient();
+// Limpiar procesos huérfanos previos y archivos de bloqueo antes de escuchar
+cleanupEnvironment();
 
-// Iniciar servidor HTTP
-const server = app.listen(PORT, () => {
-  console.log(`\n==================================================`);
-  console.log(`📡 Servidor WhatsApp Bot escuchando en http://localhost:${PORT}`);
-  console.log(`==================================================\n`);
-});
+let server = null;
+let servicesStarted = false;
+
+function startServicesOnce() {
+  if (servicesStarted) return;
+  servicesStarted = true;
+  initScheduler();
+  initWhatsAppClient();
+}
+
+function listenWithRetry(attemptsLeft = 2) {
+  server = app.listen(PORT, () => {
+    console.log(`\n==================================================`);
+    console.log(`📡 Servidor WhatsApp Bot escuchando en http://localhost:${PORT}`);
+    console.log(`==================================================\n`);
+    startServicesOnce();
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE' && attemptsLeft > 0) {
+      console.warn(`[Server] Puerto ${PORT} ocupado. Liberando y reintentando (${attemptsLeft} restante)...`);
+      cleanupEnvironment();
+      setTimeout(() => {
+        listenWithRetry(attemptsLeft - 1);
+      }, 1000);
+    } else {
+      console.error('[Server] Error fatal al iniciar servidor HTTP:', err?.message || err);
+    }
+  });
+}
+
+listenWithRetry();
 
 // Manejo de cierre gracioso para evitar archivos bloqueados en Windows
-process.on('SIGINT', async () => {
+const handleShutdown = async () => {
   await destroyClient();
-  server.close(() => {
+  if (server) {
+    server.close(() => {
+      process.exit(0);
+    });
+  } else {
     process.exit(0);
-  });
-});
+  }
+};
+
+process.on('SIGINT', handleShutdown);
+process.on('SIGTERM', handleShutdown);
 
 module.exports = { app, server };

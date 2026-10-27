@@ -47,7 +47,10 @@ function initWhatsAppClient() {
         '--disable-gpu',
         '--disable-dev-shm-usage',
         '--no-first-run',
-        '--no-zygote'
+        '--no-zygote',
+        '--no-default-browser-check',
+        '--disable-background-networking',
+        '--disable-features=Translate,OptimizationHints,MediaRouter'
       ],
     },
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36'
@@ -173,6 +176,10 @@ function initWhatsAppClient() {
           state.client = null;
         }
       } catch (_) {}
+      try {
+        const { cleanupEnvironment } = require('./cleanup');
+        cleanupEnvironment();
+      } catch (_) {}
     });
 }
 
@@ -199,6 +206,11 @@ async function restartClient(reasonText = 'Reiniciando cliente...') {
     } catch (destroyErr) {
       // Ignorar si ya estaba destruida
     }
+
+    try {
+      const { cleanupEnvironment } = require('./cleanup');
+      cleanupEnvironment();
+    } catch (_) {}
 
     setTimeout(() => {
       state.isInitializing = false;
