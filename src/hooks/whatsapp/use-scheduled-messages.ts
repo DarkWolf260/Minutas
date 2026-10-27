@@ -222,6 +222,47 @@ export function useScheduledMessages() {
     [db, localUrl]
   );
 
+  // Function to explicitly discard expired pending messages
+  const discardExpiredMessages = useCallback(
+    async (reason: string = 'Cambio de sesión de WhatsApp') => {
+      if (!db || !currentWorkspace) return;
+      try {
+        const now = new Date();
+        const docs = await db.scheduled_messages.find({
+          selector: {
+            workspace_id: currentWorkspace,
+            status: 'pending'
+          }
+        }).exec();
+
+        for (const doc of docs) {
+          if (new Date(doc.scheduledTime) <= now) {
+            await doc.incrementalPatch({
+              status: 'failed',
+              error: `Descartado: Mensaje vencido (${reason})`
+            });
+            logger.info(`Locally discarded expired message ${doc.id}`);
+          }
+        }
+
+        // Notificar al servidor en segundo plano
+        try {
+          await fetch(`${apiUrl}/api/whatsapp/scheduled/discard-expired`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
+            },
+            body: JSON.stringify({ reason, workspaceId: currentWorkspace })
+          });
+        } catch (_) {}
+      } catch (err) {
+        logger.error('Error discarding expired messages:', err);
+      }
+    },
+    [db, currentWorkspace, apiUrl]
+  );
+
   // Background worker to sync statuses from Node bot with exponential backoff if offline
   useEffect(() => {
     if (!db || !currentWorkspace) return;
@@ -317,32 +358,46 @@ export function useScheduledMessages() {
                 }
               }
             } else {
-              // Message is pending locally but MISSING on the server — push it
-              try {
-                const pushRes = await fetch(`${apiUrl}/api/whatsapp/schedule`, {
-                  method: 'POST',
-                  headers: { 
-                    'Content-Type': 'application/json',
-                    ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
-                  },
-                  body: JSON.stringify({ 
-                    id: msg.id, 
-                    chatId: msg.chatId, 
-                    message: msg.message, 
-                    scheduledTime: msg.scheduledTime, 
-                    title: msg.title,
-                    media: msg.media,
-                    workspaceId: currentWorkspace
-                  }),
-                });
-                if (pushRes.ok) {
-                  logger.info(`Pushed missing pending message ${msg.id} to background server`);
-                } else {
-                  const errBody = await pushRes.json().catch(() => ({}));
-                  logger.error(`Failed to push message ${msg.id} (HTTP ${pushRes.status}):`, errBody);
+              // Message is pending locally but MISSING on the server
+              const isExpired = new Date(msg.scheduledTime) <= new Date();
+              if (isExpired) {
+                // Si ya está vencido, NO lo enviamos al servidor: lo descartamos localmente
+                const doc = await db.scheduled_messages.findOne(msg.id).exec();
+                if (doc) {
+                  await doc.incrementalPatch({
+                    status: 'failed',
+                    error: 'Descartado: Mensaje vencido al cambiar la sesión de WhatsApp'
+                  });
+                  logger.info(`Marked expired local message ${msg.id} as failed instead of pushing`);
                 }
-              } catch (err) {
-                logger.error(`Failed to push missing message ${msg.id} to server`, err);
+              } else {
+                // Mensaje futuro pendiente: empujar al backend
+                try {
+                  const pushRes = await fetch(`${apiUrl}/api/whatsapp/schedule`, {
+                    method: 'POST',
+                    headers: { 
+                      'Content-Type': 'application/json',
+                      ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
+                    },
+                    body: JSON.stringify({ 
+                      id: msg.id, 
+                      chatId: msg.chatId, 
+                      message: msg.message, 
+                      scheduledTime: msg.scheduledTime, 
+                      title: msg.title,
+                      media: msg.media,
+                      workspaceId: currentWorkspace
+                    }),
+                  });
+                  if (pushRes.ok) {
+                    logger.info(`Pushed missing pending message ${msg.id} to background server`);
+                  } else {
+                    const errBody = await pushRes.json().catch(() => ({}));
+                    logger.error(`Failed to push message ${msg.id} (HTTP ${pushRes.status}):`, errBody);
+                  }
+                } catch (err) {
+                  logger.error(`Failed to push missing message ${msg.id} to server`, err);
+                }
               }
             }
           }
@@ -388,5 +443,6 @@ export function useScheduledMessages() {
     isLoading,
     scheduleMessage,
     cancelMessage,
+    discardExpiredMessages,
   };
 }

@@ -748,6 +748,27 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         ]);
       }
 
+      // Descartar mensajes programados vencidos localmente
+      if (db && currentWorkspace) {
+        try {
+          const now = new Date();
+          const pendingDocs = await db.scheduled_messages.find({
+            selector: {
+              workspace_id: currentWorkspace,
+              status: 'pending'
+            }
+          }).exec();
+          for (const doc of pendingDocs) {
+            if (new Date(doc.scheduledTime) <= now) {
+              await doc.incrementalPatch({
+                status: 'failed',
+                error: 'Descartado: Mensaje vencido al cerrar sesión'
+              });
+            }
+          }
+        } catch (_) {}
+      }
+
       await fetch(`${apiUrl}/api/whatsapp/logout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }

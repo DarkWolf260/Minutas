@@ -4,7 +4,8 @@ const state = require('../state');
 const {
   getScheduledMessages,
   addOrUpdateScheduledMessage,
-  removeScheduledMessage
+  removeScheduledMessage,
+  discardExpiredMessages
 } = require('../services/scheduler-service');
 
 router.post('/schedule', (req, res) => {
@@ -36,6 +37,13 @@ router.post('/schedule', (req, res) => {
   });
 
   res.json({ success: true, message: 'Mensaje programado en el servidor' });
+});
+
+router.post('/scheduled/discard-expired', (req, res) => {
+  const { reason, workspaceId } = req.body || {};
+  const requestedWorkspace = workspaceId || req.query.workspace || req.headers['x-workspace-id'];
+  const count = discardExpiredMessages(reason || 'Solicitud de descarte de mensajes vencidos', requestedWorkspace);
+  res.json({ success: true, discardedCount: count });
 });
 
 router.delete('/schedule/:id', (req, res) => {

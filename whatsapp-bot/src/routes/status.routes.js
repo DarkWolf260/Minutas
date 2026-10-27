@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const state = require('../state');
 const { restartClient } = require('../client');
+const { discardExpiredMessages } = require('../services/scheduler-service');
 
 router.get('/workspace', (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -59,9 +60,13 @@ router.post('/logout', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.json({ success: true, message: 'Cerrando sesión y reiniciando cliente...' });
 
+  state.sessionChanged = true;
   state.isReady = false;
   state.qrCodeData = null;
   state.statusMessage = 'Cerrando sesión...';
+
+  // Descartar mensajes que ya estén vencidos antes del cambio de sesión
+  discardExpiredMessages('Cierre de sesión de WhatsApp');
 
   try {
     if (state.client) {
@@ -74,3 +79,4 @@ router.post('/logout', async (req, res) => {
 });
 
 module.exports = router;
+

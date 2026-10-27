@@ -3,13 +3,32 @@ const { MessageMedia } = require('whatsapp-web.js');
 const { SCHEDULE_FILE } = require('../config');
 const state = require('../state');
 
-function clearScheduledQueueOnStart() {
-  try {
-    fs.writeFileSync(SCHEDULE_FILE, JSON.stringify([], null, 2));
-    console.log('[Programado] Se ha descartado la cola de mensajes programados al iniciar el bot.');
-  } catch (e) {
-    console.error('Error al descartar la cola de mensajes al iniciar:', e);
+function discardExpiredMessages(reason = 'Cambio de sesión de WhatsApp', workspaceId = null) {
+  const messages = getScheduledMessages();
+  const now = new Date();
+  let discardedCount = 0;
+  let updated = false;
+
+  for (const msg of messages) {
+    if (msg.status === 'pending') {
+      if (workspaceId && msg.workspaceId && msg.workspaceId !== workspaceId) {
+        continue;
+      }
+      const scheduledDate = new Date(msg.scheduledTime);
+      if (scheduledDate <= now) {
+        msg.status = 'failed';
+        msg.error = `Descartado: Mensaje vencido (${reason})`;
+        discardedCount++;
+        updated = true;
+      }
+    }
   }
+
+  if (updated) {
+    saveScheduledMessages(messages);
+    console.log(`[Programado] Se descartaron ${discardedCount} mensaje(s) vencido(s) debido a: ${reason}`);
+  }
+  return discardedCount;
 }
 
 function getScheduledMessages() {
@@ -73,7 +92,8 @@ function removeScheduledMessage(id) {
 let schedulerInterval = null;
 
 function initScheduler() {
-  clearScheduledQueueOnStart();
+  // Al arrancar el bot, descartar cualquier mensaje cuya hora programada ya haya pasado
+  discardExpiredMessages('Inicio del bot de WhatsApp');
 
   if (schedulerInterval) {
     clearInterval(schedulerInterval);
@@ -93,6 +113,18 @@ function initScheduler() {
 
     for (const msg of messages) {
       if (msg.status === 'pending' && new Date(msg.scheduledTime) <= now) {
+        const scheduledDate = new Date(msg.scheduledTime);
+        const overdueMinutes = (now.getTime() - scheduledDate.getTime()) / (1000 * 60);
+
+        // Si el mensaje está vencido por más de 15 minutos (por desconexión previa o cambio de sesión no purgado), descartarlo
+        if (overdueMinutes > 15) {
+          msg.status = 'failed';
+          msg.error = `Descartado: Mensaje vencido hace más de ${Math.round(overdueMinutes)} minutos`;
+          updated = true;
+          console.log(`[Programado] Mensaje ${msg.id} vencido hace ${Math.round(overdueMinutes)}m descartado automáticamente.`);
+          continue;
+        }
+
         // Validar si el mensaje pertenece al área de trabajo activa actual
         if (state.activeWorkspace && msg.workspaceId && msg.workspaceId !== state.activeWorkspace) {
           continue;
@@ -150,5 +182,6 @@ module.exports = {
   saveScheduledMessages,
   addOrUpdateScheduledMessage,
   removeScheduledMessage,
+  discardExpiredMessages,
   initScheduler
 };

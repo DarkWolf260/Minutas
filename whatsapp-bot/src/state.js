@@ -9,6 +9,10 @@ const state = {
   client: null,
   activeWorkspace: null,
 
+  // Control de sesión
+  currentSessionWid: null,
+  sessionChanged: false,
+
   // Cachés
   cachedChats: [],
   contactNameCache: new Map(),

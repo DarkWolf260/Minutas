@@ -2,6 +2,7 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const { PORT, SESSION_DATA_PATH } = require('./config');
 const state = require('./state');
+const { discardExpiredMessages } = require('./services/scheduler-service');
 
 function initWhatsAppClient() {
   state.isInitializing = true;
@@ -28,6 +29,7 @@ function initWhatsAppClient() {
   });
 
   state.client.on('qr', (qr) => {
+    state.sessionChanged = true;
     state.qrCodeData = qr;
     state.statusMessage = 'Esperando escaneo de QR...';
     console.log('\n==================================================');
@@ -65,6 +67,19 @@ function initWhatsAppClient() {
     console.log(`📡 Servidor API escuchando en http://localhost:${PORT}`);
     console.log('==================================================\n');
 
+    // Descartar mensajes cuya hora programada haya pasado mientras estuvo desconectado o por cambio de teléfono/sesión
+    const currentWid = state.client.info?.wid?._serialized || state.client.info?.wid?.user || null;
+    const isSessionChanged = state.sessionChanged || (state.currentSessionWid && currentWid && state.currentSessionWid !== currentWid);
+
+    if (isSessionChanged) {
+      console.log(`[WhatsApp] Cambio de sesión detectado (${state.currentSessionWid || 'ninguna'} -> ${currentWid || 'nueva'}). Descartando mensajes vencidos...`);
+      discardExpiredMessages('Cambio de sesión de WhatsApp');
+    } else {
+      discardExpiredMessages('Reconexión de sesión (mensajes vencidos)');
+    }
+    state.currentSessionWid = currentWid;
+    state.sessionChanged = false;
+
     try {
       if (state.client.pupPage) {
         await state.client.pupPage.evaluate(() => {
@@ -98,6 +113,8 @@ function initWhatsAppClient() {
 
   state.client.on('auth_failure', async msg => {
     console.error('Error de autenticación:', msg);
+    state.sessionChanged = true;
+    discardExpiredMessages('Fallo de autenticación');
     restartClient('Error de autenticación. Generando nuevo QR...');
   });
 
@@ -112,6 +129,8 @@ function initWhatsAppClient() {
 
   state.client.on('disconnected', async (reason) => {
     console.log('Cliente de WhatsApp desconectado:', reason);
+    state.sessionChanged = true;
+    discardExpiredMessages('Sesión de WhatsApp desconectada');
     restartClient('Desconectado. Generando nuevo QR...');
   });
 

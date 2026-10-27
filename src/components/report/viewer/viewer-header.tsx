@@ -528,7 +528,8 @@ export const ViewerHeader = ({
                         chatCount: 1,
                         allSent: msg.status === 'sent',
                         anyFailed: msg.status === 'failed',
-                        anyPending: msg.status === 'pending'
+                        anyPending: msg.status === 'pending',
+                        error: msg.error
                       };
                     } else {
                       acc[key].ids.push(msg.id);
@@ -538,6 +539,7 @@ export const ViewerHeader = ({
                       else acc[key].allSent = false;
                       if (msg.status === 'failed') acc[key].anyFailed = true;
                       if (msg.status === 'pending') acc[key].anyPending = true;
+                      if (msg.error) acc[key].error = msg.error;
                     }
                     return acc;
                   }, {} as Record<string, any>)
@@ -572,9 +574,12 @@ export const ViewerHeader = ({
                           <span className={cn(
                             "text-[10px] font-bold px-2 py-0.5 rounded-full",
                             status === 'pending' ? 'bg-amber-500/10 text-amber-600' :
-                            status === 'sent' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-destructive/10 text-destructive'
-                          )}>
-                            {status === 'pending' ? 'Pendiente' : status === 'sent' ? 'Enviado' : 'Fallido'}
+                            status === 'sent' ? 'bg-emerald-500/10 text-emerald-600' :
+                            group.error?.includes('Descartado') ? 'bg-zinc-500/10 text-zinc-500 dark:text-zinc-400' : 'bg-destructive/10 text-destructive'
+                          )}
+                          title={group.error || undefined}
+                          >
+                            {status === 'pending' ? 'Pendiente' : status === 'sent' ? 'Enviado' : (group.error?.includes('Descartado') ? 'Descartado' : 'Fallido')}
                           </span>
 
                           <Button

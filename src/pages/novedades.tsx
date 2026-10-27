@@ -27,7 +27,7 @@ function NovedadesPageContent() {
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
   const isBotConnected = (bot.isAvailable && bot.status.isReady) || bot.isCloudActive;
 
-  const chatPosition = settings?.whatsapp_chat_position || 'sidebar';
+  const chatPosition = settings?.whatsapp_chat_position || 'right_form';
   const isRightChat = chatPosition === 'right_form' && isBotConnected && !isMobile;
   const [isRightChatCollapsed, setIsRightChatCollapsed] = useState<boolean>(() => {
     return localStorage.getItem('novedades_right_chat_collapsed') === 'true';

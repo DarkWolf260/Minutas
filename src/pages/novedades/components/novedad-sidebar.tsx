@@ -266,7 +266,7 @@ export const NovedadSidebar = ({
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
   const isBotConnected = (bot.isAvailable && bot.status.isReady) || bot.isCloudActive;
 
-  const isChatPositionRight = settings?.whatsapp_chat_position === 'right_form';
+  const isChatPositionRight = (settings?.whatsapp_chat_position || 'right_form') === 'right_form';
   const shouldShowWhatsAppTab = showWhatsAppTab ?? (!isChatPositionRight || isMobile);
 
   const [internalVista, setInternalVista] = useState<'lista' | 'whatsapp'>(() => {

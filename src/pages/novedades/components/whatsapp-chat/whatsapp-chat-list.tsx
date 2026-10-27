@@ -306,7 +306,8 @@ export function WhatsAppChatList({
             chatCount: 1,
             allSent: msg.status === 'sent',
             anyFailed: msg.status === 'failed',
-            anyPending: msg.status === 'pending'
+            anyPending: msg.status === 'pending',
+            error: msg.error
           };
         } else {
           acc[key].ids.push(msg.id);
@@ -316,6 +317,7 @@ export function WhatsAppChatList({
           else acc[key].allSent = false;
           if (msg.status === 'failed') acc[key].anyFailed = true;
           if (msg.status === 'pending') acc[key].anyPending = true;
+          if (msg.error) acc[key].error = msg.error;
         }
         return acc;
       }, {} as Record<string, any>)
@@ -963,13 +965,18 @@ export function WhatsAppChatList({
                             ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 animate-pulse'
                             : status === 'sent'
                             ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                            : group.error?.includes('Descartado')
+                            ? 'bg-zinc-500/10 text-zinc-500 dark:text-zinc-400'
                             : 'bg-red-500/10 text-red-600 dark:text-red-400'
                         )}
+                        title={group.error || undefined}
                       >
                         {status === 'pending'
                           ? 'Pendiente'
                           : status === 'sent'
                           ? 'Enviado'
+                          : group.error?.includes('Descartado')
+                          ? 'Descartado'
                           : 'Fallido'}
                       </span>
 
