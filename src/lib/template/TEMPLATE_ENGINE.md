@@ -516,7 +516,8 @@ Valores inyectados a nivel de Workspace, sistema y sesión activa, disponibles a
 |-----------------|-------------------------|------------------------|
 | `{Fecha}` | Reloj del sistema / Backend | Inicializado con la fecha actual (`YYYY-MM-DD`). Se formatea a `DD/Mes/YYYY` en el reporte. |
 | `{Hora}` | Reloj del sistema | Hora actual en formato militar de 24 horas (`time-hlv`, HH:MM). |
-| `{Municipio}` | Configuración del Workspace | Nombre del municipio asignado a la base operativa activa (ej. `Guanta`, `Bolívar`). |
+| `{Municipio}` | Configuración del Workspace | Nombre del municipio asignado a la base operativa activa (ej. `Urbaneja`, `Guanta`, `Bolívar`). |
+| `{Municipio_Largo}` | Configuración del Workspace | Nombre protocolar u oficial largo del municipio (ej. `Municipio Turístico "El Morro" Licenciado Diego Bautista Urbaneja`). Si no se configuró, toma por defecto el valor de `{Municipio}`. |
 | `{Estado}` | Configuración del Workspace | Entidad federal (`Anzoátegui`). |
 | `{REDAN}` | Configuración Institucional | Región Estratégica de Evaluación de Daños (`Oriente`). |
 | `{ZOEDAN}` | Configuración Institucional | Zona Operativa de Evaluación de Daños (`Anzoátegui`). |

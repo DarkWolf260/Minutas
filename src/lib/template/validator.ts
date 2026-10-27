@@ -87,6 +87,8 @@ const PREDEFINED_FIELD_NAMES = new Set([
     'fecha',
     'hora',
     'municipio',
+    'municipio_largo',
+    'municipiolargo',
     'estado',
     'redan',
     'zoedan',

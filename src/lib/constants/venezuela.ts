@@ -424,3 +424,76 @@ export const VENEZUELA_MUNICIPALITIES: VenezuelaMunicipality[] = [
 export function getMunicipalitiesByState(stateId: string): VenezuelaMunicipality[] {
   return VENEZUELA_MUNICIPALITIES.filter((m) => m.state_id === stateId);
 }
+
+/**
+ * Nombres oficiales o largos conocidos para municipios de Venezuela.
+ * Utilizado para sugerir automáticamente el nombre protocolar completo en la configuración institucional.
+ */
+export const MUNICIPIOS_NOMBRES_LARGOS: Record<string, string> = {
+  // Anzoátegui
+  'urbaneja': 'Municipio Turístico "El Morro" Licenciado Diego Bautista Urbaneja',
+  'diego bautista urbaneja': 'Municipio Turístico "El Morro" Licenciado Diego Bautista Urbaneja',
+  'guanta': 'Municipio Autónomo Guanta',
+  'juan antonio sotillo': 'Municipio Juan Antonio Sotillo',
+  'sotillo': 'Municipio Juan Antonio Sotillo',
+  'simon bolivar': 'Municipio Simón Bolívar',
+  'simón bolívar': 'Municipio Simón Bolívar',
+  'bolivar': 'Municipio Simón Bolívar',
+  'bolívar': 'Municipio Simón Bolívar',
+  'anaco': 'Municipio Anaco',
+  'simon rodriguez': 'Municipio Simón Rodríguez',
+  'simón rodríguez': 'Municipio Simón Rodríguez',
+  'manuel ezequiel bruzual': 'Municipio Manuel Ezequiel Bruzual',
+  'bruzual': 'Municipio Manuel Ezequiel Bruzual',
+  'pedro maria freites': 'Municipio Pedro María Freites',
+  'freites': 'Municipio Pedro María Freites',
+  'piritu': 'Municipio Píritu',
+  'píritu': 'Municipio Píritu',
+  'san jose de guanipa': 'Municipio San José de Guanipa',
+  'guanipa': 'Municipio San José de Guanipa',
+
+  // Nueva Esparta
+  'maneiro': 'Municipio Bolivariano General en Jefe Bartolomé Maneiro',
+  'mariño': 'Municipio General en Jefe Santiago Mariño',
+  'marino': 'Municipio General en Jefe Santiago Mariño',
+  'arismendi': 'Municipio Arismendi',
+  'garcia': 'Municipio Almirante José María García',
+  'garcía': 'Municipio Almirante José María García',
+  'gomez': 'Municipio Gómez',
+  'gómez': 'Municipio Gómez',
+  'marcano': 'Municipio Gaspar Marcano',
+  'diaz': 'Municipio Antonio Díaz',
+  'díaz': 'Municipio Antonio Díaz',
+  'tubores': 'Municipio Tubores',
+  'antolin del campo': 'Municipio Antolín del Campo',
+  'antolín del campo': 'Municipio Antolín del Campo',
+  'villalba': 'Municipio Villalba',
+  'peninsula de macanao': 'Municipio Península de Macanao',
+  'península de macanao': 'Municipio Península de Macanao',
+};
+
+/**
+ * Obtiene la sugerencia de nombre largo / oficial para un municipio dado.
+ */
+export function obtenerNombreLargoSugerido(municipio: string): string {
+  if (!municipio) return '';
+  const key = municipio.trim().toLowerCase();
+  if (MUNICIPIOS_NOMBRES_LARGOS[key]) {
+    return MUNICIPIOS_NOMBRES_LARGOS[key];
+  }
+  // Buscar coincidencia parcial si el municipio contiene palabras clave
+  const entries = Object.entries(MUNICIPIOS_NOMBRES_LARGOS);
+  for (const [k, v] of entries) {
+    if (key.includes(k) || k.includes(key)) {
+      return v;
+    }
+  }
+  // Si no se encuentra, retornar un prefijo estándar si aún no lo tiene
+  if (!key.startsWith('municipio')) {
+    return `Municipio ${municipio.trim()}`;
+  }
+  return municipio.trim();
+}
+
+export const obtenerNombreLargoMunicipio = obtenerNombreLargoSugerido;
+
