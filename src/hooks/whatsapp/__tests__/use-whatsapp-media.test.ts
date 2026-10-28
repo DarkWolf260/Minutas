@@ -127,7 +127,10 @@ describe('use-whatsapp-media', () => {
         const targetUrl = 'http://localhost:3001/api/whatsapp/messages/test_123/media';
         const result = await resolveSafeMediaUrl(targetUrl);
 
-        expect(fetchMock).toHaveBeenCalledWith(targetUrl);
+        expect(fetchMock).toHaveBeenCalledWith(
+          targetUrl,
+          expect.objectContaining({ targetAddressSpace: 'loopback' })
+        );
         expect(createObjectURLMock).toHaveBeenCalledWith(mockBlob);
         expect(result).toBe('blob:https://minutas-phi.vercel.app/safe-image-123');
         expect(getMediaBlobCacheSize()).toBe(1);

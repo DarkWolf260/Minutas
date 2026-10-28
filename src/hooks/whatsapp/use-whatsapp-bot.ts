@@ -3,6 +3,7 @@ import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { DbKeys } from '@/lib/repositories/keys';
 import { logger } from '@/lib/logger';
 import { OfflinePhotosDB } from '@/lib/offline-photos';
+import { safeBotFetch } from './safe-fetch';
 
 export interface WhatsAppChat {
   id: string;
@@ -288,7 +289,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       const cacheBuster = `_t=${Date.now()}`;
       const wsParam = currentWorkspace ? `&workspace=${encodeURIComponent(currentWorkspace)}` : '';
       const url = `${apiUrl}/api/whatsapp/status?${cacheBuster}${wsParam}`;
-      const response = await fetch(url, {
+      const response = await safeBotFetch(url, {
         method: 'GET',
         cache: 'no-store',
         headers: {
@@ -415,7 +416,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       if (state.isAvailable && state.isWorkspaceMatch && state.status.isReady) {
         try {
           const wsParam = currentWorkspace ? `?workspace=${encodeURIComponent(currentWorkspace)}` : '';
-          const response = await fetch(`${apiUrl}/api/whatsapp/chats${wsParam}`, {
+          const response = await safeBotFetch(`${apiUrl}/api/whatsapp/chats${wsParam}`, {
             headers: {
               ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
             }
@@ -499,7 +500,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
           )
         : undefined;
 
-      const response = await fetch(`${apiUrl}/api/whatsapp/send`, {
+      const response = await safeBotFetch(`${apiUrl}/api/whatsapp/send`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -707,7 +708,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         updateBotState({ chats: [] });
 
         // 3. Vincular el bot local a la nueva área de trabajo
-        fetch(`${apiUrl}/api/whatsapp/workspace`, {
+        safeBotFetch(`${apiUrl}/api/whatsapp/workspace`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ workspace: currentWorkspace })
@@ -761,7 +762,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         ]);
       }
 
-      const res = await fetch(`${apiUrl}/api/whatsapp/workspace`, {
+      const res = await safeBotFetch(`${apiUrl}/api/whatsapp/workspace`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ workspace: ws })
@@ -823,7 +824,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         } catch (_) {}
       }
 
-      await fetch(`${apiUrl}/api/whatsapp/logout`, {
+      await safeBotFetch(`${apiUrl}/api/whatsapp/logout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       }).catch(() => {});
@@ -837,7 +838,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
   const fetchChatMessages = useCallback(async (chatId: string, limit: number = 50): Promise<WhatsAppMessage[]> => {
     try {
       const wsParam = currentWorkspace ? `&workspace=${encodeURIComponent(currentWorkspace)}` : '';
-      const response = await fetch(`${apiUrl}/api/whatsapp/chats/${encodeURIComponent(chatId)}/messages?limit=${limit}${wsParam}`, {
+      const response = await safeBotFetch(`${apiUrl}/api/whatsapp/chats/${encodeURIComponent(chatId)}/messages?limit=${limit}${wsParam}`, {
         headers: {
           ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
         }

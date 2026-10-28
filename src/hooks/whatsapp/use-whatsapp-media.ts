@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { safeBotFetch } from './safe-fetch';
 
 // Cache bounded to 150 items to prevent memory leaks while avoiding re-fetching
 const MAX_CACHE_SIZE = 150;
@@ -79,7 +80,7 @@ export async function resolveSafeMediaUrl(rawUrl?: string | null): Promise<strin
 
   const fetchPromise = (async () => {
     try {
-      const response = await fetch(trimmed);
+      const response = await safeBotFetch(trimmed);
       if (!response.ok) {
         throw new Error(`Media fetch failed with HTTP ${response.status}`);
       }
