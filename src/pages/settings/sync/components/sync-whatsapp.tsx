@@ -23,7 +23,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { QRCodeSVG } from 'qrcode.react';
 import { Input } from '@/components/ui/input';
-import { useWhatsAppBot, type WhatsAppChat, getCleanAvatarUrl } from '@/hooks/whatsapp';
+import { useWhatsAppBot, type WhatsAppChat, getCleanAvatarUrl, useSafeMediaSrc } from '@/hooks/whatsapp';
 import { useSettings } from '@/hooks/configuracion';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { normalizeString, cn } from '@/lib/utils';
@@ -31,20 +31,15 @@ import type { WhatsAppRecipientGroup } from '@/lib/types';
 import { toast } from 'sonner';
 
 function ChatAvatarItem({ chat }: { chat: WhatsAppChat }) {
-  const [hasError, setHasError] = useState(false);
   const cleanUrl = getCleanAvatarUrl(chat.avatarUrl);
+  const { src: safeUrl, hasError } = useSafeMediaSrc(cleanUrl);
 
-  useEffect(() => {
-    setHasError(false);
-  }, [chat.id, cleanUrl]);
-
-  if (cleanUrl && !hasError) {
+  if (safeUrl && !hasError) {
     return (
       <img
-        src={cleanUrl}
+        src={safeUrl}
         alt={chat.name || ''}
         className="w-full h-full object-cover rounded-full"
-        onError={() => setHasError(true)}
       />
     );
   }

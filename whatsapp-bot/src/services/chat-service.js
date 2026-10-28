@@ -42,6 +42,28 @@ async function resolveChatAvatarUrl(chatId) {
     } catch (_) {}
   }
 
+  // Fallback a los modelos en memoria de WhatsApp Web si getProfilePicUrl no retornó URL directa
+  if (!picUrl && state.client.pupPage) {
+    try {
+      picUrl = await state.client.pupPage.evaluate((wid) => {
+        try {
+          const collections = window.require?.('WAWebCollections') || window.Store;
+          const contact = (collections?.Contact || window.Store?.Contact)?.get(wid);
+          const chat = (collections?.Chat || window.Store?.Chat)?.get(wid);
+          return (
+            contact?.profilePicThumbObj?.eurl ||
+            contact?.profilePicThumb?.eurl ||
+            chat?.contact?.profilePicThumbObj?.eurl ||
+            chat?.contact?.profilePicThumb?.eurl ||
+            null
+          );
+        } catch (e) {
+          return null;
+        }
+      }, targetChatId);
+    } catch (_) {}
+  }
+
   state.avatarCache.set(targetChatId, picUrl || null);
   state.avatarCache.set(chatId, picUrl || null);
   return picUrl || null;
@@ -206,12 +228,15 @@ async function fetchChats(requestedWorkspace) {
             if (c.directPicUrl) {
               state.avatarCache.set(c.id, c.directPicUrl);
             }
+            const pic = c.directPicUrl || state.avatarCache.get(c.id);
             return {
               id: c.id,
               name: c.name,
               isGroup: c.isGroup,
               timestamp: c.timestamp || 0,
-              avatarUrl: c.directPicUrl || null
+              avatarUrl: (pic && typeof pic === 'string' && /^https?:\/\//i.test(pic))
+                ? pic
+                : (c.id ? `/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg` : null)
             };
           });
       }
@@ -243,7 +268,9 @@ async function fetchChats(requestedWorkspace) {
               name: chat.name || chat.formattedTitle || (id.endsWith('@g.us') ? 'Grupo' : 'Contacto'),
               isGroup: Boolean(chat.isGroup),
               timestamp: chat.timestamp || 0,
-              avatarUrl: pic || null
+              avatarUrl: (pic && typeof pic === 'string' && /^https?:\/\//i.test(pic))
+                ? pic
+                : (id ? `/api/whatsapp/chats/${encodeURIComponent(id)}/avatar.jpg` : null)
             };
           });
       }
@@ -332,11 +359,13 @@ async function fetchChats(requestedWorkspace) {
       }));
     }
 
-    // Asignar avatares reales directos (HTTPS) de WhatsApp para compatibilidad completa en web / nube / Vercel
+    // Asignar avatares reales directos (HTTPS) de WhatsApp si existen, o endpoint de avatar
     formattedChats.forEach(c => {
       const pic = c.directPicUrl || state.avatarCache.get(c.id) || null;
       if (pic && typeof pic === 'string' && /^https?:\/\//i.test(pic)) {
         c.avatarUrl = pic;
+      } else if (c.id) {
+        c.avatarUrl = `/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg`;
       } else {
         c.avatarUrl = null;
       }
