@@ -154,7 +154,7 @@ export const FormLayout = ({
                 const fieldConfig = finalConfig.fields[field_id];
                 if (!fieldConfig) return null;
 
-                const isFullWidth = fieldConfig.type === 'textarea';
+                const isFullWidth = fieldConfig.type === 'textarea' || fieldConfig.is_full_width;
 
                 return (
                   <div

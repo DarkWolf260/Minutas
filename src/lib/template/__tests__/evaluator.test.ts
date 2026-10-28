@@ -68,6 +68,15 @@ describe('Template Evaluator', () => {
             expect(applyModifiers('hello', ' upper ')).toBe('HELLO');
         });
 
+        it('should handle largo and long modifier for municipalities', () => {
+            expect(applyModifiers('Urbaneja', 'largo')).toBe(
+                'Municipio Turístico "El Morro" Licenciado Diego Bautista Urbaneja'
+            );
+            expect(applyModifiers('Guanta', ['largo', 'upper'])).toBe(
+                'MUNICIPIO AUTÓNOMO GUANTA'
+            );
+        });
+
         it('should handle hidden modifier', () => {
             expect(applyModifiers('hello', 'hidden')).toBe('');
             expect(applyModifiers('hello', ['upper', 'hidden'])).toBe('');

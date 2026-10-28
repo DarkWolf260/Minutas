@@ -49,6 +49,8 @@ Los segmentos están separados por `:`. El orden de los segmentos después del n
 | `capitalize` | Convierte la primera letra del texto en mayúscula |
 | `hidden` | Oculta el campo en la salida del reporte renderizado |
 | `single` | Permite ingresar una sola hora (sin rango) para campos `time-hlv` |
+| `largo` / `long` | Activa el nombre largo protocolar de municipio y expande el ancho completo |
+| `direcciones` / `dir` | Activa el selector con la lista de direcciones guardadas del directorio (por defecto los campos son texto libre) |
 | `default("Valor")` / `def=(Valor)` | Asigna un valor predeterminado si el campo queda vacío |
 
 #### Dropdown con opciones inline
@@ -138,9 +140,10 @@ Esto crea una sección repetible donde el campo `novedad` puede tener múltiples
 Ejemplo con campos de direcciones repetibles:
 ```text
 ::: INFORMACIÓN GEOGRÁFICA :::
-- *UBICACIÓN:* {Ubicación:textarea:req}
-- *DESTINO:* {Destino:textarea:req}*
+- *UBICACIÓN:* {Ubicación:textarea:direcciones:req}
+- *DESTINO:* {Destino:textarea:direcciones:req}*
 :::
+> **Nota:** El modificador `:direcciones` (o `:dir`) activa el selector emergente con la lista de direcciones guardadas del directorio. Si no se incluye, el campo funciona como texto libre normal.
 ```
 
 ---
@@ -569,6 +572,7 @@ Cada campo especial o reservado posee un tipo base (`FieldType`) asignado en el 
 | `{Analista}` | `staff` | Formateo con Cédula obligatoria vía `formatStaffMember(showCedula = true)` | `:upper`, `:title`, `:hidden` | `:req`, `:full` |
 | `{Director}`, `{Jefe de operaciones}`, etc. | `staff` | Notación de punto: `.sex`, `.name`, `.cargo`, `.rank`, `.cedula`, `.titulo` | `:upper`, `:title`, `:hidden` | `:req`, `:full` |
 | `{Guardia}` / `{Grupo}` | `text` | *(Auto-rellenado con `active_guard_id`)* | `:upper`, `:lower`, `:title` | `:req`, `:full`, `:default("...")` |
+| `{Ubicación}` / `{Destino}` | `text` / `textarea` | `:direcciones`, `:dir` *(activa la lista de direcciones guardadas del directorio)* | `:upper`, `:lower`, `:title`, `:capitalize`, `:hidden` | `:req`, `:full`, `:default("...")` |
 | `{photos}` / `{fotos}` | *Marcador estructural* | *(No es campo de datos; marcador de fotos)* | *(Ninguno)* | *(Ninguno)* |
 | `<<...>>` | *Marcador estructural* | *(Delimitador de resumen ejecutivo)* | *(Ninguno)* | *(Ninguno)* |
 

@@ -275,6 +275,23 @@ describe('Template Renderer - Modifiers', () => {
             'Jurisdicción: Municipio Turístico "El Morro" Licenciado Diego Bautista Urbaneja'
         );
     });
+
+    it('should resolve long municipality when data comes from form data (not predefined)', () => {
+        const templateLargoModifier = 'Oficial: {Municipio:largo:upper}';
+        const templateLargoTag = '*{Municipio_Largo:upper}\\*';
+
+        const data = {
+            Municipio: 'Guanta'
+        };
+        const predefined = {};
+
+        expect(render(templateLargoModifier, data, predefined)).toBe(
+            'Oficial: MUNICIPIO AUTÓNOMO GUANTA'
+        );
+        expect(render(templateLargoTag, data, predefined)).toBe(
+            '*MUNICIPIO AUTÓNOMO GUANTA*'
+        );
+    });
 });
 
 describe('Template Renderer - Two Field Conditionals', () => {

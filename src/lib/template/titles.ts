@@ -22,12 +22,20 @@ export function resolveTemplateTitle(
         const basePart = pipeParts[0] || '';
         const textMods = pipeParts.slice(1).map((s: string) => s.toLowerCase());
 
-        // Split by colon for value mode, e.g., {FieldName:value}
+        // Split by colon for value mode and modifiers, e.g., {FieldName:value} or {FieldName:largo:upper}
         const colonParts = basePart.split(':').map((s: string) => s.trim());
         const trimmed = colonParts[0] || '';
-        const valueMode = colonParts[1]?.toLowerCase(); // 'value', 'val', 'label', 'key'
+        const colonMods = colonParts.slice(1).map((s: string) => s.toLowerCase());
+        const valueMode = colonMods[0]; // 'value', 'val', 'label', 'key'
+        const effectiveMods = Array.from(new Set([
+            ...colonMods.filter((m: string) => m !== 'value' && m !== 'val' && m !== 'label' && m !== 'key'),
+            ...textMods
+        ]));
 
-        const rawVal = findValueInform_data(formData, trimmed);
+        let rawVal = findValueInform_data(formData, trimmed);
+        if ((rawVal === null || rawVal === undefined || rawVal === '') && (trimmed.toLowerCase() === 'municipio_largo' || trimmed.toLowerCase() === 'municipiolargo')) {
+            rawVal = findValueInform_data(formData, 'Municipio') || findValueInform_data(formData, 'municipio');
+        }
         const val = rawVal !== null && rawVal !== undefined ? rawVal : undefined;
         const actualFieldId = trimmed;
 
@@ -52,8 +60,8 @@ export function resolveTemplateTitle(
         }
 
         // Apply text transformations if provided
-        if (resolvedVal && textMods.length > 0) {
-            resolvedVal = applyModifiers(resolvedVal, textMods);
+        if (resolvedVal && effectiveMods.length > 0) {
+            resolvedVal = applyModifiers(resolvedVal, effectiveMods);
         }
 
         return resolvedVal;
