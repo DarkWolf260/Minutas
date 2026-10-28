@@ -5,6 +5,7 @@ import { DbKeys } from '@/lib/repositories/keys';
 import { logger } from '@/lib/logger';
 import { OfflinePhotosDB } from '@/lib/offline-photos';
 import { getEffectiveBotUrl } from './use-whatsapp-bot';
+import { safeBotFetch } from './safe-fetch';
 
 export interface ScheduledMessage {
   id: string;
@@ -167,7 +168,7 @@ export function useScheduledMessages() {
 
       // Enviar al backend Node para que lo programe en segundo plano
       try {
-        await fetch(`${apiUrl}/api/whatsapp/schedule`, {
+        await safeBotFetch(`${apiUrl}/api/whatsapp/schedule`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -209,7 +210,7 @@ export function useScheduledMessages() {
 
         // Cancelar en el backend Node
         try {
-          await fetch(`${apiUrl}/api/whatsapp/schedule/${encodeURIComponent(id)}`, {
+          await safeBotFetch(`${apiUrl}/api/whatsapp/schedule/${encodeURIComponent(id)}`, {
             method: 'DELETE',
           });
         } catch (error) {
@@ -247,7 +248,7 @@ export function useScheduledMessages() {
 
         // Notificar al servidor en segundo plano
         try {
-          await fetch(`${apiUrl}/api/whatsapp/scheduled/discard-expired`, {
+          await safeBotFetch(`${apiUrl}/api/whatsapp/scheduled/discard-expired`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -296,7 +297,7 @@ export function useScheduledMessages() {
       isSyncing = true;
       try {
         const wsParam = currentWorkspace ? `?workspace=${encodeURIComponent(currentWorkspace)}` : '';
-        const response = await fetch(`${apiUrl}/api/whatsapp/scheduled${wsParam}`, {
+        const response = await safeBotFetch(`${apiUrl}/api/whatsapp/scheduled${wsParam}`, {
           headers: {
             ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
           }
@@ -373,7 +374,7 @@ export function useScheduledMessages() {
               } else {
                 // Mensaje futuro pendiente: empujar al backend
                 try {
-                  const pushRes = await fetch(`${apiUrl}/api/whatsapp/schedule`, {
+                  const pushRes = await safeBotFetch(`${apiUrl}/api/whatsapp/schedule`, {
                     method: 'POST',
                     headers: { 
                       'Content-Type': 'application/json',
