@@ -213,6 +213,11 @@ export function getCleanAvatarUrl(avatarUrl?: string | null, customApiUrl?: stri
   const trimmed = avatarUrl.trim();
   if (!trimmed) return null;
 
+  // Si es un pixel transparente 1x1 conocido en base64, retornar null
+  if (trimmed.includes('iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB')) {
+    return null;
+  }
+
   // Si ya es una URL HTTPS directa, data URI o blob URL, es segura y válida
   if (/^https:\/\//i.test(trimmed) || trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
     return trimmed;
@@ -425,7 +430,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
                     : c.avatarUrl.startsWith('/') && apiUrl
                       ? `${apiUrl}${c.avatarUrl}`
                       : c.avatarUrl)
-                : (c.id && apiUrl ? `${apiUrl}/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg` : null)
+                : null
             })) : [];
             updateBotState({ chats: normalizedChats });
             
@@ -463,7 +468,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
                       : c.avatarUrl.startsWith('/') && apiUrl
                         ? `${apiUrl}${c.avatarUrl}`
                         : c.avatarUrl)
-                  : (c.id && apiUrl ? `${apiUrl}/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg` : null)
+                  : null
               }));
               updateBotState({ chats: normalizedChats });
             }

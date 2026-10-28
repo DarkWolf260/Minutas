@@ -19,15 +19,27 @@ import { type ChatItem, type UseWhatsAppChatReturn, getCleanAvatarUrl, useSafeMe
 import { useNavigate } from 'react-router-dom';
 
 function ChatAvatar({ chat }: { chat: ChatItem }) {
+  const [imgError, setImgError] = useState(false);
   const cleanUrl = getCleanAvatarUrl(chat.avatarUrl);
   const { src: safeUrl, hasError } = useSafeMediaSrc(cleanUrl);
 
-  if (safeUrl && !hasError) {
+  useEffect(() => {
+    setImgError(false);
+  }, [chat.id, cleanUrl]);
+
+  if (cleanUrl && safeUrl && !hasError && !imgError) {
     return (
       <img
         src={safeUrl}
         alt={chat.name}
         className="w-full h-full object-cover"
+        onError={() => setImgError(true)}
+        onLoad={(e) => {
+          const img = e.currentTarget;
+          if (img.naturalWidth <= 1 && img.naturalHeight <= 1) {
+            setImgError(true);
+          }
+        }}
       />
     );
   }
@@ -71,8 +83,13 @@ export function WhatsAppChatHeader({
   const [searchFilter, setSearchFilter] = useState('');
   const [isRotating, setIsRotating] = useState(false);
 
+  const [headerImgError, setHeaderImgError] = useState(false);
   const currentChatCleanUrl = getCleanAvatarUrl(currentChat?.avatarUrl);
   const { src: headerAvatarSrc, hasError: headerAvatarHasError } = useSafeMediaSrc(currentChatCleanUrl);
+
+  useEffect(() => {
+    setHeaderImgError(false);
+  }, [currentChat?.id, currentChatCleanUrl]);
 
   const handleRefresh = async () => {
     setIsRotating(true);
@@ -121,11 +138,18 @@ export function WhatsAppChatHeader({
                       : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                   )}
                 >
-                  {headerAvatarSrc && !headerAvatarHasError ? (
+                  {currentChatCleanUrl && headerAvatarSrc && !headerAvatarHasError && !headerImgError ? (
                     <img
                       src={headerAvatarSrc}
                       alt={currentChat?.name || 'Chat'}
                       className="w-full h-full object-cover"
+                      onError={() => setHeaderImgError(true)}
+                      onLoad={(e) => {
+                        const img = e.currentTarget;
+                        if (img.naturalWidth <= 1 && img.naturalHeight <= 1) {
+                          setHeaderImgError(true);
+                        }
+                      }}
                     />
                   ) : currentChat?.isGroup ? (
                     <Users className="h-4 w-4" />

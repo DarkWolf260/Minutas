@@ -66,15 +66,27 @@ function formatChatTime(timestamp?: number) {
 }
 
 function ChatAvatarItem({ chat }: { chat: WhatsAppChat }) {
+  const [imgError, setImgError] = useState(false);
   const cleanUrl = getCleanAvatarUrl(chat.avatarUrl);
   const { src: safeUrl, hasError } = useSafeMediaSrc(cleanUrl);
 
-  if (safeUrl && !hasError) {
+  useEffect(() => {
+    setImgError(false);
+  }, [chat.id, cleanUrl]);
+
+  if (cleanUrl && safeUrl && !hasError && !imgError) {
     return (
       <img
         src={safeUrl}
         alt={chat.name}
         className="w-full h-full object-cover rounded-full"
+        onError={() => setImgError(true)}
+        onLoad={(e) => {
+          const img = e.currentTarget;
+          if (img.naturalWidth <= 1 && img.naturalHeight <= 1) {
+            setImgError(true);
+          }
+        }}
       />
     );
   }
