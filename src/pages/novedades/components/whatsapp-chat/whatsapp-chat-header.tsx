@@ -15,24 +15,19 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { cn, normalizeString } from '@/lib/utils';
-import { type ChatItem, type UseWhatsAppChatReturn, getCleanAvatarUrl } from '@/hooks/whatsapp';
+import { type ChatItem, type UseWhatsAppChatReturn, getCleanAvatarUrl, useSafeMediaSrc } from '@/hooks/whatsapp';
 import { useNavigate } from 'react-router-dom';
 
 function ChatAvatar({ chat }: { chat: ChatItem }) {
-  const [hasError, setHasError] = useState(false);
   const cleanUrl = getCleanAvatarUrl(chat.avatarUrl);
+  const { src: safeUrl, hasError } = useSafeMediaSrc(cleanUrl);
 
-  useEffect(() => {
-    setHasError(false);
-  }, [chat.id, cleanUrl]);
-
-  if (cleanUrl && !hasError) {
+  if (safeUrl && !hasError) {
     return (
       <img
-        src={cleanUrl}
+        src={safeUrl}
         alt={chat.name}
         className="w-full h-full object-cover"
-        onError={() => setHasError(true)}
       />
     );
   }
@@ -75,56 +70,9 @@ export function WhatsAppChatHeader({
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [isRotating, setIsRotating] = useState(false);
-  const [headerAvatarError, setHeaderAvatarError] = useState(false);
-  const [resolvedAvatar, setResolvedAvatar] = useState<string | null>(null);
 
-  // Reset error when switching chats
-  useEffect(() => {
-    setHeaderAvatarError(false);
-  }, [currentChat?.id, currentChat?.avatarUrl]);
-
-  // Si currentChat no tiene avatarUrl aún definido (o es null), intentar resolver bajo demanda una sola vez
-  useEffect(() => {
-    if (!currentChat?.id || !isBotReady) return;
-
-    const currentClean = getCleanAvatarUrl(currentChat.avatarUrl);
-    if (currentClean) {
-      setResolvedAvatar(currentClean);
-      return;
-    }
-    if (currentChat.avatarUrl === null) {
-      setResolvedAvatar(null);
-      return;
-    }
-
-    const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-    if (isHttps) {
-      // En HTTPS (Vercel), no consultar rutas relativas /api/whatsapp que no están proxificadas
-      return;
-    }
-
-    let isMounted = true;
-    fetch(`/api/whatsapp/chats/${encodeURIComponent(currentChat.id)}/avatar`)
-      .then(res => (res.ok ? res.json() : null))
-      .then(data => {
-        if (isMounted) {
-          const url = getCleanAvatarUrl(data?.avatarUrl);
-          setResolvedAvatar(url);
-          currentChat.avatarUrl = url;
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          currentChat.avatarUrl = null;
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [currentChat?.id, currentChat?.avatarUrl, isBotReady]);
-
-  const displayAvatar = getCleanAvatarUrl(currentChat?.avatarUrl || resolvedAvatar);
+  const currentChatCleanUrl = getCleanAvatarUrl(currentChat?.avatarUrl);
+  const { src: headerAvatarSrc, hasError: headerAvatarHasError } = useSafeMediaSrc(currentChatCleanUrl);
 
   const handleRefresh = async () => {
     setIsRotating(true);
@@ -173,12 +121,11 @@ export function WhatsAppChatHeader({
                       : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                   )}
                 >
-                  {displayAvatar && !headerAvatarError ? (
+                  {headerAvatarSrc && !headerAvatarHasError ? (
                     <img
-                      src={displayAvatar}
+                      src={headerAvatarSrc}
                       alt={currentChat?.name || 'Chat'}
                       className="w-full h-full object-cover"
-                      onError={() => setHeaderAvatarError(true)}
                     />
                   ) : currentChat?.isGroup ? (
                     <Users className="h-4 w-4" />

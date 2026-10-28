@@ -37,14 +37,22 @@ describe('getCleanAvatarUrl', () => {
       });
     });
 
-    it('blocks insecure http:// URLs to prevent Mixed Content warnings', () => {
-      expect(getCleanAvatarUrl('http://localhost:3001/api/whatsapp/chats/123/avatar.jpg')).toBeNull();
-      expect(getCleanAvatarUrl('http://192.168.1.100:3001/api/whatsapp/chats/123/avatar.jpg')).toBeNull();
-      expect(getCleanAvatarUrl('http://127.0.0.1:3001/api/whatsapp/chats/123/avatar.jpg')).toBeNull();
+    it('normalizes relative /api/whatsapp URLs to absolute bot URLs so safe blob fetch can handle them', () => {
+      expect(getCleanAvatarUrl('/api/whatsapp/chats/123@c.us/avatar.jpg')).toBe(
+        'http://localhost:3001/api/whatsapp/chats/123@c.us/avatar.jpg'
+      );
     });
 
-    it('blocks relative /api/whatsapp URLs that return SPA index.html on Vercel', () => {
-      expect(getCleanAvatarUrl('/api/whatsapp/chats/123@c.us/avatar.jpg')).toBeNull();
+    it('supports custom apiUrl when resolving relative paths', () => {
+      expect(
+        getCleanAvatarUrl('/api/whatsapp/chats/123@c.us/avatar.jpg', 'http://192.168.1.50:3001')
+      ).toBe('http://192.168.1.50:3001/api/whatsapp/chats/123@c.us/avatar.jpg');
+    });
+
+    it('allows http:// bot URLs so useSafeMediaSrc can fetch them as blob', () => {
+      expect(getCleanAvatarUrl('http://localhost:3001/api/whatsapp/chats/123/avatar.jpg')).toBe(
+        'http://localhost:3001/api/whatsapp/chats/123/avatar.jpg'
+      );
     });
 
     it('allows valid HTTPS URLs', () => {

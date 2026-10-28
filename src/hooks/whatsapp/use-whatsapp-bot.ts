@@ -203,30 +203,29 @@ export function getEffectiveBotUrl(url?: string): string {
 }
 
 /**
- * Normaliza y valida una URL de avatar para renderizado en <img>.
- * En entornos HTTPS (ej: producción en Vercel), rechaza URLs inseguras http://
- * (especialmente localhost/red privada) y rutas relativas /api/whatsapp que devuelven HTML,
- * evitando advertencias de Mixed Content y permitiendo que se muestre el icono de usuario de fallback.
+ * Normaliza y valida una URL de avatar.
+ * En páginas HTTPS (ej: producción en Vercel), normaliza URLs relativas (/api/whatsapp...)
+ * hacia la URL del bot (o http://localhost:3001 por defecto) para que useSafeMediaSrc
+ * pueda descargarlas de manera segura vía CORS/PNA y convertirlas en blob: HTTPS.
  */
-export function getCleanAvatarUrl(avatarUrl?: string | null): string | null {
+export function getCleanAvatarUrl(avatarUrl?: string | null, customApiUrl?: string): string | null {
   if (!avatarUrl || typeof avatarUrl !== 'string') return null;
   const trimmed = avatarUrl.trim();
   if (!trimmed) return null;
 
-  // Si ya es una URL HTTPS directa (ej: CDN oficial de WhatsApp https://pps.whatsapp.net/...), es segura y válida
-  if (/^https:\/\//i.test(trimmed)) {
+  // Si ya es una URL HTTPS directa, data URI o blob URL, es segura y válida
+  if (/^https:\/\//i.test(trimmed) || trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
     return trimmed;
   }
 
-  // Comprobar si la aplicación se ejecuta sobre HTTPS (producción)
-  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-
-  if (isHttps) {
-    // En HTTPS, los navegadores bloquean <img> con http:// hacia redes locales y /api/whatsapp devuelve index.html.
-    // Retornar null previene los avisos de Mixed Content y activa inmediatamente el fallback limpio de icono.
-    if (/^http:\/\//i.test(trimmed) || trimmed.startsWith('/api/whatsapp')) {
-      return null;
+  // Si es una ruta relativa (/api/whatsapp...) en entorno web
+  if (trimmed.startsWith('/')) {
+    const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    if (isHttps) {
+      const base = customApiUrl || 'http://localhost:3001';
+      return `${base.replace(/\/+$/, '')}${trimmed}`;
     }
+    return trimmed;
   }
 
   return trimmed;
@@ -418,7 +417,17 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
           });
           if (response.ok) {
             const data = await response.json();
-            updateBotState({ chats: data });
+            const normalizedChats = Array.isArray(data) ? data.map((c: any) => ({
+              ...c,
+              avatarUrl: c.avatarUrl
+                ? (c.avatarUrl.startsWith('https://')
+                    ? c.avatarUrl
+                    : c.avatarUrl.startsWith('/') && apiUrl
+                      ? `${apiUrl}${c.avatarUrl}`
+                      : c.avatarUrl)
+                : (c.id && apiUrl ? `${apiUrl}/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg` : null)
+            })) : [];
+            updateBotState({ chats: normalizedChats });
             
             // Sync to database if we are in cloud workspace
             if (db && currentWorkspace && isCloud) {
@@ -428,7 +437,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
                 workspace_id: currentWorkspace,
                 type: 'whatsapp_bot_status',
                 data: {
-                  chats: data,
+                  chats: normalizedChats,
                   updatedAt: new Date().toISOString()
                 }
               }).catch(err => console.error('Error syncing chats list to DB:', err));
@@ -446,7 +455,17 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
             const item = doc.toJSON();
             const data = item.data || {};
             if (Array.isArray(data.chats)) {
-              updateBotState({ chats: data.chats });
+              const normalizedChats = data.chats.map((c: any) => ({
+                ...c,
+                avatarUrl: c.avatarUrl
+                  ? (c.avatarUrl.startsWith('https://')
+                      ? c.avatarUrl
+                      : c.avatarUrl.startsWith('/') && apiUrl
+                        ? `${apiUrl}${c.avatarUrl}`
+                        : c.avatarUrl)
+                  : (c.id && apiUrl ? `${apiUrl}/api/whatsapp/chats/${encodeURIComponent(c.id)}/avatar.jpg` : null)
+              }));
+              updateBotState({ chats: normalizedChats });
             }
           }
         } catch (error) {
