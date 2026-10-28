@@ -102,8 +102,12 @@ export async function resolveSafeMediaUrl(rawUrl?: string | null): Promise<strin
 
       mediaBlobCache.set(trimmed, blobUrl);
       return blobUrl;
-    } catch (err) {
-      console.warn(`[SafeMedia] Failed to load media from ${trimmed}:`, err);
+    } catch (err: any) {
+      if (err?.message?.includes('404')) {
+        console.debug(`[SafeMedia] Media expired or not cached on WhatsApp server (404), using preview thumbnail: ${trimmed}`);
+      } else {
+        console.warn(`[SafeMedia] Failed to load media from ${trimmed}:`, err?.message || err);
+      }
       return null;
     } finally {
       mediaInFlight.delete(trimmed);
