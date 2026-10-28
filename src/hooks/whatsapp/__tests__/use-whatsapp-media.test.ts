@@ -129,7 +129,7 @@ describe('use-whatsapp-media', () => {
 
         expect(fetchMock).toHaveBeenCalledWith(
           targetUrl,
-          expect.objectContaining({ targetAddressSpace: 'local' })
+          expect.objectContaining({ targetAddressSpace: 'loopback' })
         );
         expect(createObjectURLMock).toHaveBeenCalledWith(mockBlob);
         expect(result).toBe('blob:https://minutas-phi.vercel.app/safe-image-123');
