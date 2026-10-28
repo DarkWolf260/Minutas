@@ -227,10 +227,12 @@ function findValueForField(
 
     // Direct support for {Municipio_Largo} resolving from base {Municipio} using constants
     if (lowerCasefield_id === 'municipio_largo' || lowerCasefield_id === 'municipiolargo') {
-        const customLargo = getFromObjectInsensitive(predefinedValues, lowerCasefield_id, field_id);
-        if (customLargo !== undefined) return customLargo;
-        const baseMuni = getFromObjectInsensitive(predefinedValues, 'municipio', 'Municipio');
-        if (baseMuni !== undefined && baseMuni !== null) return obtenerNombreLargoMunicipio(String(baseMuni));
+        const customLargo = getFromObjectInsensitive(data, lowerCasefield_id, field_id) ??
+                            getFromObjectInsensitive(predefinedValues, lowerCasefield_id, field_id);
+        if (customLargo !== undefined && customLargo !== '') return customLargo;
+        const baseMuni = getFromObjectInsensitive(data, 'municipio', 'Municipio') ??
+                         getFromObjectInsensitive(predefinedValues, 'municipio', 'Municipio');
+        if (baseMuni !== undefined && baseMuni !== null && baseMuni !== '') return obtenerNombreLargoMunicipio(String(baseMuni));
     }
 
     // 5. Check predefined values

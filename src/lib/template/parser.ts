@@ -21,7 +21,20 @@ const VALID_FIELD_TYPES = new Set<FieldType>([
     'cedula',
 ]);
 
-const VALID_TEXT_MODS = new Set(['upper', 'lower', 'title', 'single', 'hidden']);
+const VALID_TEXT_MODS = new Set([
+    'upper',
+    'lower',
+    'title',
+    'capitalize',
+    'single',
+    'hidden',
+    'largo',
+    'long',
+    'direcciones',
+    'direccion',
+    'dirección',
+    'dir',
+]);
 
 /**
  * Parses field tag content to extract configuration
@@ -104,8 +117,11 @@ export function parseFieldTag(
             return;
         }
 
-        if (segment === 'full') {
+        if (segment === 'full' || segment === 'largo') {
             is_full_width = true;
+            if (segment === 'largo') {
+                modifiers.push(segment);
+            }
         } else if (segment === 'req') {
             is_required = true;
         } else if (VALID_FIELD_TYPES.has(segment as FieldType)) {
@@ -119,9 +135,12 @@ export function parseFieldTag(
                 const defMatch = trimmed.match(/^(?:default\("?(.*?)"?\)|def=\((.*?)\))$/i);
                 if (defMatch) {
                     default_value = defMatch[1] ?? defMatch[2];
-                } else if (trimmed === 'full') is_full_width = true;
-                else if (trimmed === 'req') is_required = true;
-                else if (trimmed) {
+                } else if (trimmed === 'full' || trimmed === 'largo') {
+                    is_full_width = true;
+                    if (trimmed === 'largo') modifiers.push(trimmed);
+                } else if (trimmed === 'req') {
+                    is_required = true;
+                } else if (trimmed) {
                     modifiers.push(trimmed);
                 }
             });

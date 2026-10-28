@@ -167,7 +167,19 @@ export type FieldType =
   | 'dropdown'
   | 'cedula';
 
-export type TextModifier = 'upper' | 'lower' | 'title';
+export type TextModifier =
+  | 'upper'
+  | 'lower'
+  | 'title'
+  | 'capitalize'
+  | 'single'
+  | 'hidden'
+  | 'largo'
+  | 'long'
+  | 'direcciones'
+  | 'direccion'
+  | 'dirección'
+  | 'dir';
 
 export interface SnippetOption {
   id: string;

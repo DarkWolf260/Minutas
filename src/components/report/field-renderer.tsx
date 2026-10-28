@@ -71,7 +71,10 @@ export const FieldRenderer = memo(
             ref
         ) => {
             const lowerfield_id = field_id.toLowerCase();
-            const addressFieldNames = ['ubicación', 'destino'];
+            const rawMods = (fieldConfig.modifiers || []).map((m: any) => String(m).toLowerCase().trim());
+            const showSavedAddresses = rawMods.some((m: string) =>
+                m === 'direcciones' || m === 'direccion' || m === 'dirección' || m === 'dir'
+            );
             const formContext = useFormContext();
             const tipoPath = `${name}_tipo`;
             const watchedTypeValue = useWatch({
@@ -206,7 +209,7 @@ export const FieldRenderer = memo(
 
             // If type is explicitly something other than 'text', prioritize the switch
             if (fieldConfig.type && fieldConfig.type !== 'text') {
-                if (fieldConfig.type === 'textarea' && addressFieldNames.includes(lowerfield_id)) {
+                if (fieldConfig.type === 'textarea' && showSavedAddresses) {
                     const tipoPath = `${name}_tipo`;
                     return (
                         <AddressInput
@@ -344,7 +347,7 @@ export const FieldRenderer = memo(
                 );
             }
 
-            if (addressFieldNames.includes(lowerfield_id)) {
+            if (showSavedAddresses) {
                 const tipoPath = `${name}_tipo`;
                 return (
                     <AddressInput

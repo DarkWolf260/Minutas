@@ -125,6 +125,28 @@ describe('Template Parser', () => {
             expect(result.fieldWidths.get('campo')).toBe(true);
             expect(result.requiredFields.get('campo')).toBe(true);
         });
+
+        it('should parse largo modifier for full width and text modifier', () => {
+            const template = 'Campo: {campo:largo}, Municipio: {Municipio:largo:upper}';
+            const result = parseTemplate(template);
+
+            expect(result.errors).toHaveLength(0);
+            expect(result.fieldWidths.get('campo')).toBe(true);
+            expect(result.fieldModifiers.get('campo')).toContain('largo');
+            expect(result.fieldModifiers.get('Municipio')).toContain('largo');
+            expect(result.fieldModifiers.get('Municipio')).toContain('upper');
+        });
+
+        it('should parse direcciones and dir modifiers', () => {
+            const template = 'Ubicación: {Ubicación:direcciones}, Destino: {Destino:textarea:dir:req}';
+            const result = parseTemplate(template);
+
+            expect(result.errors).toHaveLength(0);
+            expect(result.fieldModifiers.get('Ubicación')).toContain('direcciones');
+            expect(result.fieldModifiers.get('Destino')).toContain('dir');
+            expect(result.fieldTypes.get('Destino')).toBe('textarea');
+            expect(result.requiredFields.get('Destino')).toBe(true);
+        });
     });
 
     describe('Conditional Sections', () => {

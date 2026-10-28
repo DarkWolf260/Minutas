@@ -38,5 +38,25 @@
     "media": [],
     "workspaceId": "minutasdb",
     "status": "sent"
+  },
+  {
+    "id": "minutasdb:scheduled_message:dff6bb34-8449-4d07-928d-060bf3171ed0",
+    "chatId": "120363353558604551@g.us",
+    "message": "*PROTECCIÓN CIVIL MUNICIPIO URBANEJA* 🚨\n\n- *REPORTE DEL ESTADO DEL TIEMPO:* ⛅\n- *FECHA:* 28/Octubre/2026\n- *HORA:* 04:00 HLV\n\n- *DESCRIPCIÓN:* Cielo con nubosidad dispersa\n\n- *NOVEDAD:* Sin novedades para la hora.\n\n- *REPORTA:* Analista de SIMATUR OPC Francisco Marchan V-32.477.339\n\n*SOLO QUEREMOS SALVAR VIDAS* 🚨🚑",
+    "scheduledTime": "2026-10-28T08:00:00.000Z",
+    "title": "Reporte del estado del tiempo",
+    "media": [],
+    "workspaceId": "minutasdb",
+    "status": "sent"
+  },
+  {
+    "id": "minutasdb:scheduled_message:b1aa57ce-f9a3-4ea1-8487-c5a9142ee4e5",
+    "chatId": "584166842831-1553703217@g.us",
+    "message": "*PROTECCIÓN CIVIL MUNICIPIO URBANEJA* 🚨\n\n- *REPORTE DEL ESTADO DEL TIEMPO:* ⛅\n- *FECHA:* 28/Octubre/2026\n- *HORA:* 04:00 HLV\n\n- *DESCRIPCIÓN:* Cielo con nubosidad dispersa\n\n- *NOVEDAD:* Sin novedades para la hora.\n\n- *REPORTA:* Analista de SIMATUR OPC Francisco Marchan V-32.477.339\n\n*SOLO QUEREMOS SALVAR VIDAS* 🚨🚑",
+    "scheduledTime": "2026-10-28T08:00:00.000Z",
+    "title": "Reporte del estado del tiempo",
+    "media": [],
+    "workspaceId": "minutasdb",
+    "status": "sent"
   }
 ]

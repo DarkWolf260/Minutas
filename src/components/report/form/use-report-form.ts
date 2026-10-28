@@ -19,6 +19,8 @@ import { useSettings } from '@/hooks/configuracion';
 import { usePersonnel } from '@/hooks/personal';
 import { useOrdenDelDiaDraft } from '@/hooks/orden-del-dia';
 import { formatStaffMember } from '@/lib/formatters';
+import { applyModifiers } from '@/lib/template/evaluator';
+import { obtenerNombreLargoMunicipio } from '@/lib/constants/venezuela';
 
 interface UseReportFormProps {
   reportId?: string;
@@ -197,6 +199,13 @@ export function useReportForm({
     if (controlledValues) {
       Object.assign(values, controlledValues);
     }
+    const baseMuni = values['Municipio'] || values['municipio'];
+    if (baseMuni && !values['Municipio_Largo']) {
+      const largo = obtenerNombreLargoMunicipio(baseMuni);
+      values['Municipio_Largo'] = largo;
+      values['municipio_largo'] = largo;
+      values['municipiolargo'] = largo;
+    }
     return values;
   }, [definitions, controlledValues]);
 
@@ -335,9 +344,41 @@ export function useReportForm({
           );
 
           if (foundKey && predefinedValues[foundKey]) {
-            target[field_id] = safeClone(predefinedValues[foundKey]);
+            let initialVal = safeClone(predefinedValues[foundKey]);
+            const mods = finalConfig.fields[field_id]?.modifiers || [];
+            const isLargoModifier = mods.some(
+              (m: string) => m.toLowerCase() === 'largo' || m.toLowerCase() === 'long'
+            );
+            if (keyLower === 'municipio' && isLargoModifier && typeof initialVal === 'string') {
+              initialVal = obtenerNombreLargoMunicipio(initialVal);
+            }
+            if (typeof initialVal === 'string' && mods.length > 0) {
+              const textMods = mods.filter(
+                (m: string) => m.toLowerCase() !== 'largo' && m.toLowerCase() !== 'long'
+              );
+              if (textMods.length > 0) {
+                initialVal = applyModifiers(initialVal, textMods);
+              }
+            }
+            target[field_id] = initialVal;
           } else if (finalConfig.fields[field_id]?.default_value !== undefined) {
-            target[field_id] = safeClone(finalConfig.fields[field_id].default_value);
+            let defaultVal = safeClone(finalConfig.fields[field_id].default_value);
+            const mods = finalConfig.fields[field_id]?.modifiers || [];
+            const isLargoModifier = mods.some(
+              (m: string) => m.toLowerCase() === 'largo' || m.toLowerCase() === 'long'
+            );
+            if (keyLower === 'municipio' && isLargoModifier && typeof defaultVal === 'string') {
+              defaultVal = obtenerNombreLargoMunicipio(defaultVal);
+            }
+            if (typeof defaultVal === 'string' && mods.length > 0) {
+              const textMods = mods.filter(
+                (m: string) => m.toLowerCase() !== 'largo' && m.toLowerCase() !== 'long'
+              );
+              if (textMods.length > 0) {
+                defaultVal = applyModifiers(defaultVal, textMods);
+              }
+            }
+            target[field_id] = defaultVal;
           } else if (role && !MANUAL_FIELDS.includes(keyLower)) {
             target[field_id] = [];
           } else if (

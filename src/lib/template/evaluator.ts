@@ -80,6 +80,8 @@ export function evaluateCondition(
  * applyModifiers('hello world', ['title']) // 'Hello World'
  * ```
  */
+import { obtenerNombreLargoMunicipio } from '../constants/venezuela';
+
 export function applyModifiers(value: unknown, modifiers: string | string[]): string {
     if (value === undefined || value === null) return '';
 
@@ -102,6 +104,8 @@ export function applyModifiers(value: unknown, modifiers: string | string[]): st
                 .join(' ');
         } else if (trimmedMod === 'capitalize') {
             result = result.charAt(0).toUpperCase() + result.slice(1);
+        } else if (trimmedMod === 'largo' || trimmedMod === 'long') {
+            result = obtenerNombreLargoMunicipio(result);
         } else if (trimmedMod.startsWith('default(') || trimmedMod.startsWith('def=(')) {
             if (!result || result.trim() === '') {
                 const match = mod.match(/^(?:default\("?(.*?)"?\)|def=\((.*?)\))$/i);
