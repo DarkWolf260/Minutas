@@ -84,6 +84,9 @@ export async function resolveSafeMediaUrl(rawUrl?: string | null): Promise<strin
         throw new Error(`Media fetch failed with HTTP ${response.status}`);
       }
       const blob = await response.blob();
+      if (blob.size === 0) {
+        return null;
+      }
       const blobUrl = URL.createObjectURL(blob);
 
       // LRU eviction if cache exceeds capacity

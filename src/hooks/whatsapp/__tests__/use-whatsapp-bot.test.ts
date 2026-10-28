@@ -22,6 +22,11 @@ describe('getCleanAvatarUrl', () => {
     expect(getCleanAvatarUrl(undefined)).toBeNull();
     expect(getCleanAvatarUrl('')).toBeNull();
     expect(getCleanAvatarUrl('   ')).toBeNull();
+    expect(
+      getCleanAvatarUrl(
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+      )
+    ).toBeNull();
   });
 
   describe('in HTTPS production environment (e.g. Vercel)', () => {
