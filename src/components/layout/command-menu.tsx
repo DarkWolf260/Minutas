@@ -394,7 +394,7 @@ export function CommandMenu() {
           ) : (
             grouped.map(([category, categoryItems]) => (
               <div key={category} className="space-y-1">
-                <div className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground">
                   {category}
                 </div>
                 {categoryItems.map((item) => {

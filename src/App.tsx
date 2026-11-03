@@ -168,7 +168,7 @@ function AppLayout() {
 
         {(isOffline || showOnlineBar) && location.pathname !== '/offline' && (
           <div className={cn(
-            "text-white text-[10px] font-bold uppercase tracking-widest py-1.5 px-4 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 sticky top-0 z-[50] shadow-md transition-colors",
+            "text-white text-xs font-medium py-1.5 px-4 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-200 sticky top-0 z-[50] border-b border-black/10 transition-colors",
             isOffline ? "bg-amber-500" : "bg-emerald-500"
           )}>
             {isOffline ? <WifiOff className="h-3 w-3" /> : <RefreshCw className="h-3 w-3 animate-spin-slow" />}
@@ -181,7 +181,7 @@ function AppLayout() {
         )}
 
         {config.maintenance_mode && isAdmin && (
-          <div className="bg-amber-600 text-white text-[10px] font-bold uppercase tracking-widest py-1.5 px-4 flex items-center justify-center gap-2 sticky top-0 z-[49] shadow-inner">
+          <div className="bg-amber-600 text-white text-xs font-medium py-1.5 px-4 flex items-center justify-center gap-2 sticky top-0 z-[49] border-b border-amber-700/40">
             <ShieldAlert className="h-3 w-3" />
             <span>Aviso: El Modo Mantenimiento está ACTIVO para usuarios generales</span>
           </div>

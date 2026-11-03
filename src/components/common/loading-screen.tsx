@@ -19,12 +19,12 @@ export function LoadingScreen({ message, isOverlay = false }: LoadingScreenProps
           : "min-h-screen bg-background"
       )}
     >
-      <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 ring-1 ring-primary/20 shadow-[0_0_40px_-10px_hsl(var(--primary)/0.35)]">
+      <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-6 border border-primary/20">
         <img src="/icons/icon-192x192.png" alt="Logo" className="h-10 w-10 object-contain" />
       </div>
 
       <div className="flex flex-col items-center gap-3">
-        <p className="text-xs font-black tracking-[0.1em] sm:tracking-[0.3em] text-muted-foreground uppercase opacity-90 animate-pulse text-center px-4">
+        <p className="text-sm font-medium text-muted-foreground text-center px-4">
           {message || 'Sincronizando Sistema'}
         </p>
         <div className="w-32 h-1 bg-muted rounded-full overflow-hidden">
@@ -33,7 +33,7 @@ export function LoadingScreen({ message, isOverlay = false }: LoadingScreenProps
       </div>
 
       {!isOverlay && (
-        <p className="absolute bottom-10 text-[10px] uppercase tracking-[0.3em] text-muted-foreground/40 font-bold">
+        <p className="absolute bottom-10 text-xs text-muted-foreground/50 font-normal">
           Minutas • v{APP_VERSION}
         </p>
       )}

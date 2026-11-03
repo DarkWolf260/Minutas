@@ -97,9 +97,9 @@ export function PWAStatus() {
                     <Button
                         size="sm"
                         onClick={handleInstall}
-                        className="h-8 px-4 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl transition-all duration-300 backdrop-blur-xl bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 flex items-center gap-2 pr-2"
+                        className="h-8 px-3 rounded-lg text-xs font-medium bg-background border border-primary/30 text-primary hover:bg-primary/10 flex items-center gap-2 pr-2"
                     >
-                        <MonitorSmartphone className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
+                        <MonitorSmartphone className="h-3.5 w-3.5" />
                         <span>Instalar PC Reportes</span>
                         <div className="h-4 w-px bg-primary/20 mx-1" />
                         <span
@@ -122,7 +122,7 @@ export function PWAStatus() {
                         size="sm"
                         variant="ghost"
                         onClick={() => updateServiceWorker(true)}
-                        className="h-7 px-3 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-lg transition-all duration-300 backdrop-blur-md bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 flex items-center gap-2"
+                        className="h-8 px-3 rounded-lg text-xs font-medium bg-background border border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 flex items-center gap-2"
                     >
                         <RefreshCw className="h-3 w-3" />
                         <span>Nueva Versión Disponible - Actualizar</span>
@@ -132,7 +132,7 @@ export function PWAStatus() {
 
             {offlineReady && !needRefresh && (
                 <div className="pointer-events-auto">
-                    <div className="h-7 px-3 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-lg transition-all duration-300 backdrop-blur-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-2">
+                    <div className="h-8 px-3 rounded-lg text-xs font-medium bg-background border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                         <span>Lista para usar sin conexión</span>
                         <button onClick={close} className="ml-1 opacity-50 hover:opacity-100">×</button>
                     </div>

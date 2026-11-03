@@ -102,7 +102,7 @@ export function AppBar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 w-full shrink-0 items-center justify-between border-b border-border/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 sm:px-6 shadow-sm select-none transition-colors duration-200">
+    <header className="sticky top-0 z-40 flex h-16 w-full shrink-0 items-center justify-between border-b border-border/80 bg-card/95 backdrop-blur-md px-4 sm:px-6 shadow-xs select-none transition-colors duration-200">
       {/* Lado izquierdo: Logo de la app y el título / sección */}
       <div className="flex items-center gap-3 min-w-0">
         <Link
@@ -110,11 +110,11 @@ export function AppBar() {
           className="flex items-center gap-2.5 group shrink-0 focus-visible:outline-none"
           title="Minutas: Inicio"
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary transition-all duration-200 group-hover:bg-primary/20 group-hover:scale-105 shadow-2xs">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary transition-all duration-200 group-hover:bg-primary/20 shadow-2xs">
             <img
               src="/icons/icon-192x192.png"
               alt="Logo Minutas"
-              className="h-5 w-5 object-contain transition-transform group-hover:scale-110"
+              className="h-5 w-5 object-contain"
             />
           </div>
           <span className="text-lg font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">

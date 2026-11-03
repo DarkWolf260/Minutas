@@ -71,12 +71,14 @@ La paleta de colores utiliza contrastes fuertes para garantizar una lectura ráp
 - **Tactical Cobalt** (`#1d4ed8` / `oklch(0.51 0.22 260)`): Azul de alta intensidad usado para acciones primarias, acentos de selección principales e indicadores clave del sistema. Simboliza autoridad y claridad.
 - **Vibrant Indigo (Dark Mode)** (`#3b82f6` / `oklch(0.65 0.22 260)`): Variante más luminosa del azul primario, optimizada para destacar sobre el fondo negro OLED del modo oscuro sin causar fatiga visual.
 
-### Neutral
+### Neutral & Signal
 - **Deep Obsidian (Dark Background)** (`#050506` / `oklch(0.12 0.01 240)`): Fondo ultra oscuro óptimo para pantallas OLED, disminuyendo el consumo de batería y reduciendo la fatiga ocular nocturna.
-- **Facebook Slate (Gray Background)** (`#18191a` / `oklch(0.20 0.01 240)`): Variante de modo oscuro para pantallas no OLED, reduciendo el contraste extremo.
+- **Asphalt Slate (Gray Background)** (`#18191a` / `oklch(0.20 0.01 240)`): Variante de modo oscuro para pantallas no OLED, reduciendo el contraste extremo.
 - **Cool Light-Gray (Light Background)** (`#f0f4f8` / `oklch(0.96 0.01 240)`): Fondo claro que evita el blanco puro para reducir el deslumbramiento.
+- **High-Visibility White** (`#f8fafc` / `oklch(0.98 0.005 240)`): Texto principal sobre fondo oscuro o contraste crítico para visibilidad bajo luz solar directa.
 - **Ink Primary** (`#030712` / `oklch(0.12 0.01 240)`): Texto principal sobre fondo claro.
 - **Ink Muted** (`#475569` / `oklch(0.45 0.03 240)`): Texto secundario, descripciones y placeholders de alta legibilidad que garantizan contraste AA.
+- **Critical Alert Red** (`#dc2626` / `oklch(0.58 0.23 25)`): Señalización unívoca para incidentes críticos con víctimas o alertas del sistema.
 
 ### Named Rules
 **The 10% Accent Rule.** El azul primario se reserva estrictamente para botones de acción directa, enlaces de navegación activos e indicadores de estado crítico. Nunca se usa como color de fondo decorativo para secciones completas.
@@ -96,7 +98,7 @@ El sistema tipográfico utiliza la fuente *Outfit* para proyectar modernidad y p
 - **Headline** (SemiBold, `1.5rem` / `24px`, `1.3` line-height): Títulos de tarjetas principales y bloques lógicos.
 - **Title** (Medium, `1.125rem` / `18px`, `1.4` line-height): Subsecciones, nombres de campos en formularios de plantillas.
 - **Body** (Regular, `14px` (móvil) / `16px` (desktop), `1.5` line-height): Texto de reportes, minutas generadas y párrafos explicativos. Longitud máxima limitada a 65–75 caracteres (`max-w-prose`) para lectura óptima.
-- **Label** (Medium/Bold, `12px` / `0.05em` tracking, uppercase): Etiquetas de botones pequeños, badges de estado y eyebrows selectivos.
+- **Label** (Medium/SemiBold, `12px` / normal tracking, sentence case): Etiquetas de formularios, badges de estado y metadatos. Se evita el uso de mayúsculas sostenidas decorativas (`uppercase tracking-widest`), privilegiando claridad táctica y lectura natural.
 
 ### Named Rules
 **The Balance Rule.** Todos los encabezados `h1` a `h3` deben aplicar la propiedad `text-wrap: balance` para evitar saltos de línea huérfanos e incómodos. El texto de cuerpo largo debe usar `text-wrap: pretty`.

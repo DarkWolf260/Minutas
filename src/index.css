@@ -198,10 +198,10 @@
 
   /* Badges y chips de estado */
   .status-pill {
-    @apply inline-flex items-center gap-1.5 bg-muted/60 px-1.5 py-0.5 rounded text-[10px] font-semibold text-foreground/80 uppercase tracking-tight;
+    @apply inline-flex items-center gap-1.5 bg-muted/60 px-2 py-0.5 rounded text-xs font-medium text-foreground/85 tracking-normal;
   }
   .number-badge {
-    @apply px-1.5 py-0.5 rounded-md select-none shrink-0 font-sans text-xs shadow-2xs leading-none border border-primary/20 bg-primary/10 text-primary font-bold;
+    @apply px-1.5 py-0.5 rounded-md select-none shrink-0 font-mono text-xs tabular-nums leading-none border border-primary/20 bg-primary/10 text-primary font-semibold shadow-2xs;
   }
 
   /* Estados vacíos estandarizados */

@@ -75,7 +75,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
       <DropdownMenuContent align="end" className="w-64 mt-1 rounded-xl shadow-xl border-border">
         <div className="flex flex-col space-y-1 p-3">
           <p className="text-sm font-bold leading-none truncate tracking-tight">{displayName}</p>
-          <p className="text-[10px] leading-none text-muted-foreground truncate uppercase font-bold tracking-wider mt-1">
+          <p className="text-xs leading-none text-muted-foreground truncate mt-1">
             {displayDepartment}
           </p>
         </div>
@@ -86,7 +86,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
             <User className="mr-3 h-4 w-4" />
             <span className="text-sm font-medium">Mi Perfil</span>
           </div>
-          <span className="text-[9px] bg-muted px-1.5 py-0.5 rounded font-bold text-muted-foreground uppercase">Próximamente</span>
+          <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-medium text-muted-foreground">Próximamente</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild className="py-2.5">
@@ -135,7 +135,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
 
         <div className="px-2 py-3">
           <div className="flex items-center justify-between px-2 mb-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Apariencia</span>
+            <span className="text-xs font-semibold text-muted-foreground">Apariencia</span>
           </div>
           <div className="grid grid-cols-4 gap-1 bg-muted/30 p-1 rounded-xl border">
             <button
@@ -146,7 +146,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
               )}
             >
               <Sun className="h-4 w-4" />
-              <span className="text-[9px] font-bold uppercase">Claro</span>
+              <span className="text-[11px] font-medium">Claro</span>
             </button>
             <button
               onClick={() => setTheme('facebook')}
@@ -156,7 +156,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
               )}
             >
               <Eclipse className="h-4 w-4" />
-              <span className="text-[9px] font-bold uppercase">Gris</span>
+              <span className="text-[11px] font-medium">Gris</span>
             </button>
             <button
               onClick={() => setTheme('dark')}
@@ -166,7 +166,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
               )}
             >
               <Moon className="h-4 w-4" />
-              <span className="text-[9px] font-bold uppercase">OLED</span>
+              <span className="text-[11px] font-medium">OLED</span>
             </button>
             <button
               onClick={() => setTheme('system')}
@@ -176,7 +176,7 @@ export const NavUserMenu = ({ profile, analyst, displayName, displayDepartment, 
               )}
             >
               <Monitor className="h-4 w-4" />
-              <span className="text-[9px] font-bold uppercase">Auto</span>
+              <span className="text-[11px] font-medium">Auto</span>
             </button>
           </div>
         </div>
