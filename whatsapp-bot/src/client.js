@@ -40,7 +40,7 @@ function initWhatsAppClient() {
     puppeteer: {
       headless: true,
       executablePath: edgePath || undefined,
-      protocolTimeout: 0,
+      protocolTimeout: 45000,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -67,7 +67,9 @@ function initWhatsAppClient() {
   });
 
   state.client.on('loading_screen', (percent, message) => {
-    state.statusMessage = `Sincronizando: ${percent}%`;
+    if (!state.isReady) {
+      state.statusMessage = `Sincronizando: ${percent}%`;
+    }
     console.log(`Progreso de carga: ${percent}% - ${message}`);
     if (percent >= 99 && !state.isReady) {
       setTimeout(async () => {

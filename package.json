@@ -20,6 +20,7 @@
     "caddy": "caddy run --config Caddyfile",
     "caddy:reload": "caddy reload --config Caddyfile",
     "bot": "cd whatsapp-bot && npm start",
+    "bot:build:exe": "cd whatsapp-bot && npm run build:exe",
     "supabase:init": "supabase init",
     "supabase:start": "supabase start --ignore-health-check",
     "supabase:stop": "supabase stop",

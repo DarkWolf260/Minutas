@@ -10,19 +10,23 @@ async function resolveChatAvatarUrl(chatId) {
     targetChatId = `${targetChatId.replace(/\D/g, '')}@c.us`;
   }
 
-  if (state.avatarCache.has(targetChatId) && state.avatarCache.get(targetChatId)) {
+  if (state.avatarCache.has(targetChatId)) {
     return state.avatarCache.get(targetChatId);
   }
 
   let picUrl = null;
+
+  // 1. Intento rápido con client.getProfilePicUrl (timeout de 1200ms)
   try {
-    picUrl = await state.client.getProfilePicUrl(targetChatId);
+    const getPicPromise = state.client.getProfilePicUrl(targetChatId);
+    const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 1200));
+    picUrl = await Promise.race([getPicPromise, timeoutPromise]);
   } catch (_) {}
 
-  // Si es un ID @lid y no devolvió foto directa, resolver el número telefónico (@c.us)
+  // 2. Si es un ID @lid y no devolvió foto directa, resolver el número telefónico (@c.us) con timeout
   if (!picUrl && targetChatId.endsWith('@lid') && state.client.pupPage) {
     try {
-      const phoneWid = await state.client.pupPage.evaluate(async (lid) => {
+      const lidPromise = state.client.pupPage.evaluate(async (lid) => {
         try {
           const res = await window.WWebJS?.enforceLidAndPnRetrieval?.(lid);
           return res?.phone?._serialized || (res?.phone?.user ? `${res.phone.user}@c.us` : null);
@@ -30,37 +34,42 @@ async function resolveChatAvatarUrl(chatId) {
           return null;
         }
       }, targetChatId);
+      const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 900));
+      const phoneWid = await Promise.race([lidPromise, timeoutPromise]);
 
       if (phoneWid && phoneWid !== targetChatId) {
         if (state.avatarCache.has(phoneWid)) {
           picUrl = state.avatarCache.get(phoneWid);
         } else {
-          picUrl = await state.client.getProfilePicUrl(phoneWid).catch(() => null);
+          const phonePicPromise = state.client.getProfilePicUrl(phoneWid).catch(() => null);
+          const phoneTimeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 900));
+          picUrl = await Promise.race([phonePicPromise, phoneTimeoutPromise]);
           state.avatarCache.set(phoneWid, picUrl || null);
         }
       }
     } catch (_) {}
   }
 
-  // Fallback a los modelos en memoria de WhatsApp Web si getProfilePicUrl no retornó URL directa
+  // 3. Fallback directo a ProfilePicThumb en memoria si no retornó URL directa
   if (!picUrl && state.client.pupPage) {
     try {
-      picUrl = await state.client.pupPage.evaluate((wid) => {
+      const evalPromise = state.client.pupPage.evaluate((wid) => {
         try {
-          const collections = window.require?.('WAWebCollections') || window.Store;
-          const contact = (collections?.Contact || window.Store?.Contact)?.get(wid);
-          const chat = (collections?.Chat || window.Store?.Chat)?.get(wid);
-          return (
-            contact?.profilePicThumbObj?.eurl ||
-            contact?.profilePicThumb?.eurl ||
-            chat?.contact?.profilePicThumbObj?.eurl ||
-            chat?.contact?.profilePicThumb?.eurl ||
-            null
-          );
+          let collections = null;
+          try {
+            collections = window.require?.('WAWebCollections') || window.Store;
+          } catch (_) {
+            collections = window.Store;
+          }
+          const picCol = collections?.ProfilePicThumb || window.Store?.ProfilePicThumb;
+          const thumb = picCol?.get?.(wid);
+          return thumb?.eurl || null;
         } catch (e) {
           return null;
         }
       }, targetChatId);
+      const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 600));
+      picUrl = await Promise.race([evalPromise, timeoutPromise]);
     } catch (_) {}
   }
 
@@ -133,6 +142,9 @@ async function fetchChats(requestedWorkspace) {
   }
 
   if (!state.isReady || !state.client) {
+    if (state.cachedChats && state.cachedChats.length > 0) {
+      return state.cachedChats;
+    }
     const error = new Error('WhatsApp client is not ready');
     error.status = 400;
     throw error;
@@ -140,15 +152,45 @@ async function fetchChats(requestedWorkspace) {
 
   let formattedChats = [];
 
-  // 1. Extracción directa desde la memoria de WhatsApp Web en Puppeteer enriquecida con la libreta de contactos
+  // 1. Extracción directa y segura desde la memoria de WhatsApp Web en Puppeteer (enriquecida con libreta de contactos y fotos)
   try {
     if (state.client.pupPage) {
-      const rawExtractedChats = await state.client.pupPage.evaluate(() => {
+      const evalPromise = state.client.pupPage.evaluate(() => {
         try {
-          const collections = window.require?.('WAWebCollections') || window.Store;
-          const chatCollection = (collections?.Chat || window.Store?.Chat)?.getModelsArray?.() || [];
-          const contactCollection = collections?.Contact || window.Store?.Contact;
-          const ContactGetters = window.require?.('WAWebContactGetters');
+          let chatCollection = [];
+          try {
+            const collections = window.require ? window.require('WAWebCollections') : null;
+            chatCollection = (collections?.Chat || window.Store?.Chat)?.getModelsArray?.() || [];
+          } catch (_) {
+            chatCollection = window.Store?.Chat?.getModelsArray?.() || [];
+          }
+
+          if (!chatCollection || !chatCollection.length) {
+            try {
+              chatCollection = window.Store?.Chat?.models || [];
+            } catch (_) {}
+          }
+
+          let contactCollection = null;
+          try {
+            const collections = window.require ? window.require('WAWebCollections') : null;
+            contactCollection = collections?.Contact || window.Store?.Contact;
+          } catch (_) {
+            contactCollection = window.Store?.Contact;
+          }
+
+          let picThumbCollection = null;
+          try {
+            const collections = window.require ? window.require('WAWebCollections') : null;
+            picThumbCollection = collections?.ProfilePicThumb || window.Store?.ProfilePicThumb;
+          } catch (_) {
+            picThumbCollection = window.Store?.ProfilePicThumb;
+          }
+
+          let ContactGetters = null;
+          try {
+            ContactGetters = window.require ? window.require('WAWebContactGetters') : null;
+          } catch (_) {}
 
           function isValidId(id) {
             if (!id || typeof id !== 'string') return false;
@@ -166,6 +208,7 @@ async function fetchChats(requestedWorkspace) {
 
           return chatCollection
             .map(c => {
+              if (!c) return null;
               const id = c.id?._serialized || (typeof c.id === 'string' ? c.id : '');
               if (!isValidId(id)) return null;
 
@@ -179,39 +222,64 @@ async function fetchChats(requestedWorkspace) {
                     || (c.id?.user ? contactCollection.get(`${c.id.user}@c.us`) : null)
                     || c.contact;
                 }
-              } catch (e) {}
+              } catch (_) {}
               if (!contact && c.contact) {
                 contact = c.contact;
               }
 
               let name = null;
               if (isGroup) {
-                name = c.formattedTitle || c.name || c.groupMetadata?.subject || (contact && ContactGetters?.getName?.(contact)) || contact?.name;
+                name = c.formattedTitle || c.name || c.groupMetadata?.subject;
+                if (!name && contact) {
+                  try {
+                    name = (ContactGetters?.getName && ContactGetters.getName(contact)) || contact.name;
+                  } catch (_) {}
+                }
               } else {
                 if (contact) {
                   try {
-                    name = ContactGetters?.getName?.(contact)
+                    name = (ContactGetters?.getName && ContactGetters.getName(contact))
                       || contact.name
                       || contact.formattedName
                       || contact.displayName
-                      || ContactGetters?.getPushname?.(contact)
+                      || (ContactGetters?.getPushname && ContactGetters.getPushname(contact))
                       || contact.pushname
                       || contact.notifyName
-                      || ContactGetters?.getVerifiedName?.(contact)
+                      || (ContactGetters?.getVerifiedName && ContactGetters.getVerifiedName(contact))
                       || contact.verifiedName;
-                  } catch (e) {}
+                  } catch (_) {}
                 }
                 if (!name) {
                   name = c.formattedTitle || c.name;
                 }
               }
 
-              if (!name || name === id) {
+              if (typeof name !== 'string' || !name.trim() || name === id) {
                 name = c.contact?.pushname || c.contact?.notifyName || (c.id?.user ? `+${c.id.user}` : 'Chat');
+              } else {
+                name = name.trim();
               }
 
               const timestamp = c.t || c.conversationTimestamp || 0;
-              const directPicUrl = contact?.profilePicThumbObj?.eurl || contact?.profilePicThumb?.eurl || c.contact?.profilePicThumbObj?.eurl || c.profilePicThumb?.eurl || null;
+
+              // Obtener foto de perfil directamente desde ProfilePicThumb en memoria para todos los chats
+              let thumb = null;
+              try {
+                if (picThumbCollection) {
+                  thumb = picThumbCollection.get(c.id)
+                    || picThumbCollection.get(id)
+                    || (c.id?.user ? picThumbCollection.get(`${c.id.user}@c.us`) : null)
+                    || (c.id?.user ? picThumbCollection.get(`${c.id.user}@lid`) : null);
+                }
+              } catch (_) {}
+
+              const directPicUrl = (thumb?.eurl && typeof thumb.eurl === 'string' && /^https?:\/\//i.test(thumb.eurl) ? thumb.eurl : null)
+                || (contact?.profilePicThumbObj?.eurl && typeof contact.profilePicThumbObj.eurl === 'string' && /^https?:\/\//i.test(contact.profilePicThumbObj.eurl) ? contact.profilePicThumbObj.eurl : null)
+                || (contact?.profilePicThumb?.eurl && typeof contact.profilePicThumb.eurl === 'string' && /^https?:\/\//i.test(contact.profilePicThumb.eurl) ? contact.profilePicThumb.eurl : null)
+                || (c.contact?.profilePicThumbObj?.eurl && typeof c.contact.profilePicThumbObj.eurl === 'string' && /^https?:\/\//i.test(c.contact.profilePicThumbObj.eurl) ? c.contact.profilePicThumbObj.eurl : null)
+                || (c.profilePicThumb?.eurl && typeof c.profilePicThumb.eurl === 'string' && /^https?:\/\//i.test(c.profilePicThumb.eurl) ? c.profilePicThumb.eurl : null)
+                || null;
+
               return { id, name, isGroup, timestamp, directPicUrl };
             })
             .filter(Boolean)
@@ -220,6 +288,9 @@ async function fetchChats(requestedWorkspace) {
           return [];
         }
       });
+
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('evaluate timeout')), 3500));
+      const rawExtractedChats = await Promise.race([evalPromise, timeoutPromise]);
 
       if (Array.isArray(rawExtractedChats) && rawExtractedChats.length > 0) {
         formattedChats = rawExtractedChats
@@ -242,41 +313,43 @@ async function fetchChats(requestedWorkspace) {
       }
     }
   } catch (evalErr) {
-    console.warn(`[Chats] Extractor en memoria falló (${evalErr.message}). Intentando fallback nativo...`);
+    console.warn(`[Chats] Extractor en memoria falló (${evalErr.message}).`);
   }
 
-  // 2. Si el extractor directo devolvió vacío, intentar client.getChats() con un timeout estricto de 4 segundos
+  // 2. Si el extractor directo devolvió vacío pero tenemos chats en caché, usar la caché
+  if ((!formattedChats || formattedChats.length === 0) && state.cachedChats && state.cachedChats.length > 0) {
+    return state.cachedChats;
+  }
+
+  // Fallback rápido y ligero a modelos Store.Chat si el extractor no devolvió nada
   if (!formattedChats || formattedChats.length === 0) {
     try {
-      const getChatsSafe = state.client.getChats().catch(err => {
-        console.warn(`[Chats] Error interno en client.getChats(): ${err?.message || err}`);
-        return [];
-      });
-      const timeoutSafe = new Promise(resolve => setTimeout(() => resolve([]), 4000));
-      const chats = await Promise.race([getChatsSafe, timeoutSafe]);
-      if (Array.isArray(chats) && chats.length > 0) {
-        formattedChats = chats
-          .filter(chat => {
-            const id = chat.id?._serialized || (typeof chat.id === 'string' ? chat.id : '');
-            return isRealConversationId(id);
-          })
-          .map(chat => {
-            const id = chat.id?._serialized || (typeof chat.id === 'string' ? chat.id : '');
-            const pic = state.avatarCache.get(id);
-            return {
-              id,
-              name: chat.name || chat.formattedTitle || (id.endsWith('@g.us') ? 'Grupo' : 'Contacto'),
-              isGroup: Boolean(chat.isGroup),
-              timestamp: chat.timestamp || 0,
-              avatarUrl: (pic && typeof pic === 'string' && /^https?:\/\//i.test(pic))
-                ? pic
-                : null
-            };
-          });
+      if (state.client.pupPage) {
+        const simpleChats = await Promise.race([
+          state.client.pupPage.evaluate(() => {
+            try {
+              const chats = window.Store?.Chat?.models || [];
+              return chats.map(c => {
+                const id = c.id?._serialized || (typeof c.id === 'string' ? c.id : '');
+                return {
+                  id,
+                  name: c.formattedTitle || c.name || (c.id?.user ? `+${c.id.user}` : 'Chat'),
+                  isGroup: Boolean(c.isGroup),
+                  timestamp: c.t || 0,
+                  avatarUrl: null
+                };
+              }).filter(c => c.id && (c.id.endsWith('@c.us') || c.id.endsWith('@g.us') || c.id.endsWith('@lid')));
+            } catch (_) {
+              return [];
+            }
+          }),
+          new Promise(r => setTimeout(() => r([]), 2500))
+        ]);
+        if (Array.isArray(simpleChats) && simpleChats.length > 0) {
+          formattedChats = simpleChats;
+        }
       }
-    } catch (err) {
-      console.warn(`[Chats] client.getChats() omitido: ${err?.message || err}`);
-    }
+    } catch (_) {}
   }
 
   // Ordenar chats por los más recientes (timestamp descendente)
@@ -284,47 +357,8 @@ async function fetchChats(requestedWorkspace) {
     formattedChats.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
   }
 
-  // 3. Para los chats individuales cuyo nombre quedó como número de teléfono, resolver nombre real
+  // 3. Aplicar nombres de contactos y avatares conocidos previamente de caché (instantáneo, sin demoras)
   if (Array.isArray(formattedChats) && formattedChats.length > 0) {
-    const chatsNeedingNames = formattedChats.filter(c => 
-      !c.isGroup && (/^\+?\d{7,}$/.test(c.name.replace(/[\s\-\(\)]/g, '')) || c.name === c.id || c.name === 'Chat')
-    );
-
-    if (chatsNeedingNames.length > 0) {
-      // Resolver primeros 40 de inmediato
-      const primaryBatch = chatsNeedingNames.slice(0, 40);
-      await Promise.all(primaryBatch.map(async (chat) => {
-        try {
-          const contact = await state.client.getContactById(chat.id);
-          const resolvedName = contact?.name || contact?.pushname || contact?.shortName || contact?.verifiedName;
-          if (resolvedName && resolvedName.trim() && !/^\+?\d{7,}$/.test(resolvedName.replace(/[\s\-\(\)]/g, ''))) {
-            chat.name = resolvedName.trim();
-            state.contactNameCache.set(chat.id, chat.name);
-          }
-        } catch (err) {}
-      }));
-
-      // Resolver los restantes en segundo plano sin demorar la respuesta
-      const remainingBatch = chatsNeedingNames.slice(40);
-      if (remainingBatch.length > 0) {
-        (async () => {
-          for (const chat of remainingBatch) {
-            try {
-              const contact = await state.client.getContactById(chat.id);
-              const resolvedName = contact?.name || contact?.pushname || contact?.shortName || contact?.verifiedName;
-              if (resolvedName && resolvedName.trim() && !/^\+?\d{7,}$/.test(resolvedName.replace(/[\s\-\(\)]/g, ''))) {
-                chat.name = resolvedName.trim();
-                state.contactNameCache.set(chat.id, chat.name);
-              }
-            } catch (err) {}
-          }
-        })().catch(() => {});
-      }
-    }
-  }
-
-  // 4. Actualizar o recuperar de caché preservando nombres reales previamente conocidos
-  if (formattedChats && formattedChats.length > 0) {
     if (state.cachedChats && state.cachedChats.length > 0) {
       const cachedMap = new Map(state.cachedChats.map(c => [c.id, c.name]));
       formattedChats.forEach(c => {
@@ -337,8 +371,14 @@ async function fetchChats(requestedWorkspace) {
       });
     }
 
-    // Alimentar contactNameCache con los nombres de contactos/chats conocidos
     formattedChats.forEach(c => {
+      // Si el nombre aún parece teléfono, buscar en contactNameCache
+      const isPhone = /^\+?\d{7,}$/.test(c.name.replace(/[\s\-\(\)]/g, '')) || c.name === c.id || c.name === 'Chat';
+      if (isPhone && state.contactNameCache.has(c.id)) {
+        c.name = state.contactNameCache.get(c.id);
+      }
+
+      // Si conocemos nombre real, alimentar contactNameCache
       if (c.id && c.name && !/^\+?\d{7,}$/.test(c.name.replace(/[\s\-\(\)]/g, ''))) {
         state.contactNameCache.set(c.id, c.name);
         if (typeof c.id === 'string' && c.id.includes('@')) {
@@ -347,45 +387,60 @@ async function fetchChats(requestedWorkspace) {
           state.contactNameCache.set(`${u}@lid`, c.name);
         }
       }
-    });
 
-    // Resolver de inmediato los primeros 40 chats activos para que tengan respuesta instantánea con su foto real
-    const initialAvatarBatch = formattedChats.slice(0, 40).filter(c => !state.avatarCache.has(c.id) || !state.avatarCache.get(c.id));
-    if (initialAvatarBatch.length > 0) {
-      await Promise.allSettled(initialAvatarBatch.map(async c => {
-        try {
-          await resolveChatAvatarUrl(c.id);
-        } catch (e) {}
-      }));
-    }
-
-    // Asignar avatares reales directos (HTTPS) de WhatsApp si existen, o null si no tienen foto
-    formattedChats.forEach(c => {
-      const pic = c.directPicUrl || state.avatarCache.get(c.id) || null;
-      if (pic && typeof pic === 'string' && /^https?:\/\//i.test(pic)) {
-        c.avatarUrl = pic;
-      } else {
-        c.avatarUrl = null;
+      // Asignar avatar de caché si no vino directo
+      if (!c.avatarUrl && state.avatarCache.has(c.id)) {
+        const pic = state.avatarCache.get(c.id);
+        if (pic && typeof pic === 'string' && /^https?:\/\//i.test(pic)) {
+          c.avatarUrl = pic;
+        }
       }
     });
 
-    // Para los chats restantes (> 40), resolver en segundo plano en lotes pequeños sin bloquear HTTP
-    const remainingAvatarBatch = formattedChats.slice(40).filter(c => !state.avatarCache.has(c.id) || !state.avatarCache.get(c.id));
-    if (remainingAvatarBatch.length > 0) {
-      (async () => {
-        const CHUNK_SIZE = 10;
-        for (let i = 0; i < remainingAvatarBatch.length; i += CHUNK_SIZE) {
-          const chunk = remainingAvatarBatch.slice(i, i + CHUNK_SIZE);
-          await Promise.allSettled(chunk.map(c => resolveChatAvatarUrl(c.id)));
-          await new Promise(r => setTimeout(r, 150));
-        }
-      })().catch(err => console.warn('[Chats] Background avatar resolution warning:', err?.message));
-    }
-
-    // Filtrar estrictamente cualquier chat que no sea una conversación real válida
     formattedChats = formattedChats.filter(c => isRealConversationId(c.id));
     state.cachedChats = formattedChats;
-  } else if (state.cachedChats.length > 0) {
+
+    // 4. Mejoras en SEGUNDO PLANO (suave y paulatino, sin saturar CPU ni red)
+    setTimeout(() => {
+      (async () => {
+        // A. Nombres de contactos pendientes (lote moderado con timeout individual de 600ms)
+        const chatsNeedingNames = formattedChats.filter(c => 
+          !c.isGroup && (/^\+?\d{7,}$/.test(c.name.replace(/[\s\-\(\)]/g, '')) || c.name === c.id || c.name === 'Chat')
+        ).slice(0, 30);
+
+        for (const chat of chatsNeedingNames) {
+          try {
+            const contact = await Promise.race([
+              state.client.getContactById(chat.id),
+              new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 600))
+            ]);
+            const resolvedName = contact?.name || contact?.pushname || contact?.shortName || contact?.verifiedName;
+            if (resolvedName && resolvedName.trim() && !/^\+?\d{7,}$/.test(resolvedName.replace(/[\s\-\(\)]/g, ''))) {
+              chat.name = resolvedName.trim();
+              state.contactNameCache.set(chat.id, chat.name);
+            }
+          } catch (_) {}
+        }
+
+        // B. Avatares pendientes en segundo plano:
+        // Se resuelven de a 2 en 2 con un descanso de 350ms para mantener la CPU en reposo
+        const chatsNeedingAvatars = formattedChats.filter(c => 
+          !c.avatarUrl && (!state.avatarCache.has(c.id) || !state.avatarCache.get(c.id))
+        );
+
+        for (let i = 0; i < chatsNeedingAvatars.length; i += 2) {
+          const chunk = chatsNeedingAvatars.slice(i, i + 2);
+          await Promise.allSettled(chunk.map(async (c) => {
+            const pic = await resolveChatAvatarUrl(c.id);
+            if (pic) {
+              c.avatarUrl = pic;
+            }
+          }));
+          await new Promise(r => setTimeout(r, 350));
+        }
+      })().catch(err => console.warn('[Chats] Background enrichment warning:', err?.message));
+    }, 100);
+  } else if (state.cachedChats && state.cachedChats.length > 0) {
     state.cachedChats = state.cachedChats.filter(c => isRealConversationId(c.id));
     formattedChats = state.cachedChats;
   }

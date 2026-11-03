@@ -107,7 +107,16 @@ export function useWhatsAppChat({
     if (!silent) setIsLoadingMessages(true);
     try {
       const msgs = await botRef.current.fetchChatMessages(activeChatId, 40);
-      setRealMessages(msgs);
+      setRealMessages(prev => {
+        if (prev.length === msgs.length && prev.length > 0) {
+          const lastPrev = prev[prev.length - 1];
+          const lastNew = msgs[msgs.length - 1];
+          if (lastPrev?.id === lastNew?.id && lastPrev?.timestamp === lastNew?.timestamp) {
+            return prev;
+          }
+        }
+        return msgs;
+      });
     } catch (err) {
       if (!silent) {
         console.error('Error cargando mensajes de WhatsApp:', err);

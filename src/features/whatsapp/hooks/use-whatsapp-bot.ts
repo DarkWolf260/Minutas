@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { DbKeys } from '@/lib/repositories/keys';
 import { logger } from '@/lib/logger';
@@ -49,6 +49,39 @@ function isValidWhatsAppChatId(id: string | undefined | null): boolean {
   return true;
 }
 
+function isStatusEqual(a: WhatsAppStatus, b: WhatsAppStatus): boolean {
+  if (a === b) return true;
+  return (
+    a.isReady === b.isReady &&
+    a.needsAuth === b.needsAuth &&
+    a.qr === b.qr &&
+    a.statusMessage === b.statusMessage &&
+    a.activeWorkspace === b.activeWorkspace &&
+    a.isWorkspaceMatch === b.isWorkspaceMatch
+  );
+}
+
+function areChatsEqual(a: WhatsAppChat[], b: WhatsAppChat[]): boolean {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const cA = a[i];
+    const cB = b[i];
+    if (!cA || !cB) return false;
+    if (
+      cA.id !== cB.id ||
+      cA.name !== cB.name ||
+      cA.avatarUrl !== cB.avatarUrl ||
+      cA.timestamp !== cB.timestamp ||
+      cA.isGroup !== cB.isGroup ||
+      cA.unreadCount !== cB.unreadCount
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function updateBotState(updates: Partial<BotState>) {
   const newState = { ...botState, ...updates };
   
@@ -65,6 +98,21 @@ function updateBotState(updates: Partial<BotState>) {
     newState.chats = newState.chats.filter(c => isValidWhatsAppChatId(c.id));
   }
   
+  // Guard de igualdad para evitar re-renders innecesarios (tirones en la UI)
+  const isIdentical =
+    botState.isAvailable === newState.isAvailable &&
+    botState.isLoading === newState.isLoading &&
+    botState.isWorkspaceMatch === newState.isWorkspaceMatch &&
+    botState.isCloudActive === newState.isCloudActive &&
+    botState.conflictBotUrl === newState.conflictBotUrl &&
+    botState.activeWorkspace === newState.activeWorkspace &&
+    isStatusEqual(botState.status, newState.status) &&
+    areChatsEqual(botState.chats, newState.chats);
+
+  if (isIdentical) {
+    return;
+  }
+
   botState = newState;
   listeners.forEach(listener => listener(botState));
 }
@@ -356,11 +404,15 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       if (state.isAvailable && state.isWorkspaceMatch && state.status.isReady) {
         try {
           const wsParam = currentWorkspace ? `?workspace=${encodeURIComponent(currentWorkspace)}` : '';
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000);
           const response = await safeBotFetch(`${apiUrl}/api/whatsapp/chats${wsParam}`, {
+            signal: controller.signal,
             headers: {
               ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
             }
           });
+          clearTimeout(timeoutId);
           if (response.ok) {
             const data = await response.json();
             const normalizedChats = Array.isArray(data) ? data.map((c: any) => ({
@@ -674,7 +726,13 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
 
     if (state.chats.length === 0 && !hasAutoLoadedChatsRef.current) {
       hasAutoLoadedChatsRef.current = true;
-      loadChats();
+      loadChats().finally(() => {
+        if (botState.chats.length === 0) {
+          setTimeout(() => {
+            hasAutoLoadedChatsRef.current = false;
+          }, 3500);
+        }
+      });
     }
   }, [state.isAvailable, state.isWorkspaceMatch, state.status.isReady, state.chats.length, loadChats]);
 
@@ -806,7 +864,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       ? { isReady: true, needsAuth: false, qr: null, statusMessage: 'Disponible en la Nube', activeWorkspace: currentWorkspace, isWorkspaceMatch: true }
       : state.status;
 
-  return {
+  return useMemo(() => ({
     isAvailable: finalAvailable,
     isLoading: state.isLoading,
     status: finalStatus,
@@ -822,5 +880,21 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     conflictBotUrl: state.conflictBotUrl,
     activeWorkspace: state.activeWorkspace,
     isWorkspaceMatch: state.isWorkspaceMatch
-  };
+  }), [
+    finalAvailable,
+    state.isLoading,
+    finalStatus,
+    state.chats,
+    checkStatus,
+    loadChats,
+    fetchChatMessages,
+    sendMessage,
+    logout,
+    claimWorkspace,
+    localUrl,
+    state.isCloudActive,
+    state.conflictBotUrl,
+    state.activeWorkspace,
+    state.isWorkspaceMatch
+  ]);
 }

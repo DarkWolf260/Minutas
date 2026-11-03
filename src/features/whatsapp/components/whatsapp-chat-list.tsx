@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import {
   Search,
   Users,
@@ -66,20 +66,29 @@ function formatChatTime(timestamp?: number) {
   return date.toLocaleDateString([], { day: '2-digit', month: 'short' });
 }
 
-function ChatAvatarItem({ chat }: { chat: WhatsAppChat }) {
+const ChatAvatarItem = memo(function ChatAvatarItem({ chat }: { chat: WhatsAppChat }) {
   const [imgError, setImgError] = useState(false);
   const cleanUrl = getCleanAvatarUrl(chat.avatarUrl);
-  const { src: safeUrl, hasError } = useSafeMediaSrc(cleanUrl);
+
+  // Si ya es una URL HTTPS directa (ej: CDN oficial de WhatsApp https://pps.whatsapp.net),
+  // se carga directamente por el navegador sin activar hooks pesados ni peticiones blob
+  const isDirectHttps = Boolean(cleanUrl && /^https:\/\//i.test(cleanUrl));
+  const { src: safeUrl, hasError } = useSafeMediaSrc(isDirectHttps ? null : cleanUrl);
+
+  const displaySrc = isDirectHttps ? cleanUrl : safeUrl;
+  const isFailed = imgError || (!isDirectHttps && hasError);
 
   useEffect(() => {
     setImgError(false);
   }, [chat.id, cleanUrl]);
 
-  if (cleanUrl && safeUrl && !hasError && !imgError) {
+  if (cleanUrl && displaySrc && !isFailed) {
     return (
       <img
-        src={safeUrl}
+        src={displaySrc}
         alt={chat.name}
+        loading="lazy"
+        decoding="async"
         className="w-full h-full object-cover rounded-full"
         onError={() => setImgError(true)}
         onLoad={(e) => {
@@ -97,7 +106,90 @@ function ChatAvatarItem({ chat }: { chat: WhatsAppChat }) {
   ) : (
     <User className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
   );
+});
+
+interface ChatItemRowProps {
+  chat: WhatsAppChat;
+  isSelected: boolean;
+  isRecipient: boolean;
+  onSelect: (id: string) => void;
+  chatTime?: string | null;
 }
+
+const ChatItemRow = memo(function ChatItemRow({
+  chat,
+  isSelected,
+  isRecipient,
+  onSelect,
+  chatTime
+}: ChatItemRowProps) {
+  return (
+    <div
+      onClick={() => onSelect(chat.id)}
+      className={cn(
+        'w-full flex items-center gap-3 p-3 text-left transition-colors cursor-pointer group select-none',
+        isSelected
+          ? 'bg-emerald-500/10 dark:bg-emerald-950/25 border-l-4 border-emerald-500'
+          : 'hover:bg-muted/50'
+      )}
+    >
+      {/* Avatar circular */}
+      <div
+        className={cn(
+          'h-11 w-11 rounded-full flex items-center justify-center shrink-0 shadow-2xs overflow-hidden',
+          chat.isGroup
+            ? 'bg-teal-500/15 text-teal-700 dark:text-teal-300'
+            : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+        )}
+      >
+        <ChatAvatarItem chat={chat} />
+      </div>
+
+      {/* Información del chat */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-1">
+          <span
+            className={cn(
+              'text-xs sm:text-sm font-semibold truncate text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors',
+              isSelected && 'text-emerald-700 dark:text-emerald-300 font-bold'
+            )}
+          >
+            {chat.name}
+          </span>
+          {chatTime && (
+            <span className="text-[10px] text-muted-foreground shrink-0 font-medium">
+              {chatTime}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center justify-between gap-1 mt-0.5">
+          <div className="text-[11px] text-muted-foreground truncate">
+            {chat.isGroup ? 'Conversación grupal' : 'Chat individual'}
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            {chat.isGroup && (
+              <span className="text-[9px] font-medium text-teal-600 dark:text-teal-400 bg-teal-500/10 px-1.5 py-0.2 rounded shrink-0">
+                Grupo
+              </span>
+            )}
+            {isRecipient && (
+              <span className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/15 border border-emerald-500/20 px-1.5 py-0.2 rounded flex items-center gap-0.5 shrink-0">
+                <Check className="h-2.5 w-2.5" /> Destinatario
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Indicador de chat seleccionado */}
+      {isSelected && (
+        <div className="flex items-center shrink-0 ml-1">
+          <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+        </div>
+      )}
+    </div>
+  );
+});
 
 export function WhatsAppChatList({
   bot,
@@ -123,6 +215,7 @@ export function WhatsAppChatList({
 
   const selectedIds = settings?.whatsapp_default_chat_ids || [];
   const selectedCount = selectedIds.length;
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const recipientGroups: WhatsAppRecipientGroup[] = settings?.whatsapp_recipient_groups || [];
   const pendingCount = scheduledMessages.filter(m => m.status === 'pending').length;
 
@@ -570,79 +663,16 @@ export function WhatsAppChatList({
               {search ? 'No se encontraron chats con ese nombre.' : 'No hay chats disponibles en WhatsApp.'}
             </div>
           ) : (
-            filteredChats.map(chat => {
-              const isSelected = chat.id === activeChatId;
-              const isRecipient = selectedIds.includes(chat.id);
-              const chatTime = formatChatTime(chat.timestamp);
-              return (
-                <div
-                  key={chat.id}
-                  onClick={() => onSelectChat(chat.id)}
-                  className={cn(
-                    'w-full flex items-center gap-3 p-3 text-left transition-colors cursor-pointer group select-none',
-                    isSelected
-                      ? 'bg-emerald-500/10 dark:bg-emerald-950/25 border-l-4 border-emerald-500'
-                      : 'hover:bg-muted/50'
-                  )}
-                >
-                  {/* Avatar circular */}
-                  <div
-                    className={cn(
-                      'h-11 w-11 rounded-full flex items-center justify-center shrink-0 shadow-2xs overflow-hidden',
-                      chat.isGroup
-                        ? 'bg-teal-500/15 text-teal-700 dark:text-teal-300'
-                        : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                    )}
-                  >
-                    <ChatAvatarItem chat={chat} />
-                  </div>
-
-                  {/* Información del chat */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1">
-                      <span
-                        className={cn(
-                          'text-xs sm:text-sm font-semibold truncate text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors',
-                          isSelected && 'text-emerald-700 dark:text-emerald-300 font-bold'
-                        )}
-                      >
-                        {chat.name}
-                      </span>
-                      {chatTime && (
-                        <span className="text-[10px] text-muted-foreground shrink-0 font-medium">
-                          {chatTime}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between gap-1 mt-0.5">
-                      <div className="text-[11px] text-muted-foreground truncate">
-                        {chat.isGroup ? 'Conversación grupal' : 'Chat individual'}
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        {chat.isGroup && (
-                          <span className="text-[9px] font-medium text-teal-600 dark:text-teal-400 bg-teal-500/10 px-1.5 py-0.2 rounded shrink-0">
-                            Grupo
-                          </span>
-                        )}
-                        {isRecipient && (
-                          <span className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/15 border border-emerald-500/20 px-1.5 py-0.2 rounded flex items-center gap-0.5 shrink-0">
-                            <Check className="h-2.5 w-2.5" /> Destinatario
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Acciones de fila */}
-                  {/* Indicador de chat seleccionado */}
-                  {isSelected && (
-                    <div className="flex items-center shrink-0 ml-1">
-                      <Check className="h-4 w-4 text-emerald-600 shrink-0" />
-                    </div>
-                  )}
-                </div>
-              );
-            })
+            filteredChats.map(chat => (
+              <ChatItemRow
+                key={chat.id}
+                chat={chat}
+                isSelected={chat.id === activeChatId}
+                isRecipient={selectedSet.has(chat.id)}
+                onSelect={onSelectChat}
+                chatTime={formatChatTime(chat.timestamp)}
+              />
+            ))
           )}
         </div>
       )}
