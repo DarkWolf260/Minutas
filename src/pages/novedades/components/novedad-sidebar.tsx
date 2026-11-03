@@ -9,9 +9,9 @@ import { NovedadGroupItem } from './novedad-group-item';
 import type { Report, Template } from '@/lib/types';
 import { useSettings } from '@/hooks/configuracion';
 import { getReportDateTime, findValueInform_data } from '@/lib/report-sorter';
-import { WhatsAppChatView } from './whatsapp-chat/whatsapp-chat-view';
-import { WhatsAppChatList } from './whatsapp-chat/whatsapp-chat-list';
-import { useWhatsAppBot } from '@/hooks/whatsapp';
+
+
+import { WhatsAppChatView, WhatsAppChatList, useWhatsAppBot } from '@/features/whatsapp';
 
 import type { UseNovedadesReturn } from '@/hooks/novedades';
 

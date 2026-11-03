@@ -2,7 +2,11 @@ import React, { Suspense, memo, useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/ui';
 import { useNovedades } from '@/hooks/novedades';
 import { useSettings } from '@/hooks/configuracion';
-import { useWhatsAppBot } from '@/hooks/whatsapp';
+import {
+  useWhatsAppBot,
+  WhatsAppChatView,
+  WhatsAppRightPanel
+} from '@/features/whatsapp';
 import { cn } from '@/lib/utils';
 import { NoGuardBanner } from '@/components/guards/guard-selector';
 
@@ -11,8 +15,8 @@ import { NovedadSidebar } from './novedades/components/novedad-sidebar';
 import { NovedadMainContent } from './novedades/components/novedad-main-content';
 import { NovedadModals } from './novedades/components/novedad-modals';
 import { MobileHeader } from './novedades/components/mobile-header';
-import { WhatsAppChatView } from './novedades/components/whatsapp-chat/whatsapp-chat-view';
-import { WhatsAppRightPanel } from './novedades/components/whatsapp-chat/whatsapp-right-panel';
+
+
 
 function NovedadesPageContent() {
   const isMobile = useIsMobile();

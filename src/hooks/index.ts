@@ -15,4 +15,4 @@ export * from './plantillas';
 export * from './reporte-final';
 export * from './sync';
 export * from './ui';
-export * from './whatsapp';
+

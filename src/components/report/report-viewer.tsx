@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import type { Report } from '@/lib/types';
 import { useIsMobile } from '@/hooks/ui';
 import { ReportPreview } from './report-preview';
-import { useWhatsAppBot } from '@/hooks/whatsapp';
-import { useScheduledMessages } from '@/hooks/whatsapp';
+import { useWhatsAppBot, useScheduledMessages } from '@/features/whatsapp';
+
 import { toast } from 'sonner';
 
 // Componentes extraídos (SOLID)

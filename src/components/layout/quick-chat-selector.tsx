@@ -24,7 +24,7 @@ import {
   TooltipTrigger
 } from '@/components/ui/tooltip';
 import { QRCodeSVG } from 'qrcode.react';
-import { useWhatsAppBot } from '@/hooks/whatsapp';
+import { useWhatsAppBot } from '@/features/whatsapp';
 import { useSettings } from '@/hooks/configuracion';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -274,7 +274,7 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
                   </Button>
                 </div>
               </div>
-            ) : !bot.isAvailable ? (
+            ) : (!bot.isAvailable || bot.status.statusMessage === 'Bot desconectado') ? (
               /* ESTADO 3: SERVIDOR LOCAL DESCONECTADO */
               <div className="flex flex-col items-center text-center py-4 gap-3">
                 <div className="h-14 w-14 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center">
