@@ -34,6 +34,9 @@ const VALID_TEXT_MODS = new Set([
     'direccion',
     'dirección',
     'dir',
+    'ubicaciones',
+    'ubicacion',
+    'ubicación',
 ]);
 
 /**

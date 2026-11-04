@@ -73,7 +73,7 @@ export const FieldRenderer = memo(
             const lowerfield_id = field_id.toLowerCase();
             const rawMods = (fieldConfig.modifiers || []).map((m: any) => String(m).toLowerCase().trim());
             const showSavedAddresses = rawMods.some((m: string) =>
-                m === 'direcciones' || m === 'direccion' || m === 'dirección' || m === 'dir'
+                m === 'direcciones' || m === 'direccion' || m === 'dirección' || m === 'dir' || m === 'ubicaciones' || m === 'ubicacion' || m === 'ubicación'
             );
             const formContext = useFormContext();
             const tipoPath = `${name}_tipo`;

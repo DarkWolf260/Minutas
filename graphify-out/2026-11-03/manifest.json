@@ -2769,7 +2769,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\generator\\generator-header.tsx": {
-    "mtime": 1793213841.856091,
+    "mtime": 1793731817.3057194,
     "ast_hash": "87e3a34098a4b28033a7f40159a2be4c",
     "semantic_hash": ""
   },
@@ -2789,8 +2789,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\report-generator.tsx": {
-    "mtime": 1793213841.8601289,
-    "ast_hash": "a9d29724bb052ef13eede04e2af050d1",
+    "mtime": 1793732090.9294329,
+    "ast_hash": "6b67868c69d30ab9860168c0ff28f22c",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\report-photos.tsx": {
@@ -2804,7 +2804,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\report-viewer.tsx": {
-    "mtime": 1793682026.706019,
+    "mtime": 1793731812.737471,
     "ast_hash": "cc4150f8a9f65e06d4b3c0b04abd74ad",
     "semantic_hash": ""
   },
@@ -2814,13 +2814,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\sections\\repeatable-section-renderer.tsx": {
-    "mtime": 1791042647.773111,
-    "ast_hash": "9822dda1c12c023a541a0f3eae5202e1",
+    "mtime": 1793732024.2540045,
+    "ast_hash": "9ff698407e7fc7acb99497b08f10775f",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\sections\\single-section-renderer.tsx": {
-    "mtime": 1790545983.4473908,
-    "ast_hash": "197da9f902f490e1a7201a8d1bcb6c15",
+    "mtime": 1793732024.2540045,
+    "ast_hash": "b07e106bf322e7c14b3a9364aea4e6b2",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\viewer\\use-report-viewer.ts": {
@@ -2829,12 +2829,12 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\viewer\\viewer-content.tsx": {
-    "mtime": 1793213841.8661237,
-    "ast_hash": "d9a24189f43d1d3c383ac35954d58bc9",
+    "mtime": 1793732253.2759528,
+    "ast_hash": "e88ee1d03b1d2e1264773fdd12eda1bf",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\viewer\\viewer-header.tsx": {
-    "mtime": 1793682027.2904158,
+    "mtime": 1793731812.737471,
     "ast_hash": "5b3829a1a8fdc2f6dda4547c57ce039a",
     "semantic_hash": ""
   },
@@ -3114,8 +3114,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\features\\whatsapp\\components\\whatsapp-chat-list.tsx": {
-    "mtime": 1793681805.597346,
-    "ast_hash": "87a89dcc39f43b6c0dbb41a6cabe345e",
+    "mtime": 1793728607.0455184,
+    "ast_hash": "4fc2bfd0280d9b663bebbce432bbfcd2",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\features\\whatsapp\\components\\whatsapp-chat-view.tsx": {
@@ -3154,13 +3154,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\features\\whatsapp\\hooks\\use-whatsapp-bot.ts": {
-    "mtime": 1793727035.6180873,
-    "ast_hash": "f0d735397b0ab8cdacdb7b52e94dd2c4",
+    "mtime": 1793728335.1181765,
+    "ast_hash": "801434793db8eee8a5f6c965695c1a06",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\features\\whatsapp\\hooks\\use-whatsapp-chat.ts": {
-    "mtime": 1793681723.1224852,
-    "ast_hash": "4d82b676eef71f85af40721f47ca4edb",
+    "mtime": 1793728087.1657033,
+    "ast_hash": "bb987a25809842ca73b478ea7420a571",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\features\\whatsapp\\hooks\\use-whatsapp-media.ts": {
@@ -3944,7 +3944,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\pages\\novedades\\components\\novedad-main-content.tsx": {
-    "mtime": 1793213841.9987268,
+    "mtime": 1793732267.3027458,
     "ast_hash": "4b2187b7cf158282b32d792b5940152e",
     "semantic_hash": ""
   },
@@ -4299,7 +4299,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\whatsapp-bot\\src\\client.js": {
-    "mtime": 1793726917.9527714,
+    "mtime": 1793727404.402128,
     "ast_hash": "538a7473c64c6d2c26f650f2835fb994",
     "semantic_hash": ""
   },
@@ -4329,8 +4329,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\whatsapp-bot\\src\\services\\chat-service.js": {
-    "mtime": 1793726973.5865679,
-    "ast_hash": "0398cc9e43561f720ec3dabccdeadfa1",
+    "mtime": 1793729357.3887572,
+    "ast_hash": "015591db748cada9155c67ed325c59a3",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\whatsapp-bot\\src\\services\\message-service.js": {

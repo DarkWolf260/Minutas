@@ -39,7 +39,12 @@ export function SingleSectionRenderer(props: SectionRendererProps) {
     if (section.field_ids.length === 0 && section.label) {
         return (
             <div className={cn(!isNested && 'pt-4', props.wrapperClassName)}>
-                <h3 className="text-lg font-semibold">{section.label}</h3>
+                <div className="flex items-center gap-2.5 pb-2 mb-2 border-b border-border/70">
+                    <span className="w-1 h-3.5 bg-primary rounded-full shrink-0" />
+                    <h3 className="text-sm font-bold tracking-tight text-foreground">
+                        {section.label}
+                    </h3>
+                </div>
             </div>
         );
     }
@@ -105,7 +110,12 @@ export function SingleSectionRenderer(props: SectionRendererProps) {
     return (
         <div className={cn('space-y-4', !isNested && 'pt-4', props.wrapperClassName)}>
             {section.label && (
-                <h3 className="text-lg font-semibold">{section.label}</h3>
+                <div className="flex items-center gap-2.5 pb-2 mb-2 border-b border-border/70">
+                    <span className="w-1 h-3.5 bg-primary rounded-full shrink-0" />
+                    <h3 className="text-sm font-bold tracking-tight text-foreground">
+                        {section.label}
+                    </h3>
+                </div>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 3xl:grid-cols-3 gap-x-4 gap-y-6">
                 {(section.layout && section.layout.length > 0 ? section.layout : section.field_ids).map(
