@@ -313,7 +313,9 @@ async function fetchChats(requestedWorkspace) {
       }
     }
   } catch (evalErr) {
-    console.warn(`[Chats] Extractor en memoria falló (${evalErr.message}).`);
+    if (!state.cachedChats || state.cachedChats.length === 0) {
+      console.warn(`[Chats] Extractor en memoria falló (${evalErr.message}).`);
+    }
   }
 
   // 2. Si el extractor directo devolvió vacío pero tenemos chats en caché, usar la caché

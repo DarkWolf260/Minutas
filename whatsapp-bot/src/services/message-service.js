@@ -176,7 +176,17 @@ async function fetchChatMessages(targetChatId, limit = 50) {
     throw error;
   }
 
-  const chat = await state.client.getChatById(targetChatId);
+  let chat;
+  try {
+    chat = await state.client.getChatById(targetChatId);
+  } catch (chatErr) {
+    if (chatErr?.message?.includes("reading 'getChat'") || chatErr?.message?.includes('Execution context was destroyed')) {
+      const error = new Error('WhatsApp se está sincronizando con el teléfono. Por favor espera unos momentos.');
+      error.status = 503;
+      throw error;
+    }
+    throw chatErr;
+  }
   if (!chat) {
     const error = new Error('Chat no encontrado');
     error.status = 404;

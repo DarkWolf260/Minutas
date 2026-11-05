@@ -2744,7 +2744,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\components\\report\\field-renderer.tsx": {
-    "mtime": 1793761869.9392028,
+    "mtime": 1793762146.6339824,
     "ast_hash": "2f138f2ccf74714071d7083e22336b44",
     "semantic_hash": ""
   },
@@ -3789,7 +3789,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\parser.ts": {
-    "mtime": 1793761878.9692905,
+    "mtime": 1793762147.0034142,
     "ast_hash": "609d179912ebdcef4fafa9eaa3915033",
     "semantic_hash": ""
   },
@@ -4299,8 +4299,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\whatsapp-bot\\src\\client.js": {
-    "mtime": 1793727404.402128,
-    "ast_hash": "538a7473c64c6d2c26f650f2835fb994",
+    "mtime": 1793853737.203621,
+    "ast_hash": "df74632ef8357766a96769e3339cc4c6",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\whatsapp-bot\\src\\config.js": {
@@ -4309,8 +4309,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\whatsapp-bot\\src\\routes\\chats.routes.js": {
-    "mtime": 1793213842.116612,
-    "ast_hash": "d6a089e27522d7bda2d0f30da887f057",
+    "mtime": 1793853761.3671622,
+    "ast_hash": "567317ad584e4190927bcb915e6a67ab",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\whatsapp-bot\\src\\routes\\messages.routes.js": {
@@ -4329,13 +4329,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\whatsapp-bot\\src\\services\\chat-service.js": {
-    "mtime": 1793729357.3887572,
-    "ast_hash": "015591db748cada9155c67ed325c59a3",
+    "mtime": 1793853769.100653,
+    "ast_hash": "a484d64050b96464507e03646b31a377",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\whatsapp-bot\\src\\services\\message-service.js": {
-    "mtime": 1793213842.1256125,
-    "ast_hash": "1b976fbff9b0c496b958e98732f68406",
+    "mtime": 1793853746.064793,
+    "ast_hash": "311769a47b5cbe99e25d6b1f55420529",
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\whatsapp-bot\\src\\services\\scheduler-service.js": {
@@ -4679,7 +4679,7 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Dark\\Documents\\GitHub\\Minutas\\src\\lib\\template\\TEMPLATE_ENGINE.md": {
-    "mtime": 1793761898.7272122,
+    "mtime": 1793762146.7834525,
     "ast_hash": "e6e1b88e9adc7aede43693dd62147a42",
     "semantic_hash": ""
   },

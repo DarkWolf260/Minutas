@@ -1,16 +1,16 @@
-# Graph Report - Minutas  (2026-11-03)
+# Graph Report - Minutas  (2026-11-05)
 
 ## Corpus Check
-- 441 files · ~346,737 words
+- 441 files · ~346,804 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3998 nodes · 13245 edges · 317 communities (139 shown, 178 thin omitted)
+- 3998 nodes · 13245 edges · 316 communities (138 shown, 178 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 36 edges (avg confidence: 0.9)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `3b24e0d4`
+- Built from commit: `05bdc05b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -38,7 +38,6 @@
 - [[_COMMUNITY_devDependencies|devDependencies]]
 - [[_COMMUNITY_Badge|Badge]]
 - [[_COMMUNITY_db-provider.tsx|db-provider.tsx]]
-- [[_COMMUNITY_Community 23|Community 23]]
 - [[_COMMUNITY_MinutasCHANGELOG|Minutas/CHANGELOG.md]]
 - [[_COMMUNITY_useSettings|useSettings]]
 - [[_COMMUNITY_Section Definitions|Section Definitions]]
@@ -355,7 +354,7 @@
 - 1-file cycle: `src/components/orden-del-dia/index.tsx -> src/components/orden-del-dia/index.tsx`
 - 1-file cycle: `src/features/whatsapp/types/index.ts -> src/features/whatsapp/types/index.ts`
 
-## Communities (317 total, 178 thin omitted)
+## Communities (316 total, 178 thin omitted)
 
 ### Community 0 - "db.ts"
 Cohesion: 0.07
@@ -445,10 +444,6 @@ Nodes (22): ref_virtual_pwa_register, Root(), SetupPage, PWAStatus(), PwaContext
 Cohesion: 0.13
 Nodes (17): formatReportDate(), groupReportsByDay(), groupReportsByTemplate(), calcularEstadisticasDia(), calcularEstadisticasPeriodo(), findValueInform_data(), getReportDateTime(), sortReports() (+9 more)
 
-### Community 23 - "Community 23"
-Cohesion: 0.20
-Nodes (12): DEPARTMENT_IDS, DEPARTMENT_NAMES, generateDepartmentId(), generateUniqueDepartmentId(), LEADER_ROLES, OPERATIONAL_ROLES, SPECIAL_ROLES, STATUS_ROLES (+4 more)
-
 ### Community 25 - "useSettings"
 Cohesion: 0.08
 Nodes (45): CHANGE_TYPE_CONFIG, ChangeEntry, CHANGELOG, ChangelogEntry, ChangeType, WORKFLOW_STEPS, TEMPLATE_LIST, NavCardProps (+37 more)
@@ -535,7 +530,7 @@ Nodes (30): ref_fs, destroyClient(), app, avatarCache, avatarImageCache, cachedC
 
 ### Community 50 - "guard-selector.tsx"
 Cohesion: 0.07
-Nodes (54): react-hook-form, GuardStaffEditorProps, StaffListEditorProps, ActivityItemProps, AddActivityFormProps, OrdenDelDiaFormProps, AddEditPersonnelDialogProps, CsvImportButton() (+46 more)
+Nodes (54): react-hook-form, GuardStaffEditorProps, StaffListEditorProps, AddEditPersonnelDialogProps, CsvImportButton(), CsvImportButtonProps, parseSex(), parseStatus() (+46 more)
 
 ### Community 51 - "package.json"
 Cohesion: 0.04
@@ -694,8 +689,8 @@ Cohesion: 0.12
 Nodes (14): SettingsSidebar, AboutAppPage, AboutChangelogPage, AboutGuidePage, AboutTemplatesPage, DireccionesPage, SECTION_LABELS, SettingsAboutPage (+6 more)
 
 ### Community 226 - "personal.tsx"
-Cohesion: 0.18
-Nodes (12): formatStaffReporta(), 13. Campos Especiales y Etiquetas Reservadas, 1. Identificación de la Guardia, 2. Carga Automática de Funcionarios por Rol, A. Etiquetas y Marcadores Estructurales Reservados, B. Campos con Detección Automática de Tipo, C. Campos de Personal con Formato Institucional, D. Propiedades de Notación de Punto `{Campo.propiedad}` (+4 more)
+Cohesion: 0.10
+Nodes (24): ActivityItemProps, AddActivityFormProps, OrdenDelDiaFormProps, OrdenDelDiaDraft, UseOrdenDelDiaGeneratorProps, Nota, buildFullStaffName(), formatStaffMember() (+16 more)
 
 ### Community 227 - "Community 227"
 Cohesion: 0.08
@@ -900,7 +895,7 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `cn()` connect `2026-10-05T16-36-43Z__src-app-tsx.md` to `2026-10-05T19-52-35Z__src-pages-personal-tsx.md`, `use-whatsapp-bot.ts`, `2026-10-06T02-00-39Z__src-pages-setup-index-tsx.md`, `Community 227`, `novedad-main-content.tsx`, `field-renderer.tsx`, `Community 229`, `ErrorBoundary`, `Community 233`, `react`, `Community 236`, `App.tsx`, `00-bienvenida.tsx`, `template-builder.tsx`, `db-provider.tsx`, `useSettings`, `setup/index.tsx`?**
   _High betweenness centrality (0.085) - this node is a cross-community bridge._
-- **Why does `react` connect `Input` to `sync-context.tsx`, `button.tsx`, `Community 266`, `novedad-sidebar.tsx`, `settings/index.tsx`, `Badge`, `sonner`, `Report`, `13. Campos Especiales y Etiquetas Reservadas`, `workspaces/index.tsx`, `calculator.ts`, `supabase.ts`, `App.tsx`, `guard-selector.tsx`, `package.json`, `use-templates.ts`, `structure-tree.tsx`, `repositories/index.ts`, `orden-del-dia/index.tsx`, `personnel-table.tsx`, `side-nav.tsx`?**
+- **Why does `react` connect `Input` to `sync-context.tsx`, `button.tsx`, `Community 266`, `novedad-sidebar.tsx`, `settings/index.tsx`, `Badge`, `sonner`, `Report`, `13. Campos Especiales y Etiquetas Reservadas`, `workspaces/index.tsx`, `calculator.ts`, `supabase.ts`, `App.tsx`, `guard-selector.tsx`, `package.json`, `use-templates.ts`, `structure-tree.tsx`, `repositories/index.ts`, `orden-del-dia/index.tsx`, `personnel-table.tsx`, `side-nav.tsx`, `personal.tsx`?**
   _High betweenness centrality (0.083) - this node is a cross-community bridge._
 - **Why does `Button` connect `novedad-main-content.tsx` to `use-whatsapp-bot.ts`, `2026-10-05T19-52-35Z__src-pages-personal-tsx.md`, `2026-10-06T02-00-39Z__src-pages-setup-index-tsx.md`, `ErrorBoundary`, `field-renderer.tsx`, `Community 229`, `Community 231`, `Community 232`, `2026-10-05T16-36-43Z__src-app-tsx.md`, `Community 233`, `react`, `Community 236`, `App.tsx`, `00-bienvenida.tsx`, `db-provider.tsx`, `useSettings`, `setup/index.tsx`?**
   _High betweenness centrality (0.048) - this node is a cross-community bridge._

@@ -49,8 +49,10 @@ function initWhatsAppClient() {
         '--no-first-run',
         '--no-zygote',
         '--no-default-browser-check',
-        '--disable-background-networking',
-        '--disable-features=Translate,OptimizationHints,MediaRouter'
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
+        '--disable-features=CalculateNativeWinOcclusion,Translate,OptimizationHints,MediaRouter'
       ],
     },
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36'
@@ -67,8 +69,9 @@ function initWhatsAppClient() {
   });
 
   state.client.on('loading_screen', (percent, message) => {
-    if (!state.isReady) {
-      state.statusMessage = `Sincronizando: ${percent}%`;
+    state.statusMessage = `Sincronizando chats: ${percent}%`;
+    if (percent < 100 && state.isReady) {
+      state.isReady = false;
     }
     console.log(`Progreso de carga: ${percent}% - ${message}`);
     if (percent >= 99 && !state.isReady) {
