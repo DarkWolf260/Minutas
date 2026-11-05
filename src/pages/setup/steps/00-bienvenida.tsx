@@ -307,7 +307,7 @@ export function PasoBienvenida({
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-border/60" />
             </div>
-            <div className="relative px-3 bg-background text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <div className="relative px-3 bg-background text-xs font-medium text-muted-foreground">
               o modo local
             </div>
           </div>
@@ -367,7 +367,7 @@ export function PasoBienvenida({
 
         {/* Apariencia */}
         <div className="space-y-2">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
+          <span className="text-xs font-medium text-muted-foreground block">
             Apariencia Visual
           </span>
           <div className="grid grid-cols-3 gap-2">
@@ -392,7 +392,7 @@ export function PasoBienvenida({
 
         {/* Ubicación / Jurisdicción */}
         <div className="space-y-2">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
+          <span className="text-xs font-medium text-muted-foreground block">
             Jurisdicción y Despacho
           </span>
           <div className="p-4 rounded-2xl bg-muted/20 border border-border/60">

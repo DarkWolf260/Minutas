@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
     if (error.status === 403) {
       return res.status(403).json({ error: error.message, activeWorkspace: error.activeWorkspace });
     }
-    if (error.status === 400) {
+    if (error.status === 400 || error.status === 503) {
       return res.status(400).json({ error: error.message });
     }
     console.error('Error fetching chats:', error);
@@ -37,7 +37,7 @@ router.get('/:chatId/messages', async (req, res) => {
     const messages = await fetchChatMessages(chatId, limit);
     res.json(messages);
   } catch (error) {
-    if (error.status === 400) {
+    if (error.status === 400 || error.status === 503) {
       return res.status(400).json({ error: error.message });
     }
     if (error.status === 404) {

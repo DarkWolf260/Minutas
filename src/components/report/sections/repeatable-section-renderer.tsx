@@ -158,7 +158,12 @@ export function RepeatableSectionRenderer(props: SectionRendererProps) {
             )}
         >
             {section.label && (
-                <h3 className="text-lg font-semibold">{section.label}</h3>
+                <div className="flex items-center gap-2.5 pb-2 mb-2 border-b border-border/70">
+                    <span className="w-1 h-3.5 bg-primary rounded-full shrink-0" />
+                    <h3 className="text-sm font-bold tracking-tight text-foreground">
+                        {section.label}
+                    </h3>
+                </div>
             )}
             <div className="space-y-3">
                 {fields.map((field, index) => (

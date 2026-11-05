@@ -50,7 +50,7 @@ Los segmentos están separados por `:`. El orden de los segmentos después del n
 | `hidden` | Oculta el campo en la salida del reporte renderizado |
 | `single` | Permite ingresar una sola hora (sin rango) para campos `time-hlv` |
 | `largo` / `long` | Activa el nombre largo protocolar de municipio y expande el ancho completo |
-| `direcciones` / `dir` | Activa el selector con la lista de direcciones guardadas del directorio (por defecto los campos son texto libre) |
+| `direcciones` / `dir` / `ubicaciones` / `ubicacion` | Activa el selector con la lista de direcciones/ubicaciones guardadas del directorio (por defecto los campos son texto libre) |
 | `default("Valor")` / `def=(Valor)` | Asigna un valor predeterminado si el campo queda vacío |
 
 #### Dropdown con opciones inline

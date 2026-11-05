@@ -73,9 +73,9 @@ export function GuardSelector({
   if (!isLoaded) return null;
 
   return (
-    <Card className="shadow-sm border-muted/60 overflow-hidden">
+    <Card className="border-border overflow-hidden">
       <CardHeader className="py-2.5 border-b bg-muted/30 shrink-0">
-        <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+        <CardTitle className="text-xs font-semibold text-foreground/80 flex items-center gap-2">
           <Lock className="h-3.5 w-3.5 text-primary" />
           Configuración de la Guardia
         </CardTitle>
@@ -85,7 +85,7 @@ export function GuardSelector({
         <div className="space-y-2 max-w-xs flex-1 min-w-[200px]">
           <Label
             htmlFor="guard-selector-select"
-            className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
+            className="text-xs font-medium text-muted-foreground ml-0.5"
           >
             Guardia de Turno
           </Label>
@@ -96,7 +96,7 @@ export function GuardSelector({
           >
             <SelectTrigger
               id="guard-selector-select"
-              className={`h-10 rounded-lg shadow-sm ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}
+              className={`h-10 rounded-lg ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}
             >
               <SelectValue placeholder="Selecciona una guardia..." />
             </SelectTrigger>
@@ -114,7 +114,7 @@ export function GuardSelector({
         <div className="space-y-2 max-w-xs flex-1 min-w-[140px]">
           <Label
             htmlFor="guard-selector-duration"
-            className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
+            className="text-xs font-medium text-muted-foreground ml-0.5"
           >
             Duración
           </Label>
@@ -130,7 +130,7 @@ export function GuardSelector({
           >
             <SelectTrigger
               id="guard-selector-duration"
-              className={`h-10 rounded-lg shadow-sm ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}
+              className={`h-10 rounded-lg ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}
             >
               <SelectValue placeholder="Duración..." />
             </SelectTrigger>
@@ -146,7 +146,7 @@ export function GuardSelector({
           <div className="space-y-2 max-w-xs flex-1 min-w-[200px]">
             <Label
               htmlFor="guard-selector-period"
-              className="text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
+              className="text-xs font-medium text-muted-foreground ml-0.5"
             >
               Fecha Inicio
             </Label>
@@ -158,7 +158,7 @@ export function GuardSelector({
                 setPeriodo(formatDateToPeriod(date, duracionActual === 48 ? 2 : 1));
               }}
               disabled={isGuardOpen}
-              className={`h-10 rounded-lg shadow-sm ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}
+              className={`h-10 rounded-lg ${isGuardOpen ? 'bg-muted opacity-80' : 'bg-background'}`}
             />
           </div>
         )}
@@ -168,13 +168,13 @@ export function GuardSelector({
           {isGuardOpen ? (
             <Badge
               variant="outline"
-              className="h-9 px-4 gap-2 bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold uppercase tracking-wider animate-pulse rounded-xl"
+              className="h-9 px-4 gap-2 bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-medium rounded-lg"
             >
               <CheckCircle2 className="h-4 w-4" />
               Guardia Activa
             </Badge>
           ) : linkToOrdenDelDia ? (
-            <Button asChild size="sm" className="gap-2 font-bold shadow-sm">
+            <Button asChild size="sm" className="gap-2 font-medium">
               <Link to="/orden-del-dia">
                 <Newspaper className="h-3.5 w-3.5" />
                 Ir a Orden del Día
@@ -185,7 +185,7 @@ export function GuardSelector({
               onClick={handleOpen}
               disabled={!selectedGuardId}
               size="sm"
-              className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm font-bold"
+              className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
             >
               <Play className="h-3 w-3 fill-current" />
               {actionLabel}
@@ -260,8 +260,8 @@ export function NoGuardBanner({
       </div>
  
       {allowOpenHere && guards.length > 0 && (
-        <div className="w-full max-w-md bg-card border border-border/80 rounded-xl shadow-2xs p-4 sm:p-5 space-y-3 sm:space-y-4 mt-6 text-left">
-          <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-left">
+        <div className="w-full max-w-md bg-card border border-border/80 rounded-xl p-4 sm:p-5 space-y-3 sm:space-y-4 mt-6 text-left">
+          <p className="text-xs font-semibold text-foreground/80 text-left">
             Abrir guardia aquí
           </p>
  
@@ -270,7 +270,7 @@ export function NoGuardBanner({
             <div className="flex-1 space-y-1 sm:space-y-1.5 text-left">
               <Label
                 htmlFor="no-guard-select"
-                className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-foreground ml-1"
+                className="text-xs font-medium text-muted-foreground ml-0.5"
               >
                 Guardia
               </Label>
@@ -292,7 +292,7 @@ export function NoGuardBanner({
             <div className="w-full sm:w-28 space-y-1 sm:space-y-1.5 text-left">
               <Label
                 htmlFor="no-guard-duration"
-                className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-foreground ml-1"
+                className="text-xs font-medium text-muted-foreground ml-0.5"
               >
                 Duración
               </Label>
@@ -319,7 +319,7 @@ export function NoGuardBanner({
             <div className="flex-1 space-y-1 sm:space-y-1.5 text-left">
               <Label
                 htmlFor="no-guard-period"
-                className="text-[9px] sm:text-[10px] uppercase font-bold text-muted-foreground/70 ml-1"
+                className="text-xs font-medium text-muted-foreground ml-0.5"
               >
                 Fecha Inicio
               </Label>
@@ -339,7 +339,7 @@ export function NoGuardBanner({
             <Button
               onClick={handleOpen}
               disabled={!selectedGuardId}
-              className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm h-9 sm:h-10 text-xs sm:text-sm"
+              className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium h-9 sm:h-10 text-xs sm:text-sm"
               size="sm"
             >
               <Play className="h-3.5 w-3.5 fill-current" />

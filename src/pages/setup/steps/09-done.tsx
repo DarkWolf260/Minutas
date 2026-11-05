@@ -39,7 +39,7 @@ export function PasoDone({
           <div className="p-3 rounded-xl bg-muted/30 border border-border/60 space-y-1">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <MapPin className="h-3.5 w-3.5 text-primary" />
-              <span className="text-[10px] font-bold uppercase tracking-wider">Ubicación</span>
+              <span className="text-xs font-medium">Ubicación</span>
             </div>
             <p className="text-xs font-semibold truncate text-foreground">
               {municipio ? `${municipio}, ${estado}` : estado}
@@ -49,7 +49,7 @@ export function PasoDone({
           <div className="p-3 rounded-xl bg-muted/30 border border-border/60 space-y-1">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Layers className="h-3.5 w-3.5 text-primary" />
-              <span className="text-[10px] font-bold uppercase tracking-wider">Estructura</span>
+              <span className="text-xs font-medium">Estructura</span>
             </div>
             <p className="text-xs font-semibold truncate text-foreground">
               Cargos Listos
@@ -59,7 +59,7 @@ export function PasoDone({
           <div className="p-3 rounded-xl bg-muted/30 border border-border/60 space-y-1">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Database className="h-3.5 w-3.5 text-primary" />
-              <span className="text-[10px] font-bold uppercase tracking-wider">Base de Datos</span>
+              <span className="text-xs font-medium">Base de Datos</span>
             </div>
             <p className="text-xs font-semibold truncate text-foreground">
               Local y Offline
@@ -69,7 +69,7 @@ export function PasoDone({
           <div className="p-3 rounded-xl bg-muted/30 border border-border/60 space-y-1">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-              <span className="text-[10px] font-bold uppercase tracking-wider">Plantillas</span>
+              <span className="text-xs font-medium">Plantillas</span>
             </div>
             <p className="text-xs font-semibold truncate text-foreground">
               Preconfiguradas

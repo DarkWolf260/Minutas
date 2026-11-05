@@ -178,12 +178,6 @@ export function obtenerCategoriasReporte(
   if (Array.isArray(template.statistics_rules) && template.statistics_rules.length > 0) {
     const rulesByCat = new Map<string, number>();
 
-    if (import.meta.env.DEV) {
-      console.log(`[STATS DEBUG] === Evaluando reporte "${report.title}" (ID: ${report.id}) con plantilla "${template.name}" ===`);
-      console.log(`[STATS DEBUG] predefinedValues:`, predefinedValues);
-      console.log(`[STATS DEBUG] form_data:`, report.form_data);
-    }
-
     for (const rule of template.statistics_rules) {
       if (!rule.field_id) continue;
       if (rule.field_id === '__meta__') continue; // Skip metadata container
@@ -316,10 +310,6 @@ export function obtenerCategoriasReporte(
               primaryMatch = primaryMatch || prevMatch;
             } else {
               primaryMatch = primaryMatch && prevMatch;
-            }
-
-            if (import.meta.env.DEV) {
-              console.log(`[STATS DEBUG] Evaluando tramo de ruta secuencial (Leg ${i}): "${items[i - 1]}" -> "${item}" contra "${legCondition}" (${rule.operator}). Resultado: ${primaryMatch}`);
             }
           }
 
@@ -500,10 +490,6 @@ export function obtenerCategoriasReporte(
         });
       }
 
-      if (import.meta.env.DEV) {
-        console.log(`[STATS DEBUG] Regla para campo "${rule.field_id}" (${rule.operator} "${rule.condition}") -> Matches found: ${matches}. Categorías:`, ruleCategories);
-      }
-
       if (matches > 0 && ruleCategories.length > 0) {
         ruleCategories.forEach(cat => {
           const normRuleCat = normalizarCategoria(cat);
@@ -565,9 +551,6 @@ export function obtenerCategoriasReporte(
         if (categoria) {
           const normCat = normalizarCategoria(categoria);
           transferCounts.set(normCat, (transferCounts.get(normCat) || 0) + 1);
-          if (import.meta.env.DEV) {
-            console.log(`[STATS DEBUG] Tipo traslado Tramo ${i}: "${origen.value}" (${origen.type}) -> "${destino.value}" (${destino.type}) => ${categoria}`);
-          }
         }
       }
       transferCounts.forEach((count, cat) => add(cat, count));

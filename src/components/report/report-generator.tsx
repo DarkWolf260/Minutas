@@ -76,14 +76,14 @@ export const ReportGenerator = forwardRef<ReportGeneratorRef, ReportGeneratorPro
     };
 
     const formContent = (
-      <div className={cn("w-full max-w-[1000px] mx-auto", !hideHeader && "p-4 sm:p-8 pb-32")}>
-        <Card className={cn("border bg-card shadow-xs font-inherit", hideHeader && "border-none shadow-none bg-transparent")}>
+      <div className={cn("w-full max-w-4xl mx-auto", !hideHeader && "p-0 sm:p-6 lg:p-8 pb-32")}>
+        <Card className={cn("border-0 sm:border rounded-none sm:rounded-2xl bg-card shadow-none sm:shadow-xs overflow-hidden font-inherit", hideHeader && "border-none shadow-none bg-transparent")}>
           {!hideHeader && (
-            <CardHeader className="border-b py-3 px-4 sm:px-6 bg-card">
+            <CardHeader className="border-b py-3 px-3 sm:px-6 bg-card">
               <CardTitle className="text-base sm:text-lg font-bold text-foreground">{cleanTemplateName(template.name)}</CardTitle>
             </CardHeader>
           )}
-          <CardContent className={cn("pt-6 px-4 sm:px-6", hideHeader && "pt-0 p-0")}>
+          <CardContent className={cn("pt-4 sm:pt-6 px-3 sm:px-6", hideHeader && "pt-0 p-0")}>
             <ReportForm
               ref={formRef}
               reportId={sessionKey}

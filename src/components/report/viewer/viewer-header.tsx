@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { DatePicker } from '@/components/ui/custom/date-picker';
 import { useState, useEffect, useMemo } from 'react';
-import { useScheduledMessages, useWhatsAppBot } from '@/hooks/whatsapp';
+import { useScheduledMessages, useWhatsAppBot } from '@/features/whatsapp';
 import { useSettings } from '@/hooks/configuracion';
 import { cn } from '@/lib/utils';
 

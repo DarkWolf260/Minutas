@@ -23,7 +23,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { QRCodeSVG } from 'qrcode.react';
 import { Input } from '@/components/ui/input';
-import { useWhatsAppBot, type WhatsAppChat, getCleanAvatarUrl, useSafeMediaSrc } from '@/hooks/whatsapp';
+import { useWhatsAppBot, type WhatsAppChat, getCleanAvatarUrl, useSafeMediaSrc } from '@/features/whatsapp';
 import { useSettings } from '@/hooks/configuracion';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { normalizeString, cn } from '@/lib/utils';
