@@ -18,5 +18,45 @@
     "media": [],
     "workspaceId": "minutasdb",
     "status": "sent"
+  },
+  {
+    "id": "minutasdb:scheduled_message:be6b08f9-67c1-4a42-993d-050e2761ac92",
+    "chatId": "120363353558604551@g.us",
+    "message": "*PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO URBANEJA, ESTADO ANZOÁTEGUI*\n\n*DIRECTOR*\nLcdo. Gustavo Castillo\n\n*JEFE DE OPERACIONES*\nCPC I Lcda. Anmar Sucre\n\n*JEFE DE LOS SERVICIOS*\nOSPC II Manuel Hurtado\n\n- *EQUIPO DE GUARDIA:* “B”\n- *FECHA:* 06/Noviembre/2026\n- *HORA:* 02:30 HLV\n\n- *TIPO DE NOVEDAD:* Reportes de novedades\n\n- *DESCRIPCIÓN DE LA NOVEDAD:* Se realiza reporte del segundo corte de novedades diarias comprendidas entre las 16:00 HLV hasta las 03:00 HLV.\n\n- Atenciones prehospitalarias 03\n - En traslados 03\n- Solicitudes de traslados 03\n- Traslados Extraurbanos 04\n - De vía a c. asistencial 01\n - De. c. asistenciales a c. asistenciales 01\n - De. residencias a c. asistenciales 01\n - De. c. asistenciales a residencias 01\n- Eventos meteorológicos 01\n\n- *REPORTA:* Analista de SIMATUR OPC I Rubén Rojas V-28.702.026\n\n*SOLO QUEREMOS SALVAR VIDAS* 🚑",
+    "scheduledTime": "2026-11-06T06:30:00.000Z",
+    "title": "Reporte de novedades Segundo corte",
+    "media": [],
+    "workspaceId": "minutasdb",
+    "status": "sent"
+  },
+  {
+    "id": "minutasdb:scheduled_message:c5521590-0140-4fb5-8a69-3991264e1e9a",
+    "chatId": "584166842831-1553703217@g.us",
+    "message": "*PROTECCIÓN CIVIL Y ADMINISTRACIÓN DE DESASTRES MUNICIPIO URBANEJA, ESTADO ANZOÁTEGUI*\n\n*DIRECTOR*\nLcdo. Gustavo Castillo\n\n*JEFE DE OPERACIONES*\nCPC I Lcda. Anmar Sucre\n\n*JEFE DE LOS SERVICIOS*\nOSPC II Manuel Hurtado\n\n- *EQUIPO DE GUARDIA:* “B”\n- *FECHA:* 06/Noviembre/2026\n- *HORA:* 02:30 HLV\n\n- *TIPO DE NOVEDAD:* Reportes de novedades\n\n- *DESCRIPCIÓN DE LA NOVEDAD:* Se realiza reporte del segundo corte de novedades diarias comprendidas entre las 16:00 HLV hasta las 03:00 HLV.\n\n- Atenciones prehospitalarias 03\n - En traslados 03\n- Solicitudes de traslados 03\n- Traslados Extraurbanos 04\n - De vía a c. asistencial 01\n - De. c. asistenciales a c. asistenciales 01\n - De. residencias a c. asistenciales 01\n - De. c. asistenciales a residencias 01\n- Eventos meteorológicos 01\n\n- *REPORTA:* Analista de SIMATUR OPC I Rubén Rojas V-28.702.026\n\n*SOLO QUEREMOS SALVAR VIDAS* 🚑",
+    "scheduledTime": "2026-11-06T06:30:00.000Z",
+    "title": "Reporte de novedades Segundo corte",
+    "media": [],
+    "workspaceId": "minutasdb",
+    "status": "sent"
+  },
+  {
+    "id": "minutasdb:scheduled_message:641521a5-a0c6-439c-843c-d48027a0689f",
+    "chatId": "120363353558604551@g.us",
+    "message": "*PROTECCIÓN CIVIL MUNICIPIO URBANEJA* 🚨\n\n- *REPORTE DEL ESTADO DEL TIEMPO:* ⛅\n- *FECHA:* 06/Noviembre/2026\n- *HORA:* 04:00 HLV\n\n- *DESCRIPCIÓN:* Cielo con nubosidad dispersa\n\n- *NOVEDAD:* Sin novedades para la hora.\n\n- *REPORTA:* Analista de SIMATUR OPC I Rubén Rojas V-28.702.026\n\n*SOLO QUEREMOS SALVAR VIDAS* 🚨🚑",
+    "scheduledTime": "2026-11-06T08:00:00.000Z",
+    "title": "Reporte del estado del tiempo",
+    "media": [],
+    "workspaceId": "minutasdb",
+    "status": "sent"
+  },
+  {
+    "id": "minutasdb:scheduled_message:bbd1d96b-0a68-40ea-8b1d-2a6ff5d0e6dd",
+    "chatId": "584166842831-1553703217@g.us",
+    "message": "*PROTECCIÓN CIVIL MUNICIPIO URBANEJA* 🚨\n\n- *REPORTE DEL ESTADO DEL TIEMPO:* ⛅\n- *FECHA:* 06/Noviembre/2026\n- *HORA:* 04:00 HLV\n\n- *DESCRIPCIÓN:* Cielo con nubosidad dispersa\n\n- *NOVEDAD:* Sin novedades para la hora.\n\n- *REPORTA:* Analista de SIMATUR OPC I Rubén Rojas V-28.702.026\n\n*SOLO QUEREMOS SALVAR VIDAS* 🚨🚑",
+    "scheduledTime": "2026-11-06T08:00:00.000Z",
+    "title": "Reporte del estado del tiempo",
+    "media": [],
+    "workspaceId": "minutasdb",
+    "status": "sent"
   }
 ]

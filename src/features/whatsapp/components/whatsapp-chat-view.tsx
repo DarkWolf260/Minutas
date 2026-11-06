@@ -34,21 +34,30 @@ export interface WhatsAppChatViewProps extends UseWhatsAppChatOptions {
  * Agrupa mensajes de imagen consecutivos del mismo remitente enviados en un intervalo
  * corto (≤60s) en una sola burbuja de álbum (mosaico), al igual que WhatsApp nativo.
  */
+/**
+ * Agrupa mensajes de imagen estrictamente consecutivos del mismo remitente enviados en una ráfaga
+ * simultánea (≤5s) en una sola burbuja de álbum (mosaico), al igual que WhatsApp nativo.
+ *
+ * Reglas de consistencia:
+ * 1. Solo agrupa mensajes con `type === 'image'`.
+ * 2. Si hay texto ('chat'), audio, video, documento o mensaje de otro remitente en medio, la agrupación se detiene de inmediato.
+ * 3. Si más de una imagen tiene su propio pie de texto (caption) distinto, NO se agrupan (se muestran individuales con su texto).
+ * 4. Deduplica fotos dentro del grupo por ID, mediaUrl y miniatura idéntica.
+ * 5. Los stubs de tipo 'album' no se agregan como fotos para evitar duplicados.
+ */
 export function groupMessagesIntoAlbums(messages: WhatsAppMessage[]): WhatsAppMessage[] {
+  if (!messages || messages.length === 0) return [];
   const result: WhatsAppMessage[] = [];
   const n = messages.length;
   let i = 0;
 
-  const isImageMsg = (m?: WhatsAppMessage | null) =>
-    Boolean(
-      m &&
-      !m.isRevoked && (
-        m.type === 'image' ||
-        (m.hasMedia && !['ptt', 'audio', 'document', 'video', 'location', 'live_location', 'revoked'].includes(m.type))
-      )
-    );
+  const isImageMsg = (m?: WhatsAppMessage | null): boolean =>
+    Boolean(m && !m.isRevoked && m.type === 'image');
 
-  const isAlbumStub = (m?: WhatsAppMessage | null) => Boolean(m && m.type === 'album');
+  const isAlbumStub = (m?: WhatsAppMessage | null): boolean =>
+    Boolean(m && !m.isRevoked && m.type === 'album');
+
+  const MAX_ALBUM_GAP_MS = 5000; // Máximo 5 segundos entre imágenes enviadas en el mismo lote
 
   while (i < n) {
     const current = messages[i];
@@ -60,10 +69,15 @@ export function groupMessagesIntoAlbums(messages: WhatsAppMessage[]): WhatsAppMe
     if (isImageMsg(current) || isAlbumStub(current)) {
       const senderKey = `${current.fromMe ? 'me' : (current.author || current.from || '')}`;
       const group: WhatsAppMessage[] = [];
+      const seenPhotoIds = new Set<string>();
+      const seenMediaUrls = new Set<string>();
+      const seenThumbnails = new Set<string>();
+
       let j = i;
       let albumStubId: string | null = null;
       let combinedCaption = '';
       let combinedQuotedMsg = current.quotedMsg || null;
+      let captionsCount = 0;
 
       while (j < n) {
         const next = messages[j];
@@ -73,27 +87,51 @@ export function groupMessagesIntoAlbums(messages: WhatsAppMessage[]): WhatsAppMe
         if (nextSender !== senderKey) break;
 
         const timeDiff = Math.abs(next.timestamp - current.timestamp);
-        if (timeDiff > 60000) break;
+        if (timeDiff > MAX_ALBUM_GAP_MS) break;
 
         if (isImageMsg(next)) {
-          group.push(next);
-          if (next.body && !combinedCaption) {
-            combinedCaption = next.body;
+          const hasCaption = Boolean(next.body && next.body.trim());
+          if (hasCaption && captionsCount >= 1) {
+            // Un segundo mensaje con texto explicativo propio no puede pertenecer al mismo álbum.
+            // Rompe la ráfaga aquí para que sea procesado como mensaje o reporte independiente.
+            break;
           }
+
+          // Comprobar si esta imagen ya está en el grupo (deduplicación defensiva)
+          const isDuplicate =
+            seenPhotoIds.has(next.id) ||
+            (Boolean(next.mediaUrl) && seenMediaUrls.has(next.mediaUrl!)) ||
+            (Boolean(next.thumbnail) && seenThumbnails.has(next.thumbnail!));
+
+          if (!isDuplicate) {
+            seenPhotoIds.add(next.id);
+            if (next.mediaUrl) seenMediaUrls.add(next.mediaUrl);
+            if (next.thumbnail) seenThumbnails.add(next.thumbnail);
+            group.push(next);
+
+            if (hasCaption) {
+              captionsCount++;
+              if (!combinedCaption) {
+                combinedCaption = next.body.trim();
+              }
+            }
+          }
+
           if (next.quotedMsg && !combinedQuotedMsg) {
             combinedQuotedMsg = next.quotedMsg;
           }
           j++;
         } else if (isAlbumStub(next)) {
           albumStubId = next.id;
-          if (next.body && !combinedCaption) {
-            combinedCaption = next.body;
+          if (next.body && next.body.trim() && !combinedCaption) {
+            combinedCaption = next.body.trim();
           }
           if (next.quotedMsg && !combinedQuotedMsg) {
             combinedQuotedMsg = next.quotedMsg;
           }
           j++;
         } else {
+          // Cualquier otro tipo de mensaje (chat de texto, audio, video, etc.) ROMPE la ráfaga
           break;
         }
       }
@@ -189,13 +227,16 @@ export function WhatsAppChatView({
 
         const cleanBody = (msg.body || '').trim();
         const sender = msg.fromMe ? 'me' : (msg.author || msg.from || 'unknown');
-        const roundedTs = Math.round(msg.timestamp / 2000);
-        const fingerprint = `${sender}_${roundedTs}_${cleanBody}`;
+        const roundedTs = Math.round(msg.timestamp / 3000); // Bloques de 3s
+        const mediaSignature = msg.thumbnail || msg.mediaUrl || '';
+        const fingerprint = cleanBody
+          ? `${sender}_${roundedTs}_${cleanBody}`
+          : `${sender}_${roundedTs}_${msg.type}_${mediaSignature}`;
 
-        if (cleanBody && renderedFingerprints.has(fingerprint)) {
+        if (fingerprint && renderedFingerprints.has(fingerprint)) {
           return false;
         }
-        if (cleanBody) {
+        if (fingerprint) {
           renderedFingerprints.add(fingerprint);
         }
         return true;

@@ -120,13 +120,16 @@ export function useWhatsAppChat({
 
         const cleanBody = (m.body || '').trim();
         const sender = m.fromMe ? 'me' : (m.author || m.from || 'unknown');
-        const roundedTs = Math.round(m.timestamp / 2000); // Bloques de 2s
-        const fingerprint = `${sender}_${roundedTs}_${cleanBody}`;
+        const roundedTs = Math.round(m.timestamp / 3000); // Bloques de 3s
+        const mediaSignature = m.thumbnail || m.mediaUrl || '';
+        const fingerprint = cleanBody
+          ? `${sender}_${roundedTs}_${cleanBody}`
+          : `${sender}_${roundedTs}_${m.type}_${mediaSignature}`;
 
-        if (cleanBody && seenFingerprints.has(fingerprint)) {
+        if (fingerprint && seenFingerprints.has(fingerprint)) {
           continue;
         }
-        if (cleanBody) {
+        if (fingerprint) {
           seenFingerprints.add(fingerprint);
         }
 
@@ -146,8 +149,12 @@ export function useWhatsAppChat({
         });
 
         // 3. Combinar mensajes reales confirmados con temps aún pendientes
-        const combined = [...uniqueIncoming, ...remainingTemps];
-        combined.sort((a, b) => a.timestamp - b.timestamp);
+        // Si no hay temps pendientes, conservar el orden original exacto de WhatsApp
+        let combined = uniqueIncoming;
+        if (remainingTemps.length > 0) {
+          combined = [...uniqueIncoming, ...remainingTemps];
+          combined.sort((a, b) => a.timestamp - b.timestamp);
+        }
 
         // 4. Deduplicación final defensiva
         const finalSet = new Set<string>();

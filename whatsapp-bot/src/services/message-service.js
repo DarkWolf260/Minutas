@@ -682,13 +682,16 @@ const MAX_MEDIA_CACHE = 100;
 
       const cleanBody = (msg.body || '').trim();
       const sender = msg.fromMe ? 'me' : (msg.author || msg.from || 'unknown');
-      const roundedTs = Math.round(msg.timestamp / 2000); // Bloques de 2s
-      const fingerprint = `${sender}_${roundedTs}_${cleanBody}`;
+      const roundedTs = Math.round(msg.timestamp / 3000); // Bloques de 3s
+      const mediaSignature = msg.thumbnail || msg.mediaUrl || '';
+      const fingerprint = cleanBody
+        ? `${sender}_${roundedTs}_${cleanBody}`
+        : `${sender}_${roundedTs}_${msg.type}_${mediaSignature}`;
 
-      if (cleanBody && finalSeenFingerprints.has(fingerprint)) {
+      if (fingerprint && finalSeenFingerprints.has(fingerprint)) {
         continue;
       }
-      if (cleanBody) {
+      if (fingerprint) {
         finalSeenFingerprints.add(fingerprint);
       }
 
