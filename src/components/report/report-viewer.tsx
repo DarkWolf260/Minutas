@@ -59,7 +59,8 @@ export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewer
     if (!formRef.current) return;
     const content = formRef.current.getRenderedContent();
     const photos = formRef.current.getPhotos() || [];
-    const chatIds = settings?.whatsapp_default_chat_ids || [];
+    const rawChatIds = settings?.whatsapp_default_chat_ids || [];
+    const chatIds = Array.from(new Set(rawChatIds));
     
     if (chatIds.length === 0) {
       toast.error('No has configurado grupos destino.', { 
@@ -91,9 +92,10 @@ export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewer
     if (!report || !formRef.current) return;
     const content = formRef.current.getRenderedContent();
     const photos = formRef.current.getPhotos() || [];
-    const chatIds = targetChatIds && targetChatIds.length > 0
+    const rawChatIds = targetChatIds && targetChatIds.length > 0
       ? targetChatIds
       : (settings?.whatsapp_default_chat_ids || []);
+    const chatIds = Array.from(new Set(rawChatIds));
     
     if (chatIds.length === 0) {
       toast.error('No has seleccionado destinatarios.', { 

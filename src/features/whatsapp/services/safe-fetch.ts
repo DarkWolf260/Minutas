@@ -109,6 +109,14 @@ export async function safeBotFetch(url: string, options: RequestInit = {}): Prom
     try {
       return await fetch(url, enrichedOptions);
     } catch (primaryErr) {
+      // Evitar reintentar métodos no idempotentes (POST, PUT, DELETE, PATCH)
+      // para no duplicar envíos de mensajes si el servidor ya procesó la petición.
+      const method = (options.method || 'GET').toUpperCase();
+      const isIdempotent = ['GET', 'HEAD', 'OPTIONS'].includes(method);
+      if (!isIdempotent) {
+        throw primaryErr;
+      }
+
       const currentSpace = (enrichedOptions as any).targetAddressSpace;
       const fallbackSpace = currentSpace === 'loopback' ? 'local' : 'loopback';
 

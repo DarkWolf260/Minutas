@@ -1,4 +1,4 @@
-import React, { memo, useState, useRef, useEffect } from 'react';
+import React, { memo, useState, useRef, useEffect, useMemo } from 'react';
 import {
   Check,
   CheckCheck,
@@ -17,7 +17,9 @@ import {
   MapPin,
   ExternalLink,
   Video as VideoIcon,
-  Maximize2
+  Maximize2,
+  Layers,
+  Grid
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Report } from '@/lib/types';
@@ -47,6 +49,7 @@ interface WhatsAppChatBubbleProps {
   isBotReady?: boolean;
   isGroup?: boolean;
   contactNameMap?: Map<string, string>;
+  realMessages?: WhatsAppMessage[];
 }
 
 function formatDisplayName(name?: string | null): string {
@@ -207,6 +210,309 @@ function QuotedMessageThumbnail({
   );
 }
 
+function handlePhotoDragStart(e: React.DragEvent, url: string, name?: string) {
+  if (!url) return;
+  e.dataTransfer.setData('text/uri-list', url);
+  e.dataTransfer.setData('text/plain', url);
+  e.dataTransfer.setData('application/json', JSON.stringify({
+    type: 'whatsapp-photo',
+    url,
+    name: name || `whatsapp-${Date.now()}.jpg`
+  }));
+  e.dataTransfer.effectAllowed = 'copy';
+}
+
+function AlbumGridSlot({
+  message,
+  className,
+  onDragStart
+}: {
+  message: WhatsAppMessage;
+  className?: string;
+  onDragStart: (e: React.DragEvent, src: string) => void;
+}) {
+  const { src, isLoading } = useSafeMediaSrc(message.mediaUrl, message.thumbnail);
+  const [imgError, setImgError] = useState(false);
+  const resolvedSrc = src || message.thumbnail || message.mediaUrl || '';
+
+  return (
+    <div className={cn('relative overflow-hidden bg-black/10 dark:bg-black/30 group/slot select-none', className)}>
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/10 dark:bg-white/5 backdrop-blur-xs z-10">
+          <Loader2 className="h-5 w-5 animate-spin text-emerald-600" />
+        </div>
+      )}
+      {resolvedSrc && !imgError ? (
+        <img
+          src={resolvedSrc}
+          alt={message.body || 'Foto de WhatsApp'}
+          draggable={true}
+          onDragStart={(e) => onDragStart(e, resolvedSrc)}
+          onError={() => setImgError(true)}
+          loading="lazy"
+          className={cn(
+            'w-full h-full object-cover transition-transform duration-300 group-hover/slot:scale-105 cursor-grab active:cursor-grabbing',
+            isLoading ? 'opacity-60 blur-xs' : 'opacity-100 blur-none'
+          )}
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground p-3">
+          <ImageIcon className="h-6 w-6 text-muted-foreground/50" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WhatsAppAlbumGrid({
+  messages,
+  onToggleStack
+}: {
+  messages: WhatsAppMessage[];
+  onToggleStack: () => void;
+}) {
+  const count = messages.length;
+
+  const handleDrag = (e: React.DragEvent, src: string) => {
+    handlePhotoDragStart(e, src, `whatsapp-album-${Date.now()}.jpg`);
+  };
+
+  return (
+    <div
+      onClick={onToggleStack}
+      className="relative rounded-xl overflow-hidden cursor-pointer select-none group/album"
+      title="Toca para apilar fotos y arrastrarlas al reporte"
+    >
+      {/* Floating Badge in Top-Left */}
+      <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-black/60 hover:bg-black/80 text-white backdrop-blur-md shadow-md transition-all">
+        <Layers className="h-3 w-3 text-emerald-400" />
+        <span>{count} fotos</span>
+        <span className="text-[9px] opacity-80 hidden sm:inline">• Clic para apilar</span>
+      </div>
+
+      {count === 2 && (
+        <div className="grid grid-cols-2 gap-1 w-full aspect-[16/10] sm:aspect-[16/9]">
+          <AlbumGridSlot message={messages[0]} onDragStart={handleDrag} className="h-full" />
+          <AlbumGridSlot message={messages[1]} onDragStart={handleDrag} className="h-full" />
+        </div>
+      )}
+
+      {count === 3 && (
+        <div className="grid grid-cols-2 gap-1 w-full max-h-96">
+          <AlbumGridSlot
+            message={messages[0]}
+            onDragStart={handleDrag}
+            className="col-span-2 aspect-[16/10]"
+          />
+          <AlbumGridSlot
+            message={messages[1]}
+            onDragStart={handleDrag}
+            className="aspect-square"
+          />
+          <AlbumGridSlot
+            message={messages[2]}
+            onDragStart={handleDrag}
+            className="aspect-square"
+          />
+        </div>
+      )}
+
+      {count === 4 && (
+        <div className="grid grid-cols-2 gap-1 w-full aspect-square max-h-96">
+          {messages.slice(0, 4).map((m, i) => (
+            <AlbumGridSlot
+              key={m.id || i}
+              message={m}
+              onDragStart={handleDrag}
+              className="aspect-square"
+            />
+          ))}
+        </div>
+      )}
+
+      {count >= 5 && (
+        <div className="grid grid-cols-2 gap-1 w-full aspect-square max-h-96">
+          {messages.slice(0, 3).map((m, i) => (
+            <AlbumGridSlot
+              key={m.id || i}
+              message={m}
+              onDragStart={handleDrag}
+              className="aspect-square"
+            />
+          ))}
+          <div className="relative aspect-square overflow-hidden">
+            <AlbumGridSlot
+              message={messages[3]}
+              onDragStart={handleDrag}
+              className="w-full h-full"
+            />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center text-white font-bold text-base sm:text-lg select-none pointer-events-none">
+              +{count - 3}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hover action overlay indicator */}
+      <div className="absolute inset-0 bg-black/15 opacity-0 group-hover/album:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+        <div className="px-3 py-1.5 rounded-full bg-black/75 text-white text-xs font-medium flex items-center gap-1.5 shadow-lg backdrop-blur-xs">
+          <Layers className="h-3.5 w-3.5 text-emerald-400" />
+          <span>Ver {count} fotos apiladas</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AlbumStackedCard({
+  message,
+  index,
+  total,
+  onEnlarge,
+  onDragStart
+}: {
+  message: WhatsAppMessage;
+  index: number;
+  total: number;
+  onEnlarge: (src: string, title?: string) => void;
+  onDragStart: (e: React.DragEvent, src: string) => void;
+}) {
+  const { src, isLoading } = useSafeMediaSrc(message.mediaUrl, message.thumbnail);
+  const [imgError, setImgError] = useState(false);
+  const resolvedSrc = src || message.thumbnail || message.mediaUrl || '';
+
+  return (
+    <div className="relative rounded-xl overflow-hidden bg-black/5 dark:bg-black/30 border border-black/5 dark:border-white/5 group/stackCard">
+      <div
+        onClick={() => onEnlarge(resolvedSrc, message.body || `Foto ${index + 1} de ${total}`)}
+        className="relative max-h-72 sm:max-h-80 w-full overflow-hidden flex items-center justify-center cursor-pointer"
+        title="Clic para ampliar • Arrastra para añadir al reporte"
+      >
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/10 dark:bg-white/5 backdrop-blur-xs z-10">
+            <Loader2 className="h-6 w-6 animate-spin text-emerald-600" />
+          </div>
+        )}
+        {resolvedSrc && !imgError ? (
+          <img
+            src={resolvedSrc}
+            alt={message.body || `Foto ${index + 1}`}
+            draggable={true}
+            onDragStart={(e) => onDragStart(e, resolvedSrc)}
+            onError={() => setImgError(true)}
+            loading="lazy"
+            className={cn(
+              'w-full max-h-72 sm:max-h-80 object-cover transition-transform duration-200 group-hover/stackCard:scale-[1.01] cursor-grab active:cursor-grabbing',
+              isLoading ? 'opacity-60 blur-xs' : 'opacity-100 blur-none'
+            )}
+          />
+        ) : (
+          <div className="py-12 flex flex-col items-center justify-center text-muted-foreground gap-1.5">
+            <ImageIcon className="h-6 w-6 text-emerald-600" />
+            <span className="text-xs italic">Imagen multimedia</span>
+          </div>
+        )}
+
+        {/* Action buttons on hover */}
+        <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5 opacity-90 sm:opacity-0 group-hover/stackCard:opacity-100 transition-opacity">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEnlarge(resolvedSrc, message.body || `Foto ${index + 1} de ${total}`);
+            }}
+            className="p-1.5 rounded-full bg-black/60 hover:bg-black/85 text-white backdrop-blur-md shadow-md transition-all hover:scale-110 active:scale-95"
+            title="Ampliar foto"
+          >
+            <ZoomIn className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (resolvedSrc) {
+                downloadMedia(resolvedSrc, `whatsapp-foto-${index + 1}-${Date.now()}.jpg`);
+              }
+            }}
+            className="p-1.5 rounded-full bg-black/60 hover:bg-black/85 text-white backdrop-blur-md shadow-md transition-all hover:scale-110 active:scale-95"
+            title="Descargar foto"
+          >
+            <Download className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
+        {/* Floating badge */}
+        <div className="absolute bottom-2 left-2 z-10 pointer-events-none">
+          <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-black/60 text-white/90 backdrop-blur-xs flex items-center gap-1 shadow-xs">
+            <span>Foto {index + 1}/{total}</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Caption if this sub-image has specific text */}
+      {message.body && (
+        <div className="p-2 text-xs text-foreground/90 border-t border-black/5 dark:border-white/5">
+          <WhatsAppMarkdown text={message.body} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WhatsAppAlbumStack({
+  messages,
+  senderName,
+  onCollapse,
+  onEnlarge
+}: {
+  messages: WhatsAppMessage[];
+  senderName?: string | null;
+  onCollapse: () => void;
+  onEnlarge: (src: string, title?: string) => void;
+}) {
+  const handleDrag = (e: React.DragEvent, src: string, idx: number) => {
+    handlePhotoDragStart(e, src, `whatsapp-foto-${idx + 1}-${Date.now()}.jpg`);
+  };
+
+  return (
+    <div className="flex flex-col w-full select-none">
+      {/* Top Header of Stacked View */}
+      <div className="flex items-center justify-between gap-2 px-1 py-1 mb-2 border-b border-black/10 dark:border-white/10 text-xs">
+        <div className="flex items-center gap-1.5 font-semibold text-foreground/90">
+          <Layers className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+          <span>{messages.length} fotos apiladas</span>
+        </div>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onCollapse();
+          }}
+          className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300 hover:text-emerald-800 dark:hover:text-emerald-200 flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 hover:bg-emerald-500/25 transition-colors"
+          title="Volver a vista de mosaico"
+        >
+          <Grid className="h-3 w-3" />
+          <span>Mosaico</span>
+        </button>
+      </div>
+
+      {/* Column of Stacked Cards */}
+      <div className="flex flex-col gap-2.5">
+        {messages.map((subMsg, idx) => (
+          <AlbumStackedCard
+            key={subMsg.id || idx}
+            message={subMsg}
+            index={idx}
+            total={messages.length}
+            onEnlarge={onEnlarge}
+            onDragStart={(e, src) => handleDrag(e, src, idx)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function WhatsAppImagePreview({
   mediaUrl,
   thumbnail,
@@ -252,10 +558,12 @@ function WhatsAppImagePreview({
       <img
         src={src}
         alt={alt || 'Imagen de WhatsApp'}
+        draggable={true}
+        onDragStart={(e) => handlePhotoDragStart(e, src, `whatsapp-${Date.now()}.jpg`)}
         onError={() => setImgError(true)}
         loading="lazy"
         className={cn(
-          'w-full max-h-80 sm:max-h-96 object-cover rounded-xl transition-all duration-300',
+          'w-full max-h-80 sm:max-h-96 object-cover rounded-xl transition-all duration-300 cursor-grab active:cursor-grabbing',
           'group-hover:scale-[1.015]',
           isLoading ? 'opacity-60 blur-xs' : 'opacity-100 blur-none'
         )}
@@ -776,11 +1084,13 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
   onSendReportToChat,
   isBotReady,
   isGroup,
-  contactNameMap
+  contactNameMap,
+  realMessages
 }: WhatsAppChatBubbleProps) {
   const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string | null>(null);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = useState<string>('');
+  const [isStacked, setIsStacked] = useState<boolean>(false);
 
   // Scenario 1: Report / Novedad bubble
   if (report) {
@@ -1019,363 +1329,433 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
 
     const isVideo = !isRevoked && message.type === 'video';
 
+    const isAlbum = Boolean(
+      !isRevoked &&
+      message.type === 'album' &&
+      message.albumMessages &&
+      message.albumMessages.length > 1
+    );
+
     const isImage =
       !isRevoked &&
       !isLocation &&
       !isVideo &&
+      !isAlbum &&
       (message.type === 'image' ||
         message.type === 'sticker' ||
-        (message.hasMedia && !['ptt', 'audio', 'document', 'video', 'call_log', 'revoked', 'location', 'live_location'].includes(message.type)));
-    const isAudio = !isRevoked && (message.type === 'ptt' || message.type === 'audio');
-    const isDocument = !isRevoked && message.type === 'document';
+    (message.hasMedia && !['ptt', 'audio', 'document', 'video', 'call_log', 'revoked', 'location', 'live_location', 'album'].includes(message.type)));
+const isAudio = !isRevoked && (message.type === 'ptt' || message.type === 'audio');
+const isDocument = !isRevoked && message.type === 'document';
 
-    const hasMediaPreview = Boolean(message.mediaUrl || message.thumbnail);
+const hasMediaPreview = Boolean(message.mediaUrl || message.thumbnail || isAlbum);
 
-    // Resolver nombre del remitente dando prioridad a la libreta de contactos (contactNameMap)
-    const authorKey = message.author || message.from;
-    const authorNum = authorKey ? authorKey.split('@')[0] : '';
-    const resolvedFromMap =
-      (authorKey && contactNameMap?.get(authorKey)) ||
-      (authorNum && contactNameMap?.get(`${authorNum}@c.us`)) ||
-      (authorNum && contactNameMap?.get(`${authorNum}@lid`)) ||
-      (authorNum && contactNameMap?.get(authorNum));
+// Resolver nombre del remitente dando prioridad a la libreta de contactos (contactNameMap)
+const authorKey = message.author || message.from;
+const authorNum = authorKey ? authorKey.split('@')[0] : '';
+const resolvedFromMap =
+  (authorKey && contactNameMap?.get(authorKey)) ||
+  (authorNum && contactNameMap?.get(`${authorNum}@c.us`)) ||
+  (authorNum && contactNameMap?.get(`${authorNum}@lid`)) ||
+  (authorNum && contactNameMap?.get(authorNum));
 
-    const effectiveSenderName = resolvedFromMap || message.senderName;
+const effectiveSenderName = resolvedFromMap || message.senderName;
 
-    // Resolver nombre del remitente del mensaje citado dando prioridad a la libreta de contactos
-    const quotedAuthorKey = message.quotedMsg?.author || message.quotedMsg?.from || '';
-    const quotedAuthorNum = quotedAuthorKey ? quotedAuthorKey.split('@')[0] : '';
-    const resolvedQuotedFromMap =
-      (quotedAuthorKey && contactNameMap?.get(quotedAuthorKey)) ||
-      (quotedAuthorNum && contactNameMap?.get(`${quotedAuthorNum}@c.us`)) ||
-      (quotedAuthorNum && contactNameMap?.get(`${quotedAuthorNum}@lid`)) ||
-      (quotedAuthorNum && contactNameMap?.get(quotedAuthorNum));
+// Resolver nombre del remitente del mensaje citado dando prioridad a la libreta de contactos
+const quotedAuthorKey = message.quotedMsg?.author || message.quotedMsg?.from || '';
+const quotedAuthorNum = quotedAuthorKey ? quotedAuthorKey.split('@')[0] : '';
+const resolvedQuotedFromMap =
+  (quotedAuthorKey && contactNameMap?.get(quotedAuthorKey)) ||
+  (quotedAuthorNum && contactNameMap?.get(`${quotedAuthorNum}@c.us`)) ||
+  (quotedAuthorNum && contactNameMap?.get(`${quotedAuthorNum}@lid`)) ||
+  (quotedAuthorNum && contactNameMap?.get(quotedAuthorNum));
 
-    let candidateQuotedSender = resolvedQuotedFromMap || message.quotedMsg?.senderName;
-    if (candidateQuotedSender && candidateQuotedSender.includes('@lid')) {
-      candidateQuotedSender = (quotedAuthorKey && contactNameMap?.get(quotedAuthorKey)) || 'Contacto';
-    }
-    const effectiveQuotedSenderName = formatDisplayName(candidateQuotedSender) || 'Contacto';
+let candidateQuotedSender = resolvedQuotedFromMap || message.quotedMsg?.senderName;
+if (candidateQuotedSender && candidateQuotedSender.includes('@lid')) {
+  candidateQuotedSender = (quotedAuthorKey && contactNameMap?.get(quotedAuthorKey)) || 'Contacto';
+}
+const effectiveQuotedSenderName = formatDisplayName(candidateQuotedSender) || 'Contacto';
 
-    const isMediaCard = isAudio || isLocation;
+const isMediaCard = isAudio || isLocation;
 
-    return (
-      <>
-        <div
-          className={cn(
-            'flex my-1 px-2 group',
-            isFromMe ? 'justify-end' : 'justify-start'
-          )}
-        >
-          <div
-            className={cn(
-              'relative rounded-2xl p-2.5 shadow-sm border text-xs sm:text-sm',
-              isMediaCard ? 'w-72 sm:w-80 max-w-[88%]' : 'max-w-[85%] sm:max-w-[75%]',
-              isRevoked && 'opacity-85 select-none',
-              isFromMe
-                ? 'bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] rounded-tr-xs border-emerald-500/20'
-                : 'bg-white dark:bg-[#202c33] text-[#111b21] dark:text-[#e9edef] rounded-tl-xs border-border/40'
-            )}
-          >
-            {/* Sender name for group chats only (incoming only, non-revoked) */}
-            {!isFromMe && isGroup && effectiveSenderName && !isRevoked && (
-              <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">
-                {formatDisplayName(effectiveSenderName)}
-              </div>
-            )}
+const isQuotedAlbum = Boolean(
+  message.quotedMsg &&
+  (message.quotedMsg.type === 'album' ||
+    (message.quotedMsg.albumCount && message.quotedMsg.albumCount > 1))
+);
 
-            {/* Mensaje Eliminado (Revoked) */}
-            {isRevoked ? (
-              <div className="flex items-center gap-1.5 py-0.5 text-muted-foreground italic text-xs select-none">
-                <Ban className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                <span>{isFromMe ? 'Eliminaste este mensaje' : 'Este mensaje fue eliminado'}</span>
-              </div>
-            ) : (
-              <>
-                {/* Mensaje Respondido / Citado (Quoted Message) */}
-                {message.quotedMsg && (
-                  <div
-                    className={cn(
-                      'mb-1.5 p-1.5 sm:p-2 rounded-xl border-l-[3.5px] text-xs flex items-center justify-between gap-2 overflow-hidden select-none transition-colors',
-                      isFromMe
-                        ? 'bg-black/5 dark:bg-black/25 border-emerald-600 dark:border-emerald-400'
-                        : 'bg-black/5 dark:bg-black/25 border-emerald-600 dark:border-emerald-400'
-                    )}
-                  >
-                    <div className="flex-1 min-w-0 pr-1">
-                      {/* Remitente del mensaje citado */}
-                      <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 truncate">
-                        {message.quotedMsg.fromMe ? 'Tú' : effectiveQuotedSenderName}
-                      </div>
+const quotedAlbumInfo = useMemo(() => {
+  if (!message.quotedMsg || !isQuotedAlbum) return null;
+  const qId = message.quotedMsg.id;
 
-                      {/* Contenido / extracto del mensaje citado */}
-                      <div className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
-                        {message.quotedMsg.isRevoked ? (
-                          <span className="italic flex items-center gap-1 text-muted-foreground">
-                            <Ban className="h-3 w-3 shrink-0" />
-                            Este mensaje fue eliminado
+  let album = realMessages?.find(m => m.id === qId);
+  if (!album && realMessages) {
+    album = realMessages.find(m => m.albumMessages?.some(sm => sm.id === qId));
+  }
+  if (!album && realMessages) {
+    const qAuthor = message.quotedMsg.author || message.quotedMsg.from;
+    album = realMessages.find(m => {
+      const mAuthor = m.author || m.from;
+      return (m.type === 'album' || (m.albumMessages && m.albumMessages.length > 0)) &&
+        mAuthor === qAuthor;
+    });
+  }
+
+  const count = album?.albumMessages?.length || message.quotedMsg.albumCount || 3;
+  const thumb = album?.albumMessages?.[0]?.thumbnail || album?.thumbnail || message.quotedMsg.thumbnail;
+  const mediaUrl = album?.albumMessages?.[0]?.mediaUrl || album?.mediaUrl || message.quotedMsg.mediaUrl;
+  const label = message.quotedMsg.body && !message.quotedMsg.body.includes(';') ? message.quotedMsg.body : `${count} fotos`;
+
+  return { count, thumb, mediaUrl, label };
+}, [message.quotedMsg, isQuotedAlbum, realMessages]);
+
+return (
+  <>
+    <div
+      className={cn(
+        'flex my-1 px-2 group',
+        isFromMe ? 'justify-end' : 'justify-start'
+      )}
+    >
+      <div
+        className={cn(
+          'relative rounded-2xl p-2.5 shadow-sm border text-xs sm:text-sm',
+          isAlbum ? 'w-80 sm:w-96 max-w-[92%]' : isMediaCard ? 'w-72 sm:w-80 max-w-[88%]' : 'max-w-[85%] sm:max-w-[75%]',
+          isRevoked && 'opacity-85 select-none',
+          isFromMe
+            ? 'bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] rounded-tr-xs border-emerald-500/20'
+            : 'bg-white dark:bg-[#202c33] text-[#111b21] dark:text-[#e9edef] rounded-tl-xs border-border/40'
+        )}
+      >
+        {/* Sender name for group chats only (incoming only, non-revoked) */}
+        {!isFromMe && isGroup && effectiveSenderName && !isRevoked && (
+          <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">
+            {formatDisplayName(effectiveSenderName)}
+          </div>
+        )}
+
+        {/* Mensaje Eliminado (Revoked) */}
+        {isRevoked ? (
+          <div className="flex items-center gap-1.5 py-0.5 text-muted-foreground italic text-xs select-none">
+            <Ban className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span>{isFromMe ? 'Eliminaste este mensaje' : 'Este mensaje fue eliminado'}</span>
+          </div>
+        ) : (
+          <>
+            {/* Mensaje Respondido / Citado (Quoted Message) */}
+            {message.quotedMsg && (
+              <div
+                className={cn(
+                  'mb-1.5 p-1.5 sm:p-2 rounded-xl border-l-[3.5px] text-xs flex items-center justify-between gap-2 overflow-hidden select-none transition-colors',
+                  isFromMe
+                    ? 'bg-black/5 dark:bg-black/25 border-emerald-600 dark:border-emerald-400'
+                    : 'bg-black/5 dark:bg-black/25 border-emerald-600 dark:border-emerald-400'
+                )}
+              >
+                <div className="flex-1 min-w-0 pr-1">
+                  {/* Remitente del mensaje citado */}
+                  <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 truncate">
+                    {message.quotedMsg.fromMe ? 'Tú' : effectiveQuotedSenderName}
+                  </div>
+
+                  {/* Contenido / extracto del mensaje citado */}
+                  <div className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                    {message.quotedMsg.isRevoked ? (
+                      <span className="italic flex items-center gap-1 text-muted-foreground">
+                        <Ban className="h-3 w-3 shrink-0" />
+                        Este mensaje fue eliminado
+                      </span>
+                    ) : (
+                      <>
+                        {message.quotedMsg.location ? (
+                          <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-300 font-medium truncate">
+                            <MapPin className="h-3 w-3 shrink-0 text-red-500" />
+                            <span className="truncate">
+                              {message.quotedMsg.location.isLive
+                                ? 'Ubicación en tiempo real'
+                                : message.quotedMsg.location.name || message.quotedMsg.location.description || 'Ubicación'}
+                            </span>
+                          </span>
+                        ) : isQuotedAlbum ? (
+                          <span className="flex items-center gap-1.5 font-medium text-foreground/80 dark:text-foreground/90 truncate">
+                            <ImageIcon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span>{quotedAlbumInfo?.label || message.quotedMsg.body || '3 fotos'}</span>
                           </span>
                         ) : (
                           <>
-                            {message.quotedMsg.location ? (
-                              <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-300 font-medium truncate">
-                                <MapPin className="h-3 w-3 shrink-0 text-red-500" />
-                                <span className="truncate">
-                                  {message.quotedMsg.location.isLive
-                                    ? 'Ubicación en tiempo real'
-                                    : message.quotedMsg.location.name || message.quotedMsg.location.description || 'Ubicación'}
-                                </span>
+                            {message.quotedMsg.type === 'video' && !message.quotedMsg.body && (
+                              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                                <VideoIcon className="h-3 w-3 shrink-0" />
+                                <span>Video</span>
                               </span>
-                            ) : (
-                              <>
-                                {message.quotedMsg.type === 'video' && !message.quotedMsg.body && (
-                                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                                    <VideoIcon className="h-3 w-3 shrink-0" />
-                                    <span>Video</span>
-                                  </span>
-                                )}
-                                {message.quotedMsg.hasMedia && message.quotedMsg.type !== 'video' && !message.quotedMsg.body && (
-                                  <span className="flex items-center gap-1">
-                                    <ImageIcon className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                                    <span>Foto</span>
-                                  </span>
-                                )}
-                                {message.quotedMsg.body && !isBase64ImageString(message.quotedMsg.body) && (
-                                  <WhatsAppMarkdown text={message.quotedMsg.body} inline className="truncate" />
-                                )}
-                              </>
+                            )}
+                            {message.quotedMsg.hasMedia && message.quotedMsg.type !== 'video' && !message.quotedMsg.body && (
+                              <span className="flex items-center gap-1">
+                                <ImageIcon className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                <span>Foto</span>
+                              </span>
+                            )}
+                            {message.quotedMsg.body && !isBase64ImageString(message.quotedMsg.body) && (
+                              <WhatsAppMarkdown text={message.quotedMsg.body} inline className="truncate" />
                             )}
                           </>
                         )}
-                      </div>
-                    </div>
-
-                    {/* Miniatura si el mensaje respondido tenía foto */}
-                    {message.quotedMsg.hasMedia && (message.quotedMsg.thumbnail || message.quotedMsg.mediaUrl) && (
-                      <QuotedMessageThumbnail
-                        quotedMsg={message.quotedMsg}
-                        onClick={(e, resolvedSrc) => {
-                          e.stopPropagation();
-                          const target = resolvedSrc || message.quotedMsg?.thumbnail || message.quotedMsg?.mediaUrl;
-                          if (target) {
-                            setSelectedPhotoUrl(target);
-                            setPreviewTitle(message.quotedMsg?.body || 'Foto del mensaje respondido');
-                          }
-                        }}
-                      />
+                      </>
                     )}
                   </div>
-                )}
+                </div>
 
-                {/* Render Imagen real */}
-                {isImage && (
-                  <div className="mb-1.5">
-                    <WhatsAppImagePreview
-                      mediaUrl={message.mediaUrl}
-                      thumbnail={message.thumbnail}
-                      alt={message.body || 'Imagen de WhatsApp'}
-                      onClick={(resolvedSrc) => {
-                        const target = resolvedSrc || message.thumbnail || message.mediaUrl;
-                        if (target) {
-                          setSelectedPhotoUrl(target);
-                          setPreviewTitle(message.body || (effectiveSenderName ? `Foto de ${effectiveSenderName}` : 'Foto de WhatsApp'));
-                        }
-                      }}
-                    />
-                  </div>
-                )}
-
-                {/* Render Video real */}
-                {isVideo && (
-                  <div className="mb-1.5">
-                    <WhatsAppVideoPlayer
-                      mediaUrl={message.mediaUrl}
-                      thumbnail={message.thumbnail}
-                      onExpand={(resolvedSrc) => {
-                        const target = resolvedSrc || message.thumbnail || message.mediaUrl;
-                        if (target) {
-                          setSelectedVideoUrl(target);
-                          setPreviewTitle(message.body || (effectiveSenderName ? `Video de ${effectiveSenderName}` : 'Video de WhatsApp'));
-                        }
-                      }}
-                    />
-                  </div>
-                )}
-
-                {/* Ubicación compartida */}
-                {isLocation && message.location && (
-                  <WhatsAppLocationCard
-                    location={message.location}
-                    thumbnail={
-                      message.thumbnail ||
-                      message.mediaUrl ||
-                      (message.body && isBase64ImageString(message.body)
-                        ? (message.body.startsWith('data:') ? message.body : `data:image/jpeg;base64,${message.body.trim()}`)
-                        : null)
-                    }
+                  {/* Miniatura si el mensaje respondido tenía foto o álbum */ }
+                    {(message.quotedMsg.hasMedia || isQuotedAlbum) && (
+                  <QuotedMessageThumbnail
+                    quotedMsg={{
+                      ...message.quotedMsg,
+                      thumbnail: quotedAlbumInfo?.thumb || message.quotedMsg.thumbnail,
+                      mediaUrl: quotedAlbumInfo?.mediaUrl || message.quotedMsg.mediaUrl
+                    }}
+                    onClick={(e, resolvedSrc) => {
+                      e.stopPropagation();
+                      const target = resolvedSrc || quotedAlbumInfo?.thumb || quotedAlbumInfo?.mediaUrl || message.quotedMsg?.thumbnail || message.quotedMsg?.mediaUrl;
+                      if (target) {
+                        setSelectedPhotoUrl(target);
+                        setPreviewTitle(quotedAlbumInfo?.label || message.quotedMsg?.body || 'Foto del grupo respondido');
+                      }
+                    }}
                   />
                 )}
-
-                {/* Audio / Nota de voz */}
-                {isAudio && (
-                  <WhatsAppAudioPlayer
-                    mediaUrl={message.mediaUrl}
-                    isFromMe={isFromMe}
-                  />
-                )}
-
-                {/* Documento */}
-                {isDocument && (
-                  <div className="flex items-center gap-2.5 p-2.5 mb-1.5 rounded-xl bg-black/5 dark:bg-black/20 text-xs">
-                    <div className="p-2 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                      <FileText className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">{message.body || 'Documento adjunto'}</div>
-                      <span className="text-[10px] text-muted-foreground">Documento</span>
-                    </div>
-                    {message.mediaUrl && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 rounded-full shrink-0"
-                        onClick={() => downloadImage(message.mediaUrl!, 'documento')}
-                        title="Descargar documento"
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                  </div>
-                )}
-
-                {/* Placeholder fallback para otros tipos no reconocidos */}
-                {message.hasMedia && !isImage && !isVideo && !isAudio && !isDocument && !isLocation && (
-                  <div className="flex items-center gap-2 p-2 mb-1.5 rounded-lg bg-black/5 dark:bg-black/20 text-xs">
-                    <ImageIcon className="h-4 w-4 text-emerald-600" />
-                    <span className="italic text-muted-foreground">Archivo multimedia</span>
-                  </div>
-                )}
-
-                {/* Message text / caption */}
-                {message.body &&
-                  !isBase64ImageString(message.body) &&
-                  (!isLocation ||
-                    (message.body !== message.location?.name &&
-                      message.body !== message.location?.description &&
-                      message.body?.trim() !== `${message.location?.latitude}, ${message.location?.longitude}` &&
-                      message.body?.trim() !== `${message.location?.latitude},${message.location?.longitude}`)) && (
-                    <div className="pr-2">
-                      <WhatsAppMarkdown text={message.body} />
-                    </div>
-                  )}
-              </>
+              </div>
             )}
 
-            {/* Timestamp and delivery ticks */}
-            <div
-              className={cn(
-                'flex items-center justify-end gap-1 mt-1 text-[10px]',
-                !message.body && !message.quotedMsg && isImage && hasMediaPreview
-                  ? 'absolute bottom-2 right-2 bg-black/60 text-white px-2 py-0.5 rounded-full backdrop-blur-xs shadow-sm z-10'
-                  : 'text-muted-foreground dark:text-white/80'
+            {/* Render Álbum / Mosaico de fotos */}
+            {isAlbum && message.albumMessages && (
+              <div className="mb-1.5">
+                {!isStacked ? (
+                  <WhatsAppAlbumGrid
+                    messages={message.albumMessages}
+                    onToggleStack={() => setIsStacked(true)}
+                  />
+                ) : (
+                  <WhatsAppAlbumStack
+                    messages={message.albumMessages}
+                    senderName={effectiveSenderName}
+                    onCollapse={() => setIsStacked(false)}
+                    onEnlarge={(src, title) => {
+                      setSelectedPhotoUrl(src);
+                      setPreviewTitle(title || `Foto de ${effectiveSenderName || 'WhatsApp'}`);
+                    }}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Render Imagen real */}
+            {isImage && (
+              <div className="mb-1.5">
+                <WhatsAppImagePreview
+                  mediaUrl={message.mediaUrl}
+                  thumbnail={message.thumbnail}
+                  alt={message.body || 'Imagen de WhatsApp'}
+                  onClick={(resolvedSrc) => {
+                    const target = resolvedSrc || message.thumbnail || message.mediaUrl;
+                    if (target) {
+                      setSelectedPhotoUrl(target);
+                      setPreviewTitle(message.body || (effectiveSenderName ? `Foto de ${effectiveSenderName}` : 'Foto de WhatsApp'));
+                    }
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Render Video real */}
+            {isVideo && (
+              <div className="mb-1.5">
+                <WhatsAppVideoPlayer
+                  mediaUrl={message.mediaUrl}
+                  thumbnail={message.thumbnail}
+                  onExpand={(resolvedSrc) => {
+                    const target = resolvedSrc || message.thumbnail || message.mediaUrl;
+                    if (target) {
+                      setSelectedVideoUrl(target);
+                      setPreviewTitle(message.body || (effectiveSenderName ? `Video de ${effectiveSenderName}` : 'Video de WhatsApp'));
+                    }
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Ubicación compartida */}
+            {isLocation && message.location && (
+              <WhatsAppLocationCard
+                location={message.location}
+                thumbnail={
+                  message.thumbnail ||
+                  message.mediaUrl ||
+                  (message.body && isBase64ImageString(message.body)
+                    ? (message.body.startsWith('data:') ? message.body : `data:image/jpeg;base64,${message.body.trim()}`)
+                    : null)
+                }
+              />
+            )}
+
+            {/* Audio / Nota de voz */}
+            {isAudio && (
+              <WhatsAppAudioPlayer
+                mediaUrl={message.mediaUrl}
+                isFromMe={isFromMe}
+              />
+            )}
+
+            {/* Documento */}
+            {isDocument && (
+              <div className="flex items-center gap-2.5 p-2.5 mb-1.5 rounded-xl bg-black/5 dark:bg-black/20 text-xs">
+                <div className="p-2 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{message.body || 'Documento adjunto'}</div>
+                  <span className="text-[10px] text-muted-foreground">Documento</span>
+                </div>
+                {message.mediaUrl && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-full shrink-0"
+                    onClick={() => downloadImage(message.mediaUrl!, 'documento')}
+                    title="Descargar documento"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Placeholder fallback para otros tipos no reconocidos */}
+            {message.hasMedia && !isImage && !isVideo && !isAudio && !isDocument && !isLocation && (
+              <div className="flex items-center gap-2 p-2 mb-1.5 rounded-lg bg-black/5 dark:bg-black/20 text-xs">
+                <ImageIcon className="h-4 w-4 text-emerald-600" />
+                <span className="italic text-muted-foreground">Archivo multimedia</span>
+              </div>
+            )}
+
+            {/* Message text / caption */}
+            {message.body &&
+              !isBase64ImageString(message.body) &&
+              (!isLocation ||
+                (message.body !== message.location?.name &&
+                  message.body !== message.location?.description &&
+                  message.body?.trim() !== `${message.location?.latitude}, ${message.location?.longitude}` &&
+                  message.body?.trim() !== `${message.location?.latitude},${message.location?.longitude}`)) && (
+                <div className="pr-2">
+                  <WhatsAppMarkdown text={message.body} />
+                </div>
               )}
-            >
-              <span>{formattedTime}</span>
-              {isFromMe && !isRevoked && (
-                <MessageStatusTicks ack={message.ack} />
-              )}
-            </div>
-          </div>
+          </>
+        )}
+
+        {/* Timestamp and delivery ticks */}
+        <div
+          className={cn(
+            'flex items-center justify-end gap-1 mt-1 text-[10px]',
+                !message.body && !message.quotedMsg && (isImage || (isAlbum && !isStacked)) && hasMediaPreview
+              ? 'absolute bottom-2 right-2 bg-black/60 text-white px-2 py-0.5 rounded-full backdrop-blur-xs shadow-sm z-10'
+              : 'text-muted-foreground dark:text-white/80'
+          )}
+        >
+          <span>{formattedTime}</span>
+          {isFromMe && !isRevoked && (
+            <MessageStatusTicks ack={message.ack} />
+          )}
         </div>
+      </div>
+    </div>
 
-        {/* Lightbox Dialog for Real WhatsApp Images */}
-        <Dialog open={!!selectedPhotoUrl} onOpenChange={(open) => !open && setSelectedPhotoUrl(null)}>
-          <DialogContent hideCloseButton className="max-w-[95vw] md:max-w-4xl p-0 border border-muted/20 bg-background/95 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl">
-            <DialogHeader className="p-3.5 border-b border-border/50 bg-background/80 backdrop-blur-md flex flex-row items-center justify-between">
-              <DialogTitle className="text-xs sm:text-sm font-semibold truncate pr-4">
-                {previewTitle || 'Vista previa de imagen'}
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                {previewTitle || 'Vista previa ampliada de imagen de WhatsApp'}
-              </DialogDescription>
-              <div className="flex items-center gap-1">
-                {selectedPhotoUrl && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 rounded-full hover:bg-muted"
-                    onClick={() => downloadImage(selectedPhotoUrl, `whatsapp-${Date.now()}.jpg`)}
-                    title="Descargar imagen"
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full hover:bg-muted"
-                  onClick={() => setSelectedPhotoUrl(null)}
-                  title="Cerrar"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </DialogHeader>
-            <div className="p-4 flex items-center justify-center bg-black/40 min-h-[50vh] max-h-[80vh] overflow-hidden">
-              {selectedPhotoUrl && (
-                <LightboxPhotoPreview src={selectedPhotoUrl} title={previewTitle || 'Imagen ampliada'} />
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
+    {/* Lightbox Dialog for Real WhatsApp Images */}
+    <Dialog open={!!selectedPhotoUrl} onOpenChange={(open) => !open && setSelectedPhotoUrl(null)}>
+      <DialogContent hideCloseButton className="max-w-[95vw] md:max-w-4xl p-0 border border-muted/20 bg-background/95 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl">
+        <DialogHeader className="p-3.5 border-b border-border/50 bg-background/80 backdrop-blur-md flex flex-row items-center justify-between">
+          <DialogTitle className="text-xs sm:text-sm font-semibold truncate pr-4">
+            {previewTitle || 'Vista previa de imagen'}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            {previewTitle || 'Vista previa ampliada de imagen de WhatsApp'}
+          </DialogDescription>
+          <div className="flex items-center gap-1">
+            {selectedPhotoUrl && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full hover:bg-muted"
+                onClick={() => downloadImage(selectedPhotoUrl, `whatsapp-${Date.now()}.jpg`)}
+                title="Descargar imagen"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full hover:bg-muted"
+              onClick={() => setSelectedPhotoUrl(null)}
+              title="Cerrar"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogHeader>
+        <div className="p-4 flex items-center justify-center bg-black/40 min-h-[50vh] max-h-[80vh] overflow-hidden">
+          {selectedPhotoUrl && (
+            <LightboxPhotoPreview src={selectedPhotoUrl} title={previewTitle || 'Imagen ampliada'} />
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
 
-        {/* Lightbox Dialog for Real WhatsApp Videos */}
-        <Dialog open={!!selectedVideoUrl} onOpenChange={(open) => !open && setSelectedVideoUrl(null)}>
-          <DialogContent hideCloseButton className="max-w-[95vw] md:max-w-4xl p-0 border border-muted/20 bg-background/95 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl">
-            <DialogHeader className="p-3.5 border-b border-border/50 bg-background/80 backdrop-blur-md flex flex-row items-center justify-between">
-              <DialogTitle className="text-xs sm:text-sm font-semibold truncate pr-4">
-                {previewTitle || 'Reproductor de video'}
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                {previewTitle || 'Reproductor de video de WhatsApp'}
-              </DialogDescription>
-              <div className="flex items-center gap-1">
-                {selectedVideoUrl && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 rounded-full hover:bg-muted"
-                    onClick={() => downloadImage(selectedVideoUrl, `whatsapp-${Date.now()}.mp4`)}
-                    title="Descargar video"
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full hover:bg-muted"
-                  onClick={() => setSelectedVideoUrl(null)}
-                  title="Cerrar"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </DialogHeader>
-            <div className="p-4 flex items-center justify-center bg-black/70 min-h-[50vh] max-h-[80vh] overflow-hidden">
-              {selectedVideoUrl && (
-                <LightboxVideoPreview src={selectedVideoUrl} />
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-      </>
-    );
+    {/* Lightbox Dialog for Real WhatsApp Videos */}
+    <Dialog open={!!selectedVideoUrl} onOpenChange={(open) => !open && setSelectedVideoUrl(null)}>
+      <DialogContent hideCloseButton className="max-w-[95vw] md:max-w-4xl p-0 border border-muted/20 bg-background/95 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl">
+        <DialogHeader className="p-3.5 border-b border-border/50 bg-background/80 backdrop-blur-md flex flex-row items-center justify-between">
+          <DialogTitle className="text-xs sm:text-sm font-semibold truncate pr-4">
+            {previewTitle || 'Reproductor de video'}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            {previewTitle || 'Reproductor de video de WhatsApp'}
+          </DialogDescription>
+          <div className="flex items-center gap-1">
+            {selectedVideoUrl && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full hover:bg-muted"
+                onClick={() => downloadImage(selectedVideoUrl, `whatsapp-${Date.now()}.mp4`)}
+                title="Descargar video"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full hover:bg-muted"
+              onClick={() => setSelectedVideoUrl(null)}
+              title="Cerrar"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogHeader>
+        <div className="p-4 flex items-center justify-center bg-black/70 min-h-[50vh] max-h-[80vh] overflow-hidden">
+          {selectedVideoUrl && (
+            <LightboxVideoPreview src={selectedVideoUrl} />
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  </>
+);
   }
 
-  return null;
+return null;
 });

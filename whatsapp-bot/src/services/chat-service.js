@@ -133,7 +133,23 @@ function isRealConversationId(id) {
   return lower.endsWith('@c.us') || lower.endsWith('@g.us') || lower.endsWith('@lid') || lower.endsWith('@s.whatsapp.net');
 }
 
+let inFlightFetchChatsPromise = null;
+
 async function fetchChats(requestedWorkspace) {
+  if (inFlightFetchChatsPromise) {
+    return inFlightFetchChatsPromise;
+  }
+  inFlightFetchChatsPromise = (async () => {
+    try {
+      return await executeFetchChats(requestedWorkspace);
+    } finally {
+      inFlightFetchChatsPromise = null;
+    }
+  })();
+  return inFlightFetchChatsPromise;
+}
+
+async function executeFetchChats(requestedWorkspace) {
   if (state.activeWorkspace && requestedWorkspace && requestedWorkspace !== state.activeWorkspace) {
     const error = new Error(`El bot está asignado exclusivamente al área de trabajo "${state.activeWorkspace}". No disponible en "${requestedWorkspace}".`);
     error.status = 403;
@@ -206,7 +222,19 @@ async function fetchChats(requestedWorkspace) {
             return lower.endsWith('@c.us') || lower.endsWith('@g.us') || lower.endsWith('@lid') || lower.endsWith('@s.whatsapp.net');
           }
 
-          return chatCollection
+          // Filtrar y ordenar los más recientes PRIMERO, limitando a los 150 chats activos
+          // Esto evita recorrer miles de chats antiguos y garantiza una respuesta ultra rápida (<100ms)
+          const modelsArray = (Array.isArray(chatCollection) ? chatCollection : []);
+          const topChats = modelsArray
+            .filter(c => {
+              if (!c) return false;
+              const id = c.id?._serialized || (typeof c.id === 'string' ? c.id : '');
+              return isValidId(id);
+            })
+            .sort((a, b) => (b.t || b.conversationTimestamp || 0) - (a.t || a.conversationTimestamp || 0))
+            .slice(0, 150);
+
+          return topChats
             .map(c => {
               if (!c) return null;
               const id = c.id?._serialized || (typeof c.id === 'string' ? c.id : '');
@@ -289,7 +317,7 @@ async function fetchChats(requestedWorkspace) {
         }
       });
 
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('evaluate timeout')), 3500));
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('evaluate timeout')), 15000));
       const rawExtractedChats = await Promise.race([evalPromise, timeoutPromise]);
 
       if (Array.isArray(rawExtractedChats) && rawExtractedChats.length > 0) {

@@ -31,6 +31,7 @@ export interface QuotedWhatsAppMessage {
   thumbnail?: string | null;
   isRevoked?: boolean;
   location?: WhatsAppLocation | null;
+  albumCount?: number;
 }
 
 export interface WhatsAppMessage {
@@ -51,6 +52,7 @@ export interface WhatsAppMessage {
   hasQuotedMsg?: boolean;
   quotedMsg?: QuotedWhatsAppMessage | null;
   location?: WhatsAppLocation | null;
+  albumMessages?: WhatsAppMessage[];
 }
 
 export interface WhatsAppStatus {

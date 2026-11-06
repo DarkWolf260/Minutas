@@ -107,15 +107,66 @@ export function useWhatsAppChat({
     if (!silent) setIsLoadingMessages(true);
     try {
       const msgs = await botRef.current.fetchChatMessages(activeChatId, 40);
+
+      // 1. Deduplicar mensajes entrantes por ID y huella
+      const seenIds = new Set<string>();
+      const seenFingerprints = new Set<string>();
+      const uniqueIncoming: WhatsAppMessage[] = [];
+
+      for (const m of msgs) {
+        if (!m || !m.id) continue;
+        if (seenIds.has(m.id)) continue;
+        seenIds.add(m.id);
+
+        const cleanBody = (m.body || '').trim();
+        const sender = m.fromMe ? 'me' : (m.author || m.from || 'unknown');
+        const roundedTs = Math.round(m.timestamp / 2000); // Bloques de 2s
+        const fingerprint = `${sender}_${roundedTs}_${cleanBody}`;
+
+        if (cleanBody && seenFingerprints.has(fingerprint)) {
+          continue;
+        }
+        if (cleanBody) {
+          seenFingerprints.add(fingerprint);
+        }
+
+        uniqueIncoming.push(m);
+      }
+
       setRealMessages(prev => {
-        if (prev.length === msgs.length && prev.length > 0) {
+        // 2. Conciliar mensajes optimistas/temporales (temp_...)
+        const pendingTemps = prev.filter(p => p.id.startsWith('temp_'));
+        const remainingTemps = pendingTemps.filter(temp => {
+          const alreadyConfirmed = uniqueIncoming.some(real =>
+            real.fromMe &&
+            (real.body || '').trim() === (temp.body || '').trim() &&
+            Math.abs(real.timestamp - temp.timestamp) < 30000
+          );
+          return !alreadyConfirmed;
+        });
+
+        // 3. Combinar mensajes reales confirmados con temps aún pendientes
+        const combined = [...uniqueIncoming, ...remainingTemps];
+        combined.sort((a, b) => a.timestamp - b.timestamp);
+
+        // 4. Deduplicación final defensiva
+        const finalSet = new Set<string>();
+        const finalResult: WhatsAppMessage[] = [];
+        for (const item of combined) {
+          if (finalSet.has(item.id)) continue;
+          finalSet.add(item.id);
+          finalResult.push(item);
+        }
+
+        // Si la lista es idéntica en longitud y último elemento, preservar referencia
+        if (prev.length === finalResult.length && prev.length > 0) {
           const lastPrev = prev[prev.length - 1];
-          const lastNew = msgs[msgs.length - 1];
+          const lastNew = finalResult[finalResult.length - 1];
           if (lastPrev?.id === lastNew?.id && lastPrev?.timestamp === lastNew?.timestamp) {
             return prev;
           }
         }
-        return msgs;
+        return finalResult;
       });
     } catch (err) {
       if (!silent) {
@@ -151,15 +202,20 @@ export function useWhatsAppChat({
   // Send message
   const handleSendMessage = useCallback(async (customText?: string) => {
     const textToSend = (customText !== undefined ? customText : messageText).trim();
-    if (!textToSend || !activeChatId) return;
+    if (!textToSend || !activeChatId || isSending) return;
 
     setIsSending(true);
     try {
-      await bot.sendMessage(activeChatId, textToSend);
-      
+      const res = await bot.sendMessage(activeChatId, textToSend);
+
+      // Usar ID real devuelto por el bot si está disponible, o temporal
+      const realId = res?.messageId && typeof res.messageId === 'string' && !res.messageId.startsWith('dedup_')
+        ? res.messageId
+        : `temp_${Date.now()}`;
+
       // Optimistic local add
       const newMsg: WhatsAppMessage = {
-        id: `temp_${Date.now()}`,
+        id: realId,
         body: textToSend,
         type: 'chat',
         timestamp: Date.now(),
@@ -171,7 +227,10 @@ export function useWhatsAppChat({
         hasMedia: false,
         ack: 1
       };
-      setRealMessages(prev => [...prev, newMsg]);
+      setRealMessages(prev => {
+        if (prev.some(m => m.id === newMsg.id)) return prev;
+        return [...prev, newMsg];
+      });
       setMessageText('');
     } catch (err: any) {
       toast.error('Error al enviar mensaje', {
@@ -180,7 +239,7 @@ export function useWhatsAppChat({
     } finally {
       setIsSending(false);
     }
-  }, [messageText, activeChatId, bot]);
+  }, [messageText, activeChatId, bot, isSending]);
 
   // Send a specific report/novedad to WhatsApp
   const handleSendReportToChat = useCallback(async (report: Report, targetChatId?: string) => {
