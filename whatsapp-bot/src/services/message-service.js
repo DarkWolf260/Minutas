@@ -196,6 +196,16 @@ const MAX_MEDIA_CACHE = 100;
         }
       }
 
+      let qAuthorAvatar = null;
+      if (!qFromMe && qAuthorId) {
+        if (state.avatarCache.has(qAuthorId)) {
+          qAuthorAvatar = state.avatarCache.get(qAuthorId);
+        } else if (typeof qAuthorId === 'string' && qAuthorId.includes('@')) {
+          const u = qAuthorId.split('@')[0];
+          qAuthorAvatar = state.avatarCache.get(`${u}@c.us`) || state.avatarCache.get(`${u}@lid`) || state.avatarCache.get(u) || null;
+        }
+      }
+
       return {
         id: qMsgId,
         body: qBody,
@@ -204,10 +214,11 @@ const MAX_MEDIA_CACHE = 100;
         author: qAuthorId || null,
         from: qAuthorId || null,
         senderName: qSenderName || (qFromMe ? 'Tú' : 'Contacto'),
+        authorAvatar: qAuthorAvatar,
         hasMedia: qHasMedia,
         thumbnail: qThumbnail,
         location: qLocation,
-      mediaUrl: qMediaUrl,
+        mediaUrl: qMediaUrl,
         isRevoked: qIsRevoked,
         albumCount: albumCount || (qType === 'album' ? 3 : undefined)
       };
@@ -444,6 +455,23 @@ const MAX_MEDIA_CACHE = 100;
         state.revokedMessageIds.has(msgId)
       );
 
+      const isSystemMessage = Boolean(
+        msg.type === 'gp2' ||
+        msg.type === 'notification' ||
+        msg.type === 'notification_template' ||
+        msg.type === 'group_notification' ||
+        msg.type === 'e2e_notification' ||
+        msg.type === 'broadcast_notification' ||
+        msg.type === 'protocol' ||
+        msg._data?.type === 'gp2' ||
+        msg._data?.type === 'notification' ||
+        msg._data?.type === 'group_notification' ||
+        msg._data?.subtype === 'invite' ||
+        msg._data?.subtype === 'add' ||
+        msg._data?.subtype === 'leave' ||
+        msg._data?.subtype === 'remove'
+      );
+
       const location = !isRevoked ? extractLocation(msg) : null;
       const isLocationMsg = Boolean(location || msg.type === 'location' || msg.type === 'live_location');
 
@@ -455,7 +483,90 @@ const MAX_MEDIA_CACHE = 100;
       let rawBody = isRevoked ? '' : (msg.body || '');
       let bodyText = '';
       if (!isRevoked) {
-        if (isRawBase64Image(rawBody)) {
+        if (isSystemMessage) {
+          const subtype = msg.subtype || msg._data?.subtype;
+          const rawRecipients = Array.isArray(msg.recipients)
+            ? msg.recipients
+            : (Array.isArray(msg._data?.recipients) ? msg._data.recipients : []);
+
+          const formatContactId = (rawId) => {
+            if (!rawId) return '';
+            const cleanId = extractWidString(rawId);
+            let name = knownContactMap?.get(cleanId);
+            if (!name && cleanId.includes('@')) {
+              const u = cleanId.split('@')[0];
+              name = knownContactMap?.get(`${u}@c.us`) || knownContactMap?.get(`${u}@lid`) || knownContactMap?.get(u);
+            }
+            if (!name) {
+              name = state.contactNameCache?.get(cleanId);
+              if (!name && cleanId.includes('@')) {
+                const u = cleanId.split('@')[0];
+                name = state.contactNameCache?.get(`${u}@c.us`) || state.contactNameCache?.get(`${u}@lid`);
+              }
+            }
+            const rawNum = cleanId.includes('@') ? cleanId.split('@')[0] : cleanId;
+            if (!name || /^\+?\d{7,}$/.test(name.replace(/[\s\-\(\)]/g, ''))) {
+              const phoneMatch = rawNum.match(/^(\+?58)?(4\d{2})(\d{3})(\d{4})$/);
+              if (phoneMatch) {
+                return `+58 ${phoneMatch[2]}-${phoneMatch[3]}-${phoneMatch[4]}`;
+              }
+              if (/^\d{7,15}$/.test(rawNum)) {
+                return `+${rawNum}`;
+              }
+            }
+            return name || rawNum;
+          };
+
+          const formattedRecipients = rawRecipients.map(formatContactId).filter(Boolean);
+          const authorId = extractWidString(msg.author || msg._data?.author);
+          const formattedAuthor = authorId ? formatContactId(authorId) : '';
+
+          // Si recipients está vacío pero el ID tiene un @lid o teléfono al final
+          if (formattedRecipients.length === 0 && msgId.includes('_')) {
+            const parts = msgId.split('_');
+            const lastPart = parts[parts.length - 1];
+            if (lastPart && (lastPart.endsWith('@lid') || lastPart.endsWith('@c.us') || /^\d{7,}$/.test(lastPart))) {
+              const resolved = formatContactId(lastPart);
+              if (resolved) formattedRecipients.push(resolved);
+            }
+          }
+
+          const who = formattedRecipients.length > 0 ? formattedRecipients.join(', ') : (formattedAuthor || 'Un usuario');
+
+          if (subtype === 'invite') {
+            bodyText = `${who} se unió a través de un enlace de invitación.`;
+          } else if (subtype === 'add' || subtype === 'linked_group_join') {
+            if (formattedAuthor && !msg.fromMe && formattedRecipients.length > 0 && formattedAuthor !== who) {
+              bodyText = `${formattedAuthor} añadió a ${who}.`;
+            } else {
+              bodyText = `${who} se unió al grupo.`;
+            }
+          } else if (subtype === 'remove') {
+            if (formattedAuthor && !msg.fromMe && formattedRecipients.length > 0 && formattedAuthor !== who) {
+              bodyText = `${formattedAuthor} eliminó a ${who}.`;
+            } else {
+              bodyText = `${who} fue eliminado del grupo.`;
+            }
+          } else if (subtype === 'leave') {
+            bodyText = `${who} salió del grupo.`;
+          } else if (subtype === 'promote') {
+            bodyText = `${who} ahora es administrador.`;
+          } else if (subtype === 'demote') {
+            bodyText = `${who} ya no es administrador.`;
+          } else if (subtype === 'description') {
+            bodyText = `${formattedAuthor || 'Se'} cambió la descripción del grupo.`;
+          } else if (subtype === 'subject') {
+            bodyText = `${formattedAuthor || 'Se'} cambió el nombre del grupo.`;
+          } else if (subtype === 'picture') {
+            bodyText = `${formattedAuthor || 'Se'} cambió el ícono del grupo.`;
+          } else if (subtype === 'ephemeral') {
+            bodyText = `Se cambiaron los mensajes temporales.`;
+          } else if (rawBody) {
+            bodyText = rawBody;
+          } else {
+            bodyText = `${who} se unió a través de un enlace de invitación.`;
+          }
+        } else if (isRawBase64Image(rawBody)) {
           const comment = msg._data?.comment || msg._data?.loc || location?.description;
           if (comment && typeof comment === 'string' && !isRawBase64Image(comment)) {
             bodyText = comment.trim();
@@ -470,7 +581,9 @@ const MAX_MEDIA_CACHE = 100;
       }
 
       let senderName = null;
-      if (msg.fromMe) {
+      if (isSystemMessage) {
+        senderName = null;
+      } else if (msg.fromMe) {
         senderName = 'Tú';
       } else {
         const authorId = extractWidString(msg.author || msg.from);
@@ -522,16 +635,30 @@ const MAX_MEDIA_CACHE = 100;
       const hasMedia = !isRevoked && (msg.hasMedia || ['image', 'video', 'document', 'audio', 'ptt', 'sticker', 'album'].includes(msg.type));
       const mediaUrl = (hasMedia && msgId && msgId.includes('_')) ? `/api/whatsapp/messages/${encodeURIComponent(msgId)}/media` : null;
 
+      let authorAvatar = null;
+      if (!isSystemMessage && !msg.fromMe) {
+        const authorId = extractWidString(msg.author || msg.from);
+        if (authorId) {
+          if (state.avatarCache.has(authorId)) {
+            authorAvatar = state.avatarCache.get(authorId);
+          } else if (typeof authorId === 'string' && authorId.includes('@')) {
+            const u = authorId.split('@')[0];
+            authorAvatar = state.avatarCache.get(`${u}@c.us`) || state.avatarCache.get(`${u}@lid`) || state.avatarCache.get(u) || null;
+          }
+        }
+      }
+
       return {
         id: msgId,
         body: bodyText,
-        type: isRevoked ? 'revoked' : (msg.type || 'chat'),
+        type: isSystemMessage ? 'system' : (isRevoked ? 'revoked' : (msg.type || 'chat')),
         timestamp: (msg.timestamp ? msg.timestamp * 1000 : Date.now()),
         fromMe: Boolean(msg.fromMe),
         from: extractWidString(msg.from) || msg.from,
         to: extractWidString(msg.to) || msg.to,
-        author: extractWidString(msg.author) || null,
-        senderName,
+        author: isSystemMessage ? null : (extractWidString(msg.author) || null),
+        senderName: isSystemMessage ? null : senderName,
+        authorAvatar,
         hasMedia,
         mediaUrl,
         thumbnail,

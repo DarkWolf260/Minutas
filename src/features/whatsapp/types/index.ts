@@ -26,6 +26,7 @@ export interface QuotedWhatsAppMessage {
   from?: string | null;
   author?: string | null;
   senderName?: string | null;
+  authorAvatar?: string | null;
   hasMedia?: boolean;
   mediaUrl?: string | null;
   thumbnail?: string | null;
@@ -44,6 +45,7 @@ export interface WhatsAppMessage {
   to: string;
   author: string | null;
   senderName: string | null;
+  authorAvatar?: string | null;
   hasMedia: boolean;
   mediaUrl?: string | null;
   thumbnail?: string | null;

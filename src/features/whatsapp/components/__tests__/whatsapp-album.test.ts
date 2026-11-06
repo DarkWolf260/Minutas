@@ -27,9 +27,9 @@ describe('groupMessagesIntoAlbums', () => {
 
     const result = groupMessagesIntoAlbums(msgs);
     expect(result.length).toBe(2);
-    expect(result[0].type).toBe('image');
-    expect(result[0].albumMessages).toBeUndefined();
-    expect(result[1].type).toBe('chat');
+    expect(result[0]!.type).toBe('image');
+    expect(result[0]!.albumMessages).toBeUndefined();
+    expect(result[1]!.type).toBe('chat');
   });
 
   it('groups 3 consecutive image messages and an album stub into a single album', () => {
@@ -57,14 +57,14 @@ describe('groupMessagesIntoAlbums', () => {
     expect(result.length).toBe(2);
 
     // First item is the album
-    const album = result[0];
+    const album = result[0]!;
     expect(album.type).toBe('album');
     expect(album.id).toBe('album-stub'); // absorbed the stub ID
     expect(album.albumMessages?.length).toBe(3);
     expect(album.albumMessages?.map(m => m.id)).toEqual(['img-1', 'img-2', 'img-3']);
 
     // Second item is the reply
-    expect(result[1].id).toBe('reply-1');
+    expect(result[1]!.id).toBe('reply-1');
   });
 
   it('groups consecutive image messages without an album stub', () => {
@@ -75,8 +75,8 @@ describe('groupMessagesIntoAlbums', () => {
 
     const result = groupMessagesIntoAlbums(msgs);
     expect(result.length).toBe(1);
-    expect(result[0].type).toBe('album');
-    expect(result[0].albumMessages?.length).toBe(2);
+    expect(result[0]!.type).toBe('album');
+    expect(result[0]!.albumMessages?.length).toBe(2);
   });
 
   it('does not group image messages from different senders', () => {
@@ -87,8 +87,8 @@ describe('groupMessagesIntoAlbums', () => {
 
     const result = groupMessagesIntoAlbums(msgs);
     expect(result.length).toBe(2);
-    expect(result[0].id).toBe('img-1');
-    expect(result[1].id).toBe('img-2');
+    expect(result[0]!.id).toBe('img-1');
+    expect(result[1]!.id).toBe('img-2');
   });
 
   it('does not group image messages with more than 60 seconds interval', () => {
@@ -99,8 +99,8 @@ describe('groupMessagesIntoAlbums', () => {
 
     const result = groupMessagesIntoAlbums(msgs);
     expect(result.length).toBe(2);
-    expect(result[0].type).toBe('image');
-    expect(result[1].type).toBe('image');
+    expect(result[0]!.type).toBe('image');
+    expect(result[1]!.type).toBe('image');
   });
 });
 

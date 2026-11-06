@@ -27,7 +27,8 @@ import type { WhatsAppMessage } from '../types';
 import {
   useSafeMediaSrc,
   downloadMediaSafe,
-  resolveSafeMediaUrl
+  resolveSafeMediaUrl,
+  getCleanAvatarUrl
 } from '../hooks';
 import { WhatsAppMarkdown } from './whatsapp-markdown';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,7 @@ interface WhatsAppChatBubbleProps {
   isBotReady?: boolean;
   isGroup?: boolean;
   contactNameMap?: Map<string, string>;
+  contactAvatarMap?: Map<string, string>;
   realMessages?: WhatsAppMessage[];
 }
 
@@ -124,6 +126,105 @@ function LightboxVideoPreview({ src }: { src: string }) {
       autoPlay
       className="max-w-full max-h-[75vh] rounded-lg shadow-xl"
     />
+  );
+}
+
+interface SenderColorPalette {
+  text: string;
+  border: string;
+  bg: string;
+}
+
+const DEFAULT_SENDER_COLOR: SenderColorPalette = {
+  text: 'text-amber-700 dark:text-amber-400',
+  border: 'border-amber-600 dark:border-amber-500',
+  bg: 'bg-amber-600'
+};
+
+const SENDER_COLOR_PALETTES: readonly SenderColorPalette[] = [
+  DEFAULT_SENDER_COLOR,
+  { text: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-600 dark:border-emerald-500', bg: 'bg-emerald-600' },
+  { text: 'text-blue-700 dark:text-blue-400', border: 'border-blue-600 dark:border-blue-500', bg: 'bg-blue-600' },
+  { text: 'text-purple-700 dark:text-purple-400', border: 'border-purple-600 dark:border-purple-500', bg: 'bg-purple-600' },
+  { text: 'text-rose-700 dark:text-rose-400', border: 'border-rose-600 dark:border-rose-500', bg: 'bg-rose-600' },
+  { text: 'text-teal-700 dark:text-teal-400', border: 'border-teal-600 dark:border-teal-500', bg: 'bg-teal-600' },
+  { text: 'text-orange-700 dark:text-orange-400', border: 'border-orange-600 dark:border-orange-500', bg: 'bg-orange-600' },
+  { text: 'text-indigo-700 dark:text-indigo-400', border: 'border-indigo-600 dark:border-indigo-500', bg: 'bg-indigo-600' },
+];
+
+function getSenderColor(key?: string | null): SenderColorPalette {
+  if (!key) return DEFAULT_SENDER_COLOR;
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash << 5) - hash + key.charCodeAt(i);
+    hash |= 0;
+  }
+  const index = Math.abs(hash) % SENDER_COLOR_PALETTES.length;
+  return SENDER_COLOR_PALETTES[index] ?? DEFAULT_SENDER_COLOR;
+}
+
+function MessageAuthorAvatar({
+  avatarUrl,
+  authorName,
+  authorKey
+}: {
+  avatarUrl?: string | null;
+  authorName?: string | null;
+  authorKey?: string | null;
+}) {
+  const [imgError, setImgError] = useState(false);
+  const cleanUrl = getCleanAvatarUrl(avatarUrl);
+  const { src: safeUrl, hasError } = useSafeMediaSrc(cleanUrl);
+
+  const initials = useMemo(() => {
+    if (!authorName) return '?';
+    const clean = formatDisplayName(authorName).replace(/[^a-zA-Z0-9\s]/g, '').trim();
+    const parts = clean.split(/\s+/).filter(Boolean);
+    const p0 = parts[0];
+    const p1 = parts[1];
+    if (p0 && p1) {
+      const c0 = p0[0] || '';
+      const c1 = p1[0] || '';
+      return (c0 + c1).toUpperCase() || '?';
+    }
+    if (p0 && p0.length >= 2) {
+      return p0.slice(0, 2).toUpperCase();
+    }
+    if (p0 && p0.length === 1) {
+      return p0.toUpperCase();
+    }
+    return (authorName[0] || '?').toUpperCase();
+  }, [authorName]);
+
+  const senderStyle = useMemo(() => getSenderColor(authorKey || authorName), [authorKey, authorName]);
+
+  if (cleanUrl && safeUrl && !hasError && !imgError) {
+    return (
+      <img
+        src={safeUrl}
+        alt={authorName || 'Avatar'}
+        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover shrink-0 select-none shadow-xs border border-border/20"
+        onError={() => setImgError(true)}
+        onLoad={(e) => {
+          const img = e.currentTarget;
+          if (img.naturalWidth <= 1 && img.naturalHeight <= 1) {
+            setImgError(true);
+          }
+        }}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        'w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 select-none text-[10px] sm:text-[11px] font-semibold text-white shadow-xs',
+        senderStyle.bg
+      )}
+      title={authorName || 'Usuario'}
+    >
+      {initials}
+    </div>
   );
 }
 
@@ -227,10 +328,11 @@ function AlbumGridSlot({
   className,
   onDragStart
 }: {
-  message: WhatsAppMessage;
+  message?: WhatsAppMessage;
   className?: string;
   onDragStart: (e: React.DragEvent, src: string) => void;
 }) {
+  if (!message) return null;
   const { src, isLoading } = useSafeMediaSrc(message.mediaUrl, message.thumbnail);
   const [imgError, setImgError] = useState(false);
   const resolvedSrc = src || message.thumbnail || message.mediaUrl || '';
@@ -272,6 +374,10 @@ function WhatsAppAlbumGrid({
   onToggleStack: () => void;
 }) {
   const count = messages.length;
+  const m0 = messages[0];
+  const m1 = messages[1];
+  const m2 = messages[2];
+  const m3 = messages[3];
 
   const handleDrag = (e: React.DragEvent, src: string) => {
     handlePhotoDragStart(e, src, `whatsapp-album-${Date.now()}.jpg`);
@@ -290,27 +396,27 @@ function WhatsAppAlbumGrid({
         <span className="text-[9px] opacity-80 hidden sm:inline">• Clic para apilar</span>
       </div>
 
-      {count === 2 && (
+      {count === 2 && m0 && m1 && (
         <div className="grid grid-cols-2 gap-1 w-full aspect-[16/10] sm:aspect-[16/9]">
-          <AlbumGridSlot message={messages[0]} onDragStart={handleDrag} className="h-full" />
-          <AlbumGridSlot message={messages[1]} onDragStart={handleDrag} className="h-full" />
+          <AlbumGridSlot message={m0} onDragStart={handleDrag} className="h-full" />
+          <AlbumGridSlot message={m1} onDragStart={handleDrag} className="h-full" />
         </div>
       )}
 
-      {count === 3 && (
+      {count === 3 && m0 && m1 && m2 && (
         <div className="grid grid-cols-2 gap-1 w-full max-h-96">
           <AlbumGridSlot
-            message={messages[0]}
+            message={m0}
             onDragStart={handleDrag}
             className="col-span-2 aspect-[16/10]"
           />
           <AlbumGridSlot
-            message={messages[1]}
+            message={m1}
             onDragStart={handleDrag}
             className="aspect-square"
           />
           <AlbumGridSlot
-            message={messages[2]}
+            message={m2}
             onDragStart={handleDrag}
             className="aspect-square"
           />
@@ -330,7 +436,7 @@ function WhatsAppAlbumGrid({
         </div>
       )}
 
-      {count >= 5 && (
+      {count >= 5 && m3 && (
         <div className="grid grid-cols-2 gap-1 w-full aspect-square max-h-96">
           {messages.slice(0, 3).map((m, i) => (
             <AlbumGridSlot
@@ -342,7 +448,7 @@ function WhatsAppAlbumGrid({
           ))}
           <div className="relative aspect-square overflow-hidden">
             <AlbumGridSlot
-              message={messages[3]}
+              message={m3}
               onDragStart={handleDrag}
               className="w-full h-full"
             />
@@ -1085,6 +1191,7 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
   isBotReady,
   isGroup,
   contactNameMap,
+  contactAvatarMap,
   realMessages
 }: WhatsAppChatBubbleProps) {
   const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string | null>(null);
@@ -1311,6 +1418,41 @@ export const WhatsAppChatBubble = memo(function WhatsAppChatBubble({
 
   // Scenario 2: Real WhatsApp message bubble
   if (message) {
+    const isSystemMessage = Boolean(
+      message.type === 'system' ||
+      message.type === 'gp2' ||
+      message.type === 'notification' ||
+      message.type === 'notification_template' ||
+      message.type === 'group_notification' ||
+      message.type === 'e2e_notification' ||
+      message.type === 'broadcast_notification' ||
+      message.type === 'protocol'
+    );
+
+    // Mensajes del sistema (ej: "X se unió al grupo", etc.) se renderizan como píldora centrada estilo WhatsApp
+    if (isSystemMessage) {
+      if (!message.body) return null;
+      return (
+        <div className="flex justify-center my-2 px-4 select-none">
+          <div className="px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium bg-background/85 dark:bg-[#182229] text-muted-foreground shadow-xs border border-border/40 text-center max-w-[85%] backdrop-blur-xs leading-relaxed">
+            {message.body}
+          </div>
+        </div>
+      );
+    }
+
+    // Omitir burbuja si el mensaje no tiene ningún contenido renderizable
+    const hasAnyContent = Boolean(
+      message.body ||
+      message.hasMedia ||
+      message.location ||
+      message.isRevoked ||
+      (message.type === 'album' && message.albumMessages && message.albumMessages.length > 0)
+    );
+    if (!hasAnyContent) {
+      return null;
+    }
+
     const isFromMe = message.fromMe;
     const formattedTime = formatTime(message.timestamp);
 
@@ -1360,6 +1502,15 @@ const resolvedFromMap =
 
 const effectiveSenderName = resolvedFromMap || message.senderName;
 
+const resolvedAvatarFromMap =
+  (authorKey && contactAvatarMap?.get(authorKey)) ||
+  (authorNum && contactAvatarMap?.get(`${authorNum}@c.us`)) ||
+  (authorNum && contactAvatarMap?.get(`${authorNum}@lid`)) ||
+  (authorNum && contactAvatarMap?.get(authorNum));
+
+const effectiveSenderAvatar = message.authorAvatar || resolvedAvatarFromMap;
+const senderStyle = getSenderColor(authorKey || effectiveSenderName);
+
 // Resolver nombre del remitente del mensaje citado dando prioridad a la libreta de contactos
 const quotedAuthorKey = message.quotedMsg?.author || message.quotedMsg?.from || '';
 const quotedAuthorNum = quotedAuthorKey ? quotedAuthorKey.split('@')[0] : '';
@@ -1374,6 +1525,7 @@ if (candidateQuotedSender && candidateQuotedSender.includes('@lid')) {
   candidateQuotedSender = (quotedAuthorKey && contactNameMap?.get(quotedAuthorKey)) || 'Contacto';
 }
 const effectiveQuotedSenderName = formatDisplayName(candidateQuotedSender) || 'Contacto';
+const quotedSenderStyle = getSenderColor(quotedAuthorKey || effectiveQuotedSenderName);
 
 const isMediaCard = isAudio || isLocation;
 
@@ -1412,10 +1564,21 @@ return (
   <>
     <div
       className={cn(
-        'flex my-1 px-2 group',
-        isFromMe ? 'justify-end' : 'justify-start'
+        'flex my-1 px-2 group items-end',
+        isFromMe ? 'justify-end' : 'justify-start gap-1.5'
       )}
     >
+      {/* Avatar del remitente en grupos (solo mensajes recibidos) */}
+      {!isFromMe && isGroup && (
+        <div className="shrink-0 mb-0.5 select-none">
+          <MessageAuthorAvatar
+            avatarUrl={effectiveSenderAvatar}
+            authorName={effectiveSenderName}
+            authorKey={authorKey}
+          />
+        </div>
+      )}
+
       <div
         className={cn(
           'relative rounded-2xl p-2.5 shadow-sm border text-xs sm:text-sm',
@@ -1428,7 +1591,7 @@ return (
       >
         {/* Sender name for group chats only (incoming only, non-revoked) */}
         {!isFromMe && isGroup && effectiveSenderName && !isRevoked && (
-          <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">
+          <div className={cn("text-[11px] font-bold mb-0.5", senderStyle?.text || 'text-emerald-600 dark:text-emerald-400')}>
             {formatDisplayName(effectiveSenderName)}
           </div>
         )}
@@ -1445,20 +1608,21 @@ return (
             {message.quotedMsg && (
               <div
                 className={cn(
-                  'mb-1.5 p-1.5 sm:p-2 rounded-xl border-l-[3.5px] text-xs flex items-center justify-between gap-2 overflow-hidden select-none transition-colors',
-                  isFromMe
-                    ? 'bg-black/5 dark:bg-black/25 border-emerald-600 dark:border-emerald-400'
-                    : 'bg-black/5 dark:bg-black/25 border-emerald-600 dark:border-emerald-400'
+                  'mb-1.5 p-1.5 sm:p-2 rounded-xl border-l-[3.5px] text-xs flex items-center justify-between gap-2 overflow-hidden select-none transition-colors bg-black/5 dark:bg-black/25',
+                  message.quotedMsg.fromMe ? 'border-emerald-600 dark:border-emerald-400' : (quotedSenderStyle?.border || 'border-amber-600 dark:border-amber-500')
                 )}
               >
                 <div className="flex-1 min-w-0 pr-1">
                   {/* Remitente del mensaje citado */}
-                  <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 truncate">
+                  <div className={cn(
+                    "text-[11px] font-bold truncate",
+                    message.quotedMsg.fromMe ? "text-emerald-700 dark:text-emerald-300" : (quotedSenderStyle?.text || "text-amber-700 dark:text-amber-400")
+                  )}>
                     {message.quotedMsg.fromMe ? 'Tú' : effectiveQuotedSenderName}
                   </div>
 
                   {/* Contenido / extracto del mensaje citado */}
-                  <div className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                  <div className="text-[11px] text-muted-foreground truncate flex items-center gap-1.5 mt-0.5">
                     {message.quotedMsg.isRevoked ? (
                       <span className="italic flex items-center gap-1 text-muted-foreground">
                         <Ban className="h-3 w-3 shrink-0" />
@@ -1477,27 +1641,45 @@ return (
                           </span>
                         ) : isQuotedAlbum ? (
                           <span className="flex items-center gap-1.5 font-medium text-foreground/80 dark:text-foreground/90 truncate">
-                            <ImageIcon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                            <span>{quotedAlbumInfo?.label || message.quotedMsg.body || '3 fotos'}</span>
+                            <ImageIcon className="h-3.5 w-3.5 shrink-0 opacity-80" />
+                            <span>{quotedAlbumInfo?.label || `${quotedAlbumInfo?.count || 3} fotos`}</span>
+                          </span>
+                        ) : (message.quotedMsg.type === 'image' || message.quotedMsg.hasMedia) && message.quotedMsg.type !== 'video' && message.quotedMsg.type !== 'ptt' && message.quotedMsg.type !== 'audio' ? (
+                          <span className="flex items-center gap-1.5 font-medium text-foreground/80 dark:text-foreground/90 truncate">
+                            <ImageIcon className="h-3.5 w-3.5 shrink-0 opacity-80" />
+                            <span>
+                              {message.quotedMsg.body && !isBase64ImageString(message.quotedMsg.body)
+                                ? message.quotedMsg.body
+                                : 'Foto'}
+                            </span>
+                          </span>
+                        ) : message.quotedMsg.type === 'video' ? (
+                          <span className="flex items-center gap-1.5 font-medium text-foreground/80 dark:text-foreground/90 truncate">
+                            <VideoIcon className="h-3.5 w-3.5 shrink-0 opacity-80" />
+                            <span>
+                              {message.quotedMsg.body && !isBase64ImageString(message.quotedMsg.body)
+                                ? message.quotedMsg.body
+                                : 'Video'}
+                            </span>
+                          </span>
+                        ) : message.quotedMsg.type === 'ptt' || message.quotedMsg.type === 'audio' ? (
+                          <span className="flex items-center gap-1.5 font-medium text-foreground/80 dark:text-foreground/90 truncate">
+                            <Mic className="h-3.5 w-3.5 shrink-0 opacity-80" />
+                            <span>{message.quotedMsg.type === 'ptt' ? 'Mensaje de voz' : 'Audio'}</span>
+                          </span>
+                        ) : message.quotedMsg.type === 'document' ? (
+                          <span className="flex items-center gap-1.5 font-medium text-foreground/80 dark:text-foreground/90 truncate">
+                            <FileText className="h-3.5 w-3.5 shrink-0 opacity-80" />
+                            <span>
+                              {message.quotedMsg.body && !isBase64ImageString(message.quotedMsg.body)
+                                ? message.quotedMsg.body
+                                : 'Documento'}
+                            </span>
                           </span>
                         ) : (
-                          <>
-                            {message.quotedMsg.type === 'video' && !message.quotedMsg.body && (
-                              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                                <VideoIcon className="h-3 w-3 shrink-0" />
-                                <span>Video</span>
-                              </span>
-                            )}
-                            {message.quotedMsg.hasMedia && message.quotedMsg.type !== 'video' && !message.quotedMsg.body && (
-                              <span className="flex items-center gap-1">
-                                <ImageIcon className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                                <span>Foto</span>
-                              </span>
-                            )}
-                            {message.quotedMsg.body && !isBase64ImageString(message.quotedMsg.body) && (
-                              <WhatsAppMarkdown text={message.quotedMsg.body} inline className="truncate" />
-                            )}
-                          </>
+                          message.quotedMsg.body && !isBase64ImageString(message.quotedMsg.body) && (
+                            <WhatsAppMarkdown text={message.quotedMsg.body} inline className="truncate" />
+                          )
                         )}
                       </>
                     )}

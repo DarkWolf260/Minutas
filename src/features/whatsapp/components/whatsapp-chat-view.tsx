@@ -39,16 +39,23 @@ export function groupMessagesIntoAlbums(messages: WhatsAppMessage[]): WhatsAppMe
   const n = messages.length;
   let i = 0;
 
-  const isImageMsg = (m: WhatsAppMessage) =>
-    !m.isRevoked && (
-      m.type === 'image' ||
-      (m.hasMedia && !['ptt', 'audio', 'document', 'video', 'location', 'live_location', 'revoked'].includes(m.type))
+  const isImageMsg = (m?: WhatsAppMessage | null) =>
+    Boolean(
+      m &&
+      !m.isRevoked && (
+        m.type === 'image' ||
+        (m.hasMedia && !['ptt', 'audio', 'document', 'video', 'location', 'live_location', 'revoked'].includes(m.type))
+      )
     );
 
-  const isAlbumStub = (m: WhatsAppMessage) => m.type === 'album';
+  const isAlbumStub = (m?: WhatsAppMessage | null) => Boolean(m && m.type === 'album');
 
   while (i < n) {
     const current = messages[i];
+    if (!current) {
+      i++;
+      continue;
+    }
 
     if (isImageMsg(current) || isAlbumStub(current)) {
       const senderKey = `${current.fromMe ? 'me' : (current.author || current.from || '')}`;
@@ -94,22 +101,25 @@ export function groupMessagesIntoAlbums(messages: WhatsAppMessage[]): WhatsAppMe
       if (group.length > 1) {
         const first = group[0];
         const last = group[group.length - 1];
-        const albumMsg: WhatsAppMessage = {
-          ...first,
-          id: albumStubId || `album_${first.id}`,
-          type: 'album',
-          hasMedia: true,
-          body: combinedCaption || first.body || '',
-          quotedMsg: combinedQuotedMsg,
-          hasQuotedMsg: Boolean(combinedQuotedMsg),
-          albumMessages: group,
-          timestamp: last.timestamp || first.timestamp,
-          ack: last.ack ?? first.ack
-        };
-        result.push(albumMsg);
-        i = j;
-        continue;
-      } else if (group.length === 1) {
+        if (first && last) {
+          const albumMsg: WhatsAppMessage = {
+            ...first,
+            id: albumStubId || `album_${first.id}`,
+            fromMe: first.fromMe ?? false,
+            type: 'album',
+            hasMedia: true,
+            body: combinedCaption || first.body || '',
+            quotedMsg: combinedQuotedMsg,
+            hasQuotedMsg: Boolean(combinedQuotedMsg),
+            albumMessages: group,
+            timestamp: last.timestamp || first.timestamp,
+            ack: last.ack ?? first.ack
+          };
+          result.push(albumMsg);
+          i = j;
+          continue;
+        }
+      } else if (group.length === 1 && group[0]) {
         result.push(group[0]);
         i = j;
         continue;
@@ -231,6 +241,27 @@ export function WhatsAppChatView({
       return map;
     }, [bot.chats]);
 
+    // Mapa de avatares de contactos reales obtenidos desde bot.chats
+    const contactAvatarMap = useMemo(() => {
+      const map = new Map<string, string>();
+      if (bot.chats && bot.chats.length > 0) {
+        bot.chats.forEach(c => {
+          if (c.id && c.avatarUrl) {
+            map.set(c.id, c.avatarUrl);
+            if (c.id.includes('@')) {
+              const u = c.id.split('@')[0];
+              if (u) {
+                map.set(`${u}@c.us`, c.avatarUrl);
+                map.set(`${u}@lid`, c.avatarUrl);
+                map.set(u, c.avatarUrl);
+              }
+            }
+          }
+        });
+      }
+      return map;
+    }, [bot.chats]);
+
     return (
       <div
         className={cn(
@@ -334,6 +365,7 @@ export function WhatsAppChatView({
                 message={msg}
                 isGroup={Boolean(currentChat?.isGroup)}
                 contactNameMap={contactNameMap}
+                contactAvatarMap={contactAvatarMap}
                 realMessages={realMessages}
               />
             ))
