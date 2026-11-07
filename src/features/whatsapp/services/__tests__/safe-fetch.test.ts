@@ -158,6 +158,19 @@ describe('safe-fetch', () => {
       expect(res).toBe(mockSuccessResponse);
     });
 
+    it('does not retry non-idempotent POST requests across address spaces to avoid duplicate actions', async () => {
+      const originalErr = new TypeError('Failed loopback on POST');
+      const fetchSpy = vi.spyOn(globalThis, 'fetch')
+        .mockRejectedValueOnce(originalErr);
+
+      await expect(
+        safeBotFetch('http://localhost:3001/api/whatsapp/send', { method: 'POST', body: '{}' })
+      ).rejects.toThrow('Failed loopback on POST');
+
+      // Solo debe haberse intentado 1 vez (sin reintentos)
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
     it('re-throws original error if all attempts fail', async () => {
       const originalErr = new TypeError('Failed loopback');
       vi.spyOn(globalThis, 'fetch')

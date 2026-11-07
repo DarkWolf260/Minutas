@@ -3,6 +3,7 @@ import { Controller } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { SectionRenderer } from '../section-renderer';
+import { isAddressField } from '@/lib/constants/addresses';
 import { FieldRenderer } from '../field-renderer';
 import type { TemplateConfig, SectionConfig } from '@/lib/types';
 
@@ -163,7 +164,9 @@ export const FormLayout = ({
                   >
                     {(() => {
                       const normalized = field_id.toLowerCase().replace(/_/g, ' ').trim();
-                      return normalized !== 'apoyo ins' && normalized !== 'apoyo institucional';
+                      if (normalized === 'apoyo ins' || normalized === 'apoyo institucional') return false;
+                      if (isAddressField(fieldConfig, field_id)) return false;
+                      return true;
                     })() && (
                       <Label htmlFor={field_id}>
                         {fieldConfig.label || field_id}

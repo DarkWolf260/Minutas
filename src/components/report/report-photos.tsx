@@ -86,13 +86,13 @@ const uploadToSupabase = async (filePath: string, blob: Blob): Promise<string> =
       cacheControl: '3600',
       upsert: true
     });
-    
+
   if (error) throw error;
-  
+
   const { data: { publicUrl } } = supabase.storage
     .from('activity-images')
     .getPublicUrl(filePath);
-    
+
   return publicUrl;
 };
 
@@ -103,21 +103,21 @@ const generateReportPhotoName = (reportTitle: string, index: number, originalNam
   const day = String(now.getDate()).padStart(2, '0');
   const hours = String(now.getHours()).padStart(2, '0');
   const minutes = String(now.getMinutes()).padStart(2, '0');
-  
+
   const dateStr = `${year}.${month}.${day}`;
   const timeStr = `${hours}.${minutes}`;
-  
+
   const cleanTitle = (reportTitle || 'Reporte')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '') // Remove diacritics/accents
     .replace(/[^a-zA-Z0-9]/g, '_') // Replace non-alphanumeric with underscore
     .replace(/__+/g, '_') // Collapse multiple underscores
     .replace(/^_+|_+$/g, ''); // Trim leading/trailing underscores
-  
+
   const fileExt = (originalName.split('.').pop() || 'jpg')
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '');
-  
+
   // Unique suffix to avoid duplicate filenames on multiple uploads in same minute
   const uniqueSuffix = Math.random().toString(36).substring(2, 6);
   return `${dateStr}_-_${timeStr}_-_${cleanTitle}_${index + 1}_${uniqueSuffix}.${fileExt}`;
@@ -190,7 +190,7 @@ const ReportImage: React.FC<ReportImageProps> = ({ photoId, localBlobId, src, al
       try {
         const urlObj = new URL(src.replace('blob:', ''));
         isSameOrigin = urlObj.origin === window.location.origin;
-      } catch (e) {}
+      } catch (e) { }
 
       if (!isSameOrigin) {
         loadOffline();
@@ -281,7 +281,7 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
       e.preventDefault();
       const zoomFactor = 0.2;
       const direction = e.deltaY < 0 ? 1 : -1;
-      
+
       setScale(s => {
         const newScale = Math.min(4, Math.max(1, s + direction * zoomFactor));
         if (newScale === 1) {
@@ -325,7 +325,7 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
     const loadingToast = toast.loading('Procesando y comprimiendo imágenes...');
     const newPhotos: ReportPhoto[] = [...photos];
     let added = 0;
-    
+
     const resolvedTitle = typeof reportTitle === 'function' ? reportTitle() : (reportTitle || 'Reporte');
 
     try {
@@ -344,14 +344,14 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
         const photoId = `photo-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         const compressedBase64 = await compressImage(file);
         const blob = base64ToBlob(compressedBase64);
-        
+
         // Generate the custom filename
         const customName = generateReportPhotoName(resolvedTitle, newPhotos.length, file.name);
-        
+
         let url = '';
         let pendingUpload = false;
         let localBlobId = '';
-        
+
         if (navigator.onLine) {
           try {
             url = await uploadToSupabase(customName, blob);
@@ -444,11 +444,11 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
   const dropZoneProps = disabled
     ? {}
     : {
-        onDragEnter: handleDragEnter,
-        onDragLeave: handleDragLeave,
-        onDragOver: handleDragOver,
-        onDrop: handleDrop,
-      };
+      onDragEnter: handleDragEnter,
+      onDragLeave: handleDragLeave,
+      onDragOver: handleDragOver,
+      onDrop: handleDrop,
+    };
 
   return (
     <div className="space-y-6 pt-4 border-t border-muted/20" id="report-photos-section">
@@ -669,7 +669,7 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
           </DialogHeader>
           <div className="relative pt-14 pb-4 px-4 flex flex-col items-center justify-center bg-black/5 min-h-[55vh] max-h-[80vh] overflow-y-auto">
             {selectedPhoto && (
-              <div 
+              <div
                 ref={viewerRef}
                 className="relative overflow-hidden w-full flex-1 flex items-center justify-center min-h-[45vh] max-h-[60vh] cursor-grab active:cursor-grabbing select-none"
                 onPointerDown={handlePointerDown}
@@ -690,7 +690,7 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
                 />
               </div>
             )}
-            
+
             {/* Floating Zoom Controls */}
             <div className="mt-4 flex items-center gap-2 bg-background/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-muted/20 shadow-md">
               <Button
@@ -728,11 +728,10 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className={`h-8 w-8 rounded-full hover:bg-muted text-primary transition-all duration-200 ${
-                  scale > 1 || position.x !== 0 || position.y !== 0
+                className={`h-8 w-8 rounded-full hover:bg-muted text-primary transition-all duration-200 ${scale > 1 || position.x !== 0 || position.y !== 0
                     ? 'opacity-100 scale-100 pointer-events-auto'
                     : 'opacity-0 scale-75 pointer-events-none'
-                }`}
+                  }`}
                 onClick={() => {
                   setScale(1);
                   setPosition({ x: 0, y: 0 });
@@ -762,13 +761,13 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
           onSave={async (updatedUrl) => {
             const photoId = editingPhoto.id;
             const blob = base64ToBlob(updatedUrl);
-            
+
             let url = updatedUrl;
             let pendingUpload = false;
             let localBlobId = '';
-            
+
             const loadingToast = toast.loading('Guardando imagen editada...');
-            
+
             try {
               if (navigator.onLine) {
                 try {
@@ -786,10 +785,10 @@ export const ReportPhotos: React.FC<ReportPhotosProps> = ({
                 pendingUpload = true;
                 localBlobId = photoId;
               }
-              
-              onChange(photos.map((p) => 
-                p.id === photoId 
-                  ? { ...p, url, pending_upload: pendingUpload, local_blob_id: localBlobId } 
+
+              onChange(photos.map((p) =>
+                p.id === photoId
+                  ? { ...p, url, pending_upload: pendingUpload, local_blob_id: localBlobId }
                   : p
               ));
               toast.success('Imagen editada guardada.', { id: loadingToast });

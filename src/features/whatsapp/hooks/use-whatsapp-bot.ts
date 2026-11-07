@@ -22,6 +22,11 @@ let lastCheckedUrl = '';
 let lastHeartbeatTime = 0; // Throttled timestamp to reduce excessive RxDB replication spam
 let isChecking = false;
 
+let globalInFlightLoadChatsPromise: Promise<void> | null = null;
+let globalHasAutoLoadedChats = false;
+let lastChatsLoadAttemptTime = 0;
+let chatsConsecutiveFailures = 0;
+
 let botState: BotState = {
   status: { isReady: false, needsAuth: false, qr: null, statusMessage: 'Iniciando...' },
   chats: [],
@@ -393,67 +398,38 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     }
   }, [localUrl, db, currentWorkspace, isCloud]);
 
-  const isLoadingChatsRef = useRef(false);
   const loadChats = useCallback(async () => {
     const isBotReady = (state.isAvailable && state.isWorkspaceMatch && state.status.isReady) || (state.isCloudActive && isCloud);
-    if (!isBotReady || isLoadingChatsRef.current) return;
-    isLoadingChatsRef.current = true;
-    
-    try {
-      // If the local bot is running on this device and matched, fetch from it
-      if (state.isAvailable && state.isWorkspaceMatch && state.status.isReady) {
-        try {
-          const wsParam = currentWorkspace ? `?workspace=${encodeURIComponent(currentWorkspace)}` : '';
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 8000);
-          const response = await safeBotFetch(`${apiUrl}/api/whatsapp/chats${wsParam}`, {
-            signal: controller.signal,
-            headers: {
-              ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
-            }
-          });
-          clearTimeout(timeoutId);
-          if (response.ok) {
-            const data = await response.json();
-            const normalizedChats = Array.isArray(data) ? data.map((c: any) => ({
-              ...c,
-              avatarUrl: c.avatarUrl
-                ? (c.avatarUrl.startsWith('https://')
-                    ? c.avatarUrl
-                    : c.avatarUrl.startsWith('/') && apiUrl
-                      ? `${apiUrl}${c.avatarUrl}`
-                      : c.avatarUrl)
-                : null
-            })) : [];
-            updateBotState({ chats: normalizedChats });
-            
-            // Sync to database if we are in cloud workspace
-            if (db && currentWorkspace && isCloud) {
-              const chatsId = `whatsapp_chats:${currentWorkspace}`;
-              await db.configs.upsert({
-                id: chatsId,
-                workspace_id: currentWorkspace,
-                type: 'whatsapp_bot_status',
-                data: {
-                  chats: normalizedChats,
-                  updatedAt: new Date().toISOString()
-                }
-              }).catch(err => console.error('Error syncing chats list to DB:', err));
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching chats from local bot:', error);
-        }
-      } else if (isCloud && db && currentWorkspace) {
-        // If we are a remote client, load from the database
-        try {
-          const chatsId = `whatsapp_chats:${currentWorkspace}`;
-          const doc = await db.configs.findOne(chatsId).exec();
-          if (doc) {
-            const item = doc.toJSON();
-            const data = item.data || {};
-            if (Array.isArray(data.chats)) {
-              const normalizedChats = data.chats.map((c: any) => ({
+    if (!isBotReady) return;
+
+    // Compartir la promesa en curso entre todas las instancias del hook para evitar llamadas concurrentes duplicadas
+    if (globalInFlightLoadChatsPromise) {
+      return globalInFlightLoadChatsPromise;
+    }
+
+    globalInFlightLoadChatsPromise = (async () => {
+      try {
+        // If the local bot is running on this device and matched, fetch from it
+        if (state.isAvailable && state.isWorkspaceMatch && state.status.isReady) {
+          try {
+            const wsParam = currentWorkspace ? `?workspace=${encodeURIComponent(currentWorkspace)}` : '';
+            const controller = new AbortController();
+            // Tiempo de espera holgado (25s) para permitir que Puppeteer en el bot extraiga y procese los chats sin abortos prematuros
+            const timeoutId = setTimeout(() => {
+              controller.abort(new DOMException('Tiempo de espera agotado al consultar chats del bot de WhatsApp (25s)', 'TimeoutError'));
+            }, 25000);
+
+            const response = await safeBotFetch(`${apiUrl}/api/whatsapp/chats${wsParam}`, {
+              signal: controller.signal,
+              headers: {
+                ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
+              }
+            });
+            clearTimeout(timeoutId);
+
+            if (response.ok) {
+              const data = await response.json();
+              const normalizedChats = Array.isArray(data) ? data.map((c: any) => ({
                 ...c,
                 avatarUrl: c.avatarUrl
                   ? (c.avatarUrl.startsWith('https://')
@@ -462,17 +438,66 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
                         ? `${apiUrl}${c.avatarUrl}`
                         : c.avatarUrl)
                   : null
-              }));
+              })) : [];
               updateBotState({ chats: normalizedChats });
+              chatsConsecutiveFailures = 0;
+
+              // Sync to database if we are in cloud workspace
+              if (db && currentWorkspace && isCloud) {
+                const chatsId = `whatsapp_chats:${currentWorkspace}`;
+                await db.configs.upsert({
+                  id: chatsId,
+                  workspace_id: currentWorkspace,
+                  type: 'whatsapp_bot_status',
+                  data: {
+                    chats: normalizedChats,
+                    updatedAt: new Date().toISOString()
+                  }
+                }).catch(err => console.error('Error syncing chats list to DB:', err));
+              }
+            } else {
+              chatsConsecutiveFailures++;
+            }
+          } catch (error: any) {
+            chatsConsecutiveFailures++;
+            if (error?.name === 'AbortError' || error?.name === 'TimeoutError') {
+              logger.warn(`[WhatsApp] Consulta de chats cancelada o demorada: ${error?.message || 'Timeout'}`);
+            } else {
+              console.error('Error fetching chats from local bot:', error);
             }
           }
-        } catch (error) {
-          console.error('Error loading chats from database:', error);
+        } else if (isCloud && db && currentWorkspace) {
+          // If we are a remote client, load from the database
+          try {
+            const chatsId = `whatsapp_chats:${currentWorkspace}`;
+            const doc = await db.configs.findOne(chatsId).exec();
+            if (doc) {
+              const item = doc.toJSON();
+              const data = item.data || {};
+              if (Array.isArray(data.chats)) {
+                const normalizedChats = data.chats.map((c: any) => ({
+                  ...c,
+                  avatarUrl: c.avatarUrl
+                    ? (c.avatarUrl.startsWith('https://')
+                        ? c.avatarUrl
+                        : c.avatarUrl.startsWith('/') && apiUrl
+                          ? `${apiUrl}${c.avatarUrl}`
+                          : c.avatarUrl)
+                    : null
+                }));
+                updateBotState({ chats: normalizedChats });
+              }
+            }
+          } catch (error) {
+            console.error('Error loading chats from database:', error);
+          }
         }
+      } finally {
+        globalInFlightLoadChatsPromise = null;
       }
-    } finally {
-      isLoadingChatsRef.current = false;
-    }
+    })();
+
+    return globalInFlightLoadChatsPromise;
   }, [apiUrl, state.isAvailable, state.isWorkspaceMatch, state.status.isReady, state.isCloudActive, isCloud, db, currentWorkspace]);
 
   const sendMessage = useCallback(async (chatId: string, message: string, media?: { id?: string; local_blob_id?: string; url: string; name?: string; description?: string }[]) => {
@@ -665,6 +690,8 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     const prev = previousWorkspaceRef.current;
     if (prev && prev !== currentWorkspace) {
       previousWorkspaceRef.current = currentWorkspace;
+      globalHasAutoLoadedChats = false;
+      chatsConsecutiveFailures = 0;
 
       logger.info(`[WhatsApp] Cambio de área de trabajo: de "${prev}" a "${currentWorkspace}"`);
 
@@ -716,25 +743,26 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     }
   }, [currentWorkspace, localUrl, db, isCloud, checkStatus]);
 
-  // Load chats once when ready locally if chats are currently empty
-  const hasAutoLoadedChatsRef = useRef(false);
+  // Cargar chats automáticamente una vez cuando el bot esté listo localmente si la lista está vacía
   useEffect(() => {
-    if (!state.isAvailable || !state.isWorkspaceMatch || !state.status.isReady) {
-      hasAutoLoadedChatsRef.current = false;
+    const isBotReady = (state.isAvailable && state.isWorkspaceMatch && state.status.isReady) || (state.isCloudActive && isCloud);
+    if (!isBotReady) {
+      globalHasAutoLoadedChats = false;
       return;
     }
 
-    if (state.chats.length === 0 && !hasAutoLoadedChatsRef.current) {
-      hasAutoLoadedChatsRef.current = true;
-      loadChats().finally(() => {
-        if (botState.chats.length === 0) {
-          setTimeout(() => {
-            hasAutoLoadedChatsRef.current = false;
-          }, 3500);
-        }
-      });
+    const now = Date.now();
+    // Backoff si hubo fallos consecutivos (mínimo 20s, hasta 60s) para prevenir bucles de reintentos rápidos
+    const backoffDelay = chatsConsecutiveFailures > 0 
+      ? Math.min(20000 * Math.pow(1.5, chatsConsecutiveFailures - 1), 60000)
+      : 5000;
+
+    if (state.chats.length === 0 && !globalHasAutoLoadedChats && !globalInFlightLoadChatsPromise && (now - lastChatsLoadAttemptTime > backoffDelay)) {
+      globalHasAutoLoadedChats = true;
+      lastChatsLoadAttemptTime = now;
+      loadChats().catch(() => {});
     }
-  }, [state.isAvailable, state.isWorkspaceMatch, state.status.isReady, state.chats.length, loadChats]);
+  }, [state.isAvailable, state.isWorkspaceMatch, state.status.isReady, state.isCloudActive, isCloud, state.chats.length, loadChats]);
 
   const claimWorkspace = useCallback(async (targetWorkspace?: string) => {
     const ws = targetWorkspace || currentWorkspace;
@@ -766,6 +794,8 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         body: JSON.stringify({ workspace: ws })
       });
       if (res.ok) {
+        globalHasAutoLoadedChats = false;
+        chatsConsecutiveFailures = 0;
         updateBotState({ chats: [] });
         await checkStatus(true);
         await loadChats();
@@ -777,6 +807,8 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
 
   const logout = useCallback(async () => {
     try {
+      globalHasAutoLoadedChats = false;
+      chatsConsecutiveFailures = 0;
       updateBotState({
         status: { isReady: false, needsAuth: false, qr: null, statusMessage: 'Cerrando sesión...' },
         chats: []

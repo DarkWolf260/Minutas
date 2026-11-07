@@ -1,0 +1,849 @@
+{
+  "estado": "Anzoátegui",
+  "municipios": [
+    {
+      "id": "diego-bautista-urbaneja",
+      "nombre": "Diego Bautista Urbaneja",
+      "nombreOficial": "Municipio Turístico \"El Morro\" Licenciado Diego Bautista Urbaneja",
+      "parroquias": [
+        {
+          "id": "lecheria",
+          "nombre": "Lechería",
+          "circuitosComunales": [
+            "Alberto Lovera"
+          ],
+          "sectores": [
+            { "nombre": "Barrio Venezuela", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Casco Central", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Morro I", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Morro II", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Morro III", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Aldea de Pescadores", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Santa Rosa", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Playa Mansa", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Playa Lido", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Playa Cangrejo", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Cerro El Morro", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Las Garzas", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Las Chimeneas", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Rómulo Gallegos", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Peñón del Faro", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Marina del Rey", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Plaza Mayor", "circuitoComunal": "Alberto Lovera" }
+          ]
+        },
+        {
+          "id": "el-morro",
+          "nombre": "El Morro",
+          "circuitosComunales": [
+            "Alberto Lovera"
+          ],
+          "sectores": [
+            { "nombre": "Complejo Turístico El Morro", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Punta Mitre", "circuitoComunal": "Alberto Lovera" },
+            { "nombre": "Cerro Sur", "circuitoComunal": "Alberto Lovera" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "juan-antonio-sotillo",
+      "nombre": "Juan Antonio Sotillo",
+      "nombreOficial": "Municipio Juan Antonio Sotillo",
+      "parroquias": [
+        {
+          "id": "puerto-la-cruz",
+          "nombre": "Puerto La Cruz",
+          "circuitosComunales": [
+            "Bahía de Pozuelo en Revolución",
+            "Socialista Sierra Maestra",
+            "Socialista Chuparín",
+            "Socialista El Paraíso",
+            "Socialista Valle Lindo"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Bahía de Pozuelo en Revolución" },
+            { "nombre": "Urb. Guaraguao", "circuitoComunal": "Bahía de Pozuelo en Revolución" },
+            { "nombre": "Urb. Caribe", "circuitoComunal": "Bahía de Pozuelo en Revolución" },
+            { "nombre": "Urb. Gulf", "circuitoComunal": "Bahía de Pozuelo en Revolución" },
+            { "nombre": "Bella Vista", "circuitoComunal": "Bahía de Pozuelo en Revolución" },
+            { "nombre": "Guanire", "circuitoComunal": "Bahía de Pozuelo en Revolución" },
+            { "nombre": "Los Cerezos", "circuitoComunal": "Bahía de Pozuelo en Revolución" },
+            { "nombre": "Oropeza Castillo", "circuitoComunal": "Bahía de Pozuelo en Revolución" },
+            { "nombre": "Sierra Maestra", "circuitoComunal": "Socialista Sierra Maestra" },
+            { "nombre": "Chuparín Central", "circuitoComunal": "Socialista Chuparín" },
+            { "nombre": "Chuparín Arriba", "circuitoComunal": "Socialista Chuparín" },
+            { "nombre": "El Paraíso", "circuitoComunal": "Socialista El Paraíso" },
+            { "nombre": "Valle Lindo", "circuitoComunal": "Socialista Valle Lindo" }
+          ]
+        },
+        {
+          "id": "pozuelos",
+          "nombre": "Pozuelos",
+          "circuitosComunales": [
+            "Ciudad Sotillo"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central Pozuelos", "circuitoComunal": "Ciudad Sotillo" },
+            { "nombre": "Tierra Adentro", "circuitoComunal": "Ciudad Sotillo" },
+            { "nombre": "Molorca", "circuitoComunal": "Ciudad Sotillo" },
+            { "nombre": "El Frío", "circuitoComunal": "Ciudad Sotillo" },
+            { "nombre": "Las Delicias", "circuitoComunal": "Ciudad Sotillo" },
+            { "nombre": "Monte Cristo", "circuitoComunal": "Ciudad Sotillo" },
+            { "nombre": "El Pensil", "circuitoComunal": "Ciudad Sotillo" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "simon-bolivar",
+      "nombre": "Simón Bolívar",
+      "nombreOficial": "Municipio Simón Bolívar",
+      "parroquias": [
+        {
+          "id": "el-carmen",
+          "nombre": "El Carmen",
+          "circuitosComunales": [
+            "Cacique Cayaurima",
+            "Comuna Simón Bolívar",
+            "Comuna Boyacá",
+            "Juana Petronila Hernández",
+            "Mesones Unido"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Cacique Cayaurima" },
+            { "nombre": "Las Garzas", "circuitoComunal": "Cacique Cayaurima" },
+            { "nombre": "Los Cortijos", "circuitoComunal": "Cacique Cayaurima" },
+            { "nombre": "Tronconal I", "circuitoComunal": "Comuna Simón Bolívar" },
+            { "nombre": "Tronconal II", "circuitoComunal": "Comuna Simón Bolívar" },
+            { "nombre": "Tronconal III", "circuitoComunal": "Comuna Simón Bolívar" },
+            { "nombre": "Tronconal IV", "circuitoComunal": "Comuna Simón Bolívar" },
+            { "nombre": "Tronconal V", "circuitoComunal": "Comuna Simón Bolívar" },
+            { "nombre": "Tronconal VI", "circuitoComunal": "Comuna Simón Bolívar" },
+            { "nombre": "Boyacá", "circuitoComunal": "Comuna Boyacá" },
+            { "nombre": "Nueva Barcelona", "circuitoComunal": "Juana Petronila Hernández" },
+            { "nombre": "Colinas del Neverí", "circuitoComunal": "Juana Petronila Hernández" },
+            { "nombre": "Mesones", "circuitoComunal": "Mesones Unido" }
+          ]
+        },
+        {
+          "id": "san-cristobal",
+          "nombre": "San Cristóbal",
+          "circuitosComunales": [
+            "Luisa Cáceres de Arismendi",
+            "Socialista La Ponderosa",
+            "Comuna 29 de Marzo",
+            "Comuna Barrio Sucre",
+            "Comuna Las Casitas",
+            "Gran Comuna El Viñedo"
+          ],
+          "sectores": [
+            { "nombre": "Casco Histórico", "circuitoComunal": "Luisa Cáceres de Arismendi" },
+            { "nombre": "Campo Claro", "circuitoComunal": "Luisa Cáceres de Arismendi" },
+            { "nombre": "Barrio Colombia", "circuitoComunal": "Luisa Cáceres de Arismendi" },
+            { "nombre": "Portugal", "circuitoComunal": "Luisa Cáceres de Arismendi" },
+            { "nombre": "La Ponderosa", "circuitoComunal": "Socialista La Ponderosa" },
+            { "nombre": "29 de Marzo", "circuitoComunal": "Comuna 29 de Marzo" },
+            { "nombre": "Barrio Sucre", "circuitoComunal": "Comuna Barrio Sucre" },
+            { "nombre": "Las Casitas", "circuitoComunal": "Comuna Las Casitas" },
+            { "nombre": "El Viñedo", "circuitoComunal": "Gran Comuna El Viñedo" }
+          ]
+        },
+        {
+          "id": "bergantin",
+          "nombre": "Bergantín",
+          "circuitosComunales": [
+            "Cafetalero Bergantín"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central Bergantín", "circuitoComunal": "Cafetalero Bergantín" },
+            { "nombre": "La Laja", "circuitoComunal": "Cafetalero Bergantín" }
+          ]
+        },
+        {
+          "id": "caigua",
+          "nombre": "Caigua",
+          "circuitosComunales": [
+            "Indígena Caigua"
+          ],
+          "sectores": [
+            { "nombre": "Casco Caigua", "circuitoComunal": "Indígena Caigua" },
+            { "nombre": "San Miguel", "circuitoComunal": "Indígena Caigua" }
+          ]
+        },
+        {
+          "id": "el-pilar",
+          "nombre": "El Pilar",
+          "circuitosComunales": [
+            "El Pilar"
+          ],
+          "sectores": [
+            { "nombre": "Casco El Pilar", "circuitoComunal": "El Pilar" },
+            { "nombre": "La Ceiba", "circuitoComunal": "El Pilar" }
+          ]
+        },
+        {
+          "id": "naricual",
+          "nombre": "Naricual",
+          "circuitosComunales": [
+            "Carbonífero Naricual"
+          ],
+          "sectores": [
+            { "nombre": "Naricual Central", "circuitoComunal": "Carbonífero Naricual" },
+            { "nombre": "Las Minas", "circuitoComunal": "Carbonífero Naricual" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "guanta",
+      "nombre": "Guanta",
+      "nombreOficial": "Municipio Autónomo Guanta",
+      "parroquias": [
+        {
+          "id": "guanta",
+          "nombre": "Guanta",
+          "circuitosComunales": [
+            "Turístico Cultural Francisco de Miranda"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Turístico Cultural Francisco de Miranda" },
+            { "nombre": "La Montañita", "circuitoComunal": "Turístico Cultural Francisco de Miranda" },
+            { "nombre": "El Chaure", "circuitoComunal": "Turístico Cultural Francisco de Miranda" },
+            { "nombre": "Los Cocalitos", "circuitoComunal": "Turístico Cultural Francisco de Miranda" },
+            { "nombre": "Volcadero", "circuitoComunal": "Turístico Cultural Francisco de Miranda" },
+            { "nombre": "Bobures", "circuitoComunal": "Turístico Cultural Francisco de Miranda" },
+            { "nombre": "La Picha", "circuitoComunal": "Turístico Cultural Francisco de Miranda" }
+          ]
+        },
+        {
+          "id": "chorreron",
+          "nombre": "Chorrerón",
+          "circuitosComunales": [
+            "Víctor Bowell",
+            "Bolívar Chávez",
+            "La Sirena de Guanta"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Víctor Bowell" },
+            { "nombre": "Valle Seco", "circuitoComunal": "Víctor Bowell" },
+            { "nombre": "Guayuta", "circuitoComunal": "Víctor Bowell" },
+            { "nombre": "Pertigalete", "circuitoComunal": "Bolívar Chávez" },
+            { "nombre": "Conoma", "circuitoComunal": "Bolívar Chávez" },
+            { "nombre": "La Sirena", "circuitoComunal": "La Sirena de Guanta" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "anaco",
+      "nombre": "Anaco",
+      "nombreOficial": "Municipio Anaco",
+      "parroquias": [
+        {
+          "id": "anaco",
+          "nombre": "Anaco",
+          "circuitosComunales": [
+            "Corazón de Anaco",
+            "Gasífero de Anaco"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Corazón de Anaco" },
+            { "nombre": "El Merey", "circuitoComunal": "Corazón de Anaco" },
+            { "nombre": "23 de Enero", "circuitoComunal": "Corazón de Anaco" },
+            { "nombre": "Nuevo Anaco", "circuitoComunal": "Corazón de Anaco" },
+            { "nombre": "Campo Sur", "circuitoComunal": "Gasífero de Anaco" },
+            { "nombre": "Campo Norte", "circuitoComunal": "Gasífero de Anaco" },
+            { "nombre": "Las Parcelas", "circuitoComunal": "Gasífero de Anaco" }
+          ]
+        },
+        {
+          "id": "buena-vista",
+          "nombre": "Buena Vista",
+          "circuitosComunales": [
+            "Buena Vista Socialista"
+          ],
+          "sectores": [
+            { "nombre": "Buena Vista Centro", "circuitoComunal": "Buena Vista Socialista" }
+          ]
+        },
+        {
+          "id": "san-joaquin",
+          "nombre": "San Joaquín",
+          "circuitosComunales": [
+            "San Joaquín Productivo"
+          ],
+          "sectores": [
+            { "nombre": "San Joaquín Centro", "circuitoComunal": "San Joaquín Productivo" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "simon-rodriguez",
+      "nombre": "Simón Rodríguez",
+      "nombreOficial": "Municipio Simón Rodríguez",
+      "parroquias": [
+        {
+          "id": "edmundo-barrios",
+          "nombre": "Edmundo Barrios",
+          "circuitosComunales": [
+            "Petrolero del Sur Edmundo Barrios"
+          ],
+          "sectores": [
+            { "nombre": "Pueblo Nuevo Sur", "circuitoComunal": "Petrolero del Sur Edmundo Barrios" },
+            { "nombre": "Pueblo Nuevo Norte", "circuitoComunal": "Petrolero del Sur Edmundo Barrios" },
+            { "nombre": "Casco Viejo", "circuitoComunal": "Petrolero del Sur Edmundo Barrios" },
+            { "nombre": "La Charneca", "circuitoComunal": "Petrolero del Sur Edmundo Barrios" },
+            { "nombre": "17 de Diciembre", "circuitoComunal": "Petrolero del Sur Edmundo Barrios" }
+          ]
+        },
+        {
+          "id": "miguel-otero-silva",
+          "nombre": "Miguel Otero Silva",
+          "circuitosComunales": [
+            "Miguel Otero Silva"
+          ],
+          "sectores": [
+            { "nombre": "El Silencio", "circuitoComunal": "Miguel Otero Silva" },
+            { "nombre": "Las Delicias", "circuitoComunal": "Miguel Otero Silva" },
+            { "nombre": "25 de Mayo", "circuitoComunal": "Miguel Otero Silva" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "san-jose-de-guanipa",
+      "nombre": "San José de Guanipa",
+      "nombreOficial": "Municipio San José de Guanipa",
+      "parroquias": [
+        {
+          "id": "san-jose-de-guanipa",
+          "nombre": "San José de Guanipa",
+          "circuitosComunales": [
+            "Guanipa Productiva"
+          ],
+          "sectores": [
+            { "nombre": "Central I", "circuitoComunal": "Guanipa Productiva" },
+            { "nombre": "Central II", "circuitoComunal": "Guanipa Productiva" },
+            { "nombre": "El Basquero", "circuitoComunal": "Guanipa Productiva" },
+            { "nombre": "Monteverde", "circuitoComunal": "Guanipa Productiva" },
+            { "nombre": "San José", "circuitoComunal": "Guanipa Productiva" },
+            { "nombre": "La Granja", "circuitoComunal": "Guanipa Productiva" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pedro-maria-freites",
+      "nombre": "Pedro María Freites",
+      "nombreOficial": "Municipio Pedro María Freites",
+      "parroquias": [
+        {
+          "id": "cantaura",
+          "nombre": "Cantaura",
+          "circuitosComunales": [
+            "Chamariapa"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Chamariapa" },
+            { "nombre": "El Guario", "circuitoComunal": "Chamariapa" },
+            { "nombre": "Inavi", "circuitoComunal": "Chamariapa" }
+          ]
+        },
+        {
+          "id": "libertador",
+          "nombre": "Libertador",
+          "circuitosComunales": [
+            "Libertador de Freites"
+          ],
+          "sectores": [
+            { "nombre": "Casco Libertador", "circuitoComunal": "Libertador de Freites" }
+          ]
+        },
+        {
+          "id": "santa-rosa",
+          "nombre": "Santa Rosa",
+          "circuitosComunales": [
+            "Santa Rosa de Freites"
+          ],
+          "sectores": [
+            { "nombre": "Casco Santa Rosa", "circuitoComunal": "Santa Rosa de Freites" }
+          ]
+        },
+        {
+          "id": "urica",
+          "nombre": "Úrica",
+          "circuitosComunales": [
+            "Úrica Histórica"
+          ],
+          "sectores": [
+            { "nombre": "Casco Úrica", "circuitoComunal": "Úrica Histórica" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "manuel-ezequiel-bruzual",
+      "nombre": "Manuel Ezequiel Bruzual",
+      "nombreOficial": "Municipio Manuel Ezequiel Bruzual",
+      "parroquias": [
+        {
+          "id": "clarines",
+          "nombre": "Clarines",
+          "circuitosComunales": [
+            "Bruzual Histórico"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Bruzual Histórico" },
+            { "nombre": "Barrio Obrero", "circuitoComunal": "Bruzual Histórico" }
+          ]
+        },
+        {
+          "id": "guanape",
+          "nombre": "Guanape",
+          "circuitosComunales": [
+            "Guanape"
+          ],
+          "sectores": [
+            { "nombre": "Casco Guanape", "circuitoComunal": "Guanape" }
+          ]
+        },
+        {
+          "id": "sabana-de-uchire",
+          "nombre": "Sabana de Uchire",
+          "circuitosComunales": [
+            "Sabana de Uchire"
+          ],
+          "sectores": [
+            { "nombre": "Casco Sabana de Uchire", "circuitoComunal": "Sabana de Uchire" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fernando-de-penalver",
+      "nombre": "Fernando de Peñalver",
+      "nombreOficial": "Municipio Fernando de Peñalver",
+      "parroquias": [
+        {
+          "id": "puerto-piritu",
+          "nombre": "Puerto Píritu",
+          "circuitosComunales": [
+            "Peñalver Costero"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Peñalver Costero" },
+            { "nombre": "El Tejar", "circuitoComunal": "Peñalver Costero" },
+            { "nombre": "Campo Lindo", "circuitoComunal": "Peñalver Costero" }
+          ]
+        },
+        {
+          "id": "san-miguel",
+          "nombre": "San Miguel",
+          "circuitosComunales": [
+            "San Miguel"
+          ],
+          "sectores": [
+            { "nombre": "Casco San Miguel", "circuitoComunal": "San Miguel" }
+          ]
+        },
+        {
+          "id": "sucre",
+          "nombre": "Sucre",
+          "circuitosComunales": [
+            "Sucre de Peñalver"
+          ],
+          "sectores": [
+            { "nombre": "Casco Sucre", "circuitoComunal": "Sucre de Peñalver" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "piritu",
+      "nombre": "Píritu",
+      "nombreOficial": "Municipio Píritu",
+      "parroquias": [
+        {
+          "id": "piritu",
+          "nombre": "Píritu",
+          "circuitosComunales": [
+            "Píritu Colonial"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Píritu Colonial" },
+            { "nombre": "La Carrera", "circuitoComunal": "Píritu Colonial" }
+          ]
+        },
+        {
+          "id": "san-francisco",
+          "nombre": "San Francisco",
+          "circuitosComunales": [
+            "San Francisco de Píritu"
+          ],
+          "sectores": [
+            { "nombre": "Casco San Francisco", "circuitoComunal": "San Francisco de Píritu" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "san-juan-de-capistrano",
+      "nombre": "San Juan de Capistrano",
+      "nombreOficial": "Municipio San Juan de Capistrano",
+      "parroquias": [
+        {
+          "id": "boca-de-uchire",
+          "nombre": "Boca de Uchire",
+          "circuitosComunales": [
+            "Portal de Anzoátegui"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Portal de Anzoátegui" },
+            { "nombre": "Playa Pintada", "circuitoComunal": "Portal de Anzoátegui" }
+          ]
+        },
+        {
+          "id": "boca-de-chavez",
+          "nombre": "Boca de Chávez",
+          "circuitosComunales": [
+            "Boca de Chávez"
+          ],
+          "sectores": [
+            { "nombre": "Casco Boca de Chávez", "circuitoComunal": "Boca de Chávez" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aragua",
+      "nombre": "Aragua",
+      "nombreOficial": "Municipio Aragua",
+      "parroquias": [
+        {
+          "id": "aragua-de-barcelona",
+          "nombre": "Aragua de Barcelona",
+          "circuitosComunales": [
+            "Atenas de Oriente"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Atenas de Oriente" },
+            { "nombre": "Boquerón", "circuitoComunal": "Atenas de Oriente" }
+          ]
+        },
+        {
+          "id": "cachipo",
+          "nombre": "Cachipo",
+          "circuitosComunales": [
+            "Cachipo"
+          ],
+          "sectores": [
+            { "nombre": "Casco Cachipo", "circuitoComunal": "Cachipo" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "francisco-de-miranda",
+      "nombre": "Francisco de Miranda",
+      "nombreOficial": "Municipio Francisco de Miranda",
+      "parroquias": [
+        {
+          "id": "pariaguan",
+          "nombre": "Pariaguán",
+          "circuitosComunales": [
+            "Miranda Soberano"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Miranda Soberano" },
+            { "nombre": "El Pao", "circuitoComunal": "Miranda Soberano" }
+          ]
+        },
+        {
+          "id": "atapirire",
+          "nombre": "Atapirire",
+          "circuitosComunales": [
+            "Atapirire"
+          ],
+          "sectores": [
+            { "nombre": "Casco Atapirire", "circuitoComunal": "Atapirire" }
+          ]
+        },
+        {
+          "id": "boca-del-pao",
+          "nombre": "Boca del Pao",
+          "circuitosComunales": [
+            "Boca del Pao"
+          ],
+          "sectores": [
+            { "nombre": "Casco Boca del Pao", "circuitoComunal": "Boca del Pao" }
+          ]
+        },
+        {
+          "id": "el-pao",
+          "nombre": "El Pao",
+          "circuitosComunales": [
+            "El Pao"
+          ],
+          "sectores": [
+            { "nombre": "Casco El Pao", "circuitoComunal": "El Pao" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jose-gregorio-monagas",
+      "nombre": "José Gregorio Monagas",
+      "nombreOficial": "Municipio José Gregorio Monagas",
+      "parroquias": [
+        {
+          "id": "mapire",
+          "nombre": "Mapire",
+          "circuitosComunales": [
+            "Ribera del Orinoco"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Ribera del Orinoco" }
+          ]
+        },
+        {
+          "id": "piar",
+          "nombre": "Piar",
+          "circuitosComunales": [
+            "Piar de Monagas"
+          ],
+          "sectores": [
+            { "nombre": "Casco Piar", "circuitoComunal": "Piar de Monagas" }
+          ]
+        },
+        {
+          "id": "san-diego-de-cabrutica",
+          "nombre": "San Diego de Cabrutica",
+          "circuitosComunales": [
+            "Cabrutica"
+          ],
+          "sectores": [
+            { "nombre": "Casco Cabrutica", "circuitoComunal": "Cabrutica" }
+          ]
+        },
+        {
+          "id": "santa-clara",
+          "nombre": "Santa Clara",
+          "circuitosComunales": [
+            "Santa Clara"
+          ],
+          "sectores": [
+            { "nombre": "Casco Santa Clara", "circuitoComunal": "Santa Clara" }
+          ]
+        },
+        {
+          "id": "uverito",
+          "nombre": "Uverito",
+          "circuitosComunales": [
+            "Uverito"
+          ],
+          "sectores": [
+            { "nombre": "Casco Uverito", "circuitoComunal": "Uverito" }
+          ]
+        },
+        {
+          "id": "zuata",
+          "nombre": "Zuata",
+          "circuitosComunales": [
+            "Zuata"
+          ],
+          "sectores": [
+            { "nombre": "Casco Zuata", "circuitoComunal": "Zuata" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "independencia",
+      "nombre": "Independencia",
+      "nombreOficial": "Municipio Independencia",
+      "parroquias": [
+        {
+          "id": "soledad",
+          "nombre": "Soledad (Ciudad Orinoco)",
+          "circuitosComunales": [
+            "Ciudad Orinoco"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Ciudad Orinoco" },
+            { "nombre": "Las Malvinas", "circuitoComunal": "Ciudad Orinoco" }
+          ]
+        },
+        {
+          "id": "mamo",
+          "nombre": "Mamo",
+          "circuitosComunales": [
+            "Mamo"
+          ],
+          "sectores": [
+            { "nombre": "Casco Mamo", "circuitoComunal": "Mamo" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "libertad",
+      "nombre": "Libertad",
+      "nombreOficial": "Municipio Libertad",
+      "parroquias": [
+        {
+          "id": "san-mateo",
+          "nombre": "San Mateo",
+          "circuitosComunales": [
+            "Libertad Soberana"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Libertad Soberana" },
+            { "nombre": "La Manga", "circuitoComunal": "Libertad Soberana" }
+          ]
+        },
+        {
+          "id": "el-carito",
+          "nombre": "El Carito",
+          "circuitosComunales": [
+            "El Carito"
+          ],
+          "sectores": [
+            { "nombre": "Casco El Carito", "circuitoComunal": "El Carito" }
+          ]
+        },
+        {
+          "id": "santa-ines",
+          "nombre": "Santa Inés",
+          "circuitosComunales": [
+            "Santa Inés"
+          ],
+          "sectores": [
+            { "nombre": "Casco Santa Inés", "circuitoComunal": "Santa Inés" }
+          ]
+        },
+        {
+          "id": "la-romerena",
+          "nombre": "La Romereña",
+          "circuitosComunales": [
+            "La Romereña"
+          ],
+          "sectores": [
+            { "nombre": "Casco La Romereña", "circuitoComunal": "La Romereña" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "juan-manuel-cajigal",
+      "nombre": "Juan Manuel Cajigal",
+      "nombreOficial": "Municipio Juan Manuel Cajigal",
+      "parroquias": [
+        {
+          "id": "onoto",
+          "nombre": "Onoto",
+          "circuitosComunales": [
+            "Cajigal Unido"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Cajigal Unido" }
+          ]
+        },
+        {
+          "id": "san-pablo",
+          "nombre": "San Pablo",
+          "circuitosComunales": [
+            "San Pablo de Cajigal"
+          ],
+          "sectores": [
+            { "nombre": "Casco San Pablo", "circuitoComunal": "San Pablo de Cajigal" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "francisco-del-carmen-carvajal",
+      "nombre": "Francisco del Carmen Carvajal",
+      "nombreOficial": "Municipio Francisco del Carmen Carvajal",
+      "parroquias": [
+        {
+          "id": "valle-de-guanape",
+          "nombre": "Valle de Guanape",
+          "circuitosComunales": [
+            "Carvajal en Marcha"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Carvajal en Marcha" },
+            { "nombre": "El Placer", "circuitoComunal": "Carvajal en Marcha" }
+          ]
+        },
+        {
+          "id": "santa-barbara",
+          "nombre": "Santa Bárbara",
+          "circuitosComunales": [
+            "Santa Bárbara"
+          ],
+          "sectores": [
+            { "nombre": "Casco Santa Bárbara", "circuitoComunal": "Santa Bárbara" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "santa-ana",
+      "nombre": "Santa Ana",
+      "nombreOficial": "Municipio Santa Ana",
+      "parroquias": [
+        {
+          "id": "santa-ana",
+          "nombre": "Santa Ana",
+          "circuitosComunales": [
+            "Santa Ana Heroica"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "Santa Ana Heroica" }
+          ]
+        },
+        {
+          "id": "pueblo-nuevo",
+          "nombre": "Pueblo Nuevo",
+          "circuitosComunales": [
+            "Pueblo Nuevo"
+          ],
+          "sectores": [
+            { "nombre": "Casco Pueblo Nuevo", "circuitoComunal": "Pueblo Nuevo" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sir-arthur-mcgregor",
+      "nombre": "Sir Arthur McGregor",
+      "nombreOficial": "Municipio Sir Arthur McGregor",
+      "parroquias": [
+        {
+          "id": "el-chaparro",
+          "nombre": "El Chaparro",
+          "circuitosComunales": [
+            "McGregor Productivo"
+          ],
+          "sectores": [
+            { "nombre": "Casco Central", "circuitoComunal": "McGregor Productivo" }
+          ]
+        },
+        {
+          "id": "tomas-alfaro-calatrava",
+          "nombre": "Tomás Alfaro Calatrava",
+          "circuitosComunales": [
+            "Tomás Alfaro Calatrava"
+          ],
+          "sectores": [
+            { "nombre": "Casco Alfaro Calatrava", "circuitoComunal": "Tomás Alfaro Calatrava" }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

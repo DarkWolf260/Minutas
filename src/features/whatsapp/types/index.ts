@@ -26,11 +26,13 @@ export interface QuotedWhatsAppMessage {
   from?: string | null;
   author?: string | null;
   senderName?: string | null;
+  authorAvatar?: string | null;
   hasMedia?: boolean;
   mediaUrl?: string | null;
   thumbnail?: string | null;
   isRevoked?: boolean;
   location?: WhatsAppLocation | null;
+  albumCount?: number;
 }
 
 export interface WhatsAppMessage {
@@ -43,6 +45,7 @@ export interface WhatsAppMessage {
   to: string;
   author: string | null;
   senderName: string | null;
+  authorAvatar?: string | null;
   hasMedia: boolean;
   mediaUrl?: string | null;
   thumbnail?: string | null;
@@ -51,6 +54,7 @@ export interface WhatsAppMessage {
   hasQuotedMsg?: boolean;
   quotedMsg?: QuotedWhatsAppMessage | null;
   location?: WhatsAppLocation | null;
+  albumMessages?: WhatsAppMessage[];
 }
 
 export interface WhatsAppStatus {

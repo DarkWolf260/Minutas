@@ -9,6 +9,7 @@ import {
     form_dataRecord,
 } from '@/lib/types';
 import { ReportFormField } from '../fields/report-form-field';
+import { isAddressField } from '@/lib/constants/addresses';
 import { SectionRenderer, SectionRendererProps } from '../section-renderer';
 
 export function RepeatableSectionRenderer(props: SectionRendererProps) {
@@ -99,8 +100,8 @@ export function RepeatableSectionRenderer(props: SectionRendererProps) {
                     ))}
                 <div className="space-y-2">
                     {fields.map((item, index) => (
-                        <div key={item.id} className="flex items-center gap-2">
-                            <div className="flex-1">
+                        <div key={item.id} className="flex items-start gap-2 w-full min-w-0">
+                            <div className="flex-1 min-w-0">
                                 <ReportFormField
                                     path={`${fieldNamePrefix}.${index}.${field_id}`}
                                     control={control}
@@ -120,7 +121,7 @@ export function RepeatableSectionRenderer(props: SectionRendererProps) {
                                     type="button"
                                     variant="ghost"
                                     size="icon"
-                                    className="h-9 w-9 text-destructive shrink-0"
+                                    className="h-8 w-8 text-destructive shrink-0 mt-0"
                                     onClick={() => remove(index)}
                                 >
                                     <Trash2 className="h-4 w-4" />
@@ -254,7 +255,9 @@ export function RepeatableSectionRenderer(props: SectionRendererProps) {
                                         >
                                             {(() => {
                                                 const normalized = field_id.toLowerCase().replace(/_/g, ' ').trim();
-                                                return normalized !== 'apoyo ins' && normalized !== 'apoyo institucional';
+                                                if (normalized === 'apoyo ins' || normalized === 'apoyo institucional') return false;
+                                                if (isAddressField(fieldConfig, field_id)) return false;
+                                                return true;
                                             })() && (
                                                 <Label htmlFor={path}>
                                                     {fieldConfig?.label || field_id}

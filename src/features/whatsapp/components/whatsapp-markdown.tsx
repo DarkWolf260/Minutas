@@ -119,7 +119,7 @@ export const WhatsAppMarkdown = memo(function WhatsAppMarkdown({
   const codeBlockSplit = text.split(/(```[\s\S]*?```)/g);
 
   return (
-    <div className={cn('space-y-0.5 text-xs sm:text-sm leading-relaxed', className)}>
+    <div className={cn('space-y-1 text-xs sm:text-sm leading-relaxed', className)}>
       {codeBlockSplit.map((section, sectionIdx) => {
         if (!section) return null;
 
@@ -129,7 +129,7 @@ export const WhatsAppMarkdown = memo(function WhatsAppMarkdown({
           return (
             <pre
               key={`code-${sectionIdx}`}
-              className="my-1.5 p-2.5 rounded-xl bg-black/10 dark:bg-black/35 font-mono text-[11px] sm:text-xs overflow-x-auto border border-black/5 dark:border-white/10 select-text whitespace-pre text-foreground"
+              className="my-2 p-3 rounded-xl bg-black/10 dark:bg-black/35 font-mono text-[11px] sm:text-xs overflow-x-auto border border-black/5 dark:border-white/10 select-text whitespace-pre text-foreground"
             >
               <code>{rawCode}</code>
             </pre>
@@ -145,9 +145,9 @@ export const WhatsAppMarkdown = memo(function WhatsAppMarkdown({
           const line = rawLines[i] ?? '';
           const lineKey = `sec-${sectionIdx}-line-${i}`;
 
-          // Línea vacía
+          // Línea vacía: genera un salto visual notable de párrafo (estilo WhatsApp)
           if (line.trim() === '') {
-            elements.push(<div key={lineKey} className="h-2" />);
+            elements.push(<div key={lineKey} className="h-4 sm:h-5 select-none" />);
             i++;
             continue;
           }
@@ -169,10 +169,10 @@ export const WhatsAppMarkdown = memo(function WhatsAppMarkdown({
             elements.push(
               <blockquote
                 key={lineKey}
-                className="border-l-[3.5px] border-emerald-600/80 dark:border-emerald-400/80 pl-2.5 py-1 my-1 bg-black/5 dark:bg-black/25 rounded-r text-xs sm:text-[13px] italic opacity-95 space-y-0.5"
+                className="border-l-[3.5px] border-emerald-600/80 dark:border-emerald-400/80 pl-2.5 py-1.5 my-1.5 bg-black/5 dark:bg-black/25 rounded-r text-xs sm:text-[13px] italic opacity-95 space-y-1"
               >
                 {quoteLines.map((qText, qIdx) => (
-                  <div key={qIdx} className="min-h-[1.25em] break-words">
+                  <div key={qIdx} className="min-h-[1.3em] break-words">
                     {parseInlineTokens(qText, `${lineKey}-q-${qIdx}`)}
                   </div>
                 ))}
@@ -185,11 +185,11 @@ export const WhatsAppMarkdown = memo(function WhatsAppMarkdown({
           const bulletMatch = line.match(/^[-*]\s+(.*)$/);
           if (bulletMatch && bulletMatch[1]) {
             elements.push(
-              <div key={lineKey} className="flex items-start gap-2 my-0.5 pl-1 leading-relaxed">
-                <span className="text-emerald-700 dark:text-emerald-400 select-none font-bold text-xs leading-5">
+              <div key={lineKey} className="flex items-start gap-2.5 my-1 sm:my-1.5 pl-1 leading-relaxed">
+                <span className="text-emerald-700 dark:text-emerald-400 select-none font-bold text-xs sm:text-sm leading-6 shrink-0">
                   •
                 </span>
-                <span className="flex-1 min-w-0 break-words">
+                <span className="flex-1 min-w-0 break-words leading-relaxed">
                   {parseInlineTokens(bulletMatch[1], lineKey)}
                 </span>
               </div>
@@ -202,11 +202,11 @@ export const WhatsAppMarkdown = memo(function WhatsAppMarkdown({
           const numberMatch = line.match(/^(\d+)\.\s+(.*)$/);
           if (numberMatch && numberMatch[1] && numberMatch[2]) {
             elements.push(
-              <div key={lineKey} className="flex items-start gap-2 my-0.5 pl-1 leading-relaxed">
-                <span className="font-semibold text-emerald-800 dark:text-emerald-300 min-w-[1.25rem] text-right select-none font-mono text-[11px] leading-5">
+              <div key={lineKey} className="flex items-start gap-2.5 my-1 sm:my-1.5 pl-1 leading-relaxed">
+                <span className="font-semibold text-emerald-800 dark:text-emerald-300 min-w-[1.25rem] text-right select-none font-mono text-xs sm:text-sm leading-6 shrink-0">
                   {numberMatch[1]}.
                 </span>
-                <span className="flex-1 min-w-0 break-words">
+                <span className="flex-1 min-w-0 break-words leading-relaxed">
                   {parseInlineTokens(numberMatch[2], lineKey)}
                 </span>
               </div>
@@ -217,7 +217,7 @@ export const WhatsAppMarkdown = memo(function WhatsAppMarkdown({
 
           // Línea de texto estándar
           elements.push(
-            <div key={lineKey} className="min-h-[1.25em] break-words">
+            <div key={lineKey} className="min-h-[1.4em] py-0.5 break-words leading-relaxed">
               {parseInlineTokens(line, lineKey)}
             </div>
           );

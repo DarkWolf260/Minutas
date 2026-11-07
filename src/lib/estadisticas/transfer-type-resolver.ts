@@ -38,7 +38,9 @@ function resolverTipoDesdeDirectorio(
   if (!addressStr) return undefined;
   const normalized = normalizeString(addressStr);
   const found = addresses.find(
-    (addr) => normalizeString(formatAddressToString(addr)) === normalized
+    (addr) =>
+      normalizeString(formatAddressToString(addr)) === normalized ||
+      (addr.name && normalized.includes(normalizeString(addr.name)))
   );
   return found?.locationType;
 }
