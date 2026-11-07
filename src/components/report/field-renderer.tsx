@@ -23,6 +23,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { AddressInput } from '@/components/ui/custom/address-input';
+import { isAddressField } from '@/lib/constants/addresses';
 import { CedulaInput } from '@/components/ui/custom/cedula-input';
 import { formatStaffMemberForAutocomplete } from '@/lib/formatters';
 import { EstadisticasField } from './fields/estadisticas-field';
@@ -71,10 +72,8 @@ export const FieldRenderer = memo(
             ref
         ) => {
             const lowerfield_id = field_id.toLowerCase();
-            const rawMods = (fieldConfig.modifiers || []).map((m: any) => String(m).toLowerCase().trim());
-            const showSavedAddresses = rawMods.some((m: string) =>
-                m === 'direcciones' || m === 'direccion' || m === 'dirección' || m === 'dir' || m === 'ubicaciones' || m === 'ubicacion' || m === 'ubicación'
-            );
+            const showSavedAddresses = isAddressField(fieldConfig, field_id);
+            const defaultMunicipioConfig = settings?.definitions?.['Municipio']?.value;
             const formContext = useFormContext();
             const tipoPath = `${name}_tipo`;
             const watchedTypeValue = useWatch({
@@ -218,13 +217,16 @@ export const FieldRenderer = memo(
                             onTypeChange={(tipo) => setValue(tipoPath, tipo)}
                             typeValue={String(watchedTypeValue ?? '')}
                             disabled={disabled}
-                            className={className}
+                            className={cn('w-full min-w-0', className)}
                             placeholder="Selecciona o escribe una dirección..."
                             ref={ref}
                             onBlur={onBlur}
                             isTextarea
                             name={name}
                             id={name}
+                            label={fieldConfig.label || field_id}
+                            required={fieldConfig.required}
+                            defaultMunicipio={defaultMunicipioConfig}
                         />
                     );
                 }
@@ -356,12 +358,15 @@ export const FieldRenderer = memo(
                         onTypeChange={(tipo) => setValue(tipoPath, tipo)}
                         typeValue={String(watchedTypeValue ?? '')}
                         disabled={disabled}
-                        className={className}
+                        className={cn('w-full min-w-0', className)}
                         placeholder="Selecciona o escribe una dirección..."
                         ref={ref}
                         onBlur={onBlur}
                         name={name}
                         id={name}
+                        label={fieldConfig.label || field_id}
+                        required={fieldConfig.required}
+                        defaultMunicipio={defaultMunicipioConfig}
                     />
                 );
             }

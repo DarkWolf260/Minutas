@@ -55,6 +55,13 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LOCATION_TYPES } from '@/lib/constants/addresses';
+import {
+  getMunicipios,
+  getParroquias,
+  getSectores,
+  getCircuitosComunales,
+  getCircuitoComunalParaSector,
+} from '@/lib/constants/territorial';
 
 interface AddressFormDialogProps {
   isOpen: boolean;
@@ -135,6 +142,13 @@ export function AddressFormDialog({
   const onSubmit = (data: Address) => {
     onSave(data);
   };
+
+  const watchedMunicipio = form.watch('municipality');
+  const watchedParish = form.watch('parish');
+  const municipiosList = useMemo(() => getMunicipios(), []);
+  const parroquiasList = useMemo(() => getParroquias(watchedMunicipio), [watchedMunicipio]);
+  const sectoresList = useMemo(() => getSectores(watchedMunicipio, watchedParish), [watchedMunicipio, watchedParish]);
+  const circuitosList = useMemo(() => getCircuitosComunales(watchedMunicipio, watchedParish), [watchedMunicipio, watchedParish]);
 
   const FormContent = () => (
     <Form {...form}>
@@ -257,9 +271,27 @@ export function AddressFormDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-semibold">Municipio</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej: Simón Bolívar" className="bg-background border-2 border-muted/30 h-10 rounded-xl px-4" {...field} />
-                      </FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={(val) => {
+                          field.onChange(val);
+                          form.setValue('parish', '');
+                          form.setValue('sector', '');
+                        }}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="bg-background border-2 border-muted/30 h-10 rounded-xl px-4">
+                            <SelectValue placeholder="Seleccione municipio" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-h-56">
+                          {municipiosList.map((m) => (
+                            <SelectItem key={m.id} value={m.nombre}>
+                              {m.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -270,9 +302,32 @@ export function AddressFormDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-semibold">Parroquia</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej: El Carmen" className="bg-background border-2 border-muted/30 h-10 rounded-xl px-4" {...field} />
-                      </FormControl>
+                      {parroquiasList.length > 0 ? (
+                        <Select
+                          value={field.value}
+                          onValueChange={(val) => {
+                            field.onChange(val);
+                            form.setValue('sector', '');
+                          }}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="bg-background border-2 border-muted/30 h-10 rounded-xl px-4">
+                              <SelectValue placeholder="Seleccione parroquia" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-56">
+                            {parroquiasList.map((p) => (
+                              <SelectItem key={p.id} value={p.nombre}>
+                                {p.nombre}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <FormControl>
+                          <Input placeholder="Ej: El Carmen" className="bg-background border-2 border-muted/30 h-10 rounded-xl px-4" {...field} />
+                        </FormControl>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -285,9 +340,35 @@ export function AddressFormDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-semibold">Sector / Barrio</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej: Casco Central" className="bg-background border-2 border-muted/30 h-10 rounded-xl px-4" {...field} />
-                      </FormControl>
+                      {sectoresList.length > 0 ? (
+                        <Select
+                          value={field.value}
+                          onValueChange={(val) => {
+                            field.onChange(val);
+                            const autoCircuito = getCircuitoComunalParaSector(watchedMunicipio, watchedParish, val);
+                            if (autoCircuito) {
+                              form.setValue('peaceQuadrant', autoCircuito);
+                            }
+                          }}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="bg-background border-2 border-muted/30 h-10 rounded-xl px-4">
+                              <SelectValue placeholder="Seleccione sector" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-56">
+                            {sectoresList.map((s) => (
+                              <SelectItem key={s.nombre} value={s.nombre}>
+                                {s.nombre}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <FormControl>
+                          <Input placeholder="Ej: Casco Central" className="bg-background border-2 border-muted/30 h-10 rounded-xl px-4" {...field} />
+                        </FormControl>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -299,10 +380,10 @@ export function AddressFormDialog({
                     <FormItem>
                       <div className="flex items-center gap-2 mb-2">
                         <Shield className="h-3 w-3 text-primary" />
-                        <FormLabel className="text-xs font-semibold m-0">Cuadrante de Paz</FormLabel>
+                        <FormLabel className="text-xs font-semibold m-0">Circuito Comunal</FormLabel>
                       </div>
                       <FormControl>
-                        <Input placeholder="Ej: 14" className="bg-background border-2 border-muted/30 h-10 rounded-xl px-4" {...field} />
+                        <Input placeholder="Ej: Alberto Lovera" className="bg-background border-2 border-muted/30 h-10 rounded-xl px-4" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

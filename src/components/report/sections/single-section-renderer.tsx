@@ -6,6 +6,7 @@ import {
     SectionConfig,
 } from '@/lib/types';
 import { ReportFormField } from '../fields/report-form-field';
+import { isAddressField } from '@/lib/constants/addresses';
 import { SectionRenderer, SectionRendererProps } from '../section-renderer';
 
 export function SingleSectionRenderer(props: SectionRendererProps) {
@@ -78,7 +79,9 @@ export function SingleSectionRenderer(props: SectionRendererProps) {
                             >
                                 {(() => {
                                     const normalized = field_id.toLowerCase().replace(/_/g, ' ').trim();
-                                    return normalized !== 'apoyo ins' && normalized !== 'apoyo institucional';
+                                    if (normalized === 'apoyo ins' || normalized === 'apoyo institucional') return false;
+                                    if (isAddressField(fieldConfig, field_id)) return false;
+                                    return true;
                                 })() && (
                                     <Label htmlFor={path}>
                                         {fieldConfig?.label || field_id}
@@ -180,7 +183,9 @@ export function SingleSectionRenderer(props: SectionRendererProps) {
                             >
                                 {(() => {
                                     const normalized = field_id.toLowerCase().replace(/_/g, ' ').trim();
-                                    return normalized !== 'apoyo ins' && normalized !== 'apoyo institucional';
+                                    if (normalized === 'apoyo ins' || normalized === 'apoyo institucional') return false;
+                                    if (isAddressField(fieldConfig, field_id)) return false;
+                                    return true;
                                 })() && (
                                     <Label htmlFor={path}>
                                         {fieldConfig?.label || field_id}

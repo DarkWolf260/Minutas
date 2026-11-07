@@ -391,6 +391,7 @@ export const DEFAULT_ADDRESSES = [
 ];
 
 import type { Address } from '@/lib/types';
+import { formatUbicacionString } from './territorial';
 
 export const LOCATION_TYPES = [
   { value: 'centro_asistencial', label: 'Centro Asistencial' },
@@ -400,20 +401,53 @@ export const LOCATION_TYPES = [
   { value: 'sede', label: 'Sede' },
 ] as const;
 
-export function formatAddressToString(address: Address): string {
-  const parts = [`Municipio ${address.municipality}`, `parroquia ${address.parish}`];
+export function formatAddressToString(address: Address | Partial<Address>): string {
+  // If it's a legacy quadrant format (e.g. QP-01 or Cuadrante de Paz)
+  const isLegacyQuadrant =
+    address.peaceQuadrant && /^(qp|cuadrante)/i.test(address.peaceQuadrant.trim());
 
-  if (address.sector) {
-    parts.push(`sector ${address.sector}`);
+  if (isLegacyQuadrant) {
+    const parts = [
+      address.municipality
+        ? address.municipality.startsWith('Municipio')
+          ? address.municipality
+          : `Municipio ${address.municipality}`
+        : '',
+      address.parish ? `parroquia ${address.parish.replace(/^parroquia\s+/i, '')}` : '',
+    ].filter(Boolean);
+
+    if (address.sector) {
+      parts.push(`sector ${address.sector.replace(/^sector\s+/i, '')}`);
+    }
+
+    const calle = [address.street, address.houseNumber].filter(Boolean).join(' ');
+    if (calle) {
+      parts.push(`calle ${calle.replace(/^calle\s+/i, '')}`);
+    }
+
+    if (address.name) {
+      parts.push(address.name);
+    }
+
+    const cleanQuad = address.peaceQuadrant!.replace(/^cuadrante\s+de\s+paz\s+/i, '');
+    parts.push(`Cuadrante de Paz ${cleanQuad}`);
+
+    return parts.join(', ');
   }
 
-  const calle = [address.street, address.houseNumber].filter(Boolean).join(' ');
-  if (calle) {
-    parts.push(`calle ${calle}`);
-  }
+  return formatUbicacionString({
+    municipio: address.municipality,
+    parroquia: address.parish,
+    sector: address.sector,
+    calle: [address.street, address.houseNumber].filter(Boolean).join(' '),
+    lugar: address.name,
+    circuitoComunal: (address as any).circuitoComunal || address.peaceQuadrant,
+  });
+}
 
-  parts.push(address.name);
-  parts.push(`Cuadrante de Paz ${address.peaceQuadrant}`);
-
-  return parts.join(', ');
+export function isAddressField(fieldConfig?: { modifiers?: string[]; label?: string }, _field_id?: string): boolean {
+  const rawMods = ((fieldConfig?.modifiers as string[]) || []).map((m: any) => String(m).toLowerCase().trim());
+  return rawMods.some((m: string) =>
+    m === 'direcciones' || m === 'direccion' || m === 'dirección' || m === 'dir' || m === 'ubicaciones' || m === 'ubicacion' || m === 'ubicación'
+  );
 }

@@ -55,7 +55,7 @@ export function ReportFormField({
                 required: (isFinalizado && fieldConfig.required) ? 'Este campo es obligatorio' : false,
             }}
             render={({ field, fieldState: { error } }) => (
-                <div className="flex flex-col gap-1 w-full">
+                <div className="flex flex-col gap-1 w-full min-w-0">
                     <FieldRenderer
                         field_id={field_id}
                         fieldConfig={fieldConfig}
