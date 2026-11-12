@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useWhatsAppBot } from './use-whatsapp-bot';
 import { useSettings } from '@/hooks/configuracion';
+import { useWorkspaceManager, useDatabase } from '@/lib/db/db-context';
 import type { Report, Template } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -16,8 +17,10 @@ export function useWhatsAppChat({
   externalActiveChatId,
   onChatChange
 }: UseWhatsAppChatOptions) {
+  const { currentWorkspace, isCloud } = useWorkspaceManager();
+  const db = useDatabase();
   const { settings } = useSettings();
-  const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
+  const bot = useWhatsAppBot();
 
   // Selected chat ID from real WhatsApp chats
   const [internalActiveChatId, setInternalActiveChatId] = useState<string>(() => {
@@ -38,7 +41,7 @@ export function useWhatsAppChat({
   const [isSending, setIsSending] = useState(false);
   const [messageText, setMessageText] = useState('');
 
-  const isBotReady = bot.isAvailable && bot.status.isReady;
+  const isBotReady = (bot.isAvailable && bot.status.isReady) || (bot.isCloudActive ?? false);
 
   // Available chat targets from WhatsApp bot
   const chatList: ChatItem[] = useMemo(() => {
@@ -186,10 +189,10 @@ export function useWhatsAppChat({
 
   // Load chats on mount / when bot is ready
   useEffect(() => {
-    if (isBotReady && bot.chats.length === 0) {
+    if ((isBotReady || isCloud) && bot.chats.length === 0) {
       botRef.current.loadChats();
     }
-  }, [isBotReady, bot.chats.length]);
+  }, [isBotReady, isCloud, bot.chats.length]);
 
   // Poll messages if looking at a real WhatsApp chat
   useEffect(() => {
@@ -205,6 +208,44 @@ export function useWhatsAppChat({
       };
     }
   }, [activeChatId, isBotReady, loadRealMessages]);
+
+  // Suscribirse en tiempo real a las actualizaciones de mensajes en la nube
+  useEffect(() => {
+    if (!db || !currentWorkspace || !isCloud || !activeChatId) return;
+
+    const msgDocId = `whatsapp_messages:${currentWorkspace}:${activeChatId}`;
+    const sub = db.configs.findOne(msgDocId).$.subscribe((doc) => {
+      if (!doc) return;
+      const item = doc.toJSON();
+      const messages = item.data?.messages;
+      if (Array.isArray(messages) && messages.length > 0) {
+        setRealMessages(prev => {
+          const incoming = messages as WhatsAppMessage[];
+          const seenIds = new Set<string>();
+          const unique: WhatsAppMessage[] = [];
+          for (const m of incoming) {
+            if (!m || !m.id || seenIds.has(m.id)) continue;
+            seenIds.add(m.id);
+            unique.push(m);
+          }
+          const pendingTemps = prev.filter(p => p.id.startsWith('temp_'));
+          const remainingTemps = pendingTemps.filter(temp => {
+            return !unique.some(real =>
+              real.fromMe &&
+              (real.body || '').trim() === (temp.body || '').trim() &&
+              Math.abs(real.timestamp - temp.timestamp) < 30000
+            );
+          });
+          const combined = remainingTemps.length > 0 ? [...unique, ...remainingTemps] : unique;
+          combined.sort((a, b) => a.timestamp - b.timestamp);
+          return combined;
+        });
+        setIsLoadingMessages(false);
+      }
+    });
+
+    return () => sub.unsubscribe();
+  }, [db, currentWorkspace, isCloud, activeChatId]);
 
   // Send message
   const handleSendMessage = useCallback(async (customText?: string) => {
@@ -257,7 +298,7 @@ export function useWhatsAppChat({
       return;
     }
 
-    if (!isBotReady) {
+    if (!isBotReady && !isCloud) {
       toast.error('Bot de WhatsApp no conectado', {
         description: 'Enciende el bot en iniciar-bot.bat para enviar novedades.'
       });
@@ -275,15 +316,19 @@ export function useWhatsAppChat({
       }));
 
       const bodyText = `📋 *${report.title}*\n\n${report.content || ''}`.trim();
-      await bot.sendMessage(destinationId, bodyText, photosToSend);
-      toast.success('Novedad enviada con éxito', { id: toastId });
+      const res = await bot.sendMessage(destinationId, bodyText, photosToSend);
+      if (res?.viaCloud) {
+        toast.success('Novedad encolada para envío vía bot en la nube', { id: toastId });
+      } else {
+        toast.success('Novedad enviada con éxito', { id: toastId });
+      }
     } catch (err: any) {
       toast.error('Error al enviar la novedad', {
         id: toastId,
         description: err?.message || 'Falló la comunicación con el bot'
       });
     }
-  }, [activeChatId, settings?.whatsapp_default_chat_ids, isBotReady, bot]);
+  }, [activeChatId, settings?.whatsapp_default_chat_ids, isBotReady, isCloud, bot]);
 
   return {
     bot,

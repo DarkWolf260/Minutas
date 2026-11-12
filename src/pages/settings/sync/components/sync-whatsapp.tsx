@@ -23,7 +23,14 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { QRCodeSVG } from 'qrcode.react';
 import { Input } from '@/components/ui/input';
-import { useWhatsAppBot, type WhatsAppChat, getCleanAvatarUrl, useSafeMediaSrc } from '@/features/whatsapp';
+import { 
+  useWhatsAppBot, 
+  getLocalWhatsAppBotUrl, 
+  setLocalWhatsAppBotUrl, 
+  type WhatsAppChat, 
+  getCleanAvatarUrl, 
+  useSafeMediaSrc 
+} from '@/features/whatsapp';
 import { useSettings } from '@/hooks/configuracion';
 import { useWorkspaceManager } from '@/lib/db/db-context';
 import { normalizeString, cn } from '@/lib/utils';
@@ -66,17 +73,11 @@ function ChatAvatarItem({ chat }: { chat: WhatsAppChat }) {
 export function SyncWhatsApp() {
   const { currentWorkspace } = useWorkspaceManager();
   const { settings, saveSettings } = useSettings();
-  const [localUrl, setLocalUrl] = useState('http://localhost:3001');
-  const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
+  const [localUrl, setLocalUrl] = useState<string>(getLocalWhatsAppBotUrl);
+  const bot = useWhatsAppBot(localUrl);
   const [searchQuery, setSearchQuery] = useState('');
   const [showLimitAlert, setShowLimitAlert] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  useEffect(() => {
-    if (settings?.whatsapp_local_url) {
-      setLocalUrl(settings.whatsapp_local_url);
-    }
-  }, [settings?.whatsapp_local_url]);
 
   const handleLogout = async () => {
     await saveSettings({ whatsapp_default_chat_ids: [] });
@@ -268,9 +269,10 @@ export function SyncWhatsApp() {
             <Button
               variant="outline"
               size="sm"
-              onClick={async () => {
-                await saveSettings({ whatsapp_local_url: localUrl });
-                toast.success('URL del bot guardada');
+              onClick={() => {
+                setLocalWhatsAppBotUrl(localUrl);
+                bot.checkStatus(true);
+                toast.success('URL del bot guardada localmente en este dispositivo');
               }}
               className="border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 h-9 px-4 font-semibold"
             >
@@ -278,8 +280,8 @@ export function SyncWhatsApp() {
             </Button>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Usa <code>http://localhost:3001</code> si corre en este equipo, o la IP local de red (ej:{' '}
-            <code>http://192.168.1.50:3001</code>) si corre en otro dispositivo.
+            Esta URL es exclusiva de este dispositivo (no se sincroniza en la nube). Usa <code>http://localhost:3001</code> si corre en este equipo, o la IP local de red (ej:{' '}
+            <code>http://192.168.1.50:3001</code>) si corre en otro equipo de tu red local.
           </p>
         </div>
 
@@ -448,14 +450,28 @@ export function SyncWhatsApp() {
               </div>
             )}
 
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => bot.checkStatus(true)}
-              className="w-full border-emerald-500/20 hover:bg-emerald-500/5 hover:text-emerald-600 h-9 font-semibold"
-            >
-              Comprobar estado
-            </Button>
+            <div className="flex items-center gap-2 w-full">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => bot.checkStatus(true)}
+                className="flex-1 border-emerald-500/20 hover:bg-emerald-500/5 hover:text-emerald-600 h-9 font-semibold"
+              >
+                Comprobar estado
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  toast.info('Solicitando reinicio del cliente de WhatsApp...');
+                  await bot.restartBot();
+                }}
+                className="h-9 px-3 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-500/10 border-amber-500/30 font-semibold"
+                title="Reiniciar el proceso de WhatsApp Web si no genera el código QR"
+              >
+                Reiniciar Bot
+              </Button>
+            </div>
           </div>
         ) : bot.status.isReady ? (
           <div className="space-y-5">

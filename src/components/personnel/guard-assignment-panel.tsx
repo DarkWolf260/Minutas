@@ -9,7 +9,7 @@ import { GuardStaffEditor } from '@/components/guards/guard-staff-editor';
 import { PlusCircle, Trash2, ShieldCheck, Save } from 'lucide-react';
 import { useRef } from 'react';
 import type { Guard, StaffMember, StaffRole, Department } from '@/lib/types';
-import { LEADER_ROLES } from '@/lib/constants/roles';
+import { LEADER_ROLES, autoFillGuardLeaders } from '@/lib/constants/roles';
 import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -54,14 +54,7 @@ export function GuardAssignmentPanel({
     }
 
     // Pre-load Director and Jefe de Operaciones from the personnel list
-    const preStaff: Record<string, StaffMember[]> = {};
-    const leaderRoles = [LEADER_ROLES.DIRECTOR, LEADER_ROLES.JEFE_OPERACIONES];
-    leaderRoles.forEach((roleName) => {
-      const member = personnel.find(
-        (p) => p.role_id?.toLowerCase() === roleName.toLowerCase()
-      );
-      if (member) preStaff[roleName] = [member];
-    });
+    const { updatedStaff: preStaff } = autoFillGuardLeaders({}, personnel, roles);
 
     const newGuard: Guard = {
       id: guardId,
@@ -209,6 +202,7 @@ export function GuardAssignmentPanel({
                 guard={selectedGuard}
                 onUpdate={handleStaffUpdate}
                 roles={roles}
+                personnel={personnel}
                 onSave={() => toast.success('Personal de guardia actualizado')}
               />
             </CardContent>

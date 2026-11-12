@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
-import { useSettings } from '@/hooks/configuracion';
 import { DbKeys } from '@/lib/repositories/keys';
 import { logger } from '@/lib/logger';
 import { OfflinePhotosDB } from '@/lib/offline-photos';
-import { getEffectiveBotUrl } from './use-whatsapp-bot';
+import { getEffectiveBotUrl, useWhatsAppBotUrl } from './use-whatsapp-bot';
 import { safeBotFetch } from '../services/safe-fetch';
 
 import type { ScheduledMessage } from "../types";
@@ -73,12 +72,11 @@ async function convertPhotoToBase64(photoId: string, url: string, localBlobId?: 
 export function useScheduledMessages() {
   const db = useDatabase();
   const { currentWorkspace } = useWorkspaceManager();
-  const { settings } = useSettings();
   const [scheduledMessages, setScheduledMessages] = useState<ScheduledMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const deletingIds = useRef<Set<string>>(new Set());
 
-  const localUrl = settings?.whatsapp_local_url || 'http://localhost:3001';
+  const localUrl = useWhatsAppBotUrl();
   const apiUrl = getEffectiveBotUrl(localUrl);
 
   // Load and watch scheduled messages

@@ -21,6 +21,8 @@ function getEdgeExecutablePath() {
   return null;
 }
 
+let initRetryCount = 0;
+
 function initWhatsAppClient() {
   state.isInitializing = true;
   state.isReady = false;
@@ -36,11 +38,12 @@ function initWhatsAppClient() {
 
   state.client = new Client({
     authStrategy: new LocalAuth({ dataPath: SESSION_DATA_PATH }),
-    authTimeoutMs: 60000,
+    authTimeoutMs: 120000,
+    bypassCSP: true,
     puppeteer: {
       headless: true,
       executablePath: edgePath || undefined,
-      protocolTimeout: 45000,
+      protocolTimeout: 0,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -49,6 +52,7 @@ function initWhatsAppClient() {
         '--no-first-run',
         '--no-zygote',
         '--no-default-browser-check',
+        '--disable-extensions',
         '--disable-background-timer-throttling',
         '--disable-backgrounding-occluded-windows',
         '--disable-renderer-backgrounding',
@@ -92,6 +96,7 @@ function initWhatsAppClient() {
   });
 
   state.client.on('ready', async () => {
+    initRetryCount = 0;
     state.isReady = true;
     state.qrCodeData = null;
     state.statusMessage = 'Listo';
@@ -170,6 +175,7 @@ function initWhatsAppClient() {
   state.client.initialize()
     .then(() => {
       state.isInitializing = false;
+      initRetryCount = 0;
     })
     .catch(async err => {
       console.error('Error al inicializar el cliente de WhatsApp:', err);
@@ -185,10 +191,25 @@ function initWhatsAppClient() {
         const { cleanupEnvironment } = require('./cleanup');
         cleanupEnvironment();
       } catch (_) {}
+
+      // Si falla por timeout o error de carga inicial, reintentar automáticamente
+      if (initRetryCount < 3) {
+        initRetryCount++;
+        const delay = initRetryCount * 4000;
+        console.log(`[WhatsApp] Reintentando inicialización automática (intento ${initRetryCount}/3) en ${delay / 1000}s...`);
+        state.statusMessage = `Reintentando conexión (${initRetryCount}/3)...`;
+        setTimeout(() => {
+          initWhatsAppClient();
+        }, delay);
+      } else {
+        console.error('[WhatsApp] Se agotaron los reintentos automáticos. Esperando reintento manual.');
+        state.statusMessage = 'Error al inicializar cliente de WhatsApp. Haz clic en "Reintentar conexión".';
+      }
     });
 }
 
 async function restartClient(reasonText = 'Reiniciando cliente...') {
+  initRetryCount = 0;
   if (state.isRestarting) return;
   state.isRestarting = true;
   state.isInitializing = true;

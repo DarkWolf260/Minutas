@@ -3,6 +3,7 @@ import { useDatabase, useWorkspaceManager } from '@/lib/db/db-context';
 import { DbKeys } from '@/lib/repositories/keys';
 import { logger } from '@/lib/logger';
 import { OfflinePhotosDB } from '@/lib/offline-photos';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { safeBotFetch } from '../services/safe-fetch';
 
 import type {
@@ -91,13 +92,12 @@ function updateBotState(updates: Partial<BotState>) {
   const newState = { ...botState, ...updates };
   
   // Guard estricto: Si el bot local responde en esta máquina pero no está listo (esperando QR o desconectado),
-  // o si no coincide el área de trabajo activa, o si no hay bot local ni bot en la nube listo:
-  // ¡LA LISTA DE CHATS DEBE SER ESTRICTAMENTE VACÍA!
+  // o si no coincide el área de trabajo activa:
+  // ¡LA LISTA DE CHATS LOCALES DEBE SER ESTRICTAMENTE VACÍA!
   const hasLocalBot = newState.isAvailable && newState.isWorkspaceMatch;
   const isLocalReady = hasLocalBot && newState.status.isReady;
-  const isCloudReady = !hasLocalBot && newState.isCloudActive;
 
-  if (!isLocalReady && !isCloudReady) {
+  if (hasLocalBot && !isLocalReady) {
     newState.chats = [];
   } else if (Array.isArray(newState.chats)) {
     newState.chats = newState.chats.filter(c => isValidWhatsAppChatId(c.id));
@@ -225,9 +225,50 @@ export function getCleanAvatarUrl(avatarUrl?: string | null, customApiUrl?: stri
   return trimmed;
 }
 
-export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
+export const WHATSAPP_BOT_URL_STORAGE_KEY = 'minutas_whatsapp_bot_url';
+
+export function getLocalWhatsAppBotUrl(): string {
+  if (typeof window === 'undefined') return 'http://localhost:3001';
+  try {
+    return localStorage.getItem(WHATSAPP_BOT_URL_STORAGE_KEY) || 'http://localhost:3001';
+  } catch {
+    return 'http://localhost:3001';
+  }
+}
+
+export function setLocalWhatsAppBotUrl(url: string): void {
+  if (typeof window === 'undefined') return;
+  const clean = (url || 'http://localhost:3001').trim();
+  try {
+    localStorage.setItem(WHATSAPP_BOT_URL_STORAGE_KEY, clean);
+    window.dispatchEvent(new CustomEvent('minutas_whatsapp_bot_url_changed', { detail: clean }));
+  } catch {}
+}
+
+export function useWhatsAppBotUrl(): string {
+  const [storedUrl, setStoredUrl] = useState<string>(getLocalWhatsAppBotUrl);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      setStoredUrl(e.detail || getLocalWhatsAppBotUrl());
+    };
+    window.addEventListener('minutas_whatsapp_bot_url_changed', handler);
+    window.addEventListener('storage', handler);
+    return () => {
+      window.removeEventListener('minutas_whatsapp_bot_url_changed', handler);
+      window.removeEventListener('storage', handler);
+    };
+  }, []);
+
+  return storedUrl;
+}
+
+export function useWhatsAppBot(customUrl?: string) {
   const db = useDatabase();
   const { currentWorkspace, isCloud } = useWorkspaceManager();
+
+  const currentUrl = useWhatsAppBotUrl();
+  const localUrl = customUrl || currentUrl || 'http://localhost:3001';
   const apiUrl = getEffectiveBotUrl(localUrl);
 
   const [state, setState] = useState<BotState>(botState);
@@ -339,7 +380,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       if (db && currentWorkspace && isCloud) {
         const statusId = `whatsapp_bot_status:${currentWorkspace}`;
         const chatsId = `whatsapp_chats:${currentWorkspace}`;
-        const shouldWrite = force || isReadyChanged || (data.isReady && Date.now() - lastHeartbeatTime > 45000);
+        const shouldWrite = force || isReadyChanged || Boolean(data.needsAuth) || (data.isReady && Date.now() - lastHeartbeatTime > 25000);
         
         if (shouldWrite) {
           if (data.isReady) {
@@ -351,8 +392,10 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
             type: 'whatsapp_bot_status',
             data: {
               isReady: data.isReady,
-              lastSeen: new Date().toISOString(),
-              botId: localUrl
+              needsAuth: Boolean(data.needsAuth),
+              qr: data.qr || null,
+              statusMessage: data.statusMessage || '',
+              lastSeen: new Date().toISOString()
             }
           }).catch(err => logger.error('Error writing bot heartbeat:', err));
 
@@ -378,6 +421,22 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       lastCheckTime = Date.now();
       consecutiveFailures++;
       
+      // Si esta máquina estaba emitiendo heartbeats y el bot local se apagó/cerró,
+      // notificar inmediatamente a la nube que el bot ya no está listo.
+      if (lastHeartbeatTime > 0 && db && currentWorkspace && isCloud) {
+        lastHeartbeatTime = 0;
+        const statusId = `whatsapp_bot_status:${currentWorkspace}`;
+        db.configs.upsert({
+          id: statusId,
+          workspace_id: currentWorkspace,
+          type: 'whatsapp_bot_status',
+          data: {
+            isReady: false,
+            lastSeen: new Date().toISOString()
+          }
+        }).catch(() => {});
+      }
+
       if (consecutiveFailures === 1) {
         currentPollingInterval = 5000;
       } else if (consecutiveFailures === 2) {
@@ -389,7 +448,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       updateBotState({
         isAvailable: false,
         status: { isReady: false, needsAuth: false, qr: null, statusMessage: 'Servidor no disponible' },
-        chats: []
+        ...(isCloud ? {} : { chats: [] })
       });
       return false;
     } finally {
@@ -399,8 +458,9 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
   }, [localUrl, db, currentWorkspace, isCloud]);
 
   const loadChats = useCallback(async () => {
-    const isBotReady = (state.isAvailable && state.isWorkspaceMatch && state.status.isReady) || (state.isCloudActive && isCloud);
-    if (!isBotReady) return;
+    const isLocalBotReady = state.isAvailable && state.isWorkspaceMatch && state.status.isReady;
+    const canLoad = isLocalBotReady || (isCloud && Boolean(currentWorkspace));
+    if (!canLoad) return;
 
     // Compartir la promesa en curso entre todas las instancias del hook para evitar llamadas concurrentes duplicadas
     if (globalInFlightLoadChatsPromise) {
@@ -470,7 +530,38 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
           // If we are a remote client, load from the database
           try {
             const chatsId = `whatsapp_chats:${currentWorkspace}`;
-            const doc = await db.configs.findOne(chatsId).exec();
+            let doc = await db.configs.findOne(chatsId).exec();
+
+            // Si aún no ha replicado en RxDB local, consultar directamente a Supabase
+            if (!doc && isSupabaseConfigured) {
+              const { data: cloudRow } = await supabase
+                .from('configs')
+                .select('data')
+                .eq('id', chatsId)
+                .maybeSingle();
+
+              if (cloudRow?.data?.chats && Array.isArray(cloudRow.data.chats)) {
+                const normalizedChats = cloudRow.data.chats.map((c: any) => ({
+                  ...c,
+                  avatarUrl: c.avatarUrl
+                    ? (c.avatarUrl.startsWith('https://')
+                        ? c.avatarUrl
+                        : c.avatarUrl.startsWith('/') && apiUrl
+                          ? `${apiUrl}${c.avatarUrl}`
+                          : c.avatarUrl)
+                    : null
+                }));
+                updateBotState({ chats: normalizedChats });
+                await db.configs.upsert({
+                  id: chatsId,
+                  workspace_id: currentWorkspace,
+                  type: 'whatsapp_bot_status',
+                  data: cloudRow.data
+                }).catch(() => {});
+                return;
+              }
+            }
+
             if (doc) {
               const item = doc.toJSON();
               const data = item.data || {};
@@ -498,7 +589,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     })();
 
     return globalInFlightLoadChatsPromise;
-  }, [apiUrl, state.isAvailable, state.isWorkspaceMatch, state.status.isReady, state.isCloudActive, isCloud, db, currentWorkspace]);
+  }, [apiUrl, state.isAvailable, state.isWorkspaceMatch, state.status.isReady, isCloud, db, currentWorkspace]);
 
   const sendMessage = useCallback(async (chatId: string, message: string, media?: { id?: string; local_blob_id?: string; url: string; name?: string; description?: string }[]) => {
     try {
@@ -538,9 +629,9 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       
       return await response.json();
     } catch (error) {
-      // FALLBACK: Si falla el envío directo pero estamos en la nube y el bot está activo globalmente,
+      // FALLBACK: Si falla el envío directo pero estamos en la nube,
       // lo programamos para "ya mismo" (dentro de la base de datos).
-      if (isCloud && isCloudActiveRef.current && db && currentWorkspace) {
+      if (isCloud && db && currentWorkspace) {
         logger.info('Direct send failed/unreachable. Scheduling immediately via Cloud fallback...');
         const id = DbKeys.scheduledMessage(currentWorkspace, crypto.randomUUID());
         
@@ -610,27 +701,70 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     }
 
     const statusId = `whatsapp_bot_status:${currentWorkspace}`;
+
+    // Consulta inicial directa a Supabase por si la replicación aún está en curso
+    if (isSupabaseConfigured) {
+      (async () => {
+        try {
+          const { data: cloudRow } = await supabase
+            .from('configs')
+            .select('data')
+            .eq('id', statusId)
+            .maybeSingle();
+
+          if (cloudRow?.data) {
+            const lastSeen = new Date(cloudRow.data.lastSeen || 0).getTime();
+            const isRecent = Date.now() - lastSeen < 60000; // 60s TTL
+            const active = !!cloudRow.data.isReady && isRecent;
+            const needsAuth = !!cloudRow.data.needsAuth && isRecent;
+            const qr = isRecent ? (cloudRow.data.qr || null) : null;
+            const statusMessage = isRecent ? (cloudRow.data.statusMessage || '') : '';
+            updateBotState({ 
+              isCloudActive: active,
+              conflictBotUrl: null,
+              ...(!botState.isAvailable && isCloud ? {
+                status: {
+                  isReady: active,
+                  needsAuth,
+                  qr,
+                  statusMessage: statusMessage || (active ? 'Disponible en la Nube' : 'Servidor no disponible')
+                }
+              } : {})
+            });
+          }
+        } catch (_) {}
+      })();
+    }
+
     const sub = db.configs.findOne(statusId).$.subscribe((doc) => {
       if (doc) {
         const item = doc.toJSON();
         const data = item.data || {};
         const lastSeen = new Date(data.lastSeen || 0).getTime();
-        const isRecent = Date.now() - lastSeen < 120000; // 2 min TTL
+        const isRecent = Date.now() - lastSeen < 60000; // 60s TTL
         const active = !!data.isReady && isRecent;
-        const conflict = active && data.botId && data.botId !== localUrl ? data.botId : null;
+        const needsAuth = !!data.needsAuth && isRecent;
+        const qr = isRecent ? (data.qr || null) : null;
+        const statusMessage = isRecent ? (data.statusMessage || '') : '';
         updateBotState({ 
           isCloudActive: active,
-          conflictBotUrl: conflict
+          conflictBotUrl: null,
+          ...(!botState.isAvailable && isCloud ? {
+            status: {
+              isReady: active,
+              needsAuth,
+              qr,
+              statusMessage: statusMessage || (active ? 'Disponible en la Nube' : 'Servidor no disponible')
+            }
+          } : {})
         });
-      } else {
-        updateBotState({ isCloudActive: false, conflictBotUrl: null });
       }
     });
 
     return () => sub.unsubscribe();
-  }, [db, currentWorkspace, isCloud, localUrl]);
+  }, [db, currentWorkspace, isCloud]);
 
-  // 2. Re-verificar la expiración del TTL cada 30 segundos
+  // 2. Re-verificar la expiración del TTL cada 15 segundos
   useEffect(() => {
     if (!db || !currentWorkspace || !isCloud) return;
 
@@ -641,18 +775,28 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         const item = doc.toJSON();
         const data = item.data || {};
         const lastSeen = new Date(data.lastSeen || 0).getTime();
-        const isRecent = Date.now() - lastSeen < 120000;
+        const isRecent = Date.now() - lastSeen < 60000; // 60s TTL
         const active = !!data.isReady && isRecent;
-        const conflict = active && data.botId && data.botId !== localUrl ? data.botId : null;
+        const needsAuth = !!data.needsAuth && isRecent;
+        const qr = isRecent ? (data.qr || null) : null;
+        const statusMessage = isRecent ? (data.statusMessage || '') : '';
         updateBotState({ 
           isCloudActive: active,
-          conflictBotUrl: conflict
+          conflictBotUrl: null,
+          ...(!botState.isAvailable && isCloud ? {
+            status: {
+              isReady: active,
+              needsAuth,
+              qr,
+              statusMessage: statusMessage || (active ? 'Disponible en la Nube' : 'Servidor no disponible')
+            }
+          } : {})
         });
       }
-    }, 30000);
+    }, 15000);
 
     return () => clearInterval(timer);
-  }, [db, currentWorkspace, isCloud, localUrl]);
+  }, [db, currentWorkspace, isCloud]);
 
   // 3. Suscribirse a los chats del bot en la base de datos (para clientes en la nube)
   useEffect(() => {
@@ -669,19 +813,30 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       }
 
       // Si es un cliente puramente remoto (nube):
-      if (botState.isCloudActive && doc) {
+      if (doc) {
         const item = doc.toJSON();
         const data = item.data || {};
         if (Array.isArray(data.chats) && data.chats.length > 0) {
-          updateBotState({ chats: data.chats });
+          const normalizedChats = data.chats.map((c: any) => ({
+            ...c,
+            avatarUrl: c.avatarUrl
+              ? (c.avatarUrl.startsWith('https://')
+                  ? c.avatarUrl
+                  : c.avatarUrl.startsWith('/') && apiUrl
+                    ? `${apiUrl}${c.avatarUrl}`
+                    : c.avatarUrl)
+              : null
+          }));
+          updateBotState({ chats: normalizedChats });
           return;
+        } else if (Array.isArray(data.chats)) {
+          updateBotState({ chats: [] });
         }
       }
-      updateBotState({ chats: [] });
     });
 
     return () => sub.unsubscribe();
-  }, [db, currentWorkspace, isCloud]);
+  }, [db, currentWorkspace, isCloud, apiUrl]);
 
   // Manejo de cambio de área de trabajo en el dispositivo principal
   const previousWorkspaceRef = useRef<string>(currentWorkspace);
@@ -707,8 +862,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
             type: 'whatsapp_bot_status',
             data: {
               isReady: false,
-              lastSeen: new Date().toISOString(),
-              botId: localUrl
+              lastSeen: new Date().toISOString()
             }
           }).catch(err => console.error('Error desvinculando estado anterior:', err));
 
@@ -743,9 +897,9 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     }
   }, [currentWorkspace, localUrl, db, isCloud, checkStatus]);
 
-  // Cargar chats automáticamente una vez cuando el bot esté listo localmente si la lista está vacía
+  // Cargar chats automáticamente una vez cuando el bot esté listo localmente o si estamos en la nube
   useEffect(() => {
-    const isBotReady = (state.isAvailable && state.isWorkspaceMatch && state.status.isReady) || (state.isCloudActive && isCloud);
+    const isBotReady = (state.isAvailable && state.isWorkspaceMatch && state.status.isReady) || (isCloud && Boolean(currentWorkspace));
     if (!isBotReady) {
       globalHasAutoLoadedChats = false;
       return;
@@ -755,14 +909,14 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     // Backoff si hubo fallos consecutivos (mínimo 20s, hasta 60s) para prevenir bucles de reintentos rápidos
     const backoffDelay = chatsConsecutiveFailures > 0 
       ? Math.min(20000 * Math.pow(1.5, chatsConsecutiveFailures - 1), 60000)
-      : 5000;
+      : 3000;
 
     if (state.chats.length === 0 && !globalHasAutoLoadedChats && !globalInFlightLoadChatsPromise && (now - lastChatsLoadAttemptTime > backoffDelay)) {
       globalHasAutoLoadedChats = true;
       lastChatsLoadAttemptTime = now;
       loadChats().catch(() => {});
     }
-  }, [state.isAvailable, state.isWorkspaceMatch, state.status.isReady, state.isCloudActive, isCloud, state.chats.length, loadChats]);
+  }, [state.isAvailable, state.isWorkspaceMatch, state.status.isReady, isCloud, currentWorkspace, state.chats.length, loadChats]);
 
   const claimWorkspace = useCallback(async (targetWorkspace?: string) => {
     const ws = targetWorkspace || currentWorkspace;
@@ -777,7 +931,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
             id: oldStatusId,
             workspace_id: prevWs,
             type: 'whatsapp_bot_status',
-            data: { isReady: false, lastSeen: new Date().toISOString(), botId: localUrl }
+            data: { isReady: false, lastSeen: new Date().toISOString() }
           }).catch(() => {}),
           db.configs.upsert({
             id: oldChatsId,
@@ -822,7 +976,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
             id: statusId,
             workspace_id: currentWorkspace,
             type: 'whatsapp_bot_status',
-            data: { isReady: false, lastSeen: new Date().toISOString(), botId: localUrl }
+            data: { isReady: false, lastSeen: new Date().toISOString() }
           }).catch(() => {}),
           db.configs.upsert({
             id: chatsId,
@@ -865,35 +1019,171 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     }
   }, [localUrl, db, currentWorkspace, isCloud, checkStatus]);
 
-  const fetchChatMessages = useCallback(async (chatId: string, limit: number = 50): Promise<WhatsAppMessage[]> => {
+  const restartBot = useCallback(async () => {
     try {
-      const wsParam = currentWorkspace ? `&workspace=${encodeURIComponent(currentWorkspace)}` : '';
-      const response = await safeBotFetch(`${apiUrl}/api/whatsapp/chats/${encodeURIComponent(chatId)}/messages?limit=${limit}${wsParam}`, {
+      globalHasAutoLoadedChats = false;
+      chatsConsecutiveFailures = 0;
+      updateBotState({
+        status: { isReady: false, needsAuth: false, qr: null, statusMessage: 'Reiniciando cliente...' },
+        chats: []
+      });
+
+      await safeBotFetch(`${apiUrl}/api/whatsapp/restart`, {
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
         }
       });
-      if (!response.ok) return [];
-      const data: WhatsAppMessage[] = await response.json();
-      return data.map(m => ({
-        ...m,
-        mediaUrl: m.mediaUrl ? (apiUrl ? `${apiUrl}${m.mediaUrl}` : m.mediaUrl) : null,
-        quotedMsg: m.quotedMsg ? {
-          ...m.quotedMsg,
-          mediaUrl: m.quotedMsg.mediaUrl ? (apiUrl ? `${apiUrl}${m.quotedMsg.mediaUrl}` : m.quotedMsg.mediaUrl) : null
-        } : null
-      }));
-    } catch (e) {
-      console.warn('Error fetching chat messages:', e);
-      return [];
-    }
-  }, [apiUrl, currentWorkspace]);
 
-  const finalAvailable = (state.isAvailable && state.isWorkspaceMatch) || (state.isCloudActive && isCloud);
+      setTimeout(() => checkStatus(true), 1500);
+      return true;
+    } catch (e) {
+      console.error('Error during restartBot:', e);
+      return false;
+    }
+  }, [apiUrl, currentWorkspace, checkStatus]);
+
+  const fetchChatMessages = useCallback(async (chatId: string, limit: number = 50): Promise<WhatsAppMessage[]> => {
+    if (!chatId) return [];
+    const isLocalBotReady = state.isAvailable && state.isWorkspaceMatch && state.status.isReady;
+
+    // 1. Si el bot local está listo en esta máquina, consultar directamente a la API local
+    if (isLocalBotReady) {
+      try {
+        const wsParam = currentWorkspace ? `&workspace=${encodeURIComponent(currentWorkspace)}` : '';
+        const response = await safeBotFetch(`${apiUrl}/api/whatsapp/chats/${encodeURIComponent(chatId)}/messages?limit=${limit}${wsParam}`, {
+          headers: {
+            ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
+          }
+        });
+        if (response.ok) {
+          const data: WhatsAppMessage[] = await response.json();
+          const normalized = data.map(m => ({
+            ...m,
+            mediaUrl: m.mediaUrl ? (apiUrl ? `${apiUrl}${m.mediaUrl}` : m.mediaUrl) : null,
+            quotedMsg: m.quotedMsg ? {
+              ...m.quotedMsg,
+              mediaUrl: m.quotedMsg.mediaUrl ? (apiUrl ? `${apiUrl}${m.quotedMsg.mediaUrl}` : m.quotedMsg.mediaUrl) : null
+            } : null
+          }));
+
+          // Sincronizar mensajes en la base de datos para que los clientes en la nube puedan leerlos
+          if (db && currentWorkspace && isCloud) {
+            const msgDocId = `whatsapp_messages:${currentWorkspace}:${chatId}`;
+            db.configs.upsert({
+              id: msgDocId,
+              workspace_id: currentWorkspace,
+              type: 'whatsapp_bot_status',
+              data: {
+                chatId,
+                messages: normalized,
+                updatedAt: new Date().toISOString()
+              }
+            }).catch(err => console.error('Error syncing chat messages to DB:', err));
+          }
+
+          return normalized;
+        }
+      } catch (e) {
+        console.warn('Error fetching chat messages from local bot:', e);
+      }
+    }
+
+    // 2. Si es un dispositivo remoto en la nube (o el bot local no está disponible)
+    if (isCloud && db && currentWorkspace) {
+      try {
+        const msgDocId = `whatsapp_messages:${currentWorkspace}:${chatId}`;
+        const reqDocId = `whatsapp_sync_request:${currentWorkspace}`;
+
+        // Emitir petición al host con el bot para que refresque esta conversación
+        db.configs.upsert({
+          id: reqDocId,
+          workspace_id: currentWorkspace,
+          type: 'whatsapp_bot_status',
+          data: {
+            chatId,
+            requestedAt: new Date().toISOString()
+          }
+        }).catch(() => {});
+
+        // Consultar en RxDB local
+        let doc = await db.configs.findOne(msgDocId).exec();
+
+        // Si aún no ha replicado en RxDB local, consultar directamente a Supabase
+        if (!doc && isSupabaseConfigured) {
+          const { data: cloudRow } = await supabase
+            .from('configs')
+            .select('data')
+            .eq('id', msgDocId)
+            .maybeSingle();
+
+          if (cloudRow?.data?.messages && Array.isArray(cloudRow.data.messages)) {
+            db.configs.upsert({
+              id: msgDocId,
+              workspace_id: currentWorkspace,
+              type: 'whatsapp_bot_status',
+              data: cloudRow.data
+            }).catch(() => {});
+            return cloudRow.data.messages;
+          }
+        }
+
+        if (doc) {
+          const item = doc.toJSON();
+          const messages = item.data?.messages;
+          if (Array.isArray(messages)) {
+            return messages;
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching chat messages from cloud DB:', err);
+      }
+    }
+
+    return [];
+  }, [apiUrl, currentWorkspace, state.isAvailable, state.isWorkspaceMatch, state.status.isReady, isCloud, db]);
+
+  // Escuchar peticiones de sincronización de mensajes de clientes remotos en la nube
+  useEffect(() => {
+    if (!db || !currentWorkspace || !isCloud) return;
+    const isLocalBotReady = state.isAvailable && state.isWorkspaceMatch && state.status.isReady;
+    if (!isLocalBotReady) return;
+
+    const reqDocId = `whatsapp_sync_request:${currentWorkspace}`;
+    let lastProcessedTime = 0;
+
+    const sub = db.configs.findOne(reqDocId).$.subscribe(async (doc) => {
+      if (!doc) return;
+      const item = doc.toJSON();
+      const reqChatId = item.data?.chatId;
+      const requestedAt = new Date(item.data?.requestedAt || 0).getTime();
+
+      if (reqChatId && requestedAt > lastProcessedTime && (Date.now() - requestedAt < 30000)) {
+        lastProcessedTime = requestedAt;
+        try {
+          await fetchChatMessages(reqChatId, 50);
+        } catch (err) {
+          console.warn('[WhatsApp] Error procesando sync request de mensajes:', err);
+        }
+      }
+    });
+
+    return () => sub.unsubscribe();
+  }, [db, currentWorkspace, isCloud, state.isAvailable, state.isWorkspaceMatch, state.status.isReady, fetchChatMessages]);
+
+  const finalAvailable = (state.isAvailable && state.isWorkspaceMatch) || (state.isCloudActive && isCloud) || (state.status.needsAuth && isCloud);
   const finalStatus = (state.isAvailable && state.isWorkspaceMatch)
     ? state.status
-    : (state.isCloudActive && isCloud)
-      ? { isReady: true, needsAuth: false, qr: null, statusMessage: 'Disponible en la Nube', activeWorkspace: currentWorkspace, isWorkspaceMatch: true }
+    : isCloud
+      ? {
+          isReady: state.isCloudActive,
+          needsAuth: state.status.needsAuth,
+          qr: state.status.qr,
+          statusMessage: state.status.statusMessage || (state.isCloudActive ? 'Disponible en la Nube' : 'Servidor no disponible'),
+          activeWorkspace: currentWorkspace,
+          isWorkspaceMatch: true
+        }
       : state.status;
 
   return useMemo(() => ({
@@ -906,6 +1196,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     fetchChatMessages,
     sendMessage,
     logout,
+    restartBot,
     claimWorkspace,
     localUrl,
     isCloudActive: state.isCloudActive,
@@ -922,6 +1213,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     fetchChatMessages,
     sendMessage,
     logout,
+    restartBot,
     claimWorkspace,
     localUrl,
     state.isCloudActive,

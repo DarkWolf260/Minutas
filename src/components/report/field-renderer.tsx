@@ -26,6 +26,7 @@ import { AddressInput } from '@/components/ui/custom/address-input';
 import { isAddressField } from '@/lib/constants/addresses';
 import { CedulaInput } from '@/components/ui/custom/cedula-input';
 import { formatStaffMemberForAutocomplete } from '@/lib/formatters';
+import { getReportingPersonnelOptions } from '@/lib/constants/roles';
 import { EstadisticasField } from './fields/estadisticas-field';
 
 interface FieldRendererProps {
@@ -48,6 +49,101 @@ interface FieldRendererProps {
     disabled?: boolean;
     className?: string;
     name: string; // The full path name from react-hook-form
+}
+
+interface ReportaSelectFieldProps {
+    name: string;
+    value: form_dataValue;
+    onChange: (value: form_dataValue) => void;
+    onBlur?: () => void;
+    disabled?: boolean;
+    className?: string;
+    ref?: any;
+    settings: AppSettings | null;
+    staffOptions: StaffMember[];
+    roles: StaffRole[];
+}
+
+function ReportaSelectField({
+    name,
+    value,
+    onChange,
+    onBlur,
+    disabled,
+    className,
+    ref,
+    settings,
+    staffOptions,
+    roles,
+}: ReportaSelectFieldProps) {
+    const reportingStaff = React.useMemo(() => {
+        return getReportingPersonnelOptions(
+            staffOptions,
+            settings?.reportarole_ids,
+            roles
+        );
+    }, [staffOptions, settings?.reportarole_ids, roles]);
+
+    // Extract saved redactant from value if it's not in the active guard list
+    const savedStaffMember = React.useMemo(() => {
+        if (Array.isArray(value) && value.length > 0) {
+            const first = value[0];
+            if (first && typeof first === 'object' && 'id' in first) {
+                return first as unknown as StaffMember;
+            }
+        } else if (value && typeof value === 'object' && 'id' in value) {
+            return value as unknown as StaffMember;
+        }
+        return null;
+    }, [value]);
+
+    const displayStaffList = React.useMemo(() => {
+        const list = [...reportingStaff];
+        if (savedStaffMember && !list.some((s) => s.id === savedStaffMember.id)) {
+            list.unshift(savedStaffMember);
+        }
+        return list;
+    }, [reportingStaff, savedStaffMember]);
+
+    const selectedStaffId = savedStaffMember?.id;
+
+    // Auto-fill with the first option from Orden del Día if nothing is currently selected
+    React.useEffect(() => {
+        if (!selectedStaffId && displayStaffList.length > 0) {
+            onChange([displayStaffList[0]]);
+        }
+    }, [selectedStaffId, displayStaffList, onChange]);
+
+    const handleSelectChange = (staffId: string) => {
+        const selectedStaff = displayStaffList.find((s) => s.id === staffId);
+        onChange(selectedStaff ? [selectedStaff] : []);
+    };
+
+    return (
+        <Select
+            name={name}
+            onValueChange={handleSelectChange}
+            value={selectedStaffId || ''}
+            disabled={disabled}
+        >
+            <SelectTrigger className={className} ref={ref} onBlur={onBlur} id={name}>
+                <SelectValue placeholder="Selecciona el personal..." />
+            </SelectTrigger>
+            <SelectContent>
+                {displayStaffList.length > 0 ? (
+                    displayStaffList.map((staff) => (
+                        <SelectItem key={staff.id} value={staff.id}>
+                            {formatStaffMemberForAutocomplete(staff, true)}
+                        </SelectItem>
+                    ))
+                ) : (
+                    <div className="p-2 text-xs text-muted-foreground text-center">
+                        No hay personal asignado a los cargos de reporte.
+                    </div>
+                )}
+            </SelectContent>
+        </Select>
+    );
 }
 
 export const FieldRenderer = memo(
@@ -73,7 +169,7 @@ export const FieldRenderer = memo(
         ) => {
             const lowerfield_id = field_id.toLowerCase();
             const showSavedAddresses = isAddressField(fieldConfig, field_id);
-            const defaultMunicipioConfig = settings?.definitions?.['Municipio']?.value;
+            const defaultMunicipioConfig = (settings as any)?.definitions?.['Municipio']?.value;
             const formContext = useFormContext();
             const tipoPath = `${name}_tipo`;
             const watchedTypeValue = useWatch({
@@ -134,75 +230,19 @@ export const FieldRenderer = memo(
 
             // Check for Reporta field (Analista is discarded)
             if (lowerfield_id === 'reporta') {
-                const reportarole_ids = (settings?.reportarole_ids || []).map(id => id.trim().toLowerCase());
-                const reportingStaff = staffOptions.filter(
-                    (staff) => {
-                        if (!staff.role_id) return false;
-                        const staffRoleLower = staff.role_id.trim().toLowerCase();
-                        return reportarole_ids.includes(staffRoleLower);
-                    }
-                );
-
-                // Extract saved redactant from value if it's not in the active guard list
-                const savedStaffMember = (() => {
-                    if (Array.isArray(value) && value.length > 0) {
-                        const first = value[0];
-                        if (first && typeof first === 'object' && 'id' in first) {
-                            return first as unknown as StaffMember;
-                        }
-                    } else if (value && typeof value === 'object' && 'id' in value) {
-                        return value as unknown as StaffMember;
-                    }
-                    return null;
-                })();
-
-                if (savedStaffMember) {
-                    const isSavedStaffInList = reportingStaff.some(staff => staff.id === savedStaffMember.id);
-                    if (!isSavedStaffInList) {
-                        reportingStaff.unshift(savedStaffMember);
-                    }
-                }
-
-                // The value might be an array of StaffMember objects. We need the ID for the Select.
-                const selectedStaffId =
-                    Array.isArray(value) &&
-                        value.length > 0 &&
-                        value[0] &&
-                        typeof value[0] === 'object' &&
-                        'id' in value[0]
-                        ? (value[0] as any).id
-                        : undefined;
-
-                const handleSelectChange = (staffId: string) => {
-                    const selectedStaff = reportingStaff.find((s) => s.id === staffId);
-                    // The form expects an array for this field
-                    onChange(selectedStaff ? [selectedStaff] : []);
-                };
-
                 return (
-                    <Select
+                    <ReportaSelectField
                         name={name}
-                        onValueChange={handleSelectChange}
-                        value={selectedStaffId || ''}
+                        value={value}
+                        onChange={onChange}
+                        onBlur={onBlur}
                         disabled={disabled}
-                    >
-                        <SelectTrigger className={className} ref={ref} onBlur={onBlur} id={name}>
-                            <SelectValue placeholder="Selecciona el personal..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {reportingStaff.length > 0 ? (
-                                reportingStaff.map((staff) => (
-                                    <SelectItem key={staff.id} value={staff.id}>
-                                        {formatStaffMemberForAutocomplete(staff, true)}
-                                    </SelectItem>
-                                ))
-                            ) : (
-                                <div className="p-2 text-xs text-muted-foreground text-center">
-                                    No hay personal asignado a los cargos de reporte.
-                                </div>
-                            )}
-                        </SelectContent>
-                    </Select>
+                        className={className}
+                        ref={ref}
+                        settings={settings}
+                        staffOptions={staffOptions}
+                        roles={roles}
+                    />
                 );
             }
 

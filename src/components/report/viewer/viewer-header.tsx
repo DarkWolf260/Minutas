@@ -77,7 +77,7 @@ export const ViewerHeader = ({
   const [selectedTime, setSelectedTime] = useState("12:00");
 
   const { settings } = useSettings();
-  const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
+  const bot = useWhatsAppBot();
   const defaultChatIds = useMemo(() => settings?.whatsapp_default_chat_ids || [], [settings?.whatsapp_default_chat_ids]);
   const recipientGroups = useMemo(() => settings?.whatsapp_recipient_groups || [], [settings?.whatsapp_recipient_groups]);
 

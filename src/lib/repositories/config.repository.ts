@@ -73,9 +73,7 @@ export function createConfigRepository(db: MinutasDatabase | null, workspace_id:
         if (merged.reportaroleIds !== undefined) merged.reportarole_ids = merged.reportaroleIds;
         if (merged.whatsappDefaultChatIds !== undefined) merged.whatsapp_default_chat_ids = merged.whatsappDefaultChatIds;
         if (merged.whatsappRecipientGroups !== undefined) merged.whatsapp_recipient_groups = merged.whatsappRecipientGroups;
-        if (merged.whatsappLocalUrl !== undefined) merged.whatsapp_local_url = merged.whatsappLocalUrl;
-
-        // Eliminar versiones viejas
+        // Eliminar versiones viejas y excluir campos estrictamente locales del dispositivo
         delete merged.activeGuardId;
         delete merged.isGuardOpen;
         delete merged.guardPeriod;
@@ -87,6 +85,7 @@ export function createConfigRepository(db: MinutasDatabase | null, workspace_id:
         delete merged.whatsappDefaultChatIds;
         delete merged.whatsappRecipientGroups;
         delete merged.whatsappLocalUrl;
+        delete merged.whatsapp_local_url;
 
         // 4. VERIFICACIÓN DE CAMBIO REAL (Freno al bucle)
         if (stableStringify(currentData) === stableStringify(merged)) {
@@ -106,13 +105,17 @@ export function createConfigRepository(db: MinutasDatabase | null, workspace_id:
 
   const initSettings = async (defaults: AppSettings) =>
     silentWrite(
-      () =>
-        db.configs.upsert({
+      () => {
+        const cleanData = { ...defaults };
+        delete (cleanData as any).whatsapp_local_url;
+        delete (cleanData as any).whatsappLocalUrl;
+        return db.configs.upsert({
           id: DbKeys.settings(ws),
           workspace_id: ws,
           type: 'settings',
-          data: { ...defaults },
-        }),
+          data: cleanData,
+        });
+      },
       { feature: 'Settings' }
     );
 

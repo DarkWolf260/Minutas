@@ -2,6 +2,7 @@ import React, { Suspense, memo, useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/ui';
 import { useNovedades } from '@/hooks/novedades';
 import { useSettings } from '@/hooks/configuracion';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import {
   useWhatsAppBot,
   WhatsAppChatView,
@@ -27,9 +28,10 @@ function NovedadesPageContent() {
     guardiaAbierta 
   } = hook;
 
+  const { isCloud } = useWorkspaceManager();
   const { settings } = useSettings();
-  const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
-  const isBotConnected = (bot.isAvailable && bot.status.isReady) || bot.isCloudActive;
+  const bot = useWhatsAppBot();
+  const isBotConnected = !bot.isLoading && ((bot.isAvailable && bot.status.isReady) || (bot.isCloudActive && isCloud));
 
   const chatPosition = settings?.whatsapp_chat_position || 'right_form';
   const isRightChat = chatPosition === 'right_form' && isBotConnected && !isMobile;

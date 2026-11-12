@@ -36,6 +36,7 @@ import { cn, normalizeString } from '@/lib/utils';
 import type { WhatsAppChat } from '../types';
 import { type useWhatsAppBot, getCleanAvatarUrl, useSafeMediaSrc } from '../hooks';
 import { useSettings } from '@/hooks/configuracion';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import { useScheduledMessages } from '../hooks';
 import type { Report, WhatsAppRecipientGroup } from '@/lib/types';
 import { toast } from 'sonner';
@@ -210,6 +211,7 @@ export function WhatsAppChatList({
   const [modalSelectedChatIds, setModalSelectedChatIds] = useState<string[]>([]);
   const [modalChatSearch, setModalChatSearch] = useState('');
 
+  const { isCloud } = useWorkspaceManager();
   const { settings, saveSettings } = useSettings();
   const { scheduledMessages, cancelMessage, isLoading: isScheduledLoading } = useScheduledMessages();
 
@@ -229,7 +231,7 @@ export function WhatsAppChatList({
     }
   };
 
-  const isBotReady = bot.isAvailable && bot.status.isReady;
+  const isBotReady = (bot.isAvailable && bot.status.isReady) || (bot.isCloudActive ?? false);
 
   const handleToggleRecipient = async (chatId: string, name: string) => {
     if (!settings) return;
@@ -513,7 +515,7 @@ export function WhatsAppChatList({
               variant="ghost"
               size="icon"
               onClick={handleRefresh}
-              disabled={!bot.isAvailable || isRefreshing}
+              disabled={(!bot.isAvailable && !isCloud) || isRefreshing}
               className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-full"
               title="Actualizar chats"
             >
@@ -633,17 +635,21 @@ export function WhatsAppChatList({
           ) : (
             <div className="space-y-2">
               <AlertCircle className="h-6 w-6 text-amber-500 mx-auto" />
-              <div className="text-xs font-bold text-foreground">Bot de WhatsApp Desconectado</div>
+              <div className="text-xs font-bold text-foreground">
+                {isCloud ? 'Bot de WhatsApp en la Nube Inactivo' : 'Bot de WhatsApp Desconectado'}
+              </div>
               <p className="text-[11px] text-muted-foreground">
-                Inicia el bot local o verifica la conexión para ver tus chats.
+                {isCloud
+                  ? 'El bot en la nube no está respondiendo en este momento. Se muestran los contactos y chats previamente sincronizados.'
+                  : 'Inicia el bot local o verifica la conexión para ver tus chats.'}
               </p>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => bot.checkStatus(true)}
+                onClick={() => (isCloud ? bot.loadChats() : bot.checkStatus(true))}
                 className="h-7 text-xs rounded-lg mt-1"
               >
-                Reintentar conexión
+                {isCloud ? 'Reintentar carga de chats' : 'Reintentar conexión'}
               </Button>
             </div>
           )}
@@ -658,9 +664,13 @@ export function WhatsAppChatList({
               <Loader2 className="h-6 w-6 animate-spin text-emerald-600" />
               <span className="text-xs">Cargando chats más recientes...</span>
             </div>
-          ) : filteredChats.length === 0 && isBotReady ? (
+          ) : filteredChats.length === 0 ? (
             <div className="p-8 text-center text-xs text-muted-foreground">
-              {search ? 'No se encontraron chats con ese nombre.' : 'No hay chats disponibles en WhatsApp.'}
+              {search
+                ? 'No se encontraron chats con ese nombre.'
+                : isCloud
+                  ? 'No hay chats sincronizados en esta área de trabajo en la nube.'
+                  : 'No hay chats disponibles en WhatsApp.'}
             </div>
           ) : (
             filteredChats.map(chat => (

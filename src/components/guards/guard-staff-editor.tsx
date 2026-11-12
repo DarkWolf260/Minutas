@@ -9,6 +9,7 @@ import { Trash2, Search, Check, Save } from 'lucide-react';
 import { cn, normalizeString } from '@/lib/utils';
 import { usePersonnel } from '@/hooks/personal';
 import { usePersonnelHistory } from '@/hooks/personal';
+import { autoFillGuardLeaders } from '@/lib/constants/roles';
 
 import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover';
@@ -181,11 +182,18 @@ export const StaffListEditor = React.memo(({
   const canAdd = !is_single || (is_single && staffMembers.length === 0);
 
   return (
-    <div className="space-y-2">
-      <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
-        {label}
-      </Label>
-      <div className="rounded-md border bg-card shadow-sm overflow-hidden" ref={containerRef}>
+    <div className="space-y-1.5 w-full min-w-0">
+      <div className="flex items-center justify-between gap-1 px-0.5">
+        <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider truncate">
+          {label}
+        </Label>
+        {is_single && (
+          <span className="text-[10px] text-muted-foreground/60 font-semibold uppercase tracking-tight">
+            1 persona
+          </span>
+        )}
+      </div>
+      <div className="rounded-xl border bg-card shadow-2xs overflow-hidden" ref={containerRef}>
         {canAdd && (
           <div className="p-1 border-b bg-muted/30">
             <Popover open={open} onOpenChange={setOpen}>
@@ -317,7 +325,7 @@ export const StaffListEditor = React.memo(({
               items={staffMembers.map((m) => m.id)}
               strategy={verticalListSortingStrategy}
             >
-              <div className="divide-y divide-muted/50">
+              <div className="divide-y divide-muted/50 max-h-60 overflow-y-auto">
                 {staffMembers.map((member) => (
                   <SortableStaffItem
                     key={member.id}
@@ -348,6 +356,7 @@ interface GuardStaffEditorProps {
   roles: StaffRole[];
   onUpdate: (updatedGuard: Guard | Department) => void;
   onSave: () => void;
+  personnel?: StaffMember[];
 }
 
 export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
@@ -355,10 +364,17 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
   roles,
   onUpdate,
   onSave,
+  personnel: propPersonnel,
 }, ref) => {
-  const [staff, setStaff] = useState<Staff>(guard.staff || {});
+  const { personnel: hookPersonnel } = usePersonnel();
+  const effectivePersonnel = (propPersonnel && propPersonnel.length > 0) ? propPersonnel : hookPersonnel;
+
+  const [staff, setStaff] = useState<Staff>(() => {
+    const base = guard.staff || {};
+    return autoFillGuardLeaders(base, effectivePersonnel, roles).updatedStaff;
+  });
   const staffRef = useRef<Staff>(staff);
-  const initialStaffRef = useRef<Staff>(guard.staff || {});
+  const initialStaffRef = useRef<Staff>(staff);
   const { recordAssignments } = usePersonnelHistory();
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -367,10 +383,17 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
     staffRef.current = staff;
   }, [staff]);
 
-  // Update initial staff when guard changes
+  // When guard changes or personnel loads, ensure Director and Jefe de Operaciones are auto-filled
   useEffect(() => {
-    initialStaffRef.current = guard.staff || {};
-  }, [guard.id]);
+    const baseStaff = guard.staff || {};
+    const { updatedStaff, changed } = autoFillGuardLeaders(baseStaff, effectivePersonnel, roles);
+    setStaff(updatedStaff);
+    staffRef.current = updatedStaff;
+    initialStaffRef.current = updatedStaff;
+    if (changed) {
+      onUpdate({ ...guard, staff: updatedStaff });
+    }
+  }, [guard.id, effectivePersonnel, roles]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -391,10 +414,6 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
     }
     return null;
   }, [staff, activeId]);
-
-  useEffect(() => {
-    setStaff(guard.staff || {});
-  }, [guard.staff]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -481,20 +500,22 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
 
   const performSave = async (showNotification = true) => {
     const currentStaff = staffRef.current;
+    // Final auto-fill assurance before saving to definitive guard
+    const { updatedStaff: finalStaff } = autoFillGuardLeaders(currentStaff, effectivePersonnel, roles);
 
-    // Simple check to avoid saving if no changes were made since last guard load
-    // or since last save. (Deep check might be overkill, but let's at least check if it's different from initial)
-    const hasChanges = JSON.stringify(currentStaff) !== JSON.stringify(initialStaffRef.current);
+    // Check if changes exist compared to initial state
+    const hasChanges = JSON.stringify(finalStaff) !== JSON.stringify(initialStaffRef.current);
 
     if (!hasChanges) return;
 
-    onUpdate({ ...guard, staff: currentStaff });
+    onUpdate({ ...guard, staff: finalStaff });
     // Record history for the current date
     const today = format(new Date(), 'yyyy-MM-dd');
-    await recordAssignments(guard.id, currentStaff, today);
+    await recordAssignments(guard.id, finalStaff, today);
 
     // Update initialStaffRef to current state after saving
-    initialStaffRef.current = currentStaff;
+    initialStaffRef.current = finalStaff;
+    setStaff(finalStaff);
 
     if (showNotification) {
       onSave();
@@ -547,7 +568,7 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
         onDragEnd={handleDragEnd}
       >
         <ScrollArea className="flex-1 h-full" type="always">
-          <div className="space-y-4 p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 p-4 sm:p-5 items-start">
             {availableRoles.map((role) => (
               <StaffListEditor
                 key={role.name}
@@ -558,10 +579,11 @@ export const GuardStaffEditor = forwardRef<any, GuardStaffEditorProps>(({
               />
             ))}
             {availableRoles.length === 0 && (
-              <p className="p-4 text-center text-sm text-muted-foreground">
-                No hay cargos definidos para este departamento. Puedes definirlos en "Gestión de
-                Personal".
-              </p>
+              <div className="col-span-full p-8 text-center border rounded-xl bg-muted/20">
+                <p className="text-sm font-semibold text-muted-foreground">
+                  No hay cargos definidos para este departamento. Puedes definirlos en "Gestión de Personal".
+                </p>
+              </div>
             )}
           </div>
         </ScrollArea>
