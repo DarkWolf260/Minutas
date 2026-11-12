@@ -19,6 +19,7 @@ import { useSettings } from '@/hooks/configuracion';
 import { usePersonnel } from '@/hooks/personal';
 import { useOrdenDelDiaDraft } from '@/hooks/orden-del-dia';
 import { formatStaffMember } from '@/lib/formatters';
+import { getFirstReportingPerson } from '@/lib/constants/roles';
 import { applyModifiers } from '@/lib/template/evaluator';
 import { obtenerNombreLargoMunicipio } from '@/lib/constants/venezuela';
 
@@ -51,12 +52,12 @@ export function useReportForm({
   const activeGuardStaff = useMemo(() => {
     if (!settingsLoaded || !guardsLoaded || !draftLoaded || !personnelLoaded || !settings?.active_guard_id) return [];
 
-    // Prioridad 1: Borrador independiente (solo si coincide con la guardia activa)
+    // Prioridad 1: Borrador independiente (solo si coincide con la guardia activa o guardia no definida)
     // Prioridad 2: Borrador en settings (solo si coincide)
     // Prioridad 3: Plantilla de la guardia
-    const activeStaff = (cloudDraft && cloudDraft.guard_id === settings.active_guard_id)
+    const activeStaff = (cloudDraft && (!settings.active_guard_id || cloudDraft.guard_id === settings.active_guard_id))
       ? cloudDraft.staff
-      : (settings?.orden_del_dia_draft && settings.orden_del_dia_draft.guard_id === settings.active_guard_id)
+      : (settings?.orden_del_dia_draft && (!settings.active_guard_id || settings.orden_del_dia_draft.guard_id === settings.active_guard_id))
         ? settings.orden_del_dia_draft.staff
         : guards.find((g) => g.id === settings.active_guard_id)?.staff;
 
@@ -254,7 +255,7 @@ export function useReportForm({
         });
       }
 
-      const activeStaff = (cloudDraft && cloudDraft.guard_id === settings?.active_guard_id)
+      const activeStaff = (cloudDraft && (!settings?.active_guard_id || cloudDraft.guard_id === settings.active_guard_id))
         ? cloudDraft.staff
         : (settings?.active_guard_id && settings.orden_del_dia_draft && settings.orden_del_dia_draft.guard_id === settings.active_guard_id)
           ? settings.orden_del_dia_draft.staff
@@ -282,31 +283,15 @@ export function useReportForm({
           if ((role || isReporta) && !MANUAL_FIELDS.includes(keyLower)) {
             let initialStaff: any[] = [];
             
-            if (isReporta && settings?.reportarole_ids && activeStaff) {
-              // Special logic for Reporta: find first available person in configured roles
-              for (const roleName of settings.reportarole_ids) {
-                const staffKey = Object.keys(activeStaff).find(k => k.toLowerCase() === roleName.toLowerCase());
-                const staffList = staffKey ? activeStaff[staffKey] : undefined;
-                if (staffList && staffList.length > 0) {
-                  const validStaffList = staffList.filter((s: any) => s && (typeof s === 'string' || (s.name && s.name.trim() !== '')));
-                  if (validStaffList.length > 0) {
-                    initialStaff = [rehydrate(validStaffList[0], staffKey || roleName)];
-                    break;
-                  }
-                }
-              }
-
-              // Fallback for Reporta if not found in active guard
-              if (initialStaff.length === 0) {
-                const globalMatches = personnel.filter(p => 
-                  settings.reportarole_ids!.some(roleName => 
-                    p.role_id?.toLowerCase() === roleName.toLowerCase() || 
-                    p.cargo?.toLowerCase() === roleName.toLowerCase()
-                  )
-                );
-                if (globalMatches.length > 0) {
-                  initialStaff = [globalMatches[0]];
-                }
+            if (isReporta) {
+              const firstReporting = getFirstReportingPerson(
+                activeStaff,
+                settings?.reportarole_ids,
+                roles,
+                personnel
+              );
+              if (firstReporting) {
+                initialStaff = [rehydrate(firstReporting, firstReporting.role_id || 'Reporta')];
               }
             } else if ((role || isLeadershipRole) && activeStaff) {
               const staffKey = Object.keys(activeStaff).find(k => k.toLowerCase() === keyLower);
@@ -448,7 +433,7 @@ export function useReportForm({
 
       return initialFormValues;
     },
-    [finalConfig, predefinedValues, roles, guards, settings?.active_guard_id, settings?.orden_del_dia_draft, personnel, settingsLoaded, guardsLoaded]
+    [finalConfig, predefinedValues, roles, guards, settings?.active_guard_id, settings?.reportarole_ids, settings?.orden_del_dia_draft, cloudDraft, personnel, settingsLoaded, guardsLoaded, draftLoaded, personnelLoaded]
   );
 
   // 5. RHF and Sync logic
@@ -518,14 +503,15 @@ export function useReportForm({
       return;
     }
 
-    const baseDataLoaded = rolesLoaded && guardsLoaded && settingsLoaded && personnelLoaded;
+    const baseDataLoaded = rolesLoaded && guardsLoaded && settingsLoaded && personnelLoaded && draftLoaded;
     if (!baseDataLoaded) return;
 
     const currentInitialDataHash = stableStringify(initialData || {});
     
     const currentTemplateHash = stableStringify(template.content);
-    // Optimizamos la clave: solo reseteamos si cambia la guardia activa, la data inicial, la plantilla o el personal
-    const baseDataState = `${currentInitialDataHash}:${settings?.active_guard_id}:${currentTemplateHash}:${personnel.length}`;
+    const draftHash = cloudDraft?.updated_at || stableStringify(cloudDraft?.staff || {});
+    // Optimizamos la clave: solo reseteamos si cambia la guardia activa, la data inicial, la plantilla, el personal o el borrador de orden del día
+    const baseDataState = `${currentInitialDataHash}:${settings?.active_guard_id}:${currentTemplateHash}:${personnel.length}:${draftHash}`;
 
     const baseDataChanged = baseDataState !== lastBaseDataHash.current;
 

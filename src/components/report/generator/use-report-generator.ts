@@ -8,6 +8,7 @@ import { useOrdenDelDiaDraft } from '@/hooks/orden-del-dia';
 import { useGuards } from '@/hooks/guardias';
 import { usePersonnel } from '@/hooks/personal';
 import { parseTemplate } from '@/lib/template-parser';
+import { getFirstReportingPerson } from '@/lib/constants/roles';
 import { toast } from 'sonner';
 import type { ReportFormRef } from '../report-form';
 
@@ -75,34 +76,14 @@ export function useReportGenerator({ template, initialData, onSave }: UseReportG
       }
     });
 
-    if (settings.reportarole_ids && settings.reportarole_ids.length > 0) {
-      let firstPerson: StaffMember | null = null;
-      let assignedRole: string | null = null;
-
-      for (const roleName of settings.reportarole_ids) {
-        const staffKey = Object.keys(activeStaff).find(k => k.toLowerCase() === roleName.toLowerCase());
-        const roleStaff = staffKey ? (activeStaff[staffKey] || []) : [];
-        if (roleStaff.length > 0 && roleStaff[0]) {
-          firstPerson = roleStaff[0];
-          assignedRole = staffKey || roleName;
-          break;
-        }
-      }
-
-      if (firstPerson && assignedRole) {
-        dataToInject['Reporta'] = [rehydrate(firstPerson, assignedRole)];
-      } else {
-        // Fallback: search in global personnel if activeStaff didn't yield results
-        const globalMatches = personnel.filter(p => 
-          settings.reportarole_ids!.some(roleName => 
-            p.role_id?.toLowerCase() === roleName.toLowerCase() || 
-            p.cargo?.toLowerCase() === roleName.toLowerCase()
-          )
-        );
-        if (globalMatches.length > 0) {
-          dataToInject['Reporta'] = [globalMatches[0]];
-        }
-      }
+    const firstReporting = getFirstReportingPerson(
+      activeStaff,
+      settings?.reportarole_ids,
+      undefined,
+      personnel
+    );
+    if (firstReporting) {
+      dataToInject['Reporta'] = [rehydrate(firstReporting, firstReporting.role_id || 'Reporta')];
     }
 
     dataToInject['Guardia'] = settings.active_guard_id;

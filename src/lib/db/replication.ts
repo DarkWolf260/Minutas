@@ -31,7 +31,7 @@ async function startCollectionReplication(
 
   const replicationState = replicateRxCollection<any, Checkpoint>({
     collection: collection as any,
-    replicationIdentifier: `supabase-custom-v3-${collectionName}-${workspace_id}`,
+    replicationIdentifier: `supabase-custom-v4-${collectionName}-${workspace_id}`,
     pull: {
       handler: async (lastCheckpoint: any, batchSize: number) => {
         try {
@@ -49,8 +49,20 @@ async function startCollectionReplication(
             .order('id', { ascending: true })
             .limit(batchSize);
 
-          if (lastCheckpoint && lastCheckpoint.modified) {
-            query = query.gte('modified', lastCheckpoint.modified);
+          // Composite cursor pagination: (modified > lastModified) OR (modified == lastModified AND id > lastId)
+          // This avoids re-fetching the checkpoint document and prevents pagination stalling on identical timestamps.
+          if (lastCheckpoint && (lastCheckpoint.modified || lastCheckpoint.id)) {
+            if (lastCheckpoint.modified && lastCheckpoint.id) {
+              const safeId = String(lastCheckpoint.id).replace(/"/g, '\\"');
+              query = query.or(
+                `modified.gt.${lastCheckpoint.modified},and(modified.eq.${lastCheckpoint.modified},id.gt."${safeId}")`
+              );
+            } else if (lastCheckpoint.modified) {
+              query = query.gt('modified', lastCheckpoint.modified);
+            } else if (lastCheckpoint.id) {
+              const safeId = String(lastCheckpoint.id).replace(/"/g, '\\"');
+              query = query.gt('id', safeId);
+            }
           }
 
           const { data, error } = await callWithTokenRefresh(() => query);
@@ -126,7 +138,7 @@ async function startCollectionReplication(
           };
         }
       },
-      batchSize: 50,
+      batchSize: 100,
       stream$: globalPullTrigger$.pipe(
         debounceTime(100),
         map(() => 'RESYNC' as any) // Use official 'RESYNC' command to trigger pull handler
@@ -240,7 +252,7 @@ async function startCollectionReplication(
 
         return []; // Push handler returns empty array on success
       },
-      batchSize: 50,
+      batchSize: 100,
     },
     live: true,
     retryTime: 5000,

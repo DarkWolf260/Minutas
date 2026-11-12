@@ -8,6 +8,7 @@ import { NovedadFilters } from './novedad-filters';
 import { NovedadGroupItem } from './novedad-group-item';
 import type { Report, Template } from '@/lib/types';
 import { useSettings } from '@/hooks/configuracion';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import { getReportDateTime, findValueInform_data } from '@/lib/report-sorter';
 
 
@@ -262,9 +263,10 @@ export const NovedadSidebar = ({
     reports
   } = hook;
 
+  const { isCloud } = useWorkspaceManager();
   const { settings, saveSettings } = useSettings();
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
-  const isBotConnected = (bot.isAvailable && bot.status.isReady) || bot.isCloudActive;
+  const isBotConnected = (bot.isAvailable && bot.status.isReady) || bot.isCloudActive || isCloud;
 
   const isChatPositionRight = (settings?.whatsapp_chat_position || 'right_form') === 'right_form';
   const shouldShowWhatsAppTab = showWhatsAppTab ?? (!isChatPositionRight || isMobile);

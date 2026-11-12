@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useWhatsAppBot } from './use-whatsapp-bot';
 import { useSettings } from '@/hooks/configuracion';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import type { Report, Template } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -16,6 +17,7 @@ export function useWhatsAppChat({
   externalActiveChatId,
   onChatChange
 }: UseWhatsAppChatOptions) {
+  const { isCloud } = useWorkspaceManager();
   const { settings } = useSettings();
   const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
 
@@ -38,7 +40,7 @@ export function useWhatsAppChat({
   const [isSending, setIsSending] = useState(false);
   const [messageText, setMessageText] = useState('');
 
-  const isBotReady = bot.isAvailable && bot.status.isReady;
+  const isBotReady = (bot.isAvailable && bot.status.isReady) || (bot.isCloudActive ?? false);
 
   // Available chat targets from WhatsApp bot
   const chatList: ChatItem[] = useMemo(() => {
@@ -186,10 +188,10 @@ export function useWhatsAppChat({
 
   // Load chats on mount / when bot is ready
   useEffect(() => {
-    if (isBotReady && bot.chats.length === 0) {
+    if ((isBotReady || isCloud) && bot.chats.length === 0) {
       botRef.current.loadChats();
     }
-  }, [isBotReady, bot.chats.length]);
+  }, [isBotReady, isCloud, bot.chats.length]);
 
   // Poll messages if looking at a real WhatsApp chat
   useEffect(() => {
@@ -257,7 +259,7 @@ export function useWhatsAppChat({
       return;
     }
 
-    if (!isBotReady) {
+    if (!isBotReady && !isCloud) {
       toast.error('Bot de WhatsApp no conectado', {
         description: 'Enciende el bot en iniciar-bot.bat para enviar novedades.'
       });
@@ -275,15 +277,19 @@ export function useWhatsAppChat({
       }));
 
       const bodyText = `📋 *${report.title}*\n\n${report.content || ''}`.trim();
-      await bot.sendMessage(destinationId, bodyText, photosToSend);
-      toast.success('Novedad enviada con éxito', { id: toastId });
+      const res = await bot.sendMessage(destinationId, bodyText, photosToSend);
+      if (res?.viaCloud) {
+        toast.success('Novedad encolada para envío vía bot en la nube', { id: toastId });
+      } else {
+        toast.success('Novedad enviada con éxito', { id: toastId });
+      }
     } catch (err: any) {
       toast.error('Error al enviar la novedad', {
         id: toastId,
         description: err?.message || 'Falló la comunicación con el bot'
       });
     }
-  }, [activeChatId, settings?.whatsapp_default_chat_ids, isBotReady, bot]);
+  }, [activeChatId, settings?.whatsapp_default_chat_ids, isBotReady, isCloud, bot]);
 
   return {
     bot,
