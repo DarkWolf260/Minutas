@@ -51,7 +51,7 @@ export function ReportViewer({ report, onSave, onDelete, onClose }: ReportViewer
   } = hook;
 
   const { isCloud } = useWorkspaceManager();
-  const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
+  const bot = useWhatsAppBot();
   const { scheduleMessage } = useScheduledMessages();
   const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
 

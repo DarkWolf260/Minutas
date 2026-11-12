@@ -43,9 +43,14 @@ router.get('/status', (req, res) => {
 
   const isWorkspaceMatch = !state.activeWorkspace || !requestedWorkspace || state.activeWorkspace === requestedWorkspace;
 
+  const needsAuth = !state.isReady && (
+    state.qrCodeData !== null ||
+    (typeof state.statusMessage === 'string' && (state.statusMessage.includes('QR') || state.statusMessage.includes('escaneo')))
+  );
+
   res.json({
     isReady: state.isReady,
-    needsAuth: !state.isReady && state.qrCodeData !== null,
+    needsAuth,
     qr: state.qrCodeData,
     statusMessage: !isWorkspaceMatch 
       ? `El bot está asignado al área de trabajo "${state.activeWorkspace}".` 
@@ -76,6 +81,13 @@ router.post('/logout', async (req, res) => {
     // Ignorar si falla
   }
   restartClient('Sesión cerrada. Generando nuevo QR...');
+});
+
+router.post('/restart', async (req, res) => {
+  console.log('[Restart] Solicitud de reinicio manual recibida desde la API...');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.json({ success: true, message: 'Reiniciando cliente de WhatsApp...' });
+  restartClient('Reiniciando cliente a petición del usuario...');
 });
 
 module.exports = router;

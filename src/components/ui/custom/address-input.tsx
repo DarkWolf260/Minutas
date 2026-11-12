@@ -125,7 +125,7 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
         badge = `#${String(index + 1).padStart(2, '0')}`;
       } else if (name) {
         const match = name.match(/(?:\.|\[)(\d+)(?:\.|\s*\])/);
-        if (match) {
+        if (match && match[1]) {
           const idx = parseInt(match[1], 10) + 1;
           badge = `#${String(idx).padStart(2, '0')}`;
         }
@@ -305,7 +305,7 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
       setCustomSectorText('');
 
       const availableCircuits = getCircuitosComunales(newMun, firstParish);
-      const autoCircuito = availableCircuits.length === 1 ? availableCircuits[0] : '';
+      const autoCircuito = availableCircuits.length === 1 ? (availableCircuits[0] ?? '') : '';
       setCircuitoComunal(autoCircuito);
       setIsCustomCircuito(false);
 
@@ -324,7 +324,7 @@ export const AddressInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, A
       setCustomSectorText('');
 
       const availableCircuits = getCircuitosComunales(municipio, newPar);
-      const autoCircuito = availableCircuits.length === 1 ? availableCircuits[0] : '';
+      const autoCircuito = availableCircuits.length === 1 ? (availableCircuits[0] ?? '') : '';
       setCircuitoComunal(autoCircuito);
       setIsCustomCircuito(false);
 

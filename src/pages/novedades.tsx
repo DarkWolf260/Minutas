@@ -30,8 +30,8 @@ function NovedadesPageContent() {
 
   const { isCloud } = useWorkspaceManager();
   const { settings } = useSettings();
-  const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
-  const isBotConnected = (bot.isAvailable && bot.status.isReady) || bot.isCloudActive || isCloud;
+  const bot = useWhatsAppBot();
+  const isBotConnected = !bot.isLoading && ((bot.isAvailable && bot.status.isReady) || (bot.isCloudActive && isCloud));
 
   const chatPosition = settings?.whatsapp_chat_position || 'right_form';
   const isRightChat = chatPosition === 'right_form' && isBotConnected && !isMobile;

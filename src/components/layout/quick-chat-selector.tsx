@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import {
   CheckCircle2,
   RefreshCw,
+  RotateCw,
   LogOut,
   WifiOff,
   Loader2,
@@ -25,7 +26,6 @@ import {
 } from '@/components/ui/tooltip';
 import { QRCodeSVG } from 'qrcode.react';
 import { useWhatsAppBot } from '@/features/whatsapp';
-import { useSettings } from '@/hooks/configuracion';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -48,12 +48,12 @@ interface QuickChatSelectorProps {
 }
 
 export function QuickChatSelector({ className, showLabel }: QuickChatSelectorProps) {
-  const { settings } = useSettings();
-  const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
+  const bot = useWhatsAppBot();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
 
   const isBotReady = bot.isAvailable && bot.status.isReady;
 
@@ -78,6 +78,18 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
       toast.error('Error al consultar estado');
     } finally {
       setTimeout(() => setIsRefreshing(false), 400);
+    }
+  };
+
+  const handleRestart = async () => {
+    setIsRestarting(true);
+    try {
+      await bot.restartBot();
+      toast.success('Reiniciando cliente de WhatsApp...');
+    } catch {
+      toast.error('Error al solicitar reinicio del bot');
+    } finally {
+      setTimeout(() => setIsRestarting(false), 2000);
     }
   };
 
@@ -213,6 +225,30 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
                     <li>Apunta la cámara de tu teléfono hacia este código QR.</li>
                   </ol>
                 </div>
+
+                {/* Acciones de comprobación y reinicio manual */}
+                <div className="flex items-center gap-2 w-full pt-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    className="flex-1 text-xs h-8 gap-1.5"
+                  >
+                    <RefreshCw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")} />
+                    <span>Verificar Estado</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRestart}
+                    disabled={isRestarting}
+                    className="flex-1 text-xs h-8 gap-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-500/10 border-amber-500/30"
+                  >
+                    <RotateCw className={cn("h-3.5 w-3.5", isRestarting && "animate-spin")} />
+                    <span>Reiniciar Bot</span>
+                  </Button>
+                </div>
               </div>
             ) : isBotReady ? (
               /* ESTADO 2: YA CONECTADO */
@@ -225,7 +261,9 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
                     ¡WhatsApp Conectado!
                   </h3>
                   <p className="text-xs text-muted-foreground max-w-[300px]">
-                    Tu dispositivo está vinculado y listo para enviar reportes y sincronizar mensajes.
+                    {bot.isAvailable
+                      ? 'Tu dispositivo está vinculado y listo para enviar reportes y sincronizar mensajes.'
+                      : 'El bot de WhatsApp está conectado a través del área de trabajo en la nube.'}
                   </p>
                 </div>
 
@@ -234,7 +272,7 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
                     <span className="text-muted-foreground">Estado del Bot:</span>
                     <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                      En línea y sincronizado
+                      {bot.isAvailable ? 'En línea y sincronizado' : 'En línea (Nube)'}
                     </span>
                   </div>
                   {bot.chats.length > 0 && (
@@ -299,16 +337,29 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
                   </code>
                 </div>
 
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                  className="w-full text-xs h-8 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white mt-1"
-                >
-                  <RefreshCw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")} />
-                  <span>Reintentar Conexión</span>
-                </Button>
+                <div className="flex items-center gap-2 w-full mt-1">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    className="flex-1 text-xs h-8 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    <RefreshCw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")} />
+                    <span>Reintentar Conexión</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRestart}
+                    disabled={isRestarting}
+                    className="text-xs h-8 gap-1.5 text-muted-foreground hover:text-foreground border-border/80"
+                    title="Forzar reinicio del bot local"
+                  >
+                    <RotateCw className={cn("h-3.5 w-3.5", isRestarting && "animate-spin")} />
+                    <span>Reiniciar</span>
+                  </Button>
+                </div>
               </div>
             ) : (
               /* ESTADO 4: CONECTANDO O CARGANDO */
@@ -320,6 +371,28 @@ export function QuickChatSelector({ className, showLabel }: QuickChatSelectorPro
                 <p className="text-[11px] text-muted-foreground text-center max-w-[260px]">
                   Espera un momento mientras se establece la sesión en el servidor.
                 </p>
+                <div className="flex items-center gap-2 pt-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    className="text-xs h-7 gap-1.5 text-muted-foreground"
+                  >
+                    <RefreshCw className={cn("h-3 w-3", isRefreshing && "animate-spin")} />
+                    <span>Comprobar</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRestart}
+                    disabled={isRestarting}
+                    className="text-xs h-7 gap-1.5 text-amber-600 hover:text-amber-700"
+                  >
+                    <RotateCw className={cn("h-3 w-3", isRestarting && "animate-spin")} />
+                    <span>Reiniciar bot</span>
+                  </Button>
+                </div>
               </div>
             )}
           </div>

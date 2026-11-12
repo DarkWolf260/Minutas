@@ -95,6 +95,7 @@ export interface AppSettings {
   disabled_modules?: AppModuleId[];
   whatsapp_default_chat_ids?: string[];
   whatsapp_recipient_groups?: WhatsAppRecipientGroup[];
+  /** @deprecated Bot URL is now device-local (localStorage 'minutas_whatsapp_bot_url') and not synced to cloud settings. */
   whatsapp_local_url?: string;
   orden_del_dia_draft?: {
     staff: Staff;

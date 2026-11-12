@@ -70,7 +70,19 @@ export function useSettings() {
         sanitized.whatsapp_recipient_groups = Array.isArray(d.whatsapp_recipient_groups) 
           ? d.whatsapp_recipient_groups 
           : (Array.isArray(d.whatsappRecipientGroups) ? d.whatsappRecipientGroups : []);
-        sanitized.whatsapp_local_url = d.whatsapp_local_url || d.whatsappLocalUrl || '';
+
+        // Si la URL venía en la base de datos de la nube, migrarla a localStorage y purgarla de la nube
+        if (d.whatsapp_local_url || d.whatsappLocalUrl) {
+          const legacyUrl = d.whatsapp_local_url || d.whatsappLocalUrl;
+          if (typeof window !== 'undefined' && legacyUrl && !localStorage.getItem('minutas_whatsapp_bot_url')) {
+            localStorage.setItem('minutas_whatsapp_bot_url', legacyUrl);
+          }
+          delete d.whatsapp_local_url;
+          delete d.whatsappLocalUrl;
+          setTimeout(() => {
+            repo.saveSettings(sanitized, {}).catch(() => {});
+          }, 1500);
+        }
         sanitized.final_report_statistics = d.final_report_statistics || d.finalReportStatistics || '';
         sanitized.group_consecutive_reports = d.group_consecutive_reports !== undefined ? d.group_consecutive_reports : false;
         sanitized.enable_report_numbering = d.enable_report_numbering !== undefined ? d.enable_report_numbering : false;

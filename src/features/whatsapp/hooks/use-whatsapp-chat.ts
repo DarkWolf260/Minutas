@@ -19,7 +19,7 @@ export function useWhatsAppChat({
 }: UseWhatsAppChatOptions) {
   const { isCloud } = useWorkspaceManager();
   const { settings } = useSettings();
-  const bot = useWhatsAppBot(settings?.whatsapp_local_url || 'http://localhost:3001');
+  const bot = useWhatsAppBot();
 
   // Selected chat ID from real WhatsApp chats
   const [internalActiveChatId, setInternalActiveChatId] = useState<string>(() => {

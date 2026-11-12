@@ -225,9 +225,50 @@ export function getCleanAvatarUrl(avatarUrl?: string | null, customApiUrl?: stri
   return trimmed;
 }
 
-export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
+export const WHATSAPP_BOT_URL_STORAGE_KEY = 'minutas_whatsapp_bot_url';
+
+export function getLocalWhatsAppBotUrl(): string {
+  if (typeof window === 'undefined') return 'http://localhost:3001';
+  try {
+    return localStorage.getItem(WHATSAPP_BOT_URL_STORAGE_KEY) || 'http://localhost:3001';
+  } catch {
+    return 'http://localhost:3001';
+  }
+}
+
+export function setLocalWhatsAppBotUrl(url: string): void {
+  if (typeof window === 'undefined') return;
+  const clean = (url || 'http://localhost:3001').trim();
+  try {
+    localStorage.setItem(WHATSAPP_BOT_URL_STORAGE_KEY, clean);
+    window.dispatchEvent(new CustomEvent('minutas_whatsapp_bot_url_changed', { detail: clean }));
+  } catch {}
+}
+
+export function useWhatsAppBotUrl(): string {
+  const [storedUrl, setStoredUrl] = useState<string>(getLocalWhatsAppBotUrl);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      setStoredUrl(e.detail || getLocalWhatsAppBotUrl());
+    };
+    window.addEventListener('minutas_whatsapp_bot_url_changed', handler);
+    window.addEventListener('storage', handler);
+    return () => {
+      window.removeEventListener('minutas_whatsapp_bot_url_changed', handler);
+      window.removeEventListener('storage', handler);
+    };
+  }, []);
+
+  return storedUrl;
+}
+
+export function useWhatsAppBot(customUrl?: string) {
   const db = useDatabase();
   const { currentWorkspace, isCloud } = useWorkspaceManager();
+
+  const currentUrl = useWhatsAppBotUrl();
+  const localUrl = customUrl || currentUrl || 'http://localhost:3001';
   const apiUrl = getEffectiveBotUrl(localUrl);
 
   const [state, setState] = useState<BotState>(botState);
@@ -339,7 +380,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       if (db && currentWorkspace && isCloud) {
         const statusId = `whatsapp_bot_status:${currentWorkspace}`;
         const chatsId = `whatsapp_chats:${currentWorkspace}`;
-        const shouldWrite = force || isReadyChanged || (data.isReady && Date.now() - lastHeartbeatTime > 45000);
+        const shouldWrite = force || isReadyChanged || (data.isReady && Date.now() - lastHeartbeatTime > 25000);
         
         if (shouldWrite) {
           if (data.isReady) {
@@ -351,8 +392,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
             type: 'whatsapp_bot_status',
             data: {
               isReady: data.isReady,
-              lastSeen: new Date().toISOString(),
-              botId: localUrl
+              lastSeen: new Date().toISOString()
             }
           }).catch(err => logger.error('Error writing bot heartbeat:', err));
 
@@ -378,6 +418,22 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
       lastCheckTime = Date.now();
       consecutiveFailures++;
       
+      // Si esta máquina estaba emitiendo heartbeats y el bot local se apagó/cerró,
+      // notificar inmediatamente a la nube que el bot ya no está listo.
+      if (lastHeartbeatTime > 0 && db && currentWorkspace && isCloud) {
+        lastHeartbeatTime = 0;
+        const statusId = `whatsapp_bot_status:${currentWorkspace}`;
+        db.configs.upsert({
+          id: statusId,
+          workspace_id: currentWorkspace,
+          type: 'whatsapp_bot_status',
+          data: {
+            isReady: false,
+            lastSeen: new Date().toISOString()
+          }
+        }).catch(() => {});
+      }
+
       if (consecutiveFailures === 1) {
         currentPollingInterval = 5000;
       } else if (consecutiveFailures === 2) {
@@ -645,24 +701,25 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
 
     // Consulta inicial directa a Supabase por si la replicación aún está en curso
     if (isSupabaseConfigured) {
-      supabase
-        .from('configs')
-        .select('data')
-        .eq('id', statusId)
-        .maybeSingle()
-        .then(({ data: cloudRow }) => {
+      (async () => {
+        try {
+          const { data: cloudRow } = await supabase
+            .from('configs')
+            .select('data')
+            .eq('id', statusId)
+            .maybeSingle();
+
           if (cloudRow?.data) {
             const lastSeen = new Date(cloudRow.data.lastSeen || 0).getTime();
-            const isRecent = Date.now() - lastSeen < 180000; // 3 min TTL
+            const isRecent = Date.now() - lastSeen < 60000; // 60s TTL
             const active = !!cloudRow.data.isReady && isRecent;
-            const conflict = active && cloudRow.data.botId && cloudRow.data.botId !== localUrl ? cloudRow.data.botId : null;
             updateBotState({ 
               isCloudActive: active,
-              conflictBotUrl: conflict
+              conflictBotUrl: null
             });
           }
-        })
-        .catch(() => {});
+        } catch (_) {}
+      })();
     }
 
     const sub = db.configs.findOne(statusId).$.subscribe((doc) => {
@@ -670,20 +727,19 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         const item = doc.toJSON();
         const data = item.data || {};
         const lastSeen = new Date(data.lastSeen || 0).getTime();
-        const isRecent = Date.now() - lastSeen < 180000; // 3 min TTL
+        const isRecent = Date.now() - lastSeen < 60000; // 60s TTL
         const active = !!data.isReady && isRecent;
-        const conflict = active && data.botId && data.botId !== localUrl ? data.botId : null;
         updateBotState({ 
           isCloudActive: active,
-          conflictBotUrl: conflict
+          conflictBotUrl: null
         });
       }
     });
 
     return () => sub.unsubscribe();
-  }, [db, currentWorkspace, isCloud, localUrl]);
+  }, [db, currentWorkspace, isCloud]);
 
-  // 2. Re-verificar la expiración del TTL cada 30 segundos
+  // 2. Re-verificar la expiración del TTL cada 15 segundos
   useEffect(() => {
     if (!db || !currentWorkspace || !isCloud) return;
 
@@ -694,18 +750,17 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
         const item = doc.toJSON();
         const data = item.data || {};
         const lastSeen = new Date(data.lastSeen || 0).getTime();
-        const isRecent = Date.now() - lastSeen < 180000; // 3 min TTL
+        const isRecent = Date.now() - lastSeen < 60000; // 60s TTL
         const active = !!data.isReady && isRecent;
-        const conflict = active && data.botId && data.botId !== localUrl ? data.botId : null;
         updateBotState({ 
           isCloudActive: active,
-          conflictBotUrl: conflict
+          conflictBotUrl: null
         });
       }
-    }, 30000);
+    }, 15000);
 
     return () => clearInterval(timer);
-  }, [db, currentWorkspace, isCloud, localUrl]);
+  }, [db, currentWorkspace, isCloud]);
 
   // 3. Suscribirse a los chats del bot en la base de datos (para clientes en la nube)
   useEffect(() => {
@@ -771,8 +826,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
             type: 'whatsapp_bot_status',
             data: {
               isReady: false,
-              lastSeen: new Date().toISOString(),
-              botId: localUrl
+              lastSeen: new Date().toISOString()
             }
           }).catch(err => console.error('Error desvinculando estado anterior:', err));
 
@@ -841,7 +895,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
             id: oldStatusId,
             workspace_id: prevWs,
             type: 'whatsapp_bot_status',
-            data: { isReady: false, lastSeen: new Date().toISOString(), botId: localUrl }
+            data: { isReady: false, lastSeen: new Date().toISOString() }
           }).catch(() => {}),
           db.configs.upsert({
             id: oldChatsId,
@@ -886,7 +940,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
             id: statusId,
             workspace_id: currentWorkspace,
             type: 'whatsapp_bot_status',
-            data: { isReady: false, lastSeen: new Date().toISOString(), botId: localUrl }
+            data: { isReady: false, lastSeen: new Date().toISOString() }
           }).catch(() => {}),
           db.configs.upsert({
             id: chatsId,
@@ -929,6 +983,31 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     }
   }, [localUrl, db, currentWorkspace, isCloud, checkStatus]);
 
+  const restartBot = useCallback(async () => {
+    try {
+      globalHasAutoLoadedChats = false;
+      chatsConsecutiveFailures = 0;
+      updateBotState({
+        status: { isReady: false, needsAuth: false, qr: null, statusMessage: 'Reiniciando cliente...' },
+        chats: []
+      });
+
+      await safeBotFetch(`${apiUrl}/api/whatsapp/restart`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
+        }
+      });
+
+      setTimeout(() => checkStatus(true), 1500);
+      return true;
+    } catch (e) {
+      console.error('Error during restartBot:', e);
+      return false;
+    }
+  }, [apiUrl, currentWorkspace, checkStatus]);
+
   const fetchChatMessages = useCallback(async (chatId: string, limit: number = 50): Promise<WhatsAppMessage[]> => {
     try {
       const wsParam = currentWorkspace ? `&workspace=${encodeURIComponent(currentWorkspace)}` : '';
@@ -970,6 +1049,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     fetchChatMessages,
     sendMessage,
     logout,
+    restartBot,
     claimWorkspace,
     localUrl,
     isCloudActive: state.isCloudActive,
@@ -986,6 +1066,7 @@ export function useWhatsAppBot(localUrl: string = 'http://localhost:3001') {
     fetchChatMessages,
     sendMessage,
     logout,
+    restartBot,
     claimWorkspace,
     localUrl,
     state.isCloudActive,

@@ -192,28 +192,28 @@ export function parseUbicacionString(raw: string): UbicacionParts {
 
   // 1. Extraer circuito comunal (al final o precedido de coma)
   const circuitoMatch = text.match(/(?:,\s*)?circuito\s+comunal\s+([^,]+)$/i);
-  if (circuitoMatch) {
+  if (circuitoMatch && circuitoMatch[1]) {
     result.circuitoComunal = circuitoMatch[1].trim();
     text = text.substring(0, circuitoMatch.index).trim();
   }
 
   // 2. Extraer sector
   const sectorMatch = text.match(/(?:^|,\s*)sector\s+([^,]+)/i);
-  if (sectorMatch) {
+  if (sectorMatch && sectorMatch[1]) {
     result.sector = sectorMatch[1].trim();
     text = (text.substring(0, sectorMatch.index!) + text.substring(sectorMatch.index! + sectorMatch[0].length)).trim();
   }
 
   // 3. Extraer parroquia
   const parroquiaMatch = text.match(/(?:^|,\s*)parroquia\s+([^,]+)/i);
-  if (parroquiaMatch) {
+  if (parroquiaMatch && parroquiaMatch[1]) {
     result.parroquia = parroquiaMatch[1].trim();
     text = (text.substring(0, parroquiaMatch.index!) + text.substring(parroquiaMatch.index! + parroquiaMatch[0].length)).trim();
   }
 
   // 4. Extraer calle
   const calleMatch = text.match(/(?:^|,\s*)calle\s+([^,]+)/i);
-  if (calleMatch) {
+  if (calleMatch && calleMatch[1]) {
     result.calle = `calle ${calleMatch[1].trim()}`;
     text = (text.substring(0, calleMatch.index!) + text.substring(calleMatch.index! + calleMatch[0].length)).trim();
   }
@@ -224,7 +224,7 @@ export function parseUbicacionString(raw: string): UbicacionParts {
   // 5. Extraer Municipio al principio
   const chunks = text.split(',').map((c) => c.trim()).filter(Boolean);
   if (chunks.length > 0) {
-    const firstChunk = chunks[0];
+    const firstChunk = chunks[0] ?? '';
     const munFound = findMunicipio(firstChunk);
     if (munFound) {
       result.municipio = munFound.nombre;
