@@ -380,7 +380,7 @@ export function useWhatsAppBot(customUrl?: string) {
       if (db && currentWorkspace && isCloud) {
         const statusId = `whatsapp_bot_status:${currentWorkspace}`;
         const chatsId = `whatsapp_chats:${currentWorkspace}`;
-        const shouldWrite = force || isReadyChanged || (data.isReady && Date.now() - lastHeartbeatTime > 25000);
+        const shouldWrite = force || isReadyChanged || Boolean(data.needsAuth) || (data.isReady && Date.now() - lastHeartbeatTime > 25000);
         
         if (shouldWrite) {
           if (data.isReady) {
@@ -392,6 +392,9 @@ export function useWhatsAppBot(customUrl?: string) {
             type: 'whatsapp_bot_status',
             data: {
               isReady: data.isReady,
+              needsAuth: Boolean(data.needsAuth),
+              qr: data.qr || null,
+              statusMessage: data.statusMessage || '',
               lastSeen: new Date().toISOString()
             }
           }).catch(err => logger.error('Error writing bot heartbeat:', err));
@@ -713,9 +716,20 @@ export function useWhatsAppBot(customUrl?: string) {
             const lastSeen = new Date(cloudRow.data.lastSeen || 0).getTime();
             const isRecent = Date.now() - lastSeen < 60000; // 60s TTL
             const active = !!cloudRow.data.isReady && isRecent;
+            const needsAuth = !!cloudRow.data.needsAuth && isRecent;
+            const qr = isRecent ? (cloudRow.data.qr || null) : null;
+            const statusMessage = isRecent ? (cloudRow.data.statusMessage || '') : '';
             updateBotState({ 
               isCloudActive: active,
-              conflictBotUrl: null
+              conflictBotUrl: null,
+              ...(!botState.isAvailable && isCloud ? {
+                status: {
+                  isReady: active,
+                  needsAuth,
+                  qr,
+                  statusMessage: statusMessage || (active ? 'Disponible en la Nube' : 'Servidor no disponible')
+                }
+              } : {})
             });
           }
         } catch (_) {}
@@ -729,9 +743,20 @@ export function useWhatsAppBot(customUrl?: string) {
         const lastSeen = new Date(data.lastSeen || 0).getTime();
         const isRecent = Date.now() - lastSeen < 60000; // 60s TTL
         const active = !!data.isReady && isRecent;
+        const needsAuth = !!data.needsAuth && isRecent;
+        const qr = isRecent ? (data.qr || null) : null;
+        const statusMessage = isRecent ? (data.statusMessage || '') : '';
         updateBotState({ 
           isCloudActive: active,
-          conflictBotUrl: null
+          conflictBotUrl: null,
+          ...(!botState.isAvailable && isCloud ? {
+            status: {
+              isReady: active,
+              needsAuth,
+              qr,
+              statusMessage: statusMessage || (active ? 'Disponible en la Nube' : 'Servidor no disponible')
+            }
+          } : {})
         });
       }
     });
@@ -752,9 +777,20 @@ export function useWhatsAppBot(customUrl?: string) {
         const lastSeen = new Date(data.lastSeen || 0).getTime();
         const isRecent = Date.now() - lastSeen < 60000; // 60s TTL
         const active = !!data.isReady && isRecent;
+        const needsAuth = !!data.needsAuth && isRecent;
+        const qr = isRecent ? (data.qr || null) : null;
+        const statusMessage = isRecent ? (data.statusMessage || '') : '';
         updateBotState({ 
           isCloudActive: active,
-          conflictBotUrl: null
+          conflictBotUrl: null,
+          ...(!botState.isAvailable && isCloud ? {
+            status: {
+              isReady: active,
+              needsAuth,
+              qr,
+              statusMessage: statusMessage || (active ? 'Disponible en la Nube' : 'Servidor no disponible')
+            }
+          } : {})
         });
       }
     }, 15000);
@@ -1009,34 +1045,145 @@ export function useWhatsAppBot(customUrl?: string) {
   }, [apiUrl, currentWorkspace, checkStatus]);
 
   const fetchChatMessages = useCallback(async (chatId: string, limit: number = 50): Promise<WhatsAppMessage[]> => {
-    try {
-      const wsParam = currentWorkspace ? `&workspace=${encodeURIComponent(currentWorkspace)}` : '';
-      const response = await safeBotFetch(`${apiUrl}/api/whatsapp/chats/${encodeURIComponent(chatId)}/messages?limit=${limit}${wsParam}`, {
-        headers: {
-          ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
-        }
-      });
-      if (!response.ok) return [];
-      const data: WhatsAppMessage[] = await response.json();
-      return data.map(m => ({
-        ...m,
-        mediaUrl: m.mediaUrl ? (apiUrl ? `${apiUrl}${m.mediaUrl}` : m.mediaUrl) : null,
-        quotedMsg: m.quotedMsg ? {
-          ...m.quotedMsg,
-          mediaUrl: m.quotedMsg.mediaUrl ? (apiUrl ? `${apiUrl}${m.quotedMsg.mediaUrl}` : m.quotedMsg.mediaUrl) : null
-        } : null
-      }));
-    } catch (e) {
-      console.warn('Error fetching chat messages:', e);
-      return [];
-    }
-  }, [apiUrl, currentWorkspace]);
+    if (!chatId) return [];
+    const isLocalBotReady = state.isAvailable && state.isWorkspaceMatch && state.status.isReady;
 
-  const finalAvailable = (state.isAvailable && state.isWorkspaceMatch) || (state.isCloudActive && isCloud);
+    // 1. Si el bot local está listo en esta máquina, consultar directamente a la API local
+    if (isLocalBotReady) {
+      try {
+        const wsParam = currentWorkspace ? `&workspace=${encodeURIComponent(currentWorkspace)}` : '';
+        const response = await safeBotFetch(`${apiUrl}/api/whatsapp/chats/${encodeURIComponent(chatId)}/messages?limit=${limit}${wsParam}`, {
+          headers: {
+            ...(currentWorkspace ? { 'x-workspace-id': currentWorkspace } : {})
+          }
+        });
+        if (response.ok) {
+          const data: WhatsAppMessage[] = await response.json();
+          const normalized = data.map(m => ({
+            ...m,
+            mediaUrl: m.mediaUrl ? (apiUrl ? `${apiUrl}${m.mediaUrl}` : m.mediaUrl) : null,
+            quotedMsg: m.quotedMsg ? {
+              ...m.quotedMsg,
+              mediaUrl: m.quotedMsg.mediaUrl ? (apiUrl ? `${apiUrl}${m.quotedMsg.mediaUrl}` : m.quotedMsg.mediaUrl) : null
+            } : null
+          }));
+
+          // Sincronizar mensajes en la base de datos para que los clientes en la nube puedan leerlos
+          if (db && currentWorkspace && isCloud) {
+            const msgDocId = `whatsapp_messages:${currentWorkspace}:${chatId}`;
+            db.configs.upsert({
+              id: msgDocId,
+              workspace_id: currentWorkspace,
+              type: 'whatsapp_bot_status',
+              data: {
+                chatId,
+                messages: normalized,
+                updatedAt: new Date().toISOString()
+              }
+            }).catch(err => console.error('Error syncing chat messages to DB:', err));
+          }
+
+          return normalized;
+        }
+      } catch (e) {
+        console.warn('Error fetching chat messages from local bot:', e);
+      }
+    }
+
+    // 2. Si es un dispositivo remoto en la nube (o el bot local no está disponible)
+    if (isCloud && db && currentWorkspace) {
+      try {
+        const msgDocId = `whatsapp_messages:${currentWorkspace}:${chatId}`;
+        const reqDocId = `whatsapp_sync_request:${currentWorkspace}`;
+
+        // Emitir petición al host con el bot para que refresque esta conversación
+        db.configs.upsert({
+          id: reqDocId,
+          workspace_id: currentWorkspace,
+          type: 'whatsapp_bot_status',
+          data: {
+            chatId,
+            requestedAt: new Date().toISOString()
+          }
+        }).catch(() => {});
+
+        // Consultar en RxDB local
+        let doc = await db.configs.findOne(msgDocId).exec();
+
+        // Si aún no ha replicado en RxDB local, consultar directamente a Supabase
+        if (!doc && isSupabaseConfigured) {
+          const { data: cloudRow } = await supabase
+            .from('configs')
+            .select('data')
+            .eq('id', msgDocId)
+            .maybeSingle();
+
+          if (cloudRow?.data?.messages && Array.isArray(cloudRow.data.messages)) {
+            db.configs.upsert({
+              id: msgDocId,
+              workspace_id: currentWorkspace,
+              type: 'whatsapp_bot_status',
+              data: cloudRow.data
+            }).catch(() => {});
+            return cloudRow.data.messages;
+          }
+        }
+
+        if (doc) {
+          const item = doc.toJSON();
+          const messages = item.data?.messages;
+          if (Array.isArray(messages)) {
+            return messages;
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching chat messages from cloud DB:', err);
+      }
+    }
+
+    return [];
+  }, [apiUrl, currentWorkspace, state.isAvailable, state.isWorkspaceMatch, state.status.isReady, isCloud, db]);
+
+  // Escuchar peticiones de sincronización de mensajes de clientes remotos en la nube
+  useEffect(() => {
+    if (!db || !currentWorkspace || !isCloud) return;
+    const isLocalBotReady = state.isAvailable && state.isWorkspaceMatch && state.status.isReady;
+    if (!isLocalBotReady) return;
+
+    const reqDocId = `whatsapp_sync_request:${currentWorkspace}`;
+    let lastProcessedTime = 0;
+
+    const sub = db.configs.findOne(reqDocId).$.subscribe(async (doc) => {
+      if (!doc) return;
+      const item = doc.toJSON();
+      const reqChatId = item.data?.chatId;
+      const requestedAt = new Date(item.data?.requestedAt || 0).getTime();
+
+      if (reqChatId && requestedAt > lastProcessedTime && (Date.now() - requestedAt < 30000)) {
+        lastProcessedTime = requestedAt;
+        try {
+          await fetchChatMessages(reqChatId, 50);
+        } catch (err) {
+          console.warn('[WhatsApp] Error procesando sync request de mensajes:', err);
+        }
+      }
+    });
+
+    return () => sub.unsubscribe();
+  }, [db, currentWorkspace, isCloud, state.isAvailable, state.isWorkspaceMatch, state.status.isReady, fetchChatMessages]);
+
+  const finalAvailable = (state.isAvailable && state.isWorkspaceMatch) || (state.isCloudActive && isCloud) || (state.status.needsAuth && isCloud);
   const finalStatus = (state.isAvailable && state.isWorkspaceMatch)
     ? state.status
-    : (state.isCloudActive && isCloud)
-      ? { isReady: true, needsAuth: false, qr: null, statusMessage: 'Disponible en la Nube', activeWorkspace: currentWorkspace, isWorkspaceMatch: true }
+    : isCloud
+      ? {
+          isReady: state.isCloudActive,
+          needsAuth: state.status.needsAuth,
+          qr: state.status.qr,
+          statusMessage: state.status.statusMessage || (state.isCloudActive ? 'Disponible en la Nube' : 'Servidor no disponible'),
+          activeWorkspace: currentWorkspace,
+          isWorkspaceMatch: true
+        }
       : state.status;
 
   return useMemo(() => ({

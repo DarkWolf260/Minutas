@@ -63,6 +63,11 @@ export function WhatsAppRightPanel({
 
   const isBotReady = (bot.isAvailable && bot.status.isReady) || bot.isCloudActive;
 
+  // Si el bot no está conectado o listo, no mostrar el panel lateral en absoluto
+  if (!isBotReady) {
+    return null;
+  }
+
   // Si está colapsado, mostrar barra lateral delgada con botón para expandir
   if (isCollapsed) {
     return (

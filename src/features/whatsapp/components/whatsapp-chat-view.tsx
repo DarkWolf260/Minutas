@@ -19,6 +19,7 @@ import { WhatsAppChatInput } from './whatsapp-chat-input';
 import { useWhatsAppChat } from '../hooks';
 import type { UseWhatsAppChatOptions, WhatsAppMessage } from '../types';
 import type { Report } from '@/lib/types';
+import { useWorkspaceManager } from '@/lib/db/db-context';
 import { useNavigate } from 'react-router-dom';
 
 export interface WhatsAppChatViewProps extends UseWhatsAppChatOptions {
@@ -191,6 +192,7 @@ export function WhatsAppChatView({
   onCollapse
 }: WhatsAppChatViewProps) {
   const navigate = useNavigate();
+  const { isCloud } = useWorkspaceManager();
   const chatHook = useWhatsAppChat({
     reports,
     templates,
@@ -361,9 +363,13 @@ export function WhatsAppChatView({
                   <div className="h-10 w-10 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto">
                     <AlertCircle className="h-5 w-5" />
                   </div>
-                  <h4 className="font-bold text-xs text-foreground">Bot de WhatsApp Desconectado</h4>
+                  <h4 className="font-bold text-xs text-foreground">
+                    {isCloud ? 'Bot de WhatsApp en la Nube Inactivo' : 'Bot de WhatsApp Desconectado'}
+                  </h4>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Para leer y enviar mensajes reales a {currentChat?.name || 'WhatsApp'}, enciende el bot local con <code>iniciar-bot.bat</code> o verifica la URL.
+                    {isCloud
+                      ? <>El bot de WhatsApp para esta área de trabajo no está conectado. Inícialo en el equipo anfitrión con <code>iniciar-bot.bat</code> para sincronizar y enviar mensajes.</>
+                      : <>Para leer y enviar mensajes reales a {currentChat?.name || 'WhatsApp'}, enciende el bot local con <code>iniciar-bot.bat</code> o verifica la URL.</>}
                   </p>
                   <div className="pt-1 flex items-center justify-center gap-2">
                     <Button

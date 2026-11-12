@@ -90,9 +90,9 @@ describe('Roles leader autofill utilities', () => {
     const { updatedStaff, changed } = autoFillGuardLeaders({}, mockPersonnel, mockRoles);
     expect(changed).toBe(true);
     expect(updatedStaff['Director']).toHaveLength(1);
-    expect(updatedStaff['Director'][0].name).toBe('Carlos Mendoza');
+    expect(updatedStaff['Director']?.[0]?.name).toBe('Carlos Mendoza');
     expect(updatedStaff['Jefe de Operaciones']).toHaveLength(1);
-    expect(updatedStaff['Jefe de Operaciones'][0].name).toBe('María Fernández');
+    expect(updatedStaff['Jefe de Operaciones']?.[0]?.name).toBe('María Fernández');
   });
 
   it('should NOT overwrite existing Director or Jefe de Operaciones if already assigned', () => {
@@ -107,14 +107,17 @@ describe('Roles leader autofill utilities', () => {
 
     const { updatedStaff, changed } = autoFillGuardLeaders(existingStaff, mockPersonnel, mockRoles);
     expect(changed).toBe(true); // Jefe de Operaciones was added
-    expect(updatedStaff['Director'][0].name).toBe('Director Asignado Manualmente');
-    expect(updatedStaff['Jefe de Operaciones'][0].name).toBe('María Fernández');
+    expect(updatedStaff['Director']?.[0]?.name).toBe('Director Asignado Manualmente');
+    expect(updatedStaff['Jefe de Operaciones']?.[0]?.name).toBe('María Fernández');
   });
 
   it('should return changed=false if both leaders are already present', () => {
+    const p0 = mockPersonnel[0];
+    const p1 = mockPersonnel[1];
+    if (!p0 || !p1) throw new Error('Mock personnel missing');
     const existingStaff = {
-      Director: [mockPersonnel[0]],
-      'Jefe de Operaciones': [mockPersonnel[1]],
+      Director: [p0],
+      'Jefe de Operaciones': [p1],
     };
     const { updatedStaff, changed } = autoFillGuardLeaders(existingStaff, mockPersonnel, mockRoles);
     expect(changed).toBe(false);
@@ -174,11 +177,11 @@ describe('Reporta ({Reporta}) automatic selection utilities', () => {
   };
 
   const mockAllRoles: StaffRole[] = [
-    { name: 'Director', is_single: true, hierarchy_order: 0 },
-    { name: 'Jefe de Operaciones', is_single: true, hierarchy_order: 1 },
-    { name: 'Jefe de los Servicios', is_single: true, hierarchy_order: 2 },
-    { name: 'Analista de Sala de Monitoreo', is_single: false, hierarchy_order: 8 },
-    { name: 'Operador de radio', is_single: false, hierarchy_order: 11 },
+    { name: 'Director', is_single: true, hierarchy_order: 0, department_scope: 'all' },
+    { name: 'Jefe de Operaciones', is_single: true, hierarchy_order: 1, department_scope: 'all' },
+    { name: 'Jefe de los Servicios', is_single: true, hierarchy_order: 2, department_scope: 'all' },
+    { name: 'Analista de Sala de Monitoreo', is_single: false, hierarchy_order: 8, department_scope: 'all' },
+    { name: 'Operador de radio', is_single: false, hierarchy_order: 11, department_scope: 'all' },
   ];
 
   it('should select first person according to configured reportarole_ids priority', () => {
@@ -186,8 +189,8 @@ describe('Reporta ({Reporta}) automatic selection utilities', () => {
     const reportaroleIds = ['Operador de radio', 'Analista de Sala de Monitoreo'];
     const options = getReportingPersonnelOptions(mockStaff, reportaroleIds, mockAllRoles);
     expect(options).toHaveLength(2);
-    expect(options[0].name).toBe('Francisco Marchan');
-    expect(options[1].name).toBe('Rubén Rojas');
+    expect(options[0]?.name).toBe('Francisco Marchan');
+    expect(options[1]?.name).toBe('Rubén Rojas');
 
     const first = getFirstReportingPerson(mockStaff, reportaroleIds, mockAllRoles);
     expect(first?.name).toBe('Francisco Marchan');
@@ -198,7 +201,7 @@ describe('Reporta ({Reporta}) automatic selection utilities', () => {
     const options = getReportingPersonnelOptions(mockStaff, [], mockAllRoles);
     expect(options.length).toBeGreaterThan(0);
     // Analista has default reporting priority
-    expect(options[0].name).toBe('Rubén Rojas');
+    expect(options[0]?.name).toBe('Rubén Rojas');
 
     const first = getFirstReportingPerson(mockStaff, [], mockAllRoles);
     expect(first?.name).toBe('Rubén Rojas');

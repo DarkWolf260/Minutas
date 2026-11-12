@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useWhatsAppBot } from './use-whatsapp-bot';
 import { useSettings } from '@/hooks/configuracion';
-import { useWorkspaceManager } from '@/lib/db/db-context';
+import { useWorkspaceManager, useDatabase } from '@/lib/db/db-context';
 import type { Report, Template } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -17,7 +17,8 @@ export function useWhatsAppChat({
   externalActiveChatId,
   onChatChange
 }: UseWhatsAppChatOptions) {
-  const { isCloud } = useWorkspaceManager();
+  const { currentWorkspace, isCloud } = useWorkspaceManager();
+  const db = useDatabase();
   const { settings } = useSettings();
   const bot = useWhatsAppBot();
 
@@ -207,6 +208,44 @@ export function useWhatsAppChat({
       };
     }
   }, [activeChatId, isBotReady, loadRealMessages]);
+
+  // Suscribirse en tiempo real a las actualizaciones de mensajes en la nube
+  useEffect(() => {
+    if (!db || !currentWorkspace || !isCloud || !activeChatId) return;
+
+    const msgDocId = `whatsapp_messages:${currentWorkspace}:${activeChatId}`;
+    const sub = db.configs.findOne(msgDocId).$.subscribe((doc) => {
+      if (!doc) return;
+      const item = doc.toJSON();
+      const messages = item.data?.messages;
+      if (Array.isArray(messages) && messages.length > 0) {
+        setRealMessages(prev => {
+          const incoming = messages as WhatsAppMessage[];
+          const seenIds = new Set<string>();
+          const unique: WhatsAppMessage[] = [];
+          for (const m of incoming) {
+            if (!m || !m.id || seenIds.has(m.id)) continue;
+            seenIds.add(m.id);
+            unique.push(m);
+          }
+          const pendingTemps = prev.filter(p => p.id.startsWith('temp_'));
+          const remainingTemps = pendingTemps.filter(temp => {
+            return !unique.some(real =>
+              real.fromMe &&
+              (real.body || '').trim() === (temp.body || '').trim() &&
+              Math.abs(real.timestamp - temp.timestamp) < 30000
+            );
+          });
+          const combined = remainingTemps.length > 0 ? [...unique, ...remainingTemps] : unique;
+          combined.sort((a, b) => a.timestamp - b.timestamp);
+          return combined;
+        });
+        setIsLoadingMessages(false);
+      }
+    });
+
+    return () => sub.unsubscribe();
+  }, [db, currentWorkspace, isCloud, activeChatId]);
 
   // Send message
   const handleSendMessage = useCallback(async (customText?: string) => {
